@@ -242,11 +242,12 @@ struct IRCSpecCapabilityBehaviourTests {
 		#expect(try #require(channel.findMember("alice")).user.account == nil)
 	}
 
-	/// `account-tag`: an `account` tag on any message names the sender's
-	/// account without a separate ACCOUNT message.
+	/// `account-tag`: once negotiated, an `account` tag on any message names
+	/// the sender's account without a separate ACCOUNT message.
 	@Test("account-tag: the account tag identifies the sender")
 	func accountTagIdentifiesTheSender() throws {
 		let client = client()
+		client.enableCapability(.accountTag)
 		let channel = try joinedChannel("#chan", on: client)
 
 		try deliver(":alice!ali@example.org JOIN #chan", on: client)

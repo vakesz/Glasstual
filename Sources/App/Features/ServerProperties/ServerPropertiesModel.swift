@@ -7,16 +7,6 @@ import CocoaExtensions
 import Foundation
 import GlasstualPluginKit
 import Observation
-import Security
-
-/// The client-side certificate a connection sends, as the Client Certificate
-/// pane shows it.
-struct ClientCertificateDetails: Equatable, Sendable {
-	let commonName: String
-	let sha512: String
-	let sha256: String
-	let sha1: String
-}
 
 @MainActor
 @Observable
@@ -85,10 +75,9 @@ final class ServerPropertiesModel {
 		case proxyPassword
 	}
 
-	/// What the one keychain read found, by item. Empty until it answers.
+	/// What the one keychain read found, by item — the channel keys included.
+	/// Empty until it answers.
 	private var loadedSecrets: [KeychainItem: String] = [:]
-	@ObservationIgnored private var secretsTask: Task<Void, Never>?
-	@ObservationIgnored private var certificateTask: Task<Void, Never>?
 
 	/// The client-side certificate the connection sends, or `nil` when it sends
 	/// none. Four rows reading "No Certificate Selected" said the same thing
@@ -214,20 +203,16 @@ final class ServerPropertiesModel {
 		proxyPasswordText = secret(config.pendingProxyPassword, from: config.proxyPasswordKeychainItem)
 	}
 
-	/** Reads the sheet's secrets once, off the main actor.
+	/** Reads the sheet's secrets off the main actor.
 
 	 `SecItemCopyMatching` is synchronous and answers at the keychain's pace;
-	 one call per secret ran on the main actor for every sheet, and again for
-	 every `replace(with:)`. The answers are cached for as long as the sheet
-	 lives. */
-	func loadSecrets() {
-		guard secretsTask == nil else { return }
-
-		let items = secretKeychainItems
-		secretsTask = Task { [weak self] in
-			let passwords = await KeychainSecretLoader.passwords(for: items)
-			self?.applyLoadedSecrets(passwords)
-		}
+	 one call per secret ran on the main actor for every sheet, for every
+	 `replace(with:)`, and for every row of the channel list each time it was
+	 drawn. The view runs this once as the sheet opens, and the answers are
+	 cached for as long as the sheet lives. */
+	func loadSecrets() async {
+		let passwords = await KeychainSecretLoader.passwords(for: secretKeychainItems)
+		applyLoadedSecrets(passwords)
 	}
 
 	/** Describes the client certificate the connection sends, off the main
@@ -235,24 +220,23 @@ final class ServerPropertiesModel {
 
 	 The certificate is a persistent keychain reference, so naming it and
 	 digesting it is a `SecItemCopyMatching` like the passwords: read as the
-	 sheet opens, it was the stall between the click and the sheet. */
-	func loadCertificate() {
-		certificateTask?.cancel()
+	 sheet opens, it was the stall between the click and the sheet. The view
+	 runs this again whenever the reference changes, which cancels a read of
+	 the previous one. */
+	func loadCertificate() async {
 		guard let reference = config.identityClientSideCertificate else {
-			certificateTask = nil
 			certificate = nil
 			return
 		}
-		certificateTask = Task { [weak self] in
-			let details = await KeychainSecretLoader.certificate(for: reference)
-			guard Task.isCancelled == false else { return }
-			self?.certificate = details
-		}
+		let details = await KeychainSecretLoader.certificate(for: reference)
+		guard Task.isCancelled == false, reference == config.identityClientSideCertificate else { return }
+		certificate = details
 	}
 
-	isolated deinit {
-		secretsTask?.cancel()
-		certificateTask?.cancel()
+	/// Whether the channel list shows a channel as having a key: an unflushed
+	/// edit if there is one, and otherwise what the one keychain read found.
+	func channelHasSecretKey(_ channel: ChannelConfig) -> Bool {
+		channel.pendingSecretKey.value(orStored: loadedSecrets[channel.keychainItem])?.isEmpty == false
 	}
 
 	private var secretKeychainItems: [KeychainItem] {
@@ -262,7 +246,7 @@ final class ServerPropertiesModel {
 			items.append(primaryServer.keychainItem)
 		}
 
-		return items
+		return items + displayedChannels.map(\.keychainItem)
 	}
 
 	private func applyLoadedSecrets(_ passwords: [KeychainItem: String]) {
@@ -580,8 +564,8 @@ final class ServerPropertiesModel {
 			(.identity, ServerPropertiesStrings.Validation.invalidAlternateNickname(nickname))
 		} else if !ServerPropertiesValidation.isUsername(config.username.firstToken) {
 			(.identity, ServerPropertiesStrings.Validation.invalidUsername)
-		} else if config.realName.trimmed.isEmpty || !ServerPropertiesValidation.isSingleLine(config.realName) {
-			(.identity, ServerPropertiesStrings.Validation.invalidRealName)
+		} else if !ServerPropertiesValidation.isRealName(config.realName) {
+			(.identity, CommonValidationStrings.invalidRealName)
 		} else if !ServerPropertiesValidation.isLeavingComment(config.normalLeavingComment) ||
 			!ServerPropertiesValidation.isLeavingComment(config.sleepModeLeavingComment)
 		{
@@ -622,17 +606,8 @@ final class ServerPropertiesModel {
 		value.isEmpty ? nil : value
 	}
 
-	static func proxyType(forTag tag: Int) -> IRCConnectionProxyType {
-		guard tag >= 0, let type = IRCConnectionProxyType(rawValue: UInt(tag)) else { return .none }
-		return type
-	}
-
 	static func proxyTypeUsesAddress(_ type: IRCConnectionProxyType) -> Bool {
 		[.socks5, .HTTP].contains(type)
-	}
-
-	static func encoding(forTag tag: Int, default fallback: String.Encoding) -> UInt {
-		tag > 0 ? UInt(tag) : fallback.rawValue
 	}
 
 	private var primaryServer: Server? {
@@ -656,47 +631,5 @@ final class ServerPropertiesModel {
 private extension String {
 	var trimmed: String {
 		trimmingCharacters(in: .whitespacesAndNewlines)
-	}
-}
-
-/** Reads keychain secrets away from the main actor.
-
- Every `KeychainItem.password` is a synchronous `SecItemCopyMatching`, and a
- sheet needs several at once: read them together, off the main actor, and let
- the sheet cache the answers for as long as it is open. */
-nonisolated enum KeychainSecretLoader { // nonisolated: value
-	@concurrent
-	static func passwords(for items: [KeychainItem]) async -> [KeychainItem: String] {
-		var passwords: [KeychainItem: String] = [:]
-
-		for item in Set(items) {
-			if let password = item.password {
-				passwords[item] = password
-			}
-		}
-
-		return passwords
-	}
-
-	/// The name and fingerprints of the certificate a persistent keychain
-	/// reference names, or nil when the keychain no longer has it.
-	@concurrent
-	static func certificate(for reference: Data) async -> ClientCertificateDetails? {
-		let query: [CFString: Any] = [kSecClass: kSecClassCertificate, kSecValuePersistentRef: reference,
-		                              kSecReturnRef: true]
-		var result: CFTypeRef?
-		guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
-		      let result, CFGetTypeID(result) == SecCertificateGetTypeID() else { return nil }
-		let certificate = unsafeDowncast(result, to: SecCertificate.self)
-		var commonNameReference: CFString?
-		guard SecCertificateCopyCommonName(certificate, &commonNameReference) == errSecSuccess,
-		      let commonName = commonNameReference as String? else { return nil }
-		let data = SecCertificateCopyData(certificate) as Data
-		return ClientCertificateDetails(
-			commonName: commonName,
-			sha512: (data as NSData).textualSha512.uppercased(),
-			sha256: (data as NSData).textualSha256.uppercased(),
-			sha1: (data as NSData).textualSha1.uppercased()
-		)
 	}
 }

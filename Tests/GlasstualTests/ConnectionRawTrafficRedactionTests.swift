@@ -141,4 +141,21 @@ struct ConnectionRawTrafficRedactionTests {
 		#expect(bodies.contains { $0.contains("hunter2") } == false)
 		#expect(bodies.contains { $0.contains(mask) })
 	}
+
+	/// `echo-message` sends the client's own `IDENTIFY` back, so incoming
+	/// traffic carries the password too.
+	@Test("The traffic window masks an echoed identification")
+	func theWindowMasksIncomingCredentials() {
+		let client = TestClient(configDictionary: ["nickname": "mara"])
+		client.createRawDataLogQuery()
+
+		client.rawDataLogIncomingTraffic("@msgid=abc :mara!m@host PRIVMSG NickServ :IDENTIFY hunter2")
+
+		let bodies = (client.printedLines as NSArray).compactMap {
+			($0 as? [String: Any])?["messageBody"] as? String
+		}
+
+		#expect(bodies.contains { $0.contains("hunter2") } == false)
+		#expect(bodies.contains { $0.hasPrefix(">> @msgid=abc :mara!m@host PRIVMSG NickServ :IDENTIFY") })
+	}
 }

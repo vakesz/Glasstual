@@ -5,185 +5,8 @@
 
 import AppKit
 import CocoaExtensions
-import Observation
-import os
 import SwiftUI
 import UniformTypeIdentifiers
-
-private let mainWindowRootViewLogger = Logger(
-	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
-	category: "MainWindowRootView"
-)
-
-@MainActor
-@Observable
-final class MainWindowPresentationModel {
-	var isServerListVisible = true
-	/// Whether the selection has a member list at all: a joined channel has
-	/// one, a server row and a one-to-one conversation do not.
-	private(set) var isMemberListAvailable = false
-	/// Whether the column is showing. Derived, never set from outside: the
-	/// member list shows while the selection has one and the reader has not
-	/// closed it.
-	private(set) var isMemberListVisible = true
-	/** Whether the reader wants the member list beside a channel that has one.
-
-	 The pane's own visibility cannot carry this: it is false for every server
-	 row too, so restoring it would have closed the list for good the first
-	 time the reader left a server selected. This used to live on `MemberList`
-	 as `isHiddenByUser`, a second store of the same fact that six call sites
-	 kept in step with this one. */
-	private(set) var userPrefersMemberList = true
-	var transcript: LogView?
-	var appearanceRevision = 0
-	var isChoosingTransferFiles = false
-	let preferencesTransfer = MainWindowPreferencesTransferModel()
-	var inputPrompt: InputPromptPresentation?
-	/** Mirrors the toolbar search field's focus. The root view keeps it in step
-	 with its `@FocusState` in both directions, so setting it is what moves the
-	 keyboard into the field and clicking away is what clears it. */
-	var isSearchFieldFocused = false
-	/** Mirrors the notification controller's mute switch so the footer menu can
-	 tick it. The controller is not observable and the switch is thrown from the
-	 main menu as well, so the coordinator that owns the switch writes it here
-	 whenever it changes. */
-	var areNotificationsDisabled = false
-	/// The outermost sheet the window is showing; each one holds whatever it
-	/// raised on top of itself.
-	private(set) var presentedSheet: MainWindowSheetPresentation?
-
-	@ObservationIgnored weak var window: MainWindow?
-	@ObservationIgnored private var transferFileSelection: (([URL]) -> Void)?
-
-	func attach(to window: MainWindow) {
-		precondition(self.window == nil || self.window === window)
-		self.window = window
-	}
-
-	/// Puts the keyboard in the sidebar filter field, which now lives in the
-	/// window toolbar. Channel Spotlight has a command of its own.
-	func focusSearchField() {
-		isSearchFieldFocused = true
-	}
-
-	/// The commands the sidebar's footer menus issue. They are the menu bar's
-	/// commands, sent to the object that performs them, rather than eight
-	/// methods on this model that only renamed them.
-	var commands: MenuActionCoordinator? {
-		AppController.shared.menuController?.actionCoordinator
-	}
-
-	/** Applies a selection to the member-list column.
-
-	 One derivation, so the two facts cannot disagree: the column is available
-	 beside a joined channel, and it is open while it is available and the
-	 reader has not closed it. */
-	func applyMemberListAvailability(_ isAvailable: Bool) {
-		isMemberListAvailable = isAvailable
-		isMemberListVisible = isAvailable && userPrefersMemberList
-	}
-
-	/** The reader's own switch, from either menu or the toolbar.
-
-	 Nothing happens where there is no member list to show: both menus disable
-	 the command there, and a "Show Member List" that quietly recorded "hide it"
-	 is what the guard is for. */
-	func toggleMemberList() {
-		guard isMemberListAvailable else { return }
-		userPrefersMemberList.toggle()
-		isMemberListVisible = userPrefersMemberList
-	}
-
-	/// Restores what the reader last left the columns at.
-	func restoreColumns(_ state: MainWindowLayoutState) {
-		isServerListVisible = state.isServerListVisible
-		userPrefersMemberList = state.isMemberListVisible
-		isMemberListVisible = state.isMemberListVisible
-	}
-
-	var columnState: MainWindowLayoutState {
-		MainWindowLayoutState(
-			isServerListVisible: isServerListVisible,
-			isMemberListVisible: userPrefersMemberList
-		)
-	}
-
-	func chooseTransferFiles(perform: @escaping ([URL]) -> Void) {
-		transferFileSelection = perform
-		isChoosingTransferFiles = true
-	}
-
-	func completeTransferFileSelection(_ result: Result<[URL], Error>) {
-		defer { transferFileSelection = nil }
-		switch result {
-		case let .success(urls):
-			transferFileSelection?(urls)
-		case let .failure(error):
-			mainWindowRootViewLogger.error("Choosing files to transfer failed: \(error)")
-		}
-	}
-
-	func presentInputPrompt(
-		_ request: InputPromptRequest,
-		completion: @escaping @MainActor (InputPromptOutcome) -> Void
-	) {
-		inputPrompt?.finish(.cancelled)
-		inputPrompt = InputPromptPresentation(request: request, completion: completion)
-	}
-
-	func completeInputPrompt(_ outcome: InputPromptOutcome) {
-		guard let inputPrompt else { return }
-		inputPrompt.finish(outcome)
-		self.inputPrompt = nil
-	}
-
-	func inputPromptDidDismiss() {
-		guard let inputPrompt else { return }
-		inputPrompt.finish(.cancelled)
-		self.inputPrompt = nil
-	}
-
-	/// Raises a sheet: the first one on the window, any after it on whichever
-	/// sheet is innermost.
-	func presentSheet(_ presentation: MainWindowSheetPresentation) {
-		guard let innermost = presentedSheet?.chain.last else {
-			presentedSheet = presentation
-			return
-		}
-		innermost.child = presentation
-	}
-
-	func dismissSheet(ownedBy owner: AnyObject) {
-		closeSheets { $0 === owner }
-	}
-
-	func dismissPresentedSheet() {
-		dismiss(presentedSheet)
-	}
-
-	func closeSheets(where shouldClose: (AnyObject) -> Bool) {
-		dismiss(presentedSheet?.chain.first { shouldClose($0.owner) })
-	}
-
-	func closePresentedSheet() {
-		if presentedSheet != nil {
-			dismissPresentedSheet()
-		} else {
-			window?.attachedSheet?.close()
-		}
-	}
-
-	/// Takes `presentation` down, and everything it raised with it.
-	func dismiss(_ presentation: MainWindowSheetPresentation?) {
-		guard let presentation else { return }
-		if presentedSheet === presentation {
-			presentedSheet = nil
-		} else {
-			presentedSheet?.chain.first { $0.child === presentation }?.child = nil
-		}
-		presentation.finish()
-	}
-}
 
 struct MainWindowRootView: View {
 	@Bindable var model: MainWindowPresentationModel
@@ -266,8 +89,17 @@ struct MainWindowRootView: View {
 				prompt: Text(MainWindowStrings.InputBar.filterSidebar)
 			)
 			.searchFocused($isSearchFieldFocused)
+			/* Transparent is not gone. VoiceOver walked the invisible sidebar and
+			 transcript, and `disabled` does not reach the AppKit views inside,
+			 so Tab still reached the message field. The window hides those
+			 views and takes the keyboard back from them; see
+			 `MainWindow.setConversationObscured(_:)`. */
 			.disabled(loadingScreen.viewIsVisible)
+			.accessibilityHidden(loadingScreen.viewIsVisible)
 			.opacity(loadingScreen.viewIsVisible ? 0 : 1)
+			.onChange(of: loadingScreen.viewIsVisible, initial: true) { _, isVisible in
+				model.window?.setConversationObscured(isVisible)
+			}
 
 			if loadingScreen.viewIsVisible {
 				MainWindowLoadingContent(model: loadingScreen)
@@ -474,7 +306,8 @@ struct MainWindowRootView: View {
 					inputField: inputContentView,
 					accessoryHeight: MainWindowInputBarLayout.accessoryHeight(
 						for: inputContentView.textView.accessoryModel
-					)
+					),
+					isObscured: model.isConversationObscured
 				)
 				.id(model.appearanceRevision)
 
@@ -585,67 +418,6 @@ private struct MainWindowSheetHost: View {
 	}
 }
 
-enum MainWindowTypingRedirectPolicy {
-	/** Where AppKit puts the keys that are not characters.
-
-	 Tab, Return and Escape arrive as control characters, but the arrow,
-	 function, page and Home/End keys are mapped into the Unicode private-use
-	 area instead -- so an arrow press in a sidebar passed the control-character
-	 test and was inserted into the message field as an undrawable character
-	 rather than moving the selection. */
-	private static let functionKeys = Unicode.Scalar(0xF700)! ... Unicode.Scalar(0xF8FF)!
-
-	static func text(
-		for characters: String,
-		commandIsPressed: Bool,
-		controlIsPressed: Bool
-	) -> String? {
-		guard commandIsPressed == false,
-		      controlIsPressed == false,
-		      characters.isEmpty == false,
-		      characters.unicodeScalars.allSatisfy(isTypable)
-		else { return nil }
-
-		return characters
-	}
-
-	private static func isTypable(_ scalar: Unicode.Scalar) -> Bool {
-		CharacterSet.controlCharacters.contains(scalar) == false && functionKeys.contains(scalar) == false
-	}
-}
-
-private struct MainWindowTypingRedirectModifier: ViewModifier {
-	let action: (String) -> Void
-
-	func body(content: Content) -> some View {
-		content.onKeyPress { press in
-			guard let text = MainWindowTypingRedirectPolicy.text(
-				for: press.characters,
-				commandIsPressed: press.modifiers.contains(.command),
-				controlIsPressed: press.modifiers.contains(.control)
-			) else { return .ignored }
-
-			action(text)
-			return .handled
-		}
-	}
-}
-
-extension View {
-	func redirectsPrintableInput(to action: @escaping (String) -> Void) -> some View {
-		modifier(MainWindowTypingRedirectModifier(action: action))
-	}
-
-	/// A footer control: a bare icon as the label, with the accessory bar's
-	/// hover and pressed treatment so it answers the pointer the way the rows
-	/// above it do. The label style is left alone so the menu's own items keep
-	/// their titles.
-	func sidebarFooterMenu() -> some View {
-		menuStyle(.button)
-			.buttonStyle(.accessoryBar)
-	}
-}
-
 private struct MainWindowInputRepresentable: NSViewRepresentable {
 	let contentView: MainWindowTextViewContentView
 
@@ -676,259 +448,13 @@ private struct MainWindowInputRepresentable: NSViewRepresentable {
 	}
 }
 
-/** The fixed distances the input bar is built from. The transcript's inset
- is the field's frame -- which already includes `bottomPadding` and the padding
- below the field -- plus `fieldVerticalPadding` for the capsule's top, plus the
- accessory strip; adding `bottomPadding` to it counts that edge twice. */
-enum MainWindowInputBarLayout {
-	/// Above and below the field, inside the capsule.
-	static let fieldVerticalPadding: CGFloat = 6
-	/// Between the capsule and the column's foot; SwiftUI's side only.
-	static let bottomPadding: CGFloat = 6
-	static let replyBannerHeight: CGFloat = 30
-	static let typingRowHeight: CGFloat = 18
-	/// What SwiftUI proposes for the field's host view; the field's own height
-	/// constraint moves within it as the text grows.
-	static let minimumHostHeight: CGFloat = 35
-	static let idealHostHeight: CGFloat = 44
-
-	/* The same capsule measured from the AppKit side: the container the field's
-	 scroll view sits in, inset from the host view, and the scroll view's own
-	 inset within that container. They used to be five literals in
-	 `installContainer()` beside four named constants here, describing one shape
-	 from two directions. */
-
-	/// The container's inset from the host view.
-	static let containerTopInset: CGFloat = 7
-	static let containerBottomInset: CGFloat = 6
-	static let containerHorizontalInset: CGFloat = 10
-	/// The host view's height before the field has measured any text.
-	static let hostInitialHeight: CGFloat = 38
-	/// The scroll view's inset inside the container.
-	static let scrollViewTrailingInset: CGFloat = 10
-	static let scrollViewVerticalInset: CGFloat = 3
-	/// The shortest the text view itself may be: one line.
-	static let minimumTextHeight: CGFloat = 19
-
-	static func accessoryHeight(replyVisible: Bool, typingVisible: Bool) -> CGFloat {
-		var height: CGFloat = 0
-		if replyVisible {
-			height += replyBannerHeight
-		}
-		if typingVisible {
-			height += typingRowHeight
-		}
-		if replyVisible, typingVisible {
-			height += UISpacing.tight
-		}
-		return height
-	}
-
-	static func accessoryHeight(for model: MainWindowInputAccessoryModel) -> CGFloat {
-		accessoryHeight(
-			replyVisible: model.replyMessageIdentifier != nil,
-			typingVisible: model.typingNicknames.isEmpty == false
-		)
-	}
-}
-
-/** The edge between the conversation and the member list: a divider the user
- can drag, with the width it settles on kept across launches.
-
- The pointer shape is `.pointerStyle`, not a `push()`/`pop()` pair on hover:
- the pair is unbalanced the moment the view disappears mid-hover -- collapse
- the member list from the menu with the pointer over the handle and the
- resize cursor stayed on the stack for the rest of the session. The handle is
- also reachable without the pointer: it takes focus, the arrow keys move it,
- and a double-click returns it to the ideal width. */
-private struct MemberListResizeHandle: View {
-	@Binding var width: CGFloat
-	@State private var widthAtDragStart: CGFloat?
-	@FocusState private var isFocused: Bool
-
-	var body: some View {
-		Divider()
-			.frame(width: MainWindowConstants.memberListHandleWidth)
-			.contentShape(Rectangle())
-			/* The handle takes focus and the arrow keys resize from there, and
-			 nothing on screen said so: a control that answers the keyboard has
-			 to show when the keyboard is on it. A hairline in the accent colour
-			 over the divider's own line, which is the whole control. */
-			.overlay {
-				if isFocused {
-					Rectangle()
-						.fill(Color.accentColor)
-						.frame(width: 1)
-						.accessibilityHidden(true)
-				}
-			}
-			.pointerStyle(.columnResize)
-			.gesture(
-				DragGesture(minimumDistance: 1)
-					.onChanged { value in
-						let start = widthAtDragStart ?? width
-						widthAtDragStart = start
-						apply(start - value.translation.width, persist: false)
-					}
-					.onEnded { _ in
-						widthAtDragStart = nil
-						persistWidth()
-					}
-			)
-			.onTapGesture(count: 2) {
-				apply(MainWindowConstants.memberListIdealWidth, persist: true)
-			}
-			.focusable()
-			.focused($isFocused)
-			/* The width is written back when the key comes up, not on every
-			 repeat: a held arrow key otherwise wrote `UserDefaults` -- and
-			 posted its change notification, which the message field listens to
-			 -- forty times a second. The drag does the same on its own end. */
-			.onKeyPress(keys: [.leftArrow, .rightArrow], phases: [.down, .repeat, .up]) { press in
-				guard press.phase != .up else {
-					persistWidth()
-					return .handled
-				}
-				let step = MainWindowConstants.memberListKeyboardResizeStep
-				apply(width + (press.key == .leftArrow ? step : -step), persist: false)
-				return .handled
-			}
-			.accessibilityLabel(MainWindowStrings.Toolbar.memberListWidth)
-			.accessibilityHint(MainWindowStrings.Toolbar.memberListWidthHint)
-			/* A splitter adjusts, it does not activate: the button trait
-			 offered VoiceOver a "press" that does nothing, and described the
-			 arrow keys in prose instead of exposing them. */
-			.accessibilityValue(Text(Int(width.rounded()), format: .number))
-			.accessibilityAdjustableAction { direction in
-				let step = MainWindowConstants.memberListKeyboardResizeStep
-				switch direction {
-				case .increment:
-					apply(width + step, persist: true)
-				case .decrement:
-					apply(width - step, persist: true)
-				@unknown default:
-					break
-				}
-			}
-			.help(MainWindowStrings.Toolbar.memberListWidth)
-	}
-
-	private func apply(_ candidate: CGFloat, persist: Bool) {
-		width = MemberListWidthPolicy.clamped(candidate)
-		if persist {
-			persistWidth()
-		}
-	}
-
-	private func persistWidth() {
-		Preferences.MainWindow.memberListWidth.value = Double(width)
-	}
-}
-
-/// The widths the member list is allowed to settle on. A drag, an arrow key
-/// and the double-click reset all land here, so none of them can put a width
-/// into the preference that the column cannot lay out.
-nonisolated enum MemberListWidthPolicy { // nonisolated: value
-	static func clamped(_ candidate: CGFloat) -> CGFloat {
-		min(
-			MainWindowConstants.memberListMaximumWidth,
-			max(MainWindowConstants.memberListMinimumWidth, candidate)
-		)
-	}
-}
-
-struct MainWindowTranscriptRepresentable: NSViewRepresentable {
-	let logView: LogView?
-	/// The field floating over the transcript's foot, measured for the inset.
-	var inputField: MainWindowTextViewContentView?
-	/// Height of the accessory strip above the field, from what it is showing.
-	var accessoryHeight: CGFloat = 0
-
-	func makeNSView(context _: Context) -> MainWindowTranscriptHostView {
-		let host = MainWindowTranscriptHostView()
-		host.show(logView, inputField: inputField, accessoryHeight: accessoryHeight)
-		return host
-	}
-
-	func updateNSView(_ host: MainWindowTranscriptHostView, context _: Context) {
-		host.show(logView, inputField: inputField, accessoryHeight: accessoryHeight)
-	}
-
-	/** The column is SwiftUI's to size; the transcript takes what it is offered.
-
-	 Left to the default, SwiftUI measures an AppKit view by its Auto Layout
-	 fitting size, and the transcript's is whatever its topic bar happens to
-	 measure: a few dozen points with no topic, the width of the whole topic on
-	 one line with one. The split view then reads that as the detail column's
-	 minimum and ideal width, which is how the transcript ended up drawn as a
-	 strip a few characters wide beside the member list, and how a long topic
-	 pushed the columns out past the window. With no height on offer the answer
-	 is zero: the transcript has no height of its own to ask for, the column's
-	 ideal height is then the input bar's, and the window decides the rest. */
-	func sizeThatFits(
-		_ proposal: ProposedViewSize,
-		nsView _: MainWindowTranscriptHostView,
-		context _: Context
-	) -> CGSize? {
-		CGSize(width: proposal.width ?? MainWindowConstants.conversationMinimumWidth, height: proposal.height ?? 0)
-	}
-}
-
-final class MainWindowTranscriptHostView: NSView {
-	private weak var logView: LogView?
-	private weak var inputField: MainWindowTextViewContentView?
-	private var accessoryHeight: CGFloat = 0
-
-	func show(
-		_ nextLogView: LogView?,
-		inputField nextInputField: MainWindowTextViewContentView?,
-		accessoryHeight nextAccessoryHeight: CGFloat
-	) {
-		defer {
-			accessoryHeight = nextAccessoryHeight
-			updateBottomInset()
-		}
-		if inputField !== nextInputField {
-			inputField?.frameDidChange = nil
-			inputField = nextInputField
-			nextInputField?.frameDidChange = { [weak self] in
-				self?.updateBottomInset()
-			}
-		}
-		guard logView !== nextLogView else { return }
-		logView?.removeFromSuperview()
-		logView = nextLogView
-
-		guard let transcriptView = nextLogView else { return }
-		transcriptView.translatesAutoresizingMaskIntoConstraints = false
-		addSubview(transcriptView)
-		NSLayoutConstraint.activate([
-			transcriptView.leadingAnchor.constraint(equalTo: leadingAnchor),
-			transcriptView.trailingAnchor.constraint(equalTo: trailingAnchor),
-			transcriptView.topAnchor.constraint(equalTo: topAnchor),
-			transcriptView.bottomAnchor.constraint(equalTo: bottomAnchor),
-		])
-	}
-
-	override func layout() {
-		super.layout()
-		updateBottomInset()
-	}
-
-	/** The space beneath the transcript that the input bar covers: from this
-	 view's foot up to the field's top edge, then the capsule's padding above
-	 the field and the accessory strip. It runs on every layout pass and on
-	 every move of the field, and that is safe because it writes no SwiftUI
-	 state: the transcript ignores an unchanged inset, and a changed one
-	 dirties the transcript alone, not this view. A field that is not in this
-	 window yet -- it is re-hosted when the appearance changes -- keeps the
-	 inset it had rather than pulling the transcript under the bar and back. */
-	private func updateBottomInset() {
-		guard let logView, let inputField, let window, inputField.window === window else { return }
-		let fieldFrame = inputField.convert(inputField.bounds, to: self)
-		let fieldTop = isFlipped ? bounds.maxY - fieldFrame.minY : fieldFrame.maxY
-		logView.setBottomContentInset(
-			max(0, fieldTop) + MainWindowInputBarLayout.fieldVerticalPadding + accessoryHeight
-		)
+private extension View {
+	/// A footer control: a bare icon as the label, with the accessory bar's
+	/// hover and pressed treatment so it answers the pointer the way the rows
+	/// above it do. The label style is left alone so the menu's own items keep
+	/// their titles.
+	func sidebarFooterMenu() -> some View {
+		menuStyle(.button)
+			.buttonStyle(.accessoryBar)
 	}
 }

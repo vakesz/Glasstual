@@ -1,7 +1,13 @@
 #!/bin/bash
-# Seeded smoke launch: run the Debug app for 40 s against a copy of the real
-# preferences with every client's autoConnect turned off, probe the main thread
-# from outside the process every 10 s, quit it, and read the unified log back.
+# Seeded smoke launch: run the Debug app against a copy of the real preferences
+# with every client's autoConnect turned off, probe the main thread from outside
+# the process every 10 s for 40 s, quit it, and read the unified log back. With
+# launch, quit and the log read a run takes about a minute.
+#
+# The app's files never touch the real ones: GLASSTUAL_UI_REVIEW_DIRECTORY sends
+# the group container (scrollback database, caches, scripts, extensions) and
+# Application Support to a per-run "UI Reviews" subdirectory, which this script
+# removes again on exit.
 #
 # The probe is the point. `System Events` asks the app for its window names over
 # the accessibility API, which is answered on the main thread: if the main actor
@@ -23,7 +29,8 @@
 #
 # Requires: an accessibility grant for the terminal running it (System Settings
 # > Privacy & Security > Accessibility), and read access to the app's group
-# container (Full Disk Access) for the seed step.
+# container (Full Disk Access) for the seed step and for removing the per-run
+# review directory afterwards.
 
 set -uo pipefail
 
@@ -39,6 +46,14 @@ PROBES="${PROBES:-4}"
 PROBE_INTERVAL="${PROBE_INTERVAL:-10}"
 
 container_prefs="$HOME/Library/Containers/$BUNDLE_ID/Data/Library/Preferences"
+# When GLASSTUAL_UI_REVIEW_DIRECTORY is set, PathInfo in a Debug build moves the
+# group container and Application Support into "UI Reviews/<name>". Each run
+# picks a new name, so no run opens another run's database.
+review_directory="smoke-$(uuidgen | tr '[:upper:]' '[:lower:]')"
+review_paths=(
+	"$HOME/Library/Group Containers/$GROUP_ID/UI Reviews/$review_directory"
+	"$HOME/Library/Containers/$BUNDLE_ID/Data/Library/Application Support/Glasstual/UI Reviews/$review_directory"
+)
 seed_plist="$container_prefs/$SUITE.plist"
 source_plist="$HOME/Library/Group Containers/$GROUP_ID/Library/Preferences/$GROUP_ID.plist"
 plistbuddy=/usr/libexec/PlistBuddy
@@ -76,7 +91,7 @@ seed_preferences() {
 		"$plistbuddy" -c "Set :'$client_list_key':$index:autoConnect false" "$seed_plist" > /dev/null 2>&1 ||
 			"$plistbuddy" -c "Add :'$client_list_key':$index:autoConnect bool false" "$seed_plist" > /dev/null 2>&1 ||
 			setup_failure "cannot clear autoConnect on client $index"
-		[ "$("$plistbuddy" -c "Print :'$client_list_key':$index:autoConnect" "$seed_plist" 2>/dev/null)" = "false" ] ||
+		[ "$("$plistbuddy" -c "Print :'$client_list_key':$index:autoConnect" "$seed_plist" 2> /dev/null)" = "false" ] ||
 			setup_failure "autoConnect remains enabled on client $index"
 		disabled=$((disabled + 1))
 		index=$((index + 1))
@@ -98,12 +113,54 @@ fi
 crash_reports_before="$(mktemp)"
 crash_reports_after="$(mktemp)"
 log_output="$(mktemp)"
-trap 'rm -f "$crash_reports_before" "$crash_reports_after" "$log_output"' EXIT
+probe_output="$(mktemp)"
+
+# Runs after the app has quit (or been killed), so nothing is still writing.
+cleanup() {
+	rm -f "$crash_reports_before" "$crash_reports_after" "$log_output" "$probe_output"
+	local path
+	for path in "${review_paths[@]}"; do
+		[ -e "$path" ] || continue
+		if rm -rf "$path"; then
+			# Leave "UI Reviews" behind only when another review still uses it.
+			rmdir "$(dirname "$path")" 2> /dev/null
+		else
+			echo "smoke: could not remove $path. Delete it by hand." >&2
+		fi
+	done
+}
+trap cleanup EXIT
+
+# Run a command for at most $1 seconds without GNU timeout, which macOS lacks:
+# the command runs as a background job, polled, and killed when the limit
+# passes. Returns the command's status, or 124 (timeout's convention) when it
+# had to be killed. Send its output to a file rather than capturing it with
+# $(...): a command substitution waits for every process holding the pipe.
+run_bounded() {
+	local limit_tenths=$(($1 * 10)) waited=0 job
+	shift
+	"$@" &
+	job=$!
+	while kill -0 "$job" 2> /dev/null; do
+		if [ "$waited" -ge "$limit_tenths" ]; then
+			kill "$job" 2> /dev/null
+			wait "$job" 2> /dev/null
+			return 124
+		fi
+		/bin/sleep 0.1
+		waited=$((waited + 1))
+	done
+	wait "$job"
+}
 
 find "$HOME/Library/Logs/DiagnosticReports" -name 'Glasstual*' 2> /dev/null | sort > "$crash_reports_before"
 
 started_at="$(date '+%Y-%m-%d %H:%M:%S')"
-open -n "$APP" --env "GLASSTUAL_UI_REVIEW_SUITE=$SUITE" || fail "the app would not launch"
+open -n "$APP" \
+	--env "GLASSTUAL_UI_REVIEW_SUITE=$SUITE" \
+	--env "GLASSTUAL_UI_REVIEW_DIRECTORY=$review_directory" ||
+	fail "the app would not launch"
+echo "smoke: review directory $review_directory"
 
 /bin/sleep 5
 # Several builds may be running at once (sibling worktrees), so pick the
@@ -137,8 +194,9 @@ for probe in $(seq 1 "$PROBES"); do
 	fi
 
 	before="$(date +%s)"
-	windows="$(timeout 8 osascript -e "tell application \"System Events\" to tell $process_ref to get name of windows" 2>&1)"
+	run_bounded 8 osascript -e "tell application \"System Events\" to tell $process_ref to get name of windows" > "$probe_output" 2>&1
 	probe_status=$?
+	windows="$(< "$probe_output")"
 	elapsed=$(($(date +%s) - before))
 	cpu="$(ps -o %cpu= -p "$pid" 2> /dev/null | tr -d ' ')"
 
@@ -154,7 +212,7 @@ done
 
 if kill -0 "$pid" 2> /dev/null; then
 	quit_started="$(date +%s)"
-	timeout 15 osascript \
+	run_bounded 15 osascript \
 		-e "tell application \"System Events\" to tell $process_ref to set frontmost to true" \
 		-e "tell application \"System Events\" to tell $process_ref to keystroke \"q\" using command down" \
 		> /dev/null 2>&1
@@ -205,4 +263,7 @@ if [ "$status" -eq 0 ]; then
 	echo "smoke: clean"
 fi
 
+# The trap covers every early exit; the normal path cleans up in the open.
+trap - EXIT
+cleanup
 exit "$status"

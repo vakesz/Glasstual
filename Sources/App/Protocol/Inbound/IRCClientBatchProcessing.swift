@@ -85,12 +85,31 @@ public extension IRCClient {
 		else { return false }
 
 		let rootBatch = batch.rootBatch
-		if rootBatch.queueEntry(.message(message)) == false {
-			rootBatch.deliveryState = .failed
-			batchProcessingLogger.error("Dropped a message from a batch that exceeded its queue limit")
+
+		guard rootBatch.hasOverflowed == false else {
+			return false
 		}
 
-		return true
+		if rootBatch.queueMessage(message) {
+			return true
+		}
+
+		/* A full queue used to drop the message, so a netsplit wider than the
+		 queue lost the QUITs past it and left those people listed in every
+		 channel. What was queued is processed now, in order, and the rest of
+		 the batch as it arrives: the batch loses its replay treatment, but no
+		 line. Its labelled response, if any, can no longer be trusted. */
+		rootBatch.hasOverflowed = true
+		rootBatch.deliveryState = .failed
+		batchProcessingLogger.error("A batch exceeded its queue limit; processing the rest of it as it arrives")
+
+		let queued = rootBatch.queuedMessages
+		rootBatch.dequeueMessages()
+		for queuedMessage in queued {
+			processIncomingMessage(queuedMessage)
+		}
+
+		return false
 	}
 
 	func receiveBatch(_ message: Message) {
@@ -108,34 +127,14 @@ public extension IRCClient {
 		}
 	}
 
-	func recursivelyProcessBatchMessage(_ batchMessage: MessageBatch) {
-		recursivelyProcessBatchMessage(batchMessage, depth: 0)
-	}
-
-	func recursivelyProcessBatchMessage(_ batchMessage: MessageBatch, depth: Int) {
+	/// Processes the messages a closed batch held back, in the order they
+	/// arrived, and retires the batch.
+	func processQueuedMessages(of batchMessage: MessageBatch) {
 		guard !batchMessage.batchIsOpen else { return }
-		guard depth < IRCBatchPolicy.maximumParentDepth else {
-			batchProcessingLogger.error("Refused to process a batch nested deeper than the depth limit")
-			batchMessages.dequeueEntry(batchMessage)
-			return
-		}
-		for queuedEntry in batchMessage.queuedEntries {
-			switch queuedEntry {
-			case let .message(message):
-				processIncomingMessage(message)
-			case let .batch(nestedBatch):
-				recursivelyProcessBatchMessage(nestedBatch, depth: depth + 1)
-			}
+		for message in batchMessage.queuedMessages {
+			processIncomingMessage(message)
 		}
 		batchMessages.dequeueEntry(batchMessage)
-	}
-
-	func batchTypeIsChatHistory(_ batchType: String?) -> Bool {
-		IRCBatchPolicy.isChatHistory(batchType)
-	}
-
-	func batchTypeIsNetsplit(_ batchType: String?) -> Bool {
-		IRCBatchPolicy.isNetsplit(batchType)
 	}
 
 	func batchMessage(ofType batchType: String, containing message: Message) -> MessageBatch? {
@@ -267,7 +266,7 @@ private extension IRCClient {
 		} else if IRCBatchPolicy.isNetsplit(batch.batchType) {
 			replayNetsplitBatch(batch)
 		} else {
-			recursivelyProcessBatchMessage(batch)
+			processQueuedMessages(of: batch)
 		}
 	}
 

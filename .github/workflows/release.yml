@@ -50,11 +50,12 @@ jobs:
 
   release:
     needs: validate
-    # Runs on the same hosted macOS image as Quality: the Developer ID identity
-    # and the notary key are imported from repository secrets into a throwaway
-    # keychain below and removed again at the end, so nothing has to live on the
-    # runner. The `release` environment is where the protection goes: add a
-    # required reviewer there and only that approval can start this job.
+    # Runs on the same hosted macOS image as Quality. scripts/ci-signing.sh
+    # imports the Developer ID identity from repository secrets into a
+    # throwaway keychain and removes it again at the end, so nothing has to
+    # live on the runner. The `release` environment is where the protection
+    # goes: add a required reviewer there and only that approval can start
+    # this job.
     runs-on: xcode-27
     environment: release
     timeout-minutes: 90
@@ -100,78 +101,13 @@ jobs:
           [ "${XCODE_MAJOR}" -eq 27 ]
 
       - name: Generate Xcode project and metadata
-        run: |
-          set -euo pipefail
-          command -v xcodegen >/dev/null 2>&1 || brew install xcodegen
-          make generate
+        run: make generate
 
-      - name: Import Developer ID certificate
+      - name: Install Developer ID signing material
         env:
           CERT_P12: ${{ secrets.DEVELOPER_ID_APPLICATION_CERT_P12 }}
           CERT_PASSWORD: ${{ secrets.DEVELOPER_ID_APPLICATION_CERT_PASSWORD }}
-        run: |
-          set -euo pipefail
-          if [ -z "${CERT_P12}" ] || [ -z "${CERT_PASSWORD}" ]; then
-            echo "::error::Developer ID certificate secrets are not set."
-            exit 1
-          fi
-
-          KEYCHAIN_PATH="${RUNNER_TEMP}/glasstual-signing.keychain-db"
-          KEYCHAIN_PASSWORD="$(uuidgen)"
-          echo "KEYCHAIN_PATH=${KEYCHAIN_PATH}" >> "${GITHUB_ENV}"
-
-          security create-keychain -p "${KEYCHAIN_PASSWORD}" "${KEYCHAIN_PATH}"
-          security set-keychain-settings -lut 21600 "${KEYCHAIN_PATH}"
-          security unlock-keychain -p "${KEYCHAIN_PASSWORD}" "${KEYCHAIN_PATH}"
-
-          echo -n "${CERT_P12}" | base64 --decode > "${RUNNER_TEMP}/certificate.p12"
-          security import "${RUNNER_TEMP}/certificate.p12" \
-            -k "${KEYCHAIN_PATH}" \
-            -P "${CERT_PASSWORD}" \
-            -T /usr/bin/codesign -T /usr/bin/security
-          rm -f "${RUNNER_TEMP}/certificate.p12"
-
-          security set-key-partition-list -S apple-tool:,apple:,codesign: \
-            -s -k "${KEYCHAIN_PASSWORD}" "${KEYCHAIN_PATH}" > /dev/null
-          security list-keychain -d user -s "${KEYCHAIN_PATH}" login.keychain-db
-          security find-identity -v -p codesigning "${KEYCHAIN_PATH}" \
-            | grep -q 'Developer ID Application'
-
-      - name: Install Developer ID provisioning profiles
-        run: |
-          set -euo pipefail
-          PROFILE_SOURCE_DIR="${RUNNER_TEMP}/glasstual-profiles"
-          # Xcode 16 and later read profiles from UserData; older tooling from MobileDevice.
-          PROFILE_DIR="${HOME}/Library/Developer/Xcode/UserData/Provisioning Profiles"
-          LEGACY_PROFILE_DIR="${HOME}/Library/MobileDevice/Provisioning Profiles"
-          mkdir -p "${PROFILE_SOURCE_DIR}" "${PROFILE_DIR}" "${LEGACY_PROFILE_DIR}"
-          echo "PROFILE_DIR=${PROFILE_DIR}" >> "${GITHUB_ENV}"
-          echo "LEGACY_PROFILE_DIR=${LEGACY_PROFILE_DIR}" >> "${GITHUB_ENV}"
-
-          tar -xzf .github/signing/DeveloperIDProfiles.tar.gz \
-            -C "${PROFILE_SOURCE_DIR}"
-
-          install_profile() {
-            local filename="$1"
-            local uuid="$2"
-            local source="${PROFILE_SOURCE_DIR}/${filename}"
-            local destination="${PROFILE_DIR}/${uuid}.mobileprovision"
-            local actual_uuid
-
-            actual_uuid="$(security cms -D -i "${source}" \
-              | plutil -extract UUID raw -o - -)"
-            if [ "${actual_uuid}" != "${uuid}" ]; then
-              echo "::error::Unexpected UUID in ${filename}."
-              exit 1
-            fi
-            cp "${source}" "${destination}"
-            cp "${source}" "${LEGACY_PROFILE_DIR}/${uuid}.mobileprovision"
-          }
-
-          install_profile Glasstual_Developer_ID.provisionprofile \
-            1e065476-c63a-4093-b027-e12cdbc03a56
-          install_profile Glasstual_IRC_Connection_Host_Developer_ID.provisionprofile \
-            efad779e-5dc8-46fb-8466-d4c5a78b5591
+        run: bash scripts/ci-signing.sh install
 
       - name: Build signed archive
         run: |
@@ -207,12 +143,16 @@ jobs:
       - name: Notarize and staple
         env:
           NOTARY_KEY_P8: ${{ secrets.NOTARY_KEY_P8 }}
+          NOTARY_KEY_ID: ${{ secrets.NOTARY_KEY_ID }}
+          NOTARY_ISSUER_ID: ${{ secrets.NOTARY_ISSUER_ID }}
         run: |
           set -euo pipefail
-          if [ -z "${NOTARY_KEY_P8}" ]; then
-            echo "::error::NOTARY_KEY_P8 is not set."
-            exit 1
-          fi
+          for name in NOTARY_KEY_P8 NOTARY_KEY_ID NOTARY_ISSUER_ID; do
+            if [ -z "${!name}" ]; then
+              echo "::error::${name} is not set."
+              exit 1
+            fi
+          done
 
           APP="${ARCHIVE_PATH}/Products/Applications/Glasstual.app"
           KEY_DIR="${RUNNER_TEMP}/private_keys"
@@ -225,8 +165,8 @@ jobs:
           ditto -c -k --keepParent "${APP}" "${SUBMIT_ZIP}"
           SUBMISSION_JSON="$(xcrun notarytool submit "${SUBMIT_ZIP}" \
             --key "${KEY_PATH}" \
-            --key-id "${{ secrets.NOTARY_KEY_ID }}" \
-            --issuer "${{ secrets.NOTARY_ISSUER_ID }}" \
+            --key-id "${NOTARY_KEY_ID}" \
+            --issuer "${NOTARY_ISSUER_ID}" \
             --wait --timeout 45m --output-format json)"
           echo "${SUBMISSION_JSON}"
           SUBMISSION_ID="$(plutil -extract id raw -o - - <<< "${SUBMISSION_JSON}")"
@@ -235,14 +175,14 @@ jobs:
             echo "::error::Notarization ${SUBMISSION_STATUS} (submission ${SUBMISSION_ID}). Notary log follows."
             xcrun notarytool log "${SUBMISSION_ID}" \
               --key "${KEY_PATH}" \
-              --key-id "${{ secrets.NOTARY_KEY_ID }}" \
-              --issuer "${{ secrets.NOTARY_ISSUER_ID }}"
+              --key-id "${NOTARY_KEY_ID}" \
+              --issuer "${NOTARY_ISSUER_ID}"
             exit 1
           fi
           xcrun notarytool log "${SUBMISSION_ID}" \
             --key "${KEY_PATH}" \
-            --key-id "${{ secrets.NOTARY_KEY_ID }}" \
-            --issuer "${{ secrets.NOTARY_ISSUER_ID }}"
+            --key-id "${NOTARY_KEY_ID}" \
+            --issuer "${NOTARY_ISSUER_ID}"
           xcrun stapler staple "${APP}"
           xcrun stapler validate "${APP}"
           spctl --assess --type execute --verbose=4 "${APP}"
@@ -275,6 +215,9 @@ jobs:
           MAINTENANCE: ${{ inputs.maintenance }}
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
           RELEASE_REF: ${{ github.ref }}
+          PACKAGE_PATH: ${{ steps.package.outputs.path }}
+          PACKAGE_NAME: ${{ steps.package.outputs.name }}
+          PACKAGE_CHECKSUM: ${{ steps.package.outputs.checksum }}
         run: |
           set -euo pipefail
           # Recheck after signing/notarization in case a tag or newer release appeared.
@@ -282,8 +225,8 @@ jobs:
           LATEST=true
           if [ "${MAINTENANCE}" = true ]; then LATEST=false; fi
           gh release create "v${VERSION}" \
-            "${{ steps.package.outputs.path }}#${{ steps.package.outputs.name }}" \
-            "${{ steps.package.outputs.checksum }}#${{ steps.package.outputs.name }}.sha256" \
+            "${PACKAGE_PATH}#${PACKAGE_NAME}" \
+            "${PACKAGE_CHECKSUM}#${PACKAGE_NAME}.sha256" \
             --repo "${GITHUB_REPOSITORY}" \
             --target "${GITHUB_SHA}" \
             --title "Glasstual ${VERSION}" \
@@ -295,16 +238,5 @@ jobs:
       - name: Clean up signing material
         if: ${{ always() }}
         run: |
-          security delete-keychain "${KEYCHAIN_PATH:-}" 2>/dev/null || true
-          rm -rf \
-            "${RUNNER_TEMP}/certificate.p12" \
-            "${RUNNER_TEMP}/private_keys" \
-            "${RUNNER_TEMP}/glasstual-profiles" \
-            2>/dev/null || true
-          for dir in "${PROFILE_DIR:-}" "${LEGACY_PROFILE_DIR:-}"; do
-            [ -n "${dir}" ] || continue
-            rm -f \
-              "${dir}/1e065476-c63a-4093-b027-e12cdbc03a56.mobileprovision" \
-              "${dir}/efad779e-5dc8-46fb-8466-d4c5a78b5591.mobileprovision" \
-              2>/dev/null || true
-          done
+          bash scripts/ci-signing.sh remove
+          rm -rf "${RUNNER_TEMP}/private_keys"

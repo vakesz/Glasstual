@@ -92,4 +92,23 @@ struct TextFormatterMenuTargetTests {
 
 		#expect(menu.validateMenuItem(boldItem()) == false)
 	}
+
+	/// Each colour item's title is only a number. VoiceOver had nothing else to
+	/// read, so a reader who could not see the swatch could not pick a colour.
+	@Test("Every palette colour names itself to VoiceOver")
+	func paletteColoursCarryTheirNames() throws {
+		let menu = TextViewIRCFormattingMenu()
+
+		for palette in try [#require(menu.foregroundColorMenu), #require(menu.backgroundColorMenu)] {
+			let colourItems = palette.items.filter {
+				$0.isSeparatorItem == false && NSColor.formatterColors.indices.contains($0.tag)
+			}
+			#expect(colourItems.count == NSColor.formatterColors.count)
+			for item in colourItems {
+				let name = try #require(item.accessibilityValue() as? String)
+				#expect(name.isEmpty == false)
+				#expect(item.image?.accessibilityDescription == name)
+			}
+		}
+	}
 }

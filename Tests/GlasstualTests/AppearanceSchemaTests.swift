@@ -30,8 +30,6 @@ struct AppearanceSchemaTests {
 		)
 
 		#expect(schema.defaultWindowSize.size == NSSize(width: 800, height: 474))
-		#expect(schema.channelViewOverlayDefaultBackgroundColor?.color(forActiveWindow: true) != nil)
-		#expect(schema.channelViewOverlayDefaultBackgroundColor?.color(forActiveWindow: false) != nil)
 	}
 
 	@Test("The input text view appearance plist decodes")

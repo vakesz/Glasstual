@@ -305,14 +305,14 @@
       }
     },
     "regular-expression-limits-explanation" : {
-      "comment" : "Explanation of the limits placed on filter match patterns. The argument is the number of characters a pattern is matched against.",
+      "comment" : "Explanation of the limits placed on filter match patterns. The argument is the number of bytes of a message a pattern is matched against.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Patterns are matched against at most the first %@ characters of a message, and a pattern that repeats a group which already repeats without bound is pointed out as slow." } } }
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Patterns are matched against at most the first %@ bytes of a message. A pattern that can take a very long time to match cannot be saved, and one that runs too long while matching is skipped until the filters change." } } }
     },
     "regular-expression-nested-quantifier" : {
-      "comment" : "Warning shown beside a filter match field whose pattern repeats a group that already repeats without bound. The filter is saved either way.",
+      "comment" : "Validation message shown beside a filter match field whose pattern repeats a group that already repeats without bound, or repeats alternatives that match the same text. The filter cannot be saved until the pattern is rewritten.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "This pattern repeats a group that already repeats without bound, such as (a+)+. A pattern of that shape can take a very long time to match. It is saved as it is; rewriting it without the nested repetition will make it faster." } } }
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "This pattern repeats a group that can match the same text in more than one way, such as (a+)+ or (.|\\s)*. A pattern of that shape can take a very long time to match, so it cannot be saved. Rewrite it without the nested repetition or the overlapping alternatives." } } }
     },
     "token-channel-name" : {
       "comment" : "Title of the action token representing a channel name. Migrated from legacy key 90e-tj.",

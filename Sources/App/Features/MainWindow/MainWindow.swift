@@ -125,7 +125,6 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 	public internal(set) var selectedItem: TreeItem?
 	var previousSelectedItemId: String?
 	private var keyEventHandler: KeyEventHandler!
-	var cachedSwipeOriginPoint: NSPoint?
 	/** The transcript zoom the View menu last left.
 
 	 Stored beside the column widths rather than held for the session only: the
@@ -142,7 +141,6 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 	private let notifications = NotificationSubscriptions()
 
 	public var ignoreServerListSelectionChanges = false
-	public var ignoreNextServerListSelectionChange = false
 
 	override public init(
 		contentRect: NSRect,
@@ -358,7 +356,8 @@ extension MainWindow {
 		memberList.assign(to: nil)
 		delegate = nil
 		selectedItem = nil
-		close()
+		/* The window stays open. AppKit records a window closed at quit as
+		 closed, and the next launch then has nothing to restore. */
 	}
 
 	public static func restoreWindow(
@@ -372,11 +371,12 @@ extension MainWindow {
 	/* The selected item is not encoded into the window's restorable state.
 	 `MainWindowStateStore` already persists it -- written at termination, read
 	 by `restoreSelectionDuringSetup()` once the world exists, and migrating the
-	 legacy array form on the way. The coder pair was a second, weaker copy of
-	 that: AppKit restores window state before the application finishes waking,
-	 so `world` was usually nil and `restoreState(with:)` returned having done
-	 nothing. `isRestorable` and the restoration class stay: the window frame is
-	 still AppKit's to restore. */
+	 legacy array form on the way. AppKit restores the window itself, meaning
+	 its frame, whether it was in full screen, and the Space it was on. That
+	 happens between `applicationWillFinishLaunching` and
+	 `applicationDidFinishLaunching`, so the application builds this window in
+	 the first of the two. Built any later, the window did not exist when the
+	 restoration class was asked for it, and nothing was restored. */
 }
 
 // MARK: - Window delegate
@@ -550,23 +550,25 @@ extension MainWindow {
 		inputTextField.keyDown(with: event)
 	}
 
-	private func registerKeyHandlers() {
-		/* Escape is the text field's first: it dismisses a spelling suggestion,
-		 cancels a reply and closes the completion popup. Only when nothing
-		 editable holds the keyboard does it leave full screen -- which is
-		 otherwise the green button's and Control+Command+F's job anyway. */
-		keyEventHandler.registerConditional(key: .escape) { [weak self] event in
-			guard let self else { return false }
-			if inputBarHoldsKeyboardFocus {
-				inputTextField.keyDown(with: event)
-				return true
-			}
-			guard ceIsInFullscreenMode else { return false }
-			toggleFullScreen(nil)
-			return true
+	func registerKeyHandlers() {
+		/* In the message field, Escape dismisses a spelling suggestion, cancels
+		 a reply and closes the completion popup. Anywhere else the window
+		 leaves Escape to whatever holds the keyboard. It used to leave full
+		 screen instead, so the toolbar's search field and the find bar never
+		 got the Escape that clears or closes them. The green button and
+		 Control-Command-F leave full screen. */
+		registerForInputBar(key: .escape) { $0.inputTextField.keyDown(with: $1) }
+		/* Declined, not swallowed, when the preference says Tab does nothing:
+		 the field then hands Tab to keyboard navigation instead of holding the
+		 keyboard in place. */
+		keyEventHandler.registerConditional(key: .tab) { [weak self] event in
+			guard let self, inputBarHoldsKeyboardFocus else { return false }
+			return tab(event)
 		}
-		registerForInputBar(key: .tab) { $0.tab($1) }
-		registerForInputBar(key: .tab, modifiers: .shift) { $0.shiftTab($1) }
+		keyEventHandler.registerConditional(key: .tab, modifiers: .shift) { [weak self] event in
+			guard let self, inputBarHoldsKeyboardFocus else { return false }
+			return shiftTab(event)
+		}
 		register(key: .tab, modifiers: .option) { $0.selectPreviousSelection($1) }
 		/* The two colour commands pop a menu up at the caret, which no menu item
 		 can do, so they stay registrations. Bold, italics and underline are

@@ -53,13 +53,25 @@ struct ServerHighlightListRow: Identifiable, Equatable {
 		time = entry.timeLogged
 	}
 
-	/// How long ago the highlight arrived.
-	var timeLabel: String {
-		time.formatted(.relative(presentation: .numeric))
+	/// How long ago the highlight arrived, as of `now`. The table redraws
+	/// this every minute.
+	func timeLabel(relativeTo now: Date) -> String {
+		Self.relativeTimeFormatter.localizedString(for: time, relativeTo: now)
 	}
 
+	private static let relativeTimeFormatter: RelativeDateTimeFormatter = {
+		let formatter = RelativeDateTimeFormatter()
+		formatter.dateTimeStyle = .numeric
+		return formatter
+	}()
+
+	/** The row as the pasteboard gets it.
+
+	 The time is written out in full. "5 minutes ago" is already wrong by the
+	 time it is pasted anywhere, and the table used to put exactly that on the
+	 pasteboard. */
 	var copyText: String {
-		"\(timeLabel)\t\(channelName)\t\(plainMessage)"
+		"\(time.formatted(date: .abbreviated, time: .shortened))\t\(channelName)\t\(plainMessage)"
 	}
 }
 

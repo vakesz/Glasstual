@@ -235,16 +235,6 @@ extension MainWindow: ClientOutput {
 	}
 }
 
-// MARK: - Log controller lookup
-
-extension MainWindow {
-	/// The view controller drawing `item`, if the window has made one.
-	func viewController(for item: TreeItem?) -> LogController? {
-		guard let item else { return nil }
-		return logControllers.existingController(for: item)
-	}
-}
-
 extension TreeItem {
 	/** The view this item is drawn into, if a window has made one.
 
@@ -267,7 +257,9 @@ extension LogController: TreeItemPresentation {
 	}
 
 	func lastRenderedLineDate() -> Date? {
-		backingView?.displayedLines.map(\.receivedAt).max()
+		backingView?.displayedLines.filter {
+			IRCChatHistoryPolicy.marksReadPosition(lineType: $0.lineType, messageIdentifier: $0.messageIdentifier)
+		}.map(\.receivedAt).max()
 	}
 
 	/** Both conversation seams answer from the union of what the view is showing

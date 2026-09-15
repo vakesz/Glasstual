@@ -138,10 +138,7 @@ struct ServerPropertiesSheetTests {
 		defer { Self.deleteSecrets(items) }
 
 		let model = ServerPropertiesModel(config: config)
-		model.loadSecrets()
-		for _ in 0 ..< 200 where model.nicknamePassword.isEmpty {
-			try await Task.sleep(for: .milliseconds(10))
-		}
+		await model.loadSecrets()
 
 		#expect(model.nicknamePassword == "stored-nickname")
 		#expect(model.proxyPassword == "stored-proxy")
@@ -163,6 +160,36 @@ struct ServerPropertiesSheetTests {
 		#expect(edited.pendingNicknamePassword == .cleared)
 		#expect(edited.pendingProxyPassword == .unchanged)
 		#expect(edited.serverList.first?.pendingServerPassword == .set("replacement"))
+	}
+
+	/// The channel list used to call the keychain once per row every time the
+	/// pane was drawn; it answers from the sheet's one read instead, and an
+	/// unsaved edit made in the channel sheet wins over what is stored.
+	@Test("The channel list marks keys from the sheet's one read and from edits", .timeLimit(.minutes(1)))
+	func channelListShowsKeysFromTheLoadedSecrets() async {
+		var config = Self.configuration(withSecrets: false)
+		let stored = ChannelConfig(channelName: "#stored")
+		let bare = ChannelConfig(channelName: "#bare")
+		config.channelList = [stored, bare]
+		#expect(stored.keychainItem.write("stored-key"))
+		defer { stored.keychainItem.delete() }
+
+		let model = ServerPropertiesModel(config: config)
+
+		#expect(model.channelHasSecretKey(stored) == false)
+
+		await model.loadSecrets()
+
+		#expect(model.channelHasSecretKey(stored))
+		#expect(model.channelHasSecretKey(bare) == false)
+
+		var cleared = stored
+		cleared.pendingSecretKey = .cleared
+		var typed = bare
+		typed.pendingSecretKey = .set("typed")
+
+		#expect(model.channelHasSecretKey(cleared) == false)
+		#expect(model.channelHasSecretKey(typed))
 	}
 
 	/// Writes a distinct secret for each of the configuration's three keychain
@@ -315,5 +342,9 @@ struct ServerPropertiesSheetTests {
 		#expect(ServerPropertiesValidation.isLeavingComment(String(repeating: "a", count: 390)))
 		#expect(ServerPropertiesValidation.isLeavingComment(String(repeating: "a", count: 391)) == false)
 		#expect(ServerPropertiesValidation.isLeavingComment("first\nsecond") == false)
+		/* 130 three-byte characters are 390 bytes, and one more is over the
+		 limit however few characters it looks like. */
+		#expect(ServerPropertiesValidation.isLeavingComment(String(repeating: "€", count: 130)))
+		#expect(ServerPropertiesValidation.isLeavingComment(String(repeating: "€", count: 131)) == false)
 	}
 }

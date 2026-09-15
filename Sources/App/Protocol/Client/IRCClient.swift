@@ -93,7 +93,12 @@ open class IRCClient: TreeItem {
 		processIncomingMessageOnMainActor(message)
 	}
 
-	public var config: ClientConfig
+	public var config: ClientConfig {
+		// A changed configuration may carry a changed password.
+		didSet { sessionCredentials.forget() }
+	}
+
+	var sessionCredentials = SessionCredentials()
 
 	public lazy var supportInfo = IRCISupportInfo(client: self)
 	/** The ISUPPORT prefix and case-mapping values as they stand now,
@@ -334,6 +339,9 @@ open class IRCClient: TreeItem {
 	/// identifier, in the order they arrived.
 	var collapsedNetsplitNicknames: [String: [String]]?
 	var pendingDeliveries: [String: LabeledDelivery] = [:]
+	/// Waits for the earliest deadline in `pendingDeliveries`; `nil` while
+	/// nothing is pending.
+	var labeledDeliveryDeadlineTask: Task<Void, Never>?
 	var labelCounter: UInt = 0
 	var zncBouncerIsSendingCertificateInfo = false
 	var zncBouncerIsPlayingBackHistory = false
@@ -356,6 +364,8 @@ open class IRCClient: TreeItem {
 	/// How many CTCP queries this connection has answered lately. Main-actor
 	/// state on the client that answers them, so it goes when the client does.
 	var ctcpReplyThrottle = CTCPReplyThrottle()
+	/// How many unsolicited DCC offers this connection has taken lately.
+	var dccOfferThrottle = DCCOfferThrottle()
 
 	/** Preferences and services this client reads instead of reaching for the
 	 application's singletons. The world it belongs to keeps the preference half
@@ -392,6 +402,7 @@ open class IRCClient: TreeItem {
 		startup.cancel()
 		trackedUserPopulationTask?.cancel()
 		rejoinTasks.values.forEach { $0.cancel() }
+		labeledDeliveryDeadlineTask?.cancel()
 	}
 
 	override public var uniqueIdentifier: String {

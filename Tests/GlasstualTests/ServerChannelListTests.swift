@@ -39,9 +39,118 @@ import Foundation
 @testable import Glasstual
 import Testing
 
+/// Records what the protocol layer reported about a listing.
 @MainActor
-@Suite("Server channel list")
+private final class RecordingChannelListPresentation: ClientChannelListPresenting {
+	private(set) var events: [String] = []
+
+	func openChannelList(for _: IRCClient) {
+		events.append("open")
+	}
+
+	func closeChannelList(for _: IRCClient) {
+		events.append("close")
+	}
+
+	func channelListDidStart(for _: IRCClient) {
+		events.append("start")
+	}
+
+	func channelListDidReceive(channelNamed name: String, memberCount: UInt, topic: String?, for _: IRCClient) {
+		events.append("\(name) \(memberCount) \(topic ?? "")")
+	}
+
+	func channelListDidFinish(for _: IRCClient) {
+		events.append("finish")
+	}
+}
+
+@MainActor
+@Suite("Server channel list", .timeLimit(.minutes(1)))
 struct ServerChannelListTests {
+	private func receive(_ line: String, on client: TestClient) throws {
+		try client.receiveNumericReply(#require(Message(line: line, on: client)))
+	}
+
+	/// Waits for the list to stop spinning, however it gets there.
+	private func refreshEnded(in model: ServerChannelListModel) async {
+		for await refreshing in Observations({ model.isRefreshing }) where refreshing == false {
+			return
+		}
+	}
+
+	@Test("The listing replies, and a refused LIST, reach the presentation the client was given")
+	func listingRepliesReachThePresentation() throws {
+		let client = TestClient()
+		let presentation = RecordingChannelListPresentation()
+		client.environment.services.channelList = presentation
+
+		try receive(":irc.example.net 321 me Channel :Users Name", on: client)
+		try receive(":irc.example.net 322 me #swift 12 :All about Swift", on: client)
+		try receive(":irc.example.net 323 me :End of /LIST", on: client)
+		try receive(":irc.example.net 421 me LIST :Unknown command", on: client)
+
+		#expect(presentation.events == ["start", "#swift 12 All about Swift", "finish", "finish"])
+	}
+
+	/** A reply for a window that is already closed used to make a new session,
+	 and making a session sent `LIST` again: closing the list in the middle of a
+	 listing asked the server for the whole thing a second time. */
+	@Test("A listing reply for a list nobody has open neither opens one nor asks the server again")
+	func replyWithoutAnOpenListIsDropped() {
+		let scenes = ApplicationScenes()
+		let client = TestClient()
+		client.markAsLoggedIn()
+
+		scenes.channelListDidStart(for: client)
+		scenes.channelListDidReceive(channelNamed: "#swift", memberCount: 12, topic: nil, for: client)
+		scenes.channelListDidFinish(for: client)
+
+		#expect(scenes.serverChannelList(for: client.uniqueIdentifier) == nil)
+		#expect(client.sentLines.count == 0)
+	}
+
+	@Test("A refresh a client cannot send does not leave the list waiting")
+	func refreshWhileLoggedOutEndsAtOnce() {
+		let client = TestClient()
+		let session = ServerChannelListSession(client: client)
+
+		session.beginRefresh()
+
+		#expect(session.model.isRefreshing == false)
+		#expect(client.sentLines.count == 0)
+	}
+
+	@Test("A listing the server never finishes stops waiting once replies stop")
+	func unfinishedListingTimesOut() async {
+		let client = TestClient()
+		client.markAsLoggedIn()
+		let session = ServerChannelListSession(client: client, replyTimeout: .milliseconds(50))
+
+		session.beginRefresh()
+		#expect(session.model.isRefreshing)
+		#expect(client.sentLines.count == 1)
+		session.addChannel("#swift", count: 12, topic: nil)
+
+		await refreshEnded(in: session.model)
+		#expect(session.model.rows.map(\.channelName) == ["#swift"])
+		session.close()
+	}
+
+	@Test("A listing ends when the connection it was asked on logs out")
+	func disconnectEndsTheListing() async {
+		let client = TestClient()
+		client.markAsLoggedIn()
+		let session = ServerChannelListSession(client: client, replyTimeout: .seconds(3600))
+
+		session.beginRefresh()
+		#expect(session.model.isRefreshing)
+		client.isLoggedIn = false
+
+		await refreshEnded(in: session.model)
+		session.close()
+	}
+
 	private var entries: [ServerChannelListEntry] {
 		[
 			entry(name: "#swift", count: 120, topic: "All about Swift"),

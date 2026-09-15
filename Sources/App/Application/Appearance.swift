@@ -45,11 +45,6 @@ public struct AppearancePropertyCollection: Equatable, Sendable {
 		return isDarkAppearance ? Self.appKitDarkAppearance() : Self.appKitLightAppearance()
 	}
 
-	/// Compatibility with `MainWindow.swift:324`; see ``AppKitAppearanceTarget``.
-	public var appKitAppearanceTarget: AppKitAppearanceTarget {
-		overridesAppKitAppearance ? .window : .none
-	}
-
 	@MainActor public static func systemWideDarkModeEnabled() -> Bool {
 		NSApp.effectiveAppearance.bestMatch(from: [NSAppearance.Name.darkAqua]) != nil
 	}
@@ -155,6 +150,8 @@ public final class Appearance: NSObject {
 
 		switch preferredAppearance {
 		case .inherited:
+			/* Cleared before the system's appearance is read, because an
+			 appearance of the application's own would answer instead. */
 			applyAppKitAppearance(nil)
 
 			if AppearancePropertyCollection.systemWideDarkModeEnabled() {
@@ -194,12 +191,12 @@ public final class Appearance: NSObject {
 		)
 		hasResolvedAppearance = true
 
-		if preferredAppearance == .inherited {
-			applyAppKitAppearance(nil)
-		} else if isAppearanceDark {
-			applyAppKitAppearance(AppearancePropertyCollection.appKitDarkAppearance())
-		} else {
-			applyAppKitAppearance(AppearancePropertyCollection.appKitLightAppearance())
+		if preferredAppearance != .inherited {
+			applyAppKitAppearance(
+				isAppearanceDark
+					? AppearancePropertyCollection.appKitDarkAppearance()
+					: AppearancePropertyCollection.appKitLightAppearance()
+			)
 		}
 
 		if systemChanged {

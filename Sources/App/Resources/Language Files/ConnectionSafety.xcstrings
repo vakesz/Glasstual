@@ -1,6 +1,18 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "credentials-withheld-over-plaintext" : {
+      "comment" : "Console notice, printed at most once per connection, when the client refuses to send the account password (SASL PLAIN or a NickServ IDENTIFY) because a connection that was meant to be encrypted is not.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The account password was not sent: this connection was expected to be encrypted but is not."
+          }
+        }
+      }
+    },
     "direct-chat-offer-refused-address" : {
       "comment" : "Console notice when a DCC CHAT offer names an address the client refuses to dial (loopback, a private network, a documentation range). %1$@ is the sender's nickname, %2$@ the address the offer named.",
       "extractionState" : "manual",

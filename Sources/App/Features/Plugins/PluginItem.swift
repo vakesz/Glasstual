@@ -38,22 +38,22 @@ public nonisolated struct PluginSupportedFeature: OptionSet, Sendable { // nonis
 /// either returns a fully populated item or `nil`. Nothing observes a
 /// half-configured plugin.
 @MainActor
-public final class PluginItem {
+final class PluginItem {
 	private static let logger = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 		category: "PluginItem"
 	)
 
-	public let bundle: Bundle
-	public var preferencePaneIdentifier: String {
+	let bundle: Bundle
+	var preferencePaneIdentifier: String {
 		bundle.bundleIdentifier ?? bundle.bundleURL.standardizedFileURL.absoluteString
 	}
 
-	public let primaryClass: AnyObject
-	public let supportedFeatures: PluginSupportedFeature
-	public let supportedUserInputCommands: [String]
-	public let supportedServerInputCommands: [String]
-	@MainActor public let pluginPreferencesPane: PluginPreferencesPane?
+	let primaryClass: AnyObject
+	let supportedFeatures: PluginSupportedFeature
+	let supportedUserInputCommands: [String]
+	let supportedServerInputCommands: [String]
+	@MainActor let pluginPreferencesPane: PluginPreferencesPane?
 
 	private init(
 		bundle: Bundle,
@@ -74,7 +74,7 @@ public final class PluginItem {
 	/// Instantiates `bundle`'s principal class and runs its load callback.
 	/// Returns `nil`, having logged why, when the bundle is not a plugin.
 	@MainActor
-	public static func load(_ bundle: Bundle, host: PluginHostContext) -> PluginItem? {
+	static func load(_ bundle: Bundle, host: PluginHostContext) -> PluginItem? {
 		guard let principalClassType = bundle.principalClass as? NSObject.Type else {
 			logger.error(
 				"Refusing to load the bundle at “\(bundle.bundlePath, privacy: .public)“ because its principal class is missing or is not an Objective-C class"
@@ -123,11 +123,11 @@ public final class PluginItem {
 	}
 
 	@MainActor
-	public func unloadBundle() {
+	func unloadBundle() {
 		(primaryClass as? any GlasstualPlugin)?.pluginWillUnload()
 	}
 
-	public func supportsFeature(_ feature: PluginSupportedFeature) -> Bool {
+	func supportsFeature(_ feature: PluginSupportedFeature) -> Bool {
 		supportedFeatures.contains(feature)
 	}
 

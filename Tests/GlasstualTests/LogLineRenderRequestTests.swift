@@ -59,7 +59,7 @@ struct LogLineRenderRequestTests {
 	func renderCarriesContextIntoResult() {
 		let line = makeLogLine()
 		let context = LogLineRenderContext(inlineMediaEnabled: true)
-		let result = LogController.renderJob(LogLineRenderRequest(logLine: line, context: context))
+		let result = LogController.renderJob(LogLineRenderRequest(line: LogLineSnapshot(line, in: context), context: context))
 
 		#expect(result.lineNumber == line.uniqueIdentifier)
 		#expect(result.transcriptLine.body.plainText == "hello")
@@ -71,8 +71,9 @@ struct LogLineRenderRequestTests {
 	func keywordMatchIsAHighlight() {
 		var line = makeLogLine(body: "hello alice")
 		line.highlightKeywords = ["alice"]
+		let context = LogLineRenderContext()
 		let result = LogController.renderJob(
-			LogLineRenderRequest(logLine: line, context: LogLineRenderContext())
+			LogLineRenderRequest(line: LogLineSnapshot(line, in: context), context: context)
 		)
 
 		#expect(result.isHighlight)
@@ -82,7 +83,7 @@ struct LogLineRenderRequestTests {
 	@Test("Inline images only apply to message rows")
 	func inlineMediaOnlyAppliesToMessages() {
 		let context = LogLineRenderContext(inlineMediaEnabled: true)
-		let request = LogLineRenderRequest(logLine: makeLogLine(lineType: .topic), context: context)
+		let request = LogLineRenderRequest(line: makeSnapshot(lineType: .topic, in: context), context: context)
 
 		#expect(LogController.renderJob(request).processesInlineMedia == false)
 	}
@@ -121,11 +122,12 @@ struct LogLineRenderRequestTests {
 	func currentSessionMarkerCanWaitForLiveTraffic() {
 		let historical = makePreviousSessionLine()
 		let current = makeLogLine(body: "current")
+		let context = LogLineRenderContext()
 		let historicalResult = LogController.renderJob(
-			LogLineRenderRequest(logLine: historical, context: LogLineRenderContext())
+			LogLineRenderRequest(line: LogLineSnapshot(historical, in: context), context: context)
 		)
 		let currentResult = LogController.renderJob(
-			LogLineRenderRequest(logLine: current, context: LogLineRenderContext())
+			LogLineRenderRequest(line: LogLineSnapshot(current, in: context), context: context)
 		)
 		var boundary = TranscriptSessionBoundaryState()
 

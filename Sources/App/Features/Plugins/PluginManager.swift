@@ -15,35 +15,7 @@ import AppKit
 import CocoaExtensions
 import GlasstualPluginKit
 import os
-import Security
 import Synchronization
-
-/// The result of scanning the extension folders, expressed as file URLs so the
-/// scan can run off the main actor and hand its findings back.
-private nonisolated struct PluginDiscovery: Sendable { // nonisolated: value
-	var loadable: [URL] = []
-	var obsolete: [URL] = []
-	var rejected: [URL] = []
-	var scriptCatalog = PluginScriptCatalog()
-	var scriptGeneration: UInt64 = 0
-}
-
-/** What an add-on command typed into the input field is dispatched to.
-
- The client asks this before falling back to sending the command to the server
- as a raw line. Both an AppleScript and a loaded plugin can declare the same
- name, which is nothing the client can choose between, so that is a case of its
- own rather than a silent preference for one of them. */
-public nonisolated enum OutgoingCommandHandler: Equatable, Sendable { // nonisolated: value
-	/// Nothing claims the command.
-	case none
-	/// A script at this path. Kept as a path for existing command consumers.
-	case script(path: String)
-	/// A loaded plugin that declares the command.
-	case pluginExtension
-	/// Both a script and a plugin claim it.
-	case ambiguous
-}
 
 /// Everything about the loaded plugins that a caller outside the main actor
 /// needs: a plugin's own object stays on the main actor, but which features
@@ -97,7 +69,8 @@ private nonisolated struct PluginRendererFacts: Sendable { // nonisolated: value
 	var renderers: [@Sendable (PluginRenderEvent) -> String?] = []
 }
 
-/// Discovers, validates and loads Glasstual's plugin bundles.
+/// Loads the plugin bundles `PluginDiscovery` finds and
+/// `PluginBundleValidation` accepts.
 ///
 /// Only first-party bundles load: one shipped inside the application, or one
 /// installed by the user that is signed by the same Team ID. There is no
@@ -132,7 +105,7 @@ public final nonisolated class PluginManager: Sendable { // nonisolated: guarded
 	/// The loaded plugins themselves. Main actor: a `PluginItem` owns a plugin's
 	/// live object and its preferences view.
 	@MainActor
-	public var loadedPlugins: [PluginItem]? {
+	var loadedPlugins: [PluginItem]? {
 		pluginsLoaded ? loadedPluginItems : nil
 	}
 
@@ -151,6 +124,11 @@ public final nonisolated class PluginManager: Sendable { // nonisolated: guarded
 	@MainActor
 	private var lifecycle = Lifecycle.idle
 
+	/// The discovery `loadPlugins()` started, cancelled by `unloadPlugins()` so
+	/// a scan still running at termination stops rather than landing late.
+	@MainActor
+	private var loadingTask: Task<Void, Never>?
+
 	private enum Lifecycle {
 		case idle
 		case loading
@@ -168,17 +146,19 @@ public final nonisolated class PluginManager: Sendable { // nonisolated: guarded
 		lifecycle = .loading
 
 		let generation = reserveScriptGeneration()
-		Task { [weak self] in
-			/* Discovery reads directories and checks code signatures, which is
-			 slow enough to keep off the main actor. Loading itself is main-actor
-			 work: a plugin's load callback touches AppKit. */
-			var discovery = Self.discoverPluginBundles()
-			discovery.scriptCatalog = await Self.discoverAppleScripts()
+		loadingTask = Task { [weak self] in
+			/* Discovery reads directories and checks code signatures, and the
+			 script scan reads directories too: both run off the main actor, side
+			 by side. Loading itself is main-actor work — a plugin's load callback
+			 touches AppKit — and this task is main-actor, so it resumes here. */
+			async let bundles = PluginDiscovery.scan()
+			async let scripts = Self.discoverAppleScripts()
+			var discovery = await bundles
+			discovery.scriptCatalog = await scripts
 			discovery.scriptGeneration = generation
 
-			await MainActor.run {
-				self?.finishLoading(discovery)
-			}
+			guard Task.isCancelled == false else { return }
+			self?.finishLoading(discovery)
 		}
 	}
 
@@ -224,6 +204,8 @@ public final nonisolated class PluginManager: Sendable { // nonisolated: guarded
 		}
 
 		lifecycle = .unloaded
+		loadingTask?.cancel()
+		loadingTask = nil
 
 		let plugins = loadedPluginItems
 		loadedPluginItems = []
@@ -295,248 +277,6 @@ public final nonisolated class PluginManager: Sendable { // nonisolated: guarded
 		}
 		presentRejectedBundlesAlert(for: discovery.rejected)
 		Self.presentObsoleteBundlesAlert(for: discovery.obsolete.compactMap(Bundle.init(url:)))
-	}
-
-	// MARK: - Discovery
-
-	private static func discoverPluginBundles() -> PluginDiscovery {
-		var discovery = PluginDiscovery()
-		var seenBundleIdentifiers = Set<String>()
-
-		for bundle in candidateBundles() {
-			guard let bundleIdentifier = bundle.bundleIdentifier else {
-				logger.error(
-					"Refusing to load the bundle at “\(bundle.bundlePath, privacy: .public)“ because it declares no bundle identifier"
-				)
-				continue
-			}
-
-			guard seenBundleIdentifiers.insert(bundleIdentifier).inserted else {
-				logger.info(
-					"Skipping the bundle at “\(bundle.bundlePath, privacy: .public)“ because a bundle with the identifier “\(bundleIdentifier, privacy: .public)“ was already found at an earlier location"
-				)
-				continue
-			}
-
-			guard supportsCurrentPluginProtocol(bundle) else {
-				discovery.obsolete.append(bundle.bundleURL)
-				continue
-			}
-
-			guard isBundledExtension(bundle) || isSignedByThisApplication(bundle) else {
-				discovery.rejected.append(bundle.bundleURL)
-				continue
-			}
-
-			discovery.loadable.append(bundle.bundleURL)
-		}
-
-		return discovery
-	}
-
-	private static func candidateBundles() -> [Bundle] {
-		var searchPaths = [PathInfo.bundledExtensions]
-		if let customExtensions = PathInfo.customExtensions {
-			searchPaths.append(customExtensions)
-		}
-
-		return searchPaths.flatMap { path -> [Bundle] in
-			guard let filenames = try? FileManager.default.contentsOfDirectory(atPath: path) else {
-				return []
-			}
-
-			return filenames.sorted().compactMap { filename in
-				guard filename.hasSuffix(ResourceDocumentType.bundleFileExtension) else {
-					return nil
-				}
-
-				let bundleURL = URL(fileURLWithPath: path, isDirectory: true)
-					.appendingPathComponent(filename, isDirectory: true)
-
-				return Bundle(url: bundleURL)
-			}
-		}
-	}
-
-	static let interfaceVersionMetadataKey = "GlasstualPluginInterfaceVersion"
-	static let currentInterfaceVersion = 1
-
-	/// A bundle predating the interface-version key declares a host version
-	/// instead. The major it has to name is the one the contract itself names.
-	static let legacyMinimumMajorVersion = String(
-		PluginCompatibility.minimumHostVersion.prefix { $0 != "." }
-	)
-
-	static func supportsCurrentPluginProtocol(_ bundle: Bundle) -> Bool {
-		if let declaredVersion = bundle.object(forInfoDictionaryKey: interfaceVersionMetadataKey) {
-			guard case let .integer(version)? = PropertyListValue(propertyList: declaredVersion),
-			      version == currentInterfaceVersion
-			else {
-				logger.error("Unsupported plugin interface in \(bundle.bundlePath, privacy: .public)")
-				return false
-			}
-			return true
-		}
-
-		guard let minimumVersion = bundle.infoDictionary?["MinimumGlasstualVersion"] as? String else {
-			logger.error(
-				"Refusing to load the bundle at “\(bundle.bundlePath, privacy: .public)“ because it does not declare MinimumGlasstualVersion; the current minimum is \(PluginCompatibility.minimumHostVersion, privacy: .public)"
-			)
-			return false
-		}
-
-		/* Any 8.x.y is accepted, not just the exact minimum: a bundle built
-		 against an earlier point release of the same host contract still loads,
-		 and the interface-version key above is what pins the contract itself. */
-		let components = minimumVersion.split(separator: ".", omittingEmptySubsequences: false)
-		guard components.count == 3,
-		      components.allSatisfy({ !$0.isEmpty && $0.allSatisfy(\.isNumber) }),
-		      components.first.map(String.init) == legacyMinimumMajorVersion
-		else {
-			logger.error(
-				"Refusing legacy plugin metadata in \(bundle.bundlePath, privacy: .public): \(minimumVersion, privacy: .public)"
-			)
-			return false
-		}
-
-		return true
-	}
-
-	// MARK: - Signature Validation
-
-	private static func isBundledExtension(_ bundle: Bundle) -> Bool {
-		let applicationPath = (Bundle.main.bundlePath as NSString).standardizingPath
-		let bundlePath = (bundle.bundlePath as NSString).standardizingPath
-
-		return bundlePath.hasPrefix(applicationPath + "/")
-	}
-
-	private static let applicationTeamIdentifier: String? = {
-		var code: SecCode?
-		guard SecCodeCopySelf(SecCSFlags(rawValue: 0), &code) == errSecSuccess, let code else {
-			return nil
-		}
-		var staticCode: SecStaticCode?
-		guard SecCodeCopyStaticCode(code, SecCSFlags(rawValue: 0), &staticCode) == errSecSuccess,
-		      let staticCode
-		else {
-			return nil
-		}
-
-		return teamIdentifier(of: staticCode)
-	}()
-
-	private static func teamIdentifier(of staticCode: SecStaticCode) -> String? {
-		var signingInformation: CFDictionary?
-		let status = SecCodeCopySigningInformation(
-			staticCode,
-			SecCSFlags(rawValue: kSecCSSigningInformation),
-			&signingInformation
-		)
-
-		guard status == errSecSuccess, let signingInformation else {
-			return nil
-		}
-
-		let information = signingInformation as NSDictionary
-		let team = information[kSecCodeInfoTeamIdentifier as String] as? String
-
-		guard let team, team.isEmpty == false else {
-			return nil
-		}
-
-		return team
-	}
-
-	private static func error(withStatus status: OSStatus) -> NSError {
-		let message = SecCopyErrorMessageString(status, nil) as String? ?? "Unknown error"
-
-		return NSError(
-			domain: NSOSStatusErrorDomain,
-			code: Int(status),
-			userInfo: [NSLocalizedDescriptionKey: message]
-		)
-	}
-
-	/// Whether `bundle` carries a valid signature from the same Team ID that
-	/// signed the running application. Every refusal is logged with its reason.
-	static func isSignedByThisApplication(_ bundle: Bundle) -> Bool {
-		do {
-			try validateSignature(of: bundle)
-			return true
-		} catch {
-			logger.error(
-				"Refusing to load the bundle at “\(bundle.bundlePath, privacy: .public)“ because its signature is missing or is not ours: \(error.localizedDescription, privacy: .public)"
-			)
-			return false
-		}
-	}
-
-	private static func validateSignature(of bundle: Bundle) throws {
-		var staticCode: SecStaticCode?
-		var status = SecStaticCodeCreateWithPath(
-			bundle.bundleURL as CFURL,
-			SecCSFlags(rawValue: 0),
-			&staticCode
-		)
-
-		guard status == errSecSuccess, let staticCode else {
-			throw error(withStatus: status)
-		}
-
-		let validationFlags = SecCSFlags(rawValue: kSecCSCheckAllArchitectures | kSecCSStrictValidate)
-		try checkValidity(of: staticCode, flags: validationFlags, requirement: nil)
-
-		guard let team = teamIdentifier(of: staticCode) else {
-			throw error(withStatus: errSecCSSignatureUntrusted)
-		}
-
-		guard let applicationTeam = applicationTeamIdentifier, team == applicationTeam else {
-			throw error(withStatus: errSecCSSignatureUntrusted)
-		}
-
-		let requirementString =
-			"anchor apple generic and certificate leaf[subject.OU] = \"\(applicationTeam)\""
-
-		var requirement: SecRequirement?
-		status = SecRequirementCreateWithString(
-			requirementString as CFString,
-			SecCSFlags(rawValue: 0),
-			&requirement
-		)
-
-		guard status == errSecSuccess, let requirement else {
-			throw error(withStatus: status)
-		}
-
-		try checkValidity(of: staticCode, flags: validationFlags, requirement: requirement)
-	}
-
-	private static func checkValidity(
-		of staticCode: SecStaticCode,
-		flags: SecCSFlags,
-		requirement: SecRequirement?
-	) throws {
-		var validityError: Unmanaged<CFError>?
-		let status = SecStaticCodeCheckValidityWithErrors(
-			staticCode,
-			flags,
-			requirement,
-			&validityError
-		)
-
-		guard status != errSecSuccess else {
-			/* The out-parameter is populated on failure only, but release it
-			 defensively so a success path can never leak it. */
-			validityError?.release()
-			return
-		}
-
-		guard let validityError else {
-			throw error(withStatus: status)
-		}
-
-		throw validityError.takeRetainedValue() as Error
 	}
 
 	// MARK: - AppleScript Support
@@ -672,7 +412,7 @@ public final nonisolated class PluginManager: Sendable { // nonisolated: guarded
 	}
 
 	@MainActor
-	public var pluginsWithPreferencePanes: [PluginItem] {
+	var pluginsWithPreferencePanes: [PluginItem] {
 		loadedPluginItems
 			.filter { $0.supportsFeature(.preferencePane) }
 			.sorted {

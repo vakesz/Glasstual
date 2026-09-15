@@ -80,40 +80,85 @@ public enum RegularExpression {
 	/// generating them, not reusing them.
 	private static let expressionCacheLimit = 512
 
-	/** The longest input the bounded entry points hand to ICU.
+	/** The longest input the entry points hand to ICU.
 
-	 ICU matches by backtracking and has no budget of its own, so the cost of a
-	 badly shaped pattern grows with the subject as well as with the pattern.
-	 The subjects here are remote: a chat filter is matched against whatever a
-	 peer sends. An IRC line is 512 bytes, and even a
-	 tagged or multiline one stays far below this, so the cap only ever bites on
-	 something that is not a chat message. */
+	 ICU matches by backtracking, so the cost of a badly shaped pattern grows
+	 with the subject as well as with the pattern. The subjects here are remote:
+	 a chat filter is matched against whatever a peer sends. An IRC line is 512
+	 bytes, and even a tagged or multiline one stays far below this, so the cap
+	 only ever bites on something that is not a chat message. */
 	public static let inputLengthLimit = 4096
 
+	/** How long one evaluation may run before it is abandoned.
+
+	 The input cap bounds the subject, but not what a pattern does with it:
+	 `(.|\s)*x` takes seconds over two dozen spaces. The budget is what bounds
+	 that, on whatever actor the caller matches on. */
+	public static let matchBudget = Duration.milliseconds(50)
+
+	/// How one budgeted evaluation ended.
+	public enum MatchOutcome: Sendable {
+		case matched
+		case unmatched
+		/// ICU was stopped when the budget ran out, so the pattern neither matched
+		/// nor failed to; callers treat it as no match.
+		case exceededBudget
+		/// The pattern does not compile.
+		case invalidPattern
+	}
+
 	/// Whether `haystack` matches `needle`, with the subject cut to `inputLimit`
-	/// characters first; `nil` leaves the subject alone. Callers matching a
-	/// user-authored pattern against remote text pass a limit.
+	/// characters first and the evaluation abandoned after `budget`. A pattern
+	/// that runs out of budget does not match.
 	public static func string(
 		_ haystack: String,
 		isMatchedByRegex needle: String,
 		withoutCase caseless: Bool = false,
-		inputLimit: Int? = nil
+		inputLimit: Int = inputLengthLimit,
+		budget: Duration = matchBudget
 	) -> Bool {
-		let subject = boundedInput(haystack, limit: inputLimit)
+		firstMatch(of: needle, in: haystack, withoutCase: caseless, inputLimit: inputLimit, budget: budget) == .matched
+	}
 
-		return makeExpression(needle, caseless: caseless)?
-			.firstMatch(in: subject, range: subject.fullRange) != nil
+	/** How matching `needle` against `haystack` ends, within `budget`.
+
+	 ICU reports progress to the block periodically while a single match
+	 attempt backtracks, which is the only point at which a runaway evaluation
+	 can be stopped from outside. */
+	public static func firstMatch(
+		of needle: String,
+		in haystack: String,
+		withoutCase caseless: Bool = false,
+		inputLimit: Int = inputLengthLimit,
+		budget: Duration = matchBudget
+	) -> MatchOutcome {
+		guard let expression = makeExpression(needle, caseless: caseless) else { return .invalidPattern }
+		let subject = boundedInput(haystack, limit: inputLimit)
+		var outcome = MatchOutcome.unmatched
+		let deadline = ContinuousClock.now.advanced(by: budget)
+
+		expression.enumerateMatches(in: subject, options: .reportProgress, range: subject.fullRange) { result, _, stop in
+			if result != nil {
+				outcome = .matched
+				stop.pointee = true
+			} else if ContinuousClock.now >= deadline {
+				outcome = .exceededBudget
+				stop.pointee = true
+			}
+		}
+
+		return outcome
 	}
 
 	/// Every match of `needle` in `haystack`, or every capture group of every
-	/// match when `substringGroups` is set, with the same optional bound on the
-	/// subject as ``string(_:isMatchedByRegex:withoutCase:inputLimit:)``.
+	/// match when `substringGroups` is set, with the same bound on the subject as
+	/// ``string(_:isMatchedByRegex:withoutCase:inputLimit:budget:)``.
 	public static func matches(
 		in haystack: String,
 		withRegex needle: String,
 		withoutCase caseless: Bool,
 		substringGroups: Bool,
-		inputLimit: Int? = nil
+		inputLimit: Int = inputLengthLimit
 	) -> [String] {
 		let subject = boundedInput(haystack, limit: inputLimit)
 		guard let expression = makeExpression(needle, caseless: caseless) else { return [] }
@@ -132,8 +177,7 @@ public enum RegularExpression {
 	/// is bounded in what it is allowed to do on remote input. Cutting by
 	/// characters rather than by code units keeps a subject from ending in half
 	/// of a grapheme.
-	private static func boundedInput(_ haystack: String, limit: Int?) -> String {
-		guard let limit else { return haystack }
+	private static func boundedInput(_ haystack: String, limit: Int) -> String {
 		guard limit > 0 else { return "" }
 		guard haystack.count > limit else { return haystack }
 
@@ -199,20 +243,23 @@ public extension RegularExpression {
 
 	/** Whether `pattern` wraps an unbounded repetition around a body that can
 	 already match the same text in more than one way — `(a+)+`, `(\d+)*`,
-	 `((x*))+`, `(?:[a-z]+\s?)+`.
+	 `((x*))+`, `(?:[a-z]+\s?)+`, and the alternations `(.|\s)*`, `(\w|\d)+`
+	 and `(a|aa)*`.
 
 	 That is the shape that turns a few dozen characters of input into
-	 exponential backtracking, and ICU offers no match budget to stop it: every
-	 part of the body is optional or unboundedly repeated, so the engine has an
-	 exponential number of ways to divide a subject between the inner repetition
-	 and the outer one, and it tries all of them before reporting no match.
+	 exponential backtracking: either every part of the body is optional or
+	 unboundedly repeated, or two of its branches can match the same text, so
+	 the engine has an exponential number of ways to divide a subject between
+	 the repetitions and it tries all of them before reporting no match.
 
-	 It is a heuristic, and deliberately a narrow one, because what it reports is
-	 shown to a person who is typing a pattern. A repeated group with anything
+	 It is a heuristic, and deliberately a narrow one, because what it reports
+	 refuses a pattern a person is typing. A repeated group with anything
 	 mandatory in its body has one division to try and is left alone — `(#\w+ )+`
 	 and `(\w+, )+` are patterns people write — and so is any repetition with a
 	 ceiling, `(a{1,2}){1,2}` and `(\d{1,3}\.){1,4}` included, whose cost is
-	 bounded by its own limits. The input-length cap is what bounds the rest. */
+	 bounded by its own limits. Branches are compared only where one of them is
+	 a single character: `(cat|car)+` divides a subject one way. The match
+	 budget is what bounds the rest. */
 	static func hasNestedQuantifier(_ pattern: String) -> Bool {
 		let characters = Array(pattern)
 		/* One scan per open group, the last being the group being read. Index 0
@@ -230,16 +277,20 @@ public extension RegularExpression {
 				group.endBranch()
 				let repetition = repetition(at: index + 1, in: characters)
 
-				if repetition.isUnbounded, group.hasAmbiguousBranch {
+				if repetition.isUnbounded, group.hasAmbiguousBranch || group.hasOverlappingBranches {
 					return true
 				}
 
 				/* The group is one element of whatever encloses it. A group that
 				 is ambiguous on its own counts as unbounded there even without a
-				 quantifier of its own, which is what `((x*))+` turns on. */
+				 quantifier of its own, which is what `((x*))+` turns on, and a
+				 group whose branches overlap stays overlapping when it is all an
+				 enclosing group holds, which is what `((.|\s))*` turns on. */
 				scans[scans.count - 1].add(
 					isUnbounded: repetition.isUnbounded || group.hasAmbiguousBranch,
-					isOptional: repetition.isOptional
+					isOptional: repetition.isOptional,
+					overlaps: repetition.isOptional == false && repetition.isUnbounded == false
+						&& group.hasOverlappingBranches
 				)
 				index = repetition.end
 			case "|":
@@ -248,9 +299,12 @@ public extension RegularExpression {
 			default:
 				let atomEnd = atomEnd(at: index, in: characters)
 				let repetition = repetition(at: atomEnd, in: characters)
+				let isPlain = repetition.isUnbounded == false && repetition.isOptional == false
+					&& repetition.end == atomEnd
 				scans[scans.count - 1].add(
 					isUnbounded: repetition.isUnbounded,
-					isOptional: repetition.isOptional
+					isOptional: repetition.isOptional,
+					atom: isPlain ? String(characters[index ..< atomEnd]) : nil
 				)
 				index = repetition.end
 			}
@@ -259,16 +313,25 @@ public extension RegularExpression {
 		return false
 	}
 
-	/** One branch of one group, as the scan reads it.
+	/** One branch of one group, as the scan reads it, and what the group's
+	 earlier branches left behind.
 
 	 A branch is ambiguous when every element in it can vary in length and at
 	 least one of them is unbounded: that is when wrapping an unbounded
-	 repetition around it has more than one way to divide a subject. */
+	 repetition around it has more than one way to divide a subject. Two
+	 branches overlap when one is a single character and the other is nothing
+	 but characters that one can also match. */
 	private struct BranchScan {
 		private var elementCount = 0
 		private var variableCount = 0
 		private var unboundedCount = 0
 		private var sawAmbiguousBranch = false
+		/// The branch's elements while every one is a single, unrepeated atom.
+		private var atoms: [String]? = []
+		/// A branch that is nothing but a group whose own branches overlap.
+		private var wrapsOverlap = false
+		private var closedBranches: [[String]] = []
+		private(set) var hasOverlappingBranches = false
 
 		/// Whether this branch, or an earlier branch of the same group, is
 		/// ambiguous.
@@ -280,7 +343,7 @@ public extension RegularExpression {
 			elementCount > 0 && variableCount == elementCount && unboundedCount > 0
 		}
 
-		mutating func add(isUnbounded: Bool, isOptional: Bool) {
+		mutating func add(isUnbounded: Bool, isOptional: Bool, atom: String? = nil, overlaps: Bool = false) {
 			elementCount += 1
 
 			if isUnbounded {
@@ -290,14 +353,70 @@ public extension RegularExpression {
 			if isUnbounded || isOptional {
 				variableCount += 1
 			}
+
+			if let atom {
+				atoms?.append(atom)
+			} else {
+				atoms = nil
+			}
+
+			wrapsOverlap = elementCount == 1 && overlaps
 		}
 
 		/// Closes the branch an alternation ends, or the group ends.
 		mutating func endBranch() {
 			sawAmbiguousBranch = hasAmbiguousBranch
+
+			if wrapsOverlap {
+				hasOverlappingBranches = true
+			} else if let atoms, atoms.isEmpty == false {
+				if closedBranches.contains(where: { RegularExpression.branchesOverlap($0, atoms) }) {
+					hasOverlappingBranches = true
+				}
+				closedBranches.append(atoms)
+			}
+
 			elementCount = 0
 			variableCount = 0
 			unboundedCount = 0
+			atoms = []
+			wrapsOverlap = false
+		}
+	}
+
+	/** Whether two branches of plain atoms can match the same text in two ways.
+
+	 One of them has to be a single character, and every atom of the other has
+	 to share a character with it: `.` and `\s` share a space, `a` and `aa`
+	 share `a` twice over. Filters match without case, so the atoms are
+	 compared that way. */
+	private static func branchesOverlap(_ first: [String], _ second: [String]) -> Bool {
+		func covers(_ single: [String], _ other: [String]) -> Bool {
+			guard single.count == 1, let atom = single.first else { return false }
+			return other.allSatisfy { atomsShareACharacter(atom, $0) }
+		}
+
+		return covers(first, second) || covers(second, first)
+	}
+
+	/// A sample of what an atom can match: every ASCII character and a few
+	/// beyond it that the shorthand classes treat differently.
+	private static let probeCharacters: [String] = (0 ..< 128).compactMap {
+		Unicode.Scalar($0).map { String(Character($0)) }
+	} + ["\u{00A0}", "\u{00E9}", "\u{00DF}", "\u{2028}", "\u{1F600}"]
+
+	/// Whether two atoms both match at least one of the probe characters. An atom
+	/// that does not compile on its own, a backreference say, shares nothing.
+	private static func atomsShareACharacter(_ first: String, _ second: String) -> Bool {
+		guard let firstExpression = try? NSRegularExpression(pattern: "^(?:\(first))$", options: .caseInsensitive),
+		      let secondExpression = try? NSRegularExpression(pattern: "^(?:\(second))$", options: .caseInsensitive)
+		else {
+			return false
+		}
+
+		return probeCharacters.contains { probe in
+			firstExpression.firstMatch(in: probe, range: probe.fullRange) != nil
+				&& secondExpression.firstMatch(in: probe, range: probe.fullRange) != nil
 		}
 	}
 

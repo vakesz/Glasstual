@@ -10,28 +10,34 @@
  *
  *********************************************************************** */
 
-/// Owned by a transcript controller. Away, account and conversation edits do not
-/// rebuild the nickname/mark values its renderer consumes.
+/** The channel's members as the renderer reads them, rebuilt only when the
+ names, marks, membership or casemapping change.
+
+ Owned by a transcript controller. Away, account and conversation edits do not
+ rebuild it; nor does printing, however many lines use it. */
 @MainActor
 final class MemberListRenderCache {
 	private weak var memberList: ChannelMemberList?
 	private var revision: UInt64?
-	private var snapshot: [RenderedMember] = []
+	private var directory: RenderedMemberDirectory = []
+	/// How many times the directory was built, which is what says a burst of
+	/// prints or a conversation-weight edit reused it.
 	private(set) var rebuildCount = 0
 
-	func members(in channel: Channel?) -> [RenderedMember] {
+	func members(in channel: Channel?) -> RenderedMemberDirectory {
 		guard let list = channel?.memberInfo else {
 			memberList = nil
 			revision = nil
-			snapshot = []
+			directory = []
 			return []
 		}
-		if memberList !== list || revision != list.renderRevision {
+		let caseMapping = channel?.associatedClient?.supportInfo.caseMapping ?? .rfc1459
+		if memberList !== list || revision != list.renderRevision || directory.caseMapping != caseMapping {
 			memberList = list
 			revision = list.renderRevision
-			snapshot = list.memberList.map(RenderedMember.init)
+			directory = RenderedMemberDirectory(list.memberList.map(RenderedMember.init), caseMapping: caseMapping)
 			rebuildCount += 1
 		}
-		return snapshot
+		return directory
 	}
 }

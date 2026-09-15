@@ -167,9 +167,11 @@ final class LogViewTextView: NSTextView {
 
 	 The plain-text flavour `NSTextView` writes is the storage's characters, and
 	 the transcript's characters include attachments -- a delivery receipt, an
-	 inline image -- which copy as U+FFFC, plus the thin spaces that pad a
-	 reaction chip. Each attachment is replaced by the words the renderer
-	 attached for an assistive reader, which is what it says out loud. */
+	 inline image -- which copy as U+FFFC, plus the characters it draws for its
+	 own layout. Each attachment is replaced by the words the renderer attached
+	 for an assistive reader, which is what it says out loud, and the layout's
+	 own characters are left out. Only those: a thin space somebody typed is
+	 part of what they wrote. */
 	override func writeSelection(to pasteboard: NSPasteboard, type: NSPasteboard.PasteboardType) -> Bool {
 		guard type == .string else {
 			return super.writeSelection(to: pasteboard, type: type)
@@ -182,6 +184,7 @@ final class LogViewTextView: NSTextView {
 		guard let storage = textStorage else { return "" }
 		let text = NSMutableString()
 		storage.enumerateAttributes(in: range, options: []) { attributes, runRange, _ in
+			guard attributes[.transcriptPadding] == nil else { return }
 			guard attributes[.attachment] != nil else {
 				text.append(storage.attributedSubstring(from: runRange).string)
 				return
@@ -189,9 +192,7 @@ final class LogViewTextView: NSTextView {
 			let spoken = (attributes[.accessibilityCustomText] as? [String])?.joined(separator: " ") ?? ""
 			text.append(spoken)
 		}
-		return (text as String)
-			.replacingOccurrences(of: "\u{2009}", with: "")
-			.replacingOccurrences(of: "\u{200B}", with: "")
+		return text as String
 	}
 }
 
@@ -245,29 +246,49 @@ public final class LogView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 	/// edited because the menu asks on every validation pass, and the answer
 	/// used to be a walk of the whole scrollback.
 	var highlightedLineCount = 0
-	/** Every identifier the document answers to, so an edit or a duplicate
-	 check can reject a line the transcript already shows without walking it.
+	/** Where each identifier the document answers to sits, so an edit, a jump
+	 or a duplicate check reaches its line without walking the buffer.
 
 	 A row restored from storage answers to two: the history row it came back
 	 from and the line number it was printed with. Both are held, which is what
 	 keeps a message the reader has already seen from being drawn again beside
-	 its restored self. */
-	var lineNumbers: Set<String> = []
+	 its restored self.
+
+	 The values are ordinals rather than indices. Lines only ever arrive at
+	 either end and leave from the top, so an ordinal is fixed for as long as
+	 its line is held; `firstLineOrdinal` is the ordinal of `lines[0]`, and an
+	 index is the difference. Nothing is renumbered when older lines are put in
+	 front or the oldest are trimmed. */
+	var lineOrdinals: [String: Int] = [:]
+	/// The ordinals of the lines that carry each message identifier, oldest
+	/// first, for the reactions addressed to a message.
+	var messageLineOrdinals: [String: [Int]] = [:]
+	var firstLineOrdinal = 0
 	var inlineImages: [String: [CachedTranscriptImage]] = [:]
 	var editDepth = 0
 	var batchSelection: SelectionAnchor?
 	var batchViewport: (endpoint: SelectionAnchor.Endpoint, offset: CGFloat)?
 	var bufferLimit = LogViewBufferPolicy.defaultHardLimit
-	/** Older lines the reader pulled in by scrolling back. They raise the
-	 buffer's ceiling rather than pushing the newest lines out of it, so loading
-	 scrollback can never make the end of the conversation disappear. */
+	/** Older lines pulled in while the reader follows the end, which raise the
+	 buffer's ceiling so the trim after the prepend does not take them straight
+	 back out. Scrollback the reader loads by scrolling back needs none: nothing
+	 is trimmed from the top while they read. */
 	var scrollbackAllowance = 0
 	var textScale: CGFloat = 1
 	/** Whether the reader is following the end of the transcript. Scrolling,
 	 find and jump commands set it; appends, document growth and a return
-	 to the window all scroll to the end while it holds. */
+	 to the window all scroll to the end while it holds.
+
+	 Returning to the end is also what lets the scrollback go: the older lines
+	 are off screen from then on, and the next trim brings the buffer back to
+	 the limit the reader chose. */
 	var followsBottom = true {
-		didSet { updateJumpToLatestVisibility() }
+		didSet {
+			if followsBottom, oldValue == false {
+				scrollbackAllowance = 0
+			}
+			updateJumpToLatestVisibility()
+		}
 	}
 
 	var scrollsToBottomOnLayout = false
@@ -342,7 +363,7 @@ public final class LogView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 	/// Whether the document already draws the line `identifier` names, under
 	/// either of the identifiers a restored row answers to.
 	func containsLine(identifier: String) -> Bool {
-		lineNumbers.contains(identifier)
+		lineOrdinals[identifier] != nil
 	}
 
 	var displayedBounds: TranscriptDisplayedBounds {

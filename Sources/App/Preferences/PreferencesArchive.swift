@@ -5,6 +5,7 @@
 
 import CocoaExtensions
 import Foundation
+import os
 
 nonisolated enum PreferencesTransferError: LocalizedError { // nonisolated: value
 	case invalidDocument
@@ -13,6 +14,7 @@ nonisolated enum PreferencesTransferError: LocalizedError { // nonisolated: valu
 	case invalidValue(String)
 	case legacyRestore
 	case stalePreview
+	case connectionsDidNotClose
 	case busy
 
 	var errorDescription: String? {
@@ -23,6 +25,7 @@ nonisolated enum PreferencesTransferError: LocalizedError { // nonisolated: valu
 		case .invalidValue: String(localized: .PreferencesTransfer.invalidValue)
 		case .legacyRestore: String(localized: .PreferencesTransfer.legacyNotice)
 		case .stalePreview: String(localized: .PreferencesTransfer.configurationChangedAfterPreview)
+		case .connectionsDidNotClose: String(localized: .PreferencesTransfer.serversDidNotDisconnect)
 		case .busy: String(localized: .PreferencesTransfer.configurationTransferInProgress)
 		}
 	}
@@ -44,7 +47,10 @@ nonisolated struct PreferencesArchive: Equatable, Sendable { // nonisolated: val
 	var unset: Set<String>
 	var clients: [ClientConfig]?
 	var ignoredKeys: [String] = []
-	var source = Source.localRecovery
+	/// Only this Mac's own snapshot, or a file read out of the protected
+	/// recovery store, may claim local-recovery privileges; everything else is
+	/// a file someone handed over.
+	var source = Source.portable
 	/// An omitted list preserves the target's commands; an included empty list clears them.
 	var omittedConnectCommands: Set<String> = []
 
@@ -123,15 +129,13 @@ nonisolated struct PreferencesArchive: Equatable, Sendable { // nonisolated: val
 			      let absent = root["unset"]?.stringArray, Set(absent).count == absent.count,
 			      Set(absent).isDisjoint(with: preferences.keys), root["clients"]?.array != nil
 			else { throw PreferencesTransferError.invalidDocument }
+			/* A declared key the file names in neither list was declared after the
+			 file was written. The file says nothing about it: Merge leaves the
+			 local value alone and Restore returns it to its registered default,
+			 so every key added later keeps older exports and backups readable. */
 			values = preferences
 			unset = Set(absent)
 			clientValue = root["clients"]
-			let declared = Set(Preferences.allKeys.filter {
-				!Preferences.isExcludedFromExport($0.name) && $0.name != Preferences.Connection.clientList.name
-			}.map(\.name))
-			guard declared.isSubset(of: Set(values.keys).union(unset)) else {
-				throw PreferencesTransferError.invalidDocument
-			}
 		} else {
 			guard source == .portable else { throw PreferencesTransferError.invalidDocument }
 			values = root
@@ -207,6 +211,18 @@ nonisolated struct PreferencesArchive: Equatable, Sendable { // nonisolated: val
 	}
 }
 
+private let repairLogger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "Glasstual", category: "Preferences")
+
+/// What the launch repair changed, and where the values it replaced were kept.
+struct PreferencesStoredValueRepair: Equatable {
+	/// Keys that kept the elements their declaration still accepts.
+	var repaired: Set<String> = []
+	/// Keys whose stored value was removed, leaving the registered default.
+	var removed: Set<String> = []
+	/// The private file holding every replaced value as it was stored.
+	var backup: URL?
+}
+
 /// The standard store is an explicit dependency, including in tests. No suite override
 /// changes process-global UserDefaults.standard or the user's registration domain.
 struct PreferencesTransferStores {
@@ -274,45 +290,77 @@ struct PreferencesTransferStores {
 		}
 	}
 
-	/** Removes every persisted value a declaration would refuse, and reports
-	 which keys lost one.
+	/** Repairs or removes every persisted value a declaration would refuse.
 
 	 Bounds arrive after values do: a count or port stored before its range was
 	 declared, or by an older build, reads back exactly as it was stored.
 	 Everything downstream holds values to the declarations — the Settings
 	 fields, an export, the recovery backup taken before an import, the import
 	 plan itself — so one stale value would make all of them fail on this
-	 Mac's own state. Removing it leaves the registered default in its place,
-	 which is what the field would have refused it back to. Runs once at
-	 launch, before anything reads. */
+	 Mac's own state.
+
+	 A collection keeps every element the declaration still accepts; only a
+	 value with nothing left to keep is removed, which leaves the registered
+	 default in its place. Before anything is written, the values as they were
+	 stored are saved to a private file in `backupDirectory`, and if that save
+	 fails nothing is changed. Runs once at launch, before anything reads. */
 	@discardableResult
-	func removeValuesDeclarationsRefuse() -> [String] {
+	func repairValuesDeclarationsRefuse(backupDirectory: URL) -> PreferencesStoredValueRepair {
 		let persisted: [PreferenceStorage: [String: Any]] = [
 			.container: persistentDomain(for: .container),
 			.standard: persistentDomain(for: .standard),
 		]
 		var values: [String: PropertyListValue] = [:]
-		var refused: [String] = []
+		var repaired: [String: PropertyListValue] = [:]
+		var removed: Set<String> = []
+		var originals: [String: Any] = [:]
 		for key in Preferences.allKeys {
 			guard let object = persisted[key.storage]?[key.name] else { continue }
-			if let value = PropertyListValue(propertyList: object),
-			   let coerced = Preferences.coerce(value, forKey: key.name)
-			{
+			let value = PropertyListValue(propertyList: object)
+			if let value, let coerced = Preferences.coerce(value, forKey: key.name) {
 				values[key.name] = coerced
+				continue
+			}
+			originals[key.name] = object
+			if let value, let salvaged = Preferences.salvage(value, forKey: key.name) {
+				values[key.name] = salvaged
+				repaired[key.name] = salvaged
 			} else {
-				refused.append(key.name)
+				removed.insert(key.name)
 			}
 		}
 		// A value that is fine on its own can still contradict its partner.
 		for key in Preferences.allKeys {
 			if let value = values[key.name], !key.isValid(value, in: values) {
-				refused.append(key.name)
+				originals[key.name] = persisted[key.storage]?[key.name]
+				repaired.removeValue(forKey: key.name)
+				removed.insert(key.name)
 			}
 		}
-		for name in refused {
-			set(nil, for: UntypedPreferenceKey(name, storage: Preferences.storage(for: name)))
+		guard originals.isEmpty == false else { return PreferencesStoredValueRepair() }
+
+		let backup: URL
+		do {
+			let data = try PropertyListSerialization.data(fromPropertyList: originals, format: .xml, options: 0)
+			backup = try PreferencesProtectedFolder(url: backupDirectory)
+				.write(data, named: "Repaired-Settings-\(UUID().uuidString).plist")
+		} catch {
+			repairLogger.error("""
+			Left \(originals.count, privacy: .public) refused stored settings unchanged: \
+			their backup could not be written: \(error.localizedDescription, privacy: .public)
+			""")
+			return PreferencesStoredValueRepair()
 		}
-		return refused
+		for (name, value) in repaired {
+			set(value, for: UntypedPreferenceKey(name, storage: Preferences.storage(for: name)))
+			repairLogger.notice("Dropped refused entries from \(name, privacy: .public).")
+		}
+		for name in removed {
+			set(nil, for: UntypedPreferenceKey(name, storage: Preferences.storage(for: name)))
+			repairLogger.notice("Removed the refused stored value of \(name, privacy: .public).")
+		}
+		repairLogger.notice("Saved the settings as they were stored to \(backup.path, privacy: .private).")
+		return PreferencesStoredValueRepair(repaired: Set(repaired.keys), removed: removed, backup: backup)
 	}
 
 	func snapshot(clients: [ClientConfig]) -> PreferencesArchive {
@@ -338,7 +386,8 @@ struct PreferencesTransferStores {
 			}
 		}
 		return PreferencesArchive(isComplete: true, values: values, unset: unset,
-		                          clients: clients.map(PreferencesClientArchive.withoutPendingSecrets))
+		                          clients: clients.map(PreferencesClientArchive.withoutPendingSecrets),
+		                          source: .localRecovery)
 	}
 
 	func apply(_ plan: PreferencesTransferPlan, persistClients: Bool = true) {
@@ -360,6 +409,20 @@ nonisolated enum PreferencesTransferMode: String, CaseIterable, Sendable { // no
 	case restore
 }
 
+/** A change an imported file makes that can run a command or widen what
+ Glasstual trusts, which the preview spells out rather than counts. */
+nonisolated enum PreferencesRiskyChange: Hashable, Sendable { // nonisolated: value
+	/// A chat filter the file adds or changes whose action sends commands.
+	case chatFilterAction(title: String, action: String)
+	/// Link schemes the transcript would start treating as links.
+	case linkSchemes([String])
+	case developerMode
+	/// What CTCP VERSION requests would be answered with.
+	case ctcpVersionReply(String)
+	/// Commands a server would send each time it connects.
+	case connectCommands(server: String, commands: [String])
+}
+
 nonisolated struct PreferencesTransferPlan: Sendable { // nonisolated: value
 	let before: PreferencesArchive
 	let result: PreferencesArchive
@@ -368,6 +431,7 @@ nonisolated struct PreferencesTransferPlan: Sendable { // nonisolated: value
 	let addedClients: [String]
 	let updatedClients: [String]
 	let removedClients: [String]
+	let riskyChanges: [PreferencesRiskyChange]
 	let mode: PreferencesTransferMode
 
 	init(archive: PreferencesArchive, current: PreferencesArchive, mode: PreferencesTransferMode) throws {
@@ -376,14 +440,15 @@ nonisolated struct PreferencesTransferPlan: Sendable { // nonisolated: value
 		self.mode = mode
 		var result = current
 		if mode == .restore {
+			// A key the file does not name is written as absent, which reads back
+			// as its registered default.
 			result.values = archive.values
 			result.unset = archive.unset
 		} else {
+			/* Merge only writes what the file carries. `unset` is where a snapshot
+			 records a list the source never created — its chat filters, its
+			 highlight words — and that is no reason to delete this Mac's. */
 			result.values.merge(archive.values) { _, imported in imported }
-			for name in archive.unset {
-				result.values.removeValue(forKey: name)
-			}
-			result.unset.formUnion(archive.unset)
 			result.unset.subtract(archive.values.keys)
 		}
 		for key in Preferences.allKeys {
@@ -423,8 +488,14 @@ nonisolated struct PreferencesTransferPlan: Sendable { // nonisolated: value
 		}
 		result.clients = clients
 		self.result = result
+		/* Compared as the stores would read them back: a snapshot records a
+		 registered key's default as its value, so writing a key absent is only a
+		 change when this Mac holds something other than that default. */
+		func effective(_ values: [String: PropertyListValue], _ name: String) -> PropertyListValue? {
+			values[name] ?? Preferences.key(named: name)?.registeredDefault
+		}
 		changedKeys = Set(current.values.keys).union(result.values.keys).filter {
-			current.values[$0] != result.values[$0]
+			effective(current.values, $0) != effective(result.values, $0)
 		}.sorted()
 		removedKeys = changedKeys.filter { result.values[$0] == nil }
 		addedClients = clients
@@ -436,5 +507,58 @@ nonisolated struct PreferencesTransferPlan: Sendable { // nonisolated: value
 		removedClients = currentClients
 			.filter { client in !clients.contains { $0.uniqueIdentifier == client.uniqueIdentifier } }
 			.map(\.connectionName)
+		riskyChanges = Self.riskyChanges(from: current, to: result)
+	}
+
+	/** Everything the plan changes that the preview has to show in full.
+
+	 A count tells the reader nothing about a filter that answers every message
+	 with `/msg`, a scheme that makes `file:` text clickable, or a command a
+	 server runs on connect, so each is reported with its content. */
+	private static func riskyChanges(
+		from current: PreferencesArchive, to result: PreferencesArchive
+	) -> [PreferencesRiskyChange] {
+		var changes: [PreferencesRiskyChange] = []
+
+		let filters = Preferences.Extensions.chatFilters.name
+		let currentActions = PreferencesPayloadValidation.chatFilterActions(in: current.values[filters])
+		for (identifier, filter) in PreferencesPayloadValidation.chatFilterActions(in: result.values[filters])
+			.sorted(by: { $0.key < $1.key })
+			where filter.action.isEmpty == false && currentActions[identifier]?.action != filter.action
+		{
+			changes.append(.chatFilterAction(title: filter.title, action: filter.action))
+		}
+
+		func schemes(in archive: PreferencesArchive) -> Set<String> {
+			let keys = [Preferences.LinkSchemes.permittedDefault, Preferences.LinkSchemes.permitted]
+			return Set(keys.flatMap { key in
+				(archive.values[key.name] ?? key.registeredDefault)?.stringArray ?? []
+			})
+		}
+		let addedSchemes = schemes(in: result).subtracting(schemes(in: current))
+		if addedSchemes.isEmpty == false {
+			changes.append(.linkSchemes(addedSchemes.sorted()))
+		}
+
+		let developerMode = Preferences.Commands.developerMode.name
+		if result.values[developerMode]?.boolean == true, current.values[developerMode]?.boolean != true {
+			changes.append(.developerMode)
+		}
+
+		let versionReply = Preferences.Identity.ctcpVersionMasquerade.name
+		if let reply = result.values[versionReply]?.string, reply.isEmpty == false,
+		   current.values[versionReply]?.string != reply
+		{
+			changes.append(.ctcpVersionReply(reply))
+		}
+
+		for client in result.clients ?? [] where client.loginCommands.isEmpty == false {
+			let existing = current.clients?.first { $0.uniqueIdentifier == client.uniqueIdentifier }
+			if existing?.loginCommands != client.loginCommands {
+				changes.append(.connectCommands(server: client.connectionName, commands: client.loginCommands))
+			}
+		}
+
+		return changes
 	}
 }

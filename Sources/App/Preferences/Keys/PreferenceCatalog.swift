@@ -98,6 +98,27 @@ public nonisolated extension Preferences { // nonisolated: value
 		return family.coerce(name, value)
 	}
 
+	/** What of a stored value the declaration still accepts, or `nil` when
+	 nothing of it survives.
+
+	 A collection loses only the elements the declaration refuses — one bad
+	 highlight word, one malformed colour override — rather than every entry it
+	 holds. A payload with independent fields is repaired field by field first,
+	 so a rule loses one field instead of the whole rule. */
+	static func salvage(_ value: PropertyListValue, forKey name: String) -> PropertyListValue? {
+		let repaired = PreferencesPayloadValidation.repairs[name]?(value) ?? value
+		let kept: PropertyListValue = switch repaired {
+		case let .array(elements):
+			.array(elements.filter { coerce(.array([$0]), forKey: name) != nil })
+		case let .dictionary(entries):
+			.dictionary(entries.filter { coerce(.dictionary([$0.key: $0.value]), forKey: name) != nil })
+		default:
+			repaired
+		}
+
+		return coerce(kept, forKey: name)
+	}
+
 	/// The registration domain for one defaults database, built from the
 	/// declarations rather than read from a plist.
 	static func registrationDomain(for storage: PreferenceStorage) -> [String: PropertyListValue] {

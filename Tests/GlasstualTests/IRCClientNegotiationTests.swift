@@ -36,8 +36,10 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 @testable import Glasstual
+import GlasstualPluginKit
 import Testing
 
 @MainActor
@@ -319,6 +321,40 @@ struct IRCClientNegotiationTests {
 		#expect(client.sendTagMessage([:], toTarget: "#c") == false)
 	}
 
+	/// `CLIENTTAGDENY` names the client-only tags the server will not relay; a
+	/// TAGMSG made of one is not sent, and a command keeps only the tags left.
+	@Test("A client-only tag the server denies is not sent", arguments: [
+		"CLIENTTAGDENY=typing",
+		"CLIENTTAGDENY=*,-draft/reply",
+	])
+	func deniedClientTagsAreNotSent(denyToken: String) {
+		let client = TestClient()
+		client.enableCapability(.messageTags)
+		client.supportInfo.processConfigurationData(denyToken)
+
+		#expect(client.sendTagMessage(["+typing": "active"], toTarget: "#c") == false)
+		#expect(client.sendTagMessage(["+typing": "active", "+draft/reply": "abc"], toTarget: "#c") == false)
+		#expect(client.sentLines.count == 0)
+
+		client.sendCommand("PRIVMSG", arguments: ["#c", "hello"], tags: ["+typing": "active", "+draft/reply": "abc"])
+
+		#expect(sentLines(of: client) == ["@+draft/reply=abc PRIVMSG #c :hello"])
+	}
+
+	@Test("Typing notifications are unavailable where the server denies the typing tag")
+	func typingNotificationsFollowClientTagDeny() throws {
+		let client = TestClient()
+		client.markAsLoggedIn()
+		client.enableCapability(.messageTags)
+		let channel = try #require(client.findChannelOrCreate("#c"))
+
+		#expect(client.typingNotificationsAvailable(for: channel))
+
+		client.supportInfo.processConfigurationData("CLIENTTAGDENY=typing")
+
+		#expect(client.typingNotificationsAvailable(for: channel) == false)
+	}
+
 	@Test("Tags are dropped from a command until message tags are negotiated")
 	func tagsAreDroppedFromCommandsWithoutMessageTags() {
 		let client = TestClient()
@@ -508,6 +544,152 @@ struct IRCClientNegotiationTests {
 		))
 
 		#expect(client.saslMechanism == chosen)
+	}
+
+	/** A 904 refuses one attempt, not the login. A certificate the account does
+	 not know fails EXTERNAL while the password would still pass, so the client
+	 moves on to the next mechanism both sides speak and only gives up when none
+	 is left. */
+	@Test("A refused mechanism falls back to the next one before negotiation ends")
+	func refusedMechanismFallsBack() throws {
+		let client = makeClient(
+			configuration: ["usesSASL": true, "saslMechanismPreference": "PLAIN"],
+			nicknamePassword: "secret"
+		)
+		defer { client.stopAllTimers() }
+		client.isConnected = true
+		try client.handleCapabilityOrAuthenticationRequest(message(
+			":irc.example.net CAP * LS :sasl=PLAIN,SCRAM-SHA-256",
+			on: client
+		))
+		try client.handleCapabilityOrAuthenticationRequest(message(":irc.example.net CAP * ACK :sasl", on: client))
+		try #require(client.saslMechanism == "PLAIN")
+
+		try receiveAuthenticationNumeric(":irc.example.net 904 me :SASL authentication failed", on: client)
+
+		#expect(client.saslMechanism == SCRAMClient.mechanismName)
+		#expect(sentLines(of: client).last == "AUTHENTICATE \(SCRAMClient.mechanismName)")
+		#expect(client.isCapabilityEnabled(.isInSASLNegotiation))
+		#expect(capabilityCommands(of: client).contains("END") == false)
+
+		try receiveAuthenticationNumeric(":irc.example.net 904 me :SASL authentication failed", on: client)
+
+		#expect(client.isCapabilityEnabled(.isInSASLNegotiation) == false)
+		#expect(capabilityCommands(of: client).last == "END")
+	}
+
+	/** Once SASL has finished, a 900 answers something else — a NickServ
+	 `IDENTIFY` after the login failed — and the SCRAM check that guards the
+	 exchange must not turn it away on the strength of a leftover mechanism. */
+	@Test("A 900 after a failed SCRAM exchange confirms the account")
+	func loggedInAfterFailedSCRAMIsBelieved() throws {
+		let client = makeClient(
+			configuration: ["nickname": "me", "usesSASL": true, "saslMechanismPreference": SCRAMClient.mechanismName],
+			nicknamePassword: "secret"
+		)
+		defer { client.stopAllTimers() }
+		client.isConnected = true
+		try client.handleCapabilityOrAuthenticationRequest(message(
+			":irc.example.net CAP * LS :sasl=SCRAM-SHA-256",
+			on: client
+		))
+		try client.handleCapabilityOrAuthenticationRequest(message(":irc.example.net CAP * ACK :sasl", on: client))
+		try receiveAuthenticationNumeric(":irc.example.net 904 me :SASL authentication failed", on: client)
+		try #require(client.isCapabilityEnabled(.isInSASLNegotiation) == false)
+
+		#expect(client.saslMechanism == nil)
+
+		try receiveAuthenticationNumeric(
+			":irc.example.net 900 me me!u@host account :You are now logged in as account",
+			on: client
+		)
+
+		#expect(client.startup.authentication == .confirmed)
+	}
+
+	/// A `CAP REQ` line is granted or refused whole. Refusing a line of several
+	/// names says nothing about which one was the problem.
+	@Test("A refused group of capabilities is asked for again one name at a time")
+	func refusedGroupIsRequestedIndividually() throws {
+		let client = TestClient()
+
+		try client.handleCapabilityOrAuthenticationRequest(message(
+			":irc.example.net CAP * LS :multi-prefix server-time",
+			on: client
+		))
+		#expect(capabilityCommands(of: client) == ["REQ multi-prefix server-time"])
+
+		try client.handleCapabilityOrAuthenticationRequest(message(
+			":irc.example.net CAP me NAK :multi-prefix server-time",
+			on: client
+		))
+
+		#expect(capabilityCommands(of: client).dropFirst() == ["REQ multi-prefix", "REQ server-time"])
+
+		try client.handleCapabilityOrAuthenticationRequest(message(":irc.example.net CAP me ACK :multi-prefix", on: client))
+		try client.handleCapabilityOrAuthenticationRequest(message(":irc.example.net CAP me NAK :server-time", on: client))
+
+		#expect(client.isCapabilityEnabled(.multiPrefix))
+		#expect(client.isCapabilityEnabled(.serverTime) == false)
+		#expect(capabilityCommands(of: client).last == "END")
+		#expect(capabilityCommands(of: client).filter { $0.hasPrefix("REQ") }.count == 3)
+	}
+
+	/// `PLAIN` sends the password as typed. On a connection that was meant to be
+	/// encrypted and is not, it is left out; SCRAM, which never sends it, stays.
+	@Test("PLAIN is withheld from a connection that lost the encryption it asked for", arguments: [true, false])
+	func plainIsWithheldWithoutEncryption(_ serverPrefersTLS: Bool) throws {
+		let client = makeClient(configuration: ["usesSASL": true], nicknamePassword: "secret")
+		defer { client.stopAllTimers() }
+		client.isConnected = true
+		client.server = Server(serverAddress: "irc.example.net", prefersSecuredConnection: serverPrefersTLS)
+
+		try client.handleCapabilityOrAuthenticationRequest(message(":irc.example.net CAP * LS :sasl=PLAIN", on: client))
+
+		#expect(capabilityCommands(of: client) == (serverPrefersTLS ? ["END"] : ["REQ sasl"]))
+		#expect(client.selectSASLMechanism(fromOffered: ["PLAIN", "SCRAM-SHA-256"]))
+		#expect(client.saslMechanism == SCRAMClient.mechanismName)
+		#expect(client.retrySASLNegotiation(withMechanisms: ["PLAIN"]) == (serverPrefersTLS == false))
+		let bodies = client.printedLines.compactMap { ($0 as? [String: Any])?["messageBody"] as? String }
+		#expect(bodies.contains(ConnectionSafetyStrings.Credentials.withheldOverPlaintext) == serverPrefersTLS)
+	}
+
+	/// The nickname password is read from the keychain once per session and
+	/// again only after the session or the configuration changes.
+	@Test("Session credentials read the password once until they are forgotten")
+	func sessionCredentialsReadOnce() {
+		var credentials = SessionCredentials()
+		var reads = 0
+		let read = { () -> String? in
+			reads += 1
+			return "secret"
+		}
+
+		#expect(credentials.nicknamePassword(reading: read) == "secret")
+		#expect(credentials.nicknamePassword(reading: read) == "secret")
+		#expect(reads == 1)
+
+		credentials.forget()
+
+		#expect(credentials.nicknamePassword(reading: read) == "secret")
+		#expect(reads == 2)
+	}
+
+	@Test("A changed configuration is what the next password read sees")
+	func configurationChangeForgetsThePassword() {
+		let client = makeClient(configuration: [:], nicknamePassword: "first")
+
+		#expect(client.sessionNicknamePassword == "first")
+
+		client.config.pendingNicknamePassword = .set("second")
+
+		#expect(client.sessionNicknamePassword == "second")
+	}
+
+	private func receiveAuthenticationNumeric(_ line: String, on client: TestClient) throws {
+		let parsed = try message(line, on: client)
+		let numeric = try #require(IRCNumeric(rawValue: parsed.commandNumeric))
+		client.handleAuthenticationTrackingNumeric(numeric, message: parsed, shouldPrint: false)
 	}
 
 	private func expectPrintedLineContaining(_ text: String, on client: TestClient) {

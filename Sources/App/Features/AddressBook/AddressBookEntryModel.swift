@@ -67,6 +67,18 @@ final class AddressBookEntryModel {
 		trackUserActivity = entry.trackUserActivity
 	}
 
+	/// Whether the sheet edits what the entry ignores. A mixed entry, which
+	/// older releases could write, both ignores and tracks.
+	var editsIgnoreSettings: Bool {
+		entryType != .userTracking
+	}
+
+	/// Whether the sheet edits activity tracking. A mixed entry used to open as
+	/// a plain ignore, so its tracking could not be seen or changed.
+	var editsTracking: Bool {
+		entryType != .ignore
+	}
+
 	var title: String {
 		switch entryType {
 		case .ignore, .mixed: AddressBookStrings.ignoreUser
@@ -85,8 +97,7 @@ final class AddressBookEntryModel {
 		var entry = source
 		entry.hostmask = value
 
-		switch entryType {
-		case .ignore, .mixed:
+		if editsIgnoreSettings {
 			entry.ignoreClientToClientProtocol = ignoreClientToClientProtocol
 			entry.ignoreFileTransferRequests = ignoreFileTransferRequests
 			entry.ignoreGeneralEventMessages = ignoreGeneralEventMessages
@@ -96,7 +107,9 @@ final class AddressBookEntryModel {
 			entry.ignorePrivateMessages = ignorePrivateMessages
 			entry.ignorePublicMessageHighlights = ignorePublicMessageHighlights
 			entry.ignorePublicMessages = ignorePublicMessages
-		case .userTracking:
+		}
+
+		if editsTracking {
 			entry.trackUserActivity = trackUserActivity
 		}
 

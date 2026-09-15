@@ -72,24 +72,41 @@ extension LogView {
 	}
 
 	private func selectionEndpoint(at position: Int, isEnd: Bool = false) -> SelectionAnchor.Endpoint? {
-		for (index, line) in lines.enumerated() {
-			let location = lineStarts[index]
-			let next = lineStarts[index + 1]
-			if position < next || isEnd && position == next {
-				var segmentRange = NSRange()
-				let segment = textView.textStorage?.attribute(
-					.transcriptSelectionSegment, at: max(location, position - (isEnd ? 1 : 0)),
-					longestEffectiveRange: &segmentRange,
-					in: NSRange(location: location, length: next - location)
-				) as? String
-				return SelectionAnchor.Endpoint(
-					lineNumber: line.lineNumber,
-					segment: segment,
-					offset: position - (segment == nil ? location : segmentRange.location)
-				)
+		guard let index = lineIndex(containing: position, isEnd: isEnd) else { return nil }
+		let location = lineStarts[index]
+		let next = lineStarts[index + 1]
+		var segmentRange = NSRange()
+		let segment = textView.textStorage?.attribute(
+			.transcriptSelectionSegment, at: max(location, position - (isEnd ? 1 : 0)),
+			longestEffectiveRange: &segmentRange,
+			in: NSRange(location: location, length: next - location)
+		) as? String
+		return SelectionAnchor.Endpoint(
+			lineNumber: lines[index].lineNumber,
+			segment: segment,
+			offset: position - (segment == nil ? location : segmentRange.location)
+		)
+	}
+
+	/** The line a character position falls in, found by bisecting the line
+	 starts rather than walking every line before it.
+
+	 The first line whose end lies past `position`; an end endpoint also belongs
+	 to a line it sits exactly at the end of, so a selection that stops at a
+	 line break names that line rather than the next. */
+	func lineIndex(containing position: Int, isEnd: Bool = false) -> Int? {
+		var lower = 0
+		var upper = lines.count
+		while lower < upper {
+			let middle = lower + (upper - lower) / 2
+			let end = lineStarts[middle + 1]
+			if position < end || isEnd && position == end {
+				upper = middle
+			} else {
+				lower = middle + 1
 			}
 		}
-		return nil
+		return lower < lines.count ? lower : nil
 	}
 
 	func restoreSelection(_ anchor: SelectionAnchor?) {
@@ -163,6 +180,7 @@ extension LogView {
 		origin.y = max(0, verticalPosition - anchor.offset)
 		scrollView.contentView.scroll(to: origin)
 		scrollView.reflectScrolledClipView(scrollView.contentView)
+		noteViewportMovedByView()
 	}
 
 	func beginEditing() {

@@ -44,10 +44,12 @@ struct IRCWHOFlags: Equatable {
 	let isBot: Bool
 	let userModes: String
 
+	/// - Parameter botFlag: The character ISUPPORT `BOT=` names, which is the
+	///   one a bot is flagged with; `nil` where the server advertised none.
 	static func parse(
 		_ flags: String,
 		monitorAwayStatus: Bool,
-		botFlagSupported: Bool,
+		botFlag: String?,
 		modeForPrefix: (String) -> String?
 	) -> IRCWHOFlags {
 		var isAway = false
@@ -58,7 +60,7 @@ struct IRCWHOFlags: Equatable {
 			switch character {
 			case "G": isAway = monitorAwayStatus
 			case "*": isIRCop = true
-			case "B" where botFlagSupported: isBot = true
+			case botFlag: isBot = true
 			default:
 				if let mode = modeForPrefix(character) {
 					modes += mode
@@ -85,7 +87,7 @@ extension IRCClient {
 		let parsedFlags = IRCWHOFlags.parse(
 			reply.flags,
 			monitorAwayStatus: monitorAwayStatus,
-			botFlagSupported: supportInfo.botModeSymbol != nil,
+			botFlag: supportInfo.botModeSymbol,
 			modeForPrefix: supportInfo.modeSymbol(forUserPrefix:)
 		)
 
@@ -112,14 +114,10 @@ extension IRCClient {
 			editedUser.account = reply.account
 		}
 
-		let userChanged = existingUser.map { $0 != editedUser } ?? false
-		let finalUser: User
-		if existingUser == nil || userChanged {
-			finalUser = addAndReturn(editedUser)
-		} else if let existingUser {
-			finalUser = existingUser
+		let finalUser = if let existingUser, existingUser == editedUser {
+			existingUser
 		} else {
-			preconditionFailure("An unchanged WHO user must already exist")
+			addAndReturn(editedUser)
 		}
 		if let existingUser, let member = userAssociated(existingUser, with: channel) {
 			var editedMember = member
@@ -169,7 +167,10 @@ extension IRCClient {
 	 server lists every prefix the person holds, so the reply is the whole answer
 	 and replaces what the member had. Without it RFC 1459 6.2 gives one character
 	 — the highest — so a reply that says `@` says nothing about the `+` the
-	 member also holds, and the modes are merged instead of replaced. */
+	 member also holds, and the modes are merged instead of replaced. It does say
+	 the person holds nothing above `@`, though, so a higher mode the member was
+	 still marked with — one lost while the client missed the MODE — is dropped;
+	 a reply with no prefix at all says the person holds none. */
 	private func membershipModes(reportedBy reported: String, heldBy member: ChannelUser) -> ChannelModeSymbolSet {
 		let reportedModes = ChannelModeSymbolSet(letters: reported)
 
@@ -177,11 +178,13 @@ extension IRCClient {
 			return reportedModes
 		}
 
-		var modes = member.modes
 		let prefixRanks = supportInfo
+		let rank = { (mode: ChannelModeSymbol) in prefixRanks.rankForUserPrefix(withMode: String(mode.character)) }
+		let highestReportedRank = reportedModes.map(rank).max() ?? 0
+		var modes = ChannelModeSymbolSet(member.modes.filter { rank($0) <= highestReportedRank })
 
 		for mode in reportedModes {
-			modes.insert(mode) { prefixRanks.rankForUserPrefix(withMode: String($0.character)) }
+			modes.insert(mode, rankedBy: rank)
 		}
 
 		return modes

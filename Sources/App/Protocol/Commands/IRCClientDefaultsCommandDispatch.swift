@@ -48,29 +48,71 @@ private enum ClientDefaultFeature: String {
 	}
 }
 
+/// What a `/defaults` line asks for.
+enum DefaultsCommandRequest: Equatable {
+	case help
+	case change(featureName: String, enabled: Bool, appliesToAllClients: Bool)
+
+	/** Reads `/defaults help` and `/defaults enable|disable [-a] "Feature"`, or
+	 `nil` for anything else.
+
+	 Anything but the two actions used to read as "disable". `-a` is a flag, read
+	 bare or quoted — read only as a quoted token it was found only when the user
+	 had put it in quotes — and consumed only when it is the flag.
+	 A feature name is quoted because it has spaces in it, but an unquoted one
+	 is taken whole. */
+	init?(_ arguments: CommandArguments) {
+		var arguments = arguments
+		let enabled: Bool
+
+		switch arguments.next().lowercased() {
+		case "help":
+			self = .help
+			return
+		case "enable":
+			enabled = true
+		case "disable":
+			enabled = false
+		default:
+			return nil
+		}
+
+		var lookahead = arguments
+		var flag = lookahead.nextQuoted()
+		if flag.isEmpty {
+			flag = lookahead.next()
+		}
+		let appliesToAllClients = flag == "-a"
+		if appliesToAllClients {
+			arguments = lookahead
+		}
+
+		var featureName = arguments.nextQuoted()
+		if featureName.isEmpty {
+			featureName = arguments.rest.trimmingCharacters(in: .whitespaces)
+		}
+
+		guard featureName.isEmpty == false else {
+			return nil
+		}
+
+		self = .change(featureName: featureName, enabled: enabled, appliesToAllClients: appliesToAllClients)
+	}
+}
+
 @MainActor
 extension IRCClient {
 	func dispatchDefaultsCommand(_ parsed: ParsedUserCommand) {
-		var arguments = parsed.arguments
-		guard arguments.isEmpty == false else {
+		guard let request = DefaultsCommandRequest(parsed.arguments) else {
 			printDebugInformation(IRCCommandStrings.Defaults.invalidSyntax)
 			return
 		}
-		let action = arguments.next().lowercased()
-		if action == "help" {
+
+		guard case let .change(featureName, enablesFeature, appliesToAll) = request else {
 			printDebugInformation(multiline: IRCCommandStrings.Defaults.help)
 			return
 		}
-		var featureName = arguments.nextQuoted()
-		let appliesToAll = featureName == "-a"
-		if appliesToAll {
-			featureName = arguments.nextQuoted()
-		}
-		guard featureName.isEmpty == false else {
-			printDebugInformation(IRCCommandStrings.Defaults.invalidSyntax)
-			return
-		}
-		let enablesFeature = action == "enable"
+
 		guard let feature = ClientDefaultFeature(rawValue: featureName) else {
 			printDebugInformation(
 				IRCCommandStrings.Defaults.unsupportedFeature(featureName, enabling: enablesFeature)

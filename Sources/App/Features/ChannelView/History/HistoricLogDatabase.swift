@@ -39,15 +39,8 @@ import CoreData
 import Foundation
 import os
 
-/// Core Data operations for the historic log store.
-///
-/// Every function here runs inside a `perform` block on the context it is
-/// handed, so none of them may touch `HistoricLogStore` state: the actor
-/// passes in the values a query needs and gets a `Sendable` result back.
-/// `NSManagedObjectContext` is itself `Sendable`; fetch requests and the
-/// model are not, so both are built from the context inside the block.
-/// Locates this framework's bundle. `Bundle(for:)` needs a class to point at;
-/// this one exists for no other reason.
+/// Locates the bundle the compiled model ships in. `Bundle(for:)` needs a class
+/// to point at; this one exists for no other reason.
 private final nonisolated class HistoricLogStoreBundleToken {} // nonisolated: immutable
 
 /// Read only the historic timestamp; opening storage must not construct UI log
@@ -83,6 +76,13 @@ nonisolated protocol HistoricLogFilenameStoring: Sendable { // nonisolated: valu
 	var databaseFilename: String? { get nonmutating set }
 }
 
+/// Core Data operations for the historic log store.
+///
+/// Every function here runs inside a `perform` block on the context it is
+/// handed, so none of them may touch `HistoricLogStore` state: the actor
+/// passes in the values a query needs and gets a `Sendable` result back.
+/// `NSManagedObjectContext` is itself `Sendable`; fetch requests and the
+/// model are not, so both are built from the context inside the block.
 nonisolated enum HistoricLogDatabase { // nonisolated: value
 	static let modelName = "HistoricLogFileStorageModel"
 	static let entityName = "LogLine2"
@@ -145,9 +145,9 @@ nonisolated enum HistoricLogDatabase { // nonisolated: value
 		return context
 	}
 
-	/// The bundle the compiled model ships in. It travels with this framework,
-	/// so it is found through a type of this framework's rather than through
-	/// `Bundle.main`, which is the host application under test.
+	/// The bundle the compiled model ships in, found through a type compiled
+	/// beside it so the lookup does not depend on which process `Bundle.main`
+	/// names.
 	private static var modelBundle: Bundle {
 		Bundle(for: HistoricLogStoreBundleToken.self)
 	}
@@ -488,35 +488,47 @@ nonisolated enum HistoricLogDatabase { // nonisolated: value
 			return deletion
 		}
 		do {
-			let request = NSFetchRequest<NSManagedObject>(entityName: entityName)
-			request.predicate = NSPredicate(
+			let view = NSPredicate(
 				format: "%K == %@",
 				HistoricLogAttribute.logLineViewIdentifier.rawValue,
 				viewIdentifier
 			)
-			let objects = try context.fetch(request).sorted { left, right in
-				let leftID = (left.value(forKey: HistoricLogAttribute.entryIdentifier.rawValue) as? NSNumber)?
-					.int64Value ?? 0
-				let rightID = (right.value(forKey: HistoricLogAttribute.entryIdentifier.rawValue) as? NSNumber)?
-					.int64Value ?? 0
-				if leftID != rightID {
-					return leftID < rightID
+			let doomedLimit: Int
+			switch deletion {
+			case .everything:
+				doomedLimit = 0
+			case let .retainingNewest(count):
+				let counting = NSFetchRequest<NSManagedObject>(entityName: entityName)
+				counting.predicate = view
+				let excess = try context.count(for: counting) - Int(clamping: count)
+				guard excess > 0 else { return .deleted(DeletionResult(deletedCount: 0, uniqueIdentifiers: [])) }
+				doomedLimit = excess
+			}
+			let doomed = try rowIdentities(in: context, matching: view, oldestFirst: true, fetchLimit: doomedLimit)
+			let doomedObjects = Set(doomed.map(\.objectID))
+			let removed = Set(doomed.compactMap(\.uniqueIdentifier))
+			/* A line identifier names a line, not a row, so an old store can hold
+			 it twice; only the identifiers no surviving row still carries are
+			 gone. Asked of the rows that share them rather than of every row the
+			 view keeps. */
+			var retained = Set<String>()
+			let removedIdentifiers = Array(removed)
+			for start in stride(from: 0, to: removedIdentifiers.count, by: deletionLookupBatchSize) {
+				let batch = removedIdentifiers[start ..< min(start + deletionLookupBatchSize, removedIdentifiers.count)]
+				let sharing = NSCompoundPredicate(andPredicateWithSubpredicates: [
+					view,
+					NSPredicate(format: "%K IN %@", HistoricLogAttribute.logLineUniqueIdentifier.rawValue, Array(batch)),
+				])
+				for row in try rowIdentities(in: context, matching: sharing, oldestFirst: true, fetchLimit: 0)
+					where doomedObjects.contains(row.objectID) == false
+				{
+					if let identifier = row.uniqueIdentifier {
+						retained.insert(identifier)
+					}
 				}
-				return left.objectID.uriRepresentation().absoluteString < right.objectID.uriRepresentation()
-					.absoluteString
 			}
-			let doomed: [NSManagedObject] = switch deletion {
-			case .everything: objects
-			case let .retainingNewest(count): Array(objects.prefix(max(0, objects.count - Int(clamping: count))))
-			}
-			let ids = Set(doomed.map(\.objectID))
-			let removed = Set(doomed
-				.compactMap { $0.value(forKey: HistoricLogAttribute.logLineUniqueIdentifier.rawValue) as? String })
-			let retained = Set(objects.filter { !ids.contains($0.objectID) }.compactMap {
-				$0.value(forKey: HistoricLogAttribute.logLineUniqueIdentifier.rawValue) as? String
-			})
-			for object in doomed {
-				context.delete(object)
+			for objectID in doomedObjects {
+				context.delete(context.object(with: objectID))
 			}
 			try context.save()
 			return .deleted(DeletionResult(
@@ -526,6 +538,45 @@ nonisolated enum HistoricLogDatabase { // nonisolated: value
 		} catch {
 			context.rollback()
 			return .failed(error.localizedDescription)
+		}
+	}
+
+	/// How many line identifiers one lookup names, so a pass that prunes a large
+	/// backlog never builds a single unbounded `IN` list.
+	private static let deletionLookupBatchSize = 500
+
+	/** The object and line identifier of the rows `predicate` matches, and
+	 nothing else of them.
+
+	 Ordered the way reads page: by the line's own time, then by insertion, then
+	 by line identifier. Insertion order alone is not age — a server-history page
+	 is inserted after lines hours newer than it — so pruning by it deleted
+	 recent lines and kept old ones. Rows that tie on all three keys are the same
+	 moment of the same line, and which of them goes is immaterial. */
+	private static func rowIdentities(
+		in context: NSManagedObjectContext,
+		matching predicate: NSPredicate,
+		oldestFirst: Bool,
+		fetchLimit: Int
+	) throws -> [(objectID: NSManagedObjectID, uniqueIdentifier: String?)] {
+		let objectIDKey = "objectID"
+		let objectID = NSExpressionDescription()
+		objectID.name = objectIDKey
+		objectID.expression = NSExpression.expressionForEvaluatedObject()
+		objectID.expressionResultType = .objectIDAttributeType
+		let request = NSFetchRequest<NSDictionary>(entityName: entityName)
+		request.resultType = .dictionaryResultType
+		request.predicate = predicate
+		request.propertiesToFetch = [objectID, HistoricLogAttribute.logLineUniqueIdentifier.rawValue]
+		request.sortDescriptors = [
+			NSSortDescriptor(key: HistoricLogAttribute.entryCreationDate.rawValue, ascending: oldestFirst),
+			NSSortDescriptor(key: HistoricLogAttribute.entryIdentifier.rawValue, ascending: oldestFirst),
+			NSSortDescriptor(key: HistoricLogAttribute.logLineUniqueIdentifier.rawValue, ascending: oldestFirst),
+		]
+		request.fetchLimit = fetchLimit
+		return try context.fetch(request).compactMap { row in
+			guard let identifier = row[objectIDKey] as? NSManagedObjectID else { return nil }
+			return (identifier, row[HistoricLogAttribute.logLineUniqueIdentifier.rawValue] as? String)
 		}
 	}
 }

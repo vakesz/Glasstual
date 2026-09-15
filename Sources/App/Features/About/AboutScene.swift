@@ -20,17 +20,12 @@ struct AboutApplicationScene: Scene {
 }
 
 private struct AboutSceneRoot: View {
-	@Environment(\.dismissWindow) private var dismissWindow
-
 	var body: some View {
 		AboutView(
 			content: .current,
 			applicationIcon: Image(nsImage: NSApp.applicationIconImage),
 			openAcknowledgements: {
 				AppController.shared.menuController?.actionCoordinator.openAcknowledgements(nil)
-			},
-			close: {
-				dismissWindow(id: ApplicationSceneID.about)
 			}
 		)
 	}

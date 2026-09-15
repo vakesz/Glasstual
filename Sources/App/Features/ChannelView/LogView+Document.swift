@@ -105,8 +105,16 @@ extension LogView {
 	private func acceptingNewIdentifiers(_ newLines: [TranscriptLine]) -> [TranscriptLine] {
 		var batch = Set<String>()
 		return newLines.filter {
-			lineNumbers.contains($0.lineNumber) == false && batch.insert($0.lineNumber).inserted
+			lineOrdinals[$0.lineNumber] == nil && batch.insert($0.lineNumber).inserted
 		}
+	}
+
+	/// The index of the line `identifier` names, under either identifier a
+	/// restored row answers to.
+	func index(ofLine identifier: String) -> Int? {
+		guard let ordinal = lineOrdinals[identifier] else { return nil }
+		let index = ordinal - firstLineOrdinal
+		return lines.indices.contains(index) ? index : nil
 	}
 
 	func clearLines() {
@@ -118,7 +126,7 @@ extension LogView {
 		lines.removeAll()
 		lineStarts = [0]
 		highlightedLineCount = 0
-		lineNumbers.removeAll()
+		forgetLineIndex()
 		inlineImages.removeAll()
 		beginNicknameColorBatch()
 		scrollbackAllowance = 0
@@ -129,9 +137,13 @@ extension LogView {
 
 	func updateDelivery(_ update: TranscriptDeliveryUpdate) {
 		performEditingBatch {
-			guard let index = lines.firstIndex(where: { $0.lineNumber == update.lineNumber }) else { return }
+			guard let index = index(ofLine: update.lineNumber) else { return }
+			if let messageIdentifier = update.messageIdentifier, messageIdentifier != lines[index].messageIdentifier {
+				unindexMessage(of: lines[index], ordinal: firstLineOrdinal + index)
+				lines[index].messageIdentifier = messageIdentifier
+				indexMessage(of: lines[index], ordinal: firstLineOrdinal + index)
+			}
 			lines[index].deliveryState = update.state
-			lines[index].messageIdentifier = update.messageIdentifier ?? lines[index].messageIdentifier
 			lines[index].deliveryFailureReason = update.reason
 			refresh(at: index)
 		}
@@ -139,7 +151,9 @@ extension LogView {
 
 	func updateReactions(_ reactions: [String: [String]], messageIdentifier: String) {
 		performEditingBatch {
-			for index in lines.indices where lines[index].messageIdentifier == messageIdentifier {
+			for ordinal in messageLineOrdinals[messageIdentifier] ?? [] {
+				let index = ordinal - firstLineOrdinal
+				guard lines.indices.contains(index) else { continue }
 				lines[index].mergeReactions(reactions)
 				refresh(at: index)
 			}
@@ -163,8 +177,7 @@ extension LogView {
 		 it only ever trims the oldest: everything on screen arrived after the
 		 line the reader stopped at, so the boundary belongs above all of it.
 		 A conversation opened unseen carries its marker the same way. */
-		case let .line(identifier): lines
-			.firstIndex { $0.matches(identifier: identifier) } ?? lines.indices.first
+		case let .line(identifier): index(ofLine: identifier) ?? lines.indices.first
 		case let .after(date): lines.firstIndex { $0.receivedAt >= date && $0.lineType.isConversation }
 		}
 		if let target {
@@ -186,7 +199,8 @@ extension LogView {
 	}
 
 	private func insertInlineImage(_ image: TranscriptInlineImage) -> Bool {
-		guard let index = lines.firstIndex(where: { $0.lineNumber == image.lineNumber }) else { return false }
+		guard let index = index(ofLine: image.lineNumber), lines[index].lineNumber == image.lineNumber
+		else { return false }
 		var images = inlineImages[image.lineNumber] ?? []
 		guard !images.contains(where: { $0.linkIdentifier == image.linkIdentifier }),
 		      let decoded = NSImage(data: image.imageData), decoded.size.width > 0,
@@ -205,11 +219,18 @@ extension LogView {
 		return true
 	}
 
-	/// The ceiling the buffer is trimmed to: what the reader asked for, widened
-	/// by the scrollback they pulled in, and never past the largest scrollback
-	/// the preference allows.
+	/** The ceiling the buffer is trimmed to.
+
+	 While the reader follows the end it is what they asked for, widened by any
+	 scrollback pulled in since. While they are reading back it is the largest
+	 scrollback the preference allows: every line trimmed from the top then is
+	 one the reader may be looking at, and trimming it moved the text under them
+	 and pulled the viewport into the range that fetches more history — so a
+	 busy channel dropped what the reader had loaded and fetched it again, once
+	 per message. The scrollback comes back down when they return to the end. */
 	private var effectiveBufferLimit: Int {
-		min(bufferLimit + scrollbackAllowance, LogViewBufferPolicy.validLimits.upperBound)
+		let ceiling = LogViewBufferPolicy.validLimits.upperBound
+		return followsBottom ? min(bufferLimit + scrollbackAllowance, ceiling) : ceiling
 	}
 
 	/// Drops the oldest lines that no longer fit. Only the oldest: the end of
@@ -246,7 +267,7 @@ extension LogView {
 	}
 
 	func range(ofLine lineNumber: String) -> NSRange? {
-		guard let index = lines.firstIndex(where: { $0.matches(identifier: lineNumber) }) else { return nil }
+		guard let index = index(ofLine: lineNumber) else { return nil }
 		return NSRange(location: documentLocation(ofLineAt: index), length: documentLength(ofLineAt: index))
 	}
 
@@ -258,6 +279,13 @@ extension LogView {
 		var starts: [Int] = []
 		starts.reserveCapacity(newLines.count)
 		var location = origin
+		/* Lines arrive at either end: in front of the first ordinal, or after
+		 the last. */
+		precondition(index == 0 || index == lines.count)
+		if index == 0 {
+			firstLineOrdinal -= newLines.count
+		}
+		let firstOrdinal = firstLineOrdinal + index
 		storage.beginEditing()
 		defer { storage.endEditing() }
 		for start in stride(from: 0, to: newLines.count, by: 32) {
@@ -272,13 +300,47 @@ extension LogView {
 		lines.insert(contentsOf: newLines, at: index)
 		lineStarts.insert(contentsOf: starts, at: index)
 		shiftLineStarts(after: index + newLines.count - 1, by: location - origin)
-		lineNumbers.formUnion(newLines.lazy.flatMap(\.identifiers))
+		/* In front, the new lines' message ordinals come before the ones already
+		 held, so they are indexed newest first to keep each list ascending. */
+		let ordinals = Array(zip(newLines.indices, newLines))
+		for (offset, line) in index == 0 ? ordinals.reversed() : ordinals {
+			let ordinal = firstOrdinal + offset
+			for identifier in line.identifiers where lineOrdinals[identifier] == nil {
+				lineOrdinals[identifier] = ordinal
+			}
+			indexMessage(of: line, ordinal: ordinal, inFront: index == 0)
+		}
 		highlightedLineCount += newLines.filter(\.body.isHighlight).count
 	}
 
-	/// Removes a contiguous run of lines and the characters they drew.
+	private func indexMessage(of line: TranscriptLine, ordinal: Int, inFront: Bool = false) {
+		guard let identifier = line.messageIdentifier else { return }
+		if inFront {
+			messageLineOrdinals[identifier, default: []].insert(ordinal, at: 0)
+		} else {
+			messageLineOrdinals[identifier, default: []].append(ordinal)
+		}
+	}
+
+	private func unindexMessage(of line: TranscriptLine, ordinal: Int) {
+		guard let identifier = line.messageIdentifier else { return }
+		messageLineOrdinals[identifier]?.removeAll { $0 == ordinal }
+		if messageLineOrdinals[identifier]?.isEmpty == true {
+			messageLineOrdinals.removeValue(forKey: identifier)
+		}
+	}
+
+	private func forgetLineIndex() {
+		lineOrdinals.removeAll()
+		messageLineOrdinals.removeAll()
+		firstLineOrdinal = 0
+	}
+
+	/// Removes the oldest `indices` lines and the characters they drew. Only the
+	/// oldest: that is the one end lines ever leave from.
 	private func remove(_ indices: Range<Int>) {
 		guard let storage = textView.textStorage, indices.isEmpty == false else { return }
+		precondition(indices.lowerBound == 0)
 		/* The profile popover is anchored to characters; a line appended under
 		 the name leaves them where they are, but a trim or a clear moves or
 		 removes them, and a popover pointing at whatever took their place is
@@ -288,8 +350,16 @@ extension LogView {
 		let length = documentLocation(ofLineAt: indices.upperBound) - location
 		var retiredMarkers: [String: TranscriptMarker] = [:]
 		let retiredLineNumbers = lines[indices].map(\.lineNumber)
-		let retiredIdentifiers = lines[indices].flatMap(\.identifiers)
-		for line in lines[indices] {
+		var retiredMessageIdentifiers: [String] = []
+		for (offset, line) in zip(indices, lines[indices]) {
+			let ordinal = firstLineOrdinal + offset
+			for identifier in line.identifiers where lineOrdinals[identifier] == ordinal {
+				lineOrdinals.removeValue(forKey: identifier)
+			}
+			unindexMessage(of: line, ordinal: ordinal)
+			if let messageIdentifier = line.messageIdentifier, messageLineOrdinals[messageIdentifier] == nil {
+				retiredMessageIdentifiers.append(messageIdentifier)
+			}
 			inlineImages.removeValue(forKey: line.lineNumber)
 			for marker in line.markers {
 				retiredMarkers[marker.selectionSegment] = marker
@@ -299,14 +369,10 @@ extension LogView {
 		highlightedLineCount -= lines[indices].filter(\.body.isHighlight).count
 		lines.removeSubrange(indices)
 		lineStarts.removeSubrange(indices)
+		firstLineOrdinal += indices.count
 		shiftLineStarts(after: indices.lowerBound - 1, by: -length)
-		lineNumbers.subtract(retiredIdentifiers)
-		if indices.lowerBound == 0 {
-			/* The oldest lines are the ones scrollback added, so the ceiling
-			 they raised comes back down with them. Without this a reader who
-			 pulled history in once holds the widened buffer for the session,
-			 and a 500-line scrollback ends up keeping tens of thousands. */
-			scrollbackAllowance = max(0, scrollbackAllowance - indices.count)
+		if retiredMessageIdentifiers.isEmpty == false {
+			viewController?.transcriptDidRetireMessages(retiredMessageIdentifiers)
 		}
 		for identifier in retiredLineNumbers {
 			inlineImageLoader.cancelLoads(forView: viewIdentifier, lineNumber: identifier)
@@ -352,6 +418,7 @@ extension LogView {
 		lines.removeAll(keepingCapacity: true)
 		lineStarts = [0]
 		highlightedLineCount = 0
+		forgetLineIndex()
 		textView.textStorage?.beginEditing()
 		textView.textStorage?.setAttributedString(NSAttributedString())
 		insert(retainedLines, at: 0)
@@ -366,6 +433,7 @@ extension LogView {
 		textView.layoutSubtreeIfNeeded()
 		scrollView.contentView.scroll(to: oldOrigin)
 		scrollView.reflectScrolledClipView(scrollView.contentView)
+		noteViewportMovedByView()
 	}
 
 	/// Runs an edit that changes what sits above the viewport and keeps the
@@ -383,5 +451,6 @@ extension LogView {
 		adjusted.y += textView.bounds.height - oldHeight
 		scrollView.contentView.scroll(to: adjusted)
 		scrollView.reflectScrolledClipView(scrollView.contentView)
+		noteViewportMovedByView()
 	}
 }

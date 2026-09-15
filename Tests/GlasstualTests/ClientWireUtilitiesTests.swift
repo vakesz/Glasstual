@@ -142,9 +142,9 @@ struct ClientWireUtilitiesTests {
 	/// labelled one gets its tag through the same path as any other tagged
 	/// command.
 	@Test("A labelled chat history request carries its tag and its own arguments")
-	func chatHistoryRequestsAreTaggedByTheTransport() {
+	func chatHistoryRequestsAreTaggedByTheTransport() throws {
 		#expect(
-			SendingMessage.string(
+			try SendingMessage.string(
 				command: ClientWireUtilities.chatHistoryCommand,
 				arguments: ["BEFORE", "#swift", "timestamp=2026-08-26T12:00:00.000Z", "50"],
 				tags: ["label": "history-1"]

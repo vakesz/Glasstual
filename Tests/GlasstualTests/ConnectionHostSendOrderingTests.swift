@@ -15,6 +15,7 @@ import Foundation
 @testable import Glasstual
 import Network
 import Security
+import Synchronization
 import Testing
 
 private enum LoopbackTCPServerError: Error {
@@ -148,6 +149,10 @@ private enum ConnectionEvent: Sendable {
 	case didConnect
 	case didDisconnect(Error?)
 	case received(Data)
+	/// A read the shim left unanswered, for a test that answers it itself.
+	/// `overlapped` is set when the host delivered it before the previous read
+	/// was answered.
+	case withheldRead(overlapped: Bool, acknowledge: @Sendable () -> Void)
 	case closedReadStream
 }
 
@@ -155,9 +160,13 @@ private enum ConnectionEvent: Sendable {
 /// continuation the suite reads.
 private final class SendOrderingClientShim: NSObject, RemoteConnectionClientProtocol {
 	private let events: AsyncStream<ConnectionEvent>.Continuation
+	private let withholdsAcknowledgements: Bool
+	/// Whether a read is out and not yet answered.
+	private let readOutstanding = Mutex(false)
 
-	init(events: AsyncStream<ConnectionEvent>.Continuation) {
+	init(events: AsyncStream<ConnectionEvent>.Continuation, withholdsAcknowledgements: Bool = false) {
 		self.events = events
+		self.withholdsAcknowledgements = withholdsAcknowledgements
 
 		super.init()
 	}
@@ -179,8 +188,22 @@ private final class SendOrderingClientShim: NSObject, RemoteConnectionClientProt
 		events.yield(.didDisconnect(disconnectError))
 	}
 
-	func ircConnectionDidReceive(_ data: Data) {
-		events.yield(.received(data))
+	func ircConnectionDidReceive(_ lines: [Data], acknowledge: @escaping @Sendable () -> Void) {
+		for line in lines {
+			events.yield(.received(line))
+		}
+		guard withholdsAcknowledgements else {
+			acknowledge()
+			return
+		}
+		let overlapped = readOutstanding.withLock { outstanding in
+			defer { outstanding = true }
+			return outstanding
+		}
+		events.yield(.withheldRead(overlapped: overlapped, acknowledge: { [self] in
+			readOutstanding.withLock { $0 = false }
+			acknowledge()
+		}))
 	}
 
 	func ircConnectionRequestInsecureCertificateTrust(_ trustBlock: @escaping TrustDecisionHandler) {
@@ -322,8 +345,8 @@ nonisolated struct ConnectionHostSendOrderingTests { // nonisolated: value
 		config.connectionPrefersSecuredConnection = true
 		let (events, continuation) = AsyncStream<ConnectionEvent>.makeStream()
 		let service = NSXPCConnection(serviceName: "com.vakesz.glasstual.IRCConnectionHost")
-		service.remoteObjectInterface = NSXPCInterface(with: RemoteConnectionServerProtocol.self)
-		service.exportedInterface = NSXPCInterface(with: RemoteConnectionClientProtocol.self)
+		service.remoteObjectInterface = RemoteConnectionInterface.server()
+		service.exportedInterface = RemoteConnectionInterface.client()
 		service.exportedObject = SendOrderingClientShim(events: continuation)
 		service.resume()
 		let deadline = Task {
@@ -348,7 +371,7 @@ nonisolated struct ConnectionHostSendOrderingTests { // nonisolated: value
 			case .didDisconnect:
 				disconnected = true
 				continuation.finish()
-			case .received, .closedReadStream:
+			case .received, .withheldRead, .closedReadStream:
 				break
 			}
 		}
@@ -366,8 +389,8 @@ nonisolated struct ConnectionHostSendOrderingTests { // nonisolated: value
 		config.connectionPrefersSecuredConnection = false
 		let (events, continuation) = AsyncStream<ConnectionEvent>.makeStream()
 		let service = NSXPCConnection(serviceName: "com.vakesz.glasstual.IRCConnectionHost")
-		service.remoteObjectInterface = NSXPCInterface(with: RemoteConnectionServerProtocol.self)
-		service.exportedInterface = NSXPCInterface(with: RemoteConnectionClientProtocol.self)
+		service.remoteObjectInterface = RemoteConnectionInterface.server()
+		service.exportedInterface = RemoteConnectionInterface.client()
 		service.exportedObject = SendOrderingClientShim(events: continuation)
 		service.resume()
 		let deadline = Task {
@@ -394,12 +417,82 @@ nonisolated struct ConnectionHostSendOrderingTests { // nonisolated: value
 			case .didDisconnect:
 				disconnected = true
 				continuation.finish()
-			case .received, .closedReadStream:
+			case .received, .withheldRead, .closedReadStream:
 				break
 			}
 		}
 		#expect(connected)
 		#expect(disconnected, "the writer held the command drain behind a network completion")
+	}
+
+	/** The host reads the next chunk only once the application has answered
+	 for the last one.
+
+	 The application used to be told about lines over a one-way call while the
+	 host went straight on reading, so a server that sent faster than the main
+	 actor could keep up filled a queue between the processes until the
+	 application gave up and disconnected. The reply is the flow control now: a
+	 read that arrives while the previous one is unanswered is the regression.
+	 The first answer is held until the server has written everything, which is
+	 when an unthrottled host would already have delivered more. */
+	@Test("The host delivers no further read until the application acknowledges the last")
+	@concurrent
+	func readsWaitForTheApplicationsAcknowledgement() async throws {
+		let burst = (0 ..< 4000).map { "NOTICE me :line \($0)" }
+		let chunks = stride(from: 0, to: burst.count, by: 500).map { start in
+			Data(burst[start ..< min(start + 500, burst.count)].map { $0 + "\r\n" }.joined().utf8)
+		}
+		let server = try LoopbackTCPServer()
+		let port = try await server.start()
+		var config = IRCConnectionConfig()
+		config.serverAddress = "127.0.0.1"
+		config.serverPort = port
+		let (events, continuation) = AsyncStream<ConnectionEvent>.makeStream()
+		let service = NSXPCConnection(serviceName: "com.vakesz.glasstual.IRCConnectionHost")
+		service.remoteObjectInterface = RemoteConnectionInterface.server()
+		service.exportedInterface = RemoteConnectionInterface.client()
+		service.exportedObject = SendOrderingClientShim(events: continuation, withholdsAcknowledgements: true)
+		service.resume()
+		let deadline = Task {
+			try? await Task.sleep(for: .seconds(20))
+			continuation.finish()
+		}
+		defer {
+			deadline.cancel()
+			service.invalidate()
+			Task { await server.stop() }
+		}
+		let host = try #require(service.remoteObjectProxy as? RemoteConnectionServerProtocol)
+		let sending = Task { try await server.sendToClient(chunks) }
+		defer { sending.cancel() }
+		host.open(with: ConnectionConfigEnvelope(config: config))
+
+		var lines: [String] = []
+		var reads = 0
+		var overlaps = 0
+		for await event in events {
+			switch event {
+			case let .received(data):
+				try lines.append(#require(String(bytes: data, encoding: .utf8)))
+			case let .withheldRead(overlapped, acknowledge):
+				reads += 1
+				if overlapped {
+					overlaps += 1
+				}
+				if reads == 1 {
+					try await sending.value
+				}
+				acknowledge()
+			case .didDisconnect:
+				continuation.finish()
+			case .didConnect, .closedReadStream:
+				break
+			}
+		}
+
+		#expect(overlaps == 0, "a read was delivered before the previous one was acknowledged")
+		#expect(reads >= 2)
+		#expect(lines == burst)
 	}
 
 	// MARK: - The harness
@@ -529,8 +622,8 @@ nonisolated struct ConnectionHostSendOrderingTests { // nonisolated: value
 		config.serverPort = port
 		let (events, continuation) = AsyncStream<ConnectionEvent>.makeStream()
 		let service = NSXPCConnection(serviceName: "com.vakesz.glasstual.IRCConnectionHost")
-		service.remoteObjectInterface = NSXPCInterface(with: RemoteConnectionServerProtocol.self)
-		service.exportedInterface = NSXPCInterface(with: RemoteConnectionClientProtocol.self)
+		service.remoteObjectInterface = RemoteConnectionInterface.server()
+		service.exportedInterface = RemoteConnectionInterface.client()
 		service.exportedObject = SendOrderingClientShim(events: continuation)
 		service.resume()
 		let deadline = Task {
@@ -554,7 +647,7 @@ nonisolated struct ConnectionHostSendOrderingTests { // nonisolated: value
 				break
 			case .didDisconnect:
 				continuation.finish()
-			case .received, .closedReadStream:
+			case .received, .withheldRead, .closedReadStream:
 				break
 			}
 		}
@@ -596,8 +689,8 @@ nonisolated struct ConnectionHostSendOrderingTests { // nonisolated: value
 		let shim = SendOrderingClientShim(events: continuation)
 
 		let service = NSXPCConnection(serviceName: "com.vakesz.glasstual.IRCConnectionHost")
-		service.remoteObjectInterface = NSXPCInterface(with: RemoteConnectionServerProtocol.self)
-		service.exportedInterface = NSXPCInterface(with: RemoteConnectionClientProtocol.self)
+		service.remoteObjectInterface = RemoteConnectionInterface.server()
+		service.exportedInterface = RemoteConnectionInterface.client()
 		service.exportedObject = shim
 		service.resume()
 
@@ -632,7 +725,7 @@ nonisolated struct ConnectionHostSendOrderingTests { // nonisolated: value
 				connected = true
 			case let .didDisconnect(error):
 				throw error ?? LoopbackTCPServerError.peerNeverArrived
-			case .received, .closedReadStream:
+			case .received, .withheldRead, .closedReadStream:
 				break
 			}
 

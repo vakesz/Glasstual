@@ -11,15 +11,26 @@ TSAN_RESULT_BUNDLE ?= build/Glasstual-tsan.xcresult
 E2E_APP ?= $(DERIVED_DATA)/Build/Products/Debug/Glasstual.app
 E2E_OUTPUT ?= build/e2e
 GENERATED_XCODE_DIR := Generated/Xcode
-XCODEBUILD   := xcodebuild -project $(PROJECT) -scheme $(SCHEME) -destination '$(DESTINATION)' -derivedDataPath $(DERIVED_DATA)
+E2E_HELPER   := $(abspath $(DERIVED_DATA))/Build/Products/Debug/GlasstualE2EHarness
+# Extra build settings for every xcodebuild call, such as the signing overrides
+# the Quality workflow passes. The shell parses the value, so quote any setting
+# that contains a space.
+XCODEBUILD_FLAGS ?=
+XCODEBUILD   := xcodebuild -project $(PROJECT) -scheme $(SCHEME) -destination '$(DESTINATION)' -derivedDataPath $(DERIVED_DATA) $(XCODEBUILD_FLAGS)
 
-.PHONY: help generate validate-generated-metadata build archive run test tsan smoke e2e e2e-fixtures coverage lint format format-check ensure-xcodegen ensure-formatters ensure-linters clean
+# scripts/ensure-tool.sh installs pinned tool releases here. It comes first on
+# PATH, so a pinned copy wins over another version installed elsewhere, and
+# `make clean` removes it with the rest of build/.
+TOOLS_BIN    := $(CURDIR)/build/tools/bin
+export PATH  := $(TOOLS_BIN):$(PATH)
+
+.PHONY: help generate validate-generated-metadata build archive run test tsan smoke e2e e2e-build e2e-fixtures coverage lint format format-check ensure-xcodegen ensure-formatters ensure-linters clean
 
 help: ## Show this help
-	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z_-]+:.*##/ {printf "  \033[1m%-27s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z0-9_-]+:.*##/ {printf "  \033[1m%-27s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 ensure-xcodegen:
-	@command -v xcodegen >/dev/null 2>&1 || brew install xcodegen
+	@scripts/ensure-tool.sh xcodegen
 
 generate: ensure-xcodegen ## Regenerate Glasstual.xcodeproj from project.yml
 	rm -rf "$(GENERATED_XCODE_DIR)"
@@ -61,28 +72,32 @@ tsan: generate ## Run the test suite under ThreadSanitizer (local only, not in C
 	$(XCODEBUILD) -configuration Debug -enableThreadSanitizer YES \
 		-resultBundlePath "$(TSAN_RESULT_BUNDLE)" test
 
-smoke: ## Seeded 40s launch with an accessibility probe (see scripts/smoke.sh)
+smoke: ## Seeded launch of about a minute with an accessibility probe (see scripts/smoke.sh)
 	./scripts/smoke.sh
 
-e2e: generate ## Real-app Swift Testing gate (disposable GUI login + AX grant)
-	E2E_APP="$(abspath $(E2E_APP))" E2E_OUTPUT="$(abspath $(E2E_OUTPUT))" \
+e2e: e2e-build ## Real-app Swift Testing gate (disposable GUI login + AX grant)
+	E2E_APP="$(abspath $(E2E_APP))" E2E_OUTPUT="$(abspath $(E2E_OUTPUT))" E2E_HELPER="$(E2E_HELPER)" \
 		DERIVED_DATA="$(abspath $(DERIVED_DATA))" bash scripts/e2e.sh
 
-e2e-fixtures: generate ## Build and check loopback peers without launching the app or using Accessibility
+# Both E2E entry points need the harness binary before anything runs: the
+# fixtures execute it directly, and scripts/e2e.sh copies it as the supervisor.
+e2e-build: generate ## Build the GlasstualE2E scheme (app, harness and E2E tests) for testing
 	xcodebuild -quiet -project "$(PROJECT)" -scheme GlasstualE2E -destination '$(DESTINATION)' \
-		-derivedDataPath "$(DERIVED_DATA)" -configuration Debug build-for-testing
-	E2E_HELPER="$(abspath $(DERIVED_DATA))/Build/Products/Debug/GlasstualE2EHarness" bash scripts/e2e-fixtures.sh
+		-derivedDataPath "$(DERIVED_DATA)" -configuration Debug $(XCODEBUILD_FLAGS) build-for-testing
+
+e2e-fixtures: e2e-build ## Build and check loopback peers without launching the app or using Accessibility
+	E2E_HELPER="$(E2E_HELPER)" bash scripts/e2e-fixtures.sh
 
 coverage: ## Print the line coverage of the last `make test` run
 	xcrun xccov view --report --only-targets "$(RESULT_BUNDLE)"
 
 ensure-formatters:
-	@command -v swiftformat >/dev/null 2>&1 || brew install swiftformat
+	@scripts/ensure-tool.sh swiftformat
 
 ensure-linters: ensure-formatters
-	@command -v swiftlint >/dev/null 2>&1 || brew install swiftlint
-	@command -v actionlint >/dev/null 2>&1 || brew install actionlint
-	@command -v shellcheck >/dev/null 2>&1 || brew install shellcheck
+	@scripts/ensure-tool.sh swiftlint
+	@scripts/ensure-tool.sh actionlint
+	@scripts/ensure-tool.sh shellcheck
 
 lint: ensure-linters format-check ## Run whole-tree linters and format checks
 	swiftlint lint --strict --no-cache --config .swiftlint.yml Sources Tests

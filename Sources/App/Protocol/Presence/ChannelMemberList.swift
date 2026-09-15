@@ -69,6 +69,9 @@ public final class ChannelMemberList: NSObject {
 	private var indexByUserID: [User.ID: Int] = [:]
 	private var presentationUpdateDepth = 0
 	private var presentationUpdatePending = false
+	/// Set while an update batch has appended members out of order; the batch
+	/// sorts them once when it ends.
+	private var orderingPending = false
 	/// Changes only when membership, ordering, nicknames or prefix marks change.
 	private(set) var renderRevision: UInt64 = 0
 
@@ -98,8 +101,13 @@ public final class ChannelMemberList: NSObject {
 		self.presentation = presentation
 	}
 
-	/// Scope these to one synchronous protocol message, not an entire NAMES/WHO exchange.
-	/// Directory and member lookups remain current while presentation is deferred.
+	/** Scope these to one synchronous protocol message, not an entire NAMES/WHO exchange.
+
+	 Directory and member lookups remain current while presentation is deferred,
+	 but the ordering does not: a member added or resorted inside the batch is
+	 appended, and the batch sorts once as it ends. A NAMES line carries dozens of
+	 names, and a sorted insert for each one — a binary search, a shift and an
+	 index update — made a large channel's join quadratic. */
 	func beginPresentationUpdates() {
 		presentationUpdateDepth += 1
 	}
@@ -107,7 +115,12 @@ public final class ChannelMemberList: NSObject {
 	func endPresentationUpdates() {
 		precondition(presentationUpdateDepth > 0)
 		presentationUpdateDepth -= 1
-		if presentationUpdateDepth == 0, presentationUpdatePending {
+		guard presentationUpdateDepth == 0 else { return }
+		if orderingPending {
+			orderingPending = false
+			sortStoredMembers()
+		}
+		if presentationUpdatePending {
 			presentationUpdatePending = false
 			publishMembers()
 		}
@@ -151,9 +164,19 @@ public final class ChannelMemberList: NSObject {
 		return lowerBound
 	}
 
+	/// Inserts `member` at its rank, or appends it for the enclosing update batch
+	/// to sort.
 	private func sortedInsert(_ member: ChannelUser) {
-		memberContainer.insert(member, at: sortedIndex(for: member))
-		reindexMembers()
+		guard presentationUpdateDepth == 0 else {
+			indexByUserID[member.id] = memberContainer.count
+			memberContainer.append(member)
+			orderingPending = true
+			return
+		}
+
+		let index = sortedIndex(for: member)
+		memberContainer.insert(member, at: index)
+		reindexMembers(from: index)
 	}
 
 	/// `false` when this channel holds no member for `oldMember`'s person.
@@ -179,16 +202,24 @@ public final class ChannelMemberList: NSObject {
 		}
 
 		memberContainer.remove(at: index)
-		reindexMembers()
+		indexByUserID.removeValue(forKey: member.id)
+		reindexMembers(from: index)
 		return true
 	}
 
-	/** Rebuilds the identity index.
+	/// Points the identity index at the positions from `start` on, which an
+	/// insert or a removal there has shifted by one.
+	private func reindexMembers(from start: Int) {
+		for index in start ..< memberContainer.count {
+			indexByUserID[memberContainer[index].id] = index
+		}
+	}
+
+	/** Rebuilds the identity index after a sort.
 
 	 A member is a value now, so the list cannot be searched by object identity;
 	 a member's identity is the person's, and one channel holds one member per
-	 person. The index is rebuilt rather than patched because an insert or a
-	 removal shifts every position after it anyway.
+	 person. An insert or a removal patches the positions it shifted instead.
 
 	 A repeat is dropped rather than indexed away: every lookup, replacement and
 	 removal goes through this index, so a second entry for the same person is a
@@ -434,6 +465,21 @@ public final class ChannelMemberList: NSObject {
 			memberContainer[index].prefixes = prefixes
 		}
 
+		sortStoredMembers(favoringServerStaff: favorIRCop, casefoldingWith: prefixes)
+		if zip(previousOrder, memberContainer).contains(where: { $0.0 != $1.id || $0.1 != $1.mark }) {
+			renderRevision &+= 1
+		}
+		publishMembers()
+	}
+
+	private func sortStoredMembers() {
+		sortStoredMembers(
+			favoringServerStaff: preferences.memberListSortFavorsServerStaff,
+			casefoldingWith: currentPrefixes
+		)
+	}
+
+	private func sortStoredMembers(favoringServerStaff favorIRCop: Bool, casefoldingWith prefixes: IRCUserPrefixTable) {
 		memberContainer.sort {
 			$0.compareRank(
 				to: $1,
@@ -442,10 +488,6 @@ public final class ChannelMemberList: NSObject {
 			) == .orderedAscending
 		}
 		reindexMembers()
-		if zip(previousOrder, memberContainer).contains(where: { $0.0 != $1.id || $0.1 != $1.mark }) {
-			renderRevision &+= 1
-		}
-		publishMembers()
 	}
 
 	public func clearMembers() {

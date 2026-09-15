@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "2600"
+   LastUpgradeVersion = "2700"
    version = "1.7">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -30,6 +30,24 @@
       shouldUseLaunchSchemeArgsEnv = "NO"
       codeCoverageEnabled = "YES"
       onlyGenerateCoverageForSpecifiedTargets = "NO">
+      <PreActions>
+         <ExecutionAction
+            ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
+            <ActionContent
+               title = "Clear test scratch state"
+               scriptText = "&quot;${SRCROOT}/scripts/clear-test-scratch.sh&quot; com.vakesz.glasstual.tests GlasstualTests&#10;">
+               <EnvironmentBuildable>
+                  <BuildableReference
+                     BuildableIdentifier = "primary"
+                     BlueprintIdentifier = "19F5E05420E7B54DB4B5C430"
+                     BuildableName = "Glasstual.app"
+                     BlueprintName = "Glasstual"
+                     ReferencedContainer = "container:Glasstual.xcodeproj">
+                  </BuildableReference>
+               </EnvironmentBuildable>
+            </ActionContent>
+         </ExecutionAction>
+      </PreActions>
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
@@ -58,6 +76,11 @@
          <EnvironmentVariable
             key = "GLASSTUAL_UI_REVIEW_SUITE"
             value = "com.vakesz.glasstual.tests"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "GLASSTUAL_UI_REVIEW_DIRECTORY"
+            value = "GlasstualTests"
             isEnabled = "YES">
          </EnvironmentVariable>
       </EnvironmentVariables>

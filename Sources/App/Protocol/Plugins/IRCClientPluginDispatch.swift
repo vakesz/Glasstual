@@ -66,6 +66,13 @@ public extension IRCClient {
 		PluginDispatcher.didReceiveServerInput(message, onClient: self)
 	}
 
+	/// `text` as plugins receive it. They are told whether formatting is
+	/// removed and read the text on that promise, while the transcript strips
+	/// it only where a line is printed.
+	internal func textForPlugins(_ text: String) -> String {
+		environment.preferences.removeAllFormatting ? (text as NSString).stripIRCEffects : text
+	}
+
 	func postReceivedMessage(_ message: Message) -> Bool {
 		postReceivedMessage(message, withText: message.sequence, destinedFor: nil)
 	}
@@ -87,7 +94,7 @@ public extension IRCClient {
 	) -> Bool {
 		let context = PluginIncomingCommandContext(
 			command: command,
-			text: text,
+			text: text.map(textForPlugins),
 			author: message.sender,
 			destination: destination,
 			client: self,

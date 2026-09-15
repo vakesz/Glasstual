@@ -35,6 +35,10 @@ struct CapabilityNegotiationState {
 	/// re-advertises them.
 	private(set) var refusedNames: Set<String> = []
 
+	/// Names that were on a `CAP REQ` line the server refused whole. Which of
+	/// them it objected to is unknown, so each is asked for on its own line.
+	private(set) var soloRequestNames: Set<String> = []
+
 	/// Names the server withdrew with `CAP DEL`. A late `ACK` for one of these
 	/// must not bring it back; only a fresh advertisement can.
 	private(set) var withdrawnNames: Set<String> = []
@@ -79,6 +83,10 @@ struct CapabilityNegotiationState {
 
 	func isWithdrawn(_ name: String) -> Bool {
 		withdrawnNames.contains(name)
+	}
+
+	func mustRequestAlone(_ name: String) -> Bool {
+		soloRequestNames.contains(name)
 	}
 
 	/// The advertisement to measure requests against: what the server offered,
@@ -138,6 +146,12 @@ struct CapabilityNegotiationState {
 	/// Marks a request answered.
 	mutating func resolveRequest(_ name: String) {
 		outstandingRequests.remove(name)
+	}
+
+	/// Records a name from a refused group, to be asked for again by itself.
+	mutating func requestAlone(_ name: String) {
+		guard registry.capability(named: name) != nil else { return }
+		soloRequestNames.insert(name)
 	}
 
 	mutating func refuse(_ name: String) {
@@ -230,6 +244,7 @@ struct CapabilityNegotiationState {
 		offeredCapabilities.removeAll()
 		outstandingRequests.removeAll()
 		refusedNames.removeAll()
+		soloRequestNames.removeAll()
 		withdrawnNames.removeAll()
 		acknowledgedNames.removeAll()
 		facts = []

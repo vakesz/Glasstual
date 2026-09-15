@@ -229,18 +229,6 @@
         }
       }
     },
-    "dont-load": {
-      "comment": "Legacy key: r9x-3m.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Don’t Load"
-          }
-        }
-      }
-    },
     "encryption-with-a-digital-certificate-keeps": {
       "comment": "Legacy key: ihy-mz.",
       "extractionState": "manual",
@@ -337,18 +325,6 @@
         }
       }
     },
-    "glasstual-will-ask-again-before-loading": {
-      "comment": "Legacy key: h7m-2q.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Glasstual will ask again before loading each plugin the next time it launches."
-          }
-        }
-      }
-    },
     "intentionally-empty-informative-text": {
       "comment": "Intentionally empty informative text for the document-open confirmation. Legacy key: 6tj-yp.",
       "extractionState": "manual",
@@ -373,18 +349,6 @@
         }
       }
     },
-    "intentionally-empty-recovery-suggestion": {
-      "comment": "Intentionally empty recovery suggestion for a script-installation error. Legacy key: ztu-nv.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": ""
-          }
-        }
-      }
-    },
     "last-known-error-message": {
       "comment": "Legacy key: nlz-um.",
       "extractionState": "manual",
@@ -393,30 +357,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Last known error message: %@"
-          }
-        }
-      }
-    },
-    "load": {
-      "comment": "Legacy key: w2d-5h.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Load"
-          }
-        }
-      }
-    },
-    "load-the-plugin": {
-      "comment": "Legacy key: pq7-2k.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Load the plugin “%@”?"
           }
         }
       }
@@ -493,18 +433,6 @@
         }
       }
     },
-    "please-contact-the-developer-of-each": {
-      "comment": "Legacy key: 45a-df.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Please contact the developer of each addon to receive information on updating.\n\nIf you are the developer of one of these addons: In the Info.plist file of your project, set the value of the property “MinimumGlasstualVersion” to ”%@“, then rebuild to check for any errors."
-          }
-        }
-      }
-    },
     "please-enter-desired-vhost-e-g": {
       "comment": "Legacy key: 2mx-jf.",
       "extractionState": "manual",
@@ -537,30 +465,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Please note that the following items cannot be exported: custom addons, file transfer download location, log location, and passwords."
-          }
-        }
-      }
-    },
-    "plugin-approvals-have-been-reset": {
-      "comment": "Legacy key: zp3-7r.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Plugin approvals have been reset"
-          }
-        }
-      }
-    },
-    "plugin-has-not-been-loaded-before": {
-      "comment": "Legacy key: b4n-8z.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The plugin “%1$@” has not been loaded before.\n\nBundle identifier: %2$@\nTeam ID: %3$@\nLocation: %4$@\n\nPlugins run with the same access as Glasstual itself. Only load plugins from developers you trust. This choice is remembered until the plugin is signed by a different Team ID or the approvals are reset in Settings > Addons."
           }
         }
       }
@@ -669,18 +573,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Save File"
-          }
-        }
-      }
-    },
-    "script-cannot-be-saved-here": {
-      "comment": "Legacy key: m2r-gv.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A script cannot be saved here"
           }
         }
       }

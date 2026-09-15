@@ -13,7 +13,7 @@ import Testing
 struct PluginInterfaceMetadataTests {
 	@Test("Legacy compatible 8.x markers remain loadable", arguments: ["8.0.0", "8.1.2", "8.99.0"])
 	func compatibleLegacyMarkers(_ version: String) throws {
-		try withBundle(minimum: version) { #expect(PluginManager.supportsCurrentPluginProtocol($0)) }
+		try withBundle(minimum: version) { #expect(PluginBundleValidation.supportsCurrentPluginProtocol($0)) }
 	}
 
 	@Test(
@@ -21,15 +21,15 @@ struct PluginInterfaceMetadataTests {
 		arguments: [nil, "", "7.0.0", "9.0.0", "8.broken.0"]
 	)
 	func incompatibleLegacyMarkers(_ version: String?) throws {
-		try withBundle(minimum: version) { #expect(PluginManager.supportsCurrentPluginProtocol($0) == false) }
+		try withBundle(minimum: version) { #expect(PluginBundleValidation.supportsCurrentPluginProtocol($0) == false) }
 	}
 
 	@Test("Explicit interface metadata takes precedence over the legacy marker")
 	func explicitVersionWins() throws {
-		try withBundle(interface: .integer(1)) { #expect(PluginManager.supportsCurrentPluginProtocol($0)) }
+		try withBundle(interface: .integer(1)) { #expect(PluginBundleValidation.supportsCurrentPluginProtocol($0)) }
 		for invalid in [PropertyListValue.integer(2), .integer(0), .boolean(true), .string("1"), .double(1.5)] {
 			try withBundle(interface: invalid, minimum: "8.0.0") {
-				#expect(PluginManager.supportsCurrentPluginProtocol($0) == false)
+				#expect(PluginBundleValidation.supportsCurrentPluginProtocol($0) == false)
 			}
 		}
 	}
@@ -50,7 +50,7 @@ struct PluginInterfaceMetadataTests {
 			"CFBundleExecutable": .string("Plugin"),
 			"CFBundlePackageType": .string("BNDL"),
 			"NSPrincipalClass": .string("NSObject"),
-			PluginManager.interfaceVersionMetadataKey: .integer(1),
+			PluginBundleValidation.interfaceVersionMetadataKey: .integer(1),
 		]
 		let data = try PropertyListSerialization.data(
 			fromPropertyList: info.propertyListObject,
@@ -82,7 +82,7 @@ struct PluginInterfaceMetadataTests {
 			"CFBundleIdentifier": .string("test.\(UUID().uuidString)"),
 			"CFBundlePackageType": .string("BNDL"),
 		]
-		info[PluginManager.interfaceVersionMetadataKey] = interface
+		info[PluginBundleValidation.interfaceVersionMetadataKey] = interface
 		info["MinimumGlasstualVersion"] = minimum.map(PropertyListValue.string)
 		let data = try PropertyListSerialization.data(
 			fromPropertyList: info.propertyListObject,

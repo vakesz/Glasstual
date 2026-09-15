@@ -44,13 +44,13 @@ import Testing
 @Suite("Outgoing message building")
 struct SendingMessageTests {
 	@Test("A command without tags is uppercased and its last argument made a trailing one")
-	func commandWithoutTagsIsUnchanged() {
+	func commandWithoutTagsIsUnchanged() throws {
 		#expect(
-			SendingMessage.string(command: "privmsg", arguments: ["#c", "hello world"], tags: nil)
+			try SendingMessage.string(command: "privmsg", arguments: ["#c", "hello world"], tags: nil)
 				== "PRIVMSG #c :hello world"
 		)
 		#expect(
-			SendingMessage.string(command: "PRIVMSG", arguments: ["#c", "hi"], tags: [:])
+			try SendingMessage.string(command: "PRIVMSG", arguments: ["#c", "hi"], tags: [:])
 				== "PRIVMSG #c :hi"
 		)
 	}
@@ -59,18 +59,18 @@ struct SendingMessageTests {
 	 a CAP REQ that names several capabilities. The trailing parameter still has
 	 to carry the colon, or the server keeps the first name and drops the rest. */
 	@Test("A last argument with spaces is written as a trailing parameter even for an indexed command")
-	func spacedLastArgumentIsTrailingRegardlessOfIndex() {
+	func spacedLastArgumentIsTrailingRegardlessOfIndex() throws {
 		#expect(
-			SendingMessage.string(command: "CAP", arguments: ["REQ", "account-notify away-notify server-time"])
+			try SendingMessage.string(command: "CAP", arguments: ["REQ", "account-notify away-notify server-time"])
 				== "CAP REQ :account-notify away-notify server-time"
 		)
-		#expect(SendingMessage.string(command: "CAP", arguments: ["REQ", "multi-prefix"]) == "CAP REQ multi-prefix")
-		#expect(SendingMessage.string(command: "CAP", arguments: ["LS", "302"]) == "CAP LS 302")
-		#expect(SendingMessage.string(command: "CAP", arguments: ["END"]) == "CAP END")
+		#expect(try SendingMessage.string(command: "CAP", arguments: ["REQ", "multi-prefix"]) == "CAP REQ multi-prefix")
+		#expect(try SendingMessage.string(command: "CAP", arguments: ["LS", "302"]) == "CAP LS 302")
+		#expect(try SendingMessage.string(command: "CAP", arguments: ["END"]) == "CAP END")
 	}
 
 	@Test("Tags are written in key order with the reserved characters escaped")
-	func tagsAreSerializedSortedAndEscaped() {
+	func tagsAreSerializedSortedAndEscaped() throws {
 		let tags = ["+typing": "active", "+draft/reply": "a b;c\\d\r\n", "flag": ""]
 
 		#expect(
@@ -78,7 +78,7 @@ struct SendingMessageTests {
 				== "+draft/reply=a\\sb\\:c\\\\d\\r\\n;+typing=active;flag"
 		)
 		#expect(
-			SendingMessage.string(command: "TAGMSG", arguments: ["#c"], tags: tags)
+			try SendingMessage.string(command: "TAGMSG", arguments: ["#c"], tags: tags)
 				== "@+draft/reply=a\\sb\\:c\\\\d\\r\\n;+typing=active;flag TAGMSG #c"
 		)
 	}
@@ -98,7 +98,7 @@ struct SendingMessageTests {
 			// escape the backslashes so the decoder reads them back verbatim.
 			"i": "a;b \r\n\\s\\:end\\",
 		]
-		let line = SendingMessage.string(command: "TAGMSG", arguments: ["#c"], tags: tags)
+		let line = try SendingMessage.string(command: "TAGMSG", arguments: ["#c"], tags: tags)
 		let message = try #require(Message(line: line))
 
 		#expect(message.command == "TAGMSG")

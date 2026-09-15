@@ -47,14 +47,37 @@ enum IRCCTCPPolicy {
 		return (String(command).uppercased(), parts.count > 1 ? String(parts[1]) : "")
 	}
 
+	/// The characters a form field keeps as they are. `&`, `=` and `+` are the
+	/// form's own syntax, and `&` also opens a local channel name.
+	private static let formFieldAllowedCharacters = CharacterSet.urlQueryAllowed.subtracting(
+		CharacterSet(charactersIn: "&=+")
+	)
+
+	/// `fields` written as `key=value&…`, each side percent-encoded so that no
+	/// value can be read back as the form's syntax.
+	static func formEncoded(_ fields: [(key: String, value: String)]) -> String {
+		fields.map { field in
+			encodedFormField(field.key) + "=" + encodedFormField(field.value)
+		}.joined(separator: "&")
+	}
+
+	private static func encodedFormField(_ string: String) -> String {
+		string.addingPercentEncoding(withAllowedCharacters: formFieldAllowedCharacters) ?? ""
+	}
+
+	/// The fields of a `key=value&…` form, percent-decoded. A field whose
+	/// encoding is invalid is dropped.
 	static func formData(_ text: String) -> [String: String] {
 		// The text is server-controlled and may repeat a key, so duplicates
 		// must merge rather than trap. The first occurrence wins.
 		Dictionary(
 			text.split(separator: "&").compactMap { field -> (String, String)? in
 				let pair = field.split(separator: "=", maxSplits: 1)
-				guard pair.count == 2 else { return nil }
-				return (String(pair[0]), String(pair[1]))
+				guard pair.count == 2,
+				      let key = String(pair[0]).removingPercentEncoding,
+				      let value = String(pair[1]).removingPercentEncoding
+				else { return nil }
+				return (key, value)
 			},
 			uniquingKeysWith: { first, _ in first }
 		)
@@ -147,16 +170,19 @@ public extension IRCClient {
 		let sender = message.senderNickname ?? ""
 		let isLocalUser = nicknameIsMyself(sender)
 		let ignore = isLocalUser ? nil : message.senderHostmask.flatMap(findAddressBookEntry(forHostmask:))
+		guard let parsed = IRCCTCPPolicy.commandAndArguments(from: text) else { return }
+
+		/* A lag check is a query the client sends itself, so with echo-message
+		 the copy that comes back is the only one there is. It has to be read
+		 before echoes of queries sent to other people are set aside. */
+		if parsed.command == "LAGCHECK" {
+			receiveCTCPLagCheckQuery(message, text: parsed.arguments)
+			return
+		}
 		if isLocalUser, isCapabilityEnabled(.echoMessage) {
 			return
 		}
 		if ignore?.ignoreClientToClientProtocol == true {
-			return
-		}
-		guard let parsed = IRCCTCPPolicy.commandAndArguments(from: text) else { return }
-
-		if parsed.command == "LAGCHECK" {
-			receiveCTCPLagCheckQuery(message, text: parsed.arguments)
 			return
 		}
 		guard environment.preferences.replyToCTCPRequests else {

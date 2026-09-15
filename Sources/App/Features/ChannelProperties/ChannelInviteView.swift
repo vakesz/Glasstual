@@ -17,9 +17,33 @@ import SwiftUI
 struct ChannelInviteView: View {
 	let headline: String
 	let channels: [String]
-	@Binding var selectedChannel: String
 	let invite: (String) -> Void
 	let cancel: () -> Void
+
+	/** The channel the picker shows, owned by the view.
+
+	 The sheet used to hold it as a plain property behind a hand-made binding.
+	 Nothing observed that property, so choosing a channel never redrew the
+	 view and the Invite button could not follow the choice. */
+	@State private var selectedChannel: String
+
+	init(
+		headline: String,
+		channels: [String],
+		invite: @escaping (String) -> Void,
+		cancel: @escaping () -> Void
+	) {
+		self.headline = headline
+		self.channels = channels
+		self.invite = invite
+		self.cancel = cancel
+		_selectedChannel = State(initialValue: Self.initialSelection(from: channels))
+	}
+
+	/// The picker starts on the first channel offered, or on nothing when none is.
+	static func initialSelection(from channels: [String]) -> String {
+		channels.first ?? ""
+	}
 
 	var body: some View {
 		VStack(spacing: 0) {

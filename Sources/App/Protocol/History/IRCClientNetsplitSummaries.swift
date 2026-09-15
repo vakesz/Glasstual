@@ -55,7 +55,7 @@ public extension IRCClient {
 	func replayNetsplitBatch(_ batchMessage: MessageBatch) {
 		collapsedNetsplitBatch = batchMessage
 		collapsedNetsplitNicknames = [:]
-		recursivelyProcessBatchMessage(batchMessage)
+		processQueuedMessages(of: batchMessage)
 
 		let recordedNicknames = collapsedNetsplitNicknames
 		collapsedNetsplitBatch = nil

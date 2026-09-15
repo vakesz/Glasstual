@@ -64,6 +64,8 @@ extension FileTransferController {
 			isResume = false
 			processedFilesize = 0
 			openTransfer()
+		} else if restartsFromBeginning {
+			restartFromBeginning()
 		} else {
 			/* The resume offset is the size of the file this transfer writes
 			 into, so the destination has to be settled before it is read. */
@@ -71,6 +73,31 @@ extension FileTransferController {
 			guard ownedFile != nil else { return }
 			sendTransferResumeRequestToClient()
 		}
+	}
+
+	/** Starts a download over, into a file of its own, without asking to resume.
+
+	 What the partial file was cannot be resumed — the peer did not agree to,
+	 or it no longer matches the offer — so asking again would only fail again.
+	 The partial stays where it is: a fresh name is reserved beside it rather
+	 than truncating bytes the user may still want. */
+	private func restartFromBeginning() {
+		restartsFromBeginning = false
+		isResume = false
+		processedFilesize = 0
+		claimDestinationFilename()
+		guard ownedFile != nil else { return }
+		openTransfer()
+	}
+
+	/** Fails a resume in a way Try Again can get past.
+
+	 The descriptor on the partial is let go of now, since the next attempt will
+	 not write into it, and that attempt starts the file over. */
+	func closeForRestart(with failure: FileTransferFailure) {
+		releaseOwnedFile()
+		restartsFromBeginning = true
+		close(with: failure)
 	}
 
 	/// Reserves once with O_EXCL. Retries keep the descriptor and partial bytes;
@@ -87,6 +114,10 @@ extension FileTransferController {
 			takeOwnership(of: file)
 			filename = (file.path as NSString).lastPathComponent
 		} catch {
+			/* The folder is forgotten with the failure. Keeping it made every
+			 Try Again write into the same unwritable folder instead of asking
+			 for another one. */
+			self.path = nil
 			close(with: FileTransferFailure(.fileUnwritable))
 		}
 	}
@@ -282,7 +313,11 @@ extension FileTransferController {
 	private func portMapperDidFinishWork(_: Notification?) {
 		guard transferStatus == .mappingListeningPort, let portMapping else { return }
 
-		if portMapping.isMapped {
+		if portMapping.isMapped, portMapping.publicPort != 0 {
+			/* The router picks the public port, and it need not be the one asked
+			 for. The offer names it, and the peer's RESUME echoes it back, so it
+			 is the port this transfer is known by from here on. */
+			hostPort = portMapping.publicPort
 			/* Bound to a local because the log message is an autoclosure, where
 			 `self.` would be required and SwiftFormat would strip it. */
 			let mappedPort = hostPort
@@ -301,30 +336,21 @@ extension FileTransferController {
 		}
 	}
 
+	/** Works out the address the offer names, and moves the transfer on.
+
+	 The transfer waits for it in `waitingForLocalIPAddress`, which is what the
+	 center settles when the address is known, known to be unavailable, or
+	 looked up — whichever comes first. */
 	private func updateIPAddress() {
-		var address = transferCenter.ipAddress
-		let detectionMethod = Preferences.FileTransfers.ipAddressDetectionMethod.value
-		let manuallyDetect = detectionMethod == .manual
-
-		if address == nil, !manuallyDetect,
-		   let publicAddress = portMapping?.publicAddress,
-		   publicAddress.isIPAddress
-		{
-			transferCenter.ipAddress = publicAddress
-			address = publicAddress
+		transferStatus = .waitingForLocalIPAddress
+		switch transferCenter.resolveIPAddress(routerAddress: portMapping?.publicAddress) {
+		case .known:
+			noteIPAddressLookupSucceeded()
+		case .unavailable:
+			noteIPAddressLookupFailed()
+		case .pending:
+			break
 		}
-
-		guard address != nil else {
-			if manuallyDetect || detectionMethod == .routerOnly {
-				noteIPAddressLookupFailed()
-			} else {
-				transferStatus = .waitingForLocalIPAddress
-				Task { await transferCenter.lookUpIPAddress() }
-			}
-			return
-		}
-
-		noteIPAddressLookupSucceeded()
 	}
 }
 
@@ -358,10 +384,7 @@ extension FileTransferController {
 		resumeRequestTimeout = nil
 
 		guard proposedPosition > 0, proposedPosition <= totalFilesize, processedFilesize == proposedPosition else {
-			close(
-				with: .invalidResumePosition,
-				isFatalError: true
-			)
+			closeForRestart(with: .invalidResumePosition)
 			return
 		}
 
@@ -445,7 +468,7 @@ extension FileTransferController {
 
 		resumeRequestTimeout = nil
 		// A refused resume must not truncate the partial download.
-		close(with: .invalidResumePosition)
+		closeForRestart(with: .resumeNotAnswered)
 
 		return true
 	}
@@ -480,7 +503,7 @@ extension FileTransferController {
 				let size = try await ownedFile.size()
 				guard let self, isCurrent(session) else { return }
 				guard size <= totalFilesize else {
-					close(with: .invalidResumePosition, isFatalError: true)
+					closeForRestart(with: .invalidResumePosition)
 					return
 				}
 				processedFilesize = size
@@ -491,8 +514,10 @@ extension FileTransferController {
 				}
 				requestResume(position: size)
 			} catch {
+				/* The partial was moved, deleted or replaced since it was
+				 claimed, so there is nothing left to resume into. */
 				guard let self, isCurrent(session) else { return }
-				close(with: .invalidResumePosition, isFatalError: true)
+				closeForRestart(with: .invalidResumePosition)
 			}
 		}
 	}

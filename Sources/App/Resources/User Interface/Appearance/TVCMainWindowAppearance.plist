@@ -4,13 +4,6 @@
 <dict>
 	<key>Tahoe</key>
 	<dict>
-		<key>channelViewOverlayDefaultBackgroundColor</key>
-		<dict>
-			<key>type</key>
-			<integer>3</integer>
-			<key>value</key>
-			<string>textBackgroundColor</string>
-		</dict>
 		<key>defaultWindowSize</key>
 		<dict>
 			<key>width</key>

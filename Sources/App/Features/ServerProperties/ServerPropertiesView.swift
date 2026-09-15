@@ -93,6 +93,10 @@ struct ServerPropertiesView: View {
 			idealHeight: 650,
 			maxHeight: .infinity
 		)
+		/* The sheet's keychain secrets are read once as it opens, and the
+		 certificate's description again whenever a different one is chosen. */
+		.task { await model.loadSecrets() }
+		.task(id: model.config.identityClientSideCertificate) { await model.loadCertificate() }
 	}
 
 	private var form: some View {
@@ -296,7 +300,7 @@ private extension ServerPropertiesView {
 						).labelsHidden()
 						Text(verbatim: channel.channelName)
 						Spacer()
-						if let key = channel.secretKey, key.isEmpty == false {
+						if model.channelHasSecretKey(channel) {
 							Image(systemName: "key.fill")
 								.accessibilityLabel(ChannelPropertiesStrings.passwordLabel)
 						}

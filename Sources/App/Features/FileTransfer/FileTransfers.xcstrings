@@ -203,12 +203,17 @@
       "localizations": { "en": { "stringUnit": { "state": "translated", "value": "%@ closed the connection before the transfer finished. Start it again to resume." } } }
     },
     "transfer-with-failed-proposed-resume-position": {
-      "comment": "File-transfer error when the peer proposes an invalid resume position. The argument is the peer nickname. Legacy key: 0ov-tr.",
+      "comment": "File-transfer error when resuming is impossible: the peer's resume position does not match the partly transferred file, or that file is gone or larger than the offer. Try Again starts the file over under a new name and keeps the partial file. The argument is the peer nickname. Legacy key: 0ov-tr.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Could not resume the transfer with %@. Remove the partly transferred file, then start it again." } } }
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Could not resume the transfer with %@. Choose Try Again to start it over from the beginning." } } }
+    },
+    "transfer-with-failed-resume-not-answered": {
+      "comment": "File-transfer error when the peer never answered a request to resume. Try Again starts the file over under a new name and keeps the partial file. The argument is the peer nickname.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "%@ did not agree to resume the transfer. Choose Try Again to start it over from the beginning." } } }
     },
     "transfer-with-failed-stalled": {
-      "comment": "File-transfer error when a write to the peer timed out. The argument is the peer nickname.",
+      "comment": "File-transfer error when the connection to the peer stopped moving data: a write that did not complete, or a download that received nothing for too long. The argument is the peer nickname.",
       "extractionState": "manual",
       "localizations": { "en": { "stringUnit": { "state": "translated", "value": "The connection to %@ stopped responding, so the transfer was cancelled. Start it again to resume." } } }
     },

@@ -52,6 +52,49 @@ public nonisolated struct ISupportExtendedBanConfiguration: Sendable, Equatable 
 }
 
 public nonisolated enum ISupportTokenParser { // nonisolated: value
+	/** A token value with its `\xHH` escapes decoded.
+
+	 ISUPPORT values cannot carry a space, a backslash or an `=` as written, so
+	 the server sends each as `\x` and two hexadecimal digits naming a byte:
+	 `NETWORK=Example\x20Network`. The bytes are UTF-8. An escape that is not
+	 followed by two hexadecimal digits is not an escape and is kept as written. */
+	public static func unescapedValue(_ value: Substring) -> String {
+		guard value.contains("\\") else {
+			return String(value)
+		}
+
+		let input = Array(value.utf8)
+		var output: [UInt8] = []
+		output.reserveCapacity(input.count)
+		var index = 0
+
+		while index < input.count {
+			if input[index] == UInt8(ascii: "\\"), index + 3 < input.count,
+			   input[index + 1] == UInt8(ascii: "x"),
+			   let high = hexadecimalDigit(input[index + 2]),
+			   let low = hexadecimalDigit(input[index + 3])
+			{
+				output.append(high << 4 | low)
+				index += 4
+			} else {
+				output.append(input[index])
+				index += 1
+			}
+		}
+
+		// Escaped bytes that do not make UTF-8 were never text; keep them as sent.
+		return String(bytes: output, encoding: .utf8) ?? String(value)
+	}
+
+	private static func hexadecimalDigit(_ byte: UInt8) -> UInt8? {
+		switch byte {
+		case UInt8(ascii: "0") ... UInt8(ascii: "9"): byte - UInt8(ascii: "0")
+		case UInt8(ascii: "a") ... UInt8(ascii: "f"): byte - UInt8(ascii: "a") + 10
+		case UInt8(ascii: "A") ... UInt8(ascii: "F"): byte - UInt8(ascii: "A") + 10
+		default: nil
+		}
+	}
+
 	/// `CHANLIMIT`, keyed by the channel prefix each limit applies to.
 	public static func channelLimits(from token: String) -> [Character: UInt] {
 		var limits: [Character: UInt] = [:]

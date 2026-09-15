@@ -41,14 +41,17 @@ import AppKit
 // MARK: - Sheets, panels and windows
 
 public extension MenuActionCoordinator {
+	/* Each command checks it can act before it takes down the sheet already on
+	 screen. The other order dismissed an unrelated sheet, and the edits in it,
+	 for a command that then did nothing. */
+
 	@objc func showChannelPropertiesSheet(_: Any?) {
-		mainWindow.presentationModel.closePresentedSheet()
 		guard let channel = selectedChannel, channel.isChannel else { return }
+		mainWindow.presentationModel.dismissPresentedSheet()
 		present(ChannelPropertiesSheet(channel: channel)) { $0.start() }
 	}
 
 	@objc func memberSendInvite(_ sender: Any?) {
-		mainWindow.presentationModel.closePresentedSheet()
 		guard let client = selectedClient, let selectedChannel,
 		      client.isLoggedIn, selectedChannel.isChannel, selectedChannel.isActive
 		else { return }
@@ -59,6 +62,7 @@ public extension MenuActionCoordinator {
 			channel !== selectedChannel && channel.isChannel ? channel.name : nil
 		}
 		guard channels.isEmpty == false else { return }
+		mainWindow.presentationModel.dismissPresentedSheet()
 		present(ChannelInviteSheet(nicknames: nicknames, on: client)) { $0.start(withChannels: channels) }
 	}
 
@@ -67,7 +71,7 @@ public extension MenuActionCoordinator {
 	}
 
 	@objc func showOnboardingWindow(_: Any?) {
-		mainWindow.presentationModel.closePresentedSheet()
+		mainWindow.presentationModel.dismissPresentedSheet()
 		SharedApplication.sharedApplicationScenes().openOnboarding()
 	}
 
@@ -88,14 +92,14 @@ public extension MenuActionCoordinator {
 	}
 
 	@objc func showChannelModifyTopicSheet(_: Any?) {
-		mainWindow.presentationModel.closePresentedSheet()
 		guard let channel = selectedChannel, channel.isChannel else { return }
+		mainWindow.presentationModel.dismissPresentedSheet()
 		present(ChannelModifyTopicSheet(channel: channel)) { $0.start() }
 	}
 
 	@objc func showChannelModifyModesSheet(_: Any?) {
-		mainWindow.presentationModel.closePresentedSheet()
 		guard let channel = selectedChannel, channel.isChannel else { return }
+		mainWindow.presentationModel.dismissPresentedSheet()
 		present(ChannelModifyModesSheet(channel: channel)) { $0.start() }
 	}
 
@@ -104,8 +108,8 @@ public extension MenuActionCoordinator {
 	}
 
 	@objc func showServerChangeNicknameSheet(_: Any?) {
-		mainWindow.presentationModel.closePresentedSheet()
 		guard let client = selectedClient, client.isLoggedIn else { return }
+		mainWindow.presentationModel.dismissPresentedSheet()
 		present(ServerChangeNicknameSheet(client: client)) { $0.start() }
 	}
 
@@ -121,24 +125,20 @@ public extension MenuActionCoordinator {
 		showPreferences(.notifications)
 	}
 
-	func showPreferencesWindow(with selection: PreferencesSceneSelection) {
-		showPreferences(selection)
-	}
-
 	@objc func showFileTransfersWindow(_: Any?) {
 		fileTransferCenter.present()
 	}
 
 	internal func showServerProperties(for client: IRCClient, selection: ServerPropertiesDestination) {
-		mainWindow.presentationModel.closePresentedSheet()
+		mainWindow.presentationModel.dismissPresentedSheet()
 		present(ServerPropertiesSheet(client: client)) { $0.start(at: selection) }
 	}
 
 	/// Named for its argument so that the member-list menu can own the plain
 	/// `memberChangeColor:` selector.
 	func showNicknameColorSheet(for nickname: String) {
-		mainWindow.presentationModel.closePresentedSheet()
 		guard selectedClient != nil else { return }
+		mainWindow.presentationModel.dismissPresentedSheet()
 		let sheet = NicknameColorSheet(nickname: nickname)
 		sheet.colorDidChange = { [weak self] in
 			guard let self else { return }

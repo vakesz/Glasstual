@@ -97,9 +97,28 @@ struct IRCClientUserIdentityTests {
 		#expect(alice?.realName == nil)
 	}
 
+	/// A tag is only the server's word once the server said it sends it: the
+	/// `account-tag` capability, or the `BOT` token.
+	@Test("Without account-tag or BOT, the account and bot tags are not read as identity")
+	func identityTagsNeedNegotiation() throws {
+		let client = makeClient(named: "me")
+		let channel = try joinChannel("#chat", on: client)
+		addUser(named: "alice", to: channel, on: client)
+
+		try client.receivePrivmsgAndNotice(message(
+			"@account=alice_acct;bot :alice!a@example.org PRIVMSG #chat :hi",
+			on: client
+		))
+
+		#expect(client.findUser("alice")?.account == nil)
+		#expect(client.findUser("alice")?.isBot == false)
+	}
+
 	@Test("The account and bot tags on any message update the sender")
 	func accountTagAndBotTagUpdateSender() throws {
 		let client = makeClient(named: "me")
+		client.enableCapability(.accountTag)
+		client.supportInfo.processConfigurationData("BOT=B")
 		let channel = try joinChannel("#chat", on: client)
 		addUser(named: "alice", to: channel, on: client)
 

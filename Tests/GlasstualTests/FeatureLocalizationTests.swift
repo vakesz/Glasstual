@@ -52,7 +52,7 @@ struct FeatureLocalizationTests {
 			)),
 			(.invalidResumePosition, (
 				.FileTransfers.transferWithFailedProposedResumePosition("Alice"),
-				"Could not resume the transfer with Alice. Remove the partly transferred file, then start it again."
+				"Could not resume the transfer with Alice. Choose Try Again to start it over from the beginning."
 			)),
 			(.noListeningPort, (
 				.FileTransfers.transferWithFailedThereIsNo("Alice"),
@@ -83,7 +83,11 @@ struct FeatureLocalizationTests {
 				.FileTransfers.transferWithFailedNoSpaceLeft("Alice"),
 				"There is not enough free space to save the file from Alice. Free some space, then start the transfer again."
 			)),
-			(.writeTimeout, (
+			(.resumeNotAnswered, (
+				.FileTransfers.transferWithFailedResumeNotAnswered("Alice"),
+				"Alice did not agree to resume the transfer. Choose Try Again to start it over from the beginning."
+			)),
+			(.stalled, (
 				.FileTransfers.transferWithFailedStalled("Alice"),
 				"The connection to Alice stopped responding, so the transfer was cancelled. Start it again to resume."
 			)),
@@ -102,7 +106,7 @@ struct FeatureLocalizationTests {
 	@Test("No transport error falls through to an unlocalized description")
 	func everyTransportErrorHasLocalizedCopy() {
 		let transportErrors: [DCCTransferError] = [
-			.connectTimeout, .writeTimeout, .closedByPeer, .noOpenPort, .badParameter,
+			.connectTimeout, .stalled, .closedByPeer, .noOpenPort, .badParameter,
 			.rejectedPeerAddress, .oversizedTransfer, .fileUnreadable, .fileUnwritable, .storageFull,
 		]
 		for error in transportErrors {

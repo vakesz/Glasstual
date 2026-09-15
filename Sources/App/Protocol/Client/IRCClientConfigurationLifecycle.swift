@@ -258,7 +258,7 @@ public extension IRCClient {
 	}
 
 	func closeDialogs() {
-		SharedApplication.sharedApplicationScenes().closeServerChannelList(for: uniqueIdentifier)
+		channelListPresentation?.closeChannelList(for: self)
 		output?.closeSheets(for: self)
 	}
 

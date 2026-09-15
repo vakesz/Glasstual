@@ -22,6 +22,15 @@ public nonisolated enum ResourceDocumentType { // nonisolated: value
 	public static let scriptFilenameExtension = "scpt"
 }
 
+/// The bundled property list of fixed word lists, and the keys read from it.
+public nonisolated enum StaticStoreResource { // nonisolated: value
+	public static let name = "StaticStore"
+	public static let spellingIgnoresKey = "Spelling Ignores"
+	public static let forbiddenPluginCommandsKey = "THOPluginManager List of Forbidden Commands"
+	public static let nickServNeedsIdentificationTokensKey = "IRCClient List of NickServ Needs Identification Tokens"
+	public static let nickServIdentifiedTokensKey = "IRCClient List of NickServ Successfully Identified Tokens"
+}
+
 public nonisolated enum ResourceManager { // nonisolated: value
 	private static let logger = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",

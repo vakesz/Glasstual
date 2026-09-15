@@ -49,6 +49,13 @@ private nonisolated let logControllerLogger = Logger( // nonisolated: let
 	category: "LogController"
 )
 
+/// What a print's render job hands back: the row to draw, and the line already
+/// archived for the view's store.
+private nonisolated struct PrintedLineRender: Sendable { // nonisolated: value
+	let result: LogLineRenderResult
+	let historicEntry: HistoricLogEntry?
+}
+
 @MainActor
 public final class LogController: ServerHistoryPresentation {
 	public private(set) var backingView: LogView?
@@ -131,12 +138,24 @@ public final class LogController: ServerHistoryPresentation {
 	}
 
 	/// The highlights in the order they are drawn, for the commands that step
-	/// through them. Walked on demand, which is once per keystroke.
+	/// through them. Walked on demand, once per keystroke.
 	private var highlightedLineNumbers: [String] {
-		backingView?.displayedLines.filter(\.body.isHighlight).map(\.lineNumber) ?? []
+		backingView?.displayedLines.compactMap { $0.body.isHighlight ? $0.lineNumber : nil } ?? []
 	}
 
+	/** Reactions that arrived this session, by the message they answer.
+
+	 Only for messages this controller still holds, in the view or in its
+	 projection, or is about to: a reaction for anything else has no row to be
+	 drawn on, and keeping every one the connection ever carried grew for as
+	 long as the process ran. Retired with the last row of their message. */
 	private(set) var reactionsByMessageIdentifier: [String: [String: [String]]] = [:]
+
+	/// The longest reaction kept, in UTF-16 units. A reaction is an emoji, and
+	/// the longest sequences in use are a few dozen units.
+	static let maximumReactionLength = 64
+	/// How many people one reaction on one message records.
+	static let maximumReactorsPerReaction = 256
 	private(set) var viewLoadedTimestamp: TimeInterval = 0
 	var lastLineStorage: LogLine?
 	/** The lines handed to `print` that have not been applied to the view yet.
@@ -151,7 +170,16 @@ public final class LogController: ServerHistoryPresentation {
 	 when the view is torn down, so nothing here is ever a line the view will
 	 never show. Single-purpose: the two conversation seams in
 	 `MainWindowWorldSeams` are the only readers. */
-	private(set) var linesAwaitingRender: [LogLine] = []
+	var linesAwaitingRender: ArraySlice<LogLine> {
+		awaitingRender[awaitingRenderHead...]
+	}
+
+	/** The storage behind ``linesAwaitingRender``. Lines are applied in the order
+	 they were printed, so the one applied is almost always the first still
+	 waiting: withdrawing it moves a head instead of shifting every line behind
+	 it, and the storage is compacted once the head is past half of it. */
+	private var awaitingRender: [LogLine] = []
+	private var awaitingRenderHead = 0
 	var transcriptProjection = TranscriptProjectionState()
 	var transcriptSessionBoundary = TranscriptSessionBoundaryState()
 
@@ -300,7 +328,7 @@ public final class LogController: ServerHistoryPresentation {
 		renderGeneration += 1
 		cancelOlderHistory()
 		pendingApplications.removeAll()
-		linesAwaitingRender.removeAll()
+		forgetLinesAwaitingRender()
 		deferredPrepends.removeAll()
 		applicationTask?.cancel()
 		applicationTask = nil
@@ -379,7 +407,7 @@ public final class LogController: ServerHistoryPresentation {
 		}
 		renderGeneration += 1
 		terminating = true
-		linesAwaitingRender.removeAll()
+		forgetLinesAwaitingRender()
 		refreshServerRetryAvailability()
 		cancelOlderHistory()
 		pendingApplications.removeAll()
@@ -387,6 +415,7 @@ public final class LogController: ServerHistoryPresentation {
 		applicationTask?.cancel()
 		applicationTask = nil
 		viewIsLoaded = false
+		reactionsByMessageIdentifier.removeAll()
 		backingView?.clearLines()
 		backingView = nil
 		inlineImageLoader.cancelLoads(forView: uniqueIdentifier)
@@ -398,6 +427,12 @@ public final class LogController: ServerHistoryPresentation {
 		}
 	}
 
+	/// Whether this view still has a pipeline to submit to. A retired view, or
+	/// one whose application is on its way out, silently drops every job.
+	var acceptsRenderJobs: Bool {
+		terminating == false && AppController.shared.applicationIsTerminating == false
+	}
+
 	/** Submits one render job to this view's pipeline.
 
 	 `render` runs off the main actor and produces the value `apply` then acts on,
@@ -407,12 +442,6 @@ public final class LogController: ServerHistoryPresentation {
 	 capture a `LogLine`, a caller's completion block or anything else the view
 	 needs. Returning `nil` from `render` drops the job. Render outputs are
 	 Sendable values; AppKit presentation is constructed only during application. */
-	/// Whether this view still has a pipeline to submit to. A retired view, or
-	/// one whose application is on its way out, silently drops every job.
-	var acceptsRenderJobs: Bool {
-		terminating == false && AppController.shared.applicationIsTerminating == false
-	}
-
 	@discardableResult
 	func enqueueRenderJob<Output: Sendable>(
 		isStandalone: Bool = false,
@@ -482,15 +511,21 @@ public final class LogController: ServerHistoryPresentation {
 		enqueueRenderJob(isStandalone: isStandalone, render: { true }, apply: { _ in work() })
 	}
 
-	/// Snapshot of the main-actor state that rendering needs.
-	func makeRenderContext() -> LogLineRenderContext {
+	/** Snapshot of the main-actor state that rendering needs.
+
+	 The members are only needed to find the mentions in a message, and
+	 building them is a walk of the channel after every join or part: a line
+	 that is not a message leaves them out, and its sender's mark is looked up
+	 by the caller instead. */
+	func makeRenderContext(includingMembers: Bool = true) -> LogLineRenderContext {
 		let channel = associatedChannel
 		return LogLineRenderContext(
 			inlineMediaEnabled: inlineMediaEnabledForView,
 			isChannel: channel?.isChannel == true,
 			showsDateChanges: Preferences.Messages.showDateChanges.value,
 			textPolicy: .current(),
-			members: memberRenderCache.members(in: channel),
+			members: includingMembers ? memberRenderCache.members(in: channel) : [],
+			caseMapping: associatedClient?.supportInfo.caseMapping ?? .rfc1459,
 			sessionReactions: reactionsByMessageIdentifier
 		)
 	}
@@ -598,10 +633,6 @@ public extension LogController {
 		maybeReloadHistory()
 	}
 
-	func notifyDidBecomeHidden() {}
-
-	func notifySelectionChanged() {}
-
 	func changeTextSize(_: Bool) {
 		guard let attachedWindow else {
 			return
@@ -613,6 +644,7 @@ public extension LogController {
 		let policy = bufferPolicy
 		transcriptProjection.setCapacity(policy.hardLimit)
 		backingView?.setBufferLimit(policy.hardLimit)
+		forgetRetiredProjectionMessages()
 	}
 
 	func notifyHistoricLogWillDeleteLines(_ lineNumbers: [String]) {
@@ -650,7 +682,7 @@ public extension LogController {
 			return nil
 		}
 
-		guard backingView?.displayedLines.contains(where: { $0.lineNumber == lineNumber }) == true else { return nil }
+		guard backingView?.containsLine(identifier: lineNumber) == true else { return nil }
 		let generation = renderGeneration
 		let loader = inlineImageLoader
 		// Only admission failures run synchronously; successful callbacks receive the assigned token.
@@ -688,31 +720,32 @@ public extension LogController {
 	}
 
 	private func visitHighlight(offset: Int) {
-		guard viewIsLoaded, !terminating, !highlightedLineNumbers.isEmpty else {
+		guard viewIsLoaded, !terminating else {
 			return
 		}
-		let current = lastVisitedHighlight.flatMap(highlightedLineNumbers.firstIndex(of:))
-		let index = current.map { ($0 + offset + highlightedLineNumbers.count) % highlightedLineNumbers.count }
-			?? (offset > 0 ? 0 : highlightedLineNumbers.count - 1)
-		let target = highlightedLineNumbers[index]
+		let highlights = highlightedLineNumbers
+		guard highlights.isEmpty == false else { return }
+		let current = lastVisitedHighlight.flatMap(highlights.firstIndex(of:))
+		let index = current.map { ($0 + offset + highlights.count) % highlights.count }
+			?? (offset > 0 ? 0 : highlights.count - 1)
+		let target = highlights[index]
 		lastVisitedHighlight = target
 		jump(toLine: target)
 	}
 
-	private func clear(resetHistoricLog: Bool) {
+	/// Empties the transcript and the history behind it, and starts the view
+	/// over from an empty store.
+	func clear() {
 		guard !terminating else {
 			return
 		}
 		cancelRenderJobs()
 		inlineImageLoader.cancelLoads(forView: uniqueIdentifier)
-		if resetHistoricLog {
-			historicLogResetChannel()
-			transcriptProjection.reset()
-			transcriptSessionBoundary.reset()
-			newestLineNumberFromPreviousSession = nil
-		} else {
-			transcriptProjection.becomeDormant()
-		}
+		historicLogResetChannel()
+		transcriptProjection.reset()
+		transcriptSessionBoundary.reset()
+		newestLineNumberFromPreviousSession = nil
+		reactionsByMessageIdentifier.removeAll()
 		lastVisitedHighlight = nil
 		lastLineStorage = nil
 		reloadingHistory = false
@@ -722,10 +755,6 @@ public extension LogController {
 			viewIsLoaded = false
 			finishLoading(backingView)
 		}
-	}
-
-	func clear() {
-		clear(resetHistoricLog: true)
 	}
 }
 
@@ -753,44 +782,77 @@ public extension LogController {
 	}
 
 	func print(
-		_ inputLogLine: LogLine,
+		_ logLine: LogLine,
 		completionBlock postPrintBlock: LogControllerPrintOperationCompletion?
 	) {
 		guard !terminating else {
 			return
 		}
-		/* A snapshot: the caller still holds the line it handed over, and rendering
-		 continues off the main actor after this returns. */
-		let logLine = inputLogLine
 		if logLine.lineType == .mode {
 			refreshTopicBar()
 		}
 		lastLineStorage = logLine
-		let context = makeRenderContext()
+		let context = makeRenderContext(includingMembers: logLine.lineType.mentionsMembers)
+		let channel = associatedChannel
+		let senderMark = channel?.isChannel == true
+			? logLine.nickname.flatMap { channel?.findMember($0)?.mark } ?? ""
+			: ""
 		/* The plugin renderers run here, on the main actor they are declared for;
 		 the render job that follows is a function of the snapshot alone. */
-		let line = Self.applyingMessageRenderers(to: [LogLineSnapshot(logLine, in: context)])[0]
+		let line = Self.applyingMessageRenderers(to: [
+			LogLineSnapshot(logLine, in: context, modeSymbol: senderMark),
+		])[0]
+		let viewIdentifier = associatedItem?.uniqueIdentifier
 		let enqueued = enqueueRenderJob {
-			Self.renderJob(LogLineRenderRequest(line: line, context: context))
-		} apply: { [weak self] result in
-			self?.applyPrintedLine(logLine, result: result, completionBlock: postPrintBlock)
+			/* Archived here, beside the render, so the main actor that applies
+			 the line only hands the store a finished entry. */
+			PrintedLineRender(
+				result: Self.renderJob(LogLineRenderRequest(line: line, context: context)),
+				historicEntry: viewIdentifier.map { logLine.historicEntry(forView: $0) }
+			)
+		} apply: { [weak self] (rendered: PrintedLineRender) in
+			self?.applyPrintedLine(logLine, rendered: rendered, completionBlock: postPrintBlock)
 		}
 		/* Only a line the pipeline took can be applied, and only an applied line
 		 is withdrawn again: a job refused because the application is quitting
 		 would otherwise stay awaiting a render that never comes. */
 		if enqueued {
-			linesAwaitingRender.append(logLine)
+			awaitingRender.append(logLine)
 		}
+	}
+
+	/// Drops every line still waiting for its render, when the jobs that would
+	/// have applied them are gone.
+	private func forgetLinesAwaitingRender() {
+		awaitingRender.removeAll()
+		awaitingRenderHead = 0
+	}
+
+	private func withdrawLineAwaitingRender(_ logLine: LogLine) {
+		if awaitingRenderHead < awaitingRender.count,
+		   awaitingRender[awaitingRenderHead].uniqueIdentifier == logLine.uniqueIdentifier
+		{
+			awaitingRenderHead += 1
+			if awaitingRenderHead * 2 >= awaitingRender.count {
+				awaitingRender.removeFirst(awaitingRenderHead)
+				awaitingRenderHead = 0
+			}
+			return
+		}
+		awaitingRender.removeFirst(awaitingRenderHead)
+		awaitingRenderHead = 0
+		awaitingRender.removeAll { $0.uniqueIdentifier == logLine.uniqueIdentifier }
 	}
 
 	private func applyPrintedLine(
 		_ logLine: LogLine,
-		result: LogLineRenderResult,
+		rendered: PrintedLineRender,
 		completionBlock postPrintBlock: LogControllerPrintOperationCompletion?
 	) {
+		let result = rendered.result
 		/* Withdrawn before any guard below, so a line one of them drops is not
 		 left counted as a line that is still on its way to the view. */
-		linesAwaitingRender.removeAll { $0.uniqueIdentifier == logLine.uniqueIdentifier }
+		withdrawLineAwaitingRender(logLine)
 		guard !terminating else {
 			return
 		}
@@ -802,8 +864,13 @@ public extension LogController {
 		let lineNumber = result.lineNumber
 		let channel = associatedChannel
 		let alreadyDisplayed = backingView?.containsLine(identifier: lineNumber) == true
-		let isDuplicate = alreadyDisplayed || transcriptProjection
+		/* The same line printed again, as opposed to a different line carrying
+		 a message identifier the view has already seen. It was stored when it
+		 was first printed, and a second row under one line identifier is a
+		 cursor history can no longer page from. */
+		let alreadyPrinted = alreadyDisplayed || transcriptProjection
 			.containsLine(withIdentifier: logLine.uniqueIdentifier)
+		let isDuplicate = alreadyPrinted
 			|| logLine.messageIdentifier.map { historicLog.containsMessageIdentifier(
 				$0,
 				forView: associatedItem.uniqueIdentifier
@@ -814,6 +881,7 @@ public extension LogController {
 			}
 		}
 		let projectionAction = transcriptProjection.record(result)
+		forgetRetiredProjectionMessages()
 		if case .append = projectionAction, !alreadyDisplayed {
 			var displayedLine = applyingCurrentState(to: result.transcriptLine)
 			if transcriptSessionBoundary.consumePendingMarker(for: result) {
@@ -827,7 +895,12 @@ public extension LogController {
 		if case .append = projectionAction, !alreadyDisplayed, result.processesInlineMedia {
 			processInlineMedia(result.links, atLineNumber: lineNumber)
 		}
-		historicLog.writeNewEntry(with: logLine, forView: associatedItem.uniqueIdentifier)
+		if alreadyPrinted == false {
+			historicLog.writeNewEntry(
+				rendered.historicEntry ?? logLine.historicEntry(forView: associatedItem.uniqueIdentifier),
+				for: logLine
+			)
+		}
 		/* The body was scanned against the member snapshot the line rendered
 		 with; the conversation weight belongs to whoever is in the channel now. */
 		if let channel {
@@ -850,15 +923,20 @@ public extension LogController {
 	}
 
 	func noteReaction(
-		_ emoji: String,
+		_ wireEmoji: String,
 		fromNickname nickname: String,
 		toMessageIdentifier messageIdentifier: String
 	) {
-		guard !emoji.isEmpty, !nickname.isEmpty, !messageIdentifier.isEmpty else {
+		let emoji = TranscriptTextSanitizer.singleLine(wireEmoji)
+		guard !emoji.isEmpty, emoji.utf16.count <= Self.maximumReactionLength,
+		      !nickname.isEmpty, !messageIdentifier.isEmpty,
+		      holdsMessage(withIdentifier: messageIdentifier)
+		else {
 			return
 		}
 		var reactions = reactionsByMessageIdentifier[messageIdentifier] ?? [:]
 		var nicknames = reactions[emoji] ?? []
+		guard nicknames.count < Self.maximumReactorsPerReaction || nicknames.contains(nickname) else { return }
 		if !nicknames.contains(nickname) {
 			nicknames.append(nickname)
 		}
@@ -874,6 +952,34 @@ public extension LogController {
 		}
 	}
 
+	/** Whether a reaction to `identifier` has a row to be drawn on, now or once
+	 what is on its way arrives: a row the view shows or the projection keeps,
+	 a printed line still rendering, or a replay that is still loading. */
+	private func holdsMessage(withIdentifier identifier: String) -> Bool {
+		transcriptProjection.phase != .active
+			|| backingView?.messageLineOrdinals[identifier] != nil
+			|| transcriptProjection.containsMessage(withIdentifier: identifier)
+			|| linesAwaitingRender.contains { $0.messageIdentifier == identifier }
+	}
+
+	/// The view trimmed the last rows of these messages.
+	func transcriptDidRetireMessages(_ identifiers: [String]) {
+		forgetReactions(for: identifiers)
+	}
+
+	private func forgetRetiredProjectionMessages() {
+		forgetReactions(for: transcriptProjection.takeRetiredMessageIdentifiers())
+	}
+
+	private func forgetReactions(for identifiers: [String]) {
+		for identifier in identifiers where reactionsByMessageIdentifier[identifier] != nil {
+			guard backingView?.messageLineOrdinals[identifier] == nil,
+			      transcriptProjection.containsMessage(withIdentifier: identifier) == false
+			else { continue }
+			reactionsByMessageIdentifier.removeValue(forKey: identifier)
+		}
+	}
+
 	func updateDeliveryState(
 		forLineNumber lineNumber: String,
 		state: LogLineDeliveryState,
@@ -886,6 +992,7 @@ public extension LogController {
 			messageIdentifier: messageIdentifier,
 			reason: reason
 		)
+		forgetRetiredProjectionMessages()
 		guard transcriptProjection.phase == .active else {
 			return
 		}

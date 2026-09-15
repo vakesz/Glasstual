@@ -26,10 +26,12 @@ enum FileTransferFailure: Equatable, Sendable {
 	case notConnectedToIRC
 	case oversizedTransfer
 	case peerClosedConnection
+	/// The peer never answered a RESUME.
+	case resumeNotAnswered
 	case sourceFileUnreadable
 	case sourceIPAddressUnknown
 	case storageFull
-	case writeTimeout
+	case stalled
 	/// A transport error that arrived with its own description. Only
 	/// ``DCCTransferError/network(_:)`` carries one; every other transport
 	/// failure maps to a case above, which is what gives it localized copy.
@@ -57,8 +59,8 @@ extension FileTransferFailure {
 			self = .oversizedTransfer
 		case .storageFull:
 			self = .storageFull
-		case .writeTimeout:
-			self = .writeTimeout
+		case .stalled:
+			self = .stalled
 		}
 	}
 }
@@ -168,13 +170,15 @@ enum FileTransferStrings {
 			LocalizedStringResource.FileTransfers.transferFromFailedBecauseTheSender(peerNickname)
 		case .peerClosedConnection:
 			LocalizedStringResource.FileTransfers.transferWithFailedPeerClosed(peerNickname)
+		case .resumeNotAnswered:
+			LocalizedStringResource.FileTransfers.transferWithFailedResumeNotAnswered(peerNickname)
 		case .sourceFileUnreadable:
 			LocalizedStringResource.FileTransfers.transferWithFailedCouldNotRead(peerNickname)
 		case .sourceIPAddressUnknown:
 			LocalizedStringResource.FileTransfers.transferWithFailedUnknownSourceIp(peerNickname)
 		case .storageFull:
 			LocalizedStringResource.FileTransfers.transferWithFailedNoSpaceLeft(peerNickname)
-		case .writeTimeout:
+		case .stalled:
 			LocalizedStringResource.FileTransfers.transferWithFailedStalled(peerNickname)
 		case let .underlying(description):
 			LocalizedStringResource.FileTransfers.transferWithFailed(peerNickname, description)

@@ -36,18 +36,30 @@
  *
  *********************************************************************** */
 
-/** The channel-list window, as the protocol layer asks for it.
+/** The channel-list window, as the protocol layer reports to it.
 
- `Protocol/` must not depend on feature presentation, so the two calls it makes
- land here, beside the scene that answers them. Every other caller reaches
- ``ApplicationScenes`` directly. */
-@MainActor
-extension IRCClient {
-	func channelListSession() -> ServerChannelListSession? {
-		SharedApplication.sharedApplicationScenes().serverChannelList(for: uniqueIdentifier)
+ `Protocol/` must not depend on feature presentation, so it speaks to
+ ``ClientChannelListPresenting`` and the application's scenes answer. A reply
+ only ever reaches a list that is already open: opening one is the single path
+ that makes a session and asks the server for a listing. */
+extension ApplicationScenes: ClientChannelListPresenting {
+	func openChannelList(for client: IRCClient) {
+		openServerChannelList(for: client)
 	}
 
-	func openServerChannelList() {
-		SharedApplication.sharedApplicationScenes().openServerChannelList(for: self)
+	func closeChannelList(for client: IRCClient) {
+		closeServerChannelList(for: client.uniqueIdentifier)
+	}
+
+	func channelListDidStart(for client: IRCClient) {
+		serverChannelList(for: client.uniqueIdentifier)?.receiveListStart()
+	}
+
+	func channelListDidReceive(channelNamed name: String, memberCount: UInt, topic: String?, for client: IRCClient) {
+		serverChannelList(for: client.uniqueIdentifier)?.addChannel(name, count: memberCount, topic: topic)
+	}
+
+	func channelListDidFinish(for client: IRCClient) {
+		serverChannelList(for: client.uniqueIdentifier)?.finishRefresh()
 	}
 }

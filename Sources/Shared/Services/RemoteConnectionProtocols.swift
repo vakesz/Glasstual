@@ -36,6 +36,7 @@
  *********************************************************************** */
 
 import CocoaExtensions
+import CryptoKit
 import Foundation
 import Security
 
@@ -74,15 +75,12 @@ nonisolated protocol RemoteConnectionServerProtocol: AnyObject, Sendable { // no
 	@objc(clearSendQueue)
 	func clearSendQueue()
 
-	@objc(enableAppNap)
-	func enableAppNap()
-
+	/// Held until the connection ends: the host balances it when the
+	/// application detaches, so there is no enabling half to call.
 	@objc(disableAppNap)
 	func disableAppNap()
 
-	@objc(enableSuddenTermination)
-	func enableSuddenTermination()
-
+	/// Held until the connection ends, balanced the same way as ``disableAppNap()``.
 	@objc(disableSuddenTermination)
 	func disableSuddenTermination()
 }
@@ -108,8 +106,15 @@ nonisolated protocol RemoteConnectionClientProtocol: AnyObject, Sendable { // no
 	@objc(ircConnectionDidDisconnectWithError:)
 	func ircConnectionDidDisconnectWithError(_ disconnectError: Error?)
 
-	@objc(ircConnectionDidReceiveData:)
-	func ircConnectionDidReceive(_ data: Data)
+	/** The complete lines one read from the server produced, in wire order.
+
+	 `acknowledge` is an XPC reply block, and it is the flow control: the host
+	 reads nothing more from the socket until the application has handled these
+	 lines and answered. A server that sends faster than the application can
+	 keep up is slowed by TCP rather than filling a queue between the two
+	 processes, so no amount of traffic can overrun the application. */
+	@objc(ircConnectionDidReceiveLines:acknowledge:)
+	func ircConnectionDidReceive(_ lines: [Data], acknowledge: @escaping @Sendable () -> Void)
 
 	@objc(ircConnectionRequestInsecureCertificateTrust:)
 	func ircConnectionRequestInsecureCertificateTrust(_ response: @escaping TrustDecisionHandler)
@@ -119,4 +124,70 @@ nonisolated protocol RemoteConnectionClientProtocol: AnyObject, Sendable { // no
 
 	@objc(ircConnectionDidSendData)
 	func ircConnectionDidSendData()
+}
+
+/// The interfaces both ends of the connection host speak.
+///
+/// Built in one place because a collection argument is only decoded for the
+/// classes its interface names: an interface assembled by hand on either side
+/// without them refuses every received line.
+nonisolated enum RemoteConnectionInterface { // nonisolated: value
+	/// What the application calls on the host.
+	static func server() -> NSXPCInterface {
+		NSXPCInterface(with: RemoteConnectionServerProtocol.self)
+	}
+
+	/// What the host calls on the application.
+	static func client() -> NSXPCInterface {
+		let interface = NSXPCInterface(with: RemoteConnectionClientProtocol.self)
+		interface.setClasses(
+			NSSet(objects: NSArray.self, NSData.self) as? Set<AnyHashable> ?? [],
+			for: #selector(RemoteConnectionClientProtocol.ircConnectionDidReceive(_:acknowledge:)),
+			argumentIndex: 0,
+			ofReply: false
+		)
+		return interface
+	}
+}
+
+/** The code-signing requirement the connection host holds its peer to.
+
+ An application's embedded XPC service is only published to that application,
+ so this is defence in depth rather than the only gate: the host still refuses
+ a connection from anything but the application it ships in, signed with the
+ very certificate the host itself was signed with. Pinning the certificate
+ rather than a team keeps the rule the same for development, Developer ID and
+ App Store signatures, all of which sign the application and its services
+ together. */
+nonisolated enum RemoteConnectionPeerRequirement { // nonisolated: value
+	/// The requirement text for `applicationIdentifier` signed with
+	/// `leafCertificate`, the DER bytes of the signing certificate.
+	static func requirement(applicationIdentifier: String, leafCertificate: Data) -> String {
+		/* Requirement hash constants are the certificate's SHA-1, the only
+		 digest the requirement language accepts for `certificate leaf = H`. */
+		let digest = Insecure.SHA1.hash(data: leafCertificate).map { String(format: "%02x", $0) }.joined()
+		return "identifier \"\(applicationIdentifier)\" and anchor apple generic and certificate leaf = H\"\(digest)\""
+	}
+
+	/// The requirement for `applicationIdentifier`, pinned to the certificate
+	/// the running process is signed with. `nil` when the process carries no
+	/// certificate — an unsigned or ad-hoc build, which has nothing to pin.
+	static func requirement(forCurrentProcessAnd applicationIdentifier: String) -> String? {
+		var code: SecCode?
+		var staticCode: SecStaticCode?
+		var information: CFDictionary?
+		guard SecCodeCopySelf([], &code) == errSecSuccess, let code,
+		      SecCodeCopyStaticCode(code, [], &staticCode) == errSecSuccess, let staticCode,
+		      SecCodeCopySigningInformation(staticCode, SecCSFlags(rawValue: kSecCSSigningInformation), &information) == errSecSuccess,
+		      let certificates = (information as? [String: Any])?[kSecCodeInfoCertificates as String] as? [SecCertificate],
+		      let leaf = certificates.first
+		else {
+			return nil
+		}
+
+		return requirement(
+			applicationIdentifier: applicationIdentifier,
+			leafCertificate: SecCertificateCopyData(leaf) as Data
+		)
+	}
 }

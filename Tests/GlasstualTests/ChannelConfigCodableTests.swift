@@ -102,6 +102,28 @@ struct ChannelConfigCodableTests {
 		config.secretKey = "hunter2"
 
 		#expect(PropertyListModel.encode(config)["secretKey"] == nil)
-		#expect(config.pendingSecretKey == "hunter2")
+		#expect(config.pendingSecretKey == .set("hunter2"))
+	}
+
+	/** `nil` used to mean "no edit" for the channel key, so there was no way to
+	 say the key had been removed: flushing an emptied key left the keychain
+	 item in place, and the next JOIN sent it again. */
+	@Test("Clearing the channel key deletes the stored one when flushed")
+	func clearedSecretKeyDeletesTheKeychainItem() {
+		var config = ChannelConfig(channelName: "#swift")
+		#expect(config.keychainItem.write("stored-key"))
+		defer { config.keychainItem.delete() }
+
+		config.secretKey = ""
+
+		#expect(config.pendingSecretKey == .cleared)
+		#expect(config.secretKey == nil)
+		#expect(config.uniqueCopy().pendingSecretKey == .cleared)
+
+		config.writeSecretKeyToKeychain()
+
+		#expect(config.pendingSecretKey == .unchanged)
+		#expect(config.keychainItem.password == nil)
+		#expect(config.secretKey == nil)
 	}
 }

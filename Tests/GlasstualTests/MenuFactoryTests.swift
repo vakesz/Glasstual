@@ -66,7 +66,6 @@ struct MenuFactoryTests {
 			controller.dockMenu,
 			controller.mainMenuChannelMenu,
 			controller.mainMenuQueryMenu,
-			controller.mainWindowSegmentedControllerCellMenu,
 			controller.serverListNoSelectionMenu,
 			controller.userControlMenu,
 		]
@@ -387,7 +386,6 @@ struct MenuFactoryTests {
 			controller.dockMenu,
 			controller.mainMenuChannelMenu,
 			controller.mainMenuQueryMenu,
-			controller.mainWindowSegmentedControllerCellMenu,
 			controller.serverListNoSelectionMenu,
 			controller.userControlMenu,
 		]
@@ -414,6 +412,78 @@ struct MenuFactoryTests {
 				(target as AnyObject).responds(to: action),
 				"\(item.title) sends \(action) to an object that does not answer it"
 			)
+		}
+	}
+
+	/// Option-Command-D hides and shows the Dock everywhere on the Mac, so the
+	/// item bound to it never received the key.
+	@Test("Channel Spotlight answers Shift-Command-O, the key of Xcode's Open Quickly")
+	func channelSpotlightUsesOpenQuicklyShortcut() throws {
+		_ = MenuController()
+		let spotlight = try #require(NSApp.mainMenu?.item(for: .channelSpotlight))
+
+		#expect(spotlight.keyEquivalent == "o")
+		#expect(spotlight.keyEquivalentModifierMask == [.command, .shift])
+	}
+
+	/// Command-? opens the Help menu's search field, and people press it out of
+	/// habit. It opened a network connection to a public channel instead.
+	@Test("Connect to Help Channel leaves Command-? to the Help menu")
+	func helpChannelHasNoShortcut() throws {
+		_ = MenuController()
+		let help = try #require(NSApp.mainMenu?.item(for: .connectToHelpChannel))
+
+		#expect(help.keyEquivalent.isEmpty)
+	}
+
+	/// AppKit swaps in an alternate whose modifiers differ from the primary's.
+	/// Connect has none, so an alternate on Option-Command waited for Command.
+	@Test("Option alone reveals Connect Without Proxy in place of Connect")
+	func connectWithoutProxyIsTheOptionAlternate() throws {
+		_ = MenuController()
+		let mainMenu = try #require(NSApp.mainMenu)
+		let connect = try #require(mainMenu.item(for: .connect))
+		let withoutProxy = try #require(mainMenu.item(for: .connectWithoutProxy))
+
+		#expect(withoutProxy.isAlternate)
+		#expect(withoutProxy.keyEquivalent == connect.keyEquivalent)
+		#expect(connect.keyEquivalentModifierMask.isEmpty)
+		#expect(withoutProxy.keyEquivalentModifierMask == .option)
+	}
+
+	/// Channel ▸ View Logs and Query ▸ Query Logs both answered Shift-Command-L,
+	/// which left AppKit to pick one of them.
+	@Test("No two menu-bar commands share a shortcut")
+	func menuBarShortcutsAreUnique() throws {
+		let controller = MenuController()
+		let formatMenu = try #require(TextViewIRCFormattingMenu().makeMenu())
+		let menus = [
+			MenuFactory.builtMainMenu(for: controller),
+			controller.mainMenuChannelMenu,
+			controller.mainMenuQueryMenu,
+			formatMenu,
+		]
+
+		var owners: [String: [String]] = [:]
+		for item in menus.flatMap(allItems(of:))
+			where item.keyEquivalent.isEmpty == false && item.isAlternate == false
+		{
+			let modifiers = item.keyEquivalentModifierMask.intersection(.deviceIndependentFlagsMask)
+			owners["\(modifiers.rawValue) \(item.keyEquivalent.lowercased())", default: []].append(item.title)
+		}
+
+		let shared = owners.values.filter { $0.count > 1 }
+		#expect(shared.isEmpty, "Shortcuts with more than one command: \(shared)")
+	}
+
+	/// The Channel and Query menus hang in the menu bar, where macOS draws no
+	/// images, and the symbol pass drew them there anyway.
+	@Test("The menu bar's Channel and Query menus carry no symbols")
+	func menuBarChannelAndQueryMenusAreDrawnPlain() throws {
+		let controller = try #require(AppController.shared?.menuController)
+
+		for menu in [controller.mainMenuChannelMenu, controller.mainMenuQueryMenu] {
+			#expect(allItems(of: menu).allSatisfy { $0.image == nil })
 		}
 	}
 }

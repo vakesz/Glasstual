@@ -60,6 +60,47 @@ struct MainWindowInputFieldValueTests {
 		#expect(try #require(field.undoManager).canUndo == false)
 	}
 
+	/// The undo manager belongs to the window. Clearing all of it on a
+	/// conversation switch also emptied every other editor's undo stack.
+	@Test("Replacing the value keeps undo actions other targets registered")
+	func replacingTheValueKeepsOtherUndoActions() throws {
+		let (_, field) = makeField()
+		let undoManager = try #require(field.undoManager)
+		let otherTarget = NSObject()
+		undoManager.registerUndo(withTarget: otherTarget) { _ in }
+		try #require(undoManager.canUndo)
+
+		field.stringValue = "replaced"
+
+		#expect(undoManager.canUndo)
+		undoManager.removeAllActions(withTarget: otherTarget)
+	}
+
+	/** A conversation switch refills the field through the value setters, and
+	 the field reported that refill as typing. The new conversation got a
+	 typing notice the user never started. */
+	@Test("A value set from code is marked as not typed, and typing is not")
+	func programmaticValuesAreNotTyping() {
+		let window = NSWindow(
+			contentRect: NSRect(x: 0, y: 0, width: 320, height: 120),
+			styleMask: [.titled],
+			backing: .buffered,
+			defer: false
+		)
+		let field = TypingRecordingField(frame: NSRect(x: 0, y: 0, width: 320, height: 40))
+		field.prepareInitialState()
+		window.contentView?.addSubview(field)
+		window.makeFirstResponder(field)
+
+		field.stringValue = "restored draft"
+		field.attributedStringValue = NSAttributedString(string: "history entry")
+		#expect(field.changesMarkedAsReplacement == [true, true])
+
+		field.insertText("!", replacementRange: field.selectedRange())
+		#expect(field.changesMarkedAsReplacement == [true, true, false])
+		#expect(field.isReplacingEntireValue == false)
+	}
+
 	@Test("Both setters replace the whole value rather than appending")
 	func settersReplaceTheWholeValue() {
 		let (_, field) = makeField()
@@ -70,6 +111,16 @@ struct MainWindowInputFieldValueTests {
 
 		field.stringValue = ""
 		#expect(field.stringValue.isEmpty)
+	}
+}
+
+/// Records, for every text change, whether the field called it a replacement.
+private final class TypingRecordingField: TextViewWithIRCFormatter {
+	private(set) var changesMarkedAsReplacement: [Bool] = []
+
+	override func textDidChange(_ notification: Notification) {
+		super.textDidChange(notification)
+		changesMarkedAsReplacement.append(isReplacingEntireValue)
 	}
 }
 

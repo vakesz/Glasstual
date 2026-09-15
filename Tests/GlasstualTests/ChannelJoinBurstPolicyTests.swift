@@ -50,7 +50,7 @@ struct ChannelReadMarkerTests {
 
 	/// Asks a client whether a line stamped `receivedAt` arrives already seen,
 	/// with `marker` standing for what the server last reported as read.
-	private func lineIsRead(receivedAt: Date, marker: Date?) throws -> Bool {
+	private func lineIsRead(receivedAt: Date, marker: Date?, hasServerTime: Bool = true) throws -> Bool {
 		let client = TestClient(configDictionary: ["nickname": "me"])
 		let channel = try #require(client.findChannelOrCreate("#channel"))
 
@@ -61,6 +61,7 @@ struct ChannelReadMarkerTests {
 		let message = try #require(Message(line: ":a!u@h PRIVMSG #channel :hello", on: client))
 
 		message.receivedAt = receivedAt
+		message.hasServerTime = hasServerTime
 
 		return client.lineArrivedAlreadySeen(message, in: channel)
 	}
@@ -83,5 +84,28 @@ struct ChannelReadMarkerTests {
 	@Test("A line after the marker is unread")
 	func linesAfterTheMarkerAreUnread() throws {
 		try #expect(lineIsRead(receivedAt: marker.addingTimeInterval(0.001), marker: marker) == false)
+	}
+
+	/// A line without server time is stamped by the local clock, which cannot
+	/// be compared with a server timestamp: a clock running behind read every
+	/// live line as older than the marker.
+	@Test("A line without server time is never read by the marker")
+	func linesWithoutServerTimeAreUnread() throws {
+		try #expect(lineIsRead(receivedAt: marker.addingTimeInterval(-60), marker: marker, hasServerTime: false) == false)
+	}
+
+	/// The marker is sent at a line's time, so only a line the server stamped
+	/// may place it.
+	@Test("Only a conversation line the server delivered places the read marker", arguments: [
+		(lineType: LogLineType.privateMessage, messageIdentifier: "abc" as String?, marks: true),
+		(lineType: LogLineType.privateMessage, messageIdentifier: nil as String?, marks: false),
+		(lineType: LogLineType.join, messageIdentifier: "abc" as String?, marks: false),
+	])
+	func onlyServerStampedConversationLinesPlaceTheMarker(
+		lineType: LogLineType,
+		messageIdentifier: String?,
+		marks: Bool
+	) {
+		#expect(IRCChatHistoryPolicy.marksReadPosition(lineType: lineType, messageIdentifier: messageIdentifier) == marks)
 	}
 }

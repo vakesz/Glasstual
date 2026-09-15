@@ -33,14 +33,51 @@ private actor RetentionPassCounter {
 @MainActor
 @Suite("Historic log retention", .serialized)
 struct HistoricLogRetentionTests {
-	private func entry(_ id: String) -> HistoricLogEntry {
+	private func entry(_ id: String, date: TimeInterval = 100) -> HistoricLogEntry {
 		HistoricLogEntry(
 			logLineData: Data(id.utf8),
 			uniqueIdentifier: id,
 			viewIdentifier: "view",
 			sessionIdentifier: 1,
-			creationDate: 100
+			creationDate: date
 		)
+	}
+
+	/** A server-history page is written after the live lines it is older than,
+	 so its rows carry the highest insertion identifiers. Retention has to agree
+	 with the reads about which lines are oldest, or it prunes the conversation
+	 the reader just had and keeps the page they scrolled back to. */
+	@Test("Retention prunes by each line's own time, not by the order rows were inserted",
+	      .timeLimit(.minutes(1)))
+	func retentionPrunesByLineTime() async throws {
+		let directory = FileManager.default.temporaryDirectory.appendingPathComponent(
+			UUID().uuidString, isDirectory: true
+		)
+		try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+		defer { try? FileManager.default.removeItem(at: directory) }
+		let store = HistoricLogStore(filenameStore: HistoricLogFilenameFixture(), resizeDelay: { .seconds(1800) })
+		#expect(await store.openDatabase(inDirectory: directory.path).isOpen)
+		await store.setMaximumLineCount(3)
+		let rows: [(String, TimeInterval)] = [
+			("live-0", 1000), ("live-1", 1001), ("live-2", 1002),
+			("history-0", 10), ("history-1", 11), ("history-2", 12),
+		]
+		for (identifier, date) in rows {
+			#expect(await store.writeLogLine(entry(identifier, date: date)) == .accepted)
+		}
+
+		guard case let .deleted(result) = await store.resize("view") else {
+			Issue.record("Retention failed")
+			return
+		}
+		#expect(result.deletedCount == 3)
+		#expect(result.uniqueIdentifiers == ["history-0", "history-1", "history-2"])
+		let retained = await store.fetchOutcome(HistoricLogFetchRequest(
+			viewIdentifier: "view",
+			kind: .rowPage(before: nil, fetchLimit: 10, limitToDate: nil)
+		)).entries
+		#expect(retained.map(\.uniqueIdentifier) == ["live-2", "live-1", "live-0"])
+		#expect(await store.close() == .saved)
 	}
 
 	/** A pass is scheduled once and waits up to half an hour, so the limit it

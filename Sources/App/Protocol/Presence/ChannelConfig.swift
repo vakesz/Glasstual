@@ -104,10 +104,11 @@ public nonisolated struct ChannelConfig: Codable, Sendable, Equatable, Hashable 
 	/// Per-event overrides, keyed by the notification preference schema.
 	public var notifications: [String: ChannelNotificationSetting] = [:]
 
-	/** A channel key waiting to be written to the keychain, or one read back
-	 out of it so a duplicate can carry it to its own identifier. Never
-	 encoded — see `secretKey`. */
-	public var pendingSecretKey: String?
+	/** An unflushed edit to the channel key: one waiting to be written to the
+	 keychain, a request to delete the stored one, or a stored key read back so
+	 a duplicate can carry it to its own identifier. Never encoded — see
+	 `secretKey`. */
+	public var pendingSecretKey: PendingKeychainSecret = .unchanged
 
 	public init(
 		uniqueIdentifier: String = UUID().uuidString,
@@ -273,32 +274,31 @@ public nonisolated extension ChannelConfig { // nonisolated: value
 		keychainItem.password
 	}
 
-	/// The key to JOIN with: an unflushed edit if there is one, and otherwise
-	/// whatever the keychain holds.
+	/** The key to JOIN with: an unflushed edit if there is one, and otherwise
+	 whatever the keychain holds.
+
+	 Assigning `nil` or an empty key clears it, so an emptied field deletes the
+	 stored key instead of falling back to it on every later JOIN. */
 	var secretKey: String? {
-		get { pendingSecretKey ?? secretKeyFromKeychain }
-		set { pendingSecretKey = newValue }
+		get { pendingSecretKey.value(orStored: secretKeyFromKeychain) }
+		set { pendingSecretKey = PendingKeychainSecret(newValue) }
 	}
 
 	mutating func writeSecretKeyToKeychain() {
-		guard let pendingSecretKey else {
-			return
-		}
-
-		keychainItem.write(pendingSecretKey)
-		self.pendingSecretKey = nil
+		keychainItem.apply(pendingSecretKey)
+		pendingSecretKey = .unchanged
 	}
 
 	mutating func destroySecretKeyKeychainItem() {
 		keychainItem.delete()
-		pendingSecretKey = nil
+		pendingSecretKey = .unchanged
 	}
 
 	/// A copy under a fresh identity, carrying the channel key across so the
 	/// duplicate does not silently lose it.
 	func uniqueCopy() -> ChannelConfig {
 		var copy = self
-		copy.pendingSecretKey = pendingSecretKey ?? secretKeyFromKeychain
+		copy.pendingSecretKey = pendingSecretKey.detached(from: secretKeyFromKeychain)
 		copy.uniqueIdentifier = UUID().uuidString
 
 		return copy

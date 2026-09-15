@@ -403,10 +403,6 @@ public extension MenuActionCoordinator {
 	func memberInChannelViewDoubleClicked(_ sender: Any?) {
 		performDoubleClick(sender: sender ?? NSNull())
 	}
-
-	func memberInsertNameIntoTextField(_ sender: Any) {
-		insertNicknames(sender: sender)
-	}
 }
 
 private extension MenuActionCoordinator {

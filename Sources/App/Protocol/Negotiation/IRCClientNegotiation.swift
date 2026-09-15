@@ -61,10 +61,17 @@ enum ClientNegotiationUtilities {
 	/// The largest advertisement any real network sends is a few dozen.
 	static let maximumOfferedCapabilities = 256
 
+	/** The mechanisms the client can speak, in the order it tries them.
+
+	 - Parameter sendsPasswordInClear: Whether the connection may carry the
+	   password itself. `PLAIN` sends it as typed, so it is left out where the
+	   answer is no; SCRAM proves knowledge of the password without sending it
+	   and stays available. */
 	static func supportedSASLMechanisms(
 		hasClientCertificate: Bool,
 		externalMechanismDisabled: Bool,
 		hasPassword: Bool,
+		sendsPasswordInClear: Bool = true,
 		preferredMechanism: String?
 	) -> [String] {
 		var mechanisms: [String] = []
@@ -75,7 +82,9 @@ enum ClientNegotiationUtilities {
 
 		if hasPassword {
 			mechanisms.append(SCRAMClient.mechanismName)
-			mechanisms.append("PLAIN")
+			if sendsPasswordInClear {
+				mechanisms.append("PLAIN")
+			}
 		}
 
 		guard let preferredMechanism,
@@ -137,46 +146,6 @@ enum ClientNegotiationUtilities {
 }
 
 extension IRCClient {
-	var isBrokenIRCdKnownAsTwitch: Bool {
-		serverAddress?.hasSuffix(IRCServerQuirks.twitchAddressSuffix) ?? false
-	}
-
-	var supportsAdvancedTracking: Bool {
-		isCapabilityEnabled(.monitorCommand) || isCapabilityEnabled(.watchCommand)
-	}
-
-	var monitorAwayStatus: Bool {
-		isCapabilityEnabled(.awayNotify) || environment.preferences.trackUserAwayStatusMaximumChannelSize > 0
-	}
-
-	public var lastLine: LogLine? {
-		presentation?.lastPrintedLine()
-	}
-
-	func messageIsFromMyself(_ message: Message) -> Bool {
-		nicknameIsMyself(message.senderNickname ?? "")
-	}
-
-	public func nicknameIsMyself(_ nickname: String) -> Bool {
-		casefoldNickname(userNickname) == casefoldNickname(nickname)
-	}
-
-	public func casefoldNickname(_ nickname: String) -> String {
-		supportInfo.casefoldString(nickname)
-	}
-
-	public func stringIsNickname(_ string: String) -> Bool {
-		string.isHostmaskNickname(on: self) && string.isChannelName(on: self) == false
-	}
-
-	public func stringIsChannelName(_ string: String) -> Bool {
-		string.isChannelName(on: self)
-	}
-
-	func stringIsChannelNameOrZero(_ string: String) -> Bool {
-		stringIsChannelName(string) || string == "0"
-	}
-
 	func enableCapability(_ capability: ClientIRCv3SupportedCapability) {
 		let couldTrackPresence = supportsAdvancedTracking
 		capabilityNegotiation.enable(capability)
@@ -211,18 +180,6 @@ extension IRCClient {
 		capabilityNegotiation.removeFacts(capability)
 	}
 
-	public func isCapabilityEnabled(_ capability: ClientIRCv3SupportedCapability) -> Bool {
-		capabilities.contains(capability)
-	}
-
-	public func isCapabilitySupported(_ capability: String) -> Bool {
-		CapabilityRegistry.defaultRegistry.isCapabilitySupported(capability, preferences: environment.preferences)
-	}
-
-	public var enabledCapabilitiesStringValue: String {
-		capabilityNegotiation.enabledCapabilitiesStringValue
-	}
-
 	/// What the server has offered that can be asked for right now: the client
 	/// implements it, the user leaves it on, the server has not refused or
 	/// withdrawn it, and every dependency it names is already acknowledged.
@@ -249,10 +206,13 @@ extension IRCClient {
 			 pick the mechanism: this runs again on every `CAP NEW` and `CAP DEL`,
 			 and choosing here overwrote the mechanism of an exchange already in
 			 flight. The choice is made once, on the ACK. */
-			if capability.negotiation == .sasl,
-			   nextSASLMechanism(from: offer[name] ?? []) == nil
-			{
-				return nil
+			if capability.negotiation == .sasl {
+				if config.usesSASL, sessionNicknamePassword?.isEmpty == false, permitsCredentialsInClear == false {
+					reportWithheldCredentials()
+				}
+				guard nextSASLMechanism(from: offer[name] ?? []) != nil else {
+					return nil
+				}
 			}
 
 			/* `name` matched the offer exactly — capability names are
@@ -261,17 +221,23 @@ extension IRCClient {
 		}
 	}
 
-	@MainActor private func handleSTSCapability(from offered: [String: [String]]) {
+	/** Applies an `sts` advertisement, reporting whether it abandoned the connection.
+
+	 An upgrade closes the unencrypted socket and reconnects over TLS. Whatever
+	 negotiation that socket still had to do is abandoned with it: a `CAP REQ`
+	 or `CAP END` written after the upgrade was decided goes to a server the
+	 client has just resolved not to talk to in clear. */
+	@MainActor private func handleSTSCapability(from offered: [String: [String]]) -> Bool {
 		guard let values = offered["sts"],
 		      let parsed = STSCapabilityValues.values(fromCapabilityValues: values)
 		else {
-			return
+			return false
 		}
 
 		let host = socket?.config.serverAddress.nonEmpty ?? serverAddress?.nonEmpty
 
 		guard let host else {
-			return
+			return false
 		}
 
 		let connectedPort = socket?.config.serverPort ?? 0
@@ -286,7 +252,7 @@ extension IRCClient {
 		switch action {
 		case let .upgrade(upgradePort):
 			guard performedSTSUpgrade == false, upgradePort > 0 else {
-				return
+				return false
 			}
 
 			performedSTSUpgrade = true
@@ -295,7 +261,13 @@ extension IRCClient {
 			// Snapshot the pending secret too: teardown may retire its keychain item.
 			var origin = server
 			origin?.pendingServerPassword = PendingKeychainSecret(server?.serverPassword)
-			let endpoint = PendingIRCEndpoint(host: host, port: upgradePort, origin: origin, reason: .stsUpgrade)
+			let endpoint = PendingIRCEndpoint(
+				host: host,
+				port: upgradePort,
+				secured: true,
+				origin: origin,
+				reason: .stsUpgrade
+			)
 			addDisconnectCallback { [weak self] in
 				guard let self else { return }
 				pendingEndpoint = endpoint
@@ -303,6 +275,8 @@ extension IRCClient {
 			}
 
 			disconnect()
+
+			return true
 		case let .stored(policyPort):
 			printDebugInformation(toConsole: IRCTransportSecurityStrings.storedPolicy(port: policyPort))
 		case .cleared:
@@ -310,6 +284,8 @@ extension IRCClient {
 		case .none:
 			break
 		}
+
+		return false
 	}
 
 	/** Sends every request the negotiation is ready for, then closes it.
@@ -326,7 +302,16 @@ extension IRCClient {
 			return
 		}
 
-		for group in CapabilityRequestBatching.groups(eligibleCapabilityRequests()) {
+		let eligible = eligibleCapabilityRequests()
+		let (alone, batched) = eligible.reduce(into: ([String](), [String]())) { partition, name in
+			if capabilityNegotiation.mustRequestAlone(name) {
+				partition.0.append(name)
+			} else {
+				partition.1.append(name)
+			}
+		}
+
+		for group in CapabilityRequestBatching.groups(batched) + alone.map({ [$0] }) {
 			for name in group {
 				capabilityNegotiation.noteRequested(name)
 			}
@@ -406,10 +391,18 @@ extension IRCClient {
 		NotificationCenter.default.post(name: .ircClientCapabilitiesDidChange, object: self)
 	}
 
-	/// Matches an `ACK` or `NAK` back to the outstanding requests it names.
+	/** Matches an `ACK` or `NAK` back to the outstanding requests it names.
+
+	 A `CAP REQ` is all or nothing: the server refuses the whole line when it
+	 will not grant any one name on it. A refused line of several names says
+	 nothing about which of them was the problem, so each is asked for again on
+	 a line of its own, and only a name refused alone is taken as refused. */
 	@MainActor
 	private func receiveCapabilityAnswer(_ actions: String, accepted: Bool) {
-		for token in LineParser.wireTokens(in: actions) {
+		let tokens = LineParser.wireTokens(in: actions)
+		let refusesAGroup = accepted == false && tokens.count > 1
+
+		for token in tokens {
 			let name = String(token.drop(while: { $0 == "-" }).prefix(while: { $0 != "=" }))
 
 			capabilityNegotiation.resolveRequest(name)
@@ -419,6 +412,8 @@ extension IRCClient {
 				if token.hasPrefix("-") {
 					capabilityNegotiation.refuse(name)
 				}
+			} else if refusesAGroup, capabilityNegotiation.mustRequestAlone(name) == false {
+				capabilityNegotiation.requestAlone(name)
 			} else {
 				capabilityNegotiation.refuse(name)
 			}
@@ -455,7 +450,7 @@ extension IRCClient {
 		case "DEL":
 			receiveCapabilityWithdrawal(actions)
 		case "NEW":
-			receiveCapabilityAdvertisement(actions)
+			guard receiveCapabilityAdvertisement(actions) else { return }
 		default:
 			break
 		}
@@ -463,13 +458,14 @@ extension IRCClient {
 		advanceCapabilityNegotiation()
 	}
 
-	/** Takes one line of a `CAP LS`, reporting whether the listing is complete.
+	/** Takes one line of a `CAP LS`, reporting whether negotiation may advance.
 
 	 With version 302 the server may split the advertisement over several
 	 lines, marking every line but the last with a lone `*`; nothing may be
 	 requested until the last one lands. An advertisement that grows past the
 	 ceiling is dropped whole and negotiation ends, which is also a complete
-	 listing as far as the caller is concerned. */
+	 listing as far as the caller is concerned. A complete listing that upgrades
+	 to TLS abandons this connection, and nothing more is negotiated on it. */
 	@MainActor private func receiveCapabilityListing(_ message: Message) -> Bool {
 		capabilityNegotiation.beginListing()
 
@@ -493,9 +489,8 @@ extension IRCClient {
 		}
 
 		capabilityNegotiation.finishListing()
-		handleSTSCapability(from: capabilityNegotiation.offeredCapabilities)
 
-		return true
+		return handleSTSCapability(from: capabilityNegotiation.offeredCapabilities) == false
 	}
 
 	/// `CAP DEL`: the capability stops being available at once, and a request
@@ -509,8 +504,9 @@ extension IRCClient {
 	}
 
 	/// `CAP NEW`: an advertisement made after the initial listing. It is
-	/// requested the same way, but without reopening registration.
-	@MainActor private func receiveCapabilityAdvertisement(_ actions: String) {
+	/// requested the same way, but without reopening registration. Reports
+	/// whether negotiation may advance, which an upgrade to TLS forbids.
+	@MainActor private func receiveCapabilityAdvertisement(_ actions: String) -> Bool {
 		let offered = CapabilityRegistry.parseCapabilityList(actions)
 		let ceiling = ClientNegotiationUtilities.maximumOfferedCapabilities
 
@@ -522,7 +518,7 @@ extension IRCClient {
 			capabilityNegotiation.offer(name, values: values)
 		}
 
-		handleSTSCapability(from: offered)
+		return handleSTSCapability(from: offered) == false
 	}
 
 	private var supportedSASLMechanisms: [String] {
@@ -530,7 +526,8 @@ extension IRCClient {
 		return ClientNegotiationUtilities.supportedSASLMechanisms(
 			hasClientCertificate: socket?.isConnectedWithClientSideCertificate ?? false,
 			externalMechanismDisabled: config.saslAuthenticationDisableExternalMechanism,
-			hasPassword: config.nicknamePassword?.isEmpty == false,
+			hasPassword: sessionNicknamePassword?.isEmpty == false,
+			sendsPasswordInClear: permitsCredentialsInClear,
 			preferredMechanism: config.saslMechanismPreference
 		)
 	}
@@ -589,7 +586,7 @@ extension IRCClient {
 		switch saslMechanism {
 		case "PLAIN":
 			let username = config.username.nonEmpty ?? config.nickname
-			let password = config.nicknamePassword ?? ""
+			let password = sessionNicknamePassword ?? ""
 			/* PLAIN is three fields separated by U+0000. A field that contains
 			 one splits somewhere else on the server, which either authenticates
 			 as a name the user did not type or sends the tail of the password
@@ -616,7 +613,7 @@ extension IRCClient {
 		let username = config.username.nonEmpty ?? config.nickname
 
 		guard let saslScramClient else {
-			let client = SCRAMClient(username: username, password: config.nicknamePassword ?? "")
+			let client = SCRAMClient(username: username, password: sessionNicknamePassword ?? "")
 			saslScramClient = client
 			sendSASLPayloadInChunks(client.clientFirstMessage)
 			return
@@ -675,11 +672,18 @@ extension IRCClient {
 		}
 	}
 
-	/// SCRAM only buys mutual authentication if the client verified the
-	/// server's final message. A server that jumps straight to 900/903
-	/// without one has proved nothing, so its success must not be believed.
+	/** SCRAM only buys mutual authentication if the client verified the
+	 server's final message. A server that jumps straight to 900/903 without one
+	 has proved nothing, so its success must not be believed.
+
+	 The question only exists during a SCRAM exchange. Once SASL has finished,
+	 a 900 is the answer to something else — a NickServ `IDENTIFY` after a
+	 failed login, say — and a mechanism left over from the exchange must not
+	 turn it away. */
 	@MainActor func scramMutualAuthenticationIsSatisfied() -> Bool {
-		if isCapabilityEnabled(.isIdentifiedWithSASL) {
+		guard isCapabilityEnabled(.isIdentifiedWithSASL) == false,
+		      isCapabilityEnabled(.isInSASLNegotiation)
+		else {
 			return true
 		}
 		guard let saslMechanism,
@@ -722,7 +726,6 @@ extension IRCClient {
 	}
 
 	@MainActor func stopSASLTimeoutTimer() {
-		guard saslTimeoutTimer.isActive else { return }
 		saslTimeoutTimer.stop()
 	}
 
@@ -737,6 +740,7 @@ extension IRCClient {
 	@MainActor func finishSASLNegotiation(failed: Bool) {
 		stopSASLTimeoutTimer()
 		disableCapability(.isInSASLNegotiation)
+		saslMechanism = nil
 		saslScramClient = nil
 		saslIncomingPayload = nil
 		if failed {
@@ -796,6 +800,7 @@ extension IRCClient {
 		stopSASLTimeoutTimer()
 		disableCapability(.isInSASLNegotiation)
 		disableCapability(.isIdentifiedWithSASL)
+		saslMechanism = nil
 		saslScramClient = nil
 		saslIncomingPayload = nil
 	}

@@ -17,7 +17,6 @@ public protocol ChannelPropertiesSheetDelegate: AnyObject {
 	func channelPropertiesSheet(_ sender: ChannelPropertiesSheet, onOk config: ChannelConfig)
 }
 
-@objc(TDCChannelPropertiesSheet)
 @MainActor
 public final class ChannelPropertiesSheet: MainWindowSheetSession, ChannelScoped {
 	public private(set) var client: IRCClient?
@@ -26,7 +25,6 @@ public final class ChannelPropertiesSheet: MainWindowSheetSession, ChannelScoped
 	public private(set) var channelId: String?
 
 	let model: ChannelPropertiesModel
-	private var notificationItems: [NotificationConfigurationItem] = []
 	private let notifications = NotificationSubscriptions()
 
 	public convenience init(client: IRCClient) {
@@ -53,19 +51,8 @@ public final class ChannelPropertiesSheet: MainWindowSheetSession, ChannelScoped
 	}
 
 	private func installSheet() {
-		notificationItems = [
-			.configuration(ChannelNotificationConfiguration(eventType: .highlight, in: self)),
-			.separator,
-			.configuration(ChannelNotificationConfiguration(eventType: .channelMessage, in: self)),
-			.configuration(ChannelNotificationConfiguration(eventType: .channelNotice, in: self)),
-			.separator,
-			.configuration(ChannelNotificationConfiguration(eventType: .userJoined, in: self)),
-			.configuration(ChannelNotificationConfiguration(eventType: .userParted, in: self)),
-		]
-
 		let rootView = ChannelPropertiesView(
 			model: model,
-			notificationItems: notificationItems,
 			submit: { [weak self] in self?.submit() },
 			cancel: { [weak self] in self?.cancel() }
 		)

@@ -59,10 +59,9 @@ extension IRCClient {
 			}
 		case .namereply: handleNamesNumeric(message, shouldPrint: shouldPrint)
 		case .endofnames: handleEndOfNamesNumeric(message, shouldPrint: shouldPrint)
-		case .liststart:
-			channelListSession()?.receiveListStart()
+		case .liststart: channelListPresentation?.channelListDidStart(for: self)
 		case .list: handleListNumeric(message)
-		case .listend: channelListSession()?.finishRefresh()
+		case .listend: channelListPresentation?.channelListDidFinish(for: self)
 		case .banlist, .invitelist, .exceptlist, .quietlist:
 			handleModeListNumeric(numeric, message: message, shouldPrint: shouldPrint)
 		case .endofbanlist, .endofinvitelist, .endofexceptlist, .endofquietlist:
@@ -131,9 +130,14 @@ extension IRCClient {
 		)
 	}
 
+	/** Reconciles presence with one `RPL_ISON`.
+
+	 The reply names who is online among the nicknames its own command asked
+	 about, and says nothing about anyone else: a poll longer than one command
+	 draws one reply per command. Only those nicknames are reconciled. */
 	private func handleISONNumeric(_ message: Message, shouldPrint: Bool) {
 		let visible = requestedCommands.visibleIsonRequest
-		requestedCommands.recordIsonRequestClosed()
+		let asked = Set(requestedCommands.recordIsonRequestClosed().map(casefoldNickname))
 		if visible {
 			if shouldPrint {
 				printReplyToHiddenCommandResponsesQuery(message)
@@ -143,7 +147,7 @@ extension IRCClient {
 		let online = LineParser.wireTokens(in: message.sequence)
 		let tracked = supportsAdvancedTracking ? [:] : trackedUsers.trackedUsers
 		let foldedOnline = Set(online.map(casefoldNickname))
-		for (nickname, previousValue) in tracked {
+		for (nickname, previousValue) in tracked where asked.contains(casefoldNickname(nickname)) {
 			let isOnline = foldedOnline.contains(casefoldNickname(nickname))
 			let status: IRCAddressBookUserTrackingStatus = if previousValue, !isOnline,
 			                                                  !invokingISONCommandForFirstTime
@@ -158,9 +162,14 @@ extension IRCClient {
 				setTrackedNickname(nickname, status: status, notify: true)
 			}
 		}
-		invokingISONCommandForFirstTime = false
+		/* The first poll is every command it sent, not just the first reply. */
+		if requestedCommands.hasOpenIsonRequest == false {
+			invokingISONCommandForFirstTime = false
+		}
 		for channel in channelList where channel.isPrivateMessage {
-			applyPresence(foldedOnline.contains(casefoldNickname(channel.name)), to: channel)
+			let foldedName = casefoldNickname(channel.name)
+			guard asked.contains(foldedName) else { continue }
+			applyPresence(foldedOnline.contains(foldedName), to: channel)
 		}
 	}
 
@@ -273,10 +282,11 @@ extension IRCClient {
 
 	private func handleListNumeric(_ message: Message) {
 		guard message.params.count > 2, message.params[1] != "*" else { return }
-		channelListSession()?.addChannel(
-			message.params[1],
-			count: UInt(message.params[2]) ?? 0,
-			topic: message.sequence(3)
+		channelListPresentation?.channelListDidReceive(
+			channelNamed: message.params[1],
+			memberCount: UInt(message.params[2]) ?? 0,
+			topic: message.sequence(3),
+			for: self
 		)
 	}
 

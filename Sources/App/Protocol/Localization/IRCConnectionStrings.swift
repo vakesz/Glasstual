@@ -87,6 +87,12 @@ nonisolated enum IRCConnectionStrings { // nonisolated: value
 		String(localized: .IRC.serverDidNotAcknowledgeThisMessage)
 	}
 
+	/// Why a message still waiting for its acknowledgement failed when the
+	/// connection ended: the same "Disconnected" the console prints.
+	static var labeledResponseLostToDisconnect: String {
+		String(localized: .IRC.miscellaneousMessagesRelatedDisconnected)
+	}
+
 	static func disconnectReason(for mode: IRCClientDisconnectMode) -> String {
 		switch mode {
 		case .normal: String(localized: .IRC.miscellaneousMessagesRelatedDisconnected)

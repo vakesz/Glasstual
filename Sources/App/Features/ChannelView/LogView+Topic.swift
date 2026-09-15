@@ -66,7 +66,14 @@ extension LogView {
 	 what somebody actually set. */
 	func refreshTopicBar() {
 		let topic = attributedTopic(topicText)
-		let displayed = NSMutableAttributedString(attributedString: topic)
+		let displayed = NSMutableAttributedString()
+		/* Isolated, so the topic's own direction cannot carry the caption after
+		 it along. */
+		appendIsolated(
+			topic,
+			to: displayed,
+			isolateAttributes: topic.length > 0 ? topic.attributes(at: 0, effectiveRange: nil) : [:]
+		)
 		if let modes = channelModeCaption {
 			/* The gap carries the caption's own attributes: an unstyled run
 			 between them would be drawn in the system default rather than in

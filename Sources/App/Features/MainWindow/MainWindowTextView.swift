@@ -179,7 +179,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 		 inside a main-actor task delivers on the same later main-queue turn
 		 with the isolation checked instead of assumed. */
 		typingObservations = [
-			Task { @MainActor [weak self] in
+			Task { [weak self] in
 				let publisher = NotificationCenter.default
 					.publisher(for: .IRCTypingTrackerDidChange)
 
@@ -191,7 +191,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 					typingStateDidChange(notification)
 				}
 			},
-			Task { @MainActor [weak self] in
+			Task { [weak self] in
 				let publisher = NotificationCenter.default
 					.publisher(for: .mainWindowSelectionChanged)
 
@@ -217,15 +217,22 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 	}
 
 	private func selectionDidChange(_: Notification) {
-		let selectedChannel = AppController.shared.mainWindow.selectedChannel
-
-		if let typingChannel, typingChannel !== selectedChannel {
-			typingChannel.associatedClient?.localUserClearedText(in: typingChannel)
-			self.typingChannel = nil
-		}
-
+		finishTypingNotice(unlessIn: AppController.shared.mainWindow.selectedChannel)
 		cancelReply()
 		updateTypingRow()
+	}
+
+	/** Tells the conversation the local user was typing in that they stopped,
+	 unless it is `channel`.
+
+	 The window calls this when the selection changes and before it refills the
+	 field. A notice that waited for the selection notification arrived after
+	 the refill had already recorded the new conversation as the one being typed
+	 in, so the old one never heard that typing stopped. */
+	public func finishTypingNotice(unlessIn channel: Channel?) {
+		guard let typingChannel, typingChannel !== channel else { return }
+		typingChannel.associatedClient?.localUserClearedText(in: typingChannel)
+		self.typingChannel = nil
 	}
 
 	private func updateTypingRow() {
@@ -301,7 +308,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 
 		/* Same reason as the typing observations: `sink` cannot be isolated, and
 		 the body writes nine main-actor properties of this view. */
-		userDefaultsObservation = Task { @MainActor [weak self] in
+		userDefaultsObservation = Task { [weak self] in
 			let publisher = NotificationCenter.default.publisher(
 				for: UserDefaults.didChangeNotification,
 				object: defaults
@@ -354,15 +361,17 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 
 	public func resetSpellingIgnores() {
 		NSSpellChecker.shared.setIgnoredWords(
-			defaultSpellingIgnores,
+			Self.defaultSpellingIgnores,
 			inSpellDocumentWithTag: spellCheckerDocumentTag
 		)
 	}
 
-	private var defaultSpellingIgnores: [String] {
-		(ResourceManager.array(fromResources: "StaticStore", key: "Spelling Ignores") ?? [])
-			.compactMap(\.string)
-	}
+	/// Read once. The field resets its ignored words on every selection change,
+	/// and the bundled list never changes while the application runs.
+	private static let defaultSpellingIgnores: [String] = (ResourceManager.array(
+		fromResources: StaticStoreResource.name,
+		key: StaticStoreResource.spellingIgnoresKey
+	) ?? []).compactMap(\.string)
 
 	// MARK: - Text and responder behavior
 
@@ -401,7 +410,12 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 	override public func textDidChange(_ notification: Notification) {
 		super.textDidChange(notification)
 		recalculateTextViewSize()
-		noteTextChangedForTyping()
+		/* A value set from code, such as a conversation switch refilling the
+		 field, is not the user typing. Treating it as typing sent a notice to a
+		 conversation the user had only just opened. */
+		if isReplacingEntireValue == false {
+			noteTextChangedForTyping()
+		}
 	}
 
 	override public func paste(_ sender: Any?) {
@@ -425,6 +439,20 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 
 		if commandSelector == #selector(NSResponder.cancelOperation(_:)), replyMessageIdentifier != nil {
 			cancelReply()
+			return true
+		}
+
+		/* Tab and Shift-Tab reach the field only when the window declined them,
+		 which it does when the preference says Tab does nothing. The keys then
+		 move the keyboard to the next or previous control, as they do in a text
+		 field. A tab character in a chat message is never what the user meant. */
+		if commandSelector == #selector(NSResponder.insertTab(_:)) {
+			window?.selectNextKeyView(nil)
+			return true
+		}
+
+		if commandSelector == #selector(NSResponder.insertBacktab(_:)) {
+			window?.selectPreviousKeyView(nil)
 			return true
 		}
 

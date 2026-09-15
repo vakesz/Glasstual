@@ -87,7 +87,10 @@ private final class AbortClientShim: NSObject, RemoteConnectionClientProtocol {
 		events.yield(.didDisconnect(error))
 	}
 
-	func ircConnectionDidReceive(_: Data) {}
+	func ircConnectionDidReceive(_: [Data], acknowledge: @escaping @Sendable () -> Void) {
+		acknowledge()
+	}
+
 	func ircConnectionRequestInsecureCertificateTrust(_ trustBlock: @escaping TrustDecisionHandler) {
 		trustBlock(false)
 	}
@@ -120,8 +123,8 @@ nonisolated struct ConnectionHostHandshakeAbortTests { // nonisolated: value
 
 		let (events, continuation) = AsyncStream<HostEvent>.makeStream()
 		let service = NSXPCConnection(serviceName: "com.vakesz.glasstual.IRCConnectionHost")
-		service.remoteObjectInterface = NSXPCInterface(with: RemoteConnectionServerProtocol.self)
-		service.exportedInterface = NSXPCInterface(with: RemoteConnectionClientProtocol.self)
+		service.remoteObjectInterface = RemoteConnectionInterface.server()
+		service.exportedInterface = RemoteConnectionInterface.client()
 		service.exportedObject = AbortClientShim(events: continuation)
 		service.resume()
 

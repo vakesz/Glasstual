@@ -781,18 +781,6 @@
         }
       }
     },
-    "please-enter-a-properly-formatted-real": {
-      "comment": "Error localizations. Legacy key: agy-bp.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Enter a real name on one line."
-          }
-        }
-      }
-    },
     "please-enter-a-properly-formatted-username": {
       "comment": "Error localizations. Legacy key: 8iw-q8.",
       "extractionState": "manual",
@@ -1438,12 +1426,6 @@
             "state": "translated",
             "value": "Connect commands are sent before joining channels. NickServ identification waits for confirmation, for up to 30 seconds after sending. The delay above applies to other command lists."
           }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A kapcsolódási parancsok a csatornákhoz csatlakozás előtt kerülnek elküldésre. A NickServ-azonosítás legfeljebb 30 másodpercig vár a megerősítésre. A fenti késleltetés más parancslistákra vonatkozik."
-          }
         }
       }
     },
@@ -1459,7 +1441,7 @@
         }
       }
     },
-    "template-picker-title": {
+    "choose-network-title": {
       "comment": "Heading of the network list a new connection sheet opens on, shown beside the list until a row is chosen.",
       "extractionState": "manual",
       "localizations": {

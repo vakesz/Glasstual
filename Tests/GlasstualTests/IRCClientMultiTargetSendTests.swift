@@ -116,6 +116,22 @@ struct IRCClientMultiTargetSendTests {
 		)
 	}
 
+	/// A destination is matched to its channel under the server's casemapping,
+	/// so a spelling that differs from the channel's own is still the channel
+	/// the grouped line already reached.
+	@Test("A /msg destination spelled differently from its channel is sent once")
+	func msgDestinationMatchedByCasemappingIsSentOnce() throws {
+		let client = client()
+		client.isConnected = true
+		client.markAsLoggedIn()
+		client.supportInfo.processConfigurationData("TARGMAX=PRIVMSG:4")
+		_ = try channels(["#one", "#two"], on: client)
+
+		client.sendCommand("msg #ONE,#two,#One hello", completeTarget: false, target: nil)
+
+		#expect(client.sentLines.compactMap { $0 as? String } == ["PRIVMSG #one,#two :hello"])
+	}
+
 	/// `MAXTARGETS` is the older, command-agnostic form of the same statement,
 	/// and it groups the same way for a command `TARGMAX` did not name.
 	@Test("MAXTARGETS groups the channels where TARGMAX named no command")

@@ -255,4 +255,29 @@ struct ApplicationLinkTests {
 			options: externalLinkOptions
 		) == nil)
 	}
+
+	/// A link naming only a server skipped the search for a saved one, so each
+	/// click saved another copy of a server the reader already had.
+	@Test("A link to a saved server opens that server instead of saving it again")
+	func serverOnlyLinkReusesTheSavedServer() throws {
+		let request = try #require(connectionIntent(for: "ircs://irc.example.test"))
+		try #require(request.channels.isEmpty)
+		let client = TestClient()
+		client.config.serverList = [Server(
+			serverAddress: "irc.example.test", serverPort: 6697, prefersSecuredConnection: true
+		)]
+
+		ServerConnectionCoordinator.connect(
+			using: request,
+			clients: [client],
+			confirmMerge: { _, _, _ in
+				Issue.record("A link with no channel to add has nothing to confirm")
+				return .cancel
+			},
+			createConnection: { _ in Issue.record("The link saved a duplicate server") }
+		)
+
+		#expect(client.recordedOutput.selectedItems.map(ObjectIdentifier.init) == [ObjectIdentifier(client)])
+		#expect(client.sentLines.count == 0)
+	}
 }

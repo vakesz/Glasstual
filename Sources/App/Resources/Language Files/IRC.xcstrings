@@ -22,12 +22,6 @@
             "state" : "translated",
             "value" : "NickServ has not confirmed identification within 30 seconds. Joining configured channels anyway."
           }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A NickServ 30 másodpercen belül nem erősítette meg az azonosítást. Csatlakozás a beállított csatornákhoz."
-          }
         }
       }
     },
@@ -2388,8 +2382,18 @@
         "en" : {
           "variations" : {
             "plural" : {
-              "one" : { "stringUnit" : { "state" : "translated", "value" : "There is %ld timer:" } },
-              "other" : { "stringUnit" : { "state" : "translated", "value" : "There are %ld timers:" } }
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "There is %ld timer:"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "There are %ld timers:"
+                }
+              }
             }
           }
         }

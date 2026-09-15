@@ -82,8 +82,8 @@ final class ChannelBanListModel {
 	/** How many entries the list keeps.
 
 	 A channel's ban list arrives one line at a time and nothing bounded it, so
-	 a list nobody has pruned in years was held whole and re-sorted on every
-	 line. What is past the cap is counted. */
+	 a list nobody has pruned in years was held whole. What is past the cap is
+	 counted. */
 	static let maximumRetainedEntries = 20000
 	private(set) var discardedEntryCount = 0
 
@@ -112,8 +112,47 @@ final class ChannelBanListModel {
 			return
 		}
 
-		entries.append(entry)
-		sort(using: sortOrder)
+		entries.insert(entry, at: insertionIndex(for: entry))
+	}
+
+	/** Where `entry` belongs in the list as it is sorted now: after every entry
+	 that does not sort after it, so entries that compare equal keep the order
+	 they arrived in.
+
+	 A binary search, because the list arrives one line at a time: re-sorting
+	 the whole list for each line was quadratic, and at the cap that was twenty
+	 thousand sorts on the main actor for one reply. */
+	private func insertionIndex(for entry: ChannelBanListSheetEntry) -> Int {
+		var lower = entries.startIndex
+		var upper = entries.endIndex
+
+		while lower < upper {
+			let middle = lower + (upper - lower) / 2
+			if Self.compare(entries[middle], entry, using: sortOrder) == .orderedDescending {
+				upper = middle
+			} else {
+				lower = middle + 1
+			}
+		}
+
+		return lower
+	}
+
+	/// The first comparator that tells the two apart decides, as `sort(using:)`
+	/// does with the same array.
+	private static func compare(
+		_ lhs: ChannelBanListSheetEntry,
+		_ rhs: ChannelBanListSheetEntry,
+		using comparators: [ChannelBanListComparator]
+	) -> ComparisonResult {
+		for comparator in comparators {
+			let result = comparator.compare(lhs, rhs)
+			if result != .orderedSame {
+				return result
+			}
+		}
+
+		return .orderedSame
 	}
 
 	func clear() {

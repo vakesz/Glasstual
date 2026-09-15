@@ -134,27 +134,60 @@ struct LogViewTranscriptBufferTests {
 		#expect(try attachment().image === original.image)
 	}
 
-	/** The scrollback a reader pulled in gives way to new traffic.
+	/** Scrollback stays while the reader reads it, and goes once they leave.
 
-	 Loading older lines raises the buffer's ceiling so history stays on screen,
-	 but the ceiling used to stay raised for the session: a reader who scrolled
-	 back once held tens of thousands of lines live for as long as the view
-	 existed. */
-	@Test("The ceiling scrollback raised comes back down as the lines it raised it for are trimmed")
-	func scrollbackAllowanceDecaysWithTheLinesItHeld() {
+	 Trimming used to take the oldest lines while the reader was scrolled back
+	 through them, and to spend the allowance loading them had raised a little
+	 faster with every message: the text moved under the reader, the viewport
+	 slid into the range that fetches history, and a busy channel dropped and
+	 fetched the same page again once per line. */
+	@Test("Scrollback is not trimmed while the reader is reading it, and gives way when they return to the end")
+	func scrollbackStaysWhileTheReaderIsReadingIt() {
 		let logView = makeLogView(bufferLimit: 6)
 
 		logView.appendLines((0 ..< 8).map(message))
-		logView.prependLines((0 ..< 3).map { transcriptLine("older \($0)") })
-		/* History on screen still widens the buffer while it is there. */
-		#expect(logView.displayedLines.count == 9)
-
-		logView.appendLines([transcriptLine("newest")])
-		logView.appendLines([transcriptLine("newer still")])
-		#expect(logView.displayedLines.contains { $0.lineNumber.hasPrefix("older") } == false)
-
-		logView.appendLines([transcriptLine("newest of all")])
 		#expect(logView.displayedLines.count == 6)
+		logView.followsBottom = false
+		logView.prependLines((0 ..< 3).map { transcriptLine("older \($0)") })
+		for index in 0 ..< 20 {
+			logView.appendLines([transcriptLine("while reading \(index)")])
+		}
+		#expect(logView.displayedLines.count == 29)
+		#expect(logView.displayedBounds.oldest == "older 0")
+
+		logView.scrollToBottom()
+		logView.appendLines([transcriptLine("after returning")])
+		#expect(logView.displayedLines.count == 6)
+		#expect(logView.displayedLines.contains { $0.lineNumber.hasPrefix("older") } == false)
+		#expect(logView.displayedBounds.newest == "after returning")
+	}
+
+	@Test("History loaded while following the end is kept by the trim that follows it, and nothing older goes")
+	func scrollbackLoadedWhileFollowingIsKept() {
+		let logView = makeLogView(bufferLimit: 6)
+
+		logView.appendLines((0 ..< 6).map(message))
+		logView.prependLines((0 ..< 3).map { transcriptLine("older \($0)") })
+		#expect(logView.displayedLines.count == 9)
+		for index in 0 ..< 5 {
+			logView.appendLines([transcriptLine("newer \(index)")])
+		}
+		/* One line in, one line out: the widened ceiling holds steady instead
+		 of shrinking faster with each message. */
+		#expect(logView.displayedLines.count == 9)
+	}
+
+	@Test("A scroll the view makes to keep text in place is not taken for the reader scrolling up")
+	func viewportAdjustmentIsRecordedAsTheReadersPlace() throws {
+		let logView = makeLogView(bufferLimit: 1000)
+		logView.appendLines((0 ..< 200).map(message))
+		logView.layoutSubtreeIfNeeded()
+		let clip = try #require(textView(of: logView).enclosingScrollView?.contentView)
+		logView.followsBottom = false
+
+		logView.prependLines((0 ..< 50).map { transcriptLine("older \($0)") })
+
+		#expect(logView.lastVisibleTop == clip.bounds.minY)
 	}
 
 	/** A reload that has to be retried re-sends lines the document already

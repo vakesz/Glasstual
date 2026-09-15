@@ -15,9 +15,9 @@
       "problemMatcher": ["$gcc"]
     },
     {
-      "label": "Build (Release)",
+      "label": "Archive (Release)",
       "type": "shell",
-      "command": "make release",
+      "command": "make archive",
       "group": "build",
       "problemMatcher": ["$gcc"]
     },

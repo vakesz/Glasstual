@@ -66,9 +66,10 @@ nonisolated enum IRCProtocolLimits { // nonisolated: value
 	static let maximumInboundParameterCount = 64
 	/** How many bytes the message-tag section of a client-to-server line gets.
 
-	 IRCv3 budgets tags separately from the rest of the line — 4096 bytes for
-	 what the client sends, including the leading `@` and the space that ends
-	 the section — so a tagged line is measured as two budgets, not one. */
+	 IRCv3 budgets tags separately from the rest of the line, so a tagged line
+	 is measured as two budgets, not one. A client may send 4094 bytes of tag
+	 data; with the leading `@` and the space that ends the section, which is
+	 what this measures, that is 4096. */
 	static let maximumClientTagLength = 4096
 
 	/** `line` cut down to what the protocol actually carries.

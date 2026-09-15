@@ -197,8 +197,6 @@ extension MenuActionCoordinator {
 			return selectedViewController != nil
 		case .nextHighlight, .previousHighlight:
 			return selectedViewController?.hasHighlightedLines == true
-		case .segmentedAddChannel:
-			return selectedClient != nil
 		case .queryLogs:
 			return selectedChannel?.isPrivateMessage == true && TextualPreferences.logToDiskIsEnabled()
 		case .developerMode:
@@ -238,10 +236,9 @@ extension MenuActionCoordinator {
 		case .channelList:
 			return client?.isLoggedIn == true
 		case .changeNickname:
-			/* The action guards on `isLoggedIn`, and it closes the presented
-			 sheet before it gets there: validating on the looser `isConnected`
-			 offered a command that dismissed an unrelated sheet and then did
-			 nothing. */
+			/* The action guards on `isLoggedIn`. Validating on the looser
+			 `isConnected` offered a command that did nothing during
+			 registration. */
 			return MenuResponderCommandPolicy.canChangeNickname(clientIsLoggedIn: client?.isLoggedIn == true)
 		case .duplicateServer, .addChannelToServer, .serverProperties:
 			return client != nil

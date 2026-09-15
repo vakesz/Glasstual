@@ -140,24 +140,24 @@ struct CommandIndexCorpusTests {
 	// MARK: - Trailing parameters
 
 	@Test
-	func theTrailingParameterDrivesTheOutgoingLine() {
+	func theTrailingParameterDrivesTheOutgoingLine() throws {
 		#expect(
-			SendingMessage.string(command: "PRIVMSG", arguments: ["#chat", "hello there"])
+			try SendingMessage.string(command: "PRIVMSG", arguments: ["#chat", "hello there"])
 				== "PRIVMSG #chat :hello there"
 		)
 		#expect(
-			SendingMessage.string(command: "KICK", arguments: ["#chat", "alice", "bye now"])
+			try SendingMessage.string(command: "KICK", arguments: ["#chat", "alice", "bye now"])
 				== "KICK #chat alice :bye now"
 		)
 		#expect(
-			SendingMessage.string(command: "USER", arguments: ["user", "0", "*", "real name"])
+			try SendingMessage.string(command: "USER", arguments: ["user", "0", "*", "real name"])
 				== "USER user 0 * :real name"
 		)
 		/* PASS declares no position, so nothing before the last argument gets a
 		 colon — but a last argument holding a space still needs the trailing
 		 marker to survive the wire as one token. */
-		#expect(SendingMessage.string(command: "PASS", arguments: ["a b"]) == "PASS :a b")
-		#expect(SendingMessage.string(command: "JOIN", arguments: ["#chat"]) == "JOIN #chat")
+		#expect(try SendingMessage.string(command: "PASS", arguments: ["a b"]) == "PASS :a b")
+		#expect(try SendingMessage.string(command: "JOIN", arguments: ["#chat"]) == "JOIN #chat")
 	}
 
 	/// A command that never takes a trailing parameter takes each of its

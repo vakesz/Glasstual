@@ -84,11 +84,16 @@ extension LogView {
 			let attributes = nicknameAttributes(for: line, paragraph: paragraph).merging([
 				.transcriptSelectionSegment: "nickname",
 			]) { _, new in new }
-			result.append(NSAttributedString(string: header.nickname, attributes: attributes))
-			/* The gap after the name carries none of the name's click action:
-			 it is not the name, and the popover is anchored to the name alone. */
+			/* The gap after the name, and the isolate the name is drawn in, carry
+			 none of the name's click action: they are not the name, and the
+			 popover is anchored to the name alone. */
 			var separatorAttributes = attributes
 			separatorAttributes.removeValue(forKey: .transcriptAction)
+			appendIsolated(
+				NSAttributedString(string: header.nickname, attributes: attributes),
+				to: result,
+				isolateAttributes: separatorAttributes
+			)
 			result.append(NSAttributedString(
 				string: theme.layout == .bubbles ? "\n" : "  ",
 				attributes: separatorAttributes
@@ -96,12 +101,14 @@ extension LogView {
 		}
 
 		let bodyStart = result.length
+		let body = NSMutableAttributedString()
 		for run in line.body.runs {
-			result.append(NSAttributedString(
+			body.append(NSAttributedString(
 				string: run.text,
 				attributes: runAttributes(run, line: line, paragraph: paragraph)
 			))
 		}
+		appendIsolated(body, to: result, isolateAttributes: metadata)
 		result.addAttribute(.transcriptSelectionSegment, value: "body",
 		                    range: NSRange(location: bodyStart, length: result.length - bodyStart))
 		let detailsStart = result.length
@@ -113,6 +120,28 @@ extension LogView {
 		result.addAttribute(.transcriptSelectionSegment, value: "details",
 		                    range: NSRange(location: detailsStart, length: result.length - detailsStart))
 		return result
+	}
+
+	/** Appends wire text inside an isolate of its own.
+
+	 The bidirectional algorithm reorders a paragraph as a whole, so text that
+	 is not isolated can carry the name before it or the reactions after it
+	 along with its own direction. The isolate's two characters are layout, and
+	 carry the padding mark that keeps them off the pasteboard. */
+	func appendIsolated(
+		_ text: NSAttributedString,
+		to result: NSMutableAttributedString,
+		isolateAttributes: [NSAttributedString.Key: Any]
+	) {
+		guard text.length > 0 else { return }
+		var attributes = isolateAttributes
+		attributes.removeValue(forKey: .transcriptAction)
+		attributes.removeValue(forKey: .transcriptReaction)
+		attributes.removeValue(forKey: .link)
+		attributes[.transcriptPadding] = true
+		result.append(NSAttributedString(string: TranscriptTextSanitizer.isolateStart, attributes: attributes))
+		result.append(text)
+		result.append(NSAttributedString(string: TranscriptTextSanitizer.isolateEnd, attributes: attributes))
 	}
 
 	func metadataAttributes(
@@ -324,10 +353,15 @@ extension LogView {
 		} else {
 			piece.append(NSAttributedString(string: presentation.label))
 		}
-		if line.deliveryState == .failed, let reason = line.deliveryFailureReason, reason.isEmpty == false {
-			piece.append(NSAttributedString(string: " \(reason)"))
-		}
 		piece.addAttributes(attributes, range: NSRange(location: 0, length: piece.length))
+		if line.deliveryState == .failed, let reason = line.deliveryFailureReason, reason.isEmpty == false {
+			piece.append(NSAttributedString(string: " ", attributes: attributes))
+			appendIsolated(
+				NSAttributedString(string: TranscriptTextSanitizer.singleLine(reason), attributes: attributes),
+				to: piece,
+				isolateAttributes: attributes
+			)
+		}
 		result.append(piece)
 	}
 
@@ -365,8 +399,18 @@ extension LogView {
 				attributes[.cursor] = NSCursor.pointingHand
 			}
 			result.append(NSAttributedString(string: "  ", attributes: [.paragraphStyle: paragraph, .font: font]))
-			/* Thin spaces stand in for the padding a run cannot have. */
-			result.append(NSAttributedString(string: "\u{2009}\(emoji) \(count)\u{2009}", attributes: attributes))
+			/* Thin spaces stand in for the padding a run cannot have. They are
+			 marked as padding, and so is nothing the reaction itself spells. */
+			var padding = attributes
+			padding[.transcriptPadding] = true
+			result.append(NSAttributedString(string: "\u{2009}", attributes: padding))
+			appendIsolated(
+				NSAttributedString(string: TranscriptTextSanitizer.singleLine(emoji), attributes: attributes),
+				to: result,
+				isolateAttributes: attributes
+			)
+			result.append(NSAttributedString(string: " \(count)", attributes: attributes))
+			result.append(NSAttributedString(string: "\u{2009}", attributes: padding))
 		}
 	}
 
@@ -422,6 +466,9 @@ extension LogView {
 				.font: font,
 				.foregroundColor: secondary,
 			])
+		/* Anybody allowed to set the topic can put a line break or a reversal
+		 in it; the bar is one line of text, in the reading order it is given. */
+		TranscriptTextSanitizer.sanitize(result)
 		/* The links are located in the text as drawn: a scan of the wire form
 		 counts the control codes too, and every range after the first one is
 		 then a few characters out. */
@@ -526,6 +573,10 @@ extension LogView {
 			.paragraphStyle: paragraph,
 			.transcriptLineNumber: lineNumber,
 		]
+		if marker.isUnread, text == "\u{200B}" {
+			/* The zero-width space is only something for the rule to stand on. */
+			attributes[.transcriptPadding] = true
+		}
 		if let spokenText {
 			attributes[.accessibilityCustomText] = [spokenText]
 			attributes[.toolTip] = spokenText

@@ -37,8 +37,10 @@ public extension NSWindow {
 		!isKeyWindow && !isMainWindow
 	}
 
+	/// Centres the window on the screen it is on. `NSScreen.main` is the
+	/// screen holding the key window, which need not be this window's screen.
 	func ce_exactlyCenter() {
-		guard let screen = NSScreen.main else {
+		guard let screen = screen ?? NSScreen.main else {
 			return
 		}
 

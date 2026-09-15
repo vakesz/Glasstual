@@ -349,7 +349,20 @@ public nonisolated struct LogLine: Codable, Hashable, Sendable, CustomStringConv
 		"<LogLine \(uniqueIdentifier) \(lineTypeString ?? "undefined")>"
 	}
 
+	/** A session identifier for a new process.
+
+	 Never zero, because zero is what tells `populateDefaultSessionIdentifier`
+	 that a line has none yet; and drawn from the whole range the archive and
+	 the store keep (a signed 64-bit integer), so a later launch does not pick
+	 an earlier one's and count that session's lines as its own. */
+	static func newSessionIdentifier(using generator: inout some RandomNumberGenerator) -> UInt {
+		UInt.random(in: 1 ... UInt(Int64.max), using: &generator)
+	}
+
 	private enum Session {
-		static let identifier = UInt(UInt32.random(in: 0 ..< 999_999))
+		static let identifier: UInt = {
+			var generator = SystemRandomNumberGenerator()
+			return newSessionIdentifier(using: &generator)
+		}()
 	}
 }

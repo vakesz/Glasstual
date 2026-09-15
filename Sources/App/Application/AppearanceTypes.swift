@@ -41,14 +41,3 @@ public enum AppearanceType: UInt, Sendable {
 	case light
 	case dark
 }
-
-/** Whether the window carries an `NSAppearance` of its own.
-
- Scheduled for deletion: `AppearancePropertyCollection.appKitAppearance` is
- already `nil` when the application follows the system, so asking about the
- target first answers a question the value has answered. `MainWindow.swift:324`
- is the one caller left. */
-public enum AppKitAppearanceTarget: UInt, Sendable {
-	case window
-	case none
-}

@@ -39,7 +39,11 @@ struct ServerHighlightListView: View {
 					ServerHighlightListStrings.time,
 					sortUsing: ServerHighlightListComparator(field: .time, order: .forward)
 				) { row in
-					Text(verbatim: row.timeLabel).lineLimit(1)
+					/* The relative time went stale the moment it was drawn: it
+					 said "1 minute ago" for as long as the window stayed open. */
+					TimelineView(.everyMinute) { context in
+						Text(verbatim: row.timeLabel(relativeTo: context.date)).lineLimit(1)
+					}
 				}
 				.width(min: 100, ideal: 130)
 			}

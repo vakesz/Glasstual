@@ -38,6 +38,12 @@ private let connectionLifecycleLogger = Logger(
 	category: "ConnectionLifecycle"
 )
 
+/** Where the next connection goes, when it is not the next configured server.
+
+ `secured` is decided by whoever asks for the endpoint, from the connection it
+ replaces. A redirect or a `/conn` that dropped to plaintext would send the
+ account password the encrypted connection was protecting in clear, so neither
+ may ask for less encryption than the session it follows had. */
 struct PendingIRCEndpoint {
 	enum Reason {
 		case stsUpgrade
@@ -47,6 +53,7 @@ struct PendingIRCEndpoint {
 
 	let host: String
 	let port: UInt16
+	let secured: Bool
 	let origin: Server?
 	let reason: Reason
 
@@ -101,6 +108,7 @@ public extension IRCClient {
 			host: socketConfig.serverAddress,
 			port: socketConfig.serverPort
 		))
+		sessionCredentials.forget()
 		NotificationCenter.default.post(name: .IRCClientWillConnect, object: self)
 
 		socketConfig.addressType = config.addressType
@@ -134,7 +142,7 @@ public extension IRCClient {
 		pendingEndpoint = nil
 		var host = endpoint?.host ?? ""
 		var port = endpoint?.port ?? IRCConnectionDefaults.serverPort
-		var secured = endpoint?.reason == .stsUpgrade
+		var secured = endpoint?.secured ?? false
 		server = endpoint?.credentialEndpoint
 		if (host as NSString).isValidInternetAddress == false {
 			let nextIndex = lastServerSelected == UInt(NSNotFound) ? 0 : (lastServerSelected + 1) % UInt(servers.count)
@@ -157,6 +165,33 @@ public extension IRCClient {
 		connectionConfig.serverPort = port
 		connectionConfig.connectionPrefersSecuredConnection = secured
 		return connectionConfig
+	}
+
+	/** Whether the session a follow-up endpoint replaces was meant to be encrypted.
+
+	 A live socket answers for itself: it is encrypted, or it was opened to be.
+	 With no socket, the server entry the client last connected to — or would
+	 connect to first — stands in for it. */
+	internal var sessionPrefersSecuredConnection: Bool {
+		if let socket {
+			return socket.isSecured || socket.config.connectionPrefersSecuredConnection
+		}
+
+		return (server ?? config.serverList.first)?.prefersSecuredConnection ?? false
+	}
+
+	/// The endpoint `/conn host` connects to: the host on the standard port
+	/// for the encryption the current session has.
+	internal func connectCommandEndpoint(host: String) -> PendingIRCEndpoint {
+		let secured = sessionPrefersSecuredConnection
+
+		return PendingIRCEndpoint(
+			host: host,
+			port: secured ? IRCConnectionDefaults.serverPortSecure : IRCConnectionDefaults.serverPort,
+			secured: secured,
+			origin: server,
+			reason: .userCommand
+		)
 	}
 
 	func autoConnect(withDelay delay: UInt, afterWakeUp: Bool) {
@@ -247,6 +282,7 @@ public extension IRCClient {
 		readMarkerTimer.stop()
 		readMarkerPendingChannels.removeAll()
 		resetSASLNegotiation()
+		sessionCredentials.forget()
 		cancelScheduledConnection()
 		cancelConnectCommandSettling()
 		trackedUserPopulationTask?.cancel()

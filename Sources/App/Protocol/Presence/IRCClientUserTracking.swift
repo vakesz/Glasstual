@@ -182,11 +182,17 @@ extension IRCClient {
 		stopWhoTimer()
 	}
 
-	@MainActor func onISONTimer() {
-		guard isLoggedIn, isBrokenIRCdKnownAsTwitch == false else { return }
+	/** Polls ISON for the tracked nicknames and the query peers.
 
-		var nicknames = supportsAdvancedTracking ? [] : Array(trackedUsers.trackedUsers.keys)
-		nicknames.append(contentsOf: channelList.filter(\.isPrivateMessage).map(\.name))
+	 Only where the server has neither MONITOR nor WATCH: with either, the
+	 address book and every query are already on the server's list, which
+	 reports each change as it happens, and a poll on top only re-derived the
+	 same presence thirty seconds late. */
+	@MainActor func onISONTimer() {
+		guard isLoggedIn, isBrokenIRCdKnownAsTwitch == false, supportsAdvancedTracking == false else { return }
+
+		var nicknames = Array(trackedUsers.trackedUsers.keys)
+		nicknames.append(contentsOf: queryPeerNicknames)
 		sendIson(forNicknames: nicknames, hideResponse: true)
 	}
 

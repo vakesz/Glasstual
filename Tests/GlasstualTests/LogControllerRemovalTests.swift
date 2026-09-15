@@ -45,9 +45,9 @@ struct LogControllerRemovalTests {
 		let view = controller.ensureBackingView()
 		await controller.drainRenderJobs()
 		if !reloadScrollback {
-			view
-				.appendLines([LogController.renderJob(LogLineRenderRequest(logLine: line, context: .init()))
-						.transcriptLine])
+			let context = LogLineRenderContext()
+			let request = LogLineRenderRequest(line: LogLineSnapshot(line, in: context), context: context)
+			view.appendLines([LogController.renderJob(request).transcriptLine])
 		}
 		#expect(view.displayedLines
 			.map { $0.historyCursor?.lineIdentifier ?? $0.lineNumber } == [line.uniqueIdentifier])

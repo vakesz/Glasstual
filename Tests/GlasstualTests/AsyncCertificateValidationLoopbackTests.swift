@@ -217,8 +217,11 @@ private final class HostClientShim: NSObject, RemoteConnectionClientProtocol {
 		events.yield(.didDisconnect(disconnectError))
 	}
 
-	func ircConnectionDidReceive(_ data: Data) {
-		events.yield(.didReceive(data))
+	func ircConnectionDidReceive(_ lines: [Data], acknowledge: @escaping @Sendable () -> Void) {
+		for line in lines {
+			events.yield(.didReceive(line))
+		}
+		acknowledge()
 	}
 
 	func ircConnectionRequestInsecureCertificateTrust(_ trustBlock: @escaping TrustDecisionHandler) {
@@ -339,8 +342,8 @@ nonisolated struct AsyncCertificateValidationLoopbackTests { // nonisolated: val
 		let shim = HostClientShim(events: continuation)
 
 		let service = NSXPCConnection(serviceName: "com.vakesz.glasstual.IRCConnectionHost")
-		service.remoteObjectInterface = NSXPCInterface(with: RemoteConnectionServerProtocol.self)
-		service.exportedInterface = NSXPCInterface(with: RemoteConnectionClientProtocol.self)
+		service.remoteObjectInterface = RemoteConnectionInterface.server()
+		service.exportedInterface = RemoteConnectionInterface.client()
 		service.exportedObject = shim
 		service.resume()
 

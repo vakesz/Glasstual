@@ -119,14 +119,17 @@ struct InputPromptView: View {
 }
 
 public enum InputPrompt {
+	/// Asks on the window installed as ``SheetPresentation/host``. Before one
+	/// exists there is nowhere to ask, and the prompt answers as cancelled.
 	@MainActor
 	public static func present(
 		_ request: InputPromptRequest,
 		completion: @escaping @MainActor (InputPromptOutcome) -> Void
 	) {
-		AppController.shared.mainWindow.presentationModel.presentInputPrompt(
-			request,
-			completion: completion
-		)
+		guard let host = SheetPresentation.host else {
+			completion(.cancelled)
+			return
+		}
+		host.presentInputPrompt(request, completion: completion)
 	}
 }

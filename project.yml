@@ -14,7 +14,10 @@ options:
   bundleIdPrefix: com.vakesz
   deploymentTarget:
     macOS: "26.0"
-  xcodeVersion: "26.0"
+  # The Xcode that CI and the release workflow build with. XcodeGen writes it
+  # as the project's last upgrade check, so Xcode 27 does not offer to update
+  # the settings. The deployment target above stays macOS 26.
+  xcodeVersion: "27.0"
   minimumXcodeGenVersion: "2.46.0"
   generateEmptyDirectories: false
   createIntermediateGroups: true
@@ -42,9 +45,10 @@ settings:
     CURRENT_PROJECT_VERSION: $(MARKETING_VERSION)
 
     # ---- Signing ----------------------------------------------------------
-    # Local Automatic / Apple Development. CI overrides identity, style,
-    # team, and GLASSTUAL_*_PROVISIONING_PROFILE on the xcodebuild line
-    # (see .github/workflows/release.yml).
+    # Local builds sign automatically with Apple Development. CI overrides the
+    # identity, style, team and GLASSTUAL_*_PROVISIONING_PROFILE on the
+    # xcodebuild line: the Quality workflow for its Debug build and tests, and
+    # the Signed Release workflow for its archive.
     CODE_SIGN_STYLE: Automatic
     CODE_SIGN_IDENTITY: Apple Development
     DEVELOPMENT_TEAM: H8W5DK3FN2
@@ -59,62 +63,20 @@ settings:
     # accepting Xcode's recommendation to build a universal product.
     ARCHS: arm64
 
-    # ---- Languages --------------------------------------------------------
-    CLANG_ENABLE_MODULES: YES
-    GCC_NO_COMMON_BLOCKS: YES
-
+    # ---- Swift ------------------------------------------------------------
+    # Every target is Swift, and nothing generated is C or Objective-C, so the
+    # clang warning, analyzer and preprocessor settings have nothing to act
+    # on and are not declared here. XcodeGen's base presets still write
+    # Xcode's template defaults for them into the generated project.
     SWIFT_VERSION: "6.0"
     SWIFT_STRICT_CONCURRENCY: complete
     SWIFT_ENABLE_EXPLICIT_MODULES: YES
     SWIFT_ENFORCE_EXCLUSIVE_ACCESS: full
     SWIFT_APPROACHABLE_CONCURRENCY: YES
     SWIFT_TREAT_WARNINGS_AS_ERRORS: YES
-    GCC_TREAT_WARNINGS_AS_ERRORS: YES
     SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY: YES
     SWIFT_INSTALL_OBJC_HEADER: NO
     SWIFT_EMIT_LOC_STRINGS: YES
-
-    # ---- Warnings ---------------------------------------------------------
-    WARNING_CFLAGS: -Wall -Wextra -Wno-unused-parameter -Winfinite-recursion
-    CLANG_WARN_ASSIGN_ENUM: YES
-    CLANG_WARN_ATOMIC_IMPLICIT_SEQ_CST: YES
-    CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING: YES
-    CLANG_WARN_BOOL_CONVERSION: YES
-    CLANG_WARN_COMMA: YES
-    CLANG_WARN_CONSTANT_CONVERSION: YES
-    CLANG_WARN_DOCUMENTATION_COMMENTS: NO
-    CLANG_WARN_EMPTY_BODY: YES
-    CLANG_WARN_ENUM_CONVERSION: YES
-    CLANG_WARN_IMPLICIT_FALLTHROUGH: YES
-    CLANG_WARN_INFINITE_RECURSION: YES
-    CLANG_WARN_INT_CONVERSION: YES
-    CLANG_WARN_NON_LITERAL_NULL_CONVERSION: YES
-    CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER: YES
-    CLANG_WARN_RANGE_LOOP_ANALYSIS: YES
-    CLANG_WARN_SEMICOLON_BEFORE_METHOD_BODY: YES
-    CLANG_WARN_STRICT_PROTOTYPES: YES
-    CLANG_WARN_SUSPICIOUS_MOVE: YES
-    CLANG_WARN_UNGUARDED_AVAILABILITY: YES_AGGRESSIVE
-    CLANG_WARN_UNREACHABLE_CODE: YES
-    CLANG_WARN__DUPLICATE_METHOD_MATCH: YES
-    GCC_WARN_64_TO_32_BIT_CONVERSION: YES
-    GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS: YES
-    GCC_WARN_ABOUT_MISSING_NEWLINE: YES
-    GCC_WARN_ABOUT_RETURN_TYPE: YES
-    GCC_WARN_TYPECHECK_CALLS_TO_PRINTF: YES
-    GCC_WARN_UNINITIALIZED_AUTOS: YES
-    GCC_WARN_UNUSED_FUNCTION: YES
-    GCC_WARN_UNUSED_LABEL: YES
-    GCC_WARN_UNUSED_VARIABLE: YES
-
-    # ---- Static analyzer --------------------------------------------------
-    CLANG_ANALYZER_GCD_PERFORMANCE: YES
-    CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED: YES
-    CLANG_ANALYZER_SECURITY_FLOATLOOPCOUNTER: YES
-    CLANG_ANALYZER_SECURITY_INSECUREAPI_RAND: YES
-    CLANG_ANALYZER_SECURITY_INSECUREAPI_STRCPY: YES
-    CLANG_STATIC_ANALYZER_MODE: deep
-    CLANG_USE_OPTIMIZATION_PROFILE: NO
 
     # ---- Build behaviour --------------------------------------------------
     ALWAYS_SEARCH_USER_PATHS: NO
@@ -139,28 +101,21 @@ settings:
 
   configs:
     Debug:
-      GCC_OPTIMIZATION_LEVEL: "0"
-      GCC_PREPROCESSOR_DEFINITIONS: "$(inherited) DEBUG=1"
       SWIFT_ACTIVE_COMPILATION_CONDITIONS: "$(inherited) DEBUG"
       SWIFT_OPTIMIZATION_LEVEL: "-Onone"
       SWIFT_COMPILATION_MODE: singlefile
       DEPLOYMENT_POSTPROCESSING: NO
-      ENABLE_NS_ASSERTIONS: YES
       ENABLE_TESTABILITY: YES
       VALIDATE_PRODUCT: NO
-      RUN_CLANG_STATIC_ANALYZER: NO
       # Hardened runtime blocks attaching the debugger to XPC services.
       ENABLE_HARDENED_RUNTIME: NO
       CODE_SIGN_INJECT_BASE_ENTITLEMENTS: YES
     Release:
-      GCC_OPTIMIZATION_LEVEL: s
       SWIFT_OPTIMIZATION_LEVEL: "-O"
       SWIFT_COMPILATION_MODE: wholemodule
       DEPLOYMENT_POSTPROCESSING: YES
-      ENABLE_NS_ASSERTIONS: NO
       ENABLE_TESTABILITY: NO
       VALIDATE_PRODUCT: YES
-      RUN_CLANG_STATIC_ANALYZER: YES
       ENABLE_HARDENED_RUNTIME: YES
       CODE_SIGN_INJECT_BASE_ENTITLEMENTS: NO
 
@@ -334,19 +289,21 @@ targets:
       base:
         PRODUCT_NAME: IRC Connection Host
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.IRCConnectionHost
-      configs:
-        Release:
-          PROVISIONING_PROFILE_SPECIFIER: $(GLASSTUAL_IRC_PROVISIONING_PROFILE)
+        # Empty unless CI names a profile, so both configurations sign the
+        # same way wherever they are built.
+        PROVISIONING_PROFILE_SPECIFIER: $(GLASSTUAL_IRC_PROVISIONING_PROFILE)
     info:
       properties:
         CFBundleDisplayName: IRC Connection Host
         NSHumanReadableCopyright: Part of Glasstual, an independent fork of Textual. Copyright © 2017 - 2020 Codeux Software, LLC and respective contributors.
     entitlements:
       properties:
-        # The client-side certificate is stored by the app under its own access
-        # group; without this the service's SecItemCopyMatching cannot see it.
+        # A group of the service's own, and only that: the client-side
+        # certificate is looked up by the persistent reference the app hands
+        # over, which needs the keychain but none of the app's groups. The
+        # app's secrets are in groups this service is deliberately not given.
         keychain-access-groups:
-          - "$(AppIdentifierPrefix)$(GLASSTUAL_BUNDLE_IDENTIFIER)"
+          - "$(AppIdentifierPrefix)$(GLASSTUAL_BUNDLE_IDENTIFIER).connection-host"
         com.apple.security.network.client: true
     sources:
       - path: Sources/Services/IRC Connection Host/Classes
@@ -487,9 +444,9 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: $(GLASSTUAL_BUNDLE_IDENTIFIER)
         PRODUCT_MODULE_NAME: Glasstual
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-      configs:
-        Release:
-          PROVISIONING_PROFILE_SPECIFIER: $(GLASSTUAL_MAIN_PROVISIONING_PROFILE)
+        # Empty unless CI names a profile, so both configurations sign the
+        # same way wherever they are built.
+        PROVISIONING_PROFILE_SPECIFIER: $(GLASSTUAL_MAIN_PROVISIONING_PROFILE)
     info:
       properties:
         CFBundleDisplayName: Glasstual
@@ -552,8 +509,9 @@ targets:
             UTTypeTagSpecification:
               public.filename-extension:
                 - bundle
-    # Debug and Release use the same sandbox. Library validation stays on
-    # (Mac App Store): only Apple-signed or same-Team-ID bundles load.
+    # Debug and Release use the same sandbox. In Release the hardened runtime
+    # keeps library validation on, and no entitlement turns it off, so only
+    # Apple-signed or same-Team-ID bundles load.
     entitlements:
       path: Generated/Xcode/Glasstual.entitlements
       properties:
@@ -564,7 +522,12 @@ targets:
         com.apple.security.files.bookmarks.app-scope: true
         com.apple.security.files.downloads.read-write: true
         com.apple.security.files.user-selected.read-write: true
+        # KeychainStore writes every secret to the first group, which no other
+        # target lists. The second is where builds before it stored secrets;
+        # they are moved into the first as they are read, so it stays for as
+        # long as a user may still have items there.
         keychain-access-groups:
+          - "$(AppIdentifierPrefix)$(PRODUCT_BUNDLE_IDENTIFIER).secrets"
           - "$(AppIdentifierPrefix)$(PRODUCT_BUNDLE_IDENTIFIER)"
         com.apple.security.network.client: true
         com.apple.security.network.server: true
@@ -689,8 +652,8 @@ targets:
       - path: Sources/Plugins/Chat Filter/Resources/Language Files/ChatFilterLogic.xcstrings
         buildPhase: resources
       # Specification corpora the IRCSpec suites read back at runtime. Only
-      # the converted JSON ships; the YAML originals and the conversion
-      # script stay out of the bundle.
+      # the JSON vectors ship. The upstream LICENSE stays beside them in the
+      # source tree, as Tests/Corpora/IRCSpec/README.md describes.
       - path: Tests/Corpora/IRCSpec/parser-tests
         buildPhase: resources
         includes:
@@ -789,12 +752,25 @@ schemes:
     test:
       config: Debug
       gatherCoverageData: true
-      # Tests are injected into Glasstual.app (TEST_HOST). Point the shared
-      # defaults suite at a scratch domain so runs never touch real prefs.
+      # The tests run inside a full launch of Glasstual.app (TEST_HOST). The
+      # suite moves preferences to a scratch defaults domain. The review
+      # directory moves the group container and Application Support, which
+      # hold the scrollback database, caches, scripts and extensions, into
+      # "UI Reviews/GlasstualTests". The pre-action empties both before every
+      # run, from Xcode or from `make test`. Keep its arguments equal to the
+      # two values below.
       environmentVariables:
         - variable: GLASSTUAL_UI_REVIEW_SUITE
           value: com.vakesz.glasstual.tests
           isEnabled: true
+        - variable: GLASSTUAL_UI_REVIEW_DIRECTORY
+          value: GlasstualTests
+          isEnabled: true
+      preActions:
+        - name: Clear test scratch state
+          settingsTarget: Glasstual
+          script: |
+            "${SRCROOT}/scripts/clear-test-scratch.sh" com.vakesz.glasstual.tests GlasstualTests
       targets:
         - GlasstualTests
     profile:

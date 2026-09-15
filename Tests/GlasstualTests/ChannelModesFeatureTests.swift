@@ -87,6 +87,33 @@ struct ChannelModesFeatureTests {
 		#expect(limitMode.modeParameter == "44")
 	}
 
+	@Test("Clearing the limit and changing the key sets the new key, not the old limit")
+	func clearingLimitAndChangingKeySubmitsTheNewKey() throws {
+		let fixture = try makeModelState(modeString: "+kl old 50")
+		let (state, model) = (fixture.state, fixture.model)
+
+		model.setMode(.userLimit, enabled: false)
+		model.updateSecretKey("new")
+
+		withExtendedLifetime(fixture.client) {
+			#expect(state.changeGroups(for: model.modesForSubmission()) == [
+				ModeChangeGroup(symbols: "-l+k", parameters: ["new"]),
+			])
+		}
+	}
+
+	@Test("Submitting the sheet unchanged sends no mode change")
+	func unchangedSubmissionSendsNothing() throws {
+		let fixture = try makeModelState(modeString: "+nt")
+		let (state, model) = (fixture.state, fixture.model)
+
+		model.setMode(.noExternalMessages, enabled: true)
+
+		withExtendedLifetime(fixture.client) {
+			#expect(state.changeGroups(for: model.modesForSubmission()).isEmpty)
+		}
+	}
+
 	@Test("User limit edits normalize to the supported range")
 	func userLimitEditsNormalizeToSupportedRange() throws {
 		let (_, model) = try makeModel()
@@ -196,15 +223,31 @@ struct ChannelModesFeatureTests {
 		modeString: String = "",
 		maximumKeyLength: UInt = 0
 	) throws -> (ChannelModeContainer, ChannelModesModel) {
+		let fixture = try makeModelState(modeString: modeString, maximumKeyLength: maximumKeyLength)
+
+		return (fixture.state.modes, fixture.model)
+	}
+
+	private struct ModelFixture {
+		let client: TestClient
+		let state: ChannelModeState
+		let model: ChannelModesModel
+	}
+
+	private func makeModelState(
+		modeString: String,
+		maximumKeyLength: UInt = 0
+	) throws -> ModelFixture {
 		let client = TestClient()
 		client.supportInfo.processConfigurationData("CHANMODES=beI,k,l,imnpst PREFIX=(ov)@+")
 		let channel = try #require(client.findChannelOrCreate("#test"))
 		let state = ChannelModeState(channel: channel)
 		_ = state.updateModes(modeString)
 
-		return (
-			state.modes,
-			ChannelModesModel(copying: state.modes, maximumKeyLength: maximumKeyLength)
+		return ModelFixture(
+			client: client,
+			state: state,
+			model: ChannelModesModel(copying: state.modes, maximumKeyLength: maximumKeyLength)
 		)
 	}
 }

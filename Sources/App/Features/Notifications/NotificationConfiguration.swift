@@ -11,7 +11,6 @@
  *********************************************************************** */
 
 public enum NotificationAlertSound {
-	public static let defaultPreferenceValue = "Default"
 	public static let noSoundPreferenceValue = "None"
 
 	@MainActor public static var localizedDefaultTitle: String {
@@ -107,51 +106,47 @@ public final class PreferencesNotificationConfiguration: NotificationConfigurati
 public final class ChannelNotificationConfiguration: NotificationConfiguration {
 	public let eventType: NotificationEvent
 
-	private weak var sheet: ChannelPropertiesSheet?
+	private weak var channel: ChannelPropertiesModel?
 
-	public init(eventType: NotificationEvent) {
+	init(eventType: NotificationEvent, in channel: ChannelPropertiesModel) {
 		self.eventType = eventType
-	}
-
-	public init(eventType: NotificationEvent, in sheet: ChannelPropertiesSheet) {
-		self.eventType = eventType
-		self.sheet = sheet
+		self.channel = channel
 	}
 
 	public var alertSound: String? {
 		get { config?.sound(forEvent: eventType) }
-		set { sheet?.model.config.setSound(newValue, forEvent: eventType) }
+		set { channel?.config.setSound(newValue, forEvent: eventType) }
 	}
 
 	public var pushNotification: ChannelEventOverride {
 		get { config?.notificationEnabled(forEvent: eventType) ?? .inherited }
-		set { sheet?.model.config.setNotificationEnabled(newValue, forEvent: eventType) }
+		set { channel?.config.setNotificationEnabled(newValue, forEvent: eventType) }
 	}
 
 	public var speakEvent: ChannelEventOverride {
 		get { config?.speakEvent(eventType) ?? .inherited }
-		set { sheet?.model.config.setEventIsSpoken(newValue, forEvent: eventType) }
+		set { channel?.config.setEventIsSpoken(newValue, forEvent: eventType) }
 	}
 
 	public var disabledWhileAway: ChannelEventOverride {
 		get { config?.disabledWhileAway(forEvent: eventType) ?? .inherited }
-		set { sheet?.model.config.setDisabledWhileAway(newValue, forEvent: eventType) }
+		set { channel?.config.setDisabledWhileAway(newValue, forEvent: eventType) }
 	}
 
 	public var bounceDockIcon: ChannelEventOverride {
 		get { config?.bounceDockIcon(forEvent: eventType) ?? .inherited }
-		set { sheet?.model.config.setBounceDockIcon(newValue, forEvent: eventType) }
+		set { channel?.config.setBounceDockIcon(newValue, forEvent: eventType) }
 	}
 
 	public var bounceDockIconRepeatedly: ChannelEventOverride {
 		get { config?.bounceDockIconRepeatedly(forEvent: eventType) ?? .inherited }
-		set { sheet?.model.config.setBounceDockIconRepeatedly(newValue, forEvent: eventType) }
+		set { channel?.config.setBounceDockIconRepeatedly(newValue, forEvent: eventType) }
 	}
 
-	/// A nil config (the sheet is gone) reads back as `.inherited`: the neutral
-	/// value the checkbox already understands, and the default for a channel
-	/// that carries no override of its own.
+	/// A nil config, once the channel's editor is gone, reads back as
+	/// `.inherited`. The picker already shows that value, and it is what a
+	/// channel with no override of its own carries.
 	private var config: ChannelConfig? {
-		sheet?.model.config
+		channel?.config
 	}
 }

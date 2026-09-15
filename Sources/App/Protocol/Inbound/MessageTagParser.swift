@@ -52,13 +52,19 @@ public nonisolated struct ParsedMessageTags: Sendable, Equatable { // nonisolate
 }
 
 public nonisolated enum MessageTagParser { // nonisolated: value
-	/// IRCv3 message-tags caps the tag section at 8191 bytes. Anything longer
-	/// is a server that is not playing by the rules, so its tags are dropped
-	/// rather than parsed into an unbounded dictionary.
+	/// IRCv3 message-tags caps the tag section at 8191 bytes, counting the
+	/// leading `@` and the space that ends it. Anything longer is a server
+	/// that is not playing by the rules, so its tags are dropped rather than
+	/// parsed into an unbounded dictionary.
 	public static let maximumSectionLength = 8191
 
+	/// The `@` and the trailing space: counted by the cap, but already taken
+	/// off the section this parser is handed.
+	private static let sectionDelimiterLength = 2
+
+	/// - Parameter section: The tags between the `@` and the space.
 	public static func parsedTags(fromSection section: String) -> ParsedMessageTags {
-		guard section.utf8.count <= maximumSectionLength else {
+		guard section.utf8.count + sectionDelimiterLength <= maximumSectionLength else {
 			return ParsedMessageTags(tags: [:])
 		}
 

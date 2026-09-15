@@ -15,6 +15,7 @@ import SwiftUI
 
 struct PreferencesInterfaceSections: View {
 	let model: PreferencesPaneModel
+	@State private var confirmsUserListColorReset = false
 
 	var body: some View {
 		Section {
@@ -70,6 +71,17 @@ struct PreferencesInterfaceSections: View {
 			}
 			.help(Text(verbatim: PreferencesInterfaceStrings.resetUserListColors))
 			.accessibilityLabel(Text(verbatim: PreferencesInterfaceStrings.resetUserListColors))
+			.confirmationDialog(
+				PreferencesInterfaceStrings.resetColorsConfirmationTitle,
+				isPresented: $confirmsUserListColorReset
+			) {
+				Button(PreferencesInterfaceStrings.resetToDefaults, role: .destructive) {
+					resetUserListColors()
+				}
+				Button(PromptStrings.Action.cancel, role: .cancel) {}
+			} message: {
+				Text(verbatim: PreferencesInterfaceStrings.resetColorsConfirmationBody)
+			}
 		} header: {
 			Text(verbatim: PreferencesInterfaceStrings.headingUserListColors)
 		} footer: {
@@ -120,16 +132,7 @@ struct PreferencesInterfaceSections: View {
 			return
 		}
 
-		Alerts.alert(
-			withMessage: PreferencesInterfaceStrings.resetColorsConfirmationBody,
-			title: PreferencesInterfaceStrings.resetColorsConfirmationTitle,
-			defaultButton: PreferencesInterfaceStrings.resetToDefaults,
-			alternateButton: PromptStrings.Action.cancel,
-			destructiveButton: .default
-		) { outcome in
-			guard outcome.response == .default else { return }
-			resetUserListColors()
-		}
+		confirmsUserListColorReset = true
 	}
 
 	private var hasCustomUserListColors: Bool {
@@ -188,11 +191,12 @@ struct PreferencesStyleSections: View {
 	]
 
 	let model: PreferencesPaneModel
+	@State private var confirmsThemeReset = false
 
 	var body: some View {
 		Section {
 			LabeledContent {
-				PreferencesCommittedField(title: TranscriptThemeStrings.themeName, text: themeName)
+				PreferencesCommittedField(title: TranscriptThemeStrings.themeName, value: themeName)
 			} label: {
 				Text(verbatim: TranscriptThemeStrings.themeName)
 			}
@@ -209,6 +213,17 @@ struct PreferencesStyleSections: View {
 					confirmResetTranscriptTheme()
 				}
 				.help(Text(verbatim: PreferencesInterfaceStrings.resetThemeConfirmationTitle))
+				.confirmationDialog(
+					PreferencesInterfaceStrings.resetThemeConfirmationTitle,
+					isPresented: $confirmsThemeReset
+				) {
+					Button(PreferencesInterfaceStrings.resetToDefaults, role: .destructive) {
+						model.resetTranscriptTheme()
+					}
+					Button(PromptStrings.Action.cancel, role: .cancel) {}
+				} message: {
+					Text(verbatim: PreferencesInterfaceStrings.resetThemeConfirmationBody)
+				}
 			}
 		} header: {
 			Text(verbatim: TranscriptThemeStrings.transcriptTheme)
@@ -265,10 +280,10 @@ struct PreferencesStyleSections: View {
 				PreferencesComboField(
 					title: PreferencesStyleStrings.scrollbackSaveLimit,
 					presets: Self.scrollbackPresets,
-					commitsOnEndEditing: true,
-					text: model.preferences.numberFieldBinding(
+					value: model.preferences.numberField(
 						for: Preferences.Logging.scrollbackSaveLimit
-					) { TextualPreferences.performReloadAction(.scrollbackSaveLimit) }
+					) { TextualPreferences.performReloadAction(.scrollbackSaveLimit) },
+					rejectionMessage: PreferencesFieldStrings.wholeNumberRequired
 				)
 			} label: {
 				Text(verbatim: PreferencesStyleStrings.scrollbackSaveLimit)
@@ -360,7 +375,7 @@ struct PreferencesStyleSections: View {
 			PreferencesComboField(
 				title: PreferencesStyleStrings.nicknameFormatLabel,
 				presets: Self.nicknamePresets,
-				text: nicknameFormat
+				value: themeText(\.nicknameFormat)
 			)
 		} label: {
 			Text(verbatim: PreferencesStyleStrings.nicknameFormatLabel)
@@ -373,7 +388,7 @@ struct PreferencesStyleSections: View {
 			PreferencesComboField(
 				title: PreferencesStyleStrings.timestampFormatLabel,
 				presets: Self.timestampPresets,
-				text: timestampFormat
+				value: themeText(\.timestampFormat)
 			)
 		} label: {
 			Text(verbatim: PreferencesStyleStrings.timestampFormatLabel)
@@ -389,16 +404,7 @@ struct PreferencesStyleSections: View {
 			return
 		}
 
-		Alerts.alert(
-			withMessage: PreferencesInterfaceStrings.resetThemeConfirmationBody,
-			title: PreferencesInterfaceStrings.resetThemeConfirmationTitle,
-			defaultButton: PreferencesInterfaceStrings.resetToDefaults,
-			alternateButton: PromptStrings.Action.cancel,
-			destructiveButton: .default
-		) { outcome in
-			guard outcome.response == .default else { return }
-			model.resetTranscriptTheme()
-		}
+		confirmsThemeReset = true
 	}
 
 	private var hasCustomTranscriptTheme: Bool {
@@ -408,27 +414,19 @@ struct PreferencesStyleSections: View {
 
 	/// A theme with an empty name is rejected, so a blank entry restores the
 	/// stored one rather than being written.
-	private var themeName: Binding<String> {
-		Binding(
-			get: { model.transcriptTheme.name },
-			set: { newValue in
+	private var themeName: PreferencesFieldValue {
+		PreferencesFieldValue(
+			text: { model.transcriptTheme.name },
+			write: { newValue in
 				let name = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
-				guard name.isEmpty == false, name != model.transcriptTheme.name else { return }
-				model.updateTheme { $0.name = name }
+				guard name.isEmpty == false, name != model.transcriptTheme.name else { return true }
+				return model.updateTheme { $0.name = name }
 			}
 		)
 	}
 
 	private var themeLayout: Binding<TranscriptThemeLayout> {
 		themeBinding(\.layout)
-	}
-
-	private var nicknameFormat: Binding<String> {
-		themeBinding(\.nicknameFormat)
-	}
-
-	private var timestampFormat: Binding<String> {
-		themeBinding(\.timestampFormat)
 	}
 
 	private var lineSpacing: Binding<Double> {
@@ -441,6 +439,21 @@ struct PreferencesStyleSections: View {
 
 	private var horizontalPadding: Binding<Double> {
 		themeBinding(\.horizontalPadding)
+	}
+
+	/** A text field over the theme that writes when editing ends.
+
+	 Every write re-validates, persists and republishes the whole theme to every
+	 open transcript, which is what a format typed one keystroke at a time used
+	 to cost per keystroke. */
+	private func themeText(_ keyPath: WritableKeyPath<TranscriptTheme, String>) -> PreferencesFieldValue {
+		PreferencesFieldValue(
+			text: { model.transcriptTheme[keyPath: keyPath] },
+			write: { value in
+				guard value != model.transcriptTheme[keyPath: keyPath] else { return true }
+				return model.updateTheme { $0[keyPath: keyPath] = value }
+			}
+		)
 	}
 
 	private func themeBinding<Value>(_ keyPath: WritableKeyPath<TranscriptTheme, Value>) -> Binding<Value> {

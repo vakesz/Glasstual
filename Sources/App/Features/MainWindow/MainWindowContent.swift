@@ -123,35 +123,30 @@ extension MainWindow {
 		reloadTreeItem(channel)
 	}
 
-	public func clearAllViews() {
-		guard let world else { return }
-		for client in world.clientList {
-			clearContents(of: client)
-			for channel in client.channelList {
-				clearContents(of: channel)
-			}
-		}
-		markAllAsRead()
-	}
-
 	private func completeNickname(_ movingForward: Bool) {
 		nicknameCompletionStatus.completeNickname(movingForward)
 	}
 
-	func tab(_: NSEvent) {
-		switch Preferences.Input.tabKeyAction.value {
-		case .nicknameComplete: completeNickname(true)
-		case .unreadChannel: navigateChannelEntries(true, withNavigationType: .unread)
-		default: break
-		}
+	/// Answers whether the window acted on Tab; `false` leaves the key to the
+	/// message field's own keyboard navigation.
+	func tab(_: NSEvent) -> Bool {
+		performTabKeyAction(movingForward: true)
 	}
 
-	func shiftTab(_: NSEvent) {
-		switch Preferences.Input.tabKeyAction.value {
-		case .nicknameComplete: completeNickname(false)
-		case .unreadChannel: navigateChannelEntries(false, withNavigationType: .unread)
-		default: break
+	func shiftTab(_: NSEvent) -> Bool {
+		performTabKeyAction(movingForward: false)
+	}
+
+	private func performTabKeyAction(movingForward: Bool) -> Bool {
+		switch MainWindowTabKeyPolicy.outcome(for: Preferences.Input.tabKeyAction.value) {
+		case .completeNickname:
+			completeNickname(movingForward)
+		case .unreadChannel:
+			navigateChannelEntries(movingForward, withNavigationType: .unread)
+		case .keyboardNavigation:
+			return false
 		}
+		return true
 	}
 
 	func sendControlEnterMessageMaybe(_ event: NSEvent) {
@@ -279,43 +274,46 @@ public extension MainWindow {
 		}
 	}
 
-	/** A gesture that does not qualify still has to clear the origin: the next
-	 `endGesture` measures from it, and a stale one is a delta past any
-	 threshold -- the channel changing under a gesture nobody made. */
-	override func beginGesture(with event: NSEvent) {
-		let touches = Array(event.touches(matching: .touching, in: nil))
-		guard touches.count == 2, Preferences.Input.swipeMinimumLength.value >= 1 else {
-			cachedSwipeOriginPoint = nil
-			return
-		}
-		cachedSwipeOriginPoint = point(between: touches[0], and: touches[1])
-	}
+	/** Two-finger swipes between conversations, read from scroll events.
 
-	private func point(between first: NSTouch, and second: NSTouch) -> NSPoint {
-		let size = first.deviceSize
-		return NSPoint(
-			x: (first.normalizedPosition.x + second.normalizedPosition.x) / 2 * size.width,
-			y: (first.normalizedPosition.y + second.normalizedPosition.y) / 2 * size.height
+	 The window used to read them from `beginGesture` and `endGesture`, which
+	 AppKit no longer sends, so the gesture did nothing. A trackpad swipe
+	 arrives as a scroll gesture. The transcript's scroll view passes a
+	 horizontal one up the responder chain because this window asks for it
+	 below. The window then tracks it with the system's fluid swipe, which
+	 respects the "Swipe between pages" setting and the application's own
+	 switch. */
+	override func wantsScrollEventsForSwipeTracking(on axis: NSEvent.GestureAxis) -> Bool {
+		axis == .horizontal && MainWindowSwipePolicy.isEnabled(
+			systemAllowsSwipeTracking: NSEvent.isSwipeTrackingFromScrollEventsEnabled,
+			swipePreference: Preferences.Input.swipeMinimumLength.value
 		)
 	}
 
-	override func endGesture(with event: NSEvent) {
-		let minimum = Preferences.Input.swipeMinimumLength.value
-		guard minimum >= 1 else { return }
-		let touches = Array(event.touches(matching: .any, in: nil))
-		guard let origin = cachedSwipeOriginPoint, touches.count == 2 else {
-			cachedSwipeOriginPoint = nil
+	override func scrollWheel(with event: NSEvent) {
+		guard MainWindowSwipePolicy.beginsSwipe(
+			phase: event.phase,
+			scrollingDeltaX: event.scrollingDeltaX,
+			scrollingDeltaY: event.scrollingDeltaY,
+			isEnabled: wantsScrollEventsForSwipeTracking(on: .horizontal)
+		) else {
+			super.scrollWheel(with: event)
 			return
 		}
-		let destination = point(between: touches[0], and: touches[1])
-		cachedSwipeOriginPoint = nil
-		let delta = NSPoint(x: origin.x - destination.x, y: origin.y - destination.y)
-		guard abs(delta.x) >= abs(delta.y), abs(delta.x) >= minimum else { return }
-		let x = delta.x * (event.isDirectionInvertedFromDevice ? -1 : 1)
-		if x > 0 {
-			selectPreviousWindow(nil)
-		} else {
-			selectNextWindow(nil)
+
+		event.trackSwipeEvent(
+			options: [.lockDirection, .clampGestureAmount],
+			dampenAmountThresholdMin: -1,
+			max: 1
+		) { [weak self] gestureAmount, phase, isComplete, _ in
+			switch MainWindowSwipePolicy.destination(gestureAmount: gestureAmount, phase: phase, isComplete: isComplete) {
+			case .previous:
+				self?.selectPreviousWindow(nil)
+			case .next:
+				self?.selectNextWindow(nil)
+			case nil:
+				break
+			}
 		}
 	}
 
@@ -341,9 +339,20 @@ public extension MainWindow {
 		true
 	}
 
+	/** The frame Reset Window gives back, where the window already is.
+
+	 The appearance's default size is never allowed below the window's own
+	 minimum. The bundled default is 474 points tall against a 500-point
+	 minimum content height, so Reset Window left the window smaller than a
+	 resize could ever make it. */
 	var defaultWindowFrame: NSRect {
+		let minimumSize = frameRect(forContentRect: NSRect(origin: .zero, size: contentMinSize)).size
+		let defaultSize = userInterfaceObjects.defaultWindowSize
 		var value = frame
-		value.size = userInterfaceObjects.defaultWindowSize
+		value.size = NSSize(
+			width: max(defaultSize.width, minimumSize.width),
+			height: max(defaultSize.height, minimumSize.height)
+		)
 		return value
 	}
 }
@@ -384,16 +393,17 @@ public extension MainWindow {
 		let newItem = serverList.selectedItem
 		guard selectedItem !== newItem else { return }
 		storePreviousSelection()
-		let previousItem = selectedItem
 		selectedItem = newItem
 		presentationModel.transcript = newItem?.logController?.ensureBackingView()
-		previousItem?.logController?.notifyDidBecomeHidden()
 		newItem?.logController?.notifyDidBecomeVisible()
 		selectionDidChangePostflight()
 	}
 
 	private func selectionDidChangePostflight() {
-		invalidateRestorableState()
+		/* The old conversation hears that typing stopped before the field is
+		 refilled for the new one, in the same turn. A later notification found
+		 the new conversation already recorded as the one being typed in. */
+		inputTextField.finishTypingNotice(unlessIn: selectedChannel)
 		let changedTo = selectedItem
 		let changedFrom = previouslySelectedItem
 		guard changedTo !== changedFrom else { return }
@@ -401,9 +411,6 @@ public extension MainWindow {
 		if let changedTo {
 			changedTo.resetState()
 			noteItemWasViewed(changedTo)
-		}
-		if let changedFrom {
-			changedFrom.logController?.notifySelectionChanged()
 		}
 
 		guard let changedTo else {
@@ -422,7 +429,6 @@ public extension MainWindow {
 		inputHistory.moveFocus(to: changedTo)
 		inputTextField.resetSpellingIgnores()
 		updateMemberListVisibilityForSelection()
-		changedTo.logController?.notifySelectionChanged()
 		storeLastSelectedChannel()
 		NotificationCenter.default.post(name: .mainWindowSelectionChanged, object: self)
 		DockIcon.updateDockIcon()
@@ -456,7 +462,7 @@ public extension MainWindow {
 		changeColumnVisibility { presentationModel.isServerListVisible = false }
 	}
 
-	@objc func toggleServerListVisibility() {
+	func toggleServerListVisibility() {
 		changeColumnVisibility { presentationModel.isServerListVisible.toggle() }
 	}
 
@@ -471,7 +477,7 @@ public extension MainWindow {
 		}
 	}
 
-	@objc func toggleMemberListVisibility() {
+	func toggleMemberListVisibility() {
 		changeColumnVisibility { presentationModel.toggleMemberList() }
 	}
 
@@ -481,6 +487,21 @@ public extension MainWindow {
 
 	var isServerListVisible: Bool {
 		presentationModel.isServerListVisible
+	}
+
+	/** Hides the AppKit views under the loading overlay, or shows them again.
+
+	 SwiftUI's `disabled` and `accessibilityHidden` stop at the representables,
+	 so the message field and the transcript stayed in the key view loop and in
+	 the accessibility tree under an overlay that covered them. A hidden view
+	 is in neither. Nothing under the overlay may keep the keyboard either, so
+	 a view that holds it gives it back to the window. */
+	func setConversationObscured(_ isObscured: Bool) {
+		if isObscured, firstResponder is NSView {
+			makeFirstResponder(nil)
+		}
+		inputContentView.isHidden = isObscured
+		presentationModel.isConversationObscured = isObscured
 	}
 
 	/** Puts the loading screen into the state the world is in: waiting for the
@@ -666,7 +687,6 @@ public extension MainWindow {
 			?? candidates.last?.element
 		else {
 			storePreviousSelection()
-			selectedItem?.logController?.notifyDidBecomeHidden()
 			selectedItem = nil
 			presentationModel.transcript = nil
 			selectionDidChangePostflight()
@@ -709,10 +729,65 @@ public extension MainWindow {
 	}
 
 	private func serverListSelectionDidChange() {
-		if ignoreNextServerListSelectionChange {
-			ignoreNextServerListSelectionChange = false; return
-		}
 		guard ignoreServerListSelectionChanges == false else { return }
 		selectionDidChange()
+	}
+}
+
+/// What Tab does in the message field, by preference.
+enum MainWindowTabKeyPolicy {
+	enum Outcome: Equatable {
+		case completeNickname
+		case unreadChannel
+		/// The window declines the key, and the field moves the keyboard on.
+		case keyboardNavigation
+	}
+
+	static func outcome(for action: TabKeyAction) -> Outcome {
+		switch action {
+		case .nicknameComplete: .completeNickname
+		case .unreadChannel: .unreadChannel
+		case .none: .keyboardNavigation
+		}
+	}
+}
+
+/// When a two-finger horizontal swipe moves between conversations, and which way.
+enum MainWindowSwipePolicy {
+	enum Destination: Equatable {
+		case previous
+		case next
+	}
+
+	/** Both switches have to be on. One is the system's "Swipe between pages",
+	 and the other is the application's own preference, where zero has always
+	 meant off. The preference used to be a distance between two touches. The
+	 distance a swipe has to cover is now the system's threshold, the same one
+	 every other swipe on the Mac uses. */
+	static func isEnabled(systemAllowsSwipeTracking: Bool, swipePreference: Double) -> Bool {
+		systemAllowsSwipeTracking && swipePreference > 0
+	}
+
+	/// A swipe is tracked from the event that starts the scroll gesture, and
+	/// only when that gesture leads sideways.
+	static func beginsSwipe(
+		phase: NSEvent.Phase,
+		scrollingDeltaX: CGFloat,
+		scrollingDeltaY: CGFloat,
+		isEnabled: Bool
+	) -> Bool {
+		isEnabled && phase == .began && scrollingDeltaX != 0 && abs(scrollingDeltaX) > abs(scrollingDeltaY)
+	}
+
+	/** Where a tracked swipe lands, decided once, when the tracking completes.
+
+	 AppKit calls the handler for every update and every animation frame, so
+	 only the completing call may move the selection. A swipe carried past the
+	 system's threshold completes as `.ended` at a full gesture amount. One
+	 that fell short completes as `.cancelled`, back at zero. Fingers moving
+	 right go back, as they do between pages, and fingers moving left go on. */
+	static func destination(gestureAmount: CGFloat, phase: NSEvent.Phase, isComplete: Bool) -> Destination? {
+		guard isComplete, phase == .ended, gestureAmount != 0 else { return nil }
+		return gestureAmount > 0 ? .previous : .next
 	}
 }

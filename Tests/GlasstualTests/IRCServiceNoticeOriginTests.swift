@@ -1,4 +1,6 @@
+import Foundation
 @testable import Glasstual
+import GlasstualPluginKit
 import Testing
 
 /// Replying to a `NickServ` notice sends the account password, so the notice
@@ -24,11 +26,27 @@ struct IRCServiceNoticeOriginTests {
 	}
 
 	@Test(
-		"A services host is accepted",
+		"A services host on the network's domain is accepted",
 		arguments: ["services.", "services.example.net", "SERVICES.EXAMPLE.NET", "nick.services.example.net"]
 	)
 	func servicesHostIsAccepted(host: String) {
 		#expect(isFromServices(senderAddress: host))
+	}
+
+	/// A reverse DNS name is whatever the owner of the address publishes, so a
+	/// `services` label is only evidence on the network's own domain.
+	@Test(
+		"A services host outside the network's domain is refused",
+		arguments: ["services.attacker.example", "services.example.net.attacker.example", "nick.services.net", "services.net"]
+	)
+	func servicesHostElsewhereIsRefused(host: String) {
+		#expect(isFromServices(senderAddress: host) == false)
+	}
+
+	@Test("A services host is judged against the server the client is on")
+	func servicesHostFollowsTheServerName() {
+		#expect(isFromServices(senderAddress: "services.libera.chat", serverAddress: "tantalum.libera.chat"))
+		#expect(isFromServices(senderAddress: "services.libera.chat", serverAddress: "irc.example.net") == false)
 	}
 
 	@Test("A host under the network's own domain is accepted")
@@ -57,5 +75,69 @@ struct IRCServiceNoticeOriginTests {
 	@Test("An unknown server address does not widen the check")
 	func unknownServerAddressIsRefused() {
 		#expect(isFromServices(senderAddress: "example.net", serverAddress: nil) == false)
+	}
+
+	private func nickServContext(
+		identifiedWithSASL: Bool = false,
+		permitsCredentialsInClear: Bool = true
+	) -> IRCServiceNoticePolicy.NickServContext {
+		.init(
+			isWaiting: false,
+			isIdentifiedWithSASL: identifiedWithSASL,
+			permitsCredentialsInClear: permitsCredentialsInClear,
+			password: "secret",
+			nickname: "alice",
+			serverAddress: "irc.example.net",
+			sendsAuthenticationToUserServ: false,
+			needsIdentificationTokens: ["nickname is registered"],
+			successfulIdentificationTokens: ["now identified"]
+		)
+	}
+
+	@Test("An account SASL already authenticated is not identified again")
+	func saslIdentifiedAccountSendsNoPassword() {
+		let action = IRCServiceNoticePolicy.nickServAction(
+			for: "This nickname is registered",
+			context: nickServContext(identifiedWithSASL: true)
+		)
+
+		#expect(action == nil)
+	}
+
+	@Test("A password is withheld from a connection that lost the encryption it asked for")
+	func passwordIsWithheldWithoutEncryption() {
+		let action = IRCServiceNoticePolicy.nickServAction(
+			for: "This nickname is registered",
+			context: nickServContext(permitsCredentialsInClear: false)
+		)
+
+		#expect(action == .identificationWithheld)
+	}
+
+	/// Filing a `[#channel]` notice into that channel is a claim only services
+	/// may make, so an impostor's notice stays where it arrived.
+	@Test("A ChanServ notice from an ordinary user is not filed into the channel it names", arguments: [true, false])
+	func chanServNoticeRoutingNeedsServices(_ fromServices: Bool) throws {
+		var preferences = ClientPreferences()
+		preferences.locationToSendNotices = .serverConsole
+		let client = TestClient(
+			configDictionary: ["nickname": "alice"],
+			nicknamePassword: nil,
+			fixture: ClientEnvironmentFixture(preferences: preferences)
+		)
+		client.isConnected = true
+		client.supportInfo.serverAddress = "irc.example.net"
+		let channel = try #require(client.findChannelOrCreate("#swift", as: .channel))
+		let host = fromServices ? "services.example.net" : "cable.isp.example.com"
+		let message = try #require(Message(
+			line: ":ChanServ!ChanServ@\(host) NOTICE alice :[#swift] Welcome",
+			on: client
+		))
+
+		client.receivePrivmsgAndNotice(message)
+
+		let printed = try #require(client.printedLines.lastObject as? [String: Any])
+		#expect((printed["channel"] as? Channel === channel) == fromServices)
+		#expect((printed["messageBody"] as? String == "Welcome") == fromServices)
 	}
 }

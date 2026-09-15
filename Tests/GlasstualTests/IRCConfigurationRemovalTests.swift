@@ -59,7 +59,7 @@ struct IRCConfigurationRemovalTests {
 			serverAddress: "irc.example.test",
 			pendingServerPassword: .set("fixture-server")
 		)]
-		client.config.channelList[0].pendingSecretKey = "fixture-channel"
+		client.config.channelList[0].pendingSecretKey = .set("fixture-channel")
 		let presentations = (0 ... client.channelList.count).map { _ in RemovalPresentation() }
 		client.presentation = presentations[0]
 		for (index, channel) in client.channelList.enumerated() {
@@ -80,7 +80,7 @@ struct IRCConfigurationRemovalTests {
 		#expect(client.config.pendingNicknamePassword == .set("fixture-nickname"))
 		#expect(client.config.pendingProxyPassword == .set("fixture-proxy"))
 		#expect(client.config.serverList[0].pendingServerPassword == .set("fixture-server"))
-		#expect(client.config.channelList[0].pendingSecretKey == "fixture-channel")
+		#expect(client.config.channelList[0].pendingSecretKey == .set("fixture-channel"))
 		#expect(fixture.output.closedSheetClients == [client])
 		#expect(fixture.output.closedSheetChannelIds == client.channelList.map(\.uniqueIdentifier))
 		#expect(fixture.applicationState.clientsFinishedTerminating == 0)

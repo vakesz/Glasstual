@@ -38,11 +38,26 @@
 import CocoaExtensions
 import Foundation
 import GlasstualPluginKit
+import os
 
 final class ChatFilterEngine {
+	private static let logger = Logger(
+		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
+		category: "Extension['Chat Filter']"
+	)
+
+	/** The most of a message a filter pattern is matched against, in UTF-8 bytes.
+
+	 An IRC line is 512 bytes including its command and prefix, so no chat
+	 message body is longer; anything that is has not come from a chat line. */
+	static let subjectByteLimit = 512
+
 	private let filtersProvider: () -> [ChatFilter]
 	private let host: PluginHostContext
 	private var lastActionDates: [String: TimeInterval] = [:]
+	/// Patterns that ran out of their match budget, which stay out of matching
+	/// until the filters are edited or reloaded.
+	private var exhaustedPatterns: Set<String> = []
 
 	init(host: PluginHostContext, filters: @escaping () -> [ChatFilter]) {
 		self.host = host
@@ -93,13 +108,7 @@ final class ChatFilterEngine {
 
 		if !filter.senderMatch.isEmpty {
 			let identity = author.isServer ? author.nickname : author.hostmask
-			guard RegularExpression.string(
-				identity,
-				isMatchedByRegex: filter.senderMatch,
-				withoutCase: true,
-				inputLimit: RegularExpression.inputLengthLimit
-			)
-			else {
+			guard matches(filter.senderMatch, subject: identity) else {
 				return false
 			}
 		}
@@ -129,26 +138,54 @@ final class ChatFilterEngine {
 		return true
 	}
 
-	/** Whether the filter's pattern matches, over a message-sized subject.
-
-	 Every filter is tried against every line that arrives, on the main actor,
-	 and the patterns are user-authored while the subject is whatever a peer
-	 sent. ICU backtracks without a budget, so an unbounded subject is the other
-	 half of a catastrophic pattern: the editor refuses the pattern shapes and
-	 `inputLimit` refuses the length. An IRC line is 512 bytes, so the cap only
-	 ever bites on something that is not a chat message. */
+	/// Whether the filter's pattern matches the text of an event.
 	private func matchesText(_ filter: ChatFilter, text: String?, allowingNil: Bool) -> Bool {
 		guard var text else { return allowingNil }
 		guard !filter.match.isEmpty else { return true }
 		if host.removesIRCFormatting == false {
 			text = IRCFormatting.removingControlCodes(from: text)
 		}
-		return RegularExpression.string(
-			text,
-			isMatchedByRegex: filter.match,
-			withoutCase: true,
-			inputLimit: RegularExpression.inputLengthLimit
-		)
+		return matches(filter.match, subject: text)
+	}
+
+	/** Whether a user-authored pattern matches remote text, within a budget.
+
+	 Every filter is tried against every line that arrives, on the main actor,
+	 because the host asks a plugin synchronously whether to show the line. The
+	 patterns are the user's while the subject is whatever a peer sent, and ICU
+	 backtracks without a limit of its own, so both halves are bounded here: the
+	 subject to a message's length, and the evaluation to
+	 `RegularExpression.matchBudget`. A pattern that spends its whole budget
+	 once is set aside until the filters change, so a flood of lines built to
+	 trigger it costs one budget rather than one per line. */
+	private func matches(_ pattern: String, subject: String) -> Bool {
+		guard exhaustedPatterns.contains(pattern) == false else { return false }
+		switch RegularExpression.firstMatch(
+			of: pattern, in: Self.boundedSubject(subject), withoutCase: true
+		) {
+		case .matched:
+			return true
+		case .unmatched, .invalidPattern:
+			return false
+		case .exceededBudget:
+			exhaustedPatterns.insert(pattern)
+			Self.logger.error("""
+			A chat filter pattern ran out of its match budget and is skipped until the filters change: \
+			\(pattern, privacy: .private)
+			""")
+			return false
+		}
+	}
+
+	/// `text` cut to at most `subjectByteLimit` UTF-8 bytes, on a character
+	/// boundary.
+	static func boundedSubject(_ text: String) -> String {
+		guard text.utf8.count > subjectByteLimit else { return text }
+		var bytes = 0
+		return String(text.prefix { character in
+			bytes += character.utf8.count
+			return bytes <= subjectByteLimit
+		})
 	}
 
 	func receivedCommand(_ event: PluginIncomingCommandEvent) -> Bool {
@@ -338,12 +375,16 @@ final class ChatFilterEngine {
 
 	/** The commands a filter action runs, with every token expanded.
 
-	 The order the three steps run in is the whole security property of this
+	 The order the steps run in is the whole security property of this
 	 function, and it used to be the other way around:
 
 	 - The *template* is split into lines first. A line separator that arrives
 	   inside a substituted value can then never start a command, because the
 	   command boundaries were fixed before any remote text was in the string.
+	 - Whether a line is a command is decided on the template line too. Deciding
+	   it after expansion let a line that is only a token — `%_originalMessage_%`,
+	   `%_Parameter_1_%`, or `%_networkName_%`, which the server names — run
+	   whatever command a peer or server put in that value.
 	 - Every substituted value has its own line and paragraph separators
 	   stripped. `\u{2028}`, `\u{2029}`, `\u{0085}`, `\u{000B}` and `\u{000C}`
 	   are all legal in an IRC message body and all count as line breaks to
@@ -360,11 +401,10 @@ final class ChatFilterEngine {
 		let tokens = sanitized.keys.sorted { $0.count > $1.count }
 
 		return templateLines(of: template).compactMap { line -> String? in
-			let expanded = expanding(line, tokens: tokens, values: sanitized)
-			guard expanded.count > 1, expanded.hasPrefix("/"), !expanded.hasPrefix("//") else {
-				return nil
-			}
-			return String(expanded.dropFirst())
+			guard line.hasPrefix("/"), !line.hasPrefix("//") else { return nil }
+			let command = expanding(String(line.dropFirst()), tokens: tokens, values: sanitized)
+			guard command.isEmpty == false, !command.hasPrefix("/") else { return nil }
+			return command
 		}
 	}
 
@@ -413,6 +453,7 @@ final class ChatFilterEngine {
 	}
 
 	func reloadFilterActionPerforms() {
+		exhaustedPatterns.removeAll()
 		let validIdentifiers = Set(filters.lazy.filter { $0.actionFloodControlInterval > 0 }.map(\.id))
 		lastActionDates = lastActionDates.filter { validIdentifiers.contains($0.key) }
 	}

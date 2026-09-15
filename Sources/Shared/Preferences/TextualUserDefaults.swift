@@ -49,7 +49,7 @@ public nonisolated extension Notification.Name { // nonisolated: value
  poster writes rather than repeating a literal that nothing checks. */
 public nonisolated enum PreferenceChangeNotification { // nonisolated: value
 	/// The name of the preference that changed.
-	public static let changedKeyUserInfoKey = "changedKey"
+	public static let changedKeyUserInfoKey = FirstPartyPluginPreferences.changedKeyUserInfoKey
 }
 
 /** The application's preference store.

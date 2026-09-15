@@ -22,13 +22,12 @@ enum HistoryRelaunchScenario {
 		for marker in ["E2E_TYPED_MESSAGE", "E2E_SERVER_REPLY", "E2E_REPLY_ACK"] {
 			try await driver.waitForTranscript(marker)
 		}
-		try await Task.sleep(for: .seconds(2))
+		try await AppSession.awaitProbeSamples(3, driver: driver)
 		try await AppSession.stopProbe(probe, driver: driver)
 		let quitSeconds = try await AppSession.quitAndVerify(app, driver: driver)
 		let evidence: [String: Any] = ["firstPID": previous.processIdentifier, "relaunchPID": app.processIdentifier,
-		                               "historyTranscript": true, "disconnected": true,
-		                               "exitReason": "exit", "exitStatus": app.terminationStatus,
-		                               "quitSeconds": quitSeconds]
+		                               "exitReason": app.terminationReason.evidenceName,
+		                               "exitStatus": app.terminationStatus, "quitSeconds": quitSeconds]
 		try JSONSerialization.data(withJSONObject: evidence, options: [.prettyPrinted, .sortedKeys])
 			.write(to: HarnessFiles.root.appendingPathComponent("relaunch-evidence.json"), options: .atomic)
 	}

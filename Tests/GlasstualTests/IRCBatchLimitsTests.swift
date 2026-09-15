@@ -53,7 +53,7 @@ struct IRCBatchLimitsTests {
 		try client.receiveBatch(message("@batch=outer BATCH +outer example/replacement", on: client))
 		#expect(client.batchMessages.queuedEntry(withBatchToken: "outer") === original)
 		#expect(original.parentBatchMessage == nil)
-		#expect(original.queuedEntries.count == 1)
+		#expect(original.queuedMessages.count == 1)
 		try client.receiveBatch(message("BATCH -outer", on: client))
 		#expect(client.processedMessages.count == 1)
 		#expect(client.batchMessages.queuedEntries.isEmpty)
@@ -80,7 +80,7 @@ struct IRCBatchLimitsTests {
 		if closeChild {
 			try client.receiveBatch(message("BATCH -inner", on: client))
 		}
-		#expect(outer?.queuedEntries.count == 2)
+		#expect(outer?.queuedMessages.count == 2)
 		#expect(inner != nil)
 		#expect(queuedMessage != nil)
 
@@ -109,12 +109,12 @@ struct IRCBatchLimitsTests {
 		let batch = closedBatch(token: "full")
 
 		for index in 0 ..< MessageBatch.maximumQueuedEntries {
-			try #expect(batch.queueEntry(.message(message(":a!u@h PRIVMSG #c :\(index)", on: client))))
+			try #expect(batch.queueMessage(message(":a!u@h PRIVMSG #c :\(index)", on: client)))
 		}
 
-		#expect(batch.queuedEntries.count == MessageBatch.maximumQueuedEntries)
-		try #expect(batch.queueEntry(.message(message(":a!u@h PRIVMSG #c :overflow", on: client))) == false)
-		#expect(batch.queuedEntries.count == MessageBatch.maximumQueuedEntries)
+		#expect(batch.queuedMessages.count == MessageBatch.maximumQueuedEntries)
+		try #expect(batch.queueMessage(message(":a!u@h PRIVMSG #c :overflow", on: client)) == false)
+		#expect(batch.queuedMessages.count == MessageBatch.maximumQueuedEntries)
 	}
 
 	/// The per-batch ceiling bounded nothing while a server could open an
@@ -149,36 +149,33 @@ struct IRCBatchLimitsTests {
 		#expect(client.batchMessages.queuedEntries.isEmpty)
 	}
 
-	/// `depth` was declared and then ignored, so nested batches recursed
-	/// without bound.
-	@Test
-	func nestedBatchesDeeperThanTheLimitAreNotProcessed() throws {
+	/// A netsplit wider than the queue used to drop the QUITs past the ceiling,
+	/// leaving those people listed in every channel they were in.
+	@Test("A batch that overflows its queue processes every message, in order, instead of dropping any")
+	func overflowingBatchProcessesEveryMessageInOrder() throws {
 		let client = TestClient()
-		let batches = (0 ... IRCBatchPolicy.maximumParentDepth).map { closedBatch(token: "b\($0)") }
+		client.enableCapability(.batch)
+		try client.receiveBatch(message("BATCH +split netsplit a.example b.example", on: client))
+		let batch = try #require(client.batchMessages.queuedEntry(withBatchToken: "split"))
 
-		for index in 0 ..< (batches.count - 1) {
-			batches[index].queueEntry(.batch(batches[index + 1]))
+		for index in 0 ..< MessageBatch.maximumQueuedEntries {
+			try #expect(client.filterBatchCommandIncomingData(message("@batch=split :n\(index)!u@h QUIT :split", on: client)))
 		}
 
-		try batches[batches.count - 1].queueEntry(.message(message(":a!u@h PRIVMSG #c :deep", on: client)))
-
-		client.recursivelyProcessBatchMessage(batches[0], depth: 0)
-
 		#expect(client.processedMessages.count == 0)
-	}
 
-	@Test
-	func shallowlyNestedBatchesAreStillProcessed() throws {
-		let client = TestClient()
-		let outer = closedBatch(token: "outer")
-		let inner = closedBatch(token: "inner")
+		let overflow = try message("@batch=split :overflow!u@h QUIT :split", on: client)
+		#expect(client.filterBatchCommandIncomingData(overflow) == false, "The overflowing message is processed live")
+		#expect(client.processedMessages.count == MessageBatch.maximumQueuedEntries)
+		#expect((client.processedMessages.firstObject as? Message)?.senderNickname == "n0")
+		#expect(batch.queuedMessages.isEmpty)
 
-		outer.queueEntry(.batch(inner))
-		try inner.queueEntry(.message(message(":a!u@h PRIVMSG #c :hello", on: client)))
+		let later = try message("@batch=split :later!u@h QUIT :split", on: client)
+		#expect(client.filterBatchCommandIncomingData(later) == false)
 
-		client.recursivelyProcessBatchMessage(outer, depth: 0)
-
-		#expect(client.processedMessages.count == 1)
+		try client.receiveBatch(message("BATCH -split", on: client))
+		#expect(client.batchMessages.queuedEntries.isEmpty)
+		#expect(client.processedMessages.count == MessageBatch.maximumQueuedEntries)
 	}
 }
 
@@ -192,13 +189,15 @@ struct IRCMessageTagLimitTests {
 		#expect(MessageTagParser.parsedTags(fromSection: oversized).tags.isEmpty)
 	}
 
+	/// The cap counts the `@` and the trailing space the parser never sees.
 	@Test
 	func tagSectionsAtTheLimitAreStillParsed() {
-		let value = String(repeating: "b", count: MessageTagParser.maximumSectionLength - 2)
+		let value = String(repeating: "b", count: MessageTagParser.maximumSectionLength - 4)
 		let section = "a=" + value
 
-		#expect(section.utf8.count == MessageTagParser.maximumSectionLength)
+		#expect(("@" + section + " ").utf8.count == MessageTagParser.maximumSectionLength)
 		#expect(MessageTagParser.parsedTags(fromSection: section).tags == ["a": value])
+		#expect(MessageTagParser.parsedTags(fromSection: section + "b").tags.isEmpty)
 	}
 }
 

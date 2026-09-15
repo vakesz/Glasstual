@@ -286,8 +286,10 @@ struct IRCClientSCRAMMutualAuthenticationTests {
 		#expect(client.sentLines.compactMap { $0 as? String } == sent)
 	}
 
+	/// A client mid-exchange: the check only guards a SASL negotiation in flight.
 	private func client(mechanism: String?, scram: SCRAMClient?) -> TestClient {
 		let client = TestClient()
+		client.enableCapability(.isInSASLNegotiation)
 		client.saslMechanism = mechanism
 		client.saslScramClient = scram
 		return client

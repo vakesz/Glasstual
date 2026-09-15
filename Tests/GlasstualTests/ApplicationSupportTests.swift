@@ -193,6 +193,15 @@ struct ApplicationSupportTests {
 		try Data().write(to: directory.appendingPathComponent("Ping.aiff"))
 		try Data().write(to: directory.appendingPathComponent("Tone.aiff"))
 		try Data().write(to: directory.appendingPathComponent("Tone.wav"))
+		/* A Sounds folder holds more than sounds. None of these may reach the
+		 picker as a sound that plays nothing. */
+		try Data().write(to: directory.appendingPathComponent(".DS_Store"))
+		try Data().write(to: directory.appendingPathComponent(".Hidden.aiff"))
+		try Data().write(to: directory.appendingPathComponent("Read Me.txt"))
+		try FileManager.default.createDirectory(
+			at: directory.appendingPathComponent("Folder", isDirectory: true),
+			withIntermediateDirectories: false
+		)
 
 		let sounds = SoundPlayer.soundFiles(atPath: directory.path)
 
@@ -203,7 +212,7 @@ struct ApplicationSupportTests {
 
 	@Test("The list offered to the user contains Beep and is sorted ignoring case")
 	func uniqueSoundListContainsBeepAndIsCaseInsensitivelySorted() {
-		let sounds = SoundPlayer.uniqueListOfSounds()
+		let sounds = SoundPlayer.availableSoundNames
 		let sortedSounds = sounds.sorted { $0.caseInsensitiveCompare($1) == .orderedAscending }
 
 		#expect(sounds.contains("Beep"))

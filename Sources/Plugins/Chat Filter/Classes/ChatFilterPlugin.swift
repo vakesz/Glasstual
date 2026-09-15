@@ -79,7 +79,7 @@ final class ChatFilterPlugin: NSObject, GlasstualPlugin, PluginIncomingCommandHa
 		}
 		loadFilters()
 
-		defaultsObserver = PluginDefaultsObservation { [weak self] in
+		defaultsObserver = PluginDefaultsObservation(keys: [FirstPartyPluginPreferences.chatFilters]) { [weak self] in
 			self?.loadFilters()
 		}
 	}

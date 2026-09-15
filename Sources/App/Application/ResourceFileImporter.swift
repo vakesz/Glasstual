@@ -210,8 +210,8 @@ public final class ResourceFileImporter {
 			      !principal.isEmpty,
 			      let executable = bundle.executableURL,
 			      FileManager.default.isExecutableFile(atPath: executable.path),
-			      PluginManager.supportsCurrentPluginProtocol(bundle),
-			      PluginManager.isSignedByThisApplication(bundle)
+			      PluginBundleValidation.supportsCurrentPluginProtocol(bundle),
+			      PluginBundleValidation.isSignedByThisApplication(bundle)
 			else { throw ImportError.invalidPlugin }
 		}
 	}

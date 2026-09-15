@@ -13,26 +13,6 @@
 
 import AppKit
 
-public enum KeyCode: UInt16, Sendable {
-	/// `kVK_ANSI_A`. Zero is a real key code, not "no key".
-	case keyA = 0x00
-	case returnKey = 0x24
-	case tab = 0x30
-	case space = 0x31
-	case backspace = 0x33
-	case escape = 0x35
-	case enter = 0x4C
-	case home = 0x73
-	case pageUp = 0x74
-	case forwardDelete = 0x75
-	case end = 0x77
-	case pageDown = 0x79
-	case leftArrow = 0x7B
-	case rightArrow = 0x7C
-	case downArrow = 0x7D
-	case upArrow = 0x7E
-}
-
 /// Maps keyboard shortcuts onto closures. Registration used to also accept a
 /// selector to send to an `NSObject` target through the runtime; nothing but
 /// its own tests used that, and the closure form is checked by the compiler.

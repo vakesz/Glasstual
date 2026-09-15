@@ -57,10 +57,59 @@ final class ChannelPropertiesModel {
 	 which is what a sheet opened without one uses anyway. */
 	private weak var client: IRCClient?
 
+	/** The key field's text.
+
+	 It starts from the unflushed edit alone, holds whatever the one keychain
+	 read finds, and is only submitted as an edit once the person typed into it.
+	 The read lands after the sheet is on screen, so an untouched field that
+	 submitted its empty text would delete the key the sheet had not finished
+	 showing. */
+	var secretKey: String {
+		get { secretKeyText }
+		set {
+			guard newValue != secretKeyText else { return }
+			secretKeyText = newValue
+			secretKeyWasEdited = true
+		}
+	}
+
+	private var secretKeyText: String
+	private var secretKeyWasEdited = false
+
+	/// Changes whenever the stored key has to be read again, which the view
+	/// keys its loading task on.
+	private(set) var secretKeyLoadGeneration = 0
+
+	/** The Notifications pane's table.
+
+	 Its rows copy the channel's overrides when they are made, so the model is
+	 built again whenever the configuration is replaced. */
+	private(set) var notificationConfiguration = NotificationConfigurationModel(
+		notifications: [],
+		allowsInheritedState: true
+	)
+
+	/// The events a channel can override, in the order the pane lists them,
+	/// with a separator between each group.
+	private static let notificationEvents: [NotificationEvent?] = [
+		.highlight, nil, .channelMessage, .channelNotice, nil, .userJoined, .userParted,
+	]
+
 	init(config: ChannelConfig, client: IRCClient? = nil) {
 		self.config = config
 		self.client = client
 		channelNameIsEditable = config.channelName.isEmpty
+		secretKeyText = config.pendingSecretKey.value(orStored: nil) ?? ""
+		rebuildNotificationConfiguration()
+	}
+
+	private func rebuildNotificationConfiguration() {
+		notificationConfiguration = NotificationConfigurationModel(
+			notifications: Self.notificationEvents.map { event in
+				event.map { .configuration(ChannelNotificationConfiguration(eventType: $0, in: self)) } ?? .separator
+			},
+			allowsInheritedState: true
+		)
 	}
 
 	var channelName: String {
@@ -81,11 +130,6 @@ final class ChannelPropertiesModel {
 	var defaultTopic: String {
 		get { config.defaultTopic ?? "" }
 		set { config.defaultTopic = newValue }
-	}
-
-	var secretKey: String {
-		get { config.secretKey ?? "" }
-		set { config.secretKey = newValue }
 	}
 
 	/** The channel's inline-media override, which is one switch and not two.
@@ -133,13 +177,45 @@ final class ChannelPropertiesModel {
 		result.label = Self.nilIfEmpty(label.trimmingCharacters(in: .whitespacesAndNewlines))
 		result.defaultModes = Self.nilIfEmpty(defaultModes.trimmingCharacters(in: .whitespacesAndNewlines))
 		result.defaultTopic = Self.nilIfEmpty(defaultTopic.trimmingCharacters(in: .whitespacesAndNewlines))
-		result.secretKey = Self.nilIfEmpty(secretKey.firstToken)
+		result.pendingSecretKey = secretKeyWasEdited
+			? .edited(secretKey.firstToken)
+			: config.pendingSecretKey
 		return result
 	}
 
 	func replace(with config: ChannelConfig) {
 		self.config = config
 		submissionWasAttempted = false
+		rebuildNotificationConfiguration()
+		/* The replacement is what the channel now stores, and saving it may have
+		 rewritten the keychain item, so the field starts over and reads it
+		 again rather than trusting the last read. */
+		secretKeyWasEdited = false
+		secretKeyText = config.pendingSecretKey.value(orStored: nil) ?? ""
+		secretKeyLoadGeneration += 1
+	}
+
+	/** Reads the stored channel key off the main actor and shows it, unless
+	 the field has been typed into — an emptied field included — or the
+	 configuration already carries an edit of its own.
+
+	 `SecItemCopyMatching` is synchronous: the field's binding and the length
+	 caption used to call it from the view body, several times per redraw. */
+	func loadSecretKey() async {
+		guard case .unchanged = config.pendingSecretKey else { return }
+
+		let item = config.keychainItem
+		let stored = await KeychainSecretLoader.passwords(for: [item])[item]
+
+		guard Task.isCancelled == false,
+		      item == config.keychainItem,
+		      secretKeyWasEdited == false,
+		      case .unchanged = config.pendingSecretKey
+		else {
+			return
+		}
+
+		secretKeyText = stored ?? ""
 	}
 
 	/// What a connection says about how long a channel key may be, and how much

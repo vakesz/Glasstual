@@ -46,6 +46,10 @@ nonisolated enum CommonValidationStrings { // nonisolated: value
 		String(localized: .CommonErrors.maximumLength(maximumLength))
 	}
 
+	static var invalidRealName: String {
+		String(localized: .CommonErrors.realNameInvalid)
+	}
+
 	static var invalidNickname: String {
 		String(localized: .CommonErrors.nicknameInvalid)
 	}

@@ -204,3 +204,35 @@ struct CommandArityTests {
 		#expect(command.arguments.satisfiesDeclaredArity == false)
 	}
 }
+
+@MainActor
+@Suite("Defaults command parsing")
+struct DefaultsCommandRequestTests {
+	@Test("An action, an optional bare -a and a feature name make a change", arguments: [
+		(line: #"enable "Send WHO Command Requests to Channels""#, enabled: true, all: false),
+		(line: #"disable -a "Send WHO Command Requests to Channels""#, enabled: false, all: true),
+		(line: #"ENABLE "-a" "Send WHO Command Requests to Channels""#, enabled: true, all: true),
+		(line: "enable -a Send WHO Command Requests to Channels", enabled: true, all: true),
+	])
+	func readsAChange(line: String, enabled: Bool, all: Bool) throws {
+		let request = try #require(DefaultsCommandRequest(CommandArguments(line)))
+
+		#expect(request == .change(
+			featureName: "Send WHO Command Requests to Channels",
+			enabled: enabled,
+			appliesToAllClients: all
+		))
+	}
+
+	@Test("Help is its own request")
+	func readsHelp() {
+		#expect(DefaultsCommandRequest(CommandArguments("help")) == .help)
+	}
+
+	@Test("An unknown action or a missing feature is a syntax error, not a disable", arguments: [
+		"", #"toggle "Send WHO Command Requests to Channels""#, "enable", "disable -a",
+	])
+	func rejectsInvalidSyntax(line: String) {
+		#expect(DefaultsCommandRequest(CommandArguments(line)) == nil)
+	}
+}

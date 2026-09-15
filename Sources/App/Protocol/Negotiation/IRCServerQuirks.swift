@@ -77,6 +77,24 @@ nonisolated enum IRCServerQuirks { // nonisolated: value
 	/// expects, and the only way to know is the address.
 	static let twitchAddressSuffix = ".twitch.tv"
 
+	/// Networks that rate-limit hard enough to need the reduced flood settings.
+	static let rateLimitedServerSuffix = ".freenode.net"
+
+	/// Where a network's services expect the account password.
+	enum Services {
+		/// DALnet refuses an `IDENTIFY` sent to a bare `NickServ`, so the
+		/// message names the services server as well.
+		static let dalNetAddressSuffix = ".dal.net"
+		static let dalNetNickServTarget = "NickServ@services.dal.net"
+
+		/// The service networks that use UserServ take a `login` naming the
+		/// account instead of NickServ's `IDENTIFY`.
+		static let userServTarget = "userserv"
+
+		static let nickServ = "NickServ"
+		static let chanServ = "ChanServ"
+	}
+
 	/// A bouncer or proxy announcing that the far side came up. The sender name
 	/// and the text are both conventions, not protocol, and the text is
 	/// English.
@@ -96,4 +114,10 @@ nonisolated enum IRCServerQuirks { // nonisolated: value
 	/// The WHOX token the client tags its own WHO requests with, and matches the
 	/// replies against: the request and the reply carry the same number.
 	static let whoxToken = "152"
+}
+
+extension IRCClient {
+	var isBrokenIRCdKnownAsTwitch: Bool {
+		serverAddress?.hasSuffix(IRCServerQuirks.twitchAddressSuffix) ?? false
+	}
 }

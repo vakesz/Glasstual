@@ -127,6 +127,21 @@ struct ApplicationTerminationPolicyTests {
 		)
 	}
 
+	/// The machine powering off asked to quit while the confirmation was up,
+	/// and the request waited for an answer nobody was there to give.
+	@Test("The power-off path takes a confirmation on screen down instead of waiting on it")
+	func powerOffOverridesAPendingConfirmation() {
+		#expect(
+			ApplicationTerminationPolicy.decision(
+				isTerminating: false,
+				isAwaitingConfirmation: true,
+				skipConfirmation: true,
+				confirmQuitPreference: true,
+				hasLiveConnection: true
+			) == .overrideConfirmation
+		)
+	}
+
 	@Test("A shutdown in flight outranks a confirmation still on screen")
 	func terminationOutranksAPendingConfirmation() {
 		#expect(

@@ -56,7 +56,7 @@ nonisolated enum PreferencesClientArchive { // nonisolated: value
 		}
 		config.channelList = config.channelList.map {
 			var channel = $0
-			channel.pendingSecretKey = nil
+			channel.pendingSecretKey = .unchanged
 			return channel
 		}
 		return config

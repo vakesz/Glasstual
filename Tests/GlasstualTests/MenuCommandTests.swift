@@ -78,18 +78,16 @@ struct MenuCommandTests {
 			(.settings, .general),
 			(.markAllRead, .general),
 			(.queryLogs, .general),
-			(.segmentedAddChannel, .general),
 		]
 	)
 	func validationGroups(command: MenuCommand, group: MenuCommand.ValidationGroup) {
 		#expect(command.validationGroup == group)
 	}
 
-	/// `changeColor` and `segmentedAddChannel` sit inside bands the old range
+	/// `dockMuteNotifications` and `queryLogs` sit inside bands the old range
 	/// switch claimed, which is exactly the class of mistake the enum removes.
 	@Test("Grouping does not follow the tag's numeric band")
 	func groupingIsNotDerivedFromBand() {
-		#expect(MenuCommand.segmentedAddChannel.validationGroup == .general)
 		#expect(MenuCommand.dockMuteNotifications.validationGroup == .general)
 		#expect(MenuCommand.queryLogs.validationGroup == .general)
 	}
@@ -192,5 +190,21 @@ struct MenuCommandTests {
 		#expect(TextFormatterCommand.monospace.rawValue == 102)
 		#expect(MenuCommand.settings.rawValue == 102)
 		#expect(Set(TextFormatterCommand.allCases.map(\.rawValue)).count == TextFormatterCommand.allCases.count)
+	}
+
+	/// Launching finishes once the plugins have loaded, and Settings stayed
+	/// dimmed until then although nothing in it waits on a plugin.
+	@Test("Settings, About and Welcome open before the plugins have loaded", arguments: [
+		MenuCommand.settings, .about, .welcome,
+	])
+	func applicationCommandsOpenBeforeLaunchFinishes(command: MenuCommand) {
+		#expect(MenuValidationPolicy.validate(
+			command: command,
+			commandSpecificResult: true,
+			applicationIsLaunched: false,
+			mainWindowHasAttachedSheet: false,
+			mainWindowIsFocused: true,
+			hasExplicitMenuContext: false
+		))
 	}
 }

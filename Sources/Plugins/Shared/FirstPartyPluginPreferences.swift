@@ -49,6 +49,11 @@ nonisolated enum FirstPartyPluginPreferences { // nonisolated: value
 		"TPCPreferencesUserDefaultsDidChangeNotification"
 	)
 
+	/// The `userInfo` key naming the preference a
+	/// ``defaultsDidChangeNotification`` is about, declared here for the same
+	/// reason as the name.
+	static let changedKeyUserInfoKey = "changedKey"
+
 	static let chatFilters = "Glasstual Chat Filter Extension -> Filters"
 	static let caffeinePreventSleep = BooleanDefinition(
 		name: "Private Extension Store -> Caffeine Extension -> Prevent Sleep", defaultValue: false

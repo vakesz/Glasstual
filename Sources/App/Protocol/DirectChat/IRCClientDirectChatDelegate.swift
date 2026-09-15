@@ -40,15 +40,21 @@ import Foundation
 
 @MainActor
 public extension IRCClient {
-	func directChatConnection(_ connection: DirectChatConnection, didStartListeningOnPort port: UInt16) {
+	/// Offers the chat once the listener knows what to announce. `mappedAddress`
+	/// is the public address the router reported for the mapping, if it made one.
+	func directChatConnection(
+		_ connection: DirectChatConnection,
+		didStartListeningOnPort port: UInt16,
+		mappedAddress: String?
+	) {
 		guard let channel = directChatChannel(for: connection) else {
 			connection.close()
 			return
 		}
 		let nickname = connection.peerNickname
 		let transferToken = connection.transferToken
-		Task { [weak self] in
-			let address = await SharedApplication.sharedFileTransferCenter().lookUpIPAddress()
+		Task { [weak self, fileTransferCenter] in
+			let address = await fileTransferCenter.lookUpIPAddress(routerAddress: mappedAddress)
 
 			/* The lookup can reach a public service, so the offer this answers
 			 may have been closed by the time it returns. */

@@ -8,7 +8,6 @@ import SwiftUI
 @MainActor
 struct ChannelPropertiesView: View {
 	@Bindable var model: ChannelPropertiesModel
-	let notificationItems: [NotificationConfigurationItem]
 	let submit: () -> Void
 	let cancel: () -> Void
 
@@ -58,6 +57,7 @@ struct ChannelPropertiesView: View {
 			maxHeight: .infinity
 		)
 		.onAppear { channelNameIsFocused = model.channelNameIsEditable }
+		.task(id: model.secretKeyLoadGeneration) { await model.loadSecretKey() }
 		.onChange(of: model.config.pushNotifications) { _, enabled in
 			if enabled == false, model.selection == .notifications {
 				model.selection = .general
@@ -161,10 +161,7 @@ struct ChannelPropertiesView: View {
 
 	private var notificationsPane: some View {
 		Form {
-			NotificationConfigurationView(
-				notifications: notificationItems,
-				allowsInheritedState: true
-			)
+			NotificationConfigurationView(model: model.notificationConfiguration)
 		}
 		.formStyle(.grouped)
 	}

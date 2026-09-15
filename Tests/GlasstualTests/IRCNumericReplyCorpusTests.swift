@@ -53,14 +53,14 @@ struct IRCNumericReplyCorpusTests {
 		}
 	}
 
-	/// Errors are the 401-596 band, with RPL_NOMOTD carved out because servers
+	/// Errors are the 400-596 band, with RPL_NOMOTD carved out because servers
 	/// send it as an ordinary reply.
 	nonisolated static let classificationCases: [NumericCase] = [ // nonisolated: let
 		NumericCase(1, isError: false),
 		NumericCase(5, isError: false),
 		NumericCase(315, isError: false),
 		NumericCase(353, isError: false),
-		NumericCase(400, isError: false),
+		NumericCase(400, isError: true),
 		NumericCase(401, isError: true),
 		NumericCase(403, isError: true),
 		NumericCase(421, isError: true),

@@ -50,7 +50,7 @@ public final class LogPolicy: NSObject {
 		) {
 			menu.addItem(item)
 		}
-		AppController.shared.menuController?.applySymbols(to: menu)
+		MenuPresentation.apply(to: menu)
 		return menu
 	}
 

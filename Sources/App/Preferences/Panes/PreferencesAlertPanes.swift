@@ -21,11 +21,8 @@ struct PreferencesNotificationsSections: View {
 
 	var body: some View {
 		Section {
-			NotificationConfigurationView(
-				notifications: model.notificationItems,
-				allowsInheritedState: false
-			)
-			.accessibilityLabel(Text(verbatim: PreferencesNotificationsStrings.headingAlerts))
+			NotificationConfigurationView(model: model.notificationConfiguration)
+				.accessibilityLabel(Text(verbatim: PreferencesNotificationsStrings.headingAlerts))
 		} header: {
 			Text(verbatim: PreferencesNotificationsStrings.headingAlerts)
 		}
@@ -153,25 +150,31 @@ struct PreferencesKeywordList: View {
 	/// Whether these keywords are matched as regular expressions, which is what
 	/// decides whether an unusable pattern is an error worth showing.
 	var usesRegularExpression = false
-	@State private var selection: Int?
-	@FocusState private var focusedKeyword: Int?
+	/** One identity per row, in the order of `keywords`.
+
+	 Rows identified by their position hand focus and selection to whichever
+	 row slides into the place of one that was removed, so a blank row dropped
+	 when focus left it took the next row's focus with it. */
+	@State private var rowIdentities = PreferencesKeywordRowIdentities()
+	@State private var selection: UUID?
+	@FocusState private var focusedKeyword: UUID?
 
 	var body: some View {
 		VStack(alignment: .leading, spacing: PreferencesMetrics.spacingMedium) {
 			Text(verbatim: title)
 
 			List(selection: $selection) {
-				ForEach(keywords.indices, id: \.self) { index in
+				ForEach(Array(rowIdentities.identities.enumerated()), id: \.element) { index, identity in
 					HStack(spacing: PreferencesMetrics.spacingSmall) {
 						TextField(
-							text: binding(at: index),
+							text: binding(for: identity),
 							prompt: Text(verbatim: PreferencesHighlightsStrings.newKeyword)
 						) {
 							Text(verbatim: title)
 						}
 						.labelsHidden()
 						.textFieldStyle(.plain)
-						.focused($focusedKeyword, equals: index)
+						.focused($focusedKeyword, equals: identity)
 						.accessibilityLabel(Text(verbatim: title))
 
 						if let error = patternError(at: index) {
@@ -185,15 +188,15 @@ struct PreferencesKeywordList: View {
 			}
 			.frame(height: Self.listHeight)
 			.accessibilityLabel(Text(verbatim: title))
+			.onChange(of: keywords.count, initial: true) { _, count in
+				rowIdentities.match(count: count)
+			}
 			/* A row that was added and then left blank is one nobody asked for:
 			 dropping it here is what keeps a placeholder keyword out of the
 			 stored list, which is where the renderer reads it from. */
 			.onChange(of: focusedKeyword) { previous, _ in
-				guard let previous, isBlank(at: previous) else { return }
-				keywords.remove(at: previous)
-				if selection == previous {
-					selection = nil
-				}
+				guard let previous, let index = index(of: previous), isBlank(at: index) else { return }
+				removeRow(at: index)
 			}
 
 			HStack(spacing: PreferencesMetrics.spacingMedium) {
@@ -231,26 +234,70 @@ struct PreferencesKeywordList: View {
 		return keywords[index].string.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
 	}
 
-	private func binding(at index: Int) -> Binding<String> {
+	private func index(of identity: UUID) -> Int? {
+		guard let index = rowIdentities.identities.firstIndex(of: identity), keywords.indices.contains(index) else {
+			return nil
+		}
+		return index
+	}
+
+	private func binding(for identity: UUID) -> Binding<String> {
 		Binding(
-			get: { keywords.indices.contains(index) ? keywords[index].string : "" },
+			get: { index(of: identity).map { keywords[$0].string } ?? "" },
 			set: { newValue in
-				guard keywords.indices.contains(index) else { return }
+				guard let index = index(of: identity) else { return }
 				keywords[index].string = newValue
 			}
 		)
 	}
 
 	private func add() {
+		rowIdentities.match(count: keywords.count)
+		let identity = rowIdentities.append()
 		keywords.append(HighlightKeyword(string: ""))
-		selection = keywords.count - 1
-		focusedKeyword = selection
+		selection = identity
+		focusedKeyword = identity
 	}
 
 	private func remove() {
-		guard let selection, keywords.indices.contains(selection) else { return }
-		keywords.remove(at: selection)
-		self.selection = nil
+		guard let selection, let index = index(of: selection) else { return }
+		removeRow(at: index)
+	}
+
+	private func removeRow(at index: Int) {
+		let identity = rowIdentities.remove(at: index)
+		keywords.remove(at: index)
+		if selection == identity {
+			selection = nil
+		}
+	}
+}
+
+/** The identities of a keyword list's rows.
+
+ The stored list has no identity of its own — a keyword is its text, and two
+ rows can hold the same text — so the rows get one here. A list that changed
+ length without going through this, an import say, is given fresh identities. */
+struct PreferencesKeywordRowIdentities {
+	private(set) var identities: [UUID] = []
+
+	/// Gives every row of a list with `count` rows an identity, keeping the
+	/// ones it has while the count still agrees.
+	mutating func match(count: Int) {
+		guard identities.count != count else { return }
+		identities = (0 ..< count).map { _ in UUID() }
+	}
+
+	/// Records a row appended to the end of the list.
+	mutating func append() -> UUID {
+		let identity = UUID()
+		identities.append(identity)
+		return identity
+	}
+
+	/// Forgets the row at `index`, returning its identity.
+	mutating func remove(at index: Int) -> UUID {
+		identities.remove(at: index)
 	}
 }
 

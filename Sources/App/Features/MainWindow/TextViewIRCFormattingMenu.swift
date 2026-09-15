@@ -14,7 +14,8 @@
 import AppKit
 
 /// The IRC formatting menu carries its own tag vocabulary, unrelated to
-/// `MenuCommand`'s: items 0…15 are colour palette indices and the rest are the
+/// `MenuCommand`'s. A colour item's tag is its index in
+/// `NSColor.formatterColors`, 0 to 98, and every other item's tag is one of the
 /// commands below.
 public enum TextFormatterCommand: Int, CaseIterable, Sendable {
 	case bold = 100
@@ -159,6 +160,12 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 		for menu in [foregroundColorMenu!, backgroundColorMenu!] {
 			for item in menu.items where item.isSeparatorItem == false && item.action != nil {
 				item.image = Self.colorSwatch(forColorTag: item.tag)
+				/* The title only numbers the colour, which is the IRC code.
+				 VoiceOver reads the colour's name after it, so a reader who
+				 cannot see the swatch still knows which colour they pick. */
+				if let colorName = item.image?.accessibilityDescription {
+					item.setAccessibilityValue(colorName)
+				}
 			}
 		}
 
@@ -186,7 +193,7 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 			return NSImage(systemSymbolName: "rainbow", accessibilityDescription: nil)
 		}
 		let colors = NSColor.formatterColors
-		guard tag >= 0, tag < colors.count else { return nil }
+		guard colors.indices.contains(tag) else { return nil }
 		let color = colors[tag]
 		let image = NSImage(size: NSSize(width: 16, height: 16), flipped: false) { rect in
 			let circle = NSBezierPath(ovalIn: rect.insetBy(dx: 1.5, dy: 1.5))
@@ -198,6 +205,7 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 			return true
 		}
 		image.isTemplate = false
+		image.accessibilityDescription = color.accessibilityName
 		return image
 	}
 

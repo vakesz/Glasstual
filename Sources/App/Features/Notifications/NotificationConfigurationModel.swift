@@ -98,7 +98,12 @@ final class NotificationSettingRow: Identifiable {
 	}
 }
 
-/// The notification settings table: one row per event, one column per setting.
+/** The notification settings table: one row per event, one column per setting.
+
+ The screen that shows the table owns this model and builds a new one when
+ what the rows mirror is replaced. The rows copy their values when they are
+ made, so a model the view kept for itself showed the old values after a
+ channel's settings were reloaded. */
 @MainActor
 @Observable
 final class NotificationConfigurationModel {
@@ -113,6 +118,6 @@ final class NotificationConfigurationModel {
 	init(notifications: [NotificationConfigurationItem], allowsInheritedState: Bool) {
 		rows = notifications.compactMap(\.configuration).map(NotificationSettingRow.init)
 		self.allowsInheritedState = allowsInheritedState
-		soundNames = SoundPlayer.uniqueListOfSounds()
+		soundNames = SoundPlayer.availableSoundNames
 	}
 }

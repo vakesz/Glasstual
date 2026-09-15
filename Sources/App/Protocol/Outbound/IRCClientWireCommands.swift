@@ -83,12 +83,29 @@ nonisolated enum OutboundModeCommands { // nonisolated: value
 	/// `/umode +s +cfk` is two independent changes, and a server that reads only
 	/// the first mode string of a line would silently drop the second if they
 	/// shared one.
-	static func groups(inTokens tokens: [String]) -> [ModeChangeGroup] {
+	///
+	/// A token is read as a new mode string only once the letters before it have
+	/// had the parameters they are owed: `+k +secret` sets the key `+secret`, and
+	/// reading it as a second mode string sent a bare `+k` and then `+secret`.
+	///
+	/// - Parameter modeTakesParameter: Whether a letter, set or unset, is paired
+	///   with a parameter on this target.
+	static func groups(
+		inTokens tokens: [String],
+		modeTakesParameter: (_ symbol: Character, _ modeIsSet: Bool) -> Bool
+	) -> [ModeChangeGroup] {
 		var result: [ModeChangeGroup] = []
+		var parametersOwed = 0
 
 		for token in tokens where token.isEmpty == false {
-			if isModeString(token) || result.isEmpty {
+			if parametersOwed > 0 {
+				result[result.count - 1].parameters.append(token)
+				parametersOwed -= 1
+			} else if isModeString(token) || result.isEmpty {
 				result.append(ModeChangeGroup(symbols: token))
+				parametersOwed = modeChanges(in: token).count { change in
+					modeTakesParameter(change.symbol, change.sign == "+")
+				}
 			} else {
 				result[result.count - 1].parameters.append(token)
 			}
@@ -327,7 +344,14 @@ public extension IRCClient {
 			return
 		}
 
-		sendModes(OutboundModeCommands.groups(inTokens: tokens), inChannelNamed: channelName)
+		/* Only a channel has a `CHANMODES` table to say which letters are owed a
+		 parameter; a user mode string is split on its signs alone. */
+		let targetIsChannel = stringIsChannelName(channelName)
+		let groups = OutboundModeCommands.groups(inTokens: tokens) { symbol, modeIsSet in
+			targetIsChannel && supportInfo.modeHasParameter(String(symbol), whenModeIsSet: modeIsSet)
+		}
+
+		sendModes(groups, inChannelNamed: channelName)
 	}
 
 	/** The bytes one command has left for the parameters that follow
@@ -399,7 +423,7 @@ public extension IRCClient {
 			budget: outboundParameterBudget(forCommand: "ISON", fixedArguments: [])
 		) {
 			if hideResponse {
-				requestedCommands.recordIsonRequestOpened()
+				requestedCommands.recordIsonRequestOpened(askingAbout: group)
 			} else {
 				requestedCommands.recordIsonRequestOpenedAsVisible()
 			}

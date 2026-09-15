@@ -17,7 +17,6 @@ struct AboutView: View {
 	let content: AboutContent
 	let applicationIcon: Image
 	let openAcknowledgements: () -> Void
-	let close: () -> Void
 
 	var body: some View {
 		VStack(spacing: 0) {
@@ -57,6 +56,5 @@ struct AboutView: View {
 		 its text left a band of empty space under the button, and grew one
 		 when a longer translation wrapped. */
 		.frame(width: 260)
-		.onExitCommand(perform: close)
 	}
 }

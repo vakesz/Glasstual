@@ -46,6 +46,9 @@ public final class ClientRequestedCommands: NSObject {
 	private struct Request {
 		let command: Command
 		let responseIsHidden: Bool
+		/// The nicknames an ISON asked about. One reply answers for these and
+		/// nobody else.
+		var nicknames: [String] = []
 	}
 
 	private var requests: [Request] = []
@@ -58,16 +61,29 @@ public final class ClientRequestedCommands: NSObject {
 		responseIsVisible(for: .ison)
 	}
 
-	public func recordIsonRequestOpened() {
-		addRequest(for: .ison, responseIsHidden: true)
+	/// Records a hidden ISON asking about `nicknames`.
+	public func recordIsonRequestOpened(askingAbout nicknames: [String]) {
+		requests.append(Request(command: .ison, responseIsHidden: true, nicknames: nicknames))
 	}
 
 	public func recordIsonRequestOpenedAsVisible() {
 		addRequest(for: .ison, responseIsHidden: false)
 	}
 
-	public func recordIsonRequestClosed() {
-		removeFirstRequest(for: .ison)
+	/** Closes the oldest ISON request and returns the nicknames it asked about.
+
+	 A long list goes out as several ISON commands and each draws its own
+	 `RPL_ISON`, so a reply says who is online among that one command's
+	 nicknames. Read as the whole online set it signed off everyone the other
+	 commands asked about, on every poll. Empty when no request was open. */
+	@discardableResult
+	public func recordIsonRequestClosed() -> [String] {
+		removeFirstRequest(for: .ison)?.nicknames ?? []
+	}
+
+	/// Whether an ISON is still waiting for its reply.
+	public var hasOpenIsonRequest: Bool {
+		requests.contains { $0.command == .ison }
 	}
 
 	public var visibleWhoRequest: Bool {
@@ -90,12 +106,13 @@ public final class ClientRequestedCommands: NSObject {
 		requests.append(Request(command: command, responseIsHidden: responseIsHidden))
 	}
 
-	private func removeFirstRequest(for command: Command) {
+	@discardableResult
+	private func removeFirstRequest(for command: Command) -> Request? {
 		guard let index = requests.firstIndex(where: { $0.command == command }) else {
-			return
+			return nil
 		}
 
-		requests.remove(at: index)
+		return requests.remove(at: index)
 	}
 
 	private func responseIsVisible(for command: Command) -> Bool {

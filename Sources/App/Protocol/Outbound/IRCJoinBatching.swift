@@ -56,7 +56,7 @@ enum IRCJoinBatching {
 	}
 
 	/// A channel to join, and the key it needs (if any).
-	struct Target: Equatable {
+	nonisolated struct Target: Equatable { // nonisolated: value
 		var name: String
 		var key: String?
 

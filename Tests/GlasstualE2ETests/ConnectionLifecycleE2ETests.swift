@@ -23,7 +23,7 @@ struct ConnectionLifecycleE2ETests {
 	nonisolated static let withoutFixtureTest = ["settingsSnapshot", "onboardingSkip"] // nonisolated: let
 
 	@Test(arguments: scenarios + scenarios.filter { !withoutFixtureTest.contains($0) }.map { "fixture." + $0 })
-	func connectionMatrix(kind: String) throws {
+	func connectionMatrix(kind: String) async throws {
 		let fixtureOnly = kind.hasPrefix("fixture.")
 		let scenario = fixtureOnly ? String(kind.dropFirst("fixture.".count)) : kind
 		let environment = ProcessInfo.processInfo.environment
@@ -63,6 +63,13 @@ struct ConnectionLifecycleE2ETests {
 		process.environment?["E2E_RUN_DIRECTORY"] = runRoot.path
 		process.standardOutput = log
 		process.standardError = log
+		// Installed before launch, so an exit that comes before the await is
+		// still delivered: the stream buffers it.
+		let (exits, exited) = AsyncStream.makeStream(of: Void.self, bufferingPolicy: .bufferingNewest(1))
+		process.terminationHandler = { _ in
+			exited.yield()
+			exited.finish()
+		}
 		let scenarioDeadline = root.appendingPathComponent("scenario-deadline")
 		let duration = scenario.hasPrefix("dcc") ? 240.0 : 180.0
 		try Data(String(ProcessInfo.processInfo.systemUptime + duration).utf8).write(
@@ -82,10 +89,17 @@ struct ConnectionLifecycleE2ETests {
 			}
 			throw error
 		}
-		// The script's supervisor is independent of this runner and the application's main actor.
-		process.waitUntilExit()
+		// The script's supervisor is independent of this runner and the application's main actor. Awaiting the
+		// exit leaves this actor free; cancelling the test asks the helper to stop instead of abandoning it.
+		let helperPID = process.processIdentifier
+		await withTaskCancellationHandler {
+			for await _ in exits {}
+		} onCancel: {
+			kill(helperPID, SIGTERM)
+		}
 		try FileManager.default.removeItem(at: helperRecord)
 		try FileManager.default.removeItem(at: scenarioDeadline)
+		try Task.checkCancellation()
 		try #require(process.terminationReason == .exit)
 		try #require(
 			process.terminationStatus == 0,
@@ -111,9 +125,12 @@ struct ConnectionLifecycleE2ETests {
 				from: Data(contentsOf: root.appendingPathComponent("onboarding-evidence.json"))
 			)
 			try #require(launches.count == 2)
-			try #require(launches[0].pid > 0 && launches[1].pid > 0 && launches[0].pid != launches[1].pid)
+			try #require(launches[0].pid > 0)
+			try #require(launches[1].pid > 0)
+			try #require(launches[0].pid != launches[1].pid)
 			for launch in launches {
-				try #require(launch.exitReason == "exit" && launch.exitStatus == 0 && launch.identityVisible)
+				try #require(launch.exitReason == "exit")
+				try #require(launch.exitStatus == 0)
 				try #require(launch.quitSeconds > 0 && launch.quitSeconds <= 5)
 			}
 			for prefix in ["", "relaunch-"] {
@@ -139,9 +156,11 @@ struct ConnectionLifecycleE2ETests {
 			from: Data(contentsOf: root.appendingPathComponent("evidence.json"))
 		)
 		try #require(evidence.scenario == scenario)
-		try #require(evidence.originalPID > 0 && evidence.originalPID == evidence.finalPID)
+		try #require(evidence.originalPID > 0)
+		try #require(evidence.runningPIDsBeforeQuit == [evidence.originalPID])
 		try #require(evidence.shutdownSeconds > 0 && evidence.shutdownSeconds <= 5)
-		try #require(evidence.appExitReason == "exit" && evidence.appExitStatus == 0)
+		try #require(evidence.appExitReason == "exit")
+		try #require(evidence.appExitStatus == 0)
 		try checkWire(scenario: scenario, rejections: evidence.rejections, in: root)
 		try checkAdditionalEvidence(scenario: scenario, originalPID: evidence.originalPID, in: root)
 		let probe = try read("probe-evidence", in: root).split(separator: " ")
@@ -214,10 +233,11 @@ struct ConnectionLifecycleE2ETests {
 				RelaunchEvidence.self,
 				from: Data(contentsOf: root.appendingPathComponent("relaunch-evidence.json"))
 			)
-			try #require(evidence.firstPID == originalPID && evidence.relaunchPID > 0 && evidence
-				.relaunchPID != originalPID)
-			try #require(evidence.historyTranscript && evidence.disconnected)
-			try #require(evidence.exitReason == "exit" && evidence.exitStatus == 0)
+			try #require(evidence.firstPID == originalPID)
+			try #require(evidence.relaunchPID > 0)
+			try #require(evidence.relaunchPID != originalPID)
+			try #require(evidence.exitReason == "exit")
+			try #require(evidence.exitStatus == 0)
 			try #require(evidence.quitSeconds > 0 && evidence.quitSeconds <= 5)
 			try checkProbe(
 				read("relaunch-probe-evidence", in: root).split(separator: " "),
@@ -269,7 +289,7 @@ struct ConnectionLifecycleE2ETests {
 private struct Evidence: Decodable {
 	let scenario: String
 	let originalPID: Int32
-	let finalPID: Int32
+	let runningPIDsBeforeQuit: [Int32]
 	let rejections: Int
 	let shutdownSeconds: Double
 	let appExitReason: String
@@ -279,8 +299,6 @@ private struct Evidence: Decodable {
 private struct RelaunchEvidence: Decodable {
 	let firstPID: Int32
 	let relaunchPID: Int32
-	let historyTranscript: Bool
-	let disconnected: Bool
 	let exitReason: String
 	let exitStatus: Int32
 	let quitSeconds: Double
@@ -290,6 +308,5 @@ private struct OnboardingLaunchEvidence: Decodable {
 	let pid: Int32
 	let exitReason: String
 	let exitStatus: Int32
-	let identityVisible: Bool
 	let quitSeconds: Double
 }

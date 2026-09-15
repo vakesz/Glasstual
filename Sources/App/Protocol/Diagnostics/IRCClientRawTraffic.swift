@@ -68,8 +68,11 @@ public extension IRCClient {
 		rawDataLog("<< \(WireRedaction.redactedRawLogLine(data))")
 	}
 
+	/// Incoming traffic carries them too: `echo-message` sends the client's own
+	/// `IDENTIFY` back to it, and a bouncer replays what the client sent. The
+	/// source prefix and tags are kept, so the same masking applies.
 	func rawDataLogIncomingTraffic(_ data: String) {
 		guard rawDataLogQuery != nil else { return }
-		rawDataLog(">> \(data)")
+		rawDataLog(">> \(WireRedaction.redactedRawLogLine(data))")
 	}
 }

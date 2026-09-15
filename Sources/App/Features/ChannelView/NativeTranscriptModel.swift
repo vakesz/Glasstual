@@ -102,7 +102,10 @@ nonisolated struct TranscriptLine: Equatable, Sendable { // nonisolated: value
 	func header(using theme: TranscriptTheme) -> (timestamp: String, nickname: String) {
 		let timestamp = Glasstual
 			.formattedTimestamp(receivedAt as NSDate, theme.timestampFormat as NSString) ?? ""
-		guard let nickname else { return (timestamp, "") }
+		guard let wireNickname = nickname else { return (timestamp, "") }
+		/* A name is wire text like a message body, and is held to one line the
+		 same way. */
+		let nickname = TranscriptTextSanitizer.singleLine(wireNickname)
 		let formattedNickname: String = switch lineType {
 		case .action: String(format: LogLineFormat.actionNickname, nickname)
 		case .notice: String(format: LogLineFormat.noticeNickname, nickname)

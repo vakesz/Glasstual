@@ -195,14 +195,26 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, CustomKeybo
 		set { replaceEntireValue(with: newValue) }
 	}
 
-	/// The one path both value setters take: ask, replace, forget the undo
-	/// stack the old text was recorded against, then tell.
+	/// True while one of the value setters replaces the text. A change made
+	/// this way came from code, such as a conversation switch refilling the
+	/// field, and not from the user typing.
+	public private(set) var isReplacingEntireValue = false
+
+	/** The one path both value setters take. It asks, replaces the text, tells
+	 the delegate, and then forgets the undo actions the old text recorded.
+
+	 Only this field's actions go. The undo manager belongs to the window, and
+	 `removeAllActions()` also emptied every other editor's undo stack in it. */
 	private func replaceEntireValue(with newValue: NSAttributedString) {
 		let entireRange = range
 		guard shouldChangeText(in: entireRange, replacementString: newValue.string) else { return }
+		isReplacingEntireValue = true
+		defer { isReplacingEntireValue = false }
 		textStorage?.replaceCharacters(in: entireRange, with: newValue)
 		didChangeText()
-		undoManager?.removeAllActions()
+		if let textStorage {
+			undoManager?.removeAllActions(withTarget: textStorage)
+		}
 	}
 
 	open func textDidChange(_: Notification) {

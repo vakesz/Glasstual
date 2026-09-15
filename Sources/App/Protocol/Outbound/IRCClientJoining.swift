@@ -44,14 +44,20 @@ private nonisolated let joinLogger = Logger( // nonisolated: let
  entry of both is one wire token. A key with a space in it cannot be sent at
  all — as the trailing parameter it would swallow whatever followed, and
  without the colon the server would read only its first word — so it is cut at
- the space rather than colonised. */
+ the space rather than colonised. A key with a comma in it cannot be sent
+ either: the server would read it as two keys, and hand the second to the next
+ channel. */
 nonisolated enum OutboundJoinPolicy { // nonisolated: value
 	/// `key` as `JOIN` can carry it, or `nil` when nothing is left of it.
 	///
 	/// Everything from the first space on is dropped: the protocol has no way
-	/// to spell a key with a space in it, and `KEYLEN` bounds what is left.
+	/// to spell a key with a space in it, and `KEYLEN` bounds what is left. A
+	/// key with a comma in it is refused outright, because cutting it would
+	/// send a different key.
 	static func sanitizedKey(_ key: String?, maximumLength: UInt) -> String? {
-		guard let firstToken = key?.split(separator: " ", maxSplits: 1).first else {
+		guard let firstToken = key?.split(separator: " ", maxSplits: 1).first,
+		      firstToken.contains(",") == false
+		else {
 			return nil
 		}
 
@@ -63,20 +69,25 @@ nonisolated enum OutboundJoinPolicy { // nonisolated: value
 		return bounded.isEmpty ? nil : bounded
 	}
 
-	/// The key list that pairs with `channelCount` channels, or `nil` when the
-	/// user supplied none.
+	/// `channelNames` paired with the keys the user typed for them.
 	///
-	/// The user types keys separated by spaces, commas, or both; `JOIN` wants
-	/// them comma-separated so that the *n*th key belongs to the *n*th channel.
-	/// Space-separated they became one trailing parameter, which is one key for
-	/// the first channel and nothing for the rest.
-	static func keyList(from text: String, channelCount: Int, maximumLength: UInt) -> String? {
-		let keys = text
-			.split(whereSeparator: { $0 == " " || $0 == "," || $0 == "\t" })
-			.prefix(channelCount)
-			.compactMap { sanitizedKey(String($0), maximumLength: maximumLength) }
+	/// The user types keys separated by spaces, commas, or both, and the *n*th
+	/// key belongs to the *n*th channel. Space-separated on the wire they became
+	/// one trailing parameter, which is one key for the first channel and
+	/// nothing for the rest.
+	static func targets(
+		channelNames: [String],
+		keyText: String,
+		maximumKeyLength: UInt
+	) -> [IRCJoinBatching.Target] {
+		let keys = keyText.split(whereSeparator: { $0 == " " || $0 == "," || $0 == "\t" })
 
-		return keys.isEmpty ? nil : keys.joined(separator: ",")
+		return channelNames.enumerated().map { index, name in
+			IRCJoinBatching.Target(
+				name: name,
+				key: index < keys.count ? sanitizedKey(String(keys[index]), maximumLength: maximumKeyLength) : nil
+			)
+		}
 	}
 
 	/// Whether `channelName` fits the server's `CHANNELLEN`.
@@ -103,10 +114,7 @@ extension IRCClient {
 
 	func join(_ channel: Channel, password: String? = nil) {
 		guard canJoin(channel) else { return }
-		channel.errorOnLastJoinAttempt = false
-		channel.status = .joining
-		output?.reloadTreeItem(channel)
-		output?.updateTitle(for: channel)
+		markJoining(channel)
 		forceJoinChannel(channel.name, password: password ?? channel.secretKey)
 	}
 
@@ -122,6 +130,14 @@ extension IRCClient {
 		} else {
 			forceJoinChannel(channelName, password: password)
 		}
+	}
+
+	/// Shows `channel` as on its way in until the server answers the JOIN.
+	private func markJoining(_ channel: Channel) {
+		channel.errorOnLastJoinAttempt = false
+		channel.status = .joining
+		output?.reloadTreeItem(channel)
+		output?.updateTitle(for: channel)
 	}
 
 	func forceJoinChannel(_ channelName: String, password: String?) {
@@ -176,22 +192,21 @@ extension IRCClient {
 		let pending = channels.filter { canJoin($0) && acceptedNames.contains($0.name) }
 		guard pending.isEmpty == false else { return }
 		warnIfJoiningChannelsExceedsLimit(pending.map(\.name))
-		for channel in pending {
-			channel.errorOnLastJoinAttempt = false
-			channel.status = .joining
-			output?.reloadTreeItem(channel)
-			output?.updateTitle(for: channel)
-		}
+		pending.forEach(markJoining)
 
-		// One JOIN per line that fits the protocol budget; a single line with
-		// every autojoin channel on it is truncated by the server.
+		sendJoins(for: pending.map {
+			IRCJoinBatching.Target(
+				name: $0.name,
+				key: OutboundJoinPolicy.sanitizedKey($0.secretKey, maximumLength: supportInfo.maximumKeyLength)
+			)
+		})
+	}
+
+	/// Sends `targets` as one `JOIN` per line that fits the protocol budget; a
+	/// single line naming every channel is truncated by the server.
+	private func sendJoins(for targets: [IRCJoinBatching.Target]) {
 		let batches = IRCJoinBatching.batches(
-			for: pending.map {
-				IRCJoinBatching.Target(
-					name: $0.name,
-					key: OutboundJoinPolicy.sanitizedKey($0.secretKey, maximumLength: supportInfo.maximumKeyLength)
-				)
-			},
+			for: targets,
 			maximumLineLength: Int(supportInfo.maximumLineLength),
 			maximumTargets: supportInfo.maximumTargets(forCommand: "JOIN"),
 			channelLimits: supportInfo.channelLimits
@@ -252,18 +267,24 @@ extension IRCClient {
 			.compactMap { self.findChannelOrCreate($0) }
 			.first
 		let shouldJoin = (selection.map { $0.isActive == false } ?? true) || channelNames.count > 1
-		let acceptedNames = channelNamesWithinServerLimit(channelNames)
-		if shouldJoin, acceptedNames.isEmpty == false {
-			warnIfJoiningChannelsExceedsLimit(acceptedNames)
-			var arguments = [acceptedNames.joined(separator: ",")]
-			if let keys = OutboundJoinPolicy.keyList(
-				from: passwords ?? "",
-				channelCount: acceptedNames.count,
-				maximumLength: supportInfo.maximumKeyLength
-			) {
-				arguments.append(keys)
+		/* Keys pair with the names as typed, before any name is refused: a
+		 refusal must not hand its key to the channel after it. */
+		let typedTargets = OutboundJoinPolicy.targets(
+			channelNames: channelNames,
+			keyText: passwords ?? "",
+			maximumKeyLength: supportInfo.maximumKeyLength
+		)
+		let acceptedNames = Set(channelNamesWithinServerLimit(channelNames))
+		let targets = typedTargets.filter { acceptedNames.contains($0.name) }
+		if shouldJoin, targets.isEmpty == false {
+			warnIfJoiningChannelsExceedsLimit(targets.map(\.name))
+			/* A channel the sidebar already lists shows it is on its way in, as
+			 it does when it is joined from the sidebar. */
+			for target in targets {
+				guard let channel = findChannel(target.name), canJoin(channel) else { continue }
+				markJoining(channel)
 			}
-			send("JOIN", arguments: arguments)
+			sendJoins(for: targets)
 		}
 
 		guard let selection else { return }

@@ -78,7 +78,6 @@ enum MenuFactory {
 		controller.channelViewGeneralMenu = contextMenu(channelViewEntries, controller)
 		controller.mainMenuChannelMenu = contextMenu(channelEntries, controller)
 		controller.mainMenuQueryMenu = contextMenu(queryEntries, controller)
-		controller.mainWindowSegmentedControllerCellMenu = contextMenu(segmentedEntries, controller)
 		controller.userControlMenu = contextMenu(memberEntries, controller)
 
 		let mainMenu = builtMainMenu(for: controller)
@@ -513,12 +512,15 @@ private extension MenuFactory {
 	static let serverEntries: [Entry] = [
 		.item(MenuStrings.Server.connect, .connect, #selector(MenuActionCoordinator.connect(_:))),
 		/* Option reveals the proxy-free variant in place, which is how macOS
-			offers a modified form of the command above it. */
+			offers a modified form of the command above it. AppKit swaps in an
+			alternate whose modifiers differ from the primary's, and Connect has
+			none. Option alone therefore has to be the whole mask, or the swap
+			waits for Command as well. */
 		.item(
 			MenuStrings.Server.connectWithoutProxy,
 			.connectWithoutProxy,
 			#selector(MenuActionCoordinator.connectBypassingProxy(_:)),
-			modifiers: [.command, .option],
+			modifiers: .option,
 			isAlternate: true
 		),
 		.item(MenuStrings.Server.disconnect, .disconnect, #selector(MenuActionCoordinator.disconnect(_:))),
@@ -653,15 +655,16 @@ private extension MenuFactory {
 		),
 	]
 
+	/** Query Logs carries no key equivalent. Channel ▸ View Logs sends the same
+	 action, validates for a query too, and already answers Shift-Command-L.
+	 Two menu-bar items on one shortcut leave AppKit to pick one of them. */
 	static let queryEntries: [Entry] = [
 		.item(MenuStrings.Query.closeQuery, .closeQuery, #selector(MenuActionCoordinator.leaveChannel(_:))),
 		.separator(),
 		.item(
 			MenuStrings.Query.queryLogs,
 			.queryLogs,
-			#selector(MenuActionCoordinator.openChannelLogs(_:)),
-			key: "l",
-			modifiers: [.command, .shift]
+			#selector(MenuActionCoordinator.openChannelLogs(_:))
 		),
 	]
 
@@ -777,12 +780,15 @@ private extension MenuFactory {
 			key: "f",
 			modifiers: [.command, .option]
 		),
+		/* Shift-Command-O, the key Xcode's Open Quickly uses for the same kind
+			of type-to-jump panel. Option-Command-D is the system's Dock hiding
+			shortcut and never reached this item. */
 		.item(
 			MenuStrings.Navigation.channelSpotlight,
 			.channelSpotlight,
 			#selector(MenuActionCoordinator.showChannelSpotlightWindow(_:)),
-			key: "d",
-			modifiers: [.command, .option]
+			key: "o",
+			modifiers: [.command, .shift]
 		),
 	]
 
@@ -849,13 +855,13 @@ private extension MenuFactory {
 	]
 
 	static let helpEntries: [Entry] = [
-		/* ⌘? is the system's help key, and the support channel is where this
-		 application's help actually is: there is no help book to open. */
+		/* No key equivalent. Command-? opens the Help menu's search field
+		 everywhere on the Mac, and people press it out of habit. Bound here, the
+		 same keys opened a network connection to a public IRC channel. */
 		.item(
 			MenuStrings.Help.connectToHelpChannel,
 			.connectToHelpChannel,
-			#selector(MenuActionCoordinator.connectToGlasstualHelpChannel(_:)),
-			key: "?"
+			#selector(MenuActionCoordinator.connectToGlasstualHelpChannel(_:))
 		),
 		.item(
 			MenuStrings.Help.connectToTestingChannel,
@@ -918,20 +924,6 @@ private extension MenuFactory {
 			modifiers: [.command, .shift]
 		),
 		.item(MenuStrings.MenuBar.channel, .webChannelMenu),
-	]
-
-	static let segmentedEntries: [Entry] = [
-		.item(
-			MenuStrings.Server.addServer,
-			.segmentedAddServer,
-			#selector(MenuActionCoordinator.addServer(_:))
-		),
-		.separator(),
-		.item(
-			MenuStrings.Server.addChannel,
-			.segmentedAddChannel,
-			#selector(MenuActionCoordinator.addChannel(_:))
-		),
 	]
 
 	static let memberEntries: [Entry] = [

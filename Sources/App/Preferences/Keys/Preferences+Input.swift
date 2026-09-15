@@ -179,9 +179,11 @@ public nonisolated extension Preferences { // nonisolated: value
 		 One implementation, because both the connection layer's snapshot and
 		 the maintenance pass that rewrites the stored list have to agree on
 		 which entries count: an empty entry matches everything, so it is not a
-		 keyword at all. */
+		 keyword at all, and neither is one that is only spaces, which Settings
+		 already shows as blank. Surrounding whitespace is dropped for the same
+		 reason: a keyword is what the list shows. */
 		public static func keywords(in list: [HighlightKeyword]) -> [String] {
-			list.map(\.string).filter { $0.isEmpty == false }
+			list.map { $0.string.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { $0.isEmpty == false }
 		}
 
 		static let all: [any AnyPreferenceKey] = [

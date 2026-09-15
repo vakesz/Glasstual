@@ -110,11 +110,20 @@ enum IRCServiceNoticePolicy {
 
 	enum NickServAction: Equatable {
 		case sendIdentification(target: String, text: String)
+		/// Services asked for the password, and the connection may not carry it.
+		case identificationWithheld
 		case identificationSucceeded
 	}
 
 	struct NickServContext {
 		let isWaiting: Bool
+		/// Whether SASL already authenticated the account. Services still ask
+		/// a nickname that is identified to identify on some networks, and the
+		/// answer would be a second copy of the password for nothing.
+		let isIdentifiedWithSASL: Bool
+		/// Whether the connection may carry the password; see
+		/// `IRCClient.permitsCredentialsInClear`.
+		let permitsCredentialsInClear: Bool
 		let password: String?
 		let nickname: String
 		let serverAddress: String?
@@ -123,12 +132,22 @@ enum IRCServiceNoticePolicy {
 		let successfulIdentificationTokens: [String]
 	}
 
-	/// Whether a `NickServ` notice plausibly came from network services.
-	///
-	/// The reply to one of these carries the account password. Nothing stops
-	/// an ordinary user from holding the nickname `NickServ` on a network
-	/// without nickname protection, so the sender has to look like a service
-	/// before anything is sent back.
+	/** Whether a `NickServ` or `ChanServ` notice plausibly came from network services.
+
+	 The reply to a NickServ notice carries the account password, and a ChanServ
+	 notice is filed into the channel it names. Nothing stops an ordinary user
+	 from holding either nickname on a network without nickname protection, so
+	 the sender has to be the network's before either happens.
+
+	 The host alone cannot say so. A reverse DNS name is whatever the owner of
+	 the address publishes, so `services.attacker.example` is one record away
+	 for anyone; what an ordinary user cannot have is a host inside the domain
+	 of the server the client connected to. Services therefore count when they
+	 are the server itself, when their host is under the network's own domain
+	 (`NickServ!service@dal.net` against `irc.dal.net`), or when a `services`
+	 label sits directly on that domain (`services.libera.chat` against
+	 `irc.libera.chat`). The bare `services.` host some networks use is not a
+	 name DNS can produce, so only the network can have given it. */
 	static func noticeIsFromServices(
 		senderIsServer: Bool,
 		senderAddress: String?,
@@ -142,17 +161,36 @@ enum IRCServiceNoticePolicy {
 			return false
 		}
 
-		if address == "services." || address.hasPrefix("services.") || address.contains(".services.") {
+		if address == "services." {
 			return true
 		}
 
-		/* Some networks host services under the network's own domain, as in
-		 NickServ!service@dal.net against irc.dal.net. */
 		guard let serverAddress = serverAddress?.lowercased(), serverAddress.isEmpty == false else {
 			return false
 		}
 
-		return address == serverAddress || serverAddress.hasSuffix("." + address)
+		var labels = address.split(separator: ".", omittingEmptySubsequences: false)
+
+		/* `services.example.net` and `nick.services.example.net` both name the
+		 domain after their `services` label; a host with no such label names
+		 its own. */
+		if let servicesLabel = labels.lastIndex(of: "services") {
+			labels.removeSubrange(...servicesLabel)
+		}
+
+		return domain(labels.joined(separator: "."), contains: serverAddress)
+	}
+
+	/// Whether `host` is `domain` or sits under it. A single label is a
+	/// top-level domain, never a network's own, so it contains nothing.
+	private static func domain(_ domain: String, contains host: String) -> Bool {
+		let labels = domain.split(separator: ".", omittingEmptySubsequences: false)
+
+		guard labels.count >= 2, labels.allSatisfy({ $0.isEmpty == false }) else {
+			return false
+		}
+
+		return host == domain || host.hasSuffix("." + domain)
 	}
 
 	static func channelNotice(from text: String) -> ChannelNotice? {
@@ -172,20 +210,29 @@ enum IRCServiceNoticePolicy {
 		if context.successfulIdentificationTokens.contains(where: text.localizedCaseInsensitiveContains) {
 			return .identificationSucceeded
 		}
-		if context.isWaiting {
+		if context.isWaiting || context.isIdentifiedWithSASL {
 			return nil
 		}
 
 		guard let password = context.password, !password.isEmpty,
 		      context.needsIdentificationTokens.contains(where: text.localizedCaseInsensitiveContains)
 		else { return nil }
-		if context.serverAddress?.hasSuffix(".dal.net") == true {
-			return .sendIdentification(target: "NickServ@services.dal.net", text: "IDENTIFY \(password)")
+		guard context.permitsCredentialsInClear else {
+			return .identificationWithheld
+		}
+		if context.serverAddress?.hasSuffix(IRCServerQuirks.Services.dalNetAddressSuffix) == true {
+			return .sendIdentification(
+				target: IRCServerQuirks.Services.dalNetNickServTarget,
+				text: "IDENTIFY \(password)"
+			)
 		}
 		if context.sendsAuthenticationToUserServ {
-			return .sendIdentification(target: "userserv", text: "login \(context.nickname) \(password)")
+			return .sendIdentification(
+				target: IRCServerQuirks.Services.userServTarget,
+				text: "login \(context.nickname) \(password)"
+			)
 		}
-		return .sendIdentification(target: "NickServ", text: "IDENTIFY \(password)")
+		return .sendIdentification(target: IRCServerQuirks.Services.nickServ, text: "IDENTIFY \(password)")
 	}
 }
 
@@ -310,9 +357,11 @@ public extension IRCClient {
 		var newPrivateMessage = false
 
 		if isNotice {
-			if sender.caseInsensitiveCompare("ChanServ") == .orderedSame {
+			if sender.caseInsensitiveCompare(IRCServerQuirks.Services.chanServ) == .orderedSame,
+			   noticeIsFromServices(message)
+			{
 				(query, deliveredText) = channelServiceNoticeDestination(current: query, text: text)
-			} else if sender.caseInsensitiveCompare("NickServ") == .orderedSame {
+			} else if sender.caseInsensitiveCompare(IRCServerQuirks.Services.nickServ) == .orderedSame {
 				processNickServNotice(text, from: message)
 			}
 			if environment.preferences.locationToSendNotices == .selectedChannel {
@@ -393,23 +442,29 @@ public extension IRCClient {
 		return (channel, notice.text)
 	}
 
-	private func processNickServNotice(_ text: String, from message: Message) {
-		guard !message.isHistoric, message.params.first.map(nicknameIsMyself) == true else { return }
-		guard IRCServiceNoticePolicy.noticeIsFromServices(
+	private func noticeIsFromServices(_ message: Message) -> Bool {
+		IRCServiceNoticePolicy.noticeIsFromServices(
 			senderIsServer: message.senderIsServer,
 			senderAddress: message.senderAddress,
 			serverAddress: serverAddress
-		) else {
-			return
-		}
+		)
+	}
+
+	private func processNickServNotice(_ text: String, from message: Message) {
+		guard !message.isHistoric, message.params.first.map(nicknameIsMyself) == true else { return }
+		guard noticeIsFromServices(message) else { return }
 
 		serverHasNickServ = true
-		let comparableText = environment.preferences.removeAllFormatting ? text : (text as NSString).stripIRCEffects
+		let isIdentifiedWithSASL = isCapabilityEnabled(.isIdentifiedWithSASL)
 		let action = IRCServiceNoticePolicy.nickServAction(
-			for: comparableText,
+			for: (text as NSString).stripIRCEffects,
 			context: .init(
 				isWaiting: isWaitingForNickServ,
-				password: config.nicknamePassword,
+				isIdentifiedWithSASL: isIdentifiedWithSASL,
+				permitsCredentialsInClear: permitsCredentialsInClear,
+				// Read only where it could be sent: a session SASL authenticated
+				// never touches the keychain for a NickServ notice.
+				password: isIdentifiedWithSASL ? nil : sessionNicknamePassword,
 				nickname: config.nickname,
 				serverAddress: serverAddress,
 				sendsAuthenticationToUserServ: config.sendAuthenticationRequestsToUserServ,
@@ -426,6 +481,8 @@ public extension IRCClient {
 			isWaitingForNickServ = false
 			userIsIdentifiedWithNickServ = true
 			noteAccountAuthenticated()
+		case .identificationWithheld:
+			reportWithheldCredentials()
 		case nil:
 			break
 		}
@@ -439,7 +496,7 @@ public extension IRCClient {
 	) -> Bool {
 		let author = message.sender
 		return PluginDispatcher.dispatchReceivedText(
-			text,
+			textForPlugins(text),
 			authoredBy: author,
 			destinedFor: destination,
 			as: lineType,

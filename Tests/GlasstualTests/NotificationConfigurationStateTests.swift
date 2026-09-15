@@ -24,7 +24,8 @@ private nonisolated let notificationEvents: [NotificationEvent] = [ // nonisolat
 struct NotificationConfigurationStateTests {
 	@Test("A channel configuration with no override reads back as inherited", arguments: notificationEvents)
 	func channelConfigurationWithoutOverrideIsInherited(event: NotificationEvent) {
-		let configuration = ChannelNotificationConfiguration(eventType: event)
+		// The editor is gone as soon as this line ends, which leaves no config to read.
+		let configuration = ChannelNotificationConfiguration(eventType: event, in: ChannelPropertiesModel(config: ChannelConfig()))
 
 		#expect(configuration.speakEvent == .inherited)
 		#expect(configuration.pushNotification == .inherited)

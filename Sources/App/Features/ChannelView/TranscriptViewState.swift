@@ -52,6 +52,11 @@ extension NSAttributedString.Key {
 	/// draws it.
 	static let transcriptInlineImage = NSAttributedString.Key("GlasstualTranscriptInlineImage")
 	static let transcriptSelectionSegment = NSAttributedString.Key("GlasstualTranscriptSelectionSegment")
+	/** Characters the transcript drew for its own layout rather than for the
+	 text: the thin spaces that pad a reaction chip, the zero-width space an
+	 unread marker stands on, the isolates wire text is drawn inside. Copying
+	 leaves exactly these out, and nothing the sender typed. */
+	static let transcriptPadding = NSAttributedString.Key("GlasstualTranscriptPadding")
 	/** A hairline drawn across the paragraph that carries it, in this colour,
 	 `transcriptRuleInset` points below the paragraph's top; the paragraph's
 	 layout fragment is a `TranscriptRuleLayoutFragment`. It stands in for an

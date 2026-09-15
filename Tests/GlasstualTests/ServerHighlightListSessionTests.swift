@@ -60,6 +60,22 @@ struct ServerHighlightListSessionTests {
 		#expect(copied.contains(second.lineNumber) == false)
 	}
 
+	/// A relative time is wrong as soon as it is pasted, so the pasteboard gets
+	/// the absolute time. The table's own label follows the clock it is given.
+	@Test("A copied row carries the absolute time, and the label is relative to now")
+	func copiedTimeIsAbsolute() throws {
+		let receivedAt = Date(timeIntervalSince1970: 1_700_000_000)
+		let model = ServerHighlightListModel()
+		model.replace(with: [entry(body: "ping", receivedAt: receivedAt)])
+		let row = try #require(model.rows.first)
+
+		#expect(row.copyText.hasPrefix(receivedAt.formatted(date: .abbreviated, time: .shortened) + "\t"))
+		#expect(
+			row.timeLabel(relativeTo: receivedAt.addingTimeInterval(120))
+				!= row.timeLabel(relativeTo: receivedAt.addingTimeInterval(3600))
+		)
+	}
+
 	@Test("Clearing the native table also clears selection")
 	func clearRemovesRowsAndSelection() throws {
 		let model = ServerHighlightListModel()

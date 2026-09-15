@@ -91,10 +91,10 @@ extension MenuActionCoordinator: ChannelInviteSheetDelegate, ChannelModifyTopicS
 	public func channelModifyModesSheet(_ sender: ChannelModifyModesSheet, onOk modes: ChannelModeContainer) {
 		guard let client = sender.client, let channel = sender.channel,
 		      client.isLoggedIn, channel.isChannel,
-		      let changeString = channel.modeInfo?.changeCommand(for: modes),
-		      changeString.isEmpty == false
+		      let changes = channel.modeInfo?.changeGroups(for: modes),
+		      changes.isEmpty == false
 		else { return }
-		client.sendModes(changeString, withParametersString: nil, inChannelNamed: channel.name)
+		client.sendModes(changes, inChannelNamed: channel.name)
 	}
 
 	public func serverChangeNicknameSheet(_ sender: ServerChangeNicknameSheet, didInputNickname nickname: String) {

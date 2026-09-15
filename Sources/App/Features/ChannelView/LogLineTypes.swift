@@ -77,6 +77,12 @@ public enum LogLineType: UInt, Codable, Sendable {
 			false
 		}
 	}
+
+	/// A message whose body the renderer scans for the channel's members and
+	/// the reader's highlight keywords.
+	nonisolated var mentionsMembers: Bool { // nonisolated: pure
+		self == .privateMessage || self == .action
+	}
 }
 
 /** Persisted alongside the log line; see `LogLineType`. */

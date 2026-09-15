@@ -54,6 +54,24 @@ struct ServerNicknameChangeFeatureTests {
 		#expect(model.normalizedNickname == "NewNick")
 	}
 
+	/// The validator used to capture the connection strongly, so the sheet's
+	/// model could keep a removed connection alive for as long as it lived.
+	@Test("The nickname validator does not keep its connection alive")
+	func validatorHoldsTheClientWeakly() throws {
+		var client: TestClient? = TestClient()
+		weak let weakClient = client
+		let validator = try ServerChangeNicknameSheet.nicknameValidator(for: #require(client))
+
+		#expect(validator("alice") == nil)
+		#expect(validator("") == ApplicationStrings.requiredField)
+
+		client = nil
+
+		try #require(weakClient == nil, "the validator must not be what keeps the connection alive")
+		#expect(validator("alice") == nil)
+		#expect(validator("not a nickname") == CommonValidationStrings.invalidNickname)
+	}
+
 	@Test("The sheet session keeps client identity and forwards its outcome")
 	func sessionKeepsClientAndDelegateContracts() {
 		let client = TestClient()

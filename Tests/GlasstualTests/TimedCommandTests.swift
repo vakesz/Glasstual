@@ -35,6 +35,7 @@
  *
  *********************************************************************** */
 
+import Foundation
 @testable import Glasstual
 import Testing
 
@@ -78,6 +79,51 @@ struct TimedCommandTests {
 		#expect(command.timer.isActive)
 
 		command.stop()
+	}
+
+	@Test("A timed command made in a channel that has since closed is removed rather than run elsewhere")
+	func timedCommandForAClosedChannelIsRemoved() throws {
+		let client = TestClient(configDictionary: ["nickname": "me"])
+		client.isConnected = true
+		client.markAsLoggedIn()
+		let closed = try #require(client.findChannelOrCreate("#closed"))
+		let selected = try #require(client.findChannelOrCreate("#selected"))
+		closed.activate()
+		selected.activate()
+		client.recordedOutput.selectedClient = client
+		client.recordedOutput.selectedChannel = selected
+
+		let timedCommand = TimedCommand(command: "me waves", onClient: client, inChannel: closed)
+		client.addTimedCommand(timedCommand)
+		client.channelList.removeAll { $0 === closed }
+
+		client.onTimedCommand(timedCommand)
+
+		#expect(client.sentLines.count == 0)
+		#expect(client.timedCommand(withIdentifier: timedCommand.identifier) == nil)
+	}
+
+	@Test("A timed command runs in the channel it was made in, not the one selected when it fires")
+	func timedCommandRunsInItsOwnChannel() throws {
+		let client = TestClient(configDictionary: ["nickname": "me"])
+		client.isConnected = true
+		client.markAsLoggedIn()
+		let origin = try #require(client.findChannelOrCreate("#origin"))
+		let selected = try #require(client.findChannelOrCreate("#selected"))
+		origin.activate()
+		selected.activate()
+		client.recordedOutput.selectedClient = client
+		client.recordedOutput.selectedChannel = selected
+
+		let inChannel = TimedCommand(command: "me waves", onClient: client, inChannel: origin)
+		let inConsole = TimedCommand(command: "me waves", onClient: client)
+
+		client.onTimedCommand(inChannel)
+		client.onTimedCommand(inConsole)
+
+		let sent = client.sentLines.compactMap { $0 as? String }
+		#expect(sent.first == "PRIVMSG #origin :\u{01}ACTION waves\u{01}")
+		#expect(sent.contains { $0.hasPrefix("PRIVMSG #selected") } == false)
 	}
 
 	@Test("The client owns its timed commands and hands them back by identifier")

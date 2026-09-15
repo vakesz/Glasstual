@@ -64,6 +64,19 @@ enum IRCChatHistoryPolicy {
 	static func shouldAdvanceMarker(candidate: Date, previous: Date?) -> Bool {
 		previous == nil || candidate > previous ?? .distantFuture
 	}
+
+	/** Whether a read marker may be placed at `line`'s time.
+
+	 A marker is a server timestamp, and it is compared with the server time of
+	 every line that arrives after it. Only a line the server delivered — a
+	 conversation line carrying its `msgid` — is stamped on that clock; the
+	 client's own events and a message it printed before any echo are stamped by
+	 the local one. A marker taken from those sat wherever the local clock was,
+	 and a clock running ahead silenced the lines the server sent until it
+	 caught up. */
+	static func marksReadPosition(lineType: LogLineType, messageIdentifier: String?) -> Bool {
+		lineType.isConversation && messageIdentifier != nil
+	}
 }
 
 /// Where the page a `CHATHISTORY BEFORE` brings back is delivered.
@@ -255,10 +268,11 @@ public extension IRCClient {
 	}
 
 	func markChannel(asRead channel: Channel) {
+		/* Without a view, the stored conversation is what was read. */
 		let viewedDate = if let presentation = channel.presentation {
 			presentation.lastRenderedLineDate()
 		} else {
-			newestKnownLineDate(for: channel)
+			LogControllerHistoricLogFile.shared.newestConversationLineDate(forView: channel.uniqueIdentifier)
 		}
 		guard let date = viewedDate else { return }
 		scheduleReadMarker(for: channel, date: date)
@@ -285,11 +299,6 @@ public extension IRCClient {
 			guard let channel = channelList.first(where: { $0.uniqueIdentifier == identifier }) else { continue }
 			sendReadMarker(for: channel, date: date)
 		}
-	}
-
-	func sendReadMarker(for channel: Channel) {
-		guard let date = newestKnownLineDate(for: channel) else { return }
-		sendReadMarker(for: channel, date: date)
 	}
 
 	internal func sendReadMarker(for channel: Channel, date newestDate: Date) {
@@ -479,7 +488,7 @@ extension IRCClient {
 			$0.rootBatch === contents && $0.batchIsOpen
 		}
 		var pageMessageCount = 0
-		for case let .message(message) in contents.queuedEntries {
+		for message in contents.queuedMessages {
 			let inPage = batch === contents || batchMessage(ofType: "chathistory", containing: message) === batch
 			if inPage {
 				pageMessageCount += 1

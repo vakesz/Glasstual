@@ -38,13 +38,13 @@
       }
     },
     "additional-mounted-drive" : {
-      "comment" : "Additional mounted-drive summary for the /diskspace/ command. Arguments are the drive name, total space, and free space. Migrated from legacy key lct-7h.",
+      "comment" : "Additional mounted-volume summary for the /diskspace/ command, which is only shown locally. Arguments are the volume number, total space, and free space. Volume names are left out. Migrated from legacy key lct-7h.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : " — %1$@: Total: %2$@; Free: %3$@"
+            "value" : " — Volume %1$lld: Total: %2$@; Free: %3$@"
           }
         }
       }
@@ -121,7 +121,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : " \u0002CPU:\u0002 %1$@ (%2$lu Cores) \u0002•\u0002"
+            "value" : "\u0002CPU:\u0002 %1$@ (%2$lu Cores)"
           }
         }
       }
@@ -162,7 +162,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : " \u0002Display:\u0002 %1$@ \u0002•\u0002"
+            "value" : "\u0002Display:\u0002 %1$@"
           }
         }
       }
@@ -174,7 +174,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : " \u0002Display:\u0002 %1$@ at %2$@ \u0002•\u0002"
+            "value" : "\u0002Display:\u0002 %1$@ at %2$@"
           }
         }
       }
@@ -216,13 +216,13 @@
       }
     },
     "first-mounted-drive" : {
-      "comment" : "First mounted-drive summary for the /diskspace/ command. Arguments are the drive name, total space, and free space. Migrated from legacy key bvr-wz.",
+      "comment" : "First mounted-volume summary for the /diskspace/ command, which is only shown locally. Arguments are the volume number, total space, and free space. Volume names are left out. Migrated from legacy key bvr-wz.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@: Total: %2$@; Free: %3$@"
+            "value" : "Volume %1$lld: Total: %2$@; Free: %3$@"
           }
         }
       }
@@ -240,13 +240,13 @@
       }
     },
     "graphics-segment" : {
-      "comment" : "Graphics segment of the /sysinfo/ response. The argument is the graphics description. Migrated from legacy key q5v-uq.",
+      "comment" : "Graphics segment of the /sysinfo/ response, joined to the other segments with a bold bullet. The argument is the graphics description. Migrated from legacy key q5v-uq.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : " \u0002Graphics:\u0002 %@ \u0002•\u0002"
+            "value" : "\u0002Graphics:\u0002 %@"
           }
         }
       }
@@ -348,25 +348,25 @@
       }
     },
     "memory-segment" : {
-      "comment" : "Memory segment of the /sysinfo/ response. The argument is the memory size. Migrated from legacy key 1am-io.",
+      "comment" : "Memory segment of the /sysinfo/ response, joined to the other segments with a bold bullet. The argument is the memory size. Migrated from legacy key 1am-io.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : " \u0002Memory:\u0002 %@ \u0002•\u0002"
+            "value" : "\u0002Memory:\u0002 %@"
           }
         }
       }
     },
     "model-segment" : {
-      "comment" : "Model segment of the /sysinfo/ response. The argument is the model name. Migrated from legacy key 7g5-pf.",
+      "comment" : "Model segment of the /sysinfo/ response, joined to the other segments with a bold bullet. The argument is the model name. Migrated from legacy key 7g5-pf.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : " \u0002Model:\u0002 %@ \u0002•\u0002"
+            "value" : "\u0002Model:\u0002 %@"
           }
         }
       }
@@ -420,13 +420,13 @@
       }
     },
     "operating-system-segment" : {
-      "comment" : "Operating-system segment of the /sysinfo/ response. Arguments are the OS name, version, and build. Migrated from legacy key g41-p7.",
+      "comment" : "Operating-system segment of the /sysinfo/ response, joined to the other segments with a bold bullet. Arguments are the OS name, version, and build. Migrated from legacy key g41-p7.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : " \u0002OS:\u0002 %1$@ (Version %2$@, Build %3$@)"
+            "value" : "\u0002OS:\u0002 %1$@ (Version %2$@, Build %3$@)"
           }
         }
       }
@@ -468,13 +468,13 @@
       }
     },
     "space-segment" : {
-      "comment" : "Disk-space segment of the /sysinfo/ response. The argument is the disk size. Migrated from legacy key yrc-6l.",
+      "comment" : "Disk-space segment of the /sysinfo/ response, joined to the other segments with a bold bullet. The argument is the disk size. Migrated from legacy key yrc-6l.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : " \u0002Space:\u0002 %@ \u0002•\u0002"
+            "value" : "\u0002Space:\u0002 %@"
           }
         }
       }
@@ -516,13 +516,13 @@
       }
     },
     "uptime-segment" : {
-      "comment" : "Uptime segment of the /sysinfo/ response. The argument is the system uptime. Migrated from legacy key xb6-bh.",
+      "comment" : "Uptime segment of the /sysinfo/ response, joined to the other segments with a bold bullet. The argument is the system uptime. Migrated from legacy key xb6-bh.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : " \u0002Uptime:\u0002 %@ \u0002•\u0002"
+            "value" : "\u0002Uptime:\u0002 %@"
           }
         }
       }

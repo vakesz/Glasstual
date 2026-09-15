@@ -71,22 +71,39 @@ struct IRCISupportInfoTests {
 		])
 	}
 
+	/// NICKLEN is what the server lets this client register, not a promise
+	/// about every name it relays, so it only ever widens how long a nickname
+	/// is read. Taken as a hard limit, a longer nickname made the whole prefix
+	/// read as a server.
 	@Test(
-		"Parsed NICKLEN bounds names and sender prefixes without narrowing UInt early",
+		"Parsed NICKLEN never narrows how names and sender prefixes are read",
 		arguments: [UInt(3), 8, UInt(Int.max), UInt(Int.max) + 1, UInt.max]
 	)
 	func nicknameLimitsReachNameConsumers(_ limit: UInt) throws {
 		let client = TestClient()
 		client.supportInfo.processConfigurationData("NICKLEN=\(limit)")
-		#expect(client.stringIsNickname("alice") == (limit >= 5))
-		#expect(("alice!u@host" as NSString).hostmask(on: client)?.nickname == (limit >= 5 ? "alice" : nil))
+		#expect(client.stringIsNickname("alice"))
+		#expect(("alice!u@host" as NSString).hostmask(on: client)?.nickname == "alice")
 		let message = try #require(Message(line: ":alice!u@host PRIVMSG #test :hello", on: client))
-		#expect(message.senderIsServer == (limit < 5))
+		#expect(message.senderIsServer == false)
+		#expect(message.senderNickname == "alice")
 		#expect(("alice" as NSString).padNickname(
 			withCharacter: 95,
 			maximumLength: client.supportInfo.maximumNicknameLength
 		)
 			== (limit == 3 ? "al_" : "alice_"))
+	}
+
+	@Test("A NICKLEN wider than the default lets a longer nickname parse as a user", arguments: [true, false])
+	func widerNicknameLimitWidensParsing(_ advertisesWiderLimit: Bool) throws {
+		let client = TestClient()
+		if advertisesWiderLimit {
+			client.supportInfo.processConfigurationData("NICKLEN=64")
+		}
+		let nickname = String(repeating: "n", count: 60)
+		let message = try #require(Message(line: ":\(nickname)!u@host PRIVMSG #test :hello", on: client))
+
+		#expect(message.senderIsServer == (advertisesWiderLimit == false))
 	}
 
 	@Test(
@@ -111,6 +128,31 @@ struct IRCISupportInfoTests {
 
 		#expect(supportInfo.caseMapping == IRCISupportInfoCaseMapping.rfc1459)
 		#expect(supportInfo.casefoldString("Nick[]\\~") == "nick{}|^")
+	}
+
+	/// RFC 8265 obsoletes RFC 7613 and keeps its case mapping, so either name
+	/// selects it; an unrecognised one fell back to RFC 1459.
+	@Test("CASEMAPPING names for the PRECIS mapping select it", arguments: ["rfc8265", "rfc7613", "RFC8265"])
+	func precisCaseMappingNamesAreRecognised(_ name: String) {
+		let supportInfo = supportInfoWithConfiguration("CASEMAPPING=\(name)")
+
+		#expect(supportInfo.caseMapping == IRCISupportInfoCaseMapping.rfc7613)
+	}
+
+	@Test(
+		"Token values have their \\xHH escapes decoded",
+		arguments: [
+			("NETWORK=Example\\x20Network", "Example Network"),
+			("NETWORK=Back\\x5Cslash\\x3Dequals", "Back\\slash=equals"),
+			("NETWORK=Caf\\xC3\\xA9", "Caf\u{e9}"),
+			("NETWORK=Not\\xZZescaped", "Not\\xZZescaped"),
+			("NETWORK=Trailing\\x2", "Trailing\\x2"),
+		]
+	)
+	func tokenValueEscapesAreDecoded(_ configuration: String, _ networkName: String) {
+		let supportInfo = supportInfoWithConfiguration(configuration)
+
+		#expect(supportInfo.networkName == networkName)
 	}
 
 	@Test("Parsing a mode string consumes a parameter for each mode that takes one")

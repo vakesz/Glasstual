@@ -14,13 +14,14 @@ former class name.
 | `Features/` | User-facing behavior. Each feature owns its views, presentation model, validation, strings and feature-specific platform adapters. |
 | `UI/` | Small reusable platform adapters and controls with no feature owner. It does not own feature state. |
 | `Localization/` | Generated string accessors and shared formatting or validation text. |
-| `Resources/` | Asset catalogs, String Catalogs, documents and the few resources loaded at runtime. |
+| `Resources/` | The `AppIcon.icon` app icon, String Catalogs, documents and the few resources loaded at runtime. |
 
-The main features are `MainWindow`, `ChannelView`, `ServerList`, `MemberList`,
-`ServerProperties`, `ChannelProperties`, `FileTransfer`, `Notifications`,
-`Onboarding`, `Plugins` and `About`. A feature may have subdirectories when a
-cohesive subsystem benefits from a separate boundary; for example,
-`ChannelView/History` owns the in-process scrollback actor and Core Data model.
+The features are `MainWindow`, `ChannelView`, `ServerList`, `MemberList`,
+`ServerProperties`, `ChannelProperties`, `ServerChannelList`, `AddressBook`,
+`ChannelSpotlight`, `FileTransfer`, `Notifications`, `Onboarding`, `Plugins`
+and `About`. A feature may have subdirectories when a cohesive subsystem
+benefits from a separate boundary; for example, `ChannelView/History` owns the
+in-process scrollback actor and Core Data model.
 
 ## Dependency direction
 

@@ -93,7 +93,7 @@ struct PreferencesFileTransfersSections: View {
 			HStack(spacing: 6) {
 				PreferencesCommittedField(
 					title: PreferencesFileTransfersStrings.portRangeFirst,
-					text: model.preferences.portFieldBinding(
+					value: model.preferences.portField(
 						for: Preferences.FileTransfers.portRangeStart,
 						limitedBy: Preferences.FileTransfers.portRangeEnd
 					),
@@ -103,7 +103,7 @@ struct PreferencesFileTransfersSections: View {
 				Text(verbatim: PreferencesFileTransfersStrings.portRangeSeparator)
 				PreferencesCommittedField(
 					title: PreferencesFileTransfersStrings.portRangeLast,
-					text: model.preferences.portFieldBinding(
+					value: model.preferences.portField(
 						for: Preferences.FileTransfers.portRangeEnd,
 						limitedBy: Preferences.FileTransfers.portRangeStart
 					),
@@ -224,12 +224,12 @@ struct PreferencesHiddenSections: View {
 			PreferencesComboField(
 				title: PreferencesHiddenStrings.scrollbackVisibleLimit,
 				presets: Self.scrollbackPresets,
-				commitsOnEndEditing: true,
-				text: model.preferences.numberFieldBinding(
+				value: model.preferences.numberField(
 					for: Preferences.Logging.scrollbackVisibleLimit
 				) {
 					TextualPreferences.performReloadAction(.scrollbackVisibleLimit)
-				}
+				},
+				rejectionMessage: PreferencesFieldStrings.wholeNumberRequired
 			)
 		} label: {
 			Text(verbatim: PreferencesHiddenStrings.scrollbackVisibleLimit)

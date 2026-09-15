@@ -119,15 +119,18 @@ enum SystemProfileReport {
 	/// collected. The collection is the slow half and does not run here: it
 	/// mounts nothing, but it stats every mounted volume, and a network share
 	/// or a sleeping disk answers when it answers.
+	///
+	/// Volumes are numbered rather than named: a volume's name is whatever its
+	/// owner called it, which is nobody else's business even on this Mac's screen.
 	static func systemDiskSpaceInformation(volumes: [SystemProfileInformation.VolumeCapacity]) -> String {
 		let descriptions = volumes.enumerated().map { index, volume -> String in
 			let totalDescription = SystemProfileInformation.formattedByteCount(volume.totalCapacity)
 			let freeDescription = SystemProfileInformation.formattedByteCount(volume.availableCapacity)
-			let name = volume.name
+			let number = index + 1
 			return if index == 0 {
-				String(localized: .BasicLanguage.firstMountedDrive(name, totalDescription, freeDescription))
+				String(localized: .BasicLanguage.firstMountedDrive(number, totalDescription, freeDescription))
 			} else {
-				String(localized: .BasicLanguage.additionalMountedDrive(name, totalDescription, freeDescription))
+				String(localized: .BasicLanguage.additionalMountedDrive(number, totalDescription, freeDescription))
 			}
 		}
 		guard descriptions.isEmpty == false else {
@@ -165,58 +168,71 @@ enum SystemProfileReport {
 		}.joined()
 	}
 
-	/// Formats the facts ``SystemProfileInformation/hardwareFacts()`` collected.
-	/// Only the screen is read here, because only the screen has to be.
-	static func systemInformation(defaults: UserDefaults, facts: SystemProfileInformation.HardwareFacts) -> String {
+	/// What separates two segments of the `/sysinfo` line: a bold bullet.
+	private static let segmentSeparator = " \u{0002}•\u{0002} "
+
+	/** Formats the facts ``SystemProfileInformation/hardwareFacts()`` collected.
+	 Only the screen is read here, because only the screen has to be.
+
+	 Uptime and disk space come from APIs whose declared reasons allow showing
+	 them to the person using this Mac and nothing more, so they are part of the
+	 line only when it is printed locally. */
+	static func systemInformation(
+		defaults: UserDefaults,
+		facts: SystemProfileInformation.HardwareFacts,
+		includesOnDeviceFacts: Bool
+	) -> String {
 		func enabled(_ feature: SystemProfilerFeature) -> Bool {
 			defaults.bool(forKey: feature.disabledPreference.name) == false
 		}
 
-		var result = String(localized: .BasicLanguage.systemInformationHeading)
+		var segments: [String] = []
 		if let model = facts.modelName {
-			result += String(localized: .BasicLanguage.modelSegment(model))
+			segments.append(String(localized: .BasicLanguage.modelSegment(model)))
 		}
 		if enabled(.cpuModel), let processor = facts.processor {
-			result += String(localized: .BasicLanguage.cpuCoreSegment(processor, UInt(facts.physicalCoreCount)))
+			segments.append(String(localized: .BasicLanguage.cpuCoreSegment(processor, UInt(facts.physicalCoreCount))))
 		}
 		if enabled(.memoryInformation) {
-			result += String(localized: .BasicLanguage.memorySegment(SystemProfileInformation.formattedByteCount(facts.physicalMemory)))
+			segments.append(String(
+				localized: .BasicLanguage.memorySegment(SystemProfileInformation.formattedByteCount(facts.physicalMemory))
+			))
 		}
-		if enabled(.systemUptime) {
+		if includesOnDeviceFacts, enabled(.systemUptime) {
 			let uptime = PluginHost.humanReadableTimeInterval(facts.systemUptime, shortValue: true)
-			result += String(localized: .BasicLanguage.uptimeSegment(uptime))
+			segments.append(String(localized: .BasicLanguage.uptimeSegment(uptime)))
 		}
-		if enabled(.diskInformation), let disk = facts.rootVolumeCapacity {
-			result += String(localized: .BasicLanguage.spaceSegment(SystemProfileInformation.formattedByteCount(disk)))
+		if includesOnDeviceFacts, enabled(.diskInformation), let disk = facts.rootVolumeCapacity {
+			segments.append(String(
+				localized: .BasicLanguage.spaceSegment(SystemProfileInformation.formattedByteCount(disk))
+			))
 		}
 		if enabled(.gpuModel), let graphics = facts.graphicsDescription {
-			result += String(localized: .BasicLanguage.graphicsSegment(graphics))
+			segments.append(String(localized: .BasicLanguage.graphicsSegment(graphics)))
 		}
 		if enabled(.screenResolution), let screen = NSScreen.main ?? NSScreen.screens.first {
 			if let refreshRate = SystemProfileInformation.refreshRate(for: screen) {
-				result += String(
+				segments.append(String(
 					localized: .BasicLanguage.displayWithRefreshRateSegment(
 						screen.textualScreenResolutionString,
 						refreshRate
 					)
-				)
+				))
 			} else {
-				result += String(localized: .BasicLanguage.displaySegment(screen.textualScreenResolutionString))
+				segments.append(String(localized: .BasicLanguage.displaySegment(screen.textualScreenResolutionString)))
 			}
 		}
 		if enabled(.operatingSystemVersion) {
-			result += String(
+			segments.append(String(
 				localized: .BasicLanguage.operatingSystemSegment(
 					SystemInformation.systemOperatingSystemName,
 					SystemInformation.systemStandardVersion,
 					SystemInformation.systemBuildVersion ?? ""
 				)
-			)
+			))
 		}
-		if result.hasSuffix(" \u{0002}•\u{0002}") {
-			result.removeLast(4)
-		}
-		return result
+		let heading = String(localized: .BasicLanguage.systemInformationHeading)
+		return segments.isEmpty ? heading : heading + " " + segments.joined(separator: segmentSeparator)
 	}
 
 	static func systemMemoryInformation() -> String {
@@ -258,7 +274,6 @@ nonisolated enum SystemProfileInformation { // nonisolated: value
 	/// One mounted volume, as `/diskspace` reports it. A value, so the
 	/// enumeration that produces it can run off the main actor.
 	struct VolumeCapacity: Sendable {
-		let name: String
 		let totalCapacity: UInt64
 		let availableCapacity: UInt64
 	}
@@ -307,7 +322,6 @@ nonisolated enum SystemProfileInformation { // nonisolated: value
 	@concurrent
 	static func mountedVolumeCapacities() async -> [VolumeCapacity] {
 		let keys: Set<URLResourceKey> = [
-			.volumeNameKey,
 			.volumeTotalCapacityKey,
 			.volumeAvailableCapacityForImportantUsageKey,
 		]
@@ -318,7 +332,6 @@ nonisolated enum SystemProfileInformation { // nonisolated: value
 
 		return volumes.compactMap { volume -> VolumeCapacity? in
 			guard let values = try? volume.resourceValues(forKeys: keys),
-			      let name = values.volumeName,
 			      let total = values.volumeTotalCapacity,
 			      let free = values.volumeAvailableCapacityForImportantUsage
 			else { return nil }
@@ -328,7 +341,6 @@ nonisolated enum SystemProfileInformation { // nonisolated: value
 			 `volumeAvailableCapacityForImportantUsage` also goes negative when
 			 purgeable-space accounting overshoots. Neither is a byte count. */
 			return VolumeCapacity(
-				name: name,
 				totalCapacity: UInt64(clamping: total),
 				availableCapacity: UInt64(clamping: free)
 			)

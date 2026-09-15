@@ -111,6 +111,8 @@ struct IRCClientInboundHandlerPolicyTests {
 			for: "This nickname is registered",
 			context: .init(
 				isWaiting: false,
+				isIdentifiedWithSASL: false,
+				permitsCredentialsInClear: true,
 				password: "secret",
 				nickname: "alice",
 				serverAddress: "irc.dal.net",
@@ -126,6 +128,8 @@ struct IRCClientInboundHandlerPolicyTests {
 			for: "identify yourself",
 			context: .init(
 				isWaiting: false,
+				isIdentifiedWithSASL: false,
+				permitsCredentialsInClear: true,
 				password: "secret",
 				nickname: "alice",
 				serverAddress: "irc.example.net",
@@ -141,6 +145,8 @@ struct IRCClientInboundHandlerPolicyTests {
 			for: "You are now identified",
 			context: .init(
 				isWaiting: true,
+				isIdentifiedWithSASL: false,
+				permitsCredentialsInClear: true,
 				password: nil,
 				nickname: "alice",
 				serverAddress: nil,

@@ -17,49 +17,18 @@ import Testing
 @Suite("Server properties sheet values")
 @MainActor
 struct ServerPropertiesSheetValueTests {
-	private func usesAddress(forTag tag: Int) -> Bool {
-		ServerPropertiesModel.proxyTypeUsesAddress(ServerPropertiesModel.proxyType(forTag: tag))
-	}
-
-	/// proxyTypeChanged fell back to .none and saveConfig to .automatic, so an
-	/// unrecognised tag disabled the proxy fields while quietly enabling the
-	/// system SOCKS proxy in the saved configuration.
 	@Test(
-		"A proxy tag maps to one type, with one fallback",
+		"Only SOCKS5 and HTTP proxies take an address",
 		arguments: [
-			(0, UInt(0)),
-			(1, UInt(1)),
-			(5, UInt(5)),
-			(6, UInt(6)),
-			(8, UInt(8)),
-			(-1, UInt(0)),
-			(4, UInt(0)),
-			(99, UInt(0)),
+			(IRCConnectionProxyType.none, false),
+			(.automatic, false),
+			(.socks5, true),
+			(.HTTP, true),
+			(.tor, false),
 		]
 	)
-	func proxyTypeForTag(tag: Int, expected: UInt) {
-		#expect(ServerPropertiesModel.proxyType(forTag: tag).rawValue == expected)
-	}
-
-	@Test("Only SOCKS5 and HTTP proxies take an address")
-	func proxyTypesThatTakeAnAddress() {
-		#expect(usesAddress(forTag: 5))
-		#expect(usesAddress(forTag: 6))
-		for tag in [-1, 0, 1, 8, 99] {
-			#expect(usesAddress(forTag: tag) == false)
-		}
-	}
-
-	/// The encoding pop-up carries the numeric encoding in `tag`, so an advanced
-	/// encoding survives a round trip through a menu that does not list it.
-	@Test("An encoding tag round-trips, and an unset tag falls back")
-	func encodingForTag() {
-		let advanced = String.Encoding.japaneseEUC.rawValue
-		#expect(ServerPropertiesModel.encoding(forTag: Int(advanced), default: .utf8) == advanced)
-		#expect(ServerPropertiesModel.encoding(forTag: 0, default: .utf8) == String.Encoding.utf8.rawValue)
-		#expect(
-			ServerPropertiesModel.encoding(forTag: -1, default: .isoLatin1) == String.Encoding.isoLatin1.rawValue
-		)
+	func proxyTypesThatTakeAnAddress(type: IRCConnectionProxyType, takesAddress: Bool) {
+		#expect(ServerPropertiesModel.proxyTypeUsesAddress(type) == takesAddress)
 	}
 
 	/// dictionaryValue(for:) omits a nil but persists an empty string, so the

@@ -122,17 +122,20 @@ nonisolated struct ClientPreferences: Sendable, Equatable { // nonisolated: valu
 final class ClientServices {
 	weak var output: (any ClientOutput)?
 	weak var menu: (any ClientMenuPresenting)?
+	weak var channelList: (any ClientChannelListPresenting)?
 	weak var applicationState: (any ClientApplicationState)?
 	weak var world: World?
 
 	init(
 		output: (any ClientOutput)? = nil,
 		menu: (any ClientMenuPresenting)? = nil,
+		channelList: (any ClientChannelListPresenting)? = nil,
 		applicationState: (any ClientApplicationState)? = nil,
 		world: World? = nil
 	) {
 		self.output = output
 		self.menu = menu
+		self.channelList = channelList
 		self.applicationState = applicationState
 		self.world = world
 	}
@@ -187,6 +190,10 @@ extension IRCClient {
 
 	var menu: (any ClientMenuPresenting)? {
 		environment.services.menu
+	}
+
+	var channelListPresentation: (any ClientChannelListPresenting)? {
+		environment.services.channelList
 	}
 
 	var world: World? {

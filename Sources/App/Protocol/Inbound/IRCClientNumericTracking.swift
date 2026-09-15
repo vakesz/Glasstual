@@ -72,14 +72,18 @@ extension IRCClient {
 			handleTrackedAwayNumeric(numeric, message: message, shouldPrint: shouldPrint)
 		case .logon, .logoff, .nowon, .nowoff:
 			handleTrackedStatusNumeric(numeric, message: message, shouldPrint: shouldPrint)
-		case .toomanywatch, .monlistfull:
+		case .monlistfull:
 			if shouldPrint {
 				printErrorReply(message)
 			}
 		case .mononline, .monoffline:
 			handleMonitorStatusNumeric(numeric, message: message, shouldPrint: shouldPrint)
 		case .targumodeg:
-			break
+			/* RPL_TARGUMODEG: the message went nowhere because the recipient is
+			 in +g. Swallowing it left the user believing it had arrived. */
+			if shouldPrint {
+				printReply(message)
+			}
 		default:
 			break
 		}
@@ -180,16 +184,23 @@ extension IRCClient {
 		}
 	}
 
+	/** `RPL_SASLMECHS`: the mechanisms the server would have taken.
+
+	 The server sends this when it refuses the mechanism the client named, and
+	 follows it with `ERR_SASLFAIL`. The failure is what moves the exchange on
+	 to the next mechanism; this only narrows what that next one may be. Moving
+	 on here as well sent the retry ahead of the 904 that belonged to the
+	 refused attempt, and the 904 then ended the retry before it began. */
 	private func handleSASLMechanismsNumeric(_ message: Message, shouldPrint: Bool) {
 		if shouldPrint {
 			printErrorReply(message)
 		}
-		guard isCapabilityEnabled(.isInSASLNegotiation) else { return }
-		let mechanisms = message.params.count >= 2
-			? message.params[1].components(separatedBy: CharacterSet(charactersIn: ", ")).filter { !$0.isEmpty }
-			: []
-		guard !retrySASLNegotiation(withMechanisms: mechanisms) else { return }
-		finishSASLNegotiation(failed: true)
+		guard isCapabilityEnabled(.isInSASLNegotiation), message.params.count >= 2 else { return }
+		let mechanisms = message.params[1]
+			.components(separatedBy: CharacterSet(charactersIn: ", "))
+			.filter { !$0.isEmpty }
+		guard !mechanisms.isEmpty else { return }
+		saslOfferedMechanisms = mechanisms
 	}
 
 	/// The numerics that mean the server refused this SASL attempt, as opposed
@@ -206,6 +217,14 @@ extension IRCClient {
 		}
 		guard isCapabilityEnabled(.isInSASLNegotiation) else { return }
 		let failed = Self.saslFailureNumerics.contains(numeric)
+		/* 904 is a refused attempt, not a refused login: a certificate the
+		 account does not know fails EXTERNAL while the password would still
+		 pass SCRAM. The exchange ends only once every mechanism both sides
+		 speak has been tried. The other failures are about the account or the
+		 exchange itself, and another mechanism would not change them. */
+		if numeric == .saslfail, retrySASLNegotiation(withMechanisms: []) {
+			return
+		}
 		if !failed, scramMutualAuthenticationIsSatisfied() == false {
 			abortUnverifiedSASLSuccess()
 			return

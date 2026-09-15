@@ -152,8 +152,6 @@ public enum MenuCommand: Int, CaseIterable, Sendable {
 	case webPaste = 1206 // Paste
 	case webQueryLogs = 1208 // Query Logs
 	case webChannelMenu = 1209 // Channel
-	case segmentedAddServer = 1300 // Add Server…
-	case segmentedAddChannel = 1302 // Add Channel…
 	case serverListAddServer = 1400 // Add Server…
 	case addIgnore = 1600 // Add Ignore…
 	case modifyIgnore = 1601 // Modify Ignore…
@@ -287,9 +285,11 @@ public extension MenuCommand {
 	}
 
 	/// Commands that stay live even before the application finishes launching.
+	/// Launching finishes when the plugins have loaded, and nothing about
+	/// Settings, About or Welcome waits on a plugin.
 	var isEssential: Bool {
 		switch self {
-		case .about, .quit, .printLog, .closeWindow, .paste, .mainWindow,
+		case .about, .settings, .quit, .printLog, .closeWindow, .paste, .mainWindow,
 		     .acknowledgements, .advanced, .welcome, .exportSettings:
 			true
 		default:
@@ -303,9 +303,9 @@ public extension MenuCommand {
 public extension MenuCommand {
 	/// The SF Symbol drawn next to the command, if it takes one.
 	///
-	/// Contextual menus only. The menu bar is plain: macOS draws no images
-	/// beside its own commands, and a column of symbols next to Cut, Copy and
-	/// Quit reads as decoration rather than as meaning.
+	/// Contextual menus only. The menu bar is plain, because macOS draws no
+	/// images beside its own commands, and a column of symbols next to Cut,
+	/// Copy and Quit reads as decoration rather than as meaning.
 	var symbolName: String? {
 		Self.symbolNames[self]
 	}
@@ -327,8 +327,7 @@ public extension MenuCommand {
 		.webChangeNickname: "pencil", .webSearch: "magnifyingglass",
 		.webDictionary: "book", .webCopy: "doc.on.doc",
 		.webPaste: "doc.on.clipboard", .webQueryLogs: "doc.text",
-		.webChannelMenu: "number", .segmentedAddServer: "plus",
-		.segmentedAddChannel: "plus.circle", .serverListAddServer: "plus",
+		.webChannelMenu: "number", .serverListAddServer: "plus",
 		.addIgnore: "hand.raised", .modifyIgnore: "pencil",
 		.removeIgnore: "hand.raised.slash", .inviteTo: "envelope",
 		.whois: "info.circle", .privateMessage: "bubble.left",

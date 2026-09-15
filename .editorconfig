@@ -6,10 +6,15 @@ end_of_line = lf
 insert_final_newline = true
 trim_trailing_whitespace = true
 
-[*.{c,cc,cpp,h,m,mm,swift,sh,pbxproj}]
+[*.{swift,sh,pbxproj}]
 indent_style = tab
 indent_size = 4
 tab_width = 4
+
+# shfmt reads these, so `shfmt -d scripts/*.sh` and the editor agree.
+[*.sh]
+switch_case_indent = true
+space_redirects = true
 
 [*.{css,js,json,yaml,yml}]
 indent_style = space

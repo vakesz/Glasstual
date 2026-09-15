@@ -38,16 +38,17 @@
 
 import AppKit
 
-/** The menus themselves, and the four AppKit protocols that reach them.
+/** The menus themselves, and the AppKit delegate protocol that reaches them.
 
- Commands live on ``MenuActionCoordinator``: the menu items target it directly,
+ Commands live on ``MenuActionCoordinator``. The menu items target it directly,
  so a command is one `@objc` method rather than a forwarder, an enum case and a
- switch arm. What is left here is what only a menu controller can be — the
- menus AppKit pops up, the delegate and validation callbacks it sends, the
- world's notification that the tree changed, and the seam the protocol layer
- raises sheets through. */
+ switch arm. AppKit asks an item's target to validate it, so validation lives
+ there too. What is left here is what only a menu controller can be. That is
+ the menus AppKit pops up, the delegate callbacks it sends, the world's
+ notification that the tree changed, and the seam the protocol layer raises
+ sheets through. */
 @MainActor
-public final class MenuController: NSObject, NSMenuDelegate, NSMenuItemValidation {
+public final class MenuController: NSObject, NSMenuDelegate {
 	public var channelViewChannelNameMenu = NSMenu()
 	public var channelViewGeneralMenu = NSMenu()
 	public var channelViewURLMenu = NSMenu()
@@ -59,7 +60,6 @@ public final class MenuController: NSObject, NSMenuDelegate, NSMenuItemValidatio
 	public var mainMenuQueryMenuItem: NSMenuItem?
 	public var mainMenuServerMenuItem: NSMenuItem?
 	public var mainMenuFormatMenuItem: NSMenuItem?
-	public var mainWindowSegmentedControllerCellMenu = NSMenu()
 	public var serverListNoSelectionMenu = NSMenu()
 	public var userControlMenu = NSMenu()
 	public var muteNotificationsDockMenuItem: NSMenuItem?
@@ -79,16 +79,8 @@ public final class MenuController: NSObject, NSMenuDelegate, NSMenuItemValidatio
 		actionCoordinator.prepareInitialState()
 	}
 
-	public func applySymbols(to menu: NSMenu?) {
-		MenuPresentation.apply(to: menu)
-	}
-
 	public func prepareForApplicationTermination() {
 		actionCoordinator.prepareForApplicationTermination()
-	}
-
-	public func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
-		actionCoordinator.validateMenuItem(menuItem)
 	}
 
 	public func menuWillOpen(_ menu: NSMenu) {
