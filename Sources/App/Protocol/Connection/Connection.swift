@@ -56,19 +56,16 @@ private enum ConnectionEvent: Sendable {
 	case didSecure(protocolType: tls_protocol_version_t, cipherSuite: tls_ciphersuite_t)
 	case didCloseReadStream
 	case didDisconnect(error: Error?)
-	case didReceive(Data)
+	/// One read's lines, and the reply that lets the host read the next.
+	case didReceive([Data], acknowledge: @Sendable () -> Void)
 	case requestInsecureCertificateTrust(TrustDecisionHandler)
 	case willSend(Data)
 	case didSendData
 	case serviceFailed(Error)
 	case serviceInterrupted
 	case serviceInvalidated
-	case inputOverload
 }
 
-/*  Owned by `IRCClient` on the main actor. The connection host's callbacks
- arrive on an NSXPC queue and are forwarded through `events`, which the main
- actor drains in order; nothing else on this type is touched off-main. */
 /** The object NSXPC exports for the host's callbacks.
 
  `RemoteConnectionClientProtocol` refines `Sendable` so the connection host can
@@ -78,7 +75,6 @@ private enum ConnectionEvent: Sendable {
  continuation and hands every callback straight to it. */
 private final class ConnectionClientShim: NSObject, RemoteConnectionClientProtocol {
 	private let events: AsyncStream<ConnectionEvent>.Continuation
-	let inputBudget = ConnectionInputBudget()
 
 	init(events: AsyncStream<ConnectionEvent>.Continuation) {
 		self.events = events
@@ -112,12 +108,8 @@ private final class ConnectionClientShim: NSObject, RemoteConnectionClientProtoc
 		events.yield(.didDisconnect(error: disconnectError))
 	}
 
-	func ircConnectionDidReceive(_ data: Data) {
-		switch inputBudget.admit(bytes: data.count) {
-		case .accepted: events.yield(.didReceive(data))
-		case .overflow: events.yield(.inputOverload)
-		case .closed: break
-		}
+	func ircConnectionDidReceive(_ lines: [Data], acknowledge: @escaping @Sendable () -> Void) {
+		events.yield(.didReceive(lines, acknowledge: acknowledge))
 	}
 
 	func ircConnectionRequestInsecureCertificateTrust(_ trustBlock: @escaping TrustDecisionHandler) {
@@ -133,6 +125,9 @@ private final class ConnectionClientShim: NSObject, RemoteConnectionClientProtoc
 	}
 }
 
+/** Owned by `IRCClient` on the main actor. The connection host's callbacks
+ arrive on an NSXPC queue and are forwarded through `events`, which the main
+ actor drains in order; nothing else on this type is touched off-main. */
 public final class Connection: NSObject {
 	public private(set) weak var client: IRCClient?
 	public private(set) var config: IRCConnectionConfig
@@ -229,20 +224,41 @@ public final class Connection: NSObject {
 	/// Drains the host's callbacks on the main actor in the order they arrived.
 	private func startDeliveringEvents() {
 		eventTask = Task { [weak self, events] in
-			var handled = 0
 			for await event in events {
 				guard let self else { return }
-				if case let .didReceive(data) = event {
-					clientShim.inputBudget.consumed(bytes: data.count)
-				}
-				handle(event)
-				handled += 1
-				if handled.isMultiple(of: 64) {
-					await Task.yield()
+				if case let .didReceive(lines, acknowledge) = event {
+					await receive(lines)
+					/* Answered once the lines are handled, whatever became of
+					 the connection meanwhile: the host is waiting on this reply
+					 before it reads again. */
+					acknowledge()
+				} else {
+					handle(event)
 				}
 			}
 		}
 	}
+
+	/** Hands one read's lines to the client, in order.
+
+	 The main actor is given back between every few lines so that a long burst —
+	 a `/LIST`, a bouncer's playback — does not hold up drawing. Nothing arrives
+	 behind the burst meanwhile: the host reads the next one only after the
+	 acknowledgement. */
+	private func receive(_ lines: [Data]) async {
+		for (index, line) in lines.enumerated() {
+			guard terminal == false, client?.socket === self else { return }
+			if let string = convertFromCommonEncoding(line) {
+				client?.ircConnection(self, didReceiveData: string)
+			}
+			if (index + 1).isMultiple(of: Self.linesPerTurn) {
+				await Task.yield()
+			}
+		}
+	}
+
+	/// How many lines are handled before the main actor is offered to other work.
+	private static let linesPerTurn = 64
 
 	private func handle(_ event: ConnectionEvent) {
 		guard terminal == false, client?.socket === self else {
@@ -274,9 +290,10 @@ public final class Connection: NSObject {
 			client?.ircConnectionDidCloseReadStream(self)
 		case let .didDisconnect(error):
 			didDisconnect(with: error)
-		case let .didReceive(data):
-			guard let string = convertFromCommonEncoding(data) else { return }
-			client?.ircConnection(self, didReceiveData: string)
+		case .didReceive:
+			/* Delivered by `receive(_:)`, which the event loop awaits so that
+			 the acknowledgement follows the last line. */
+			break
 		case let .requestInsecureCertificateTrust(response):
 			openInsecureCertificateTrustPanel(response)
 		case let .willSend(data):
@@ -289,13 +306,6 @@ public final class Connection: NSObject {
 			handleServiceInvalidation()
 		case .serviceInvalidated:
 			handleServiceInvalidation()
-		case .inputOverload:
-			connectionLogger
-				.error(
-					"IRC input exceeded the bounded application queue; disconnecting without claiming complete delivery"
-				)
-			invalidateProcess()
-			didDisconnect(with: NSError(domain: NSPOSIXErrorDomain, code: Int(ENOBUFS)))
 		}
 	}
 
@@ -363,8 +373,8 @@ public final class Connection: NSObject {
 
 		connectionLogger.debug("Warming IRC connection service")
 		let connection = makeService()
-		connection.remoteObjectInterface = NSXPCInterface(with: RemoteConnectionServerProtocol.self)
-		connection.exportedInterface = NSXPCInterface(with: RemoteConnectionClientProtocol.self)
+		connection.remoteObjectInterface = RemoteConnectionInterface.server()
+		connection.exportedInterface = RemoteConnectionInterface.client()
 		connection.exportedObject = callbackReceiver
 		connection.interruptionHandler = { [weak self] in
 			self?.eventContinuation.yield(.serviceInterrupted)
@@ -636,11 +646,22 @@ public final class Connection: NSObject {
 
 		guard let data = convertToCommonEncoding(cleanLine) else { return }
 
-		if cleanLine.hasPrefix("PONG") {
+		if Self.bypassesFloodControl(cleanLine) {
 			remoteObjectProxy()?.send(data, bypassQueue: true)
 		} else {
 			remoteObjectProxy()?.send(data)
 		}
+	}
+
+	/** Whether `line` goes out ahead of the flood-control queue.
+
+	 A PONG answers the server's liveness probe, which a backed-up queue would
+	 otherwise make it miss. A QUIT is the last line a closing connection sends:
+	 the disconnect that follows it clears the queue, so a QUIT waiting behind
+	 flood control was thrown away and the user's quit message never reached
+	 anyone. */
+	static func bypassesFloodControl(_ line: String) -> Bool {
+		line.hasPrefix("PONG") || line.hasPrefix("QUIT")
 	}
 
 	public func clearSendQueue() {

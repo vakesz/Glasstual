@@ -55,13 +55,13 @@ public nonisolated enum DCCChatEvent: Sendable { // nonisolated: value
 	case closed(DCCTransferError?)
 }
 
-/// One DCC CHAT session: the socket and the line framing, owned by one actor.
-///
 private nonisolated let directChatConnectionLogger = Logger( // nonisolated: let
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 	category: "DCCChatConnection"
 )
 
+/// One DCC CHAT session: the socket and the line framing, owned by one actor.
+///
 /// The file-transfer side of DCC is ``DCCTransfer``, and the two share the
 /// Network.framework helpers in ``DCCTransport``. What differs is
 /// what travels: a chat carries newline-terminated lines in both directions for
@@ -119,7 +119,7 @@ public actor DCCChatConnection {
 	/// Set once the connection is carrying bytes, which is when ``send(_:)``
 	/// has somewhere to write.
 	private var readyConnection: NetworkConnection<TCP>?
-	private var lineBuffer = Data()
+	private var framer: DCCChatLineFramer
 	private var isCancelled = false
 	private var hasFinished = false
 
@@ -128,6 +128,7 @@ public actor DCCChatConnection {
 		events = stream
 		eventContinuation = continuation
 		self.configuration = configuration
+		framer = DCCChatLineFramer(maximumLineLength: configuration.maximumLineLength)
 	}
 
 	deinit {
@@ -174,7 +175,7 @@ public actor DCCChatConnection {
 			throw DCCTransferError.closedByPeer
 		}
 
-		try await DCCTransport.withTimeout(configuration.sendTimeout, failingWith: .writeTimeout) {
+		try await DCCTransport.withTimeout(configuration.sendTimeout, failingWith: .stalled) {
 			try await connection.send(payload)
 		}
 	}
@@ -351,7 +352,9 @@ public actor DCCChatConnection {
 			let (payload, isComplete) = try await receive(on: connection)
 
 			if let payload, payload.isEmpty == false {
-				try consume(payload)
+				for line in try framer.lines(appending: payload) {
+					emit(.line(line))
+				}
 			}
 
 			if isComplete {
@@ -361,23 +364,48 @@ public actor DCCChatConnection {
 			}
 		}
 	}
+}
 
-	/// Splits `payload` into lines, emitting each one.
-	///
-	/// The framing is a bare line feed: a peer that sends CRLF leaves the CR at
-	/// the end of the line, and the client strips it when it decodes.
-	private func consume(_ payload: Data) throws {
-		lineBuffer.append(payload)
+/** Cuts a DCC CHAT byte stream into lines.
 
-		while let newline = lineBuffer.firstIndex(of: 0x0A) {
-			let line = Data(lineBuffer[lineBuffer.startIndex ..< newline])
-			lineBuffer.removeSubrange(lineBuffer.startIndex ... newline)
+ The framing is a bare line feed: a peer that sends CRLF leaves the CR at the
+ end of the line, and the client strips it when it decodes.
 
-			emit(.line(line))
+ A read is scanned once, from where the last one stopped, and the buffer is
+ compacted once per read. Removing each line from the front of the buffer as it
+ was found moved everything behind it every time, which made a read carrying
+ many short lines cost the square of its length. */
+nonisolated struct DCCChatLineFramer { // nonisolated: value
+	/// A peer that never sends a newline must not be able to grow the buffer
+	/// without bound; framing fails once the unterminated part passes this.
+	let maximumLineLength: Int
+
+	/// Bytes after the last line feed, waiting for the rest of their line.
+	private var pending = Data()
+
+	init(maximumLineLength: Int) {
+		self.maximumLineLength = maximumLineLength
+	}
+
+	/// The lines `payload` completes, in order.
+	mutating func lines(appending payload: Data) throws -> [Data] {
+		let scanFrom = pending.count
+		pending.append(payload)
+
+		var lines: [Data] = []
+		var lineStart = pending.startIndex
+		var searchStart = pending.startIndex + scanFrom
+		while let newline = pending[searchStart...].firstIndex(of: 0x0A) {
+			lines.append(Data(pending[lineStart ..< newline]))
+			lineStart = pending.index(after: newline)
+			searchStart = lineStart
 		}
+		pending.removeSubrange(pending.startIndex ..< lineStart)
 
-		guard lineBuffer.count <= configuration.maximumLineLength else {
+		guard pending.count <= maximumLineLength else {
 			throw DCCTransferError.badParameter
 		}
+
+		return lines
 	}
 }

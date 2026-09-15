@@ -195,7 +195,7 @@ enum IRCNumeric: UInt, CaseIterable, Sendable {
 		     .quietlist, .endofquietlist:
 			.channel
 		case .youreoper, .channelUrl, .reaway, .goneaway, .notaway, .logon, .logoff, .watchoff,
-		     .watchstat, .nowon, .nowoff, .watchlist, .endofwatchlist, .toomanywatch,
+		     .watchstat, .nowon, .nowoff, .watchlist, .endofwatchlist,
 		     .mononline, .monoffline, .monlist, .endofmonlist, .monlistfull, .targumodeg:
 			.presence
 		case .targnotify, .umodegmsg, .loggedin, .loggedout, .saslsuccess, .saslmechs,
@@ -219,12 +219,12 @@ enum IRCNumeric: UInt, CaseIterable, Sendable {
 		Self.isErrorReply(rawValue)
 	}
 
-	/// Numerics between 401 and 596 are errors by convention; RPL_NOMOTD sits
-	/// inside that range without being one. The test takes a raw value because
-	/// servers send error numerics this enum has no case for and those still
-	/// have to reach the error path.
+	/// Numerics from 400 to 596 are errors by convention — 400 is
+	/// `ERR_UNKNOWNERROR` — and RPL_NOMOTD sits inside that range without being
+	/// one. The test takes a raw value because servers send error numerics this
+	/// enum has no case for and those still have to reach the error path.
 	static func isErrorReply(_ rawValue: UInt) -> Bool {
-		rawValue > 400 && rawValue < 597 && rawValue != IRCNumeric.nomotd.rawValue
+		rawValue >= 400 && rawValue < 597 && rawValue != IRCNumeric.nomotd.rawValue
 	}
 
 	/// The handler a numeric belongs to.

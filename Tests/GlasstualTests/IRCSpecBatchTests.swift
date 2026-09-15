@@ -133,7 +133,7 @@ struct IRCSpecBatchTests {
 
 		let batch = try #require(client.queuedBatchMessage(withToken: "ref") as? MessageBatch)
 
-		#expect(batch.queuedEntries.count == 1)
+		#expect(batch.queuedMessages.count == 1)
 	}
 
 	/// `batch`: "If the client receives a message with a batch tag naming a
@@ -219,7 +219,7 @@ struct IRCSpecBatchTests {
 
 		let outer = try #require(client.queuedBatchMessage(withToken: "outer") as? MessageBatch)
 
-		#expect(outer.queuedEntries.count == 1)
+		#expect(outer.queuedMessages.count == 1)
 	}
 
 	/// A batch may not be nested without bound: a server that keeps opening

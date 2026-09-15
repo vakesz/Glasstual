@@ -64,16 +64,19 @@ extension ObservablePreferences {
 
 	/// A committed number field. The key's own declaration decides which counts
 	/// are valid, so a rejected entry leaves the saved value alone.
-	func numberFieldBinding(
+	func numberField(
 		for key: PreferenceKey<UInt>,
 		didSet: @escaping () -> Void = {}
-	) -> Binding<String> {
-		Binding(
-			get: { String(self[key]) },
-			set: { newValue in
-				guard let value = UInt(newValue), key.accepts(value) else { return }
+	) -> PreferencesFieldValue {
+		PreferencesFieldValue(
+			text: { String(self[key]) },
+			write: { newValue in
+				guard let value = UInt(newValue.trimmingCharacters(in: .whitespaces)), key.accepts(value) else {
+					return false
+				}
 				self[key] = value
 				didSet()
+				return true
 			}
 		)
 	}
@@ -109,20 +112,21 @@ extension ObservablePreferences {
 
 	/// The same declaration-level port constraints an imported file goes
 	/// through, including the ordered-pair rule the two ends of a range share.
-	func portFieldBinding(
+	func portField(
 		for key: PreferenceKey<UInt16>,
 		limitedBy other: PreferenceKey<UInt16>?
-	) -> Binding<String> {
-		Binding(
-			get: { String(self[key]) },
-			set: { newValue in
-				guard let value = UInt16(newValue) else { return }
+	) -> PreferencesFieldValue {
+		PreferencesFieldValue(
+			text: { String(self[key]) },
+			write: { newValue in
+				guard let value = UInt16(newValue.trimmingCharacters(in: .whitespaces)) else { return false }
 				var others: [String: PropertyListValue] = [:]
 				if let other {
 					others[other.name] = other.propertyListValue
 				}
-				guard key.accepts(value, alongside: others) else { return }
+				guard key.accepts(value, alongside: others) else { return false }
 				self[key] = value
+				return true
 			}
 		)
 	}

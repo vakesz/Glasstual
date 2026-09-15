@@ -191,6 +191,65 @@ struct IRCLabeledResponseRetirementTests {
 		#expect(client.batchMessages.queuedEntries.isEmpty)
 	}
 
+	@Test("A disconnect fails every delivery still waiting instead of leaving it pending")
+	func disconnectFailsPendingDeliveries() throws {
+		let client = clientWithLabeledResponse()
+		let channel = try #require(client.findChannelOrCreate("#chat"))
+		let presentation = DeliveryPresentation()
+		channel.presentation = presentation
+		let label = try #require(client.registerPendingDelivery(for: channel))
+		client.attachLineNumber("7", toDeliveryWithLabel: label)
+		let delivery = try #require(client.pendingDeliveries[label])
+
+		#expect(client.labeledDeliveryDeadlineTask != nil)
+
+		client.resetCapabilityNegotiation()
+
+		#expect(delivery.state == .failed)
+		#expect(presentation.updates == [
+			.init(lineNumber: "7", state: .failed, messageIdentifier: nil, reason: "Disconnected"),
+		])
+		#expect(client.pendingDeliveries.isEmpty)
+		#expect(client.labeledDeliveryDeadlineTask == nil)
+	}
+
+	@Test("A deadline sweep fails only the deliveries that have come due")
+	func deadlineSweepFailsOnlyDueDeliveries() throws {
+		let client = clientWithLabeledResponse()
+		let overdue = try #require(client.registerPendingDelivery(for: nil))
+		let waiting = try #require(client.registerPendingDelivery(for: nil))
+		try #require(client.pendingDeliveries[overdue]).deadline = .now - .seconds(1)
+
+		client.failDeliveries(dueBy: .now)
+
+		#expect(client.pendingDeliveries[overdue] == nil)
+		#expect(client.deliveryState(forLabel: waiting) == .pending)
+		#expect(client.labeledDeliveryDeadlineTask != nil)
+
+		client.resolveDelivery(withLabel: waiting, state: .delivered, messageIdentifier: nil, reason: nil)
+
+		#expect(client.labeledDeliveryDeadlineTask == nil, "Nothing left to wait for")
+	}
+
+	@Test("The deadline sweep fails a delivery nobody answered once its deadline passes", .timeLimit(.minutes(1)))
+	func deadlineSweepRunsOnItsOwn() async throws {
+		let client = clientWithLabeledResponse()
+		let delivery = LabeledDelivery()
+		delivery.label = "due"
+		delivery.state = .pending
+		delivery.deadline = .now
+		client.pendingDeliveries["due"] = delivery
+		_ = try #require(client.registerPendingDelivery(for: nil))
+
+		let sweep = try #require(client.labeledDeliveryDeadlineTask)
+		await sweep.value
+
+		#expect(delivery.state == .failed)
+		#expect(client.pendingDeliveries["due"] == nil)
+		#expect(client.pendingDeliveries.count == 1)
+		client.failPendingDeliveriesForDisconnect()
+	}
+
 	@Test("Resolving a delivery removes it from the pending table")
 	func resolvingRemovesPendingEntry() throws {
 		let client = clientWithLabeledResponse()

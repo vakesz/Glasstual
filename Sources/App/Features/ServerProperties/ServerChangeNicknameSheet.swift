@@ -56,20 +56,34 @@ public final class ServerChangeNicknameSheet: MainWindowSheetSession, ClientScop
 
 		self.client = client
 		clientId = client.uniqueIdentifier
-		model = ServerNicknameChangeModel(currentNickname: currentNickname) { candidate in
+		model = ServerNicknameChangeModel(
+			currentNickname: currentNickname,
+			validator: Self.nicknameValidator(for: client)
+		)
+
+		super.init(window: nil)
+		installSheet()
+	}
+
+	/** Checks a proposed nickname against what `client`'s server accepts.
+
+	 The closure holds the client weakly, so the sheet's model is never what
+	 keeps a connection alive. Once the client is gone the check falls back to
+	 the syntax every server accepts. */
+	static func nicknameValidator(for client: IRCClient) -> ServerNicknameChangeModel.Validator {
+		{ [weak client] candidate in
 			if candidate.isEmpty {
 				return ApplicationStrings.requiredField
 			}
 
-			guard (candidate as NSString).isHostmaskNickname(on: client) else {
-				return CommonValidationStrings.invalidNickname
+			let isNickname = if let client {
+				(candidate as NSString).isHostmaskNickname(on: client)
+			} else {
+				(candidate as NSString).isHostmaskNickname
 			}
 
-			return nil
+			return isNickname ? nil : CommonValidationStrings.invalidNickname
 		}
-
-		super.init(window: nil)
-		installSheet()
 	}
 
 	private func installSheet() {

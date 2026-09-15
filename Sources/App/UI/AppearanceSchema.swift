@@ -225,8 +225,8 @@ public enum AppearanceSchema {
 	}
 }
 
-/// Base class for the three appearance objects loaded from a property list.
-/// It carries the application-wide appearance snapshot the subclasses need to
+/// Base class for the appearance objects loaded from a property list. It
+/// carries the application-wide appearance snapshot the subclasses need to
 /// pick their entry out of the file.
 open class ApplicationAppearance {
 	private let applicationProperties: AppearancePropertyCollection
@@ -251,10 +251,5 @@ open class ApplicationAppearance {
 
 	public var appKitAppearance: NSAppearance? {
 		applicationProperties.appKitAppearance
-	}
-
-	/// Compatibility with `MainWindow.swift:324`; see ``AppKitAppearanceTarget``.
-	public var appKitAppearanceTarget: AppKitAppearanceTarget {
-		applicationProperties.appKitAppearanceTarget
 	}
 }

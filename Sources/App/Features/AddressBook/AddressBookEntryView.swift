@@ -36,10 +36,13 @@ struct AddressBookEntryView: View {
 			Form {
 				identitySection
 
-				if model.entryType == .userTracking {
-					trackingSection
-				} else {
+				if model.editsIgnoreSettings {
 					ignoreSection
+				}
+				if model.editsTracking {
+					trackingSection
+				}
+				if model.editsIgnoreSettings {
 					hostmaskHelp
 				}
 			}

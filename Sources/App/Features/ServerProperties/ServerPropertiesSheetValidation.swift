@@ -28,10 +28,20 @@ enum ServerPropertiesValidation {
 		value.rangeOfCharacter(from: .newlines) == nil
 	}
 
+	/** A real name the server will accept on the USER line: something other
+	 than whitespace, on one line. Onboarding and the server properties sheet
+	 both ask this, so a name one of them accepts the other does not refuse. */
+	static func isRealName(_ value: String) -> Bool {
+		value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false && isSingleLine(value)
+	}
+
+	/// The protocol limits a line in bytes, so a disconnect message is measured
+	/// in UTF-8 bytes rather than in characters, which undercount anything
+	/// outside ASCII.
 	static let maximumCommentLength = 390
 
 	static func isLeavingComment(_ value: String) -> Bool {
-		isSingleLine(value) && value.count <= maximumCommentLength
+		isSingleLine(value) && value.utf8.count <= maximumCommentLength
 	}
 
 	/// The first alternative nickname the server would refuse, or `nil` when

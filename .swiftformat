@@ -1,4 +1,8 @@
---swiftversion 6.0
+# SwiftFormat enables a rule only when this version supports the syntax it
+# writes. Xcode 27 ships Swift 6.4, but any value above 6.0 turns on
+# trailingCommas and swiftTestingTestCaseNames, which rewrite about 670 files.
+# Raise it together with that reformat, in a change of its own.
+--swift-version 6.0
 --indent tab
 --tabwidth 4
 # Matches line_length in .swiftlint.yml: the formatter wraps at this width and

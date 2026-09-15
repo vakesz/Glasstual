@@ -144,6 +144,19 @@ public enum KeychainItem: Sendable, Equatable, Hashable {
 		}
 	}
 
+	/** The `kSecAttrService` actually stored: ``service``, except in a Debug
+	 build running the unit tests or a UI review, where it is prefixed.
+
+	 Those runs set `GLASSTUAL_UI_REVIEW_SUITE` or
+	 `GLASSTUAL_UI_REVIEW_DIRECTORY` to keep off the user's real preferences and
+	 files, and the prefix does the same for secrets: the tests run inside the
+	 application and share its access group, so without it a test item and a
+	 real one with the same identifier would be one item. ``service`` stays the
+	 name earlier releases wrote, which is what everything else asks for. */
+	public var storedService: String {
+		KeychainStore.isolatedServicePrefix + service
+	}
+
 	public var itemClass: KeychainItemClass {
 		.applicationPassword
 	}
@@ -158,18 +171,18 @@ public enum KeychainItem: Sendable, Equatable, Hashable {
 	/// The stored secret, telling an absent item apart from a keychain that
 	/// refused the read — which `password` cannot.
 	public func readPassword() -> KeychainReadOutcome {
-		KeychainStore.readPassword(kind: itemClass, service: service)
+		KeychainStore.readPassword(kind: itemClass, service: storedService)
 	}
 
 	/// Writes `password`, creating the item when it does not exist yet.
 	@discardableResult
 	public func write(_ password: String) -> Bool {
-		KeychainStore.modifyOrAddItem(label, kind: itemClass, newPassword: password, service: service)
+		KeychainStore.modifyOrAddItem(label, kind: itemClass, newPassword: password, service: storedService)
 	}
 
 	@discardableResult
 	public func delete() -> Bool {
-		KeychainStore.deleteItem(kind: itemClass, service: service)
+		KeychainStore.deleteItem(kind: itemClass, service: storedService)
 	}
 
 	/// Writes or deletes the item so it matches `secret`. `.unchanged` leaves
@@ -196,10 +209,45 @@ public enum KeychainReadOutcome: Sendable, Equatable {
 
 /// The `SecItem` calls behind ``KeychainItem``. The four cases of that enum are
 /// the whole surface anything outside this framework needs.
+///
+/// Every secret lives in one access group, named explicitly: the first entry of
+/// the process's `keychain-access-groups` entitlement. The application declares
+/// its own there, and the IRC connection host — which holds only its own group —
+/// cannot read any of them. Items an earlier build left in another group the
+/// application is still entitled to are moved into it the first time they are
+/// read, and no copy is left outside it once a secret is written or deleted.
 enum KeychainStore {
+	/// The access group secrets are written to, or `nil` in a process with no
+	/// keychain groups at all, where the data-protection keychain uses its
+	/// default and there is nowhere else to look.
+	private static let accessGroup: String? = entitledAccessGroups.first
+
+	/// Prepended to every stored service name in a Debug test or UI-review run;
+	/// empty otherwise, and always empty in a Release build.
+	static let isolatedServicePrefix: String = {
+		#if DEBUG
+			let environment = ProcessInfo.processInfo.environment
+			let isIsolatedRun = ["GLASSTUAL_UI_REVIEW_SUITE", "GLASSTUAL_UI_REVIEW_DIRECTORY"].contains {
+				environment[$0]?.isEmpty == false
+			}
+			return isIsolatedRun ? "glasstual.tests." : ""
+		#else
+			return ""
+		#endif
+	}()
+
+	/// This process's `keychain-access-groups`, in the order they are declared.
+	private static var entitledAccessGroups: [String] {
+		guard let task = SecTaskCreateFromSelf(nil) else { return [] }
+		let groups = SecTaskCopyValueForEntitlement(task, "keychain-access-groups" as CFString, nil)
+		return groups as? [String] ?? []
+	}
+
+	/// Deletes the item from every group this process can reach, so a copy an
+	/// earlier build left elsewhere cannot come back on the next read.
 	@discardableResult
 	static func deleteItem(kind: KeychainItemClass, service: String) -> Bool {
-		SecItemDelete(identityQuery(kind: kind, service: service) as CFDictionary) == errSecSuccess
+		SecItemDelete(identityQuery(kind: kind, service: service, accessGroup: nil) as CFDictionary) == errSecSuccess
 	}
 
 	@discardableResult
@@ -215,9 +263,12 @@ enum KeychainStore {
 		if let newPassword {
 			changes[kSecValueData] = Data(newPassword.utf8)
 		}
-		let query = identityQuery(kind: kind, service: service)
+		let query = identityQuery(kind: kind, service: service, accessGroup: accessGroup)
 		let status = SecItemUpdate(query as CFDictionary, changes as CFDictionary)
 		guard status == errSecItemNotFound else {
+			if status == errSecSuccess {
+				removeCopiesOutsideAccessGroup(kind: kind, service: service)
+			}
 			return status == errSecSuccess
 		}
 		guard let newPassword, newPassword.isEmpty == false else {
@@ -229,14 +280,19 @@ enum KeychainStore {
 		 not repeat. Updating the existing item is what the caller asked for,
 		 so a duplicate is a second chance rather than a dropped password. */
 		let addStatus = addItem(name, kind: kind, password: newPassword, service: service)
-		guard addStatus == errSecDuplicateItem else {
-			return addStatus == errSecSuccess
+		let written = switch addStatus {
+		case errSecSuccess: true
+		case errSecDuplicateItem: SecItemUpdate(query as CFDictionary, changes as CFDictionary) == errSecSuccess
+		default: false
 		}
-		return SecItemUpdate(query as CFDictionary, changes as CFDictionary) == errSecSuccess
+		if written {
+			removeCopiesOutsideAccessGroup(kind: kind, service: service)
+		}
+		return written
 	}
 
-	/// Creates the item, reporting the `OSStatus` so a caller can tell a
-	/// collision from a refusal.
+	/// Creates the item in ``accessGroup``, reporting the `OSStatus` so a caller
+	/// can tell a collision from a refusal.
 	@discardableResult
 	static func addItem(
 		_ name: String,
@@ -244,7 +300,7 @@ enum KeychainStore {
 		password: String,
 		service: String
 	) -> OSStatus {
-		var query = identityQuery(kind: kind, service: service)
+		var query = identityQuery(kind: kind, service: service, accessGroup: accessGroup)
 		/* Written once, at creation, and never looked up by: these are the two
 		 attributes Keychain Access lets the user edit. */
 		query[kSecAttrLabel] = name
@@ -255,7 +311,7 @@ enum KeychainStore {
 	}
 
 	static func readPassword(kind: KeychainItemClass, service: String) -> KeychainReadOutcome {
-		var query = identityQuery(kind: kind, service: service)
+		var query = identityQuery(kind: kind, service: service, accessGroup: accessGroup)
 		query[kSecMatchLimit] = kSecMatchLimitOne
 		query[kSecReturnData] = true
 
@@ -270,9 +326,67 @@ enum KeychainStore {
 
 			return .found(password)
 		case errSecItemNotFound:
-			return .missing
+			return migrateFromOtherAccessGroup(kind: kind, service: service)
 		default:
 			return .failed(status)
+		}
+	}
+
+	/** Moves a secret an earlier build stored in another access group into
+	 ``accessGroup``, and reports it.
+
+	 The copy is written before the original is deleted, and the original stays
+	 where it is unless the copy landed: a move that fails halfway leaves the
+	 secret readable from where it was rather than from nowhere. */
+	private static func migrateFromOtherAccessGroup(kind: KeychainItemClass, service: String) -> KeychainReadOutcome {
+		guard let accessGroup else { return .missing }
+
+		var query = identityQuery(kind: kind, service: service, accessGroup: nil)
+		query[kSecMatchLimit] = kSecMatchLimitAll
+		query[kSecReturnAttributes] = true
+		query[kSecReturnData] = true
+
+		var result: CFTypeRef?
+		let status = SecItemCopyMatching(query as CFDictionary, &result)
+		guard status == errSecSuccess else {
+			return status == errSecItemNotFound ? .missing : .failed(status)
+		}
+		let items = result as? [[CFString: Any]] ?? []
+		guard let item = items.first(where: { $0[kSecAttrAccessGroup] as? String != accessGroup }),
+		      let legacyGroup = item[kSecAttrAccessGroup] as? String,
+		      let data = item[kSecValueData] as? Data,
+		      let password = String(data: data, encoding: .utf8)
+		else {
+			return .failed(errSecDecode)
+		}
+
+		let label = item[kSecAttrLabel] as? String ?? service
+		let added = addItem(label, kind: kind, password: password, service: service)
+		if added == errSecSuccess || added == errSecDuplicateItem {
+			SecItemDelete(identityQuery(kind: kind, service: service, accessGroup: legacyGroup) as CFDictionary)
+		}
+
+		return .found(password)
+	}
+
+	/// Deletes every copy of the item that is not in ``accessGroup``.
+	private static func removeCopiesOutsideAccessGroup(kind: KeychainItemClass, service: String) {
+		guard let accessGroup else { return }
+
+		var query = identityQuery(kind: kind, service: service, accessGroup: nil)
+		query[kSecMatchLimit] = kSecMatchLimitAll
+		query[kSecReturnAttributes] = true
+
+		var result: CFTypeRef?
+		guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
+		      let items = result as? [[CFString: Any]]
+		else {
+			return
+		}
+
+		let otherGroups = Set(items.compactMap { $0[kSecAttrAccessGroup] as? String }).subtracting([accessGroup])
+		for group in otherGroups {
+			SecItemDelete(identityQuery(kind: kind, service: service, accessGroup: group) as CFDictionary)
 		}
 	}
 
@@ -281,11 +395,20 @@ enum KeychainStore {
 	/// not hide it from the update that follows — which used to fail as
 	/// `errSecItemNotFound`, then fail again as `errSecDuplicateItem` when the
 	/// add ran, dropping the new password without saying so.
-	private static func identityQuery(kind: KeychainItemClass, service: String) -> [CFString: Any] {
-		[
+	///
+	/// `accessGroup` narrows the query to one group; `nil` reaches every group
+	/// this process is entitled to.
+	private static func identityQuery(
+		kind: KeychainItemClass,
+		service: String,
+		accessGroup: String?
+	) -> [CFString: Any] {
+		var query: [CFString: Any] = [
 			kSecClass: kind.secClass,
 			kSecAttrService: service,
 			kSecUseDataProtectionKeychain: true,
 		]
+		query[kSecAttrAccessGroup] = accessGroup
+		return query
 	}
 }

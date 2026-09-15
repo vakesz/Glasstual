@@ -50,7 +50,8 @@ struct PreferencesTransferTests {
 		#expect(String(data: data.prefix(100), encoding: .utf8)?.contains("<?xml") == true)
 		let decoded = try PreferencesArchive.decode(data)
 		#expect(decoded.values[Preferences.Connection.confirmQuit.name] == true)
-		#expect(decoded.unset.contains(Preferences.LinkSchemes.permitAny.name))
+		#expect(decoded.unset.contains(Preferences.LinkSchemes.permitAny.name) == false)
+		#expect(decoded.values[Preferences.LinkSchemes.permitAny.name] == nil)
 		#expect(decoded.values[Preferences.MainWindow.serverListSelection.name] == nil)
 
 		try await targetSession.prepareImport(from: source.write(data))
@@ -65,7 +66,8 @@ struct PreferencesTransferTests {
 		#expect(try targetSession.liveSnapshot().hasSameConfiguration(as: sourceSession.liveSnapshot()))
 		#expect(target.stores.standard.stringArray(forKey: Preferences.LinkSchemes.permitted.name) == ["test-scheme"])
 		#expect(target.stores.container.object(forKey: Preferences.LinkSchemes.permitted.name) == nil)
-		#expect(target.stores.standard.object(forKey: Preferences.LinkSchemes.permitAny.name) == nil)
+		// Allowing every link scheme is this Mac's own decision, so Restore leaves it.
+		#expect(target.stores.standard.bool(forKey: Preferences.LinkSchemes.permitAny.name))
 		#expect(target.stores.container
 			.string(forKey: Preferences.MainWindow.serverListSelection.name) == "keep this Mac's state")
 		let backup = try #require(targetSession.result?.backup)
@@ -185,13 +187,13 @@ struct PreferencesTransferTests {
 		configuration.identityClientSideCertificate = Data("certificate-reference".utf8)
 		configuration.loginCommands = ["msg NickServ identify secret"]
 		configuration.serverList[0].pendingServerPassword = .set("server-password")
-		configuration.channelList[0].pendingSecretKey = "channel-password"
+		configuration.channelList[0].pendingSecretKey = .set("channel-password")
 		let portable = PreferencesClientArchive.portable(configuration)
 		#expect(portable.pendingNicknamePassword == .unchanged)
 		#expect(portable.pendingProxyPassword == .unchanged)
 		#expect(portable.identityClientSideCertificate == nil)
 		#expect(portable.serverList[0].pendingServerPassword == .unchanged)
-		#expect(portable.channelList[0].pendingSecretKey == nil)
+		#expect(portable.channelList[0].pendingSecretKey == .unchanged)
 
 		/* Connect commands are withheld by removing the key, never by writing an
 		 empty list: an omitted list preserves the target's commands while an
@@ -236,17 +238,17 @@ struct PreferencesTransferTests {
 		#expect(throws: PreferencesTransferError.self) { try PreferencesArchive.decode(futureData) }
 	}
 
-	@Test("Number drafts commit only on explicit completion and reject invalid edits")
+	@Test("Number drafts commit only on explicit completion and report what the store refused")
 	func transientNumberEditing() {
 		var committed = "15000"
 		let key = Preferences.Logging.scrollbackSaveLimit
-		let binding = Binding(get: { committed }, set: { text in
-			if let value = UInt(text),
-			   let plist = value.preferenceObject.flatMap(PropertyListValue.init(propertyList:)),
-			   key.coerce(plist) != nil
-			{
-				committed = String(value)
-			}
+		let field = PreferencesFieldValue(text: { committed }, write: { text in
+			guard let value = UInt(text),
+			      let plist = value.preferenceObject.flatMap(PropertyListValue.init(propertyList:)),
+			      key.coerce(plist) != nil
+			else { return false }
+			committed = String(value)
+			return true
 		})
 		var draft = PreferencesFieldDraft()
 		for input in ["", "1", "12", "123"] {
@@ -254,12 +256,12 @@ struct PreferencesTransferTests {
 			#expect(committed == "15000")
 			#expect(draft.displayed(committed) == input)
 		}
-		draft.commit(to: binding)
+		draft.commit(to: field)
 		#expect(committed == "123")
 		#expect(draft.wasRejected == false)
 		#expect(draft.displayed(committed) == "123")
 		draft.edit("-4")
-		draft.commit(to: binding)
+		draft.commit(to: field)
 		#expect(committed == "123")
 		#expect(draft.wasRejected)
 	}

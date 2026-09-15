@@ -42,7 +42,7 @@ import GlasstualPluginKit
 import os
 
 private nonisolated let clientConfigMigrationLogger = Logger( // nonisolated: let
-	subsystem: "com.vakesz.glasstual",
+	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 	category: "Migration"
 )
 
@@ -208,7 +208,9 @@ nonisolated extension ClientConfig { // nonisolated: value
 			return
 		}
 
-		let port = container.decode(UInt16.self, forKey: .serverPort, aliases: [], default: 0)
+		// Decoded with the standard port as its default: an old configuration
+		// that never wrote one was connecting to that port, not to none.
+		let port = legacyServerPort
 		guard port > 0 else {
 			clientConfigMigrationLogger.debug("Server-list migration cancelled because the stored port is invalid")
 			return

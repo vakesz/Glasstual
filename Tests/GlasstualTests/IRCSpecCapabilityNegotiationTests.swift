@@ -698,10 +698,13 @@ struct IRCSpecCapabilityNegotiationTests {
 	}
 
 	/// sasl-3.2 §"RPL_SASLMECHS": a 908 lists the mechanisms the server will
-	/// accept, and the client retries with one it has not tried yet.
-	@Test("sasl-3.2: 908 drives a retry with an untried mechanism")
+	/// accept and is followed by the 904 for the refused attempt. The 904 is
+	/// what moves the client on, to one it has not tried yet; a retry sent on
+	/// the 908 was ended by the 904 that belonged to the attempt before it.
+	@Test("sasl-3.2: 908 then 904 drives a retry with an untried mechanism")
 	func saslMechanismsNumericDrivesARetry() throws {
 		let client = client(password: "hunter2")
+		defer { client.stopAllTimers() }
 		client.isConnected = true
 		try receive("CAP * LS :sasl=SCRAM-SHA-256,PLAIN", on: client)
 		try receive("CAP me ACK :sasl", on: client)
@@ -709,12 +712,19 @@ struct IRCSpecCapabilityNegotiationTests {
 		#expect(client.saslMechanism == SCRAMClient.mechanismName)
 
 		let mechanisms = try #require(Message(line: ":irc.example.net 908 me PLAIN :Available mechanisms", on: client))
+		let failure = try #require(Message(line: ":irc.example.net 904 me :SASL authentication failed", on: client))
 		try handleAuthentication(mechanisms, on: client)
+		#expect(client.saslMechanism == SCRAMClient.mechanismName)
+		#expect(client.sentLines.contains("AUTHENTICATE PLAIN") == false)
+
+		try handleAuthentication(failure, on: client)
 		#expect(client.saslMechanism == "PLAIN")
 		#expect(client.sentLines.contains("AUTHENTICATE PLAIN"))
+		#expect(client.isCapabilityEnabled(.isInSASLNegotiation))
 		#expect(capabilityCommands(of: client).contains("END") == false)
 
 		try handleAuthentication(mechanisms, on: client)
+		try handleAuthentication(failure, on: client)
 		#expect(client.isCapabilityEnabled(.isInSASLNegotiation) == false)
 		#expect(capabilityCommands(of: client).last == "END")
 	}

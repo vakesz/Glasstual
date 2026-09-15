@@ -33,11 +33,16 @@ private struct PreferencesTransferAlert: ViewModifier {
 	}
 }
 
-/// One setting an import would change, as the Settings window names it.
+/// One setting an import would change, under the name Settings shows it with,
+/// or its stored name when no pane shows it.
 private struct PreferencesChangedSetting: Identifiable {
 	let id: String
-	let displayName: String
+	let displayName: String?
 	let isRemoved: Bool
+
+	var title: String {
+		displayName ?? id
+	}
 }
 
 struct PreferencesTransferPreviewView: View {
@@ -76,6 +81,7 @@ struct PreferencesTransferPreviewView: View {
 			ScrollView {
 				VStack(alignment: .leading, spacing: PreferencesMetrics.spacingMedium) {
 					if let plan {
+						riskyChanges(in: plan)
 						changedSettings(in: plan)
 						clientList(plan.addedClients, title: String(localized: .PreferencesTransfer.serversToAdd))
 						clientList(plan.updatedClients, title: String(localized: .PreferencesTransfer.serversToUpdate))
@@ -96,13 +102,18 @@ struct PreferencesTransferPreviewView: View {
 				Spacer()
 				Button(PromptStrings.Action.cancel) { session.cancelPreview(); dismiss() }
 					.keyboardShortcut(.cancelAction)
-				/* Restoring replaces every preference the file names, so Return
-				 must not do it: only Merge, which adds to what is there, is
-				 safe to bind to the default action. */
+				/* Restore replaces the whole configuration — it resets every
+				 setting the file leaves out and removes every server it does not
+				 list — and a file that adds commands or trusted schemes needs
+				 reading before it is accepted, so Return does neither. Only a
+				 Merge with nothing to review, which writes just the settings and
+				 servers the file carries, is bound to the default action. */
 				Button(preview.mode == .restore ? .PreferencesTransfer.restore : .PreferencesTransfer.merge) {
 					Task { await session.commitPreview() }
 				}
-				.keyboardShortcut(preview.mode == .restore ? nil : .defaultAction)
+				.keyboardShortcut(
+					preview.mode == .merge && plan?.riskyChanges.isEmpty == true ? .defaultAction : nil
+				)
 				.disabled(plan == nil)
 			}
 		}
@@ -118,32 +129,77 @@ struct PreferencesTransferPreviewView: View {
 
 	/** What the import would change, under the names the Settings window uses.
 
-	 A stored key the window never shows has no name worth printing — its
-	 defaults spelling means nothing to the person reading the list — so those
-	 are counted rather than listed. */
+	 A stored key no pane shows is listed under its stored name: it is the only
+	 name it has, and a file someone handed over is exactly where an
+	 unexplained change must not hide inside a count. */
 	@ViewBuilder
 	private func changedSettings(in plan: PreferencesTransferPlan) -> some View {
-		let named = plan.changedKeys
-			.compactMap { name in
-				PreferencesPaneKeys.displayName(forKeyNamed: name).map {
-					PreferencesChangedSetting(
-						id: name,
-						displayName: $0,
-						isRemoved: plan.removedKeys.contains(name)
-					)
-				}
+		let settings = plan.changedKeys
+			.map { name in
+				PreferencesChangedSetting(
+					id: name,
+					displayName: PreferencesPaneKeys.displayName(forKeyNamed: name),
+					isRemoved: plan.removedKeys.contains(name)
+				)
 			}
-			.sorted { $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending }
+			.sorted { first, second in
+				// Named settings first, then stored names, each alphabetically.
+				guard (first.displayName == nil) == (second.displayName == nil) else {
+					return first.displayName != nil
+				}
+				return first.title.localizedCaseInsensitiveCompare(second.title) == .orderedAscending
+			}
 
 		Text(.PreferencesTransfer.preferencesChanged(plan.changedKeys.count))
-		ForEach(named) { setting in
-			Label(setting.displayName, systemImage: setting.isRemoved ? "minus.circle" : "pencil")
-				.font(.caption)
+		ForEach(settings) { setting in
+			Label {
+				if setting.displayName == nil {
+					Text(verbatim: setting.title).monospaced()
+				} else {
+					Text(verbatim: setting.title)
+				}
+			} icon: {
+				Image(systemName: setting.isRemoved ? "minus.circle" : "pencil")
+			}
+			.font(.caption)
 		}
-		if plan.changedKeys.count > named.count {
-			Text(.PreferencesTransfer.otherSettingsChanged(plan.changedKeys.count - named.count))
-				.font(.caption)
-				.foregroundStyle(.secondary)
+	}
+
+	/** The changes that can send commands or widen what is trusted, each with
+	 the content it would bring in, above everything else in the preview. */
+	@ViewBuilder
+	private func riskyChanges(in plan: PreferencesTransferPlan) -> some View {
+		if plan.riskyChanges.isEmpty == false {
+			VStack(alignment: .leading, spacing: PreferencesMetrics.spacingSmall) {
+				Label(.PreferencesTransfer.reviewBeforeImporting, systemImage: "exclamationmark.triangle.fill")
+					.font(.headline)
+					.foregroundStyle(.orange)
+				Text(.PreferencesTransfer.riskyChangesNotice)
+					.font(.callout)
+				ForEach(plan.riskyChanges, id: \.self) { change in
+					Text(verbatim: Self.description(of: change))
+						.font(.callout.monospaced())
+						.textSelection(.enabled)
+				}
+			}
+			.padding(PreferencesMetrics.spacingMedium)
+			.frame(maxWidth: .infinity, alignment: .leading)
+			.background(.orange.opacity(0.12), in: .rect(cornerRadius: PreferencesMetrics.spacingMedium))
+		}
+	}
+
+	private static func description(of change: PreferencesRiskyChange) -> String {
+		switch change {
+		case let .chatFilterAction(title, action):
+			String(localized: .PreferencesTransfer.riskyChatFilterAction(title, action))
+		case let .linkSchemes(schemes):
+			String(localized: .PreferencesTransfer.riskyLinkSchemes(schemes.formatted(.list(type: .and))))
+		case .developerMode:
+			String(localized: .PreferencesTransfer.riskyDeveloperMode)
+		case let .ctcpVersionReply(reply):
+			String(localized: .PreferencesTransfer.riskyCtcpVersionReply(reply))
+		case let .connectCommands(server, commands):
+			String(localized: .PreferencesTransfer.riskyConnectCommands(server, commands.joined(separator: "\n")))
 		}
 	}
 

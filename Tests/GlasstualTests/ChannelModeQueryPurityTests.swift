@@ -44,7 +44,7 @@ struct ChannelModeQueryPurityTests {
 			_ = modes.modeInfo(for: symbol)
 		}
 
-		#expect(channelMode.changeCommand(for: modes) == "")
+		#expect(channelMode.changeGroups(for: modes).isEmpty)
 	}
 
 	@Test("A mode set after being queried still produces an add command")
@@ -55,6 +55,6 @@ struct ChannelModeQueryPurityTests {
 		_ = modes.modeInfo(for: "k")
 		modes.changeMode("k", modeIsSet: true, modeParameter: "secret")
 
-		#expect(channelMode.changeCommand(for: modes) == "+k secret")
+		#expect(channelMode.changeGroups(for: modes) == [ModeChangeGroup(symbols: "+k", parameters: ["secret"])])
 	}
 }

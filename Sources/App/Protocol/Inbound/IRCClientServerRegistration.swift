@@ -77,8 +77,7 @@ public extension IRCClient {
 		saslScramClient = nil
 		saslIncomingPayload = nil
 		saslTriedMechanisms.removeAll()
-		pendingDeliveries.values.forEach { $0.timeoutTask?.cancel() }
-		pendingDeliveries.removeAll()
+		failPendingDeliveriesForDisconnect()
 		NotificationCenter.default.post(name: .ircClientCapabilitiesDidChange, object: self)
 	}
 

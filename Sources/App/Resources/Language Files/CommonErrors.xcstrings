@@ -4,10 +4,17 @@
     "internet-port-invalid" : {
       "comment" : "Validation error for an invalid internet port. Migrated from legacy key l0c-nb.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Enter a whole number between 1 and 65,535." } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter a whole number between 1 and 65,535."
+          }
+        }
+      }
     },
     "maximum-length" : {
-      "comment" : "Validation error for text exceeding a maximum length. The argument is the maximum character count. Migrated from legacy key 2cb-af.",
+      "comment" : "Validation error for text too long to send over IRC, such as a disconnect message in the server properties Messages pane. The argument is the maximum length in bytes of UTF-8, which is what the IRC protocol limits. Migrated from legacy key 2cb-af.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -16,13 +23,13 @@
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Maximum length is %ld character."
+                  "value" : "Maximum length is %ld byte."
                 }
               },
               "other" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Maximum length is %ld characters."
+                  "value" : "Maximum length is %ld bytes."
                 }
               }
             }
@@ -33,17 +40,50 @@
     "nickname-invalid" : {
       "comment" : "Validation error for an invalid IRC nickname. Migrated from legacy key och-j5.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "A nickname can contain letters, digits and - [ ] \\ ` _ ^ { | } and cannot start with a digit." } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A nickname can contain letters, digits and - [ ] \\ ` _ ^ { | } and cannot start with a digit."
+          }
+        }
+      }
+    },
+    "real-name-invalid" : {
+      "comment" : "Validation error shown beside the real name field, in the server properties Identity pane and on the onboarding identity step, when the name is empty or spans more than one line. Legacy key: agy-bp.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter a real name on one line."
+          }
+        }
+      }
     },
     "server-address-invalid" : {
       "comment" : "Validation error for an invalid IRC server address. Migrated from legacy key yyx-l3.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Enter a host name such as irc.libera.chat, or pick a network from the list." } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter a host name such as irc.libera.chat, or pick a network from the list."
+          }
+        }
+      }
     },
     "single-line-required" : {
       "comment" : "Validation error for text containing more than one line. Migrated from legacy key gas-v8.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Cannot contain more than one line." } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cannot contain more than one line."
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

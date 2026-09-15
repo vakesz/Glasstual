@@ -43,6 +43,12 @@ nonisolated enum ConnectionSafetyStrings { // nonisolated: value
 		}
 	}
 
+	enum Credentials {
+		static var withheldOverPlaintext: String {
+			String(localized: .ConnectionSafety.credentialsWithheldOverPlaintext)
+		}
+	}
+
 	enum SASL {
 		static var credentialsContainNullCharacter: String {
 			String(localized: .ConnectionSafety.saslCredentialsContainANullCharacter)

@@ -121,10 +121,27 @@ nonisolated struct TranscriptProjectionState: Sendable { // nonisolated: value
 	/// What ``recentResults`` holds, so a duplicate check is an answer rather
 	/// than a walk.
 	private var recentLineNumbers: Set<String> = []
+	/// How many retained rows carry each message identifier.
+	private var recentMessageIdentifiers: [String: Int] = [:]
+	/// Message identifiers no retained row carries any longer, since the owner
+	/// last took them.
+	private var retiredMessageIdentifiers: [String] = []
 	private var pendingResults: [LogLineRenderResult] = []
 
 	func containsLine(withIdentifier identifier: String) -> Bool {
 		recentLineNumbers.contains(identifier)
+	}
+
+	/// Whether a retained row carries `identifier` as its message identifier.
+	func containsMessage(withIdentifier identifier: String) -> Bool {
+		recentMessageIdentifiers[identifier] != nil
+	}
+
+	/// The message identifiers that left with trimmed rows, for state kept per
+	/// message that has nothing left to belong to.
+	mutating func takeRetiredMessageIdentifiers() -> [String] {
+		defer { retiredMessageIdentifiers.removeAll() }
+		return retiredMessageIdentifiers
 	}
 
 	var lineCount: Int {
@@ -145,10 +162,16 @@ nonisolated struct TranscriptProjectionState: Sendable { // nonisolated: value
 		 twice. It is rare enough to be worth a walk when it happens, and the
 		 set above is what keeps the common case from walking at all. */
 		if recentLineNumbers.contains(result.lineNumber) {
+			for retired in recentResults where retired.lineNumber == result.lineNumber {
+				releaseMessage(of: retired)
+			}
 			recentResults.removeAll { $0.lineNumber == result.lineNumber }
 		}
 		recentResults.append(result)
 		recentLineNumbers.insert(result.lineNumber)
+		if let identifier = result.transcriptLine.messageIdentifier {
+			retainMessage(identifier)
+		}
 		trimToCapacity()
 
 		switch phase {
@@ -183,17 +206,14 @@ nonisolated struct TranscriptProjectionState: Sendable { // nonisolated: value
 		return pending
 	}
 
-	mutating func becomeDormant() {
-		phase = .dormant
-		pendingResults.removeAll(keepingCapacity: true)
-	}
-
 	mutating func reset() {
 		phase = .dormant
 		mark = .none
 		deliveryUpdates.removeAll()
 		recentResults.removeAll()
 		recentLineNumbers.removeAll()
+		recentMessageIdentifiers.removeAll()
+		retiredMessageIdentifiers.removeAll()
 		pendingResults.removeAll()
 	}
 
@@ -221,7 +241,17 @@ nonisolated struct TranscriptProjectionState: Sendable { // nonisolated: value
 		guard recentLineNumbers.contains(lineNumber) else {
 			return
 		}
+		/* An acknowledgement is where an outgoing line first learns its
+		 message identifier, so the identifier the update names counts as one
+		 the row carries. */
+		let previous = deliveryUpdates[lineNumber]?.messageIdentifier
 		deliveryUpdates[lineNumber] = update
+		if let messageIdentifier, messageIdentifier != previous {
+			retainMessage(messageIdentifier)
+			if let previous {
+				releaseMessage(previous)
+			}
+		}
 	}
 
 	private mutating func trimToCapacity() {
@@ -229,11 +259,34 @@ nonisolated struct TranscriptProjectionState: Sendable { // nonisolated: value
 			return
 		}
 		let removalCount = recentResults.count - capacity
-		let removedLineNumbers = recentResults.prefix(removalCount).map(\.lineNumber)
+		let removed = recentResults.prefix(removalCount)
+		for result in removed {
+			recentLineNumbers.remove(result.lineNumber)
+			if let acknowledged = deliveryUpdates.removeValue(forKey: result.lineNumber)?.messageIdentifier {
+				releaseMessage(acknowledged)
+			}
+			releaseMessage(of: result)
+		}
 		recentResults.removeFirst(removalCount)
-		for lineNumber in removedLineNumbers {
-			recentLineNumbers.remove(lineNumber)
-			deliveryUpdates.removeValue(forKey: lineNumber)
+	}
+
+	private mutating func releaseMessage(of result: LogLineRenderResult) {
+		if let identifier = result.transcriptLine.messageIdentifier {
+			releaseMessage(identifier)
+		}
+	}
+
+	private mutating func retainMessage(_ identifier: String) {
+		recentMessageIdentifiers[identifier, default: 0] += 1
+	}
+
+	private mutating func releaseMessage(_ identifier: String) {
+		guard let count = recentMessageIdentifiers[identifier] else { return }
+		if count <= 1 {
+			recentMessageIdentifiers.removeValue(forKey: identifier)
+			retiredMessageIdentifiers.append(identifier)
+		} else {
+			recentMessageIdentifiers[identifier] = count - 1
 		}
 	}
 }

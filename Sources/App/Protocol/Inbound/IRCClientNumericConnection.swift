@@ -55,7 +55,7 @@ extension IRCClient {
 		case .isupport:
 			handleISupportNumeric(message, shouldPrint: shouldPrint)
 		case .redir:
-			handleRedirectNumeric(message)
+			handleRedirectNumeric(message, shouldPrint: shouldPrint)
 		case .localusers, .globalusers:
 			guard shouldPrint else { return }
 			let text = message.params.count == 4 ? message.sequence(3) : message.sequence
@@ -135,7 +135,22 @@ extension IRCClient {
 		}
 	}
 
-	private func handleRedirectNumeric(_ message: Message) {
+	/** `RPL_BOUNCE`: the server is full and names another to try.
+
+	 It is only a redirect while registration is still under way; after 001 the
+	 client has a session worth keeping, and a numeric sent then is shown rather
+	 than obeyed. The next connection is as encrypted as this one was meant to
+	 be, whatever port the server named: a redirect is server-controlled input,
+	 and one that could turn TLS off would hand the credentials sent at
+	 registration to whoever answers in clear. A plaintext port refuses the
+	 handshake, which is the right outcome for that server. */
+	private func handleRedirectNumeric(_ message: Message, shouldPrint: Bool) {
+		guard isLoggedIn == false else {
+			if shouldPrint {
+				printReply(message)
+			}
+			return
+		}
 		guard message.params.count == 4 else { return }
 		let serverAddress = message.params[1]
 		let serverPort = message.params[2]
@@ -149,7 +164,13 @@ extension IRCClient {
 		}
 		/* Assign the overrides inside the callback so the redirect stays atomic: if
 		 disconnect() finds nothing to close, nothing is left half-applied. */
-		let endpoint = PendingIRCEndpoint(host: serverAddress, port: port, origin: server, reason: .serverRedirect)
+		let endpoint = PendingIRCEndpoint(
+			host: serverAddress,
+			port: port,
+			secured: sessionPrefersSecuredConnection,
+			origin: server,
+			reason: .serverRedirect
+		)
 		addDisconnectCallback { [weak self] in
 			guard let self else { return }
 			pendingEndpoint = endpoint

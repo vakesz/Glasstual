@@ -129,14 +129,42 @@ extension LogView {
 		if clip.bounds.width > 0, textView.frame.width != clip.bounds.width {
 			textView.setFrameSize(NSSize(width: clip.bounds.width, height: textView.frame.height))
 		}
-		if let layoutManager = textView.textLayoutManager {
-			layoutManager.ensureLayout(for: layoutManager.documentRange)
-		}
+		ensureLayoutForTail()
 		textView.sizeToFit()
 		let insets = scrollView.contentInsets
 		let targetY = textView.frame.maxY + insets.bottom - clip.bounds.height
 		clip.scroll(to: NSPoint(x: clip.bounds.origin.x, y: max(-insets.top, targetY)))
 		scrollView.reflectScrolledClipView(clip)
+		noteViewportMovedByView()
+	}
+
+	/** Lays out the end of the document, which is the part a scroll to the end
+	 lands in.
+
+	 TextKit 2 lays out on demand and estimates the height of what it has not
+	 reached, so the rest of a long scrollback is left to the viewport as it
+	 comes into view. Laying out the whole document here made every appended
+	 batch cost the entire transcript; the estimate it refines later moves the
+	 document's height, which ``documentHeightDidChange()`` already follows. */
+	func ensureLayoutForTail() {
+		guard let layoutManager = textView.textLayoutManager,
+		      let contentManager = layoutManager.textContentManager,
+		      let lastStart = lineStarts.dropLast().last,
+		      let tailStart = contentManager.location(contentManager.documentRange.location, offsetBy: lastStart),
+		      let tail = NSTextRange(location: tailStart, end: contentManager.documentRange.endLocation)
+		else { return }
+		layoutManager.ensureLayout(for: tail)
+	}
+
+	/** Records a scroll this view made itself as the place the reader already is.
+
+	 The clip's bounds notifications arrive on a later turn and cannot say who
+	 moved the viewport, and only a reader moving towards the top asks for
+	 history. Keeping an edit's own scroll — text trimmed or inserted above the
+	 viewport, a rebuild, a restored anchor — from reading as that is what stops
+	 a prepend or a trim from fetching the next page on the reader's behalf. */
+	func noteViewportMovedByView() {
+		lastVisibleTop = scrollView.contentView.bounds.minY
 	}
 
 	/** Runs a find command on the transcript's own find bar.

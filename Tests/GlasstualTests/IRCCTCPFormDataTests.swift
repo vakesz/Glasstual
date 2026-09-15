@@ -36,6 +36,7 @@
  *
  *********************************************************************** */
 
+import Foundation
 @testable import Glasstual
 import Testing
 
@@ -59,5 +60,51 @@ struct IRCCTCPFormDataTests {
 	@Test
 	func valuesMayContainTheSeparator() {
 		#expect(IRCCTCPPolicy.formData("time=1=2") == ["time": "1=2"])
+	}
+
+	/// `/mylag` names the channel to answer in, and a channel name is made of
+	/// the characters a form escapes: `#`, and `&` for a local channel. Read
+	/// back undecoded, `%23chat` named no channel and the reply went nowhere.
+	@Test("A form written by the client reads back to the same fields", arguments: [
+		"#chat", "&local", "#a=b+c&d", "#ünïcode", "#100%",
+	])
+	func encodedFormRoundTrips(channelName: String) {
+		let payload = IRCCTCPPolicy.formEncoded([
+			(key: "connection", value: "abc-123"),
+			(key: "channel", value: channelName),
+		])
+
+		#expect(IRCCTCPPolicy.formData(payload) == ["connection": "abc-123", "channel": channelName])
+	}
+
+	/// `/lag` queries the client itself, so with echo-message the copy the
+	/// server sends back is the only one — and it was set aside with the echoes
+	/// of queries sent to other people.
+	@Test("A lag check answered through echo-message replies in the channel it names")
+	func lagCheckIsReadThroughEchoMessage() throws {
+		let client = TestClient(configDictionary: ["nickname": "me", "username": "user"])
+		let connection = Connection(config: IRCConnectionConfig(), onClient: client)
+		client.socket = connection
+		client.markAsLoggedIn()
+		client.enableCapability(.echoMessage)
+		let channel = try #require(client.findChannelOrCreate("#chat"))
+		channel.activate()
+
+		let payload = IRCCTCPPolicy.formEncoded([
+			(key: "connection", value: connection.uniqueIdentifier),
+			(key: "time", value: String(Date().timeIntervalSince1970)),
+			(key: "channel", value: "#chat"),
+		])
+		let message = try #require(Message(line: ":me!user@example.org PRIVMSG me :\u{01}LAGCHECK \(payload)\u{01}", on: client))
+
+		client.receiveCTCPQuery(message, text: "LAGCHECK \(payload)")
+
+		let sent = client.sentLines.compactMap { $0 as? String }
+		#expect(sent.contains { $0.hasPrefix("PRIVMSG #chat :") })
+	}
+
+	@Test("A field with invalid percent-encoding is dropped")
+	func invalidPercentEncodingIsDropped() {
+		#expect(IRCCTCPPolicy.formData("a=%zz&b=2") == ["b": "2"])
 	}
 }

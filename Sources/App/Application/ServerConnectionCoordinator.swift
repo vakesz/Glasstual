@@ -192,13 +192,19 @@ enum ServerConnectionCoordinator {
 		createConnection: @MainActor (ServerConnectionRequest) -> Void = createClient
 	) {
 		var existingClient: IRCClient?
-		if request.options.mergeConnectionIfPossible, request.channels.isEmpty == false {
+		/* Whether or not the link names a channel. A link to a server alone
+		 used to skip this, so every one added another saved copy of a server
+		 the reader already had. */
+		if request.options.mergeConnectionIfPossible {
 			existingClient = (clients ?? ClientEnvironment.shared.world?.clientList ?? []).first {
 				canReuse($0, for: request)
 			}
 		}
 
-		if let matchedClient = existingClient {
+		/* The question is about adding channels to that connection. With no
+		 channel to add there is nothing to ask, and the existing connection is
+		 the one the link means. */
+		if let matchedClient = existingClient, request.channels.isEmpty == false {
 			switch confirmMerge(matchedClient, request.serverAddress, request.channels) {
 			case .useExisting: break
 			case .createNew: existingClient = nil
@@ -251,6 +257,9 @@ enum ServerConnectionCoordinator {
 		client.world?.save()
 		if request.options.selectFirstChannelAdded, let firstChannel {
 			client.output?.select(firstChannel)
+		} else if request.channels.isEmpty {
+			/* A link to the server alone opens that server. */
+			client.output?.select(client)
 		}
 	}
 

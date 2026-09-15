@@ -1,6 +1,7 @@
-# GitHub's Xcode 27 hosted runner is newer than actionlint 1.7.12's built-in
-# label catalogue. Declaring it here teaches actionlint the valid label; the
-# workflow still uses GitHub's hosted runner, not a repository runner.
+# `xcode-27` is a GitHub-hosted arm64 macOS runner label, in public preview
+# as of September 2026. actionlint 1.7.12 does not know it yet, so this file
+# declares it. The workflows still run on GitHub's hosted runner, and this
+# repository has no self-hosted runners.
 self-hosted-runner:
   labels:
     - xcode-27

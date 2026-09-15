@@ -61,4 +61,7 @@ nonisolated struct TranscriptRenderOptions: Sendable { // nonisolated: value
 	var excludedKeywords: [String] = []
 	/// The preference facts the render needs, taken on the main actor.
 	var textPolicy = TranscriptTextPolicy()
+	/// The server's casemapping, under which a keyword that is somebody's name
+	/// matches every spelling of it.
+	var caseMapping = IRCISupportInfoCaseMapping.rfc1459
 }

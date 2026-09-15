@@ -12,17 +12,17 @@
 
 import SwiftUI
 
+/// The toggle writes through the host's preference store, whose change
+/// notification is what the plugin re-evaluates sleep from.
 struct CaffeinePreferencesView: View {
 	@AppStorage private var preventSleep: Bool
-	let onPreferenceChange: () -> Void
 
-	init(defaults: UserDefaults, onPreferenceChange: @escaping () -> Void) {
+	init(defaults: UserDefaults) {
 		_preventSleep = AppStorage(
 			wrappedValue: FirstPartyPluginPreferences.caffeinePreventSleep.defaultValue,
 			FirstPartyPluginPreferences.caffeinePreventSleep.name,
 			store: defaults
 		)
-		self.onPreferenceChange = onPreferenceChange
 	}
 
 	var body: some View {
@@ -41,8 +41,5 @@ struct CaffeinePreferencesView: View {
 			}
 		}
 		.formStyle(.grouped)
-		.onChange(of: preventSleep) { _, _ in
-			onPreferenceChange()
-		}
 	}
 }

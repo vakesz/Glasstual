@@ -29,6 +29,30 @@ private actor HistoryOperationGate {
 	}
 }
 
+/// Counts the saves the store makes once a test has started listening, and
+/// lets the test wait for the first of them.
+private actor SaveSignal {
+	private var listening = false
+	private var saves = 0
+	private var waiting: CheckedContinuation<Void, Never>?
+
+	func listen() {
+		listening = true
+	}
+
+	func record() {
+		guard listening else { return }
+		saves += 1
+		waiting?.resume()
+		waiting = nil
+	}
+
+	func firstSave() async {
+		guard saves == 0 else { return }
+		await withCheckedContinuation { waiting = $0 }
+	}
+}
+
 @MainActor
 @Suite("Historic store transactions", .serialized)
 struct HistoricLogTransactionTests {
@@ -110,6 +134,46 @@ struct HistoricLogTransactionTests {
 		#expect(await store.fetchOutcome(.newestEntries(forView: "view", fetchLimit: 10)).entries
 			.map(\.uniqueIdentifier) == ["admitted"])
 		await store.close()
+	}
+
+	@Test("A close that fails to save leaves the store saving on its own again", .timeLimit(.minutes(1)))
+	func failedCloseRearmsPeriodicSaves() async throws {
+		let directory = try directory()
+		defer { try? FileManager.default.removeItem(at: directory) }
+		let context = try HistoricLogDatabase.makeStack(at: directory.appendingPathComponent("history.sqlite"))
+		let signal = SaveSignal()
+		let store = HistoricLogStore(
+			filenameStore: HistoricLogFilenameFixture(),
+			makeStack: { _ in context },
+			saveInterval: .milliseconds(20),
+			willPerform: { operation in
+				if case .save = operation {
+					await signal.record()
+				}
+			}
+		)
+		#expect(await store.openDatabase(inDirectory: directory.path).isOpen)
+		let row = entry("pending")
+		/* Inserted and made invalid in one block on the context's queue, so no
+		 periodic save can land between the two and store the row. */
+		try await context.perform {
+			HistoricLogDatabase.insert(row, in: context, entryIdentifier: 1)
+			let inserted = try #require(context.insertedObjects.first)
+			inserted.setValue(nil, forKey: HistoricLogAttribute.sessionIdentifier.rawValue)
+		}
+		if case .failed = await store.close() {} else {
+			Issue.record("Close unexpectedly saved an invalid row")
+		}
+		await signal.listen()
+		await signal.firstSave()
+		try await context.perform {
+			let inserted = try #require(context.insertedObjects.first)
+			inserted.setValue(
+				NSNumber(value: row.sessionIdentifier),
+				forKey: HistoricLogAttribute.sessionIdentifier.rawValue
+			)
+		}
+		#expect(await store.close() == .saved)
 	}
 
 	@Test("Failed save, deletion and close retain the accepted archive for repair")

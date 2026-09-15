@@ -148,7 +148,7 @@ nonisolated enum ServerPropertiesStrings { // nonisolated: value
 	/// The network list a new connection sheet opens on.
 	enum Template {
 		static var title: String {
-			String(localized: .TDCServerPropertiesSheet.templatePickerTitle)
+			String(localized: .TDCServerPropertiesSheet.chooseNetworkTitle)
 		}
 
 		static var help: String {
@@ -440,10 +440,6 @@ nonisolated enum ServerPropertiesStrings { // nonisolated: value
 	enum Validation {
 		static var invalidUsername: String {
 			String(localized: .TDCServerPropertiesSheet.pleaseEnterAProperlyFormattedUsername)
-		}
-
-		static var invalidRealName: String {
-			String(localized: .TDCServerPropertiesSheet.pleaseEnterAProperlyFormattedReal)
 		}
 
 		static var invalidProxyAddress: String {

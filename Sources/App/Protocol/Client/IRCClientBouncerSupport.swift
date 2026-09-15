@@ -54,8 +54,11 @@ public extension IRCClient {
 		isConnectedToZNC && nickname.hasPrefix(IRCServerQuirks.ZNC.modulePrefix)
 	}
 
+	/// Folded the way the server folds nicknames, so `*Status` and `*status`
+	/// name the same module.
 	func nickname(_ nickname: String, isZNCUser zncNickname: String) -> Bool {
-		nickname == nicknameAsZNCUser(zncNickname)
+		guard let moduleNickname = nicknameAsZNCUser(zncNickname) else { return false }
+		return casefoldNickname(nickname) == casefoldNickname(moduleNickname)
 	}
 
 	func nicknameAsZNCUser(_ nickname: String) -> String? {

@@ -36,7 +36,6 @@ public protocol ServerPropertiesSheetDelegate: AnyObject {
 	func serverPropertiesSheet(_ sender: ServerPropertiesSheet, onOk config: ClientConfig)
 }
 
-@objc(TDCServerPropertiesSheet)
 @MainActor
 public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 	AddressBookSheetDelegate, ChannelPropertiesSheetDelegate, HighlightEntrySheetDelegate,
@@ -69,7 +68,6 @@ public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 		super.init(window: nil)
 		installSheet()
 		addConfigurationDidChangeObserver()
-		updateClientCertificateDetails()
 	}
 
 	private func installSheet() {
@@ -128,8 +126,6 @@ public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 		case .default: .general
 		case .addressBook, .newIgnoreEntry, .editIgnoreEntry: .addressBook
 		}
-		// The sheet's keychain secrets are read once, when it opens.
-		model.loadSecrets()
 		startSheet()
 
 		switch destination {
@@ -276,10 +272,6 @@ public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 		model.selectedAddressBookEntryID = entry.uniqueIdentifier
 	}
 
-	private func updateClientCertificateDetails() {
-		model.loadCertificate()
-	}
-
 	/// Copies the command that registers the fingerprint with NickServ, which
 	/// is what the button beside a fingerprint has always put on the pasteboard
 	/// — the button used to say only "Copy".
@@ -290,7 +282,6 @@ public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 
 	private func resetCertificate() {
 		model.config.identityClientSideCertificate = nil
-		updateClientCertificateDetails()
 	}
 
 	private func chooseCertificate() {
@@ -342,7 +333,6 @@ public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 		      let reference = result as? Data else { return }
 		model.config.identityClientSideCertificate = reference
 		model.primaryServerIsSecured = true
-		updateClientCertificateDetails()
 	}
 
 	private func addConfigurationDidChangeObserver() {
@@ -375,7 +365,6 @@ public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 			guard outcome.response == .alternate, let self else { return }
 			client.updateStoredConfiguration()
 			model.replace(with: client.config)
-			updateClientCertificateDetails()
 		}
 	}
 

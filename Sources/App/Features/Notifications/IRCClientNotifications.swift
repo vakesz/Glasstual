@@ -39,6 +39,7 @@
 import AppKit
 import CocoaExtensions
 import Foundation
+import UserNotifications
 
 public extension IRCClient {
 	private func formatSpokenNotification(
@@ -177,12 +178,9 @@ public extension IRCClient {
 
 	@MainActor
 	private func normalizedSpeechText(_ text: String?) -> String? {
-		guard var text else { return nil }
-		text = text.trimmingCharacters(in: .whitespacesAndNewlines)
-		if !Preferences.Messages.removeAllFormatting.value {
-			text = (text as NSString).stripIRCEffects
-		}
-		return text
+		guard let text else { return nil }
+		// Speech reads plain text whatever the transcript shows.
+		return (text.trimmingCharacters(in: .whitespacesAndNewlines) as NSString).stripIRCEffects
 	}
 
 	@MainActor
@@ -209,7 +207,7 @@ public extension IRCClient {
 	) {
 		let resolvedTarget = target ?? self
 		let channel = resolvedTarget as? Channel
-		guard SharedApplication.sharedNotificationController().speakEvent(event, in: channel) else { return }
+		guard NotificationEventSettings.speaks(event, in: channel) else { return }
 		var notification = SpokenNotification(
 			notificationType: event,
 			lineType: lineType,
@@ -234,7 +232,7 @@ public extension IRCClient {
 	 Returns whether the event was answered — `false` only where the event is
 	 discarded outright, which is what tells the caller nothing was shown. */
 	@MainActor
-	func notifyEvent(
+	internal func notifyEvent(
 		_ event: NotificationEvent,
 		lineType: LogLineType,
 		target: Channel? = nil,
@@ -257,9 +255,9 @@ public extension IRCClient {
 		}
 
 		let controller = SharedApplication.sharedNotificationController()
-		if controller.bounceDockIcon(forEvent: event, in: target) {
+		if NotificationEventSettings.bouncesDockIcon(for: event, in: target) {
 			let requestType: NSApplication.RequestUserAttentionType =
-				controller.bounceDockIconRepeatedly(forEvent: event, in: target)
+				NotificationEventSettings.bouncesDockIconRepeatedly(for: event, in: target)
 					? .criticalRequest
 					: .informationalRequest
 			NSApp.requestUserAttention(requestType)
@@ -277,7 +275,7 @@ public extension IRCClient {
 		)
 
 		let soundIsMuted = Preferences.Notifications.soundIsMuted.value
-		let soundName = soundIsMuted ? nil : controller.sound(forEvent: event, in: target)
+		let soundName = soundIsMuted ? nil : NotificationEventSettings.sound(for: event, in: target)
 		let soundPlayback = IRCNotificationPolicy.soundPlayback(
 			soundName: soundName,
 			isMuted: soundIsMuted,
@@ -289,27 +287,36 @@ public extension IRCClient {
 		 and the notification is posted silent. */
 		let notificationSound = soundPlayback == .withNotification ? soundName : nil
 
+		let userInfo = suppliedUserInfo ?? IRCNotificationPolicy.notificationUserInfo(
+			clientIdentifier: uniqueIdentifier,
+			channelIdentifier: target?.uniqueIdentifier,
+			queryName: target?.isPrivateMessage == true ? target?.name : nil
+		)
+		let postsNotification = !onlySpeak && IRCNotificationPolicy.shouldPostUserNotification(
+			event: event,
+			notificationEnabled: NotificationEventSettings.isEnabled(event, in: target),
+			postWhileFocused: postWhileFocused,
+			mainWindowIsFocused: mainWindowIsFocused,
+			disabledWhileAway: NotificationEventSettings.isDisabledWhileAway(event, in: target),
+			userIsAway: userIsAway
+		)
+		/* Only the first alert of a burst in one conversation interrupts. The
+		 notifications after it are posted quietly and the application plays no
+		 sound for them. An event that neither posts nor plays a sound does not
+		 start a burst. */
+		let alerts = postsNotification || soundPlayback == .byApplication
+			? controller.claimsAlert(inThread: userInfo.threadIdentifier)
+			: true
+
 		if !soundIsMuted {
-			if soundPlayback == .byApplication, let soundName {
+			if soundPlayback == .byApplication, alerts, let soundName {
 				SoundPlayer.playAlertSound(soundName)
 			}
 			speakEvent(event, lineType: lineType, target: target, nickname: nickname, text: text)
 		}
 
-		guard !onlySpeak else { return true }
-		guard IRCNotificationPolicy.shouldPostUserNotification(
-			event: event,
-			notificationEnabled: controller.notificationEnabled(forEvent: event, in: target),
-			postWhileFocused: postWhileFocused,
-			mainWindowIsFocused: mainWindowIsFocused,
-			disabledWhileAway: controller.disabledWhileAway(forEvent: event, in: target),
-			userIsAway: userIsAway
-		) else { return true }
+		guard postsNotification else { return true }
 
-		let userInfo = suppliedUserInfo ?? IRCNotificationPolicy.notificationUserInfo(
-			clientIdentifier: uniqueIdentifier,
-			channelIdentifier: target?.uniqueIdentifier
-		)
 		guard let content = notificationContent(
 			for: event,
 			lineType: lineType,
@@ -322,9 +329,10 @@ public extension IRCClient {
 			title: content.title,
 			subtitle: content.subtitle,
 			body: content.body,
-			sound: notificationSound,
+			sound: alerts ? notificationSound : nil,
 			userInfo: userInfo,
-			categoryIdentifier: NotificationController.categoryIdentifier(for: event)
+			category: NotificationCategory(event: event),
+			interruptionLevel: alerts ? IRCNotificationPolicy.interruptionLevel(for: event) : .passive
 		)
 
 		return true

@@ -75,9 +75,6 @@ nonisolated enum ClientConfigDefaults { // nonisolated: value
 
 		return min(max(value, 0), maximumAutojoinConnectCommandDelay)
 	}
-
-	/// Networks that rate-limit hard enough to need the reduced flood settings.
-	static let rateLimitedServerSuffix = ".freenode.net"
 }
 
 /** Everything one IRC connection is configured with.
@@ -316,7 +313,7 @@ nonisolated extension ClientConfig { // nonisolated: value
 	 measures against the standard defaults, so a reduced value is written out
 	 verbatim and survives the round trip. */
 	var usesRateLimitedFloodControl: Bool {
-		serverList.contains { $0.serverAddress.hasSuffix(ClientConfigDefaults.rateLimitedServerSuffix) }
+		serverList.contains { $0.serverAddress.hasSuffix(IRCServerQuirks.rateLimitedServerSuffix) }
 	}
 
 	/// Moves a configuration still sitting on the standard defaults onto the

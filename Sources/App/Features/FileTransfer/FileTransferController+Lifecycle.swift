@@ -93,8 +93,9 @@ extension FileTransferController {
 
 	func peerNicknameChanged(_ notification: Notification) {
 		guard let oldNickname = notification.userInfo?["oldNickname"] as? String,
-		      peerNickname == oldNickname,
-		      let newNickname = notification.userInfo?["newNickname"] as? String
+		      let newNickname = notification.userInfo?["newNickname"] as? String,
+		      let client,
+		      client.supportInfo.casefoldString(peerNickname) == client.supportInfo.casefoldString(oldNickname)
 		else {
 			return
 		}
@@ -115,7 +116,7 @@ extension FileTransferController {
 		) as NSObjectProtocol
 	}
 
-	private func releaseOwnedFile() {
+	func releaseOwnedFile() {
 		guard let file = ownedFile else { return }
 		ownedFile = nil
 		enqueueStop { await file.close() }

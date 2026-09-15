@@ -13,6 +13,41 @@ nonisolated struct PreferencesRecoveryBackup: Identifiable, Equatable, Sendable 
 	}
 }
 
+/** The owner-only folder recovery files are written into.
+
+ Every file lands whole or not at all: it is written to a hidden temporary
+ file that is already private, flushed, and only then moved into place. */
+nonisolated struct PreferencesProtectedFolder: Sendable { // nonisolated: value
+	let url: URL
+
+	func write(_ data: Data, named name: String) throws -> URL {
+		let files = FileManager.default
+		try files.createDirectory(at: url, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
+		guard try files.attributesOfItem(atPath: url.path)[.type] as? FileAttributeType == .typeDirectory else {
+			throw CocoaError(.fileWriteNoPermission)
+		}
+		try files.setAttributes([.posixPermissions: 0o700], ofItemAtPath: url.path)
+		let destination = url.appendingPathComponent(name)
+		let temporary = url.appendingPathComponent(".\(UUID().uuidString).tmp")
+		guard files.createFile(atPath: temporary.path, contents: nil, attributes: [.posixPermissions: 0o600]) else {
+			throw CocoaError(.fileWriteUnknown)
+		}
+		defer { try? files.removeItem(at: temporary) }
+		try files.setAttributes([.posixPermissions: 0o600], ofItemAtPath: temporary.path)
+		let handle = try FileHandle(forWritingTo: temporary)
+		do {
+			try handle.write(contentsOf: data)
+			try handle.synchronize()
+			try handle.close()
+		} catch {
+			try? handle.close()
+			throw error
+		}
+		try files.moveItem(at: temporary, to: destination)
+		return destination
+	}
+}
+
 /// Backups survive process exit. Only this directory's own archives are pruned.
 actor PreferencesRecoveryStore {
 	let directory: URL
@@ -20,6 +55,13 @@ actor PreferencesRecoveryStore {
 
 	init(directory: URL) {
 		self.directory = directory
+	}
+
+	/// Where this Mac keeps its configuration backups.
+	@MainActor
+	static var defaultDirectory: URL {
+		(PathInfo.applicationSupportURL ?? URL.applicationSupportDirectory)
+			.appendingPathComponent("Configuration Backups", isDirectory: true)
 	}
 
 	func backups() throws -> [PreferencesRecoveryBackup] {
@@ -49,33 +91,8 @@ actor PreferencesRecoveryStore {
 		let data = try archive.recoveryEncoded()
 		// Prove the recovery document is readable before permitting any destructive work.
 		_ = try PreferencesArchive.decode(data, source: .localRecovery)
-		let files = FileManager.default
-		try files.createDirectory(
-			at: directory,
-			withIntermediateDirectories: true,
-			attributes: [.posixPermissions: 0o700]
-		)
-		guard try files.attributesOfItem(atPath: directory.path)[.type] as? FileAttributeType == .typeDirectory else {
-			throw CocoaError(.fileWriteNoPermission)
-		}
-		try files.setAttributes([.posixPermissions: 0o700], ofItemAtPath: directory.path)
-		let url = directory.appendingPathComponent("Configuration-\(UUID().uuidString).plist")
-		let temporary = directory.appendingPathComponent(".\(UUID().uuidString).tmp")
-		guard files.createFile(atPath: temporary.path, contents: nil, attributes: [.posixPermissions: 0o600]) else {
-			throw CocoaError(.fileWriteUnknown)
-		}
-		defer { try? files.removeItem(at: temporary) }
-		try files.setAttributes([.posixPermissions: 0o600], ofItemAtPath: temporary.path)
-		let handle = try FileHandle(forWritingTo: temporary)
-		do {
-			try handle.write(contentsOf: data)
-			try handle.synchronize()
-			try handle.close()
-		} catch {
-			try? handle.close()
-			throw error
-		}
-		try files.moveItem(at: temporary, to: url)
+		let url = try PreferencesProtectedFolder(url: directory)
+			.write(data, named: "Configuration-\(UUID().uuidString).plist")
 		for expired in try backups().filter({ $0.url != url }).dropFirst(Self.retentionCount - 1) {
 			try FileManager.default.removeItem(at: expired.url)
 		}

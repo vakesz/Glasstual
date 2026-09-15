@@ -137,9 +137,8 @@ struct MenuCommandValidationResponderTests {
 	}
 
 	/** Change Nickname validated on `isConnected` while the action it enables
-	 guards on `isLoggedIn` -- and calls `closePresentedSheet()` first, so
-	 choosing it during registration dismissed an unrelated sheet and then did
-	 nothing at all. */
+	 guards on `isLoggedIn`, so choosing it during registration did nothing at
+	 all. */
 	@Test("Change Nickname needs a registered connection, not merely a socket")
 	func changeNicknameNeedsLogin() {
 		#expect(MenuResponderCommandPolicy.canChangeNickname(clientIsLoggedIn: true))

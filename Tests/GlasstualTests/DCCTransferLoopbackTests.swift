@@ -250,7 +250,9 @@ struct DCCTransferLoopbackTests {
 		#expect(await events.value.last.flatMap(TransferFixture.failure) == .connectTimeout)
 	}
 
-	@Test("An idle connected sender cannot hold a receiver forever", .timeLimit(.minutes(1)))
+	/// A connected peer that stops sending has stalled; it was reported as never
+	/// having answered the connection attempt, which it had.
+	@Test("An idle connected sender cannot hold a receiver forever, and is reported as stalled", .timeLimit(.minutes(1)))
 	func receiverInactivityDeadline() async throws {
 		let directory = try TransferFixture.makeDirectory()
 		defer { TransferFixture.remove(directory) }
@@ -274,7 +276,7 @@ struct DCCTransferLoopbackTests {
 				try await peer.send(Data())
 			}
 		}
-		#expect(events.last.flatMap(TransferFixture.failure) == .connectTimeout)
+		#expect(events.last.flatMap(TransferFixture.failure) == .stalled)
 		withExtendedLifetime(connection) {}
 	}
 

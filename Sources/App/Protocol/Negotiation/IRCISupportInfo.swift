@@ -280,8 +280,8 @@ public class IRCISupportInfo: NSObject {
 		client?.publishUserPrefixes(table)
 	}
 
-	/** The most recent 005 line, kept verbatim so the numeric handler can spell
-	 back out what the server just said.
+	/** The most recent 005 line, its values unescaped, kept so the numeric
+	 handler can spell back out what the server just said.
 
 	 Only the newest line is ever read, and a server may send 005 for as long as
 	 it stays connected, so the earlier ones are not kept. */
@@ -494,7 +494,9 @@ public class IRCISupportInfo: NSObject {
 
 			if let equalSignIndex = segment.firstIndex(of: "="), equalSignIndex != segment.startIndex {
 				segmentKey = String(segment[..<equalSignIndex])
-				segmentValue = String(segment[segment.index(after: equalSignIndex)...])
+				segmentValue = ISupportTokenParser.unescapedValue(
+					segment[segment.index(after: equalSignIndex)...]
+				)
 
 				if segmentValue?.isEmpty == true,
 				   ISupportToken(tokenName: segmentKey)?.readsAnEmptyValueAsNone != true
@@ -740,8 +742,6 @@ public class IRCISupportInfo: NSObject {
 			}
 
 			return "q"
-		@unknown default:
-			return nil
 		}
 	}
 
@@ -984,7 +984,11 @@ private extension IRCISupportInfo {
 			self.caseMapping = .ascii
 		} else if caseMapping.caseInsensitiveCompare("strict-rfc1459") == .orderedSame {
 			self.caseMapping = .strictRFC1459
-		} else if caseMapping.caseInsensitiveCompare("rfc7613") == .orderedSame {
+		} else if caseMapping.caseInsensitiveCompare("rfc8265") == .orderedSame
+			|| caseMapping.caseInsensitiveCompare("rfc7613") == .orderedSame
+		{
+			/* RFC 8265 obsoletes RFC 7613 and keeps its casefold; servers
+			 advertise either name for the same mapping. */
 			self.caseMapping = .rfc7613
 		} else {
 			self.caseMapping = .rfc1459

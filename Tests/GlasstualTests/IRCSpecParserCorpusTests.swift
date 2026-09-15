@@ -225,7 +225,7 @@ struct IRCSpecParserCorpusTests {
 	@Test("msg-join", arguments: joinCases)
 	func atomsJoinIntoAnAcceptedLine(_ testCase: IRCSpecMessageJoinCase) throws {
 		let verb = try #require(testCase.atoms.verb)
-		let line = SendingMessage.string(
+		let line = try SendingMessage.string(
 			command: verb,
 			arguments: testCase.atoms.params,
 			tags: testCase.atoms.tags
@@ -240,7 +240,7 @@ struct IRCSpecParserCorpusTests {
 	@Test("msg-join round trips through msg-split", arguments: joinCases)
 	func joinedLineParsesBackIntoItsAtoms(_ testCase: IRCSpecMessageJoinCase) throws {
 		let verb = try #require(testCase.atoms.verb)
-		let line = SendingMessage.string(
+		let line = try SendingMessage.string(
 			command: verb,
 			arguments: testCase.atoms.params,
 			tags: testCase.atoms.tags
@@ -262,12 +262,14 @@ struct IRCSpecParserCorpusTests {
 
 	/// RFC 1459 2.3.1: the trailing parameter may be empty, and msg-join says
 	/// it is written as a bare colon. A middle parameter has no such form, so
-	/// an empty one is still skipped rather than written as nothing.
+	/// an empty one is refused rather than written as nothing.
 	@Test("msg-join: an empty trailing parameter is written as ':'")
-	func emptyTrailingParameterIsWrittenAsAColon() {
-		#expect(SendingMessage.string(command: "foo", arguments: ["bar", "baz", ""]) == "FOO bar baz :")
-		#expect(SendingMessage.string(command: "AWAY", arguments: [""]) == "AWAY :")
-		#expect(SendingMessage.string(command: "foo", arguments: ["bar", "", "baz"]) == "FOO bar baz")
+	func emptyTrailingParameterIsWrittenAsAColon() throws {
+		#expect(try SendingMessage.string(command: "foo", arguments: ["bar", "baz", ""]) == "FOO bar baz :")
+		#expect(try SendingMessage.string(command: "AWAY", arguments: [""]) == "AWAY :")
+		#expect(throws: SendingMessage.ArgumentError.self) {
+			try SendingMessage.string(command: "foo", arguments: ["bar", "", "baz"])
+		}
 	}
 
 	// MARK: - userhost-split

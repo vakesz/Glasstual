@@ -117,6 +117,33 @@ struct ChannelAccessListSessionTests {
 		#expect(model.entries.map(\.entryMask) == ["*!*@new.example", "*!*@old.example"])
 	}
 
+	/** Each arriving entry used to re-sort the whole list, which was quadratic
+	 over a reply of up to twenty thousand lines. Inserting in place has to give
+	 the same order the sort did, ties included. */
+	@Test("Entries arriving out of order land where a full sort would put them")
+	func arrivingEntriesAreInsertedInSortedOrder() {
+		let model = ChannelBanListModel()
+		model.sortOrder = [
+			ChannelBanListComparator(field: .author, order: .forward),
+			ChannelBanListComparator(field: .creationDate, order: .reverse),
+		]
+		let arrivals = [
+			entry(mask: "a", author: "carol", created: Date(timeIntervalSince1970: 10)),
+			entry(mask: "b", author: "alice", created: Date(timeIntervalSince1970: 30)),
+			entry(mask: "c", author: "bob", created: nil),
+			entry(mask: "d", author: "alice", created: Date(timeIntervalSince1970: 50)),
+			entry(mask: "e", author: "bob", created: nil),
+			entry(mask: "f", author: "Alice", created: Date(timeIntervalSince1970: 40)),
+		]
+
+		for arrival in arrivals {
+			model.add(arrival)
+		}
+
+		#expect(model.entries.map(\.entryMask) == ["d", "f", "b", "c", "e", "a"])
+		#expect(model.entries == arrivals.sorted(using: model.sortOrder))
+	}
+
 	@Test("The selected masks follow the visible table order")
 	func selectedMasksFollowVisibleOrder() {
 		let model = ChannelBanListModel()

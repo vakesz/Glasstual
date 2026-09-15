@@ -154,12 +154,78 @@ public typealias AlertCompletion = @MainActor (AlertOutcome) -> Void
 public enum AlertPresentation {
 	/// Blocks in its own modal loop.
 	case applicationModal
-	/// A state-driven sheet on the application's main window.
+	/// A state-driven sheet on the application's main window. While that
+	/// window is off screen, because it is closed, minimised or hidden with the
+	/// application, the alert runs application modal instead. Nobody can
+	/// answer a sheet on a window they cannot see.
 	case mainWindow
 	/// A sheet on the main window, or on any other visible window while the
 	/// main window is hidden. During launch and migration no window exists yet,
 	/// and the alert runs application modal instead.
 	case anyVisibleWindow
+}
+
+/// What an alert is actually attached to, once the windows on screen are known.
+enum AlertHost: Equatable {
+	/// The sheet stack of the installed ``SheetPresentationHost``.
+	case sheetHost
+	/// A `beginSheet` sheet on some other visible window.
+	case visibleWindow
+	/// Its own modal loop.
+	case applicationModal
+}
+
+@MainActor
+enum AlertHostPolicy {
+	static func host(
+		for presentation: AlertPresentation,
+		sheetHostIsVisible: Bool,
+		hasOtherVisibleWindow: Bool
+	) -> AlertHost {
+		switch presentation {
+		case .applicationModal:
+			.applicationModal
+		case .mainWindow:
+			sheetHostIsVisible ? .sheetHost : .applicationModal
+		case .anyVisibleWindow:
+			if sheetHostIsVisible {
+				.sheetHost
+			} else if hasOtherVisibleWindow {
+				.visibleWindow
+			} else {
+				.applicationModal
+			}
+		}
+	}
+}
+
+/** The window that carries alerts and input prompts in a sheet stack of its own.
+
+ The main window presents sheets from SwiftUI state rather than through
+ `beginSheet`, and that stack belongs to the main-window feature. Shared UI
+ knows only this much of it, so an alert does not have to reach into the
+ feature's presentation model to be shown there. */
+@MainActor
+public protocol SheetPresentationHost: AnyObject {
+	/// The window the sheets attach to, asked whether it is on screen.
+	var sheetHostWindow: NSWindow { get }
+	/// Raises `content` on top of whatever the host is already showing.
+	/// `onDismiss` runs once the sheet has gone, however it went.
+	func presentSheet(owner: AnyObject, content: AnyView, onDismiss: @escaping @MainActor () -> Void)
+	/// Takes down the sheet `owner` raised, and anything raised on top of it.
+	func dismissSheet(ownedBy owner: AnyObject)
+	func presentInputPrompt(
+		_ request: InputPromptRequest,
+		completion: @escaping @MainActor (InputPromptOutcome) -> Void
+	)
+}
+
+/// Where alerts and prompts find the window that hosts them.
+@MainActor
+public enum SheetPresentation {
+	/// Installed by the application once its main window exists; `nil`
+	/// before then, which is when an alert runs application modal.
+	public weak static var host: (any SheetPresentationHost)?
 }
 
 /// The presentation half of showing an alert: build the panel, run it, report the
@@ -503,7 +569,7 @@ private final class AlertPresentationSession {
 		case unattached
 		case modal(NSWindow)
 		case sheet(parent: NSWindow, panel: NSWindow)
-		case mainWindowSheet(MainWindow)
+		case hostSheet(any SheetPresentationHost)
 	}
 
 	private let request: AlertRequest
@@ -538,17 +604,24 @@ private final class AlertPresentationSession {
 		return finish(code)
 	}
 
-	func presentSheet(in mainWindow: MainWindow) async -> AlertPresenterResult {
-		host = .mainWindowSheet(mainWindow)
+	func presentSheet(in sheetHost: any SheetPresentationHost) async -> AlertPresenterResult {
+		host = .hostSheet(sheetHost)
 
 		return await withCheckedContinuation { continuation in
 			self.continuation = continuation
-			mainWindow.presentationModel.presentSheet(MainWindowSheetPresentation(
+			sheetHost.presentSheet(
 				owner: self,
-				content: makeView(),
-				onDismiss: { [weak self] in self?.finishMainWindowSheet() }
-			))
+				content: AnyView(makeView()),
+				onDismiss: { [weak self] in self?.finishHostSheet() }
+			)
 		}
+	}
+
+	/** Takes the alert down unanswered, because whoever asked no longer waits.
+
+	 It reads as the Escape button, the same as a sheet someone else ended. */
+	func cancel() {
+		end(with: request.escapeButton)
 	}
 
 	private func makeWindow() -> NSWindow {
@@ -598,8 +671,8 @@ private final class AlertPresentationSession {
 			NSApp.stopModal(withCode: code)
 		case let .sheet(parent, panel):
 			parent.endSheet(panel, returnCode: code)
-		case let .mainWindowSheet(mainWindow):
-			mainWindow.presentationModel.dismissSheet(ownedBy: self)
+		case let .hostSheet(sheetHost):
+			sheetHost.dismissSheet(ownedBy: self)
 		}
 	}
 
@@ -613,7 +686,7 @@ private final class AlertPresentationSession {
 		switch host {
 		case let .modal(panel), let .sheet(_, panel):
 			panel.contentViewController = nil
-		case .unattached, .mainWindowSheet:
+		case .unattached, .hostSheet:
 			break
 		}
 
@@ -621,7 +694,7 @@ private final class AlertPresentationSession {
 		return result
 	}
 
-	private func finishMainWindowSheet() {
+	private func finishHostSheet() {
 		let result = AlertPresenterResult(
 			response: response ?? dismissedResponse,
 			suppressionChecked: model.suppressionChecked
@@ -656,24 +729,38 @@ private final class AlertPresentationSession {
 public struct SwiftUIAlertPresenter: AlertPresenter {
 	public init() {}
 
+	/// Cancelling the task that awaits the answer takes the alert down, and it
+	/// answers with its Escape button.
 	public func present(_ request: AlertRequest, in presentation: AlertPresentation) async -> AlertPresenterResult {
 		let session = AlertPresentationSession(request: request)
 
-		switch presentation {
+		return await withTaskCancellationHandler {
+			await present(session, in: presentation)
+		} onCancel: {
+			Task { @MainActor in session.cancel() }
+		}
+	}
+
+	private func present(
+		_ session: AlertPresentationSession,
+		in presentation: AlertPresentation
+	) async -> AlertPresenterResult {
+		let sheetHost = SheetPresentation.host.flatMap { $0.sheetHostWindow.isVisible ? $0 : nil }
+		let otherWindow = NSApp.keyWindow.flatMap { $0.isVisible ? $0 : nil }
+			?? NSApp.windows.first(where: \.isVisible)
+
+		switch AlertHostPolicy.host(
+			for: presentation,
+			sheetHostIsVisible: sheetHost != nil,
+			hasOtherVisibleWindow: otherWindow != nil
+		) {
+		case .sheetHost:
+			guard let sheetHost else { return session.presentModal() }
+			return await session.presentSheet(in: sheetHost)
+		case .visibleWindow:
+			guard let otherWindow else { return session.presentModal() }
+			return await session.presentSheet(on: otherWindow)
 		case .applicationModal:
-			return session.presentModal()
-		case .mainWindow:
-			guard let mainWindow = AppController.shared.mainWindow else {
-				return session.presentModal()
-			}
-			return await session.presentSheet(in: mainWindow)
-		case .anyVisibleWindow:
-			if let mainWindow = AppController.shared.mainWindow, mainWindow.isVisible {
-				return await session.presentSheet(in: mainWindow)
-			}
-			if let window = NSApp.keyWindow ?? NSApp.windows.first(where: \.isVisible) {
-				return await session.presentSheet(on: window)
-			}
 			return session.presentModal()
 		}
 	}

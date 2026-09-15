@@ -252,14 +252,14 @@ struct IRCSpecOutboundLimitsTests {
 	/// RFC 1459 §2.3.1: only the last parameter may carry spaces, and it needs
 	/// the `:` that says so. A parameter with no space needs no colon.
 	@Test("Only a parameter that needs the colon gets one")
-	func onlyTheTrailingParameterGetsAColon() {
-		#expect(SendingMessage.string(command: "JOIN", arguments: ["#chan"]) == "JOIN #chan")
+	func onlyTheTrailingParameterGetsAColon() throws {
+		#expect(try SendingMessage.string(command: "JOIN", arguments: ["#chan"]) == "JOIN #chan")
 		#expect(
-			SendingMessage.string(command: "PRIVMSG", arguments: ["#chan", "hello world"])
+			try SendingMessage.string(command: "PRIVMSG", arguments: ["#chan", "hello world"])
 				== "PRIVMSG #chan :hello world"
 		)
 		#expect(
-			SendingMessage.string(command: "PRIVMSG", arguments: ["#chan", ":-)"])
+			try SendingMessage.string(command: "PRIVMSG", arguments: ["#chan", ":-)"])
 				== "PRIVMSG #chan ::-)"
 		)
 	}
@@ -267,8 +267,8 @@ struct IRCSpecOutboundLimitsTests {
 	/// The command a client sends is upper case on the wire, which RFC 1459
 	/// §2.3 allows for and every server expects.
 	@Test("RFC 1459 §2.3: outgoing commands are upper-cased")
-	func outgoingCommandsAreUpperCased() {
-		#expect(SendingMessage.string(command: "privmsg", arguments: ["#chan", "hi"]) == "PRIVMSG #chan :hi")
+	func outgoingCommandsAreUpperCased() throws {
+		#expect(try SendingMessage.string(command: "privmsg", arguments: ["#chan", "hi"]) == "PRIVMSG #chan :hi")
 	}
 
 	// MARK: - The assembled line
@@ -304,6 +304,19 @@ struct IRCSpecOutboundLimitsTests {
 			IRCProtocolLimits.bodyLimit(forAdvertisedLineLength: 1_000_000)
 				== IRCProtocolLimits.maximumServerLineLength - IRCProtocolLimits.lineTerminatorLength
 		)
+	}
+
+	/// The disconnect that follows a QUIT clears the send queue, so a QUIT that
+	/// waited behind flood control was never sent.
+	@Test("PONG and QUIT go out ahead of flood control; everything else waits its turn", arguments: [
+		(line: "PONG :irc.example.net\r\n", bypasses: true),
+		(line: "QUIT :Leaving\r\n", bypasses: true),
+		(line: "QUIT\r\n", bypasses: true),
+		(line: "PRIVMSG #chat :QUIT\r\n", bypasses: false),
+		(line: "PING :irc.example.net\r\n", bypasses: false),
+	])
+	func pongAndQuitBypassFloodControl(line: String, bypasses: Bool) {
+		#expect(Connection.bypassesFloodControl(line) == bypasses)
 	}
 
 	/// The socket starts on the RFC's 512 and takes the server's `LINELEN` from

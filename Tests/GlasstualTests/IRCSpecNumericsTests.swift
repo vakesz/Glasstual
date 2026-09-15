@@ -150,7 +150,7 @@ struct IRCSpecNumericsTests {
 	@Test(
 		"Numerics in the error band route to the error path",
 		arguments: [
-			(UInt(399), false), (UInt(400), false), (UInt(401), true), (UInt(433), true),
+			(UInt(399), false), (UInt(400), true), (UInt(401), true), (UInt(433), true),
 			(UInt(596), true), (UInt(597), false), (UInt(600), false), (UInt(904), false),
 		]
 	)

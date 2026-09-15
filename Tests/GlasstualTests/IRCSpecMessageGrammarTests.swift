@@ -273,18 +273,17 @@ struct IRCSpecMessageGrammarTests {
 	/// dropped wholesale rather than parsed into an unbounded dictionary.
 	///
 	/// The specification counts the leading `@` and the trailing space inside
-	/// that 8191, so the largest conforming section is 8189 bytes; the parser
-	/// measures only the section and is therefore two bytes more permissive.
-	/// See the report for the deviation.
-	@Test("IRCv3 message-tags: the section length cap")
+	/// that 8191, so the largest conforming section the parser is handed,
+	/// which has neither, is 8189 bytes.
+	@Test("IRCv3 message-tags: the section length cap counts the @ and the space")
 	func sectionLengthCapIsEnforced() {
 		#expect(MessageTagParser.maximumSectionLength == 8191)
 
-		let atTheCap = "a=" + String(repeating: "b", count: 8189)
-		#expect(atTheCap.utf8.count == 8191)
+		let atTheCap = "a=" + String(repeating: "b", count: 8187)
+		#expect(atTheCap.utf8.count == 8189)
 		#expect(MessageTagParser.parsedTags(fromSection: atTheCap).tags.count == 1)
 
-		let pastTheCap = "a=" + String(repeating: "b", count: 8190)
+		let pastTheCap = "a=" + String(repeating: "b", count: 8188)
 		#expect(MessageTagParser.parsedTags(fromSection: pastTheCap).tags.isEmpty)
 	}
 
@@ -338,7 +337,7 @@ struct IRCSpecMessageGrammarTests {
 	@Test("IRCv3 message-tags: outbound values are escaped and round trip")
 	func outboundTagValuesRoundTrip() throws {
 		let tags = ["a": "b\\and\nk", "d": "gh;764", "e": "with space", "f": "carriage\rreturn"]
-		let line = SendingMessage.string(command: "TAGMSG", arguments: ["#chan"], tags: tags)
+		let line = try SendingMessage.string(command: "TAGMSG", arguments: ["#chan"], tags: tags)
 		let parsed = try #require(LineParser.parsedLine(fromLine: line))
 		let section = try #require(parsed.messageTagSection)
 

@@ -57,7 +57,13 @@ final class CaffeinePlugin: NSObject, GlasstualPlugin, PluginPreferencesProvidin
 
 	private func disableSleep() {
 		guard activity == nil else { return }
-		activity = ProcessInfo.processInfo.beginActivity(options: .userInitiated, reason: "Disable sleep mode")
+		/* Only idle system sleep. `.userInitiated` also disables App Nap and
+		 sudden and automatic termination for as long as a server is connected,
+		 none of which keeping the Mac awake needs. */
+		activity = ProcessInfo.processInfo.beginActivity(
+			options: .idleSystemSleepDisabled,
+			reason: "Keeping the Mac awake while connected to IRC"
+		)
 		Self.logger.debug("Disabled sleep mode")
 	}
 
@@ -76,7 +82,13 @@ final class CaffeinePlugin: NSObject, GlasstualPlugin, PluginPreferencesProvidin
 		}
 	}
 
+	/// Reads the clients only when the setting asks for them: building their
+	/// snapshots is the expensive half, and it has nothing to decide otherwise.
 	private func refreshSleepState() {
+		guard shouldPreventSleepWhenConnected else {
+			enableSleep()
+			return
+		}
 		updateSleepState(hasConnectedClient: host?.clients.contains(where: \.isLoggedIn) == true)
 	}
 
@@ -86,7 +98,9 @@ final class CaffeinePlugin: NSObject, GlasstualPlugin, PluginPreferencesProvidin
 		connectionObservation = host.observeConnectionState { [weak self] hasConnectedClient in
 			self?.updateSleepState(hasConnectedClient: hasConnectedClient)
 		}
-		defaultsObservation = PluginDefaultsObservation { [weak self] in
+		defaultsObservation = PluginDefaultsObservation(
+			keys: [FirstPartyPluginPreferences.caffeinePreventSleep.name]
+		) { [weak self] in
 			self?.refreshSleepState()
 		}
 		refreshSleepState()
@@ -102,10 +116,8 @@ final class CaffeinePlugin: NSObject, GlasstualPlugin, PluginPreferencesProvidin
 
 	var pluginPreferencesPane: PluginPreferencesPane? {
 		guard let host else { return nil }
-		return PluginPreferencesPane(title: String(localized: .BasicLanguage.sleepModeManagement)) { [weak self] in
-			CaffeinePreferencesView(defaults: host.defaults) {
-				self?.refreshSleepState()
-			}
+		return PluginPreferencesPane(title: String(localized: .BasicLanguage.sleepModeManagement)) {
+			CaffeinePreferencesView(defaults: host.defaults)
 		}
 	}
 }

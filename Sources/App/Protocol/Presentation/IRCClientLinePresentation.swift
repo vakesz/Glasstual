@@ -43,6 +43,18 @@ enum IRCLinePresentationPolicy {
 		nickname == localNickname ? .localUser : .normal
 	}
 
+	/// The body a printed line keeps. "Remove formatting from incoming
+	/// messages" strips the control codes of everything but the local user's
+	/// own lines, and only the text: the line was parsed as it arrived.
+	static func messageBody(
+		_ body: String,
+		memberType: LogLineMemberType,
+		removesIncomingFormatting: Bool
+	) -> String {
+		guard removesIncomingFormatting, memberType != .localUser else { return body }
+		return (body as NSString).stripIRCEffects
+	}
+
 	static func normalized(_ lineType: LogLineType) -> LogLineType {
 		switch lineType {
 		case .actionNoHighlight:
@@ -185,6 +197,11 @@ public extension IRCClient {
 }
 
 public extension IRCClient {
+	/// The last line printed to the console.
+	var lastLine: LogLine? {
+		presentation?.lastPrintedLine()
+	}
+
 	func printReply(_ message: Message, in channel: Channel? = nil, withSequence sequence: UInt = 1) {
 		print(message.sequence(sequence), by: nil, in: channel, as: .debug, command: message.command,
 		      receivedAt: message.receivedAt)
@@ -291,7 +308,11 @@ private extension IRCClient {
 		logLine.excludeKeywords = keywordLists.exclude
 		logLine.highlightKeywords = keywordLists.match
 		logLine.nickname = request.nickname
-		logLine.messageBody = request.messageBody
+		logLine.messageBody = IRCLinePresentationPolicy.messageBody(
+			request.messageBody,
+			memberType: memberType,
+			removesIncomingFormatting: environment.preferences.removeAllFormatting
+		)
 		let previousLine = channel?.lastLine ?? lastLine
 		logLine.isFirstForDay = IRCLinePresentationPolicy.isFirstForDay(
 			receivedAt: request.receivedAt,

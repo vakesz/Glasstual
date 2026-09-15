@@ -160,11 +160,13 @@ enum Scenario {
 			try await driver.waitForConnectionStatus(connected: true)
 			try await driver.wait("peer observed fixture PONG") { _ in try HarnessFiles.exists("pong-wire") }
 		}
-		guard appProcess.isRunning, !application.isTerminated, application.processIdentifier == originalPID else {
+		// A fresh lookup, not the launch-time handle: a relaunched or second
+		// instance would show up here under a different PID.
+		guard appProcess.isRunning, AppSession.runningPIDs(of: application) == [originalPID] else {
 			throw HarnessFailure.assertion("Retry did not preserve the app process")
 		}
 		try await channelActions(kind: kind, driver: driver)
-		try await Task.sleep(for: .seconds(2))
+		try await AppSession.awaitProbeSamples(3, driver: driver)
 		var shutdownSeconds = 0.0
 		if !kind.connectedQuit {
 			let start = try await driver.menu("Disconnect", in: "Server")
@@ -184,6 +186,7 @@ enum Scenario {
 		if kind.connectedQuit {
 			try await driver.waitForConnectionStatus(connected: true, channel: kind.finalChannel)
 		}
+		let runningPIDsBeforeQuit = AppSession.runningPIDs(of: application)
 		let quitSeconds = try await AppSession.quitAndVerify(appProcess, driver: driver) {
 			try !peer.isRunning && HarnessFiles.exists("peer-complete")
 		}
@@ -194,8 +197,13 @@ enum Scenario {
 		      peer.terminationStatus == 0 else { throw HarnessFailure.assertion("Peer failed") }
 		try HarnessFiles.unregister(peer.processIdentifier)
 		AppSession.release(peer)
-		try saveEvidence(kind: kind, originalPID: originalPID, finalPID: application.processIdentifier,
-		                 shutdownSeconds: shutdownSeconds, appExitStatus: appProcess.terminationStatus)
+		try saveEvidence(
+			kind: kind,
+			originalPID: originalPID,
+			runningPIDsBeforeQuit: runningPIDsBeforeQuit,
+			shutdownSeconds: shutdownSeconds,
+			app: appProcess
+		)
 	}
 
 	private static func channelActions(kind: ScenarioKind, driver: AccessibilityDriver) async throws {
@@ -230,13 +238,15 @@ enum Scenario {
 		}
 	}
 
-	private static func saveEvidence(kind: ScenarioKind, originalPID: pid_t, finalPID: pid_t,
-	                                 shutdownSeconds: Double, appExitStatus: Int32) throws
+	/// Every value is read back from the processes after Quit, so the E2E test
+	/// checks what happened rather than what this helper assumed.
+	private static func saveEvidence(kind: ScenarioKind, originalPID: pid_t, runningPIDsBeforeQuit: [pid_t],
+	                                 shutdownSeconds: Double, app: Process) throws
 	{
 		let evidence: [String: Any] = [
-			"scenario": kind.rawValue, "originalPID": originalPID, "finalPID": finalPID,
-			"rejections": kind.rejectionCount,
-			"shutdownSeconds": shutdownSeconds, "appExitReason": "exit", "appExitStatus": appExitStatus,
+			"scenario": kind.rawValue, "originalPID": originalPID, "runningPIDsBeforeQuit": runningPIDsBeforeQuit,
+			"rejections": kind.rejectionCount, "shutdownSeconds": shutdownSeconds,
+			"appExitReason": app.terminationReason.evidenceName, "appExitStatus": app.terminationStatus,
 		]
 		try JSONSerialization.data(withJSONObject: evidence, options: [.prettyPrinted, .sortedKeys])
 			.write(to: HarnessFiles.root.appendingPathComponent("evidence.json"), options: .atomic)

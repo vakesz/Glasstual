@@ -15,8 +15,9 @@ import AudioToolbox
 import os
 import UniformTypeIdentifiers
 
+/// Plays alert sounds by name and lists the ones a person can choose from.
 @MainActor
-public final class SoundPlayer: NSObject {
+enum SoundPlayer {
 	private static let logger = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 		category: "SoundPlayer"
@@ -24,27 +25,35 @@ public final class SoundPlayer: NSObject {
 
 	/// The one sound that is not a file in a Sounds folder: the system alert,
 	/// which `NSSound.beep()` plays and a notification names as its default.
-	public static let beepSoundName = "Beep"
+	static let beepSoundName = "Beep"
 
 	/** A SystemSoundID is an owned resource. Creating one per playback leaked it and
 	 rescanned three sound directories on the notification-delivery path. */
 	private static var soundCache: [String: SystemSoundID] = [:]
 
-	public static func soundFiles(atPath path: String) -> [String: String] {
+	/** The sound files in the folder at `path`, keyed by name without the
+	 extension.
+
+	 Only audio files count. A Sounds folder can also hold a `.DS_Store`, a
+	 read-me or a folder, and each of those used to appear in the sound picker
+	 as a sound that played nothing. */
+	static func soundFiles(atPath path: String) -> [String: String] {
 		let files = (try? FileManager.default.contentsOfDirectory(atPath: path)) ?? []
 		var sounds: [String: String] = [:]
 
-		for file in files {
-			let filePath = (path as NSString).appendingPathComponent(file)
-			let name = (file as NSString).deletingPathExtension
+		for file in files.sorted() where file.hasPrefix(".") == false {
+			guard let type = UTType(filenameExtension: (file as NSString).pathExtension), type.conforms(to: .audio)
+			else {
+				continue
+			}
 
-			sounds[name] = filePath
+			sounds[(file as NSString).deletingPathExtension] = (path as NSString).appendingPathComponent(file)
 		}
 
 		return sounds
 	}
 
-	public static func playAlertSound(_ name: String) {
+	static func playAlertSound(_ name: String) {
 		if name == NotificationAlertSound.noSoundPreferenceValue {
 			return
 		}
@@ -66,7 +75,15 @@ public final class SoundPlayer: NSObject {
 		AudioServicesPlayAlertSound(soundID)
 	}
 
-	public static func uniqueListOfSounds() -> [String] {
+	/** The sound names a person can choose from, read from the three Sounds
+	 folders the first time anything asks and kept for the rest of the launch.
+
+	 The notification settings table asked for it every time its view was built,
+	 which scanned three folders on the main actor on every redraw of its
+	 parent. */
+	static let availableSoundNames: [String] = uniqueListOfSounds()
+
+	private static func uniqueListOfSounds() -> [String] {
 		var sounds = [beepSoundName]
 
 		for catalog in [systemAlertSoundFiles, systemLibrarySoundFiles, userLibrarySoundFiles] {
@@ -101,7 +118,7 @@ public final class SoundPlayer: NSObject {
 	}
 
 	/// Disposes every cached sound. Call once, during application termination.
-	public static func prepareForApplicationTermination() {
+	static func prepareForApplicationTermination() {
 		for soundID in soundCache.values {
 			AudioServicesDisposeSystemSoundID(soundID)
 		}
@@ -121,7 +138,7 @@ public final class SoundPlayer: NSObject {
 
 	private static func alertSound(named name: String) -> SystemSoundID {
 		for catalog in [userLibrarySoundFiles, systemLibrarySoundFiles, systemAlertSoundFiles] {
-			guard let catalog, let soundPath = validatedSoundPath(named: name, in: catalog) else {
+			guard let soundPath = catalog?[name] else {
 				continue
 			}
 
@@ -136,22 +153,5 @@ public final class SoundPlayer: NSObject {
 		}
 
 		return 0
-	}
-
-	private static func validatedSoundPath(named name: String, in files: [String: String]) -> String? {
-		guard let path = files[name] else {
-			return nil
-		}
-
-		guard
-			let type = UTType(filenameExtension: (path as NSString).pathExtension),
-			type.conforms(to: .audio)
-		else {
-			logger.debug("File is not audio: \(path, privacy: .public)")
-
-			return nil
-		}
-
-		return path
 	}
 }

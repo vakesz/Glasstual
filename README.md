@@ -41,9 +41,11 @@ runs in a sandboxed XPC host.
 
 ## Building
 
-Glasstual requires macOS 26 or later, an Apple Silicon Mac, Xcode 26 or later,
-and XcodeGen. SwiftFormat, SwiftLint, actionlint and ShellCheck are used by the
-quality gate.
+Glasstual runs on macOS 26 or later on an Apple Silicon Mac. Building it takes
+Xcode 27, the version CI and the release workflow use. The Makefile pins
+XcodeGen, SwiftFormat, SwiftLint, actionlint and ShellCheck. When the pinned
+version is not on `PATH`, `make` downloads that release, checks its SHA-256
+and unpacks it under `build/tools`.
 
 `project.yml` is the source of truth for targets, build settings, signing,
 entitlements and generated metadata. Do not edit target settings or generated
@@ -62,6 +64,7 @@ files in `Glasstual.xcodeproj` by hand.
 
    ```sh
    make test
+   make e2e-fixtures
    make lint
    ```
 
@@ -92,8 +95,7 @@ revision and preservation requirements are recorded in
 The app and its XPC host are sandboxed and use the hardened runtime. Library
 validation remains enabled, so plugins must be signed with the same Team ID as
 the app. Cryptography is provided by macOS system frameworks. The release
-workflow produces a signed and notarized direct-download archive; the project
-also supports App Store signing profiles.
+workflow produces a signed and notarized direct-download archive.
 
 Glasstual has no in-app updater. Releases are published through this
 repository's GitHub Releases page.

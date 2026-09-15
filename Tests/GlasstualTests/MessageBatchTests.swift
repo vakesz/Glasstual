@@ -48,48 +48,37 @@ struct MessageBatchTests {
 		let batch = batchWithToken("history-1")
 		let message = try #require(Message(line: ":nick!user@host PRIVMSG #channel :hello"))
 
-		batch.queueEntry(.message(message))
+		batch.queueMessage(message)
 
 		container.queueEntry(batch)
 
 		#expect(container.queuedEntry(withBatchToken: "history-1") === batch)
 
 		#expect(container.queuedEntries["history-1"] === batch)
-		#expect(batch.queuedEntries.first?.object as? Message === message)
+		#expect(batch.queuedMessages.first === message)
 
 		container.dequeueEntry(withBatchToken: "history-1")
 
 		#expect(container.queuedEntry(withBatchToken: "history-1") == nil)
 
-		#expect(batch.queuedEntries.count == 0)
+		#expect(batch.queuedMessages.isEmpty)
 	}
 
-	@Test("A batch keeps its messages and its nested batches in the order they arrived")
-	func batchKeepsMessagesAndNestedBatchesInOrder() throws {
-		let parent = batchWithToken("parent")
-		let child = batchWithToken("child")
+	@Test("A batch keeps its messages in the order they arrived, repeats included")
+	func batchKeepsMessagesInOrder() throws {
+		let batch = batchWithToken("parent")
 		let first = try #require(Message(line: "PING :first"))
 		let second = try #require(Message(line: "PING :second"))
 
-		child.parentBatchMessage = parent
+		batch.queueMessage(first)
+		batch.queueMessage(first)
+		batch.queueMessage(second)
 
-		parent.queueEntry(.message(first))
-		parent.queueEntry(.message(first))
-		parent.queueEntry(.batch(child))
-		parent.queueEntry(.message(second))
+		#expect(batch.queuedMessages.map(ObjectIdentifier.init) == [first, first, second].map(ObjectIdentifier.init))
 
-		#expect(parent.queuedEntries.count == 4)
-		#expect(parent.queuedEntries[0].object as? Message === first)
-		#expect(parent.queuedEntries[1].object as? Message === first)
-		#expect(parent.queuedEntries[2].object as? MessageBatch === child)
-		#expect(parent.queuedEntries[3].object as? Message === second)
+		batch.dequeueMessages()
 
-		#expect(child.parentBatchMessage === parent)
-
-		parent.dequeueEntry(.message(first))
-		parent.dequeueEntry(.batch(child))
-
-		#expect(parent.queuedEntries.first?.object as? Message === second)
+		#expect(batch.queuedMessages.isEmpty)
 	}
 
 	@Test("Discarding every batch releases queued messages instead of retaining retired replay")
@@ -98,14 +87,14 @@ struct MessageBatchTests {
 		let batch = batchWithToken("batch")
 		let message = try #require(Message(line: "PING :token"))
 
-		batch.queueEntry(.message(message))
+		batch.queueMessage(message)
 
 		container.queueEntry(batch)
 		container.dequeueEntries()
 
 		#expect(container.queuedEntries.count == 0)
 
-		#expect(batch.queuedEntries.isEmpty)
+		#expect(batch.queuedMessages.isEmpty)
 	}
 
 	private func batchWithToken(_ token: String) -> MessageBatch {

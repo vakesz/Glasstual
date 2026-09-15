@@ -337,7 +337,7 @@ extension IRCClient {
 			closeCommandChannel(parsed, targetChannel: targetChannel)
 		case .list:
 			guard isLoggedIn else { return }
-			openServerChannelList()
+			channelListPresentation?.openChannelList(for: self)
 		case .setcolor:
 			setColorForCommandNickname(parsed)
 		default:
@@ -427,7 +427,9 @@ extension IRCClient {
 			printDebugInformation(IRCCommandStrings.invalidArguments)
 			return
 		}
-		if let existingQuery = findChannel(nickname) {
+		/* The query itself is what a change of case finds, and it is not the
+		 other conversation the prompt offers to delete. */
+		if let existingQuery = findChannel(nickname), existingQuery !== targetChannel {
 			/* Delete/Cancel, not Yes/No: the button says what accepting does, and
 			 the destructive role is what tints it and tells VoiceOver the
 			 existing conversation is not coming back. */
@@ -444,11 +446,7 @@ extension IRCClient {
 			guard shouldDelete else { return }
 			world?.destroyChannel(existingQuery)
 		}
-		targetChannel.name = nickname
-		if let mainWindow = output {
-			mainWindow.reloadTreeItem(targetChannel)
-			mainWindow.updateTitle(for: targetChannel)
-		}
+		retitleQuery(targetChannel, from: targetChannel.name, to: nickname)
 	}
 
 	private func dispatchChannelConversationCommand(

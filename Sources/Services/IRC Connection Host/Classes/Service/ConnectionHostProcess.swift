@@ -114,16 +114,8 @@ final class RemoteConnectionProcess: NSObject, RemoteConnectionServerProtocol {
 		commands.yield { await $0.clearSendQueue() }
 	}
 
-	func enableAppNap() {
-		commands.yield { await $0.enableAppNap() }
-	}
-
 	func disableAppNap() {
 		commands.yield { await $0.disableAppNap() }
-	}
-
-	func enableSuddenTermination() {
-		commands.yield { await $0.enableSuddenTermination() }
 	}
 
 	func disableSuddenTermination() {

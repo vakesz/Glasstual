@@ -143,8 +143,11 @@ public final class World: NSObject {
 		observers.remove(observer)
 	}
 
+	/// Delivers `event` to the observers registered when it was raised. One an
+	/// event handler registers hears the events after it.
 	private func notifyObservers(_ event: (any WorldObserver) -> Void) {
-		observers.forEach(event)
+		observers.liveObservers.forEach(event)
+		observers.pruneReleased()
 	}
 
 	/// Republishes the navigation list after a client changed shape on its own.
@@ -429,14 +432,6 @@ public final class World: NSObject {
 
 	public func pasteboardString(for item: TreeItem) -> String {
 		item.uniqueIdentifier
-	}
-
-	public func findClient(withServerAddress serverAddress: String) -> IRCClient? {
-		clientList.first { client in
-			client.config.serverList.contains { server in
-				server.serverAddress.caseInsensitiveCompare(serverAddress) == .orderedSame
-			}
-		}
 	}
 
 	// MARK: - Factory

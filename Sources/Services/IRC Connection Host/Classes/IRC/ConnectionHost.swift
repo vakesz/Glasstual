@@ -345,13 +345,12 @@ actor ConnectionHost {
 
 	/** Lets the process nap again, one held activity at a time.
 
-	 What used to be here registered a default, which does nothing after launch
-	 and nothing at all to App Nap; the enabling half had no caller either, so a
-	 connection that asked to stay awake had no way to stop asking. Activities
-	 are counted the way the sudden-termination disables are, because the host
-	 process is shared by every connection: the last one to end its activity is
-	 what lets the process nap. */
-	func enableAppNap() {
+	 A connection keeps its activity until the application detaches, which is
+	 when `balanceAppNap()` hands them all back; nothing asks for one to end
+	 sooner. Activities are counted the way the sudden-termination disables are,
+	 because the host process is shared by every connection: the last one to
+	 end its activity is what lets the process nap. */
+	private func enableAppNap() {
 		guard let activity = appNapActivities.popLast() else { return }
 
 		ProcessInfo.processInfo.endActivity(activity)
@@ -379,7 +378,7 @@ actor ConnectionHost {
 		}
 	}
 
-	func enableSuddenTermination() {
+	private func enableSuddenTermination() {
 		guard suddenTerminationDisableCount > 0 else { return }
 
 		suddenTerminationDisableCount -= 1
@@ -403,11 +402,14 @@ actor ConnectionHost {
 	// MARK: - Transport Events
 
 	private func handle(_ event: SocketEvent, from socket: ConnectionSocket) {
-		if case let .readDrained(continuation) = event {
-			continuation.finish()
+		guard self.socket === socket else {
+			/* Nobody is going to answer for a transport this host let go of,
+			 so its reader is released here rather than left waiting. */
+			if case let .received(_, acknowledged) = event {
+				acknowledged.finish()
+			}
 			return
 		}
-		guard self.socket === socket else { return }
 		switch event {
 		case let .willConnectToProxy(host, port):
 			client?.ircConnectionWillConnect(toProxy: host, port: port)
@@ -418,10 +420,17 @@ actor ConnectionHost {
 			startWriterIfNeeded()
 		case let .secured(protocolVersion, cipherSuite):
 			client?.ircConnectionDidSecureConnection(withProtocolType: protocolVersion, cipherSuite: cipherSuite)
-		case let .received(data):
-			client?.ircConnectionDidReceive(data)
-		case .readDrained:
-			break
+		case let .received(lines, acknowledged):
+			/* The transport waits on the application's reply, not on this
+			 loop: the forwarding returns at once, so the events behind these
+			 lines are not held up while the application works through them. */
+			guard let client else {
+				acknowledged.finish()
+				return
+			}
+			client.ircConnectionDidReceive(lines) {
+				acknowledged.finish()
+			}
 		case let .willSend(data):
 			client?.ircConnectionWillSend(data)
 		case .didSend:

@@ -91,7 +91,7 @@ public extension MenuActionCoordinator {
 
 	@objc func addServer(_: Any?) {
 		guard isRunning else { return }
-		mainWindow.presentationModel.closePresentedSheet()
+		mainWindow.presentationModel.dismissPresentedSheet()
 		present(ServerPropertiesSheet(client: nil)) { $0.start() }
 	}
 
@@ -155,9 +155,8 @@ public extension MenuActionCoordinator {
 	}
 
 	@objc func addChannel(_: Any?) {
-		guard isRunning else { return }
-		mainWindow.presentationModel.closePresentedSheet()
-		guard let client = selectedClient else { return }
+		guard isRunning, let client = selectedClient else { return }
+		mainWindow.presentationModel.dismissPresentedSheet()
 		present(ChannelPropertiesSheet(client: client)) { $0.start() }
 	}
 

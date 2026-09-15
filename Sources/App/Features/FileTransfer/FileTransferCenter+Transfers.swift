@@ -145,6 +145,19 @@ extension FileTransferCenter {
 		dismiss()
 	}
 
+	/** Whether an offer downloads without the user accepting it.
+
+	 Only when the user asked for that, only from a peer they already know — the
+	 whole network can send an offer — and only up to a size that cannot fill a
+	 disk on a stranger's say-so. Anything else waits in the list for Accept. */
+	static func downloadsAutomatically(
+		_ behavior: FileTransferRequestBehavior,
+		peerIsKnown: Bool,
+		filesize: UInt64
+	) -> Bool {
+		behavior == .automaticallyDownload && peerIsKnown && filesize <= FileTransferConstants.automaticDownloadSizeLimit
+	}
+
 	func addReceiver(
 		for client: IRCClient,
 		nickname: String,
@@ -152,7 +165,8 @@ extension FileTransferCenter {
 		port hostPort: UInt16,
 		filename: String,
 		filesize totalFilesize: UInt64,
-		token transferToken: String?
+		token transferToken: String?,
+		peerIsKnown: Bool
 	) -> String? {
 		guard model.receiverCount < FileTransferConstants.receiverHardLimit else {
 			fileTransferLogger.error(
@@ -179,10 +193,16 @@ extension FileTransferCenter {
 			return nil
 		}
 
-		present()
+		/* Not brought forward: the offer arrived unasked, and the window taking
+		 focus for each one is what made a flood of them unusable. The row, the
+		 notification and the transcript line are how the user hears of it. */
 		model.add(controller)
 
-		if Preferences.FileTransfers.requestReplyAction.value == .automaticallyDownload {
+		if Self.downloadsAutomatically(
+			Preferences.FileTransfers.requestReplyAction.value,
+			peerIsKnown: peerIsKnown,
+			filesize: totalFilesize
+		) {
 			let destinationPath = downloadDestinationURLPrivate?.path ?? PathInfo.userDownloads
 
 			/* Reserving the file first and finding out on the last block that the
@@ -278,11 +298,20 @@ extension FileTransferCenter {
 
 	 Answered where it was asked: the person has said what they wanted, and a
 	 window they did not open has no business changing its filter and selection
-	 on the strength of it. */
+	 on the strength of it.
+
+	 An offer nobody accepted is removed outright. Stopping it did nothing — it
+	 was already stopped — so Decline left the offer sitting in the list exactly
+	 as it was. A transfer already under way is stopped instead, and stays listed
+	 with whatever it got through. */
 	@discardableResult
 	func declineNotification(for identifier: String, clientIdentifier: String?) -> Bool {
 		guard let transfer = notifiedTransfer(identifier, of: clientIdentifier) else { return false }
-		transfer.closeAndPostNotification(false)
+		if transfer.isSender == false, transfer.transferStatus == .stopped {
+			removeFileTransfers([transfer])
+		} else {
+			transfer.closeAndPostNotification(false)
+		}
 		return true
 	}
 
@@ -332,9 +361,13 @@ extension FileTransferCenter {
 		var pending: [FileTransferController] = []
 
 		for transfer in transfers where transfer.canStart {
-			if transfer.isSender || transfer.path != nil {
+			if transfer.isSender {
+				transfer.open()
+			} else if let path = transfer.path {
+				guard claimRoom(for: transfer, at: path) else { continue }
 				transfer.open()
 			} else if let savePath {
+				guard claimRoom(for: transfer, at: savePath) else { continue }
 				transfer.destinationAccessURL = downloadDestinationURLPrivate
 				transfer.open(withPath: savePath)
 			} else {
@@ -372,10 +405,30 @@ extension FileTransferCenter {
 		}
 
 		for transfer in pending {
-			guard !transfer.isSender, transfer.canStart else { continue }
+			guard !transfer.isSender, transfer.canStart, claimRoom(for: transfer, at: url.path) else { continue }
 			transfer.destinationAccessURL = url
 			transfer.open(withPath: url.path)
 		}
+	}
+
+	/** Whether the download can start at `path` without running out of room,
+	 failing it in a way Try Again can get past when not.
+
+	 The automatic download always asked this; a download the user accepted by
+	 hand did not, and found out on the last block. The downloads already
+	 running still have their own bytes to write, so the room has to be there
+	 beside theirs. */
+	private func claimRoom(for transfer: FileTransferController, at path: String) -> Bool {
+		let remaining = transfer.totalFilesize > transfer.processedFilesize
+			? transfer.totalFilesize - transfer.processedFilesize
+			: 0
+		let (required, overflow) = remaining.addingReportingOverflow(model.pendingReceiveByteCount)
+		guard Self.destination(path, hasRoomFor: overflow ? .max : required) else {
+			fileTransferLogger.error("Refused to start a download the destination volume has no room for")
+			transfer.close(with: .storageFull)
+			return false
+		}
+		return true
 	}
 
 	private func removeFileTransfers(_ transfers: [FileTransferController]) {

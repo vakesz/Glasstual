@@ -27,10 +27,11 @@ are no `.h`, `.m`, `.c` or `.mm` files left, and none should come back.
   `MainActor.assumeIsolated` to settle an isolation error; move the boundary
   instead. See "Isolation rules" below for what the gate enforces.
 - Preferences are typed `PreferenceKey` declarations under
-  `Sources/App/Preferences/Keys/`, with the handful the XPC connection host
-  also read in `Sources/Shared/Preferences/`. Read and write through the key,
-  never through a raw defaults string. Defaults registration, storage routing,
-  and import/export filtering are derived directly from those declarations;
+  `Sources/App/Preferences/Keys/`. The `PreferenceKey` type and the
+  `TextualUserDefaults` store live in `Sources/Shared/Preferences/`, and only
+  the app compiles them; the XPC connection host reads no preferences. Read
+  and write through the key, never through a raw defaults string. Defaults
+  registration, storage routing, and import/export filtering are derived directly from those declarations;
   do not add a generated plist mirror or a build phase for them.
 - The channel transcript is native. `LogRenderer` produces semantic
   `TranscriptLine` values and the transcript adapter draws them with TextKit;
@@ -55,20 +56,22 @@ are no `.h`, `.m`, `.c` or `.mm` files left, and none should come back.
 
 | Target | Sources | Kind | Default isolation |
 | --- | --- | --- | --- |
-| `Glasstual` | `Sources/App/**` | app | `MainActor` |
-| `Caffeine`, `ChatFilter`, `SmileyConverter`, `SystemProfiler`, `UserInsights`, `ZNCAdditions` | `Sources/Plugins/<Name>/**` | first-party plugin bundles | `MainActor` |
+| `Glasstual` | `Sources/App/**`, `Sources/Shared/**` | app | `MainActor` |
+| `Caffeine`, `ChatFilter`, `SmileyConverter`, `SystemProfiler`, `UserInsights`, `ZNCAdditions` | `Sources/Plugins/<Directory>/**`, where the directory is the target name with spaces: `Chat Filter`, `Smiley Converter`, `System Profiler`, `User Insights`, `ZNC Additions` | first-party plugin bundles | `MainActor` |
 | `CocoaExtensions` | `Sources/Frameworks/Cocoa Extensions/**` | framework (Foundation/AppKit helpers) | `nonisolated` |
 | `GlasstualPluginKit` | `Sources/Frameworks/Plugin Kit/**` | framework (plugin ABI: `Sendable` event payloads, `@MainActor` callbacks) | `nonisolated` |
 | `IRCConnectionHost` | `Sources/Services/IRC Connection Host/**` | capability-limited XPC network host; its exported shim forwards to `ConnectionHost`, which owns sockets and the `Sendable` client proxy | `nonisolated` |
-| `GlasstualTests` | `Tests/GlasstualTests/**`, corpora under `Tests/Corpora/**` | Swift Testing bundle hosted by the app | `MainActor` |
+| `GlasstualTests` | `Tests/GlasstualTests/**` and three `Chat Filter` plugin sources with their two String Catalogs; the `IRCSpec` and `TLS` corpora ship as bundle resources, and the `History` fixture test reads its corpus from the source tree | Swift Testing bundle hosted by the app | `MainActor` |
 | `GlasstualE2ETests` | `Tests/GlasstualE2ETests/**` | Swift Testing bundle hosted by the test runner, not the app | `MainActor` |
 | `GlasstualE2EHarness` | `Tests/E2EHarness/**` | external Accessibility driver, watchdog and loopback peers | `MainActor` |
 
 `Sources/Shared/` holds the declarations the network host shares with the app
-(XPC protocols and connection envelopes) and the app-side preference store the
-host also reads; only what the `IRCConnectionHost` target lists crosses the
-process boundary. First-party plugin preference names live under
-`Sources/Plugins/Shared/`, compiled into the app and every bundled plugin.
+(XPC protocols and connection envelopes) and the app's preference store. The
+app compiles all of it. The `IRCConnectionHost` target lists the few files it
+compiles, and only those cross the process boundary. First-party plugin
+preference names live in `Sources/Plugins/Shared/FirstPartyPluginPreferences.swift`.
+The app, `Caffeine`, `ChatFilter`, `SmileyConverter` and `SystemProfiler`
+compile it.
 
 ## Isolation rules
 
@@ -131,8 +134,9 @@ hand a `Sendable` snapshot across.
 Two runtime checks back the static ones, both local-only because they are far
 too slow for CI: `make tsan` runs the suite under ThreadSanitizer, and
 `make smoke` launches the Debug app against a copy of the real preferences
-with `autoConnect` cleared, probes the main thread from outside the process
-every ten seconds, and reads the unified log back. The probe is what catches a
+with `autoConnect` cleared and a per-run scratch directory in place of the
+group container, probes the main thread from outside the process every ten
+seconds, and reads the unified log back. The probe is what catches a
 blocked main actor — the process stays alive and looks idle, but stops
 answering the accessibility API. Tests assert isolation with `expectMainActor()`
 and `IsolationProbe` from `Tests/GlasstualTests/Support/`.
@@ -164,3 +168,39 @@ and `IsolationProbe` from `Tests/GlasstualTests/Support/`.
   exercise.
 - Commits carry no AI attribution: no `Co-Authored-By` trailer, no generated-by
   note.
+
+## Agent skills
+
+Skills installed for this checkout live under `.agents/skills/` (read by
+Codex and OpenCode; `.claude/skills/` symlinks them for Claude Code), pinned in
+`skills-lock.json`. They are general Apple-platform guidance, and this file
+overrides them wherever the two disagree. The known disagreements:
+
+- `@unchecked Sendable`, `nonisolated(unsafe)`, `MainActor.assumeIsolated`,
+  GCD queues and locks other than `Mutex<Value>` are offered as last resorts in
+  `write-swift` and `swift-concurrency-pro`. Here they are banned outright; see
+  "Isolation rules".
+- `#available` gating with fallbacks (`swiftui-expert-skill`) does not apply:
+  the deployment target is macOS 26, so an API from 26 or earlier is used
+  directly.
+- `withKnownIssue` and `.disabled(…)` (`write-swift`) are banned under `Tests/`.
+- XCTest for UI automation does not apply: end-to-end coverage goes through the
+  Accessibility harness in `Tests/E2EHarness/`.
+- WebKit, iOS-only patterns and cross-platform fallbacks do not belong in this
+  macOS-only, native-transcript app.
+- `xcode-build-fixer` and `xcode-project-analyzer` edit or read
+  `project.pbxproj` settings. Here a build setting changes in `project.yml`,
+  followed by `make generate`; never edit `Glasstual.xcodeproj` by hand.
+- `xcode-compilation-analyzer` injects slow-type-checking warnings, which
+  `SWIFT_TREAT_WARNINGS_AS_ERRORS` turns into build failures. Pass
+  `SWIFT_TREAT_WARNINGS_AS_ERRORS=NO` for that run only. Point the build
+  benchmark scripts at `build/` for output and DerivedData.
+- `axiom-performance`, `axiom-networking`, `axiom-security` and
+  `swift-security-expert` include GCD timers, atomics, `@unchecked Sendable`
+  mocks, XCUITest launch tests and API snippets that do not compile. Use them
+  for diagnosis and Apple facts, and check code against the SDK. The
+  "always use the data protection keychain" advice must not strand existing
+  keychain items: migrate them.
+- The Core Data history store keeps automatic migration off on purpose.
+- The web quality skills apply to `.github/website/`. GitHub Pages cannot set
+  response headers, so ignore header findings such as CSP and HSTS.

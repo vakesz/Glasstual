@@ -39,7 +39,24 @@
 import Foundation
 
 public enum SendingMessage {
-	public static func string(command: String, arguments: [String]?) -> String {
+	/// Why an argument list has no wire spelling.
+	public enum ArgumentError: Error, Equatable {
+		/// A parameter before the last is empty, holds a space, or starts with
+		/// a colon. Only the trailing parameter can be any of those; anywhere
+		/// else it becomes a different number of parameters on the wire.
+		case malformedMiddleArgument(index: Int)
+	}
+
+	/** The line `command` with `arguments` is written as.
+
+	 The last argument travels as the trailing parameter whenever it has to — it
+	 is empty, holds a space, or starts with a colon — or wherever the command
+	 declares its text goes. Every argument before it has to be one wire token.
+	 An empty one used to be skipped, which moved every later argument up a
+	 place, and one holding a space went out as two; `/nick :foo` tripped a debug
+	 assertion. User input reaches here, so each of those is refused with an
+	 error instead. */
+	public static func string(command: String, arguments: [String]?) throws(ArgumentError) -> String {
 		let uppercaseCommand = command.uppercased()
 
 		guard let arguments, arguments.isEmpty == false else {
@@ -50,34 +67,26 @@ public enum SendingMessage {
 		let trailingParameter = IRCRemoteCommand(wireName: command)?.trailingParameter
 
 		for (index, argument) in arguments.enumerated() {
-			let isLastArgument = index == arguments.count - 1
-
-			/* Skip an empty argument rather than stopping at it, so the ones behind
-			 it still go out. An empty *last* argument is a different thing: RFC 1459
-			 2.3.1 lets the trailing parameter be empty, and dropping it changes what
-			 the command means -- "AWAY :" clears an away message where "AWAY" asks for
-			 nothing at all. */
-			guard argument.isEmpty == false || isLastArgument else {
-				continue
-			}
-
 			line.append(" ")
 
-			guard argument.isEmpty == false else {
-				line.append(":")
+			guard index == arguments.count - 1 else {
+				guard argument.isEmpty == false, argument.hasPrefix(":") == false, argument.contains(" ") == false else {
+					throw .malformedMiddleArgument(index: index)
+				}
+
+				line.append(argument)
 				continue
 			}
 
-			/* A parameter with a space in it can only travel as the trailing one,
-			 whatever the command's declared position says: `IRCRemoteCommand` knows
-			 where PRIVMSG puts its text, but not that this CAP REQ names eleven
-			 capabilities. Without the colon the server keeps the first word and
-			 drops the rest — Libera answered a batched request with one ACK and
-			 registration hung for the ten it never saw. */
-			if isLastArgument, argument.hasPrefix(":") || argument.contains(" ") {
-				assertLastArgumentMayBeTrailing(command: uppercaseCommand, trailingParameter: trailingParameter)
-				line.append(":")
-			} else if trailingParameter == .startsAtArgument(index) {
+			/* RFC 1459 2.3.1 lets the trailing parameter be empty, and dropping it
+			 changes what the command means -- "AWAY :" clears an away message where
+			 "AWAY" asks for nothing at all. A parameter with a space in it can only
+			 travel as the trailing one, whatever the command's declared position
+			 says: `IRCRemoteCommand` knows where PRIVMSG puts its text, but not that
+			 this CAP REQ names eleven capabilities. */
+			if argument.isEmpty || argument.hasPrefix(":") || argument.contains(" ")
+				|| trailingParameter == .startsAtArgument(index)
+			{
 				line.append(":")
 			}
 
@@ -87,37 +96,12 @@ public enum SendingMessage {
 		return line
 	}
 
-	/** Debug-only guard against a caller pre-joining several parameters.
-
-	 A command whose `trailingParameter` is `.never` takes each of its parameters
-	 as its own wire token: `MODE #chan +ooo alice bob carol`, not
-	 `MODE #chan :+ooo alice bob carol`. When such a command reaches the
-	 colonising branch above, a caller has joined a list with spaces and the
-	 server will read the whole thing as one token — a `+ooo` that ops nobody.
-
-	 Two commands are exceptions `TrailingParameter` cannot express. `CAP REQ :multi-prefix
-	 sasl` is how the protocol batches a capability request, and `PONG` echoes
-	 whatever token the server chose to `PING` with — if that token had spaces in
-	 it, it arrived as a trailing parameter and goes back as one.
-
-	 An `assert` rather than a `precondition`, because the shipping client should
-	 send a malformed line rather than terminate; the next pre-joined list fails
-	 a test instead of a connection. */
-	private static let commandsWithAnUndeclaredTrailingParameter: Set<String> = ["CAP", "PONG"]
-
-	private static func assertLastArgumentMayBeTrailing(
+	public static func string(
 		command: String,
-		trailingParameter: TrailingParameter?
-	) {
-		assert(
-			trailingParameter != .never
-				|| commandsWithAnUndeclaredTrailingParameter.contains(command),
-			"\(command) takes no trailing parameter, so its last argument cannot hold a space"
-		)
-	}
-
-	public static func string(command: String, arguments: [String]?, tags: [String: String]?) -> String {
-		let line = string(command: command, arguments: arguments)
+		arguments: [String]?,
+		tags: [String: String]?
+	) throws(ArgumentError) -> String {
+		let line = try string(command: command, arguments: arguments)
 
 		guard let tags, tags.isEmpty == false else {
 			return line

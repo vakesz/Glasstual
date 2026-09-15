@@ -56,6 +56,20 @@ struct ClientRequestedCommandsTests {
 		#expect(requests.visibleIsonRequest == false)
 	}
 
+	@Test("Closing an ISON request answers with the nicknames that request asked about")
+	func closingIsonRequestReturnsItsNicknames() {
+		let requests = ClientRequestedCommands()
+
+		requests.recordIsonRequestOpened(askingAbout: ["alice", "bob"])
+		requests.recordIsonRequestOpened(askingAbout: ["carol"])
+
+		#expect(requests.recordIsonRequestClosed() == ["alice", "bob"])
+		#expect(requests.hasOpenIsonRequest)
+		#expect(requests.recordIsonRequestClosed() == ["carol"])
+		#expect(requests.hasOpenIsonRequest == false)
+		#expect(requests.recordIsonRequestClosed().isEmpty)
+	}
+
 	@Test("Requests for the same command are closed in insertion order")
 	func requestsWithSameCommandCloseInInsertionOrder() {
 		let requests = ClientRequestedCommands()

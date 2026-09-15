@@ -122,7 +122,7 @@ public extension MenuActionCoordinator {
 		 Deferring to the next main-actor turn preserves the click-time
 		 selection until that action has run. */
 		selectionResetTask?.cancel()
-		selectionResetTask = Task { @MainActor [weak self] in
+		selectionResetTask = Task { [weak self] in
 			guard let self, Task.isCancelled == false else {
 				return
 			}
@@ -142,9 +142,11 @@ public extension MenuActionCoordinator {
 
 	/** Symbols are for the menus that pop up under the pointer.
 
-	 The menu bar is deliberately absent from this list: macOS draws no images
-	 beside its own menu-bar commands, and the blank spacers a mixed column
-	 needed went with them. */
+	 The menu bar is absent from this list, and that includes the Channel and
+	 Query menus. Those two instances hang in the menu bar itself, so drawing
+	 symbols into them put images beside menu-bar commands, which macOS never
+	 does. The transcript menu's Channel submenu is a copy taken before this
+	 runs, and it gets its symbols through `channelViewGeneralMenu`. */
 	private func applyMenuSymbols() {
 		guard let menuController else {
 			return
@@ -155,9 +157,6 @@ public extension MenuActionCoordinator {
 			menuController.channelViewGeneralMenu,
 			menuController.channelViewURLMenu,
 			menuController.dockMenu,
-			menuController.mainMenuChannelMenu,
-			menuController.mainMenuQueryMenu,
-			menuController.mainWindowSegmentedControllerCellMenu,
 			menuController.serverListNoSelectionMenu,
 			menuController.userControlMenu,
 		]

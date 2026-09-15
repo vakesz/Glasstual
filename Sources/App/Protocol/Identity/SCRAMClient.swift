@@ -40,8 +40,8 @@ import CryptoKit
 import Foundation
 import Security
 
-/// Error codes in `SCRAMClient.errorDomain`.
-public enum SCRAMClientErrorCode: Int {
+/// Why a SCRAM exchange failed.
+public nonisolated enum SCRAMClientErrorCode: Int, Sendable { // nonisolated: value
 	case invalidState = 1
 	case malformedServerMessage
 	case nonceMismatch
@@ -50,6 +50,25 @@ public enum SCRAMClientErrorCode: Int {
 	case serverSignatureMismatch
 	case keyDerivationFailed
 	case iterationCountTooHigh
+}
+
+/// A failed SCRAM exchange. It bridges to an `NSError` in
+/// ``errorDomain`` whose code is the ``SCRAMClientErrorCode`` raw value.
+public nonisolated struct SCRAMClientError: LocalizedError, CustomNSError { // nonisolated: value
+	public static let errorDomain = "TLOSCRAMClientErrorDomain"
+
+	public let code: SCRAMClientErrorCode
+	/// What went wrong, in terms of the exchange. Not localized: it names wire
+	/// attributes and is shown after a localized lead-in.
+	public let reason: String
+
+	public var errorCode: Int {
+		code.rawValue
+	}
+
+	public var errorDescription: String? {
+		reason
+	}
 }
 
 /// Client side of SASL SCRAM-SHA-256 (RFC 5802, RFC 7677).
@@ -77,8 +96,6 @@ public final class SCRAMClient: NSObject {
 		case authenticated
 		case failed
 	}
-
-	public static let errorDomain = "TLOSCRAMClientErrorDomain"
 
 	/// The mechanism name as advertised in `sasl=` values and on the wire.
 	public nonisolated static let mechanismName = "SCRAM-SHA-256" // nonisolated: let
@@ -259,14 +276,10 @@ public final class SCRAMClient: NSObject {
 
 	// MARK: - Helpers
 
-	private func fail(_ code: SCRAMClientErrorCode, _ description: String) -> NSError {
+	private func fail(_ code: SCRAMClientErrorCode, _ reason: String) -> SCRAMClientError {
 		state = .failed
 
-		return NSError(
-			domain: SCRAMClient.errorDomain,
-			code: code.rawValue,
-			userInfo: [NSLocalizedDescriptionKey: description]
-		)
+		return SCRAMClientError(code: code, reason: reason)
 	}
 
 	static func constantTimeEquals(_ lhs: Data, _ rhs: Data) -> Bool {

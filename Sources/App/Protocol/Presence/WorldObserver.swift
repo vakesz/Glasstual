@@ -97,7 +97,12 @@ extension WorldObserver {
 
 /** The observer list. Entries are weak: an observer is a window or a menu
  controller whose lifetime the world has no say in, and a dead entry is dropped
- the next time the list is walked. */
+ once an event has been delivered past it.
+
+ Delivery walks a snapshot rather than the list itself. An observer that
+ registered another from inside an event was writing to the list while the
+ delivery loop still held it for writing — an exclusivity violation — and the
+ loop then put back the list it had started with, losing the registration. */
 @MainActor
 struct WorldObserverList {
 	private struct Entry {
@@ -107,25 +112,22 @@ struct WorldObserverList {
 	private var entries: [Entry] = []
 
 	mutating func add(_ observer: any WorldObserver) {
+		pruneReleased()
 		guard entries.contains(where: { $0.observer === observer }) == false else { return }
 		entries.append(Entry(observer: observer))
 	}
 
 	mutating func remove(_ observer: any WorldObserver) {
-		entries.removeAll { $0.observer === observer || $0.observer == nil }
+		entries.removeAll { $0.observer == nil || $0.observer === observer }
 	}
 
-	/// Delivers `event` to every live observer, forgetting the dead ones.
-	mutating func forEach(_ event: (any WorldObserver) -> Void) {
-		var survivors: [Entry] = []
-		survivors.reserveCapacity(entries.count)
+	/// The observers still alive, in the order they registered.
+	var liveObservers: [any WorldObserver] {
+		entries.compactMap(\.observer)
+	}
 
-		for entry in entries {
-			guard let observer = entry.observer else { continue }
-			survivors.append(entry)
-			event(observer)
-		}
-
-		entries = survivors
+	/// Forgets the entries whose observer has gone.
+	mutating func pruneReleased() {
+		entries.removeAll { $0.observer == nil }
 	}
 }

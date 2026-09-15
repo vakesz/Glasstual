@@ -397,9 +397,16 @@ public nonisolated struct TranscriptTheme: Codable, Equatable, Sendable { // non
 	/// only produce a choice that cannot be applied.
 	static let fontSizeRange: ClosedRange<CGFloat> = 9 ... 36
 
+	/** The longest name, font name or format a theme may carry, in characters.
+
+	 Each is drawn or formatted for every transcript line, and an imported
+	 document is whatever someone wrote, so none is left unbounded. */
+	static let maximumTextLength = 256
+
 	var isValid: Bool {
 		formatVersion == Self.currentFormatVersion &&
 			name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false &&
+			[name, fontName, timestampFormat, nicknameFormat].allSatisfy { $0.count <= Self.maximumTextLength } &&
 			fontSize.isFinite && Self.fontSizeRange.contains(fontSize) &&
 			lineSpacing.isFinite && (0 ... 16).contains(lineSpacing) &&
 			messageSpacing.isFinite && (0 ... 32).contains(messageSpacing) &&

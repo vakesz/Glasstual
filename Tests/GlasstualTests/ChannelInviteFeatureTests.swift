@@ -40,15 +40,23 @@ struct ChannelInviteFeatureTests {
 		#expect(ChannelInviteStrings.inviteButtonTitle == "Invite")
 	}
 
-	@Test("Accepting the sheet reports the selected channel")
-	func adapterUsesTheTypedLegacyDelegateContract() {
+	@Test("Inviting reports the chosen channel to the delegate")
+	func invitingReportsTheChosenChannel() {
 		let adapter = ChannelInviteSheet(nicknames: ["alice"], on: TestClient())
 		let delegate = ChannelInviteDelegateSpy()
 		adapter.delegate = delegate
 
 		adapter.start(withChannels: ["#general", "#support"])
-		adapter.submit()
+		adapter.invite(to: "#support")
 
-		#expect(delegate.selectedChannel == "#general")
+		#expect(delegate.selectedChannel == "#support")
+	}
+
+	@Test("The picker starts on the first channel offered", arguments: [
+		(["#general", "#support"], "#general"),
+		([], ""),
+	])
+	func pickerStartsOnTheFirstChannel(_ channels: [String], _ selection: String) {
+		#expect(ChannelInviteView.initialSelection(from: channels) == selection)
 	}
 }

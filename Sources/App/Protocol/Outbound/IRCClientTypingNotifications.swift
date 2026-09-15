@@ -45,6 +45,9 @@ nonisolated enum TypingState: String, Sendable { // nonisolated: value
 	case done
 }
 
+/// The client-only tag a typing notification travels in.
+private let typingTagName = "+typing"
+
 enum OutboundTypingPolicy {
 	static let activeInterval: TimeInterval = 3
 	static let pausedDelay: TimeInterval = 5
@@ -63,7 +66,7 @@ public extension IRCClient {
 	func typingNotificationsAvailable(for channel: Channel?) -> Bool {
 		guard let channel, channel.isUtility == false else { return false }
 		guard channel.isChannel || channel.isPrivateMessage else { return false }
-		return isLoggedIn && isCapabilityEnabled(.messageTags)
+		return isLoggedIn && isCapabilityEnabled(.messageTags) && isClientTagPermitted(typingTagName)
 	}
 
 	func noteLocalUserTyping(_ text: String, in channel: Channel?) {
@@ -87,7 +90,7 @@ public extension IRCClient {
 			previousState: typingStateSent[key],
 			lastSentAt: typingActiveSentAt[key],
 			now: date
-		), sendTagMessage(["+typing": TypingState.active.rawValue], toTarget: channel.name) {
+		), sendTagMessage([typingTagName: TypingState.active.rawValue], toTarget: channel.name) {
 			typingActiveSentAt[key] = date
 			typingStateSent[key] = .active
 		}
@@ -123,7 +126,7 @@ public extension IRCClient {
 			return
 		}
 
-		if sendTagMessage(["+typing": TypingState.paused.rawValue], toTarget: channel.name) {
+		if sendTagMessage([typingTagName: TypingState.paused.rawValue], toTarget: channel.name) {
 			typingStateSent[key] = .paused
 		}
 	}
@@ -139,7 +142,7 @@ public extension IRCClient {
 		typingActiveSentAt.removeValue(forKey: key)
 
 		if typingNotificationsAvailable(for: channel) {
-			_ = sendTagMessage(["+typing": TypingState.done.rawValue], toTarget: channel.name)
+			_ = sendTagMessage([typingTagName: TypingState.done.rawValue], toTarget: channel.name)
 		}
 	}
 

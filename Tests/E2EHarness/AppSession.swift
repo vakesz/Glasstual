@@ -56,6 +56,34 @@ enum AppSession {
 		return probe
 	}
 
+	/// Wait until the running probe has answered `additional` more times than
+	/// it had when this was called. A scenario uses it to keep the app under
+	/// observation for a counted number of answered probes, not a fixed delay.
+	static func awaitProbeSamples(_ additional: Int, driver: AccessibilityDriver) async throws {
+		let evidence = driver.artifactPrefix + "probe-evidence"
+		let baseline = try probeSampleCount(evidence)
+		try await driver.wait("probe answered \(additional) more times") { _ in
+			try probeSampleCount(evidence) >= baseline + additional
+		}
+	}
+
+	/// The sample count the probe writes first in its evidence file.
+	private static func probeSampleCount(_ evidence: String) throws -> Int {
+		guard try HarnessFiles.exists(evidence) else { return 0 }
+		return try Int(HarnessFiles.read(evidence).split(separator: " ").first ?? "") ?? 0
+	}
+
+	/// The PIDs LaunchServices reports for the application's bundle identifier
+	/// right now, sorted. A launch-time `NSRunningApplication` keeps its PID for
+	/// life, so only a fresh lookup can show a restarted or duplicate instance.
+	static func runningPIDs(of application: NSRunningApplication) -> [pid_t] {
+		guard let bundleID = application.bundleIdentifier else { return [] }
+		return NSRunningApplication.runningApplications(withBundleIdentifier: bundleID)
+			.filter { !$0.isTerminated }
+			.map(\.processIdentifier)
+			.sorted()
+	}
+
 	/// Ask the probe to stop and require a normal exit with its completion marker.
 	static func stopProbe(_ probe: Process, driver: AccessibilityDriver) async throws {
 		let prefix = driver.artifactPrefix
@@ -119,5 +147,16 @@ enum AppSession {
 		}
 		guard let running else { throw HarnessFailure.assertion("Relaunched app failed to start") }
 		return (app, running)
+	}
+}
+
+extension Process.TerminationReason {
+	/// The spelling the evidence files record and the E2E tests compare.
+	var evidenceName: String {
+		switch self {
+		case .exit: "exit"
+		case .uncaughtSignal: "uncaughtSignal"
+		@unknown default: "unknown(\(rawValue))"
+		}
 	}
 }

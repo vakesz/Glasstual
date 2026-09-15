@@ -17,10 +17,6 @@ import os
 
 private let terminationHistoricLogSaveTimeout: TimeInterval = 15.0
 
-private let pluginsFinishedLoadingNotification = Notification.Name(
-	"THOPluginManagerFinishedLoadingPluginsNotification"
-)
-
 /// AppKit ships `NSWorkspace.WillSleepMessage` but no power-off equivalent, so
 /// the interop shape is spelled out here: the notification to bridge from, and
 /// how to make the message. Declaring it as a `MainActorMessage` is what makes
@@ -74,6 +70,9 @@ enum ApplicationTerminationPolicy {
 		/// The confirmation sheet is on screen: the answer to that one decides
 		/// this request too, so do not ask a second time.
 		case alreadyDeciding
+		/// The confirmation sheet is on screen, but this request cannot wait for
+		/// an answer. Take the sheet down and run the termination steps.
+		case overrideConfirmation
 		/// Run the termination steps now.
 		case begin
 		/// Ask before quitting on top of a live connection.
@@ -91,8 +90,10 @@ enum ApplicationTerminationPolicy {
 			return .alreadyTerminating
 		}
 
+		/* The machine powering off cannot wait for a question the reader may
+		 never come back to answer. */
 		if isAwaitingConfirmation {
-			return .alreadyDeciding
+			return skipConfirmation ? .overrideConfirmation : .alreadyDeciding
 		}
 
 		if skipConfirmation || confirmQuitPreference == false || hasLiveConnection == false {
@@ -117,18 +118,13 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 
 	private var hasInstalledMainWindow = false
 
-	public private(set) var debugModeIsOn = false
 	public private(set) var ghostModeIsOn = false
-	public private(set) var applicationIsActive = false
 	public private(set) var applicationIsLaunched = false
-	public private(set) var applicationIsChangingActiveState = false
 
 	/// Teardown has begun: nothing may act on the connection tree any more.
 	public var applicationIsTerminating: Bool {
 		terminationStage >= .disconnecting
 	}
-
-	public var skipTerminateSave = false
 
 	private var terminationStage: ApplicationTerminationStage = .running
 	/// The two log drains still running. Step three waits for both, or for the
@@ -137,6 +133,9 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 	/// Bounds both history persistence and the independent transcript-file drain.
 	private var historicLogSaveTimeoutTask: Task<Void, Never>?
 	private var skipTerminateConfirmation = false
+	/// The quit confirmation while it is on screen. Cancelling it takes the
+	/// sheet down without its answer being acted on.
+	private var terminationConfirmation: Task<Void, Never>?
 	private let notifications = NotificationSubscriptions()
 	private lazy var resourceFileImporter = ResourceFileImporter()
 
@@ -151,7 +150,7 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 				return
 			}
 
-			Task { @MainActor [weak self] in
+			Task { [weak self] in
 				self?.terminatingClientsDidFinish()
 			}
 		}
@@ -169,16 +168,10 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 	private func prepareInitialState() {
 		Logging.setDefaultSubsystem(toMainBundleCategory: "General")
 
-		let keyboardKeys = NSEvent.modifierFlags.intersection(.deviceIndependentFlagsMask)
-
-		if keyboardKeys.contains(.control) {
-			debugModeIsOn = true
-			Self.logger.info("Launching in debug mode")
-		}
-
 		#if DEBUG
 			ghostModeIsOn = true // Do not use auto connect during debug
 		#else
+			let keyboardKeys = NSEvent.modifierFlags.intersection(.deviceIndependentFlagsMask)
 			if keyboardKeys.contains(.shift) {
 				ghostModeIsOn = true
 				Self.logger.info("Launching without auto connecting to the configured servers")
@@ -186,7 +179,12 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 		#endif
 	}
 
-	/// Builds the main window after the programmatic application and menu graph.
+	/** Builds the main window after the programmatic application and menu graph.
+
+	 It has to exist before `applicationDidFinishLaunching`, because AppKit
+	 restores windows before that call. A restoration class with no window to
+	 hand back restores nothing, so the frame, full screen and the Space were
+	 all lost. */
 	private func installMainWindow() {
 		guard hasInstalledMainWindow == false else {
 			return
@@ -213,6 +211,7 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 		window.isReleasedWhenClosed = false
 		window.setAccessibilityLabel(AccessibilityStrings.mainWindow)
 		mainWindow = window
+		SheetPresentation.host = window
 		window.configure()
 	}
 
@@ -227,6 +226,7 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 		let services = ClientEnvironment.shared.services
 		services.output = mainWindow
 		services.menu = menuController
+		services.channelList = SharedApplication.sharedApplicationScenes()
 		services.applicationState = self
 		services.world = world
 
@@ -263,7 +263,7 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 			.observe(NSWorkspace.screensDidSleepNotification, center: workspaceCenter) { [weak self] notification in
 				self?.computerScreenWillSleep(notification)
 			}
-		notifications.observe(pluginsFinishedLoadingNotification) { [weak self] notification in
+		notifications.observe(PluginManager.finishedLoadingNotification) { [weak self] notification in
 			self?.pluginsFinishedLoading(notification)
 		}
 
@@ -332,10 +332,11 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 		 finished launching. A simple access to the singleton will set this
 		 for us which we can just do here. */
 		_ = SharedApplication.sharedNotificationController()
+
+		installMainWindow()
 	}
 
 	public func applicationDidFinishLaunching(_: Notification) {
-		installMainWindow()
 		mainWindow.makeMain()
 		mainWindow.makeKeyAndOrderFront(nil)
 	}
@@ -361,22 +362,12 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 		SharedApplication.sharedApplicationScenes().openOnboarding()
 	}
 
-	public func applicationWillResignActive(_: Notification) {
-		applicationIsChangingActiveState = true
-	}
-
-	public func applicationWillBecomeActive(_: Notification) {
-		applicationIsChangingActiveState = true
-	}
-
-	public func applicationDidResignActive(_: Notification) {
-		applicationIsActive = false
-		applicationIsChangingActiveState = false
-	}
+	/* The delegate stays attached until the process exits. The callbacks below
+	 can therefore arrive during termination, and they must not start work that
+	 teardown is already undoing. */
 
 	public func applicationDidBecomeActive(_: Notification) {
-		applicationIsActive = true
-		applicationIsChangingActiveState = false
+		guard applicationIsTerminating == false else { return }
 		if SharedApplication.sharedPluginManager().pluginsLoaded {
 			SharedApplication.sharedPluginManager().refreshScriptCommands()
 		}
@@ -396,6 +387,7 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 	 `read(from:ofType:)` had to assume the main actor before it could put an
 	 alert on screen; this delegate method is isolated by declaration. */
 	public func application(_: NSApplication, open urls: [URL]) {
+		guard applicationIsTerminating == false else { return }
 		resourceFileImporter.open(urls)
 	}
 
@@ -430,8 +422,16 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 			Self.terminationLogger.debug("Termination is already in progress")
 		case .alreadyDeciding:
 			Self.terminationLogger.debug("Termination confirmation is already on screen")
+		case .overrideConfirmation:
+			Self.terminationLogger.debug("Termination can no longer wait for the confirmation")
+			terminationConfirmation?.cancel()
+			terminationConfirmation = nil
+			terminationStage = .running
+			Task { [weak self] in
+				self?.performApplicationTerminationStepOne()
+			}
 		case .begin:
-			Task { @MainActor [weak self] in
+			Task { [weak self] in
 				self?.performApplicationTerminationStepOne()
 			}
 		case .confirm:
@@ -441,23 +441,36 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 		return .terminateLater
 	}
 
-	/** The sheet's completion reports to NSApp and begins termination itself.
+	/** The sheet's answer reports to NSApp and begins termination itself.
 
 	 Sheets stack, so a second ⌘Q while this one is up would queue a second
 	 sheet and run both completions: two shutdowns, or a cancel answered on top
 	 of one already in flight. The stage is what keeps the second request from
-	 asking again. */
+	 asking again.
+
+	 The window comes forward first, because nobody can answer a sheet on a
+	 window they cannot see. Quitting from the Dock with the main window closed,
+	 or with the application hidden, left termination stuck behind that sheet
+	 for good, and a logout stuck behind termination. */
 	private func presentTerminationConfirmation() {
 		terminationStage = .confirming
 
-		Alerts.alertSheet(
-			body: PromptStrings.Application.quitBody,
+		NSApp.activate()
+		mainWindow.makeKeyAndOrderFront(nil)
+
+		let request = AlertRequest(
 			title: PromptStrings.Application.quitTitle,
+			body: PromptStrings.Application.quitBody,
 			defaultButton: PromptStrings.Application.quitButtonTitle,
-			alternateButton: PromptStrings.Action.cancel,
-			otherButton: nil
-		) { [weak self] outcome in
-			guard let self else { return }
+			alternateButton: PromptStrings.Action.cancel
+		)
+
+		terminationConfirmation = Task { [weak self] in
+			let outcome = await Alerts.run(request, on: .mainWindow)
+			/* A request that could not wait cancelled this task. It took the
+			 sheet down and began termination itself. */
+			guard Task.isCancelled == false, let self else { return }
+			terminationConfirmation = nil
 			terminationStage = .running
 
 			let result = outcome.response == .default
@@ -525,9 +538,9 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 	}
 
 	private func performApplicationTerminationStepOne() {
-		/* Nothing may run the teardown twice: a second pass nils the delegate
-		 again and re-seeds `terminatingClientCount` while the first round's
-		 clients are still reporting in. */
+		/* Nothing may run the teardown twice. A second pass re-seeds
+		 `terminatingClientCount` while the first round's clients are still
+		 reporting in. */
 		guard applicationIsTerminating == false else {
 			Self.terminationLogger.debug("Step one skipped; termination is already in progress")
 			return
@@ -541,8 +554,12 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 
 		mainWindow.prepareForApplicationTermination()
 
-		Self.terminationLogger.debug("Giving up shared application delegation")
-		NSApp.delegate = nil
+		/* The application keeps its delegate here. Without one, AppKit answers
+		 a second quit request, such as another ⌘Q, the Dock's Quit or a
+		 logout, with an immediate exit. That exit came before step three saved
+		 the world, unloaded the plugins and drained the logs.
+		 `applicationShouldTerminate` answers the request instead and leaves
+		 this shutdown alone. */
 
 		Self.terminationLogger.debug("Cancelling lifecycle notification subscriptions")
 		notifications.cancelAll()
@@ -587,10 +604,8 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 
 		terminationStage = .finished
 
-		if skipTerminateSave == false {
-			Self.terminationLogger.debug("Saving IRC world")
-			world.save()
-		}
+		Self.terminationLogger.debug("Saving IRC world")
+		world.save()
 
 		Self.terminationLogger.debug("Unloading plugins")
 		SharedApplication.sharedPluginManager().unloadPlugins()
@@ -610,7 +625,8 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 	 `applicationShouldTerminate` read termination as already under way and
 	 answer `.terminateLater` without ever running step one: no client left IRC
 	 gracefully and no historic log was saved. The flag belongs to step one;
-	 all this path skips is the confirmation sheet. */
+	 all this path skips is the confirmation sheet. A sheet already on screen
+	 comes down instead of holding termination up. */
 	public func terminateGracefully() {
 		skipTerminateConfirmation = true
 
@@ -643,8 +659,12 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 
 		world.prepareForSleep()
 
-		SharedApplication.sharedSpeechSynthesizer().isStopped = true
-		SharedApplication.sharedSpeechSynthesizer().clearQueue()
+		/* Only an engine that already exists. Going to sleep is no reason to
+		 start one. */
+		if let speechSynthesizer = SharedApplication.existingSpeechSynthesizer() {
+			speechSynthesizer.isStopped = true
+			speechSynthesizer.clearQueue()
+		}
 
 		SharedApplication.sharedNetworkReachabilityNotifier().stopNotifier()
 	}
@@ -652,7 +672,7 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 	private func computerDidWakeUp(_: Notification) {
 		Self.logger.log("Waking from sleep")
 
-		SharedApplication.sharedSpeechSynthesizer().isStopped = false
+		SharedApplication.existingSpeechSynthesizer()?.isStopped = false
 		_ = SharedApplication.sharedNetworkReachabilityNotifier().startNotifier()
 
 		world.autoConnect(afterWakeup: true)

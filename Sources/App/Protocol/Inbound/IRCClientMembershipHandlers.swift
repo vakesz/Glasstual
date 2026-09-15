@@ -385,16 +385,12 @@ public extension IRCClient {
 	 was never renamed and `stopTrackingQueryPeer` was never called, so the watch
 	 list kept asking after a nickname that now belongs to somebody else. */
 	private func renameQuery(_ query: Channel, from oldNickname: String, to newNickname: String) {
-		guard let existing = findChannel(newNickname) else {
-			stopTrackingQueryPeer(oldNickname)
-			query.name = newNickname
-			trackQueryPeer(newNickname)
-			output?.reloadTreeItem(query)
-			output?.updateTitle(for: query)
+		/* A rename that only changes case finds the query itself under the new
+		 name, and is no collision. */
+		guard let existing = findChannel(newNickname), existing !== query else {
+			retitleQuery(query, from: oldNickname, to: newNickname)
 			return
 		}
-
-		guard existing !== query else { return }
 
 		stopTrackingQueryPeer(oldNickname)
 		applyPresence(false, to: query)
@@ -403,6 +399,29 @@ public extension IRCClient {
 		if existing.isPrivateMessage {
 			applyPresence(true, to: existing)
 		}
+	}
+
+	/** Puts `query` under `newNickname`, and moves the server's watch entry for
+	 its peer along with it.
+
+	 The one rename both a peer's NICK and `/setqueryname` go through: renaming
+	 the query alone left the watch list asking after the old nickname and never
+	 reporting the new one, so the row stopped following its peer. */
+	func retitleQuery(_ query: Channel, from oldNickname: String, to newNickname: String) {
+		let peerChanged = casefoldNickname(oldNickname) != casefoldNickname(newNickname)
+
+		if peerChanged {
+			stopTrackingQueryPeer(oldNickname)
+		}
+
+		query.name = newNickname
+
+		if peerChanged {
+			trackQueryPeer(newNickname)
+		}
+
+		output?.reloadTreeItem(query)
+		output?.updateTitle(for: query)
 	}
 
 	private func updateTrackingStatus(for entry: AddressBookEntry, message: Message) {

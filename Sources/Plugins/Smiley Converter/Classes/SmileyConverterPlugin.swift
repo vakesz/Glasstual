@@ -165,7 +165,10 @@ extension SmileyConverterPlugin: GlasstualPlugin, PluginPreferencesProviding {
 		pluginWillUnload()
 		self.host = host
 		rebuildConversionSnapshot()
-		defaultsObservation = PluginDefaultsObservation { [weak self] in
+		defaultsObservation = PluginDefaultsObservation(keys: [
+			FirstPartyPluginPreferences.smileyServiceEnabled.name,
+			FirstPartyPluginPreferences.smileyExtraEmoticons.name,
+		]) { [weak self] in
 			self?.rebuildConversionSnapshot()
 		}
 	}
@@ -179,10 +182,8 @@ extension SmileyConverterPlugin: GlasstualPlugin, PluginPreferencesProviding {
 
 	var pluginPreferencesPane: PluginPreferencesPane? {
 		guard let host else { return nil }
-		return PluginPreferencesPane(title: String(localized: .BasicLanguage.preferencesPaneTitle)) { [weak self] in
-			SmileyConverterPreferencesView(defaults: host.defaults) {
-				self?.rebuildConversionSnapshot()
-			}
+		return PluginPreferencesPane(title: String(localized: .BasicLanguage.preferencesPaneTitle)) {
+			SmileyConverterPreferencesView(defaults: host.defaults)
 		}
 	}
 

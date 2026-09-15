@@ -15,14 +15,11 @@ import AppKit
 /// The shape of `TVCMainWindowAppearance.plist`.
 struct MainWindowAppearanceSchema: Decodable, Sendable {
 	let defaultWindowSize: AppearanceSize
-	let channelViewOverlayDefaultBackgroundColor: AppearanceStatefulColor?
 }
 
 public final class MainWindowAppearance: ApplicationAppearance {
 	public private(set) var textView: MainWindowTextViewAppearance
 	public private(set) var defaultWindowSize: NSSize = .zero
-	public private(set) var channelViewOverlayDefaultBackgroundColorActiveWindow: NSColor?
-	public private(set) var channelViewOverlayDefaultBackgroundColorInactiveWindow: NSColor?
 
 	@MainActor
 	public init?() {
@@ -42,9 +39,5 @@ public final class MainWindowAppearance: ApplicationAppearance {
 		}
 
 		defaultWindowSize = schema.defaultWindowSize.size
-		channelViewOverlayDefaultBackgroundColorActiveWindow =
-			schema.channelViewOverlayDefaultBackgroundColor?.color(forActiveWindow: true)
-		channelViewOverlayDefaultBackgroundColorInactiveWindow =
-			schema.channelViewOverlayDefaultBackgroundColor?.color(forActiveWindow: false)
 	}
 }

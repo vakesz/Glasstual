@@ -122,6 +122,38 @@ struct InboundPresenceTrackingTests {
 		#expect(client.findChannel("bob") === aliceQuery)
 	}
 
+	/// `/setqueryname` looks the new name up under the server's casemapping, so
+	/// a change of case finds the query being renamed — which it offered to
+	/// delete as a conflicting conversation.
+	@Test("Renaming a query to a change of case keeps the query")
+	func setQueryNameToAChangeOfCaseKeepsTheQuery() throws {
+		let client = client()
+		client.isConnected = true
+		client.markAsLoggedIn()
+		let peerQuery = try query("bob", on: client)
+
+		client.sendCommand("setqueryname Bob", completeTarget: true, target: "bob")
+
+		#expect(peerQuery.name == "Bob")
+		#expect(client.findChannel("bob") === peerQuery)
+		#expect(client.sentLines.count == 0)
+	}
+
+	@Test("Renaming a query moves the peer's MONITOR entry to the new nickname")
+	func setQueryNameMovesTheMonitorEntry() throws {
+		let client = client()
+		client.isConnected = true
+		client.markAsLoggedIn()
+		client.enableCapability(.monitorCommand)
+		let peerQuery = try query("bob", on: client)
+		client.sentLines.removeAllObjects()
+
+		client.sendCommand("setqueryname carol", completeTarget: true, target: "bob")
+
+		#expect(peerQuery.name == "carol")
+		#expect(client.sentLines.compactMap { $0 as? String } == ["MONITOR - bob", "MONITOR + carol"])
+	}
+
 	/// RPL_ISON answers with whatever spelling the server prefers, and the
 	/// query row follows the peer on and off line from it.
 	@Test("An ISON reply matches a query under the server's casemapping")
@@ -131,10 +163,53 @@ struct InboundPresenceTrackingTests {
 
 		client.markAsLoggedIn()
 		peerQuery.deactivate()
+		client.onISONTimer()
 
 		try receive(":irc.example.net 303 me :nick{home}", on: client)
 
 		#expect(peerQuery.isActive)
+	}
+
+	/// A poll longer than one ISON draws one reply per command, and each reply
+	/// names only who is online among its own nicknames.
+	@Test("An ISON reply leaves the nicknames another command asked about alone")
+	func isonReplyReconcilesOnlyItsOwnNicknames() throws {
+		let client = client()
+		let peers = try (1 ... 16).map { try query("peer\($0)", on: client) }
+
+		client.isConnected = true
+		client.markAsLoggedIn()
+		client.onISONTimer()
+
+		let isonLines = client.sentLines.compactMap { $0 as? String }.filter { $0.hasPrefix("ISON ") }
+		try #require(isonLines.count == 2)
+
+		// The first command's reply: peer1 is gone, every other peer is online.
+		let firstReply = (2 ... 15).map { "peer\($0)" }.joined(separator: " ")
+		try receive(":irc.example.net 303 me :\(firstReply)", on: client)
+
+		#expect(peers[0].isActive == false)
+		let middlePeersAreActive = peers[1 ..< 15].allSatisfy(\.isActive)
+		#expect(middlePeersAreActive)
+		#expect(peers[15].isActive, "peer16 was asked about by the second command")
+
+		try receive(":irc.example.net 303 me :peer16", on: client)
+
+		#expect(peers[15].isActive)
+	}
+
+	@Test("A server with MONITOR is not polled with ISON")
+	func monitorServerIsNotPolled() throws {
+		let client = client()
+		_ = try query("peer", on: client)
+
+		client.isConnected = true
+		client.markAsLoggedIn()
+		client.enableCapability(.monitorCommand)
+		client.onISONTimer()
+
+		let sent = client.sentLines.compactMap { $0 as? String }
+		#expect(sent.contains { $0.hasPrefix("ISON") } == false)
 	}
 
 	// MARK: - Typing

@@ -547,7 +547,7 @@ struct IRCClientHistoryTests {
 
 		try withChannel(named: "#chat", on: client) { channel in
 			index(logLine(messageIdentifier: "r1", nickname: "a", text: "hi", date: Date()), for: channel)
-			client.sendReadMarker(for: channel)
+			client.sendReadMarker(for: channel, date: Date())
 
 			#expect(client.sentLines.count == 0)
 		}

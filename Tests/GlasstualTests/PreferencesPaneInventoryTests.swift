@@ -254,16 +254,32 @@ struct PreferencesFacadeBindingTests {
 		let key = Preferences.Logging.scrollbackSaveLimit
 		defer { key.reset() }
 
-		let binding = preferences.numberFieldBinding(for: key)
-		binding.wrappedValue = "20000"
+		let field = preferences.numberField(for: key)
+		#expect(field.write("20000"))
 		#expect(key.value == 20000)
-		binding.wrappedValue = "1"
+		#expect(field.write("1") == false)
 		#expect(key.value == 20000)
-		binding.wrappedValue = "999999"
+		#expect(field.write("999999") == false)
 		#expect(key.value == 20000)
-		binding.wrappedValue = "-7"
+		#expect(field.write("-7") == false)
 		#expect(key.value == 20000)
 		#expect(Preferences.Logging.scrollbackSaveRange == 100 ... 50000)
+	}
+
+	/// The store normalises what it accepts, so reading back something other
+	/// than the typed text is not a refusal.
+	@Test("A number entry the store normalises is not reported as rejected", arguments: ["0200", "+200", " 200"])
+	func normalisedNumberEntryIsAccepted(_ input: String) {
+		let key = Preferences.Logging.scrollbackSaveLimit
+		let original = key.storedValue
+		defer { key.storedValue = original }
+
+		let field = preferences.numberField(for: key)
+		var draft = PreferencesFieldDraft()
+		draft.edit(input)
+		draft.commit(to: field)
+		#expect(draft.wasRejected == false)
+		#expect(field.text() == "200")
 	}
 
 	@Test("Zero survives in the fields where it means 'no limit'")
@@ -271,14 +287,14 @@ struct PreferencesFacadeBindingTests {
 		let key = Preferences.Logging.scrollbackVisibleLimit
 		defer { key.reset() }
 
-		let binding = preferences.numberFieldBinding(for: key)
-		binding.wrappedValue = "0"
+		let field = preferences.numberField(for: key)
+		#expect(field.write("0"))
 		#expect(key.value == 0)
-		binding.wrappedValue = "50"
+		#expect(field.write("50") == false)
 		#expect(key.value == 0)
-		binding.wrappedValue = "15001"
+		#expect(field.write("15001") == false)
 		#expect(key.value == 0)
-		binding.wrappedValue = "5000"
+		#expect(field.write("5000"))
 		#expect(key.value == 5000)
 		#expect(Preferences.Logging.scrollbackVisibleRange == 100 ... 15000)
 	}
@@ -295,10 +311,10 @@ struct PreferencesFacadeBindingTests {
 		start.value = 2000
 		end.value = 3000
 
-		preferences.portFieldBinding(for: start, limitedBy: end).wrappedValue = "5000"
+		#expect(preferences.portField(for: start, limitedBy: end).write("5000") == false)
 		#expect(start.value == 2000)
 
-		preferences.portFieldBinding(for: end, limitedBy: start).wrappedValue = "1024"
+		#expect(preferences.portField(for: end, limitedBy: start).write("1024") == false)
 		#expect(end.value == 3000)
 	}
 
@@ -316,11 +332,11 @@ struct PreferencesFacadeBindingTests {
 		start.value = 2000
 		end.value = 65535
 
-		preferences.portFieldBinding(for: start, limitedBy: end).wrappedValue = "80"
+		#expect(preferences.portField(for: start, limitedBy: end).write("80") == false)
 		#expect(start.value == 2000)
-		preferences.portFieldBinding(for: start, limitedBy: end).wrappedValue = "1024"
+		#expect(preferences.portField(for: start, limitedBy: end).write("1024"))
 		#expect(start.value == 1024)
-		preferences.portFieldBinding(for: end, limitedBy: start).wrappedValue = "70000"
+		#expect(preferences.portField(for: end, limitedBy: start).write("70000") == false)
 		#expect(end.value == 65535)
 		#expect(Preferences.FileTransfers.portRange == 1024 ... 65535)
 	}

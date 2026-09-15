@@ -3,6 +3,7 @@
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
 
+import CocoaExtensions
 @testable import Glasstual
 import Testing
 
@@ -131,5 +132,86 @@ struct ChannelPropertiesModelTests {
 		model.channelName = "glasstual"
 
 		#expect(model.channelNameIsValid == false)
+	}
+
+	/** Emptying the key field used to submit `nil`, which the configuration
+	 read as "no edit": the stored key stayed in the keychain, was sent on every
+	 later JOIN, and came back the next time the sheet opened. */
+	@Test("Emptying a loaded channel key asks for the stored key to go", .timeLimit(.minutes(1)))
+	func emptiedChannelKeyIsCleared() async {
+		let config = ChannelConfig(channelName: "#glasstual")
+		#expect(config.keychainItem.write("stored-key"))
+		defer { config.keychainItem.delete() }
+
+		let model = ChannelPropertiesModel(config: config)
+		await model.loadSecretKey()
+
+		#expect(model.secretKey == "stored-key")
+		#expect(model.submittedConfig.pendingSecretKey == .unchanged)
+
+		model.secretKey = ""
+
+		#expect(model.submittedConfig.pendingSecretKey == .cleared)
+
+		model.secretKey = "  replacement trailing"
+
+		#expect(model.submittedConfig.pendingSecretKey == .set("replacement"))
+	}
+
+	/// The key is read after the sheet is on screen, so saving before the read
+	/// answers must not submit the still-empty field as an emptied one.
+	@Test("Saving before the keychain answers leaves the channel key alone")
+	func savingBeforeTheKeyLoadsKeepsIt() {
+		let model = ChannelPropertiesModel(config: ChannelConfig(channelName: "#glasstual"))
+
+		#expect(model.secretKey.isEmpty)
+		#expect(model.submittedConfig.pendingSecretKey == .unchanged)
+	}
+
+	/// A field the person has typed into keeps what they typed when the read
+	/// lands afterwards, and a configuration already carrying an edit is not
+	/// overwritten by what the keychain holds.
+	@Test("The keychain read never overwrites an edit", .timeLimit(.minutes(1)))
+	func keychainReadKeepsEdits() async {
+		var config = ChannelConfig(channelName: "#glasstual")
+		#expect(config.keychainItem.write("stored-key"))
+		defer { config.keychainItem.delete() }
+
+		let typed = ChannelPropertiesModel(config: config)
+		typed.secretKey = "typed"
+		await typed.loadSecretKey()
+
+		#expect(typed.secretKey == "typed")
+
+		config.pendingSecretKey = .cleared
+		let cleared = ChannelPropertiesModel(config: config)
+		await cleared.loadSecretKey()
+
+		#expect(cleared.secretKey.isEmpty)
+		#expect(cleared.submittedConfig.pendingSecretKey == .cleared)
+	}
+
+	/** The notification table kept its rows in view state, and the rows copy
+	 the channel's overrides when they are made. Reloading the sheet after the
+	 channel changed elsewhere left the table showing the old overrides. */
+	@Test("Reloading the configuration rebuilds the notification table")
+	func replacingTheConfigurationRebuildsTheNotificationTable() throws {
+		let model = ChannelPropertiesModel(config: ChannelConfig(channelName: "#glasstual"))
+		let before = try #require(model.notificationConfiguration.rows.first { $0.event == .highlight })
+
+		#expect(before.showsNotification == .inherited)
+		#expect(model.notificationConfiguration.rows.map(\.event) == [
+			.highlight, .channelMessage, .channelNotice, .userJoined, .userParted,
+		])
+
+		var changed = model.config
+		changed.setNotificationEnabled(.off, forEvent: .highlight)
+		model.replace(with: changed)
+
+		let after = try #require(model.notificationConfiguration.rows.first { $0.event == .highlight })
+		#expect(after.showsNotification == .off)
+
+		after.showsNotification = .on
+		#expect(model.config.notificationEnabled(forEvent: .highlight) == .on)
 	}
 }

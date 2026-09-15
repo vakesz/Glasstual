@@ -142,11 +142,14 @@ final class PreferencesPaneModel {
 	@ObservationIgnored var themeImportTask: Task<Void, Never>?
 
 	@ObservationIgnored
-	let notificationItems: [NotificationConfigurationItem]
+	let notificationConfiguration: NotificationConfigurationModel
 
 	init(themeController: ThemeController = SharedApplication.sharedThemeController()) {
 		self.themeController = themeController
-		notificationItems = Self.defaultNotificationItems
+		notificationConfiguration = NotificationConfigurationModel(
+			notifications: Self.defaultNotificationItems,
+			allowsInheritedState: false
+		)
 	}
 
 	/// Shows a row the sidebar is actually listing. A row that has gone away
@@ -177,13 +180,17 @@ final class PreferencesPaneModel {
 		}
 	}()
 
-	func updateTheme(_ update: (inout TranscriptTheme) -> Void) {
+	/// Applies an edit to the theme, and reports whether the theme accepted it.
+	@discardableResult
+	func updateTheme(_ update: (inout TranscriptTheme) -> Void) -> Bool {
 		var changed = themeController.theme
 		update(&changed)
 
-		if themeController.apply(changed) == false {
+		guard themeController.apply(changed) else {
 			report(TranscriptThemeStrings.invalidValues, from: .applyTranscriptTheme)
+			return false
 		}
+		return true
 	}
 
 	func refreshFolders() {

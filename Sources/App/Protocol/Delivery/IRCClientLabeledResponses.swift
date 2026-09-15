@@ -39,7 +39,7 @@
 import Foundation
 
 enum IRCLabeledResponsePolicy {
-	static let timeoutInterval: TimeInterval = 30
+	static let timeout: Duration = .seconds(30)
 	static let maximumPendingDeliveries = 512
 
 	/** How a labelled response answers the command that carried the label.
@@ -78,9 +78,8 @@ final class LabeledDelivery: NSObject {
 	var lineNumber: String?
 	var resolved = false
 	var state: LogLineDeliveryState = .none
-	/// Fails the delivery when nothing answers the label. Cancelled the moment
-	/// the delivery resolves.
-	var timeoutTask: Task<Void, Never>?
+	/// When the delivery fails if nothing has answered its label.
+	var deadline: ContinuousClock.Instant = .now
 }
 
 public extension IRCClient {
@@ -108,16 +107,62 @@ public extension IRCClient {
 		delivery.label = label
 		delivery.channel = channel
 		delivery.state = .pending
-
-		delivery.timeoutTask = Task { [weak self] in
-			try? await Task.sleep(for: .seconds(IRCLabeledResponsePolicy.timeoutInterval))
-
-			guard Task.isCancelled == false else { return }
-
-			self?.timeoutDelivery(withLabel: label)
-		}
+		delivery.deadline = .now + IRCLabeledResponsePolicy.timeout
 		pendingDeliveries[label] = delivery
+		scheduleDeliveryDeadlineSweep()
 		return label
+	}
+
+	/** Keeps one task waiting for the earliest pending deadline.
+
+	 One sleeping task per labelled message meant up to 512 of them, each woken
+	 to find, almost always, that its delivery had resolved long ago. This one
+	 sleeps until the oldest unanswered delivery is due, fails whatever has come
+	 due by then, and waits again for the next. Nothing to wait for ends it. */
+	private func scheduleDeliveryDeadlineSweep() {
+		guard labeledDeliveryDeadlineTask == nil,
+		      let earliest = pendingDeliveries.values.lazy.map(\.deadline).min()
+		else { return }
+
+		labeledDeliveryDeadlineTask = Task { [weak self] in
+			try? await Task.sleep(until: earliest, clock: .continuous)
+
+			guard Task.isCancelled == false, let self else { return }
+
+			labeledDeliveryDeadlineTask = nil
+			failDeliveries(dueBy: .now)
+			scheduleDeliveryDeadlineSweep()
+		}
+	}
+
+	/// Fails every pending delivery whose deadline is `instant` or earlier.
+	func failDeliveries(dueBy instant: ContinuousClock.Instant) {
+		let dueLabels = pendingDeliveries.filter { $0.value.deadline <= instant }.map(\.key)
+
+		for label in dueLabels {
+			timeoutDelivery(withLabel: label)
+		}
+	}
+
+	/** Settles every delivery still waiting as failed, for a connection that has
+	 ended.
+
+	 Nothing will answer a label once the session it went out on is gone, and
+	 dropping the table left each of those lines drawn as pending for good. */
+	func failPendingDeliveriesForDisconnect() {
+		labeledDeliveryDeadlineTask?.cancel()
+		labeledDeliveryDeadlineTask = nil
+
+		for label in Array(pendingDeliveries.keys) {
+			resolveDelivery(
+				withLabel: label,
+				state: .failed,
+				messageIdentifier: nil,
+				reason: IRCConnectionStrings.labeledResponseLostToDisconnect
+			)
+		}
+
+		pendingDeliveries.removeAll()
 	}
 
 	func attachLineNumber(_ lineNumber: String, toDeliveryWithLabel label: String) {
@@ -143,11 +188,13 @@ public extension IRCClient {
 		guard let delivery = pendingDeliveries[label], !delivery.resolved else { return }
 		delivery.resolved = true
 		delivery.state = state
-		delivery.timeoutTask?.cancel()
-		delivery.timeoutTask = nil
 		/* Without this the table grows by one entry per outgoing message for the
 		 whole session, and a server reusing a stale label would keep matching it. */
 		pendingDeliveries.removeValue(forKey: label)
+		if pendingDeliveries.isEmpty {
+			labeledDeliveryDeadlineTask?.cancel()
+			labeledDeliveryDeadlineTask = nil
+		}
 		for batch in batchMessages.queuedEntries.values where batch.responseLabel == label {
 			batch.responseLabel = nil
 		}

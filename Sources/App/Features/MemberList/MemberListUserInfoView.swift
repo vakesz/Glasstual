@@ -42,7 +42,7 @@ struct MemberListUserInfoContent {
 
 	private static func displayText(_ value: String, stripsFormatting: Bool) -> AttributedString {
 		guard stripsFormatting == false else {
-			return AttributedString(value)
+			return AttributedString((value as NSString).stripIRCEffects)
 		}
 		guard let formatted = (value as NSString).attributedString(
 			withIRCFormatting: NSFont.systemFont(ofSize: NSFont.systemFontSize),

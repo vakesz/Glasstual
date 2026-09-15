@@ -44,19 +44,22 @@ private nonisolated struct HistoricLogViewIndex: Sendable { // nonisolated: valu
 	 is news the badge should count. */
 	var newestConversationDate: Date?
 
-	/// Records what `uniqueIdentifier` contributes. A line the index already
-	/// holds is left alone: the same row is indexed again on every fetch.
+	/// Records what `uniqueIdentifier` contributes, and reports whether this
+	/// call added it. A line the index already holds is left alone: the same
+	/// row is indexed again on every fetch.
+	@discardableResult
 	mutating func add(
 		_ contribution: Contribution,
 		for uniqueIdentifier: String
-	) {
+	) -> Bool {
 		guard uniqueIdentifier.isEmpty == false else {
 			retain(contribution)
-			return
+			return false
 		}
-		guard contributions[uniqueIdentifier] == nil else { return }
+		guard contributions[uniqueIdentifier] == nil else { return false }
 		contributions[uniqueIdentifier] = contribution
 		retain(contribution)
+		return true
 	}
 
 	/// Withdraws what a pruned line contributed.
@@ -94,10 +97,25 @@ private nonisolated struct HistoricLogViewIndex: Sendable { // nonisolated: valu
 public final class LogControllerHistoricLogFile {
 	public static let shared = LogControllerHistoricLogFile()
 
+	/// One storage operation, run on the main actor in its view's order.
+	typealias Operation = @MainActor @Sendable () async -> Void
+
+	/** One view's writes and removals, in the order they were asked for.
+
+	 A serial lane per view rather than one for the whole process: a write
+	 must land before a later removal of the same view, and a fetch has to see
+	 the writes queued ahead of it, but nothing about one conversation waits on
+	 another's. The store serializes the transactions themselves. */
+	private struct Lane {
+		let operations: AsyncStream<Operation>.Continuation
+		let pump: Task<Void, Never>
+	}
+
 	private var viewIndexes: [String: HistoricLogViewIndex] = [:]
 	private let client: HistoricLogClient
 	let recovery = TranscriptHistoryRecoveryState()
-	private var operations: Task<Void, Never>?
+	private var lanes: [String: Lane] = [:]
+	private var terminationTask: Task<Void, Never>?
 	private enum Termination {
 		case none
 		case pending([@MainActor @Sendable () -> Void])
@@ -107,6 +125,55 @@ public final class LogControllerHistoricLogFile {
 
 	init(client: HistoricLogClient = .shared) {
 		self.client = client
+	}
+
+	isolated deinit {
+		for lane in lanes.values {
+			lane.operations.finish()
+			lane.pump.cancel()
+		}
+		terminationTask?.cancel()
+	}
+
+	private func lane(for viewIdentifier: String) -> Lane {
+		if let lane = lanes[viewIdentifier] {
+			return lane
+		}
+		let (stream, continuation) = AsyncStream<Operation>.makeStream()
+		let lane = Lane(operations: continuation, pump: Task {
+			for await operation in stream {
+				await operation()
+			}
+		})
+		lanes[viewIdentifier] = lane
+		return lane
+	}
+
+	/// Queues `operation` behind the view's earlier ones, and reports whether
+	/// the lane took it.
+	@discardableResult
+	private func enqueue(_ operation: @escaping Operation, forView viewIdentifier: String) -> Bool {
+		if case .terminated = lane(for: viewIdentifier).operations.yield(operation) {
+			return false
+		}
+		return true
+	}
+
+	/// Returns once everything already queued for the view has run.
+	private func drain(view viewIdentifier: String) async {
+		guard let lane = lanes[viewIdentifier] else { return }
+		await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+			if case .terminated = lane.operations.yield({ continuation.resume() }) {
+				continuation.resume()
+			}
+		}
+	}
+
+	/// Returns once every view's queued operations have run.
+	private func drainAllViews() async {
+		for viewIdentifier in Array(lanes.keys) {
+			await drain(view: viewIdentifier)
+		}
 	}
 
 	// MARK: - Process life cycle
@@ -126,9 +193,8 @@ public final class LogControllerHistoricLogFile {
 			return
 		}
 		termination = .pending(completionBlock.map { [$0] } ?? [])
-		let predecessor = operations
-		operations = Task { @MainActor in
-			await predecessor?.value
+		terminationTask = Task { @MainActor in
+			await drainAllViews()
 			let result = await client.prepareForTermination()
 			if case let .failed(reason) = result {
 				recovery.storageFailure = reason
@@ -188,10 +254,13 @@ public final class LogControllerHistoricLogFile {
 		return String(format: "%lld\u{001f}%@\u{001f}%@", milliseconds, nickname ?? "", messageBody)
 	}
 
-	public func indexLogLine(_ logLine: LogLine, forView viewIdentifier: String) {
+	/// Indexes `logLine` for the duplicate checks, and reports whether this call
+	/// added it rather than finding it already there.
+	@discardableResult
+	public func indexLogLine(_ logLine: LogLine, forView viewIdentifier: String) -> Bool {
 		let messageIdentifier = logLine.messageIdentifier
 
-		viewIndexes[viewIdentifier, default: HistoricLogViewIndex()].add(
+		let added = viewIndexes[viewIdentifier, default: HistoricLogViewIndex()].add(
 			HistoricLogViewIndex.Contribution(
 				messageIdentifier: messageIdentifier?.isEmpty == false ? messageIdentifier : nil,
 				fallbackKey: Self.fallbackKey(
@@ -208,10 +277,11 @@ public final class LogControllerHistoricLogFile {
 		let newestDate = viewIndexes[viewIdentifier]?.newestDate ?? receivedAt
 		viewIndexes[viewIdentifier]?.newestDate = max(newestDate, receivedAt)
 
-		guard logLine.lineType.isConversation else { return }
+		guard logLine.lineType.isConversation else { return added }
 
 		let newestConversationDate = viewIndexes[viewIdentifier]?.newestConversationDate ?? receivedAt
 		viewIndexes[viewIdentifier]?.newestConversationDate = max(newestConversationDate, receivedAt)
+		return added
 	}
 
 	public func indexLogLines(_ logLines: [LogLine], forView viewIdentifier: String) {
@@ -263,40 +333,69 @@ public final class LogControllerHistoricLogFile {
 	// MARK: - Writing
 
 	public func writeNewEntry(with logLine: LogLine, forView viewIdentifier: String) {
-		let entry = logLine.historicEntry(forView: viewIdentifier)
-		let predecessor = operations
-		operations = Task {
-			await predecessor?.value
-			switch await client.writeEntry(entry) {
-			case .accepted: indexLogLine(logLine, forView: viewIdentifier)
-			case .unavailable: recovery.storageFailure = PromptStrings.Logging.scrollbackFailureBody
-			case let .failed(reason): recovery.storageFailure = reason
+		writeNewEntry(logLine.historicEntry(forView: viewIdentifier), for: logLine)
+	}
+
+	/** Queues an archived line for storage.
+
+	 The entry is the line archived for its view, which a caller that renders
+	 off the main actor has already done there. The line is indexed now rather
+	 than once the store accepts it: the next line from the same burst is
+	 checked against the index in the same turn, before any write could have
+	 finished. A write that fails withdraws what it added. */
+	func writeNewEntry(_ entry: HistoricLogEntry, for logLine: LogLine) {
+		let viewIdentifier = entry.viewIdentifier
+		let indexed = indexLogLine(logLine, forView: viewIdentifier)
+		let client = client
+		enqueue({ [weak self] in
+			let outcome = await client.writeEntry(entry)
+			guard let self else { return }
+			if case .accepted = outcome {
+				return
 			}
-		}
+			if indexed {
+				forgetLines([logLine.uniqueIdentifier], inView: viewIdentifier)
+			}
+			recovery.storageFailure = switch outcome {
+			case let .failed(reason): reason
+			case .accepted, .unavailable: PromptStrings.Logging.scrollbackFailureBody
+			}
+		}, forView: viewIdentifier)
 	}
 
 	/// Drops a view's history. `forget` also drops what the store remembers
 	/// about the view itself, which is what a channel being removed asks for;
 	/// clearing a conversation the reader is still in does not.
+	/// The returned task finishes when the removal has run, for a caller that
+	/// has to know; the removal itself takes its turn in the view's lane either
+	/// way.
 	@discardableResult
 	public func removeHistory(forView viewIdentifier: String, forget: Bool) -> Task<Void, Never> {
-		let predecessor = operations
-		let operation = Task {
-			await predecessor?.value
-			switch await client.removeHistory(viewIdentifier, forget: forget) {
+		let client = client
+		let (finished, finish) = AsyncStream<Void>.makeStream()
+		let queued = enqueue({ [weak self] in
+			defer { finish.finish() }
+			let outcome = await client.removeHistory(viewIdentifier, forget: forget)
+			guard let self else { return }
+			switch outcome {
 			case .deleted:
 				viewIndexes.removeValue(forKey: viewIdentifier)
 				recovery.deletionFailures.removeValue(forKey: viewIdentifier)
 			case let .failed(reason): recovery.deletionFailures[viewIdentifier] = reason
 			case .unavailable: recovery.deletionFailures[viewIdentifier] = PromptStrings.Logging.scrollbackFailureBody
 			}
+		}, forView: viewIdentifier)
+		if queued == false {
+			finish.finish()
 		}
-		operations = operation
-		return operation
+		return Task {
+			for await _ in finished {}
+		}
 	}
 
 	func retryLoading() async -> Bool {
-		await operations?.value
+		await terminationTask?.value
+		await drainAllViews()
 		guard await client.retryLoading() else { return false }
 		switch await client.saveData() {
 		case .saved:
@@ -319,7 +418,7 @@ public final class LogControllerHistoricLogFile {
 	}
 
 	func fetchOutcome(_ request: HistoricLogFetchRequest) async -> HistoricLogFetchOutcome {
-		await operations?.value
+		await drain(view: request.viewIdentifier)
 		return await client.fetchOutcome(request)
 	}
 }

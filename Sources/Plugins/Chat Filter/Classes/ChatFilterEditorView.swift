@@ -86,12 +86,11 @@ private struct ChatFilterActionPlaceholder: Identifiable {
 /** What a match pattern is: whether it compiles at all, and whether its shape
  can backtrack for a long time.
 
- Compiling is the expensive half, and a `body` pass asks four questions about
- two patterns, so this is computed when a pattern changes rather than each time
- the sheet is drawn. */
+ Compiling is the expensive half, and a `body` pass asks several questions
+ about two patterns, so this is computed when a pattern changes rather than
+ each time the sheet is drawn. */
 private struct ChatFilterPatternValidation: Equatable {
 	var error: String?
-	var warning: String?
 
 	init(pattern: String = "") {
 		guard pattern.isEmpty == false else { return }
@@ -107,7 +106,7 @@ private struct ChatFilterPatternValidation: Equatable {
 
 		guard RegularExpression.hasNestedQuantifier(pattern) else { return }
 
-		warning = String(localized: .ChatFilterEditor.regularExpressionNestedQuantifier)
+		error = String(localized: .ChatFilterEditor.regularExpressionNestedQuantifier)
 	}
 }
 
@@ -185,7 +184,6 @@ struct ChatFilterEditorView: View {
 			TextField(String(localized: .ChatFilterEditor.filterTitleLabel), text: $filter.title)
 			TextField(String(localized: .ChatFilterEditor.filterMatchLabel), text: $filter.match)
 			validationMessage(matchError)
-			validationWarning(matchWarning)
 			Text(Self.patternLimitsExplanation)
 				.font(.caption)
 				.foregroundStyle(.secondary)
@@ -285,7 +283,6 @@ struct ChatFilterEditorView: View {
 			TextField(String(localized: .ChatFilterEditor.senderMatchLabel), text: $filter.senderMatch)
 				.disabled(filter.isLimitedToMyself)
 			validationMessage(senderMatchError)
-			validationWarning(senderMatchWarning)
 			Text(Self.patternLimitsExplanation)
 				.font(.caption)
 				.foregroundStyle(.secondary)
@@ -377,14 +374,6 @@ struct ChatFilterEditorView: View {
 
 	private var senderMatchError: String? {
 		filter.isLimitedToMyself ? nil : senderValidation.error
-	}
-
-	private var matchWarning: String? {
-		matchValidation.warning
-	}
-
-	private var senderMatchWarning: String? {
-		filter.isLimitedToMyself ? nil : senderValidation.warning
 	}
 
 	private var commandsError: String? {
@@ -512,28 +501,12 @@ struct ChatFilterEditorView: View {
 		}
 	}
 
-	/** Shown beside a field whose pattern is legal but slow.
-
-	 It does not stop the filter being saved: recognising the shape is a
-	 heuristic, the pattern may well be the one the person meant, and what
-	 bounds the damage is the cap on how much of a message a filter is matched
-	 against. */
-	@ViewBuilder
-	private func validationWarning(_ message: String?) -> some View {
-		if let message {
-			Label(message, systemImage: "exclamationmark.triangle")
-				.font(.caption)
-				.foregroundStyle(.orange)
-				.accessibilityLabel(message)
-		}
-	}
-
 	/// What the two match fields promise: how much of a message a pattern sees,
-	/// and that a pattern which can backtrack without bound is pointed out here
-	/// rather than at the point a peer sends the line that triggers it.
+	/// and that a pattern which can backtrack without bound is refused here
+	/// rather than discovered when a peer sends the line that triggers it.
 	private static let patternLimitsExplanation = String(
 		localized: .ChatFilterEditor.regularExpressionLimitsExplanation(
-			RegularExpression.inputLengthLimit.formatted(.number)
+			ChatFilterEngine.subjectByteLimit.formatted(.number)
 		)
 	)
 

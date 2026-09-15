@@ -40,6 +40,9 @@ import Foundation
 
 enum FileTransferConstants {
 	static let receiverHardLimit = 120
+	/// The largest offer that downloads without being accepted, even from a
+	/// known peer. Anything larger waits for the user.
+	static let automaticDownloadSizeLimit: UInt64 = 512 * 1024 * 1024
 	static let maintenanceInterval: Duration = .seconds(1)
 }
 
@@ -53,14 +56,19 @@ public final class FileTransferCenter {
 	/// DCC offers ask the address service once between them.
 	var ipAddressLookup: Task<String?, Never>?
 	var cachedIPAddress: String?
+	/// Where an address lookup asks. The public service, except in tests.
+	let addressSource: @MainActor () async -> String?
+	private var networkChanges: Task<Void, Never>?
 	var pendingDestinationTransferIDs: Set<String> = []
 	let workspace = FileTransferWorkspace()
 	private lazy var notifications = NotificationSubscriptions()
 
-	public init() {
+	init(addressSource: @escaping @MainActor () async -> String? = { await InternetAddressLookup.address() }) {
+		self.addressSource = addressSource
 		notifications.observe(.ircWorldWillDestroyClient) { [weak self] notification in
 			self?.clientWillBeDestroyed(notification)
 		}
+		networkChanges = followNetworkChanges()
 	}
 
 	func present() {
@@ -74,6 +82,7 @@ public final class FileTransferCenter {
 	isolated deinit {
 		notifications.cancelAll()
 		maintenanceTask?.cancel()
+		networkChanges?.cancel()
 		ipAddressLookup?.cancel()
 		downloadDestinationURLPrivate?.stopAccessingSecurityScopedResource()
 	}

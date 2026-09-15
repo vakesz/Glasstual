@@ -12,12 +12,13 @@
 
 import SwiftUI
 
+/// The toggles write through the host's preference store, whose change
+/// notification is what the plugin rebuilds its table from.
 struct SmileyConverterPreferencesView: View {
 	@AppStorage private var serviceEnabled: Bool
 	@AppStorage private var extraEmoticonsEnabled: Bool
-	let onPreferenceChange: () -> Void
 
-	init(defaults: UserDefaults, onPreferenceChange: @escaping () -> Void) {
+	init(defaults: UserDefaults) {
 		_serviceEnabled = AppStorage(
 			wrappedValue: FirstPartyPluginPreferences.smileyServiceEnabled.defaultValue,
 			FirstPartyPluginPreferences.smileyServiceEnabled.name,
@@ -28,7 +29,6 @@ struct SmileyConverterPreferencesView: View {
 			FirstPartyPluginPreferences.smileyExtraEmoticons.name,
 			store: defaults
 		)
-		self.onPreferenceChange = onPreferenceChange
 	}
 
 	var body: some View {
@@ -54,11 +54,5 @@ struct SmileyConverterPreferencesView: View {
 			}
 		}
 		.formStyle(.grouped)
-		.onChange(of: serviceEnabled) { _, _ in
-			onPreferenceChange()
-		}
-		.onChange(of: extraEmoticonsEnabled) { _, _ in
-			onPreferenceChange()
-		}
 	}
 }

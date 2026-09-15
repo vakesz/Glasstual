@@ -48,8 +48,8 @@ enum OnboardingScenario {
 			try await verifyCompletedIdentity(driver)
 			try await AppSession.stopProbe(probe, driver: driver)
 			let quitSeconds = try await AppSession.quitAndVerify(app, driver: driver)
-			evidence.append(["pid": app.processIdentifier, "exitReason": "exit", "exitStatus": app.terminationStatus,
-			                 "identityVisible": true, "quitSeconds": quitSeconds])
+			evidence.append(["pid": app.processIdentifier, "exitReason": app.terminationReason.evidenceName,
+			                 "exitStatus": app.terminationStatus, "quitSeconds": quitSeconds])
 			if launch == 0 {
 				(app, application) = try await AppSession.relaunch(first)
 			}

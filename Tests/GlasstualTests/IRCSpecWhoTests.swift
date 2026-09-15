@@ -168,40 +168,48 @@ struct IRCSpecWhoTests {
 		}
 
 		let away = IRCWHOFlags.parse(
-			"G@", monitorAwayStatus: true, botFlagSupported: false, modeForPrefix: modeForPrefix
+			"G@", monitorAwayStatus: true, botFlag: nil, modeForPrefix: modeForPrefix
 		)
 
 		#expect(away.isAway)
 		#expect(away.userModes == "o")
 
 		let here = IRCWHOFlags.parse(
-			"H+", monitorAwayStatus: true, botFlagSupported: false, modeForPrefix: modeForPrefix
+			"H+", monitorAwayStatus: true, botFlag: nil, modeForPrefix: modeForPrefix
 		)
 
 		#expect(here.isAway == false)
 		#expect(here.userModes == "v")
 
 		let operatorFlags = IRCWHOFlags.parse(
-			"H*@", monitorAwayStatus: true, botFlagSupported: false, modeForPrefix: modeForPrefix
+			"H*@", monitorAwayStatus: true, botFlag: nil, modeForPrefix: modeForPrefix
 		)
 
 		#expect(operatorFlags.isIRCop)
 		#expect(operatorFlags.userModes == "o")
 	}
 
-	/// The `B` flag only means "bot" on a server that advertises `BOT=` in
-	/// ISUPPORT; elsewhere it is just another prefix character.
-	@Test("352: the bot flag needs the ISUPPORT BOT token")
-	func botFlagNeedsTheISupportToken() {
+	/// A bot is flagged with the character the server named in `BOT=`, and
+	/// with nothing on a server that named none.
+	@Test("352: the bot flag is the character the ISUPPORT BOT token names")
+	func botFlagIsTheISupportCharacter() {
 		let supported = IRCWHOFlags.parse(
-			"HB", monitorAwayStatus: false, botFlagSupported: true, modeForPrefix: { _ in nil }
+			"HB", monitorAwayStatus: false, botFlag: "B", modeForPrefix: { _ in nil }
 		)
 		let unsupported = IRCWHOFlags.parse(
-			"HB", monitorAwayStatus: false, botFlagSupported: false, modeForPrefix: { _ in nil }
+			"HB", monitorAwayStatus: false, botFlag: nil, modeForPrefix: { _ in nil }
+		)
+		let otherCharacter = IRCWHOFlags.parse(
+			"Hb", monitorAwayStatus: false, botFlag: "b", modeForPrefix: { _ in nil }
+		)
+		let wrongCharacter = IRCWHOFlags.parse(
+			"HB", monitorAwayStatus: false, botFlag: "b", modeForPrefix: { _ in nil }
 		)
 
 		#expect(supported.isBot)
 		#expect(unsupported.isBot == false)
+		#expect(otherCharacter.isBot)
+		#expect(wrongCharacter.isBot == false)
 	}
 
 	/// A short 352 cannot be read at the indices the reply defines, so it says

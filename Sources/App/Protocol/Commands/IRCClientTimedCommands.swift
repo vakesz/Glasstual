@@ -89,15 +89,29 @@ extension IRCClient {
 		timedCommandsByIdentifier.removeValue(forKey: timedCommand.identifier)
 	}
 
+	/** Runs `timedCommand` where it was made.
+
+	 A command made in a channel runs in that channel, and one made in the
+	 server console runs with no channel at all. Completing the target at fire
+	 time instead sent a command made in the console, or in a channel since
+	 closed, into whichever channel happened to be selected by then — so a
+	 timer whose channel has gone is removed rather than run. */
 	@MainActor
 	func onTimedCommand(_ timedCommand: TimedCommand) {
+		let channel = timedCommand.channelId.flatMap { channelId in
+			channelList.first { $0.uniqueIdentifier == channelId }
+		}
+
+		if timedCommand.channelId != nil, channel == nil {
+			timedCommand.stop()
+			removeTimedCommand(timedCommand)
+			return
+		}
+
 		if timedCommand.timer.isActive == false {
 			removeTimedCommand(timedCommand)
 		}
 
-		let channel = timedCommand.channelId.flatMap { channelId in
-			channelList.first { $0.uniqueIdentifier == channelId }
-		}
-		sendCommand(timedCommand.command, completeTarget: true, target: channel?.name)
+		sendCommand(timedCommand.command, completeTarget: channel != nil, target: channel?.name)
 	}
 }

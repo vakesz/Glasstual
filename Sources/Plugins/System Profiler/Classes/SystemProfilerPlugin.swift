@@ -84,14 +84,20 @@ final class SystemProfilerPlugin: NSObject, GlasstualPlugin, PluginCommandHandli
 		/* The two reports that stat filesystems and enumerate Metal devices
 		 collect first and format afterwards. The task inherits the main actor,
 		 so nothing but the collection leaves it, and the window keeps drawing
-		 while a network mount or a sleeping GPU takes its time to answer. */
+		 while a network mount or a sleeping GPU takes its time to answer.
+
+		 Disk space and the time since boot are read through APIs whose
+		 declared reasons (85F4.1, 35F9.1) allow showing them to the person
+		 using this Mac and nothing more. `/diskspace` and `/uptime` are made of
+		 those facts, so they always print locally; `/sysinfo` leaves them out
+		 of the line it sends. */
 		switch command {
 		case "SYSINFO":
 			let defaults = host.defaults
 			Task { [weak self] in
 				let facts = await SystemProfileInformation.hardwareFacts()
 				self?.output(
-					SystemProfileReport.systemInformation(defaults: defaults, facts: facts),
+					SystemProfileReport.systemInformation(defaults: defaults, facts: facts, includesOnDeviceFacts: quiet),
 					quiet: quiet,
 					client: invocation.client,
 					channel: channel
@@ -103,18 +109,25 @@ final class SystemProfilerPlugin: NSObject, GlasstualPlugin, PluginCommandHandli
 				let volumes = await SystemProfileInformation.mountedVolumeCapacities()
 				self?.output(
 					SystemProfileReport.systemDiskSpaceInformation(volumes: volumes),
-					quiet: quiet,
+					quiet: true,
 					client: invocation.client,
 					channel: channel
 				)
 			}
+			return
+		case "UPTIME":
+			output(
+				SystemProfileReport.applicationAndSystemUptime(host: host),
+				quiet: true,
+				client: invocation.client,
+				channel: channel
+			)
 			return
 		default:
 			break
 		}
 
 		let report: String? = switch command {
-		case "UPTIME": SystemProfileReport.applicationAndSystemUptime(host: host)
 		case "NETSTATS": SystemProfileReport.systemNetworkInformation()
 		case "MSGCOUNT": SystemProfileReport.applicationBandwidthStatistics(metrics: metrics)
 		case "STYLE": SystemProfileReport.applicationActiveStyle(metrics: metrics, host: host)

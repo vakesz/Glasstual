@@ -15,19 +15,22 @@ import CocoaExtensions
 import Foundation
 import GlasstualPluginKit
 
-/// The longest nickname to read out of a hostmask before ISUPPORT says
-/// otherwise. RFC 2812 fixes no ceiling and servers differ, so this is the
-/// widest any network is known to allow.
+/// The longest nickname to read out of a hostmask. RFC 2812 fixes no ceiling
+/// and servers differ, so this is the widest any network is known to allow.
 private nonisolated let defaultHostmaskNicknameLength = 50 // nonisolated: let
 
-@MainActor
-private func maximumHostmaskNicknameLength(on client: IRCClient?, inputLength: Int) -> Int {
-	guard let client, client.isConnectedToZNC == false, client.supportInfo.configurationReceived else {
-		return defaultHostmaskNicknameLength
-	}
+/** The longest nickname a name read on `client` may have.
 
-	let configuredMaximum = client.supportInfo.maximumNicknameLength
-	return configuredMaximum > 0 ? Int(min(configuredMaximum, UInt(inputLength))) : defaultHostmaskNicknameLength
+ ISUPPORT `NICKLEN` is how long a nickname the server lets *this* client
+ register, and it says nothing binding about the names it relays: services, a
+ bouncer's module users and other servers' users across a link routinely exceed
+ it. Used as a hard limit, a longer nickname failed to parse as a user and the
+ whole prefix was read as a server. So the advertised length only ever widens
+ the default, never narrows it. */
+@MainActor
+private func maximumHostmaskNicknameLength(on client: IRCClient?) -> Int {
+	let advertised = client?.supportInfo.maximumNicknameLength ?? 0
+	return max(Int(clamping: advertised), defaultHostmaskNicknameLength)
 }
 
 nonisolated extension String { // nonisolated: pure
@@ -180,7 +183,7 @@ public extension NSString {
 	func hostmask(on client: IRCClient?) -> IRCHostmask? {
 		IRCHostmask(
 			parsing: self as String,
-			maximumNicknameLength: maximumHostmaskNicknameLength(on: client, inputLength: length)
+			maximumNicknameLength: maximumHostmaskNicknameLength(on: client)
 		)
 	}
 
@@ -189,14 +192,14 @@ public extension NSString {
 	func senderPrefix(on client: IRCClient?) -> Prefix? {
 		Prefix.user(
 			parsing: self as String,
-			maximumNicknameLength: maximumHostmaskNicknameLength(on: client, inputLength: length)
+			maximumNicknameLength: maximumHostmaskNicknameLength(on: client)
 		)
 	}
 
 	func isHostmaskNickname(on client: IRCClient?) -> Bool {
 		IRCHostmask.isValidNickname(
 			self as String,
-			maximumLength: maximumHostmaskNicknameLength(on: client, inputLength: length)
+			maximumLength: maximumHostmaskNicknameLength(on: client)
 		)
 	}
 

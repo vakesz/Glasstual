@@ -48,7 +48,9 @@ public final class DirectChatConnection: NSObject {
 	 port from the socket. Modelling it this way removes the unreachable dead-end
 	 `openConnection()` used to hit when the address was nil. */
 	private enum Role {
-		case listening
+		/// `expectedPeerAddress` is the only address the listener takes a
+		/// connection from; empty takes the first to arrive.
+		case listening(expectedPeerAddress: String)
 		case connecting(address: String)
 	}
 
@@ -115,14 +117,24 @@ public final class DirectChatConnection: NSObject {
 		return object
 	}
 
+	/** A chat this side listens for.
+
+	 `offeredAddress` is the address a passive offer named for the peer. It is
+	 the one address the listener accepts, as a reverse DCC SEND's is, when it is
+	 one the peer could actually connect from. A chat this user started has no
+	 such address: the peer's hostmask says where they reached the server from —
+	 a bouncer, a VPN, the other address family — not where they will dial out
+	 from, so pinning to it would refuse the very peer the offer was sent to. */
 	public static func listeningConnection(
 		forPeer nickname: String,
 		token transferToken: String?,
+		offeredAddress: String? = nil,
 		onClient client: IRCClient
 	) -> DirectChatConnection {
+		let expectedPeerAddress = offeredAddress.flatMap { DCCWireFormat.isDialableAddress($0) ? $0 : nil } ?? ""
 		let object = DirectChatConnection(
 			peer: nickname,
-			role: .listening,
+			role: .listening(expectedPeerAddress: expectedPeerAddress),
 			onClient: client
 		)
 
@@ -139,8 +151,8 @@ public final class DirectChatConnection: NSObject {
 		}
 
 		switch role {
-		case .listening:
-			openListener()
+		case let .listening(expectedPeerAddress):
+			openListener(expectingPeerAt: expectedPeerAddress)
 		case let .connecting(address):
 			openConnection(to: address)
 		}
@@ -157,7 +169,7 @@ public final class DirectChatConnection: NSObject {
 		))
 	}
 
-	private func openListener() {
+	private func openListener(expectingPeerAt expectedPeerAddress: String) {
 		let portRangeStart = preferences.fileTransferPortRangeStart
 		let portRangeEnd = preferences.fileTransferPortRangeEnd
 
@@ -168,15 +180,19 @@ public final class DirectChatConnection: NSObject {
 
 		state = .listening
 
-		start(endpoint: .listen(portRange: portRangeStart ... portRangeEnd))
+		start(
+			endpoint: .listen(portRange: portRangeStart ... portRangeEnd),
+			expectedPeerAddress: expectedPeerAddress
+		)
 		startListenTimeout()
 	}
 
-	private func start(endpoint: DCCChatConnection.Endpoint) {
+	private func start(endpoint: DCCChatConnection.Endpoint, expectedPeerAddress: String = "") {
 		let chat = DCCChatConnection(configuration: DCCChatConnection.Configuration(
 			endpoint: endpoint,
 			maximumLineLength: maximumLineLength,
-			sendTimeout: writeTimeout
+			sendTimeout: writeTimeout,
+			expectedPeerAddress: expectedPeerAddress
 		))
 		self.chat = chat
 
@@ -273,16 +289,22 @@ public final class DirectChatConnection: NSObject {
 
 		portMappingNotifications.cancelAll()
 
-		if portMapping.isMapped {
+		/* The router decides the public port, and it need not be the one asked
+		 for: the offer has to name the port and address the peer can reach,
+		 not the listener's own. */
+		var mappedAddress: String?
+		if portMapping.isMapped, portMapping.publicPort != 0 {
+			hostPort = portMapping.publicPort
+			mappedAddress = portMapping.publicAddress
 			let port = hostPort
-			directChatLogger.info("Direct chat: port \(port, privacy: .public) mapped")
+			directChatLogger.info("Direct chat: mapped to public port \(port, privacy: .public)")
 		} else {
 			directChatLogger.error(
 				"Direct chat: port mapping failed with error code \(portMapping.error, privacy: .public)"
 			)
 		}
 
-		client?.directChatConnection(self, didStartListeningOnPort: hostPort)
+		client?.directChatConnection(self, didStartListeningOnPort: hostPort, mappedAddress: mappedAddress)
 	}
 
 	// MARK: - Sending

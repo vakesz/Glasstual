@@ -80,15 +80,22 @@ public extension IRCClient {
 		modifyUser(withNickname: nickname) { $0.realName = realName }
 	}
 
+	/** IRCv3 `account-tag` and the ISUPPORT `BOT` token's `bot` tag.
+
+	 Each is read under the same rule as `account-notify`: only a server that
+	 negotiated the capability, or advertised the token, is saying anything by
+	 sending the tag. Without that, a tag on a relayed line is whatever a
+	 bouncer, a server that does not filter client tags, or the peer put there,
+	 and an account name or bot flag taken from it is a claim nobody checked. */
 	func updateUserIdentity(fromMessageTags message: Message) {
 		guard !message.senderIsServer, let nickname = message.senderNickname, !nickname.isEmpty else { return }
-		let account = message.senderAccount
-		let isBot = message.messageTags?["bot"] != nil
+		let account = isCapabilityEnabled(.accountTag) ? message.senderAccount : nil
+		let isBot = supportInfo.botModeSymbol != nil && message.messageTags?["bot"] != nil
 		guard account != nil || isBot else { return }
 
 		modifyUser(withNickname: nickname) { mutableUser in
 			if let account {
-				mutableUser.account = Self.account(fromWireValue: account)
+				mutableUser.account = IRCIdentityPolicy.account(fromWireValue: account)
 			}
 			if isBot {
 				mutableUser.isBot = true

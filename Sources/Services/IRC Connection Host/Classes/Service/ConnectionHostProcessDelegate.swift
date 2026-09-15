@@ -44,9 +44,33 @@ private let processDelegateLogger = Logger(
 )
 
 final class RemoteConnectionProcessDelegate: NSObject, NSXPCListenerDelegate {
+	/** What a connecting peer has to be: the application this service is
+	 embedded in, signed with the same certificate.
+
+	 The service bundle sits at `Contents/XPCServices/` inside that application,
+	 which is where its identifier is read from rather than repeated here. */
+	private let peerRequirement: String? = {
+		let applicationURL = Bundle.main.bundleURL
+			.deletingLastPathComponent()
+			.deletingLastPathComponent()
+			.deletingLastPathComponent()
+		guard let applicationIdentifier = Bundle(url: applicationURL)?.bundleIdentifier else {
+			return nil
+		}
+		return RemoteConnectionPeerRequirement.requirement(forCurrentProcessAnd: applicationIdentifier)
+	}()
+
 	func listener(_: NSXPCListener, shouldAcceptNewConnection connection: NSXPCConnection) -> Bool {
-		connection.exportedInterface = NSXPCInterface(with: RemoteConnectionServerProtocol.self)
-		connection.remoteObjectInterface = NSXPCInterface(with: RemoteConnectionClientProtocol.self)
+		if let peerRequirement {
+			/* Enforced by NSXPC on every message: a peer that does not satisfy
+			 it never reaches the exported object. */
+			connection.setCodeSigningRequirement(peerRequirement)
+		} else {
+			processDelegateLogger.error("The connection host is not signed; accepting its peer unverified")
+		}
+
+		connection.exportedInterface = RemoteConnectionInterface.server()
+		connection.remoteObjectInterface = RemoteConnectionInterface.client()
 
 		/* The host owns every piece of mutable state. The connection stays out
 		 here — it is not Sendable — and only the client proxy, which is, crosses

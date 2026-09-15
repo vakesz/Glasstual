@@ -17,8 +17,8 @@ struct TypedLocalizationCatalogTests {
 		/* A validation message says what to enter; "properly formatted" told
 		 the reader only that what they typed was wrong. */
 		#expect(CommonValidationStrings.invalidNickname.hasPrefix("A nickname can contain "))
-		#expect(CommonValidationStrings.maximumLength(390) == "Maximum length is 390 characters.")
-		#expect(CommonValidationStrings.maximumLength(1) == "Maximum length is 1 character.")
+		#expect(CommonValidationStrings.maximumLength(390) == "Maximum length is 390 bytes.")
+		#expect(CommonValidationStrings.maximumLength(1) == "Maximum length is 1 byte.")
 		#expect(NotificationStrings.eventTypeTitle(for: .invite) == "Invitation")
 		#expect(
 			NotificationStrings.Membership.parted(nickname: "Alice", reason: "Leaving")

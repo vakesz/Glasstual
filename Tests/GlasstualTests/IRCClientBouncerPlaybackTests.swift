@@ -42,6 +42,16 @@ import Testing
 @MainActor
 @Suite("Bouncer playback and notification policy")
 struct IRCClientBouncerPlaybackTests {
+	/// The server folds nicknames, so `*Status` and `*status` are one module.
+	@Test("A ZNC module is recognised under the server's case folding", arguments: ["*status", "*Status", "*STATUS"])
+	func zncModuleNicknameIsCaseFolded(_ nickname: String) {
+		let client = TestClient()
+		client.isConnectedToZNC = true
+
+		#expect(client.nickname(nickname, isZNCUser: "status"))
+		#expect(client.nickname(nickname, isZNCUser: "playback") == false)
+	}
+
 	@Test("Playback starts from the beginning when no timestamp is eligible")
 	func playbackStartsFromBeginningWithoutAnEligibleTimestamp() {
 		#expect(

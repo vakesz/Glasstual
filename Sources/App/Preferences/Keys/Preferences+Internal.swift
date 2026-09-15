@@ -100,8 +100,9 @@ public nonisolated extension Preferences { // nonisolated: value
 }
 
 public nonisolated extension Preferences { // nonisolated: value
-	/// The scheme allowlist the vendored AutoHyperlinks parser consults. It
-	/// reads `UserDefaults.standard` directly, so the keys live there.
+	/// The scheme allowlist the transcript's link parser consults. The names and
+	/// the standard domain are the ones the AutoHyperlinks framework it replaced
+	/// used, so a customization carries over.
 	enum LinkSchemes {
 		public static let permittedDefault = PreferenceKey(
 			"com.adiumX.AutoHyperlinks.permittedSchemesDefault",
@@ -119,11 +120,13 @@ public nonisolated extension Preferences { // nonisolated: value
 			traits: .unregistered
 		)
 
+		/// Makes every scheme a link. A decision this Mac's user makes for
+		/// themselves, so no configuration file carries it in or out.
 		public static let permitAny = PreferenceKey(
 			"com.adiumX.AutoHyperlinks.permittedSchemesAny",
 			default: false,
 			storage: .standard,
-			traits: .unregistered
+			traits: [.unregistered, .excludedFromExport]
 		)
 
 		static let all: [any AnyPreferenceKey] = [permittedDefault, permitted, permitAny]

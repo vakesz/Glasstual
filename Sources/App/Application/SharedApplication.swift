@@ -42,7 +42,7 @@ public enum SharedApplication {
 		networkReachabilityNotifier
 	}
 
-	public static func sharedNotificationController() -> NotificationController {
+	static func sharedNotificationController() -> NotificationController {
 		notificationController
 	}
 

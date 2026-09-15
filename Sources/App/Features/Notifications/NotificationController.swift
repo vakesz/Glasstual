@@ -16,89 +16,14 @@ import CocoaExtensions
 import os
 import UserNotifications
 
-/** What a delivered notification carries back when the person clicks it.
-
- `UNNotificationContent.userInfo` is a property-list dictionary, so the keys
- below are the only place the strings appear; every producer and reader inside
- the application works with the value. It used to be an untyped dictionary
- passed whole from the protocol layer to the delegate callback, with each
- reader guessing at the keys. */
-public nonisolated struct NotificationPayload: Equatable, Sendable { // nonisolated: value
-	static let clientIdentifierKey = "clientId"
-	static let channelIdentifierKey = "channelId"
-	private static let fileTransferIdentifierKey = "fileTransferUniqueIdentifier"
-	private static let fileTransferTypeKey = "fileTransferNotificationType"
-
-	public var clientIdentifier: String?
-	public var channelIdentifier: String?
-	/// The transfer a file-transfer notification is about, and its event.
-	public var fileTransferIdentifier: String?
-	public var fileTransferEventRawValue: Int = 0
-
-	public init(
-		clientIdentifier: String? = nil,
-		channelIdentifier: String? = nil,
-		fileTransferIdentifier: String? = nil,
-		fileTransferEventRawValue: Int = 0
-	) {
-		self.clientIdentifier = clientIdentifier
-		self.channelIdentifier = channelIdentifier
-		self.fileTransferIdentifier = fileTransferIdentifier
-		self.fileTransferEventRawValue = fileTransferEventRawValue
-	}
-
-	/// Reads a payload back out of the dictionary UserNotifications kept.
-	public init(userInfo: [AnyHashable: Any]) {
-		clientIdentifier = userInfo[Self.clientIdentifierKey] as? String
-		channelIdentifier = userInfo[Self.channelIdentifierKey] as? String
-		fileTransferIdentifier = userInfo[Self.fileTransferIdentifierKey] as? String
-		fileTransferEventRawValue = (userInfo[Self.fileTransferTypeKey] as? NSNumber)?.intValue ?? 0
-	}
-
-	/// The property list UserNotifications stores with the request.
-	public var userInfo: [String: PropertyListValue] {
-		var result: [String: PropertyListValue] = [:]
-
-		result[Self.clientIdentifierKey] = clientIdentifier.map(PropertyListValue.string)
-		result[Self.channelIdentifierKey] = channelIdentifier.map(PropertyListValue.string)
-		result[Self.fileTransferIdentifierKey] = fileTransferIdentifier.map(PropertyListValue.string)
-
-		if fileTransferIdentifier != nil {
-			result[Self.fileTransferTypeKey] = .integer(fileTransferEventRawValue)
-		}
-
-		return result
-	}
-
-	/// The notification group this payload belongs to: one thread per channel,
-	/// or per client for a notification the whole connection raised.
-	public var threadIdentifier: String? {
-		guard let clientIdentifier else {
-			return nil
-		}
-
-		guard let channelIdentifier else {
-			return clientIdentifier
-		}
-
-		return "\(clientIdentifier)-\(channelIdentifier)"
-	}
-}
-
-private let fileTransferCategoryIdentifier = "TXNotificationCategoryIdentifierFileTransfer"
-private let fileTransferAcceptActionIdentifier = "TXNotificationActionIdentifierFileTransferAccept"
-private let fileTransferDeclineActionIdentifier = "TXNotificationActionIdentifierFileTransferDecline"
-private let privateMessageCategoryIdentifier = "TXNotificationCategoryIdentifierPrivateMessage"
-private let privateMessageReplyActionIdentifier = "TXNotificationActionIdentifierPrivateMessageReply"
-
-private nonisolated let notificationControllerLogger = Logger( // nonisolated: let
+nonisolated let notificationControllerLogger = Logger( // nonisolated: let
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 	category: "NotificationController"
 )
 
 @MainActor
-public final class NotificationController: NSObject, UNUserNotificationCenterDelegate {
-	public var areNotificationsDisabled = false {
+final class NotificationController: NSObject {
+	var areNotificationsDisabled = false {
 		didSet {
 			guard oldValue != areNotificationsDisabled else { return }
 			SharedApplication.sharedSpeechSynthesizer().setNotificationsMuted(
@@ -110,6 +35,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 			 back below. */
 			deliveryTasks.values.forEach { $0.cancel() }
 			deliveryTasks.removeAll()
+			bursts.reset()
 			let center = UNUserNotificationCenter.current()
 			center.removeAllPendingNotificationRequests()
 			center.removeAllDeliveredNotifications()
@@ -118,13 +44,16 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 
 	private var deliveryTasks: [String: Task<Void, Never>] = [:]
 
+	/// Which notifications in a burst may alert. See `claimsAlert(inThread:)`.
+	private var bursts = NotificationBurstCoalescer()
+
 	/// The one permission request of this launch, so that a burst of events
 	/// raises one prompt rather than one each.
 	private var authorizationRequest: Task<Void, Never>?
 	/// The main-window selection notification this controller answers.
 	private let notifications = NotificationSubscriptions()
 
-	override public init() {
+	override init() {
 		super.init()
 
 		prepareInitialState()
@@ -157,7 +86,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 	 flow as well as here — and every time the application comes forward,
 	 because the person can switch its sounds off in System Settings while it is
 	 running and nothing announces that. */
-	public func refreshSoundDelivery() async {
+	func refreshSoundDelivery() async {
 		let settings = await UNUserNotificationCenter.current().notificationSettings()
 
 		systemSoundDelivery = switch settings.authorizationStatus {
@@ -236,49 +165,10 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		await authorizationRequest?.value
 	}
 
-	private var categoriesToRegister: Set<UNNotificationCategory> {
-		let fileTransferAcceptAction = UNNotificationAction(
-			identifier: fileTransferAcceptActionIdentifier,
-			title: PromptStrings.Action.accept,
-			options: [.foreground]
-		)
-
-		/* Refusing from the notification is the other half of the decision the
-		 request asks for; without it the only way to say no was to open the
-		 transfer list and stop the transfer there. */
-		let fileTransferDeclineAction = UNNotificationAction(
-			identifier: fileTransferDeclineActionIdentifier,
-			title: PromptStrings.Action.decline,
-			options: [.destructive]
-		)
-
-		let fileTransferCategory = UNNotificationCategory(
-			identifier: fileTransferCategoryIdentifier,
-			actions: [fileTransferAcceptAction, fileTransferDeclineAction],
-			intentIdentifiers: [],
-			options: [.customDismissAction]
-		)
-
-		let privateMessageReplyAction = UNTextInputNotificationAction(
-			identifier: privateMessageReplyActionIdentifier,
-			title: NotificationStrings.replyActionTitle,
-			options: [],
-			textInputButtonTitle: NotificationStrings.replySendButtonTitle,
-			textInputPlaceholder: NotificationStrings.replyPlaceholder
-		)
-
-		let privateMessageCategory = UNNotificationCategory(
-			identifier: privateMessageCategoryIdentifier,
-			actions: [privateMessageReplyAction],
-			intentIdentifiers: [],
-			options: [.customDismissAction]
-		)
-
-		return [fileTransferCategory, privateMessageCategory]
-	}
-
 	private func registerCategories() {
-		UNUserNotificationCenter.current().setNotificationCategories(categoriesToRegister)
+		UNUserNotificationCenter.current().setNotificationCategories(
+			Set(NotificationCategory.allCases.map(\.notificationCategory))
+		)
 	}
 
 	private func mainWindowSelectionChanged(_: Notification) {
@@ -291,95 +181,40 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		dismissNotifications(for: mainWindow.selectedChannel, on: client)
 	}
 
+	/** Whether a notification in `thread` may alert now, as the first of a
+	 burst. The ones after it in the same burst are posted quietly, and any sound
+	 the application would play for them is skipped as well. */
+	func claimsAlert(inThread thread: String?) -> Bool {
+		bursts.claimsAlert(inThread: thread, at: .now)
+	}
+
 	/** Posts one notification.
 
 	 Who or what it is about is the title, where it happened the subtitle and
-	 the detail the body — the shape Messages and Mail use. Every event takes
-	 the same shape: titles used to be a second family of "<Category>: <subject>"
+	 the detail the body, the shape Messages and Mail use. Every event takes the
+	 same shape. Titles used to be a second family of "<Category>: <subject>"
 	 strings that said in the title what the subtitle already said.
 
 	 `sound` is the alert the event asks for, or `nil` where the person has
-	 muted them: the notification carries it so the system plays it with Do Not
+	 muted them. The notification carries it so the system plays it with Do Not
 	 Disturb, the alert volume and the notification's own settings applied. */
-	public func post(
+	func post(
 		title: String,
 		subtitle: String?,
 		body: String?,
 		sound: String?,
 		userInfo: NotificationPayload?,
-		categoryIdentifier: String?
+		category: NotificationCategory,
+		interruptionLevel: UNNotificationInterruptionLevel
 	) {
-		var body = body ?? ""
+		// A notification is plain text whatever the transcript shows.
+		let body = ((body ?? "") as NSString).stripIRCEffects
 
-		if Preferences.Messages.removeAllFormatting.value == false {
-			body = (body as NSString).stripIRCEffects
-		}
-
-		scheduleNotification(
-			title: title,
-			subtitle: subtitle,
-			message: body,
-			sound: sound,
-			userInfo: userInfo,
-			threadIdentifier: userInfo?.threadIdentifier,
-			categoryIdentifier: categoryIdentifier
-		)
-	}
-
-	/// The actions the system offers on a delivered notification, by event.
-	public static func categoryIdentifier(for event: NotificationEvent) -> String? {
-		switch event {
-		case .fileTransferReceiveRequested: fileTransferCategoryIdentifier
-		case .newPrivateMessage, .privateMessage: privateMessageCategoryIdentifier
-		default: nil
-		}
-	}
-
-	/// The grouping the payload names; kept as a static so callers that hold
-	/// two identifiers rather than a payload can ask for it too.
-	public static func threadIdentifier(
-		forClient clientIdentifier: String?,
-		channel channelIdentifier: String?
-	) -> String? {
-		NotificationPayload(
-			clientIdentifier: clientIdentifier,
-			channelIdentifier: channelIdentifier
-		).threadIdentifier
-	}
-
-	public func scheduleNotification(
-		title: String,
-		message: String,
-		for channel: Channel?,
-		on client: IRCClient
-	) {
-		let payload = NotificationPayload(
-			clientIdentifier: client.uniqueIdentifier,
-			channelIdentifier: channel?.uniqueIdentifier
-		)
-
-		scheduleNotification(
-			title: title,
-			message: message,
-			userInfo: payload,
-			threadIdentifier: payload.threadIdentifier,
-			categoryIdentifier: nil
-		)
-	}
-
-	private func scheduleNotification(
-		title: String,
-		subtitle: String? = nil,
-		message: String,
-		sound: String? = nil,
-		userInfo: NotificationPayload?,
-		threadIdentifier: String?,
-		categoryIdentifier: String?
-	) {
 		let content = UNMutableNotificationContent()
-
 		content.title = title
-		content.body = message
+		content.body = body
+		content.categoryIdentifier = category.rawValue
+		content.interruptionLevel = interruptionLevel
 
 		if let subtitle, subtitle.isEmpty == false {
 			content.subtitle = subtitle
@@ -393,29 +228,44 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 			content.userInfo = userInfo.userInfo.propertyListObject
 		}
 
-		if let categoryIdentifier {
-			content.categoryIdentifier = categoryIdentifier
-		}
-
-		if let threadIdentifier {
+		if let threadIdentifier = userInfo?.threadIdentifier {
 			content.threadIdentifier = threadIdentifier
 		}
+
+		schedule(content)
+	}
+
+	/// Posts the notification `/notifybubble` asks for, in the thread of the
+	/// channel it names or of the connection.
+	func scheduleNotification(
+		title: String,
+		message: String,
+		for channel: Channel?,
+		on client: IRCClient
+	) {
+		post(
+			title: title,
+			subtitle: nil,
+			body: message,
+			sound: nil,
+			userInfo: NotificationPayload(
+				clientIdentifier: client.uniqueIdentifier,
+				channelIdentifier: channel?.uniqueIdentifier
+			),
+			category: .activity,
+			interruptionLevel: .active
+		)
+	}
+
+	private func schedule(_ content: UNNotificationContent) {
+		guard !areNotificationsDisabled else { return }
 
 		/* Unique per notification: the system replaces a delivered notification
 		 that carries an identifier it has already seen, and two of the same
 		 message in the same channel are two notifications. */
-		scheduleNotification(content: content, identifier: UUID().uuidString)
-	}
+		let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
+		let title = content.title
 
-	private func scheduleNotification(content: UNNotificationContent, identifier: String) {
-		let request = UNNotificationRequest(identifier: identifier, content: content, trigger: nil)
-
-		scheduleNotification(request: request)
-	}
-
-	private func scheduleNotification(request: UNNotificationRequest) {
-		guard !areNotificationsDisabled else { return }
-		let title = request.content.title
 		deliveryTasks[request.identifier] = Task { [weak self] in
 			defer { self?.deliveryTasks[request.identifier] = nil }
 			await self?.requestAuthorizationIfNeeded()
@@ -437,43 +287,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		}
 	}
 
-	// MARK: - Notification Center Delegate
-
-	public func userNotificationCenter(
-		_: UNUserNotificationCenter,
-		openSettingsFor _: UNNotification?
-	) {
-		AppController.shared.menuController?.actionCoordinator.showNotificationPreferences(nil)
-	}
-
-	public func userNotificationCenter(
-		_: UNUserNotificationCenter,
-		willPresent _: UNNotification
-	) async -> UNNotificationPresentationOptions {
-		Self.presentationOptions(notificationsAreDisabled: areNotificationsDisabled)
-	}
-
-	/** How a notification that arrives while Glasstual is frontmost is shown.
-
-	 `.sound` is part of the answer: without it the system shows the banner and
-	 drops the sound the notification carries, which is every sound for an event
-	 raised while the application is in front. */
-	static func presentationOptions(notificationsAreDisabled: Bool) -> UNNotificationPresentationOptions {
-		notificationsAreDisabled ? [] : [.list, .banner, .sound]
-	}
-
-	public func userNotificationCenter(
-		_: UNUserNotificationCenter,
-		didReceive response: UNNotificationResponse
-	) async {
-		notificationResponseReceived(
-			actionIdentifier: response.actionIdentifier,
-			payload: NotificationPayload(userInfo: response.notification.request.content.userInfo),
-			replyMessage: (response as? UNTextInputNotificationResponse)?.userText
-		)
-	}
-
-	public func dismissNotifications(for channel: Channel?, on client: IRCClient) {
+	func dismissNotifications(for channel: Channel?, on client: IRCClient) {
 		let clientId = client.uniqueIdentifier
 		let channelId = channel?.uniqueIdentifier
 
@@ -515,7 +329,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		}
 	}
 
-	public nonisolated static func isNotification( // nonisolated: pure
+	nonisolated static func isNotification( // nonisolated: pure
 		userInfo: [AnyHashable: Any],
 		inScopeOfClientIdentifier clientIdentifier: String,
 		channelIdentifier: String?
@@ -524,162 +338,5 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 
 		/* Equality of nil is valid so both channel IDs can be absent. */
 		return clientIdentifier == payload.clientIdentifier && channelIdentifier == payload.channelIdentifier
-	}
-
-	// MARK: - Notification Callback
-
-	func notificationResponseReceived(
-		actionIdentifier: String,
-		payload: NotificationPayload,
-		replyMessage: String?
-	) {
-		if actionIdentifier == UNNotificationDismissActionIdentifier {
-			return
-		}
-
-		if let identifier = payload.fileTransferIdentifier {
-			fileTransferResponseReceived(
-				actionIdentifier: actionIdentifier,
-				identifier: identifier,
-				payload: payload
-			)
-
-			return
-		}
-
-		/* A reply is answered where it was typed. Raising the main window over
-		 it is the one thing the person did not ask for. */
-		if actionIdentifier != privateMessageReplyActionIdentifier {
-			NSApp.activate()
-			AppController.shared.mainWindow.makeKeyAndOrderFront(nil)
-		}
-
-		guard let clientId = payload.clientIdentifier, let world = AppController.shared.world else {
-			return
-		}
-
-		guard let channelId = payload.channelIdentifier else {
-			if let client = world.findClient(withId: clientId) {
-				AppController.shared.mainWindow.select(client)
-			}
-
-			return
-		}
-
-		guard let channel = world.findChannel(withId: channelId, onClientWithId: clientId) else {
-			return
-		}
-
-		let treeItem: TreeItem = channel
-		AppController.shared.mainWindow.select(treeItem)
-
-		guard let replyMessage, replyMessage.isEmpty == false else {
-			return
-		}
-
-		channel.associatedClient?.inputText(replyMessage, destination: treeItem)
-	}
-
-	private func fileTransferResponseReceived(
-		actionIdentifier: String,
-		identifier: String,
-		payload: NotificationPayload
-	) {
-		let center = SharedApplication.sharedFileTransferCenter()
-		let clientIdentifier = payload.clientIdentifier
-
-		if actionIdentifier == fileTransferDeclineActionIdentifier {
-			center.declineNotification(for: identifier, clientIdentifier: clientIdentifier)
-			return
-		}
-
-		guard actionIdentifier == UNNotificationDefaultActionIdentifier
-			|| actionIdentifier == fileTransferAcceptActionIdentifier
-		else {
-			return
-		}
-
-		let accept = actionIdentifier == fileTransferAcceptActionIdentifier
-			&& payload.fileTransferEventRawValue == Int(NotificationEvent.fileTransferReceiveRequested.rawValue)
-		/* The transfer may have been cleared before the click arrived. The
-		 click still asked for the transfer list, so it is still shown. */
-		_ = center.respondToNotification(for: identifier, clientIdentifier: clientIdentifier, accept: accept)
-		NSApp.activate()
-		center.present()
-	}
-
-	// MARK: - Preferences
-
-	public func sound(forEvent event: NotificationEvent, in channel: Channel?) -> String? {
-		if let channel, let channelValue = channel.config.sound(forEvent: event) {
-			return channelValue
-		}
-
-		return Preferences.Notifications.sound(event).storedValue
-	}
-
-	public func speakEvent(_ event: NotificationEvent, in channel: Channel?) -> Bool {
-		resolve(
-			event,
-			in: channel,
-			channelValue: { $0.speakEvent($1) },
-			globalValue: { Preferences.Notifications.flag($0, .speak).value }
-		)
-	}
-
-	public func notificationEnabled(forEvent event: NotificationEvent, in channel: Channel?) -> Bool {
-		resolve(
-			event,
-			in: channel,
-			channelValue: { $0.notificationEnabled(forEvent: $1) },
-			globalValue: { Preferences.Notifications.flag($0, .enabled).value }
-		)
-	}
-
-	public func disabledWhileAway(forEvent event: NotificationEvent, in channel: Channel?) -> Bool {
-		resolve(
-			event,
-			in: channel,
-			channelValue: { $0.disabledWhileAway(forEvent: $1) },
-			globalValue: { Preferences.Notifications.flag($0, .disabledWhileAway).value }
-		)
-	}
-
-	public func bounceDockIcon(forEvent event: NotificationEvent, in channel: Channel?) -> Bool {
-		resolve(
-			event,
-			in: channel,
-			channelValue: { $0.bounceDockIcon(forEvent: $1) },
-			globalValue: { Preferences.Notifications.flag($0, .bounceDockIcon).value }
-		)
-	}
-
-	public func bounceDockIconRepeatedly(forEvent event: NotificationEvent, in channel: Channel?) -> Bool {
-		resolve(
-			event,
-			in: channel,
-			channelValue: { $0.bounceDockIconRepeatedly(forEvent: $1) },
-			globalValue: { Preferences.Notifications.flag($0, .bounceDockIconRepeatedly).value }
-		)
-	}
-
-	/// A channel's override wins when it has one; `.inherited` means "no
-	/// override", so the application-wide preference answers. Five settings
-	/// shared this shape as five byte-identical bodies.
-	private func resolve(
-		_ event: NotificationEvent,
-		in channel: Channel?,
-		channelValue: (ChannelConfig, NotificationEvent) -> ChannelEventOverride,
-		globalValue: (NotificationEvent) -> Bool
-	) -> Bool {
-		if let channel {
-			switch channelValue(channel.config, event) {
-			case .on: return true
-			case .off: return false
-			case .inherited: break
-			}
-		}
-
-		return globalValue(event)
 	}
 }

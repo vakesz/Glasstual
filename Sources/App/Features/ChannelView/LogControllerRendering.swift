@@ -36,6 +36,57 @@ nonisolated struct RenderedMember: Sendable, Hashable { // nonisolated: value
 	}
 }
 
+/** The channel's members as a render reads them: by name, under the casemapping
+ the server advertised.
+
+ Built once per change to the member list and shared by every line rendered
+ against it. A render asks it about each word of a message and about each
+ line's sender, so both are lookups rather than walks of the whole channel. */
+nonisolated struct RenderedMemberDirectory: Equatable, Sendable, ExpressibleByArrayLiteral { // nonisolated: value
+	/// The members in the order the channel lists them.
+	let members: [RenderedMember]
+	let caseMapping: IRCISupportInfoCaseMapping
+	/// Each member under their folded name. The first spelling wins where two
+	/// fold alike, which a server that enforces its casemapping never sends.
+	private let membersByFoldedNickname: [String: RenderedMember]
+	/// The distinct lengths of the members' names, in UTF-16 units, shortest
+	/// first: the only lengths a mention can have.
+	let nicknameLengths: [Int]
+
+	init(_ members: [RenderedMember], caseMapping: IRCISupportInfoCaseMapping = .rfc1459) {
+		self.members = members
+		self.caseMapping = caseMapping
+		var byName: [String: RenderedMember] = [:]
+		var lengths = Set<Int>()
+		for member in members where member.nickname.isEmpty == false {
+			let folded = ISupportTokenParser.casefold(member.nickname, caseMapping: caseMapping)
+			if byName[folded] == nil {
+				byName[folded] = member
+			}
+			lengths.insert((member.nickname as NSString).length)
+		}
+		membersByFoldedNickname = byName
+		nicknameLengths = lengths.sorted()
+	}
+
+	init(arrayLiteral members: RenderedMember...) {
+		self.init(members)
+	}
+
+	var isEmpty: Bool {
+		members.isEmpty
+	}
+
+	/// The member `nickname` names under the casemapping, however it is spelled.
+	func member(named nickname: String) -> RenderedMember? {
+		membersByFoldedNickname[ISupportTokenParser.casefold(nickname, caseMapping: caseMapping)]
+	}
+
+	static func == (lhs: Self, rhs: Self) -> Bool {
+		lhs.members == rhs.members && lhs.caseMapping == rhs.caseMapping
+	}
+}
+
 nonisolated struct LogLineRenderContext: Sendable { // nonisolated: value
 	var inlineMediaEnabled = false
 	var isChannel = false
@@ -46,12 +97,12 @@ nonisolated struct LogLineRenderContext: Sendable { // nonisolated: value
 	/// The preference facts the body renderer branches on, taken on the main
 	/// actor for the same reason `showsDateChanges` is.
 	var textPolicy = TranscriptTextPolicy()
-	var members: [RenderedMember] = []
+	/// The channel's members, for the mentions in a message and the mark
+	/// beside its sender. Empty where the lines rendered need neither.
+	var members: RenderedMemberDirectory = []
+	/// The server's casemapping, which decides what spells the same name.
+	var caseMapping = IRCISupportInfoCaseMapping.rfc1459
 	var sessionReactions: [String: [String: [String]]] = [:]
-
-	func member(named nickname: String) -> RenderedMember? {
-		members.first { $0.nickname.caseInsensitiveCompare(nickname) == .orderedSame }
-	}
 
 	func reactions(for line: LogLineSnapshot) -> [String: [String]] {
 		let archived = line.reactions ?? [:]
@@ -95,7 +146,14 @@ nonisolated struct LogLineSnapshot: Sendable { // nonisolated: value
 
 	init() {}
 
-	init(_ logLine: LogLine, in context: LogLineRenderContext, historyCursor: HistoricLogRowCursor? = nil) {
+	/// `modeSymbol` is the sender's mark where the caller already knows it; a
+	/// line rendered off the main actor finds it in the context's members.
+	init(
+		_ logLine: LogLine,
+		in context: LogLineRenderContext,
+		historyCursor: HistoricLogRowCursor? = nil,
+		modeSymbol knownModeSymbol: String? = nil
+	) {
 		self.historyCursor = historyCursor
 		uniqueIdentifier = historyCursor?.rowURI ?? logLine.uniqueIdentifier
 		messageBody = logLine.messageBody
@@ -114,8 +172,10 @@ nonisolated struct LogLineSnapshot: Sendable { // nonisolated: value
 		isFirstForDay = logLine.isFirstForDay
 		fromCurrentSession = logLine.fromCurrentSession
 
-		modeSymbol = if context.isChannel, let sender = logLine.nickname {
-			context.member(named: sender)?.mark ?? ""
+		modeSymbol = if let knownModeSymbol {
+			knownModeSymbol
+		} else if context.isChannel, let sender = logLine.nickname {
+			context.members.member(named: sender)?.mark ?? ""
 		} else {
 			""
 		}
@@ -125,15 +185,6 @@ nonisolated struct LogLineSnapshot: Sendable { // nonisolated: value
 nonisolated struct LogLineRenderRequest: Sendable { // nonisolated: value
 	var line: LogLineSnapshot
 	var context: LogLineRenderContext
-
-	init(line: LogLineSnapshot, context: LogLineRenderContext) {
-		self.line = line
-		self.context = context
-	}
-
-	init(logLine: LogLine, context: LogLineRenderContext) {
-		self.init(line: LogLineSnapshot(logLine, in: context), context: context)
-	}
 }
 
 nonisolated struct LogLineRenderResult: Sendable { // nonisolated: value
@@ -143,10 +194,6 @@ nonisolated struct LogLineRenderResult: Sendable { // nonisolated: value
 
 	var lineNumber: String {
 		transcriptLine.lineNumber
-	}
-
-	var timestamp: TimeInterval {
-		transcriptLine.receivedAt.timeIntervalSince1970
 	}
 
 	var isHighlight: Bool {
@@ -196,13 +243,14 @@ extension LogController {
 			memberType: line.memberType,
 			highlightKeywords: line.highlightKeywords ?? [],
 			excludedKeywords: line.excludeKeywords ?? [],
-			textPolicy: request.context.textPolicy
+			textPolicy: request.context.textPolicy,
+			caseMapping: request.context.caseMapping
 		)
 
 		let body = LogRenderer.renderNativeBody(
 			line.messageBody,
 			withAttributes: attributes,
-			members: request.context.members
+			members: request.context.members.members
 		)
 		let markers = markers(for: request)
 		let transcriptLine = TranscriptLine(

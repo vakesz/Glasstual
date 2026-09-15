@@ -14,16 +14,7 @@ import SwiftUI
  events bounce the Dock?" a question you answered by clicking nineteen times. */
 @MainActor
 struct NotificationConfigurationView: View {
-	@State private var model: NotificationConfigurationModel
-
-	init(notifications: [NotificationConfigurationItem], allowsInheritedState: Bool) {
-		_model = State(
-			initialValue: NotificationConfigurationModel(
-				notifications: notifications,
-				allowsInheritedState: allowsInheritedState
-			)
-		)
-	}
+	let model: NotificationConfigurationModel
 
 	/// An override needs room for three named states; a plain switch is a
 	/// checkbox and needs room for nothing.

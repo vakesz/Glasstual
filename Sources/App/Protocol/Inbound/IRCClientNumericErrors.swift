@@ -95,6 +95,9 @@ public extension IRCClient {
 			switch message.param(at: 1) {
 			case "ISON": requestedCommands.recordIsonRequestClosed()
 			case "WHO": requestedCommands.recordWhoRequestClosed()
+			/* A refused LIST sends no RPL_LISTEND, and a list left waiting for
+			 one spins with its Refresh button disabled. */
+			case "LIST": channelListPresentation?.channelListDidFinish(for: self)
 			default: break
 			}
 		}

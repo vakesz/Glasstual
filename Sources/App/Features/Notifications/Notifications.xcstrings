@@ -780,6 +780,90 @@
           }
         }
       }
+    },
+    "file-transfer-decline-action" : {
+      "comment" : "Title of the button on an incoming file transfer notification that refuses the transfer.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Decline"
+          }
+        }
+      }
+    },
+    "hidden-preview-activity" : {
+      "comment" : "Shown in place of a channel message, mention, join or connection notification when the person hides notification previews in System Settings.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New activity"
+          }
+        }
+      }
+    },
+    "hidden-preview-file-transfer" : {
+      "comment" : "Shown in place of an incoming file transfer notification when the person hides notification previews in System Settings.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "File transfer"
+          }
+        }
+      }
+    },
+    "hidden-preview-private-message" : {
+      "comment" : "Shown in place of a private message notification when the person hides notification previews in System Settings.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Private message"
+          }
+        }
+      }
+    },
+    "summary-activity" : {
+      "comment" : "Summary under a collapsed stack of channel and connection notifications from one conversation. The argument is the number of notifications in the stack, which the system fills in and which is always 2 or more.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ notifications"
+          }
+        }
+      }
+    },
+    "summary-file-transfers" : {
+      "comment" : "Summary under a collapsed stack of incoming file transfer notifications from one connection. The argument is the number of notifications in the stack, which the system fills in and which is always 2 or more.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ file transfers"
+          }
+        }
+      }
+    },
+    "summary-private-messages" : {
+      "comment" : "Summary under a collapsed stack of private message notifications from one person. The argument is the number of notifications in the stack, which the system fills in and which is always 2 or more.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ private messages"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

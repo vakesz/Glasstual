@@ -47,7 +47,6 @@ struct OnboardingView: View {
 		.frame(minWidth: 720, idealWidth: 720, minHeight: 620, idealHeight: 700)
 		.animation(reduceMotion ? nil : .snappy(duration: 0.2), value: model.currentStep)
 		.animation(reduceMotion ? nil : .snappy(duration: 0.2), value: session.isCompleting)
-		.onExitCommand(perform: setUpLater)
 		.alert(
 			Text(verbatim: OnboardingStrings.Window.connectionUnavailable),
 			isPresented: $session.isCompletionFailurePresented

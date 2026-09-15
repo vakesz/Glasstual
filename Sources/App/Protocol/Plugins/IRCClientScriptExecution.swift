@@ -36,9 +36,9 @@ private let scriptExecutionLogger = Logger(
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 	category: "ScriptExecution"
 )
-private let appleScriptSuite = AEEventClass(0x6173_6372)
-private let appleScriptSubroutineEvent = AEEventID(0x7073_6272)
-private let appleScriptSubroutineName = AEKeyword(0x736E_616D)
+private nonisolated let appleScriptSuite = AEEventClass(0x6173_6372) // nonisolated: let
+private nonisolated let appleScriptSubroutineEvent = AEEventID(0x7073_6272) // nonisolated: let
+private nonisolated let appleScriptSubroutineName = AEKeyword(0x736E_616D) // nonisolated: let
 
 /// Helpers for the `glasstualcmd` script bridge, kept free of `IRCClient` so
 /// they can be exercised without a live client.
@@ -58,15 +58,20 @@ enum ScriptExecutionSupport {
 	}
 
 	/// The handler name Glasstual asks a script to run.
-	static let handlerName = "glasstualcmd"
+	nonisolated static let handlerName = "glasstualcmd" // nonisolated: let
 
 	/// The handler name Textual used. Scripts written for Textual — including
 	/// every user script carried over from it — still define this one, so it is
 	/// tried when the preferred name is not defined.
-	static let legacyHandlerName = "textualcmd"
+	nonisolated static let legacyHandlerName = "textualcmd" // nonisolated: let
 
 	/// `errAEEventNotHandled`: the script has no handler under that name.
-	static let handlerNotDefinedError = -1708
+	nonisolated static let handlerNotDefinedError = -1708 // nonisolated: let
+
+	/// `errOSAGeneralError`: what a failure that reports no error number is
+	/// recorded as. It must not be the missing-handler code, or every such
+	/// failure would run the script a second time under the legacy name.
+	nonisolated static let unknownScriptError = -2700 // nonisolated: let
 
 	/** How much of a script's output is kept.
 
@@ -77,34 +82,100 @@ enum ScriptExecutionSupport {
 	 reader at all. */
 	nonisolated static let maximumOutputBytes = 1 << 20 // nonisolated: let
 
-	private nonisolated static let outputChunkBytes = 64 * 1024 // nonisolated: let
+	/** Reads `handle` to end of file, keeping at most ``maximumOutputBytes``.
 
-	/// Reads `handle` to end of file, keeping at most ``maximumOutputBytes``.
-	///
-	/// This runs while the script is still executing. A pipe holds a fixed
-	/// amount (64 KB on macOS); a script that writes more blocks in `write(2)`
-	/// until something reads, so a reader that waits for termination first
-	/// would wedge the script and never start.
+	 This runs while the script is still executing. A pipe holds a fixed amount
+	 (64 KB on macOS); a script that writes more blocks in `write(2)` until
+	 something reads, so a reader that waits for termination first would wedge
+	 the script and never start.
+
+	 The bytes arrive through `FileHandle.bytes`, which suspends between reads.
+	 A blocking `read(upToCount:)` held one of the few cooperative-pool threads
+	 for as long as the script ran, however long that was. */
 	@concurrent
 	static func readOutput(from handle: FileHandle) async throws -> Data {
 		var accumulated = Data()
 		var exceededLimit = false
 
-		while true {
-			guard let chunk = try handle.read(upToCount: outputChunkBytes), chunk.isEmpty == false else {
-				break
-			}
-
-			let remaining = maximumOutputBytes - accumulated.count
-			exceededLimit = exceededLimit || chunk.count > remaining
-
-			if remaining > 0 {
-				accumulated.append(chunk.prefix(remaining))
+		for try await byte in handle.bytes {
+			if accumulated.count < maximumOutputBytes {
+				accumulated.append(byte)
+			} else {
+				exceededLimit = true
 			}
 		}
 
 		guard exceededLimit == false else { throw OutputError.tooLarge }
 		return accumulated
+	}
+
+	/// Runs the executable at `url` with `arguments` and returns what it wrote
+	/// to standard output, read while it runs.
+	@concurrent
+	static func runUnixScript(at url: URL, arguments: [String]) async throws -> Data {
+		let task = try NSUserUnixTask(url: url)
+		let pipe = Pipe()
+		let readHandle = pipe.fileHandleForReading
+		let writeHandle = pipe.fileHandleForWriting
+		task.standardOutput = writeHandle
+		defer { try? readHandle.close() }
+
+		// Start draining before the script runs. Reading only once it has
+		// terminated deadlocks a script whose output overflows the pipe.
+		async let output = readOutput(from: readHandle)
+		let executionError: (any Error)?
+		do {
+			try await task.execute(withArguments: arguments)
+			executionError = nil
+		} catch {
+			executionError = error
+		}
+
+		// The task holds the only other reference to the write end; closing it
+		// here is what lets the drain above see EOF.
+		try? writeHandle.close()
+		let data = try await output
+
+		if let executionError {
+			throw executionError
+		}
+
+		return data
+	}
+
+	/// Runs `handler` in the user AppleScript at `url` and returns its result
+	/// as text, when it has one.
+	@concurrent
+	static func runUserAppleScript(at url: URL, handler: String, input: String, target: String?) async throws -> String? {
+		let task = try NSUserAppleScriptTask(url: url)
+		let result = try await task.execute(withAppleEvent: appleEvent(handler: handler, input: input, target: target))
+
+		return result.stringValue
+	}
+
+	/// Runs the preferred handler, and the legacy one only where the script
+	/// does not define the preferred one.
+	@concurrent
+	static func runUserAppleScriptTryingLegacyHandler(
+		at url: URL,
+		input: String,
+		target: String?
+	) async throws -> String? {
+		do {
+			return try await runUserAppleScript(
+				at: url,
+				handler: handlerName,
+				input: input,
+				target: target
+			)
+		} catch where isHandlerNotDefined(error as NSError) {
+			return try await runUserAppleScript(
+				at: url,
+				handler: legacyHandlerName,
+				input: input,
+				target: target
+			)
+		}
 	}
 
 	nonisolated static func decodedOutput(_ data: Data) throws -> String { // nonisolated: pure
@@ -113,7 +184,11 @@ enum ScriptExecutionSupport {
 		return output
 	}
 
-	static func appleEvent(handler: String, input: String, target: String?) -> NSAppleEventDescriptor {
+	nonisolated static func appleEvent( // nonisolated: pure
+		handler: String,
+		input: String,
+		target: String?
+	) -> NSAppleEventDescriptor {
 		let parameters = NSAppleEventDescriptor.list()
 		parameters.insert(NSAppleEventDescriptor(string: input), at: 1)
 		parameters.insert(NSAppleEventDescriptor(string: target ?? ""), at: 2)
@@ -131,7 +206,7 @@ enum ScriptExecutionSupport {
 
 	/// `true` when the script simply does not define the handler that was asked
 	/// for, which is the only failure worth retrying under the legacy name.
-	static func isHandlerNotDefined(_ error: NSError) -> Bool {
+	nonisolated static func isHandlerNotDefined(_ error: NSError) -> Bool { // nonisolated: pure
 		if let number = error.userInfo[NSAppleScript.errorNumber] as? Int {
 			return number == handlerNotDefinedError
 		}
@@ -142,7 +217,7 @@ enum ScriptExecutionSupport {
 	/// into an `Error` the shared reporting path understands.
 	static func error(from information: NSDictionary?) -> NSError {
 		let userInfo = (information as? [String: Any]) ?? [:]
-		let code = (userInfo[NSAppleScript.errorNumber] as? Int) ?? handlerNotDefinedError
+		let code = (userInfo[NSAppleScript.errorNumber] as? Int) ?? unknownScriptError
 		return NSError(domain: NSOSStatusErrorDomain, code: code, userInfo: userInfo)
 	}
 }
@@ -252,7 +327,6 @@ extension IRCClient {
 				path: script.url.path,
 				input: input,
 				target: target,
-				handler: ScriptExecutionSupport.handlerName,
 				invocation: invocation
 			)
 		}
@@ -299,41 +373,30 @@ extension IRCClient {
 		path: String,
 		input: String,
 		target: String?,
-		handler: String,
 		invocation: ScriptInvocation
 	) {
-		do {
-			let task = try NSUserAppleScriptTask(url: url)
-			let event = ScriptExecutionSupport.appleEvent(handler: handler, input: input, target: target)
-			task.execute(withAppleEvent: event) { [weak self] result, error in
-				let resultString = result?.stringValue
-				let scriptError = error as NSError?
-				Task { @MainActor [weak self] in
-					guard let self, scriptInvocationIsCurrent(invocation) else { return }
-					guard let scriptError else {
-						if let resultString {
-							sendGlasstualCmdScriptResult(resultString, to: invocation)
-						}
-						return
-					}
-					if handler == ScriptExecutionSupport.handlerName,
-					   ScriptExecutionSupport.isHandlerNotDefined(scriptError)
-					{
-						executeUserAppleScript(
-							at: url,
-							path: path,
-							input: input,
-							target: target,
-							handler: ScriptExecutionSupport.legacyHandlerName,
-							invocation: invocation
-						)
-						return
-					}
-					outputDescription(for: scriptError, forGlasstualCmdScriptAtPath: path, inputString: input)
-				}
+		Task { [weak self] in
+			let outcome: Result<String?, any Error>
+			do {
+				outcome = try await .success(ScriptExecutionSupport.runUserAppleScriptTryingLegacyHandler(
+					at: url,
+					input: input,
+					target: target
+				))
+			} catch {
+				outcome = .failure(error)
 			}
-		} catch {
-			outputDescription(for: error, forGlasstualCmdScriptAtPath: path, inputString: input)
+
+			guard let self, scriptInvocationIsCurrent(invocation) else { return }
+
+			switch outcome {
+			case let .success(resultString):
+				if let resultString {
+					sendGlasstualCmdScriptResult(resultString, to: invocation)
+				}
+			case let .failure(error):
+				outputDescription(for: error, forGlasstualCmdScriptAtPath: path, inputString: input)
+			}
 		}
 	}
 
@@ -344,37 +407,25 @@ extension IRCClient {
 		target: String?,
 		invocation: ScriptInvocation
 	) {
-		do {
-			let task = try NSUserUnixTask(url: url)
-			let pipe = Pipe()
-			task.standardOutput = pipe.fileHandleForWriting
-			let arguments = [target ?? ""] + input.components(separatedBy: .whitespaces)
-			let readHandle = pipe.fileHandleForReading
-			let writeHandle = pipe.fileHandleForWriting
-			// Start draining before the script runs. Reading only once it has
-			// terminated deadlocks a script whose output overflows the pipe.
-			let output = Task { try await ScriptExecutionSupport.readOutput(from: readHandle) }
-			task.execute(withArguments: arguments) { [weak self] error in
-				// The task holds the only other reference to the write end; closing
-				// it here is what lets the drain above see EOF instead of blocking.
-				try? writeHandle.close()
-				Task { @MainActor [weak self] in
-					let result = await output.result
-					try? readHandle.close()
-					guard let self, scriptInvocationIsCurrent(invocation) else { return }
-					do {
-						if let error {
-							throw error
-						}
-						let text = try ScriptExecutionSupport.decodedOutput(result.get())
-						sendGlasstualCmdScriptResult(text, to: invocation)
-					} catch {
-						outputDescription(for: error, forGlasstualCmdScriptAtPath: path, inputString: input)
-					}
-				}
+		let arguments = [target ?? ""] + input.components(separatedBy: .whitespaces)
+
+		Task { [weak self] in
+			let outcome: Result<String, any Error>
+			do {
+				let data = try await ScriptExecutionSupport.runUnixScript(at: url, arguments: arguments)
+				outcome = try .success(ScriptExecutionSupport.decodedOutput(data))
+			} catch {
+				outcome = .failure(error)
 			}
-		} catch {
-			outputDescription(for: error, forGlasstualCmdScriptAtPath: path, inputString: input)
+
+			guard let self, scriptInvocationIsCurrent(invocation) else { return }
+
+			switch outcome {
+			case let .success(text):
+				sendGlasstualCmdScriptResult(text, to: invocation)
+			case let .failure(error):
+				outputDescription(for: error, forGlasstualCmdScriptAtPath: path, inputString: input)
+			}
 		}
 	}
 }

@@ -78,6 +78,27 @@ struct StringCatalogStructureTests {
 		}
 	}
 
+	/** A language with a handful of translated entries still becomes one the
+	 bundle declares, so a person who prefers it gets it as the application's
+	 localization: two stray Hungarian strings made the notification speech
+	 voice Hungarian while every string it spoke was English. A language is
+	 therefore either translated throughout or not supplied at all. */
+	@Test("A translation language covers every entry of every catalog")
+	func translationsAreComplete() throws {
+		let catalogs = try StringCatalog.all()
+		let languages = Set(catalogs.flatMap { catalog in
+			catalog.strings.values.flatMap(\.localizations.keys)
+		}).subtracting(catalogs.map(\.sourceLanguage))
+
+		for language in languages.sorted() {
+			for catalog in catalogs {
+				for (key, entry) in catalog.strings {
+					#expect(entry.localizations[language] != nil, "\(catalog.name):\(key) has no \(language) translation")
+				}
+			}
+		}
+	}
+
 	@Test("Every supplied translation preserves argument positions and types")
 	func placeholdersAreConsistent() throws {
 		for catalog in try StringCatalog.all() {

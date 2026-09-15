@@ -39,12 +39,11 @@
 import AppKit
 
 /// Owns the visual policy for AppKit menu symbols. Keeping this policy in one
-/// place prevents the contextual menus assembled at runtime from drifting
-/// apart.
+/// place stops the contextual menus assembled at runtime from drifting apart.
 ///
-/// The menu bar is not among them: macOS draws no images beside its own
-/// menu-bar commands, so this application draws none either — and the
-/// transparent spacer a half-illustrated column needed went with them.
+/// Only contextual menus get symbols. macOS draws no images beside its own
+/// menu-bar commands, so this application draws none there either. That
+/// includes the Channel and Query menus, which hang in the menu bar.
 @MainActor
 public enum MenuPresentation {
 	private static let symbolConfiguration = NSImage.SymbolConfiguration(

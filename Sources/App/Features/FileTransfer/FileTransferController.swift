@@ -172,6 +172,9 @@ public final class FileTransferController: ClientScoped {
 	var portMapping: PortMapper?
 	var transfer: DCCTransfer?
 	var transferEvents: Task<Void, Never>?
+	/// Set when resuming failed, so the next start begins the file again in a
+	/// new reservation instead of asking the peer to resume once more.
+	var restartsFromBeginning = false
 	/// Gives up on an unanswered RESUME without truncating the partial file.
 	var resumeRequestTimeout: Task<Void, Never>?
 	var offerTimeout: Task<Void, Never>?

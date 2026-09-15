@@ -51,6 +51,46 @@ nonisolated enum NotificationStrings { // nonisolated: value
 		String(localized: .Notifications.replySendButton)
 	}
 
+	static var declineFileTransferActionTitle: String {
+		String(localized: .Notifications.fileTransferDeclineAction)
+	}
+
+	/// What the system shows instead of a notification while previews are hidden.
+	enum HiddenPreview {
+		static var activity: String {
+			String(localized: .Notifications.hiddenPreviewActivity)
+		}
+
+		static var fileTransfer: String {
+			String(localized: .Notifications.hiddenPreviewFileTransfer)
+		}
+
+		static var privateMessage: String {
+			String(localized: .Notifications.hiddenPreviewPrivateMessage)
+		}
+	}
+
+	/** The summary format under a collapsed stack of notifications.
+
+	 The system counts the stack and puts the number where `%u` is, so the
+	 format has to reach it with `%u` still in it. The catalog entries take the
+	 placeholder as their argument for that reason. */
+	enum Summary {
+		private static let countPlaceholder = "%u"
+
+		static var activity: String {
+			String(localized: .Notifications.summaryActivity(countPlaceholder))
+		}
+
+		static var fileTransfers: String {
+			String(localized: .Notifications.summaryFileTransfers(countPlaceholder))
+		}
+
+		static var privateMessages: String {
+			String(localized: .Notifications.summaryPrivateMessages(countPlaceholder))
+		}
+	}
+
 	static func messageBody(formattedNickname: String, text: String) -> String {
 		String(localized: .Notifications.bodyMessageWithNickname(formattedNickname, text))
 	}

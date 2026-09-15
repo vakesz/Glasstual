@@ -5,6 +5,7 @@
 
 import Foundation
 @testable import Glasstual
+import GlasstualPluginKit
 import Testing
 
 @MainActor
@@ -175,6 +176,25 @@ struct IRCClientOutboundPolicyTests {
 		])
 	}
 
+	@Test("A mode parameter that starts with a sign is paired with its mode, not read as a mode string")
+	func signedModeParameterIsNotReadAsModeString() throws {
+		let client = loggedInClient()
+		client.supportInfo.processConfigurationData("CHANMODES=beI,k,l,imnpst PREFIX=(ov)@+")
+		let channel = try #require(client.findChannelOrCreate("#chat"))
+
+		client.sendModes("+k +secret", withParametersString: nil, inChannelNamed: channel.name)
+		client.sendModes("+b -bad!*@* +m", withParametersString: nil, inChannelNamed: channel.name)
+		client.sendModes("-l +i", withParametersString: nil, inChannelNamed: channel.name)
+
+		#expect(sentLines(of: client) == [
+			"MODE #chat +k +secret",
+			"MODE #chat +b -bad!*@*",
+			"MODE #chat +m",
+			"MODE #chat -l",
+			"MODE #chat +i",
+		])
+	}
+
 	@Test("WHO and NAMES send each of their arguments as a parameter")
 	func whoAndNamesTokenizeTheirArguments() {
 		let client = loggedInClient()
@@ -241,6 +261,36 @@ struct IRCClientOutboundPolicyTests {
 		client.sendCommand("join #a,#b k1 k2", completeTarget: false, target: nil)
 
 		#expect(sentLines(of: client) == ["JOIN #a,#b k1,k2"])
+	}
+
+	/// `/join a,b,c` went out as one line however long the list, and none of
+	/// the channels already in the sidebar showed that it was being joined.
+	@Test("A typed channel list is batched to the line budget and listed channels show they are joining")
+	func typedJoinListIsBatchedAndMarksChannelsJoining() throws {
+		let client = loggedInClient()
+		client.supportInfo.processConfigurationData("TARGMAX=JOIN:2")
+		let listed = try #require(client.findChannelOrCreate("#b"))
+
+		client.sendCommand("join #a,#b,#c", completeTarget: false, target: nil)
+
+		#expect(sentLines(of: client) == ["JOIN #a,#b", "JOIN #c"])
+		#expect(listed.status == .joining)
+	}
+
+	@Test("Keys stay with their channels when a channel before them is refused")
+	func typedJoinKeysPairWithTheirOwnChannels() {
+		let client = loggedInClient()
+		client.supportInfo.processConfigurationData("CHANNELLEN=6")
+
+		client.sendCommand("join #toolong,#ok,#free first second", completeTarget: false, target: nil)
+
+		#expect(sentLines(of: client) == ["JOIN #free", "JOIN #ok second"])
+	}
+
+	@Test("A key with a comma in it is not sent, since the server would read two keys")
+	func keyWithACommaIsRefused() {
+		#expect(OutboundJoinPolicy.sanitizedKey("a,b", maximumLength: 0) == nil)
+		#expect(OutboundJoinPolicy.sanitizedKey("ab", maximumLength: 0) == "ab")
 	}
 
 	/// A key with a space in it has no wire spelling at all: as the trailing

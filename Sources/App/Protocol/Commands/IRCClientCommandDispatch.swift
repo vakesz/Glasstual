@@ -260,12 +260,7 @@ public extension IRCClient {
 					printDebugInformation(IRCCommandStrings.invalidArguments)
 					return
 				}
-				pendingEndpoint = PendingIRCEndpoint(
-					host: serverAddress,
-					port: IRCConnectionDefaults.serverPort,
-					origin: server,
-					reason: .userCommand
-				)
+				pendingEndpoint = connectCommandEndpoint(host: serverAddress)
 			}
 			if isConnecting || isConnected {
 				addDisconnectCallback { [weak self] in self?.connect() }
@@ -519,18 +514,16 @@ public extension IRCClient {
 
 	private func dispatchLagCommand(_ parsed: ParsedUserCommand) {
 		guard isLoggedIn, let socket else { return }
-		var queryItems = [
-			URLQueryItem(name: "connection", value: socket.uniqueIdentifier),
-			URLQueryItem(name: "time", value: String(Date().timeIntervalSince1970)),
+		var fields = [
+			(key: "connection", value: socket.uniqueIdentifier),
+			(key: "time", value: String(Date().timeIntervalSince1970)),
 		]
 		if parsed.localCommand == .mylag,
 		   let channel = output?.selectedChannel(on: self)
 		{
-			queryItems.append(URLQueryItem(name: "channel", value: channel.name))
+			fields.append((key: "channel", value: channel.name))
 		}
-		var components = URLComponents()
-		components.queryItems = queryItems
-		let payload = components.percentEncodedQuery ?? ""
+		let payload = IRCCTCPPolicy.formEncoded(fields)
 		sendCTCPQuery(userNickname, command: "LAGCHECK", text: payload)
 		printDebugInformation(IRCCommandStrings.waitingForLagCheck)
 	}

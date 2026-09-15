@@ -254,10 +254,10 @@ final class OnboardingModel {
 		return ServerPropertiesValidation.isNickname(alternate) ? nil : CommonValidationStrings.invalidNickname
 	}
 
+	/// The same rule the server properties sheet applies, so a real name
+	/// accepted here is not refused the first time that sheet is saved.
 	var realNameProblem: String? {
-		settings.realName.rangeOfCharacter(from: .controlCharacters) == nil
-			? nil
-			: CommonValidationStrings.singleLineRequired
+		ServerPropertiesValidation.isRealName(settings.realName) ? nil : CommonValidationStrings.invalidRealName
 	}
 
 	/// Drives the primary button. Nothing is rejected after the fact, so every
@@ -321,13 +321,11 @@ final class OnboardingModel {
 	}
 
 	private func prepareCurrentStep() {
-		switch currentStep {
-		case .notifications:
-			Task { await refreshNotificationPermission() }
-		case .network:
+		/* The notifications step reads the permission from its own view task,
+		 which starts when the step appears and stops when it goes. Starting a
+		 second read here asked the system twice for every visit. */
+		if currentStep == .network {
 			networkPicker.updateDefaultNickname(settings.nickname)
-		default:
-			break
 		}
 	}
 

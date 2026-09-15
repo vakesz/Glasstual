@@ -16,6 +16,10 @@ import Foundation
 /// Turns IRC formatting control sequences into attributed text in one pass.
 /// The renderer consumes the attributes without needing to know how control
 /// sequences change formatting state or how many UTF-16 units they occupy.
+///
+/// Every other control character is settled in the same pass, the way
+/// ``TranscriptTextSanitizer`` says: a line separator is drawn as a space and
+/// the rest are dropped, so no formatted string can break out of its line.
 nonisolated enum IRCFormattingParser { // nonisolated: value
 	static func parse(_ source: String) -> NSMutableAttributedString {
 		var parser = Parser(source: source)
@@ -43,7 +47,7 @@ nonisolated enum IRCFormattingParser { // nonisolated: value
 
 			while inputIndex < inputCharacters.count {
 				let character = inputCharacters[inputIndex]
-				guard character < 0x20 else {
+				guard character < 0x20 || TranscriptTextSanitizer.disposition(of: character) != .keep else {
 					inputIndex += 1
 					continue
 				}
@@ -78,7 +82,16 @@ nonisolated enum IRCFormattingParser { // nonisolated: value
 				result.deleteCharacters(in: NSRange(location: position, length: 1))
 				return 1
 			default:
-				return 0
+				switch TranscriptTextSanitizer.disposition(of: character) {
+				case .keep:
+					return 0
+				case .space:
+					result.replaceCharacters(in: NSRange(location: position, length: 1), with: " ")
+					return 0
+				case .remove:
+					result.deleteCharacters(in: NSRange(location: position, length: 1))
+					return 1
+				}
 			}
 		}
 

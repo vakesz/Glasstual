@@ -3,7 +3,7 @@
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
 
-import Foundation
+import AppKit
 import Observation
 import SwiftUI
 
@@ -26,9 +26,9 @@ final class MainWindowSheetPresentation: Identifiable {
 	var child: MainWindowSheetPresentation?
 
 	@ObservationIgnored private var didFinish = false
-	@ObservationIgnored private let onDismiss: () -> Void
+	@ObservationIgnored private let onDismiss: @MainActor () -> Void
 
-	init(owner: AnyObject, content: some View, onDismiss: @escaping () -> Void) {
+	init(owner: AnyObject, content: some View, onDismiss: @escaping @MainActor () -> Void) {
 		self.owner = owner
 		self.content = AnyView(content)
 		self.onDismiss = onDismiss
@@ -97,5 +97,28 @@ open class MainWindowSheetSession: NSObject {
 	/// The sheet is going away without being accepted.
 	open func cancel() {
 		endSheet()
+	}
+}
+
+/// Shared alerts and prompts appear on the main window, in the same
+/// state-driven sheet stack its own sheets use.
+extension MainWindow: SheetPresentationHost {
+	public var sheetHostWindow: NSWindow {
+		self
+	}
+
+	public func presentSheet(owner: AnyObject, content: AnyView, onDismiss: @escaping @MainActor () -> Void) {
+		presentationModel.presentSheet(MainWindowSheetPresentation(owner: owner, content: content, onDismiss: onDismiss))
+	}
+
+	public func dismissSheet(ownedBy owner: AnyObject) {
+		presentationModel.dismissSheet(ownedBy: owner)
+	}
+
+	public func presentInputPrompt(
+		_ request: InputPromptRequest,
+		completion: @escaping @MainActor (InputPromptOutcome) -> Void
+	) {
+		presentationModel.presentInputPrompt(request, completion: completion)
 	}
 }

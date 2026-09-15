@@ -214,7 +214,7 @@ struct AppMenuContentTests {
 				 visibility of the ones it answers itself, and it hides Enter
 				 Full Screen for a window that cannot go full screen. */
 				for item in Self.items(of: menu) where item.target != nil {
-					_ = controller.validateMenuItem(item)
+					_ = controller.actionCoordinator.validateMenuItem(item)
 					guard let command = item.command, item.isHidden else { continue }
 					if allowedToHide.contains(command) == false {
 						hidden.append("\(command) (\(item.title))")
@@ -223,6 +223,33 @@ struct AppMenuContentTests {
 			}
 
 			#expect(hidden.isEmpty, "Commands answering availability by hiding: \(hidden.sorted())")
+		}
+	}
+
+	/** A sheet command took down the sheet already on screen before it checked
+	 whether it could act. With nothing it could act on, the reader lost the
+	 sheet and whatever they had typed into it, and nothing replaced it. */
+	@Test("A sheet command that cannot act leaves the sheet on screen alone")
+	func sheetCommandThatCannotActKeepsTheSheet() async throws {
+		try await withChannelMenu { controller, window, _, _ in
+			let coordinator = controller.actionCoordinator
+			let owner = NSObject()
+			var dismissed = false
+			window.presentationModel.presentSheet(MainWindowSheetPresentation(owner: owner, content: EmptyView()) {
+				dismissed = true
+			})
+			defer { window.presentationModel.dismissSheet(ownedBy: owner) }
+			try #require(window.selectedItem == nil)
+
+			coordinator.showChannelPropertiesSheet(nil)
+			coordinator.showChannelModifyTopicSheet(nil)
+			coordinator.showChannelModifyModesSheet(nil)
+			coordinator.showServerChangeNicknameSheet(nil)
+			coordinator.addChannel(nil)
+			coordinator.showNicknameColorSheet(for: "someone")
+
+			#expect(dismissed == false)
+			#expect(window.presentationModel.presentedSheet?.owner === owner)
 		}
 	}
 
@@ -237,11 +264,11 @@ struct AppMenuContentTests {
 			window.select(channel)
 
 			let moderated = try #require(controller.mainMenuChannelMenu.item(for: .channelModeModerated))
-			_ = controller.validateMenuItem(moderated)
+			_ = controller.actionCoordinator.validateMenuItem(moderated)
 			#expect(moderated.state == .off)
 
 			_ = channel.modeInfo?.updateModes("+m")
-			_ = controller.validateMenuItem(moderated)
+			_ = controller.actionCoordinator.validateMenuItem(moderated)
 			#expect(moderated.state == .on)
 			#expect(controller.actionCoordinator.channelModeIsSet("m"))
 		}

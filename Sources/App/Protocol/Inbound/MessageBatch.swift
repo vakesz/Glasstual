@@ -37,22 +37,6 @@
 
 import Foundation
 
-/// What a batch can hold: a message, or a batch nested inside it.
-/// The wire path queues messages at the root. Keep the public nested case and
-/// overloads for external Swift consumers, which cannot be ruled out by a tree search.
-public enum BatchEntry {
-	case message(Message)
-	case batch(MessageBatch)
-
-	/// The entry as the object it wraps, for identity comparisons.
-	var object: AnyObject {
-		switch self {
-		case let .message(message): message
-		case let .batch(batch): batch
-		}
-	}
-}
-
 /// The batches a connection currently has open, keyed by their token.
 ///
 /// Main-actor, like everything else that reads an inbound message, so the
@@ -87,14 +71,14 @@ public final class MessageBatchContainer {
 	}
 
 	public func dequeueEntry(withBatchToken token: String) {
-		entries.removeValue(forKey: token)?.dequeueEntries()
+		entries.removeValue(forKey: token)?.dequeueMessages()
 	}
 
 	public func dequeueEntries() {
 		// Queued messages retain their batch metadata until replay. Break those
 		// back-references before dropping the connection's batch table.
 		for batch in entries.values {
-			batch.dequeueEntries()
+			batch.dequeueMessages()
 		}
 		entries.removeAll()
 	}
@@ -104,13 +88,22 @@ public final class MessageBatchContainer {
 	}
 }
 
+/** One open or closing `BATCH`, and the messages it is holding back.
+
+ Messages are queued at the root of a nested family, in the order they arrived,
+ and a nested batch reaches them through `parentBatchMessage`; no batch is ever
+ queued inside another. */
 public final class MessageBatch {
 	/// A batch the server never closes queues messages forever, so the queue
 	/// is bounded. The ceiling is well above the largest chat-history replay
 	/// any network offers.
 	public static let maximumQueuedEntries = 5000
 
-	private var entries: [BatchEntry] = []
+	private var messages: [Message] = []
+
+	/// Set once the queue has overflowed: what it held was processed there and
+	/// then, and every later message of the batch is processed as it arrives.
+	var hasOverflowed = false
 
 	public var batchIsOpen = false
 	public var batchToken = ""
@@ -144,29 +137,24 @@ public final class MessageBatch {
 		return root
 	}
 
-	public var queuedEntries: [BatchEntry] {
-		entries
+	public var queuedMessages: [Message] {
+		messages
 	}
 
-	/// `true` when the entry was accepted; `false` when the queue is full.
+	/// `true` when the message was accepted; `false` when the queue is full.
 	@discardableResult
-	public func queueEntry(_ entry: BatchEntry) -> Bool {
-		guard entries.count < MessageBatch.maximumQueuedEntries else {
+	public func queueMessage(_ message: Message) -> Bool {
+		guard messages.count < MessageBatch.maximumQueuedEntries else {
 			return false
 		}
 
-		entries.append(entry)
+		messages.append(message)
 
 		return true
 	}
 
-	public func dequeueEntry(_ entry: BatchEntry) {
-		let object = entry.object
-		entries.removeAll { $0.object === object }
-	}
-
-	public func dequeueEntries() {
-		entries.removeAll()
+	public func dequeueMessages() {
+		messages.removeAll()
 	}
 
 	/// `true` when this batch, or one it is nested inside, replays lines that

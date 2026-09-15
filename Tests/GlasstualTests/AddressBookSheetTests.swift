@@ -75,6 +75,27 @@ struct AddressBookSheetTests {
 		#expect(entry.trackUserActivity == false)
 	}
 
+	/// A mixed entry both ignores and tracks. It opened as a plain ignore, so
+	/// its tracking setting could be neither seen nor changed.
+	@Test("A mixed rule edits both what it ignores and whether it tracks")
+	func mixedEntryEditsBothHalves() throws {
+		var source = AddressBookEntry(entryType: .mixed, hostmask: "*!*@example.com")
+		source.trackUserActivity = true
+		source.ignorePublicMessages = false
+		let model = AddressBookEntryModel(entry: source)
+
+		#expect(model.editsIgnoreSettings)
+		#expect(model.editsTracking)
+
+		model.trackUserActivity = false
+		model.ignorePublicMessages = true
+		let entry = try #require(model.validatedEntry())
+
+		#expect(entry.entryType == .mixed)
+		#expect(entry.trackUserActivity == false)
+		#expect(entry.ignorePublicMessages)
+	}
+
 	@Test("Invalid nickname copy comes from the shared validation catalog")
 	func invalidTrackingNickname() {
 		let model = AddressBookEntryModel(entryType: .userTracking)

@@ -110,6 +110,17 @@ struct ScriptExecutionSupportTests {
 		#expect(error.userInfo[NSAppleScript.errorMessage] as? String == "boom")
 	}
 
+	/// A failure that reports no error number used to be recorded as the
+	/// missing-handler code, so any such failure ran the script again under
+	/// the legacy handler name.
+	@Test("A failure with no error number is not mistaken for a missing handler")
+	func failureWithoutNumberIsNotHandlerNotDefined() {
+		let error = ScriptExecutionSupport.error(from: [NSAppleScript.errorMessage: "boom"])
+
+		#expect(error.code == ScriptExecutionSupport.unknownScriptError)
+		#expect(ScriptExecutionSupport.isHandlerNotDefined(error) == false)
+	}
+
 	@Test("Both bundled scripts define the handler Glasstual asks for", arguments: ["date", "moti"])
 	func bundledScriptsDefineTheHandler(named name: String) throws {
 		let url = try #require(
@@ -167,6 +178,39 @@ struct ScriptExecutionSupportTests {
 		try? pipe.fileHandleForReading.close()
 
 		#expect(data.count == byteCount)
+	}
+
+	/// The reader used to block in `read(2)` on a cooperative-pool thread for as
+	/// long as its script ran. A handful of long-running scripts took every
+	/// thread the pool has, and nothing else off the main actor ran until one
+	/// of them exited.
+	@Test("Readers waiting on silent scripts leave the concurrency pool free", .timeLimit(.minutes(1)))
+	func idleReadersLeaveThePoolFree() async throws {
+		let idlePipes = (0 ..< 64).map { _ in Pipe() }
+
+		try await withThrowingTaskGroup(of: Data.self) { group in
+			for idle in idlePipes {
+				group.addTask { try await ScriptExecutionSupport.readOutput(from: idle.fileHandleForReading) }
+			}
+
+			let pipe = Pipe()
+			let output = Task { try await ScriptExecutionSupport.readOutput(from: pipe.fileHandleForReading) }
+			await Self.write(byteCount: 16, to: pipe.fileHandleForWriting)
+
+			#expect(try await output.value.count == 16)
+			try? pipe.fileHandleForReading.close()
+
+			for idle in idlePipes {
+				try? idle.fileHandleForWriting.close()
+			}
+			for try await data in group {
+				#expect(data.isEmpty)
+			}
+		}
+
+		for idle in idlePipes {
+			try? idle.fileHandleForReading.close()
+		}
 	}
 
 	@Test("Oversized output is drained but rejected, never returned as partial commands")

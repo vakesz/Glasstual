@@ -43,7 +43,9 @@ import os
 /// Why a DCC transfer stopped before it delivered the whole file.
 public nonisolated enum DCCTransferError: Error, Equatable, Sendable { // nonisolated: value
 	case connectTimeout
-	case writeTimeout
+	/// The connection stopped moving data: a write did not complete in time,
+	/// or a download went too long without receiving anything.
+	case stalled
 	case closedByPeer
 	case noOpenPort
 	case badParameter
@@ -61,7 +63,8 @@ public nonisolated enum DCCTransferError: Error, Equatable, Sendable { // noniso
 /// What a ``DCCTransfer`` reports to whoever is driving it.
 ///
 /// The sequence is always zero or one `listening`, then `connected`, then any
-/// number of `progress`, then exactly one of `finished`/`failed`. A cancelled
+/// number of `progress`, then — only for a transfer that delivered everything —
+/// one `completion`, then exactly one of `finished`/`failed`. A cancelled
 /// transfer ends the stream without a terminal event.
 public nonisolated enum DCCTransferEvent: Sendable { // nonisolated: value
 	case listening(port: UInt16)
@@ -410,7 +413,7 @@ public actor DCCTransfer {
 					sent = true
 					group.addTask {
 						try await Task.sleep(for: Self.gracefulCloseTimeout)
-						throw DCCTransferError.writeTimeout
+						throw DCCTransferError.stalled
 					}
 				case let .peer(result):
 					completion = result
@@ -463,7 +466,7 @@ public actor DCCTransfer {
 			try Task.checkCancellation()
 			submittedBytes = processedBytes + UInt64(chunk.count)
 
-			try await DCCTransport.withTimeout(configuration.sendTimeout, failingWith: .writeTimeout) {
+			try await DCCTransport.withTimeout(configuration.sendTimeout, failingWith: .stalled) {
 				try await connection.send(chunk)
 			}
 
@@ -473,16 +476,16 @@ public actor DCCTransfer {
 			windowBytes += UInt64(chunk.count)
 
 			if windowBytes >= Self.rateLimitBytesPerSecond {
-				try await Self.pause(untilASecondHasPassedSince: windowStart)
+				try await pause(untilASecondHasPassedSince: windowStart)
 				windowStart = ContinuousClock.now
 				windowBytes = 0
 			}
 		}
 	}
 
-	private nonisolated static func pause( // nonisolated: pure
-		untilASecondHasPassedSince start: ContinuousClock.Instant
-	) async throws { // nonisolated: pure
+	/// Sleeps out what is left of the second that began at `start`. The sleep
+	/// suspends the transfer, not the actor: nothing else waits on it meanwhile.
+	private func pause(untilASecondHasPassedSince start: ContinuousClock.Instant) async throws {
 		let elapsed = ContinuousClock.now - start
 
 		guard elapsed < .seconds(1) else {
@@ -502,7 +505,7 @@ public actor DCCTransfer {
 		var processedBytes = configuration.resumeOffset
 		if processedBytes == configuration.fileSize {
 			let acknowledgement = Self.acknowledgement(for: processedBytes)
-			try await DCCTransport.withTimeout(configuration.sendTimeout, failingWith: .writeTimeout) {
+			try await DCCTransport.withTimeout(configuration.sendTimeout, failingWith: .stalled) {
 				try await connection.send(acknowledgement)
 			}
 		}
@@ -512,7 +515,7 @@ public actor DCCTransfer {
 
 			let (payload, isComplete) = try await DCCTransport.withTimeout(
 				configuration.inactivityTimeout,
-				failingWith: .connectTimeout
+				failingWith: .stalled
 			) { [self] in
 				try await receive(on: connection)
 			}
@@ -527,7 +530,7 @@ public actor DCCTransfer {
 				/* The DCC acknowledgement is the receiver's running total, so
 				 it goes out before the transfer is torn down for the excess. */
 				let acknowledgement = Self.acknowledgement(for: processedBytes)
-				try await DCCTransport.withTimeout(configuration.sendTimeout, failingWith: .writeTimeout) {
+				try await DCCTransport.withTimeout(configuration.sendTimeout, failingWith: .stalled) {
 					try await connection.send(acknowledgement)
 				}
 				emit(.progress(processedBytes: processedBytes))

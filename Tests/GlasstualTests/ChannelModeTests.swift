@@ -61,7 +61,9 @@ struct ChannelModeTests {
 		modes.changeMode("k", modeIsSet: false, modeParameter: "secret")
 		modes.changeMode("l", modeIsSet: true, modeParameter: "10")
 
-		#expect(channelMode.changeCommand(for: modes) == "-k+l secret 10")
+		#expect(channelMode.changeGroups(for: modes) == [
+			ModeChangeGroup(symbols: "-k+l", parameters: ["secret", "10"]),
+		])
 	}
 
 	@Test("Modes that did not change produce no command")
@@ -69,7 +71,7 @@ struct ChannelModeTests {
 		let channelMode = try channelMode(currentModes: "+nt")
 		let modes = try #require(channelMode.modes.copy() as? ChannelModeContainer)
 
-		#expect(channelMode.changeCommand(for: modes) == "")
+		#expect(channelMode.changeGroups(for: modes).isEmpty)
 	}
 
 	@Test("The mode string lists every letter first and the parameters after them")
@@ -81,13 +83,63 @@ struct ChannelModeTests {
 	}
 
 	@Test("A change command orders its modes the same way whatever order they were set in")
-	func changeCommandIsDeterministic() throws {
+	func changeGroupsAreDeterministic() throws {
 		let channelMode = try channelMode(currentModes: "")
 		let modes = try #require(channelMode.modes.copy() as? ChannelModeContainer)
-		modes.changeMode("z", modeIsSet: true, modeParameter: "last")
-		modes.changeMode("a", modeIsSet: true, modeParameter: "first")
+		modes.changeMode("l", modeIsSet: true, modeParameter: "last")
+		modes.changeMode("k", modeIsSet: true, modeParameter: "first")
 
-		#expect(channelMode.changeCommand(for: modes) == "+az first last")
+		#expect(channelMode.changeGroups(for: modes) == [
+			ModeChangeGroup(symbols: "+kl", parameters: ["first", "last"]),
+		])
+	}
+
+	/// The sheet still remembers the old limit after its box is cleared; pairing
+	/// that text with `-l` shifted the new key onto the limit's slot.
+	@Test("A removal carries a parameter only where the mode's class takes one")
+	func removalParametersFollowTheModeClass() throws {
+		let channelMode = try channelMode(currentModes: "+kl old 50")
+		let modes = try #require(channelMode.modes.copy() as? ChannelModeContainer)
+		modes.changeMode("l", modeIsSet: false, modeParameter: "50")
+		modes.changeMode("k", modeIsSet: true, modeParameter: "new")
+
+		#expect(channelMode.changeGroups(for: modes) == [
+			ModeChangeGroup(symbols: "-l+k", parameters: ["new"]),
+		])
+	}
+
+	@Test("Removing a key sends the key the channel was set with")
+	func keyRemovalCarriesTheCurrentKey() throws {
+		let channelMode = try channelMode(currentModes: "+k current")
+		let modes = try #require(channelMode.modes.copy() as? ChannelModeContainer)
+		modes.changeMode("k", modeIsSet: false, modeParameter: "edited")
+
+		#expect(channelMode.changeGroups(for: modes) == [
+			ModeChangeGroup(symbols: "-k", parameters: ["current"]),
+		])
+	}
+
+	@Test("Modes unset on both sides, and set modes whose parameter is unchanged, send nothing")
+	func unsetAndUnchangedModesSendNothing() throws {
+		let channelMode = try channelMode(currentModes: "+ntl 50")
+		let modes = try #require(channelMode.modes.copy() as? ChannelModeContainer)
+
+		for symbol in ["i", "k", "m", "p", "s"] {
+			modes.changeMode(symbol, modeIsSet: false, modeParameter: symbol == "k" ? "typed" : nil)
+		}
+		modes.changeMode("l", modeIsSet: true, modeParameter: "50")
+
+		#expect(channelMode.changeGroups(for: modes).isEmpty)
+	}
+
+	@Test("A parameterised mode set with no parameter is left out of the change")
+	func parameterisedAdditionWithoutParameterIsDropped() throws {
+		let channelMode = try channelMode(currentModes: "")
+		let modes = try #require(channelMode.modes.copy() as? ChannelModeContainer)
+		modes.changeMode("l", modeIsSet: true, modeParameter: "")
+		modes.changeMode("m", modeIsSet: true)
+
+		#expect(channelMode.changeGroups(for: modes) == [ModeChangeGroup(symbols: "+m")])
 	}
 
 	@Test("List modes and user modes are not kept as channel state")

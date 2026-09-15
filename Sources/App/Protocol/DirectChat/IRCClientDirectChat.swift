@@ -172,6 +172,10 @@ public extension IRCClient {
 				)
 				return
 			}
+		} else if admitsDCCOffer(from: sender) == false {
+			/* Each unsolicited offer puts a prompt in front of the user, so a
+			 flood of them is dropped here, before any prompt is made. */
+			return
 		}
 
 		if DCCChatPolicy.isDialable(offer) == false {
@@ -208,7 +212,7 @@ public extension IRCClient {
 				}
 				guard isLoggedIn else { return }
 				if offer.isPassive {
-					openDirectChat(withNickname: sender, listeningWithToken: offer.token)
+					openDirectChat(withNickname: sender, listeningWithToken: offer.token, offeredAddress: offer.address)
 				} else {
 					openDirectChat(withNickname: sender, address: offer.address, port: offer.port)
 				}
@@ -246,10 +250,14 @@ public extension IRCClient {
 		connection.open()
 	}
 
-	func openDirectChat(withNickname nickname: String, listeningWithToken token: String?) {
+	func openDirectChat(
+		withNickname nickname: String,
+		listeningWithToken token: String?,
+		offeredAddress: String? = nil
+	) {
 		guard let channel = prepareDirectChatChannel(forNickname: nickname) else { return }
 		let connection = DirectChatConnection.listeningConnection(
-			forPeer: nickname, token: token, onClient: self
+			forPeer: nickname, token: token, offeredAddress: offeredAddress, onClient: self
 		)
 		channel.directChatConnection = connection
 		printDebugInformation(IRCDirectChatStrings.offering(to: nickname), in: channel)

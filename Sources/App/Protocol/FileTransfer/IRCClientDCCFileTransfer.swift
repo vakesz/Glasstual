@@ -142,9 +142,61 @@ enum DCCFileTransferRequestParser {
 		return UInt16(integer)
 	}
 
+	/// A size or a resume position. An empty file is a file like any other, and
+	/// a position of zero is refused where it means nothing, not here.
 	private static func validFilesize(_ value: String) -> UInt64? {
-		guard let size = UInt64(value), size > 0, size <= maximumFilesize else { return nil }
+		guard value.allSatisfy(\.isNumber), let size = UInt64(value), size <= maximumFilesize else { return nil }
 		return size
+	}
+}
+
+/** How many unsolicited DCC offers — a file, or a chat — one connection takes.
+
+ Every offer that gets through costs the user something: a row in the transfer
+ list with its observers, a notification and a Dock bounce, or a chat prompt in
+ front of whatever they were doing. One sender offering hundreds of files, or a
+ channel's worth of people doing it together, is a flood rather than a request,
+ so past these ceilings an offer is dropped where it arrived.
+
+ The counts are timestamps rather than a running total so the window slides,
+ and the senders remembered are bounded because the network chooses their
+ names. */
+nonisolated struct DCCOfferThrottle: Sendable { // nonisolated: value
+	/// How long an offer is remembered for.
+	static let window: TimeInterval = 60
+	/// Offers one sender gets through inside the window.
+	static let perSenderLimit = 3
+	/// Offers everyone together gets through inside the window.
+	static let overallLimit = 10
+	/// Senders remembered at once. Past it the least recently heard from is
+	/// forgotten, which at worst forgives one sender one offer.
+	static let maximumTrackedSenders = 64
+
+	private var offerTimesBySender: [String: [Date]] = [:]
+
+	/// Whether an offer from `sender` — already casefolded, so that one person
+	/// cannot reset the count by changing the case of their nickname — may be
+	/// taken now, counting it if so.
+	mutating func recordOffer(from sender: String, at now: Date) -> Bool {
+		let cutoff = now.addingTimeInterval(-Self.window)
+		offerTimesBySender = offerTimesBySender.compactMapValues { times in
+			let recent = times.filter { $0 > cutoff }
+			return recent.isEmpty ? nil : recent
+		}
+
+		let senderCount = offerTimesBySender[sender]?.count ?? 0
+		let overallCount = offerTimesBySender.values.reduce(0) { $0 + $1.count }
+		guard senderCount < Self.perSenderLimit, overallCount < Self.overallLimit else {
+			return false
+		}
+
+		offerTimesBySender[sender, default: []].append(now)
+		if offerTimesBySender.count > Self.maximumTrackedSenders,
+		   let oldest = offerTimesBySender.min(by: { ($0.value.last ?? .distantPast) < ($1.value.last ?? .distantPast) })
+		{
+			offerTimesBySender.removeValue(forKey: oldest.key)
+		}
+		return true
 	}
 }
 
@@ -168,7 +220,11 @@ public extension IRCClient {
 			target: nil,
 			nickname: nickname,
 			text: description,
+			/* The connection is named so the notification groups with the rest
+				of its connection's, and so the Accept and Decline it offers can
+				find the transfer they belong to. */
 			userInfo: NotificationPayload(
+				clientIdentifier: uniqueIdentifier,
 				fileTransferIdentifier: identifier,
 				fileTransferEventRawValue: Int(type.rawValue)
 			)
@@ -191,6 +247,28 @@ public extension IRCClient {
 		processFileTransferRequest(request, sender: sender)
 	}
 
+	/// Counts an unsolicited offer from `sender` against the throttle, and says
+	/// whether it may be taken.
+	func admitsDCCOffer(from sender: String) -> Bool {
+		guard dccOfferThrottle.recordOffer(from: supportInfo.casefoldString(sender), at: Date()) else {
+			dccFileTransferLogger.notice("Dropped a DCC offer past the offer throttle")
+			return false
+		}
+		return true
+	}
+
+	/** Whether this user already knows `nickname`: a query with them is open,
+	 or they are in the address book as someone whose activity is tracked.
+
+	 An offer from anyone else is still listed for the user to accept, but it
+	 does not download on its own, however the automatic download is set. */
+	func isKnownFileTransferPeer(_ nickname: String) -> Bool {
+		if findChannel(nickname)?.isPrivateMessage == true {
+			return true
+		}
+		return findUserTrackingAddressBookEntry(forNickname: nickname) != nil
+	}
+
 	func receivedDCCSend(
 		_ nickname: String,
 		filename: String,
@@ -199,17 +277,19 @@ public extension IRCClient {
 		filesize totalFilesize: UInt64,
 		token transferToken: String?
 	) {
+		guard admitsDCCOffer(from: nickname) else { return }
 		print(
 			IRCFileTransferStrings.request(nickname: nickname, filename: filename, byteCount: totalFilesize),
 			by: nil,
 			in: nil,
 			as: .dccFileTransfer, command: LogLineFormat.defaultCommand
 		)
-		guard environment.preferences.fileTransferRequestReplyAction != .ignore,
-		      let identifier = fileTransferCenter.addReceiver(
-		      	for: self, nickname: nickname, address: address, port: port,
-		      	filename: filename, filesize: totalFilesize, token: transferToken
-		      )
+		guard environment.preferences.fileTransferRequestReplyAction != .ignore else { return }
+		guard let identifier = fileTransferCenter.addReceiver(
+			for: self, nickname: nickname, address: address, port: port,
+			filename: filename, filesize: totalFilesize, token: transferToken,
+			peerIsKnown: isKnownFileTransferPeer(nickname)
+		)
 		else { return }
 		notifyFileTransfer(
 			.fileTransferReceiveRequested,
@@ -276,9 +356,11 @@ public extension IRCClient {
 	private func processFileTransferRequest(_ request: DCCFileTransferRequest, sender: String) {
 		switch request {
 		case let .send(filename, address, port, filesize, token):
-			// The offer decides which host the client dials, so a peer must
-			// not be able to point it at loopback or a private network.
-			guard DCCWireFormat.isDialableAddress(address) else {
+			/* An active offer decides which host the client dials, so a peer
+			 must not be able to point it at loopback or a private network. A
+			 passive one — port zero — is dialled by the peer instead, and a
+			 peer behind NAT names the private address it knows itself by. */
+			guard port == 0 || DCCWireFormat.isDialableAddress(address) else {
 				dccFileTransferLogger.error("Refused a DCC SEND offer for a non-routable address")
 				printInvalidDCCRequest(from: sender)
 				return

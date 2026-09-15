@@ -50,9 +50,6 @@ public final class ChannelInviteSheet: MainWindowSheetSession, ClientScoped {
 	public private(set) var clientId: String?
 	public private(set) var nicknames: [String] = []
 
-	private var availableChannels: [String] = []
-	private var selectedChannel = ""
-
 	public init(nicknames: [String], on client: IRCClient) {
 		super.init(window: nil)
 		self.nicknames = nicknames
@@ -65,42 +62,23 @@ public final class ChannelInviteSheet: MainWindowSheetSession, ClientScoped {
 			return
 		}
 
-		availableChannels = channels
-		selectedChannel = channels[0]
-		installSheet(channels: channels)
-		startSheet()
-	}
-
-	private func installSheet(channels: [String]) {
-		let rootView = ChannelInviteView(
+		setContent(ChannelInviteView(
 			headline: ChannelInviteStrings.invitationTitle(for: nicknames),
 			channels: channels,
-			selectedChannel: Binding(
-				get: { [weak self] in self?.selectedChannel ?? "" },
-				set: { [weak self] in self?.selectedChannel = $0 }
-			),
 			invite: { [weak self] channel in
-				self?.completeInvitation(to: channel)
+				self?.invite(to: channel)
 			},
 			cancel: { [weak self] in
 				self?.cancel()
 			}
-		)
-		setContent(rootView)
+		))
+		startSheet()
 	}
 
-	override public func submit() {
-		guard availableChannels.contains(selectedChannel) else {
-			cancel()
-			return
-		}
-
-		completeInvitation(to: selectedChannel)
-	}
-
-	private func completeInvitation(to channel: String) {
+	/// Tells the delegate which channel the person chose, and closes the sheet.
+	func invite(to channel: String) {
 		(delegate as? ChannelInviteSheetDelegate)?.channelInviteSheet(self, onSelectChannel: channel)
 
-		super.submit()
+		submit()
 	}
 }

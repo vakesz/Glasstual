@@ -151,30 +151,44 @@ struct PreferencesCapabilityToggle: View {
 /// A field the user can type into, with the values the application ships
 /// reachable from the pop-up beside it.
 struct PreferencesComboField: View {
+	private enum Storage {
+		/// Every keystroke is stored.
+		case live(Binding<String>)
+		/// A partially typed entry has to be finished before it is stored.
+		case committed(PreferencesFieldValue, rejectionMessage: String?)
+	}
+
 	let title: String
 	let presets: [String]
-	/// Whether a partially typed entry has to be finished before it is stored.
-	var commitsOnEndEditing = false
-	@Binding var text: String
+	private let storage: Storage
+
+	init(title: String, presets: [String], text: Binding<String>) {
+		self.title = title
+		self.presets = presets
+		storage = .live(text)
+	}
+
+	init(title: String, presets: [String], value: PreferencesFieldValue, rejectionMessage: String? = nil) {
+		self.title = title
+		self.presets = presets
+		storage = .committed(value, rejectionMessage: rejectionMessage)
+	}
 
 	var body: some View {
 		HStack(spacing: PreferencesMetrics.spacingMedium) {
-			if commitsOnEndEditing {
-				PreferencesCommittedField(
-					title: title,
-					text: $text,
-					rejectionMessage: PreferencesFieldStrings.wholeNumberRequired
-				)
-			} else {
-				TextField("", text: $text)
+			switch storage {
+			case let .live(text):
+				TextField("", text: text)
 					.labelsHidden()
 					.accessibilityLabel(Text(verbatim: title))
+			case let .committed(value, rejectionMessage):
+				PreferencesCommittedField(title: title, value: value, rejectionMessage: rejectionMessage)
 			}
 
 			Menu {
 				ForEach(presets, id: \.self) { preset in
 					Button(preset) {
-						text = preset
+						choose(preset)
 					}
 				}
 			} label: {
@@ -187,6 +201,24 @@ struct PreferencesComboField: View {
 			.help(Text(verbatim: PreferencesFieldStrings.presetsHelp))
 		}
 	}
+
+	private func choose(_ preset: String) {
+		switch storage {
+		case let .live(text): text.wrappedValue = preset
+		case let .committed(value, _): _ = value.write(preset)
+		}
+	}
+}
+
+/** What a field that writes on completion edits: the stored value as text,
+ and a write that says whether the store took the entry.
+
+ The store is the judge of what it accepts, and only it knows: comparing what
+ reads back with what was typed calls `08` or `+5` a rejection when the store
+ simply wrote `8` and `5`. */
+struct PreferencesFieldValue {
+	let text: () -> String
+	let write: (String) -> Bool
 }
 
 /** A field that writes when editing ends rather than as it is typed.
@@ -195,8 +227,8 @@ struct PreferencesComboField: View {
  that refuses "2" on the way to "2000" snaps the field back mid-word. */
 struct PreferencesCommittedField: View {
 	let title: String
-	@Binding var text: String
-	/// Shown under the field when the stored value refused the last entry.
+	let value: PreferencesFieldValue
+	/// Shown under the field when the store refused the last entry.
 	var rejectionMessage: String?
 
 	@State private var draft = PreferencesFieldDraft()
@@ -204,14 +236,14 @@ struct PreferencesCommittedField: View {
 
 	var body: some View {
 		VStack(alignment: .leading, spacing: PreferencesMetrics.spacingSmall) {
-			TextField("", text: Binding(get: { draft.displayed(text) }, set: { draft.edit($0) }))
+			TextField("", text: Binding(get: { draft.displayed(value.text()) }, set: { draft.edit($0) }))
 				.labelsHidden()
 				.accessibilityLabel(Text(verbatim: title))
 				.focused($isFocused)
-				.onSubmit { draft.commit(to: $text) }
+				.onSubmit { draft.commit(to: value) }
 				.onChange(of: isFocused) { _, hasFocus in
 					if hasFocus == false {
-						draft.commit(to: $text)
+						draft.commit(to: value)
 					}
 				}
 
@@ -227,8 +259,8 @@ struct PreferencesCommittedField: View {
 /** What a field that writes on completion is holding.
 
  Nothing reaches the store while an entry is being typed, and the store is the
- judge of what it accepts: a value that did not survive the write is one the
- field reports and then forgets. */
+ judge of what it accepts: an entry it refused is one the field reports and
+ then forgets. */
 struct PreferencesFieldDraft {
 	private var edited: String?
 	private(set) var wasRejected = false
@@ -242,11 +274,10 @@ struct PreferencesFieldDraft {
 		edited = newValue
 	}
 
-	mutating func commit(to stored: Binding<String>) {
+	mutating func commit(to value: PreferencesFieldValue) {
 		guard let submitted = edited else { return }
 
 		edited = nil
-		stored.wrappedValue = submitted
-		wasRejected = stored.wrappedValue != submitted
+		wasRejected = value.write(submitted) == false
 	}
 }

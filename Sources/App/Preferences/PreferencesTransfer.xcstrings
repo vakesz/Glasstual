@@ -300,18 +300,6 @@
         }
       }
     },
-    "other-settings-changed": {
-      "comment": "Import preview. Number of changed settings that Settings has no name for. %lld is the count.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Other settings: %lld"
-          }
-        }
-      }
-    },
     "passwords-and-certificates-stay-on-this-mac": {
       "comment": "Import preview. What a portable configuration file does and does not carry.",
       "extractionState": "manual",
@@ -386,6 +374,110 @@
           "stringUnit": {
             "state": "translated",
             "value": "Replace portable settings and remove servers missing from this snapshot. Changed or removed servers will disconnect. Restore proceeds only after a recovery backup has been saved."
+          }
+        }
+      }
+    },
+    "review-before-importing": {
+      "comment": "Import preview. Heading of the block listing changes that can send commands or widen what Glasstual trusts.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review Before Importing"
+          }
+        }
+      }
+    },
+    "risky-changes-notice": {
+      "comment": "Import preview. Explains the block that lists changes which can send commands or widen what Glasstual trusts.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This file changes settings that can send commands to servers or change what Glasstual trusts. Read each one before importing."
+          }
+        }
+      }
+    },
+    "risky-chat-filter-action": {
+      "comment": "Import preview. A chat filter the file adds or changes that runs commands. The first argument is the filter's title, the second is its action text, which can span several lines.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chat filter “%1$@” runs:\n%2$@"
+          }
+        }
+      }
+    },
+    "risky-connect-commands": {
+      "comment": "Import preview. Commands a server in the file sends each time it connects. The first argument is the server's name, the second is its commands, one per line.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server “%1$@” sends when it connects:\n%2$@"
+          }
+        }
+      }
+    },
+    "risky-ctcp-version-reply": {
+      "comment": "Import preview. The file changes the reply sent to CTCP VERSION requests. The argument is that reply.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Answers CTCP VERSION requests with: %@"
+          }
+        }
+      }
+    },
+    "risky-developer-mode": {
+      "comment": "Import preview. The file turns on developer mode.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turns on developer mode."
+          }
+        }
+      }
+    },
+    "risky-link-schemes": {
+      "comment": "Import preview. Link schemes the file would make clickable in transcripts. The argument is a formatted list of scheme names, such as “file and x-apple”.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text using these link schemes becomes clickable: %@"
+          }
+        }
+      }
+    },
+    "servers-did-not-disconnect": {
+      "comment": "Error shown when an import had to disconnect servers first and at least one of them did not disconnect in time. The import is abandoned and the servers reconnect.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some servers did not disconnect in time, so no imported settings were applied. Glasstual is reconnecting the servers it disconnected."
           }
         }
       }

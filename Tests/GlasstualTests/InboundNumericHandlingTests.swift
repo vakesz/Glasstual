@@ -65,6 +65,33 @@ struct InboundNumericHandlingTests {
 		#expect(client.numberOfUsers == 1)
 	}
 
+	/// A NAMES line is ordered as one batch when it ends, not one sorted insert
+	/// per name; the members it adds, and the ones it re-ranks, still land in
+	/// rank order with every lookup pointing at the right row.
+	@Test("A NAMES line leaves its members in rank order with every lookup intact")
+	func namesLineIsSortedOnceAndIndexedCorrectly() throws {
+		let client = client()
+		let channel = try joinedChannel("#chan", on: client)
+
+		try receive(":irc.example.net 353 me = #chan :erin dave", on: client)
+		try receive(":irc.example.net 353 me = #chan :carol +bob @alice @dave", on: client)
+
+		let memberInfo = try #require(channel.memberInfo)
+		let nicknames = memberInfo.memberList.map(\.user.nickname)
+
+		#expect(nicknames == ["alice", "dave", "bob", "carol", "erin"])
+
+		for nickname in nicknames {
+			let member = try #require(channel.findMember(nickname))
+			#expect(member.user.nickname == nickname)
+		}
+
+		try receive(":carol!c@example.org PART #chan", on: client)
+
+		#expect(memberInfo.memberList.map(\.user.nickname) == ["alice", "dave", "bob", "erin"])
+		#expect(try #require(channel.findMember("erin")).user.nickname == "erin")
+	}
+
 	/// The NAMES reply is the server's own list, so it is the truth about
 	/// everyone in it — including the member a JOIN already created.
 	@Test("A NAMES entry sets the prefixes of a member that already exists")
@@ -113,6 +140,40 @@ struct InboundNumericHandlingTests {
 		)
 
 		#expect(try #require(channel.findMember("alice")).modes.letters == "ov")
+	}
+
+	/// The one character a reply without `multi-prefix` carries is the highest
+	/// the person holds, so anything the member is marked with above it was
+	/// lost without the client seeing the MODE.
+	@Test("A WHO reply without multi-prefix drops the modes ranked above the one it reports", arguments: [
+		(flags: "H+", modes: "v"),
+		(flags: "H", modes: ""),
+	])
+	func whoReplyDropsModesRankedAboveTheReportedOne(flags: String, modes: String) throws {
+		let client = client()
+		let channel = try joinedChannel("#chan", on: client)
+
+		try receive(":irc.example.net 353 me = #chan :@alice", on: client)
+		try receive(
+			":irc.example.net 352 me #chan ali example.org irc.example.net alice \(flags) :0 Alice",
+			on: client
+		)
+
+		#expect(try #require(channel.findMember("alice")).modes.letters == modes)
+	}
+
+	// MARK: - Presence and errors
+
+	/// RPL_TARGUMODEG says a message was held back by the recipient's +g, and
+	/// was swallowed without a word.
+	@Test("A caller-ID notice for a +g recipient is printed")
+	func targetInCallerIDModeIsPrinted() throws {
+		let client = client()
+
+		try receive(":irc.example.net 716 me alice :is in +g mode (server-side ignore)", on: client)
+
+		let bodies = client.printedLines.compactMap { ($0 as? [String: Any])?["messageBody"] as? String }
+		#expect(bodies.contains { $0.contains("alice") && $0.contains("+g") })
 	}
 
 	// MARK: - Mode lists

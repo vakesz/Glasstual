@@ -121,17 +121,14 @@ final class ApplicationScenes {
 		)
 	}
 
+	/** The channel list open for a client, if there is one.
+
+	 Only a lookup. Protocol replies and the scene body both ask here, and a
+	 lookup that made a missing session sent the server another `LIST` for
+	 every row still arriving after the window closed. Opening the window is
+	 the one path that makes a session and asks for a listing. */
 	func serverChannelList(for clientIdentifier: String) -> ServerChannelListSession? {
-		if let session = serverChannelListSessions[clientIdentifier] {
-			return session
-		}
-		guard let client = AppController.shared.world?.findClient(withId: clientIdentifier) else {
-			return nil
-		}
-		let session = ServerChannelListSession(client: client)
-		serverChannelListSessions[clientIdentifier] = session
-		session.beginRefresh()
-		return session
+		serverChannelListSessions[clientIdentifier]
 	}
 
 	func closeServerChannelList(for clientIdentifier: String) {

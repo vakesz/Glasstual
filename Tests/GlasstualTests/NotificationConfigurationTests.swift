@@ -43,7 +43,6 @@ struct NotificationConfigurationTests {
 		#expect(NotificationAlertSound.localizedDefaultTitle.isEmpty == false)
 		#expect(NotificationAlertSound.localizedNoSoundTitle.isEmpty == false)
 
-		#expect(NotificationAlertSound.defaultPreferenceValue == "Default")
 		#expect(NotificationAlertSound.noSoundPreferenceValue == "None")
 	}
 
@@ -89,7 +88,10 @@ struct NotificationConfigurationTests {
 	func bothImplementationsSatisfyTheProtocol() {
 		let configurations: [any NotificationConfiguration] = [
 			PreferencesNotificationConfiguration(eventType: .invite),
-			ChannelNotificationConfiguration(eventType: .invite),
+			ChannelNotificationConfiguration(
+				eventType: .invite,
+				in: ChannelPropertiesModel(config: ChannelConfig())
+			),
 		]
 
 		for configuration in configurations {

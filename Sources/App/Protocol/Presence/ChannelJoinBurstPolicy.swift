@@ -76,8 +76,10 @@ extension IRCClient {
 		/* The read marker is the newest point this client has told the server it
 		 read, or the newest the server reported in a `MARKREAD`. A line at or
 		 before it was read somewhere else, so it is not this channel's news
-		 either. Without a marker nothing is known to have been read. */
-		guard let marker = readMarkerSentDates[channel.uniqueIdentifier] else {
+		 either. Without a marker nothing is known to have been read, and a line
+		 with no server time is stamped by the local clock, which says nothing
+		 about where it falls against a server timestamp. */
+		guard message.hasServerTime, let marker = readMarkerSentDates[channel.uniqueIdentifier] else {
 			return false
 		}
 

@@ -1,8 +1,6 @@
 {
   "recommendations": [
     "swiftlang.swift-vscode",
-    "llvm-vs-code-extensions.vscode-clangd",
-    "xaver.clang-format",
     "vadimcn.vscode-lldb",
     "editorconfig.editorconfig",
     "timonwong.shellcheck",

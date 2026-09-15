@@ -70,6 +70,8 @@ actor HistoricLogStore {
 	private let deletionHandler: DeletionHandler
 	private let makeStack: StackFactory
 	private let resizeDelay: ResizeDelay
+	/// How long the store waits between the saves it makes on its own.
+	private let saveInterval: Duration
 	private let willPerform: (@Sendable (HistoricLogStoreOperation) async -> Void)?
 	var pendingOperationCount: Int {
 		waiting.count
@@ -79,12 +81,14 @@ actor HistoricLogStore {
 		filenameStore: any HistoricLogFilenameStoring,
 		makeStack: @escaping StackFactory = { try HistoricLogDatabase.makeStack(at: $0) },
 		resizeDelay: @escaping ResizeDelay = { .seconds(Int.random(in: 0 ..< 1800)) },
+		saveInterval: Duration = .seconds(120),
 		willPerform: (@Sendable (HistoricLogStoreOperation) async -> Void)? = nil,
 		deletionHandler: @escaping DeletionHandler = { _, _ in }
 	) {
 		self.filenameStore = filenameStore
 		self.makeStack = makeStack
 		self.resizeDelay = resizeDelay
+		self.saveInterval = saveInterval
 		self.willPerform = willPerform
 		self.deletionHandler = deletionHandler
 	}
@@ -166,6 +170,13 @@ actor HistoricLogStore {
 			lifecycle = closingCount == 1 ? .open : .closing
 			for identifier in views.keys {
 				views[identifier]?.resizeTask = nil
+			}
+			/* Admission cancelled the periodic save. A store that stays open has
+			 to keep saving on its own, or the rows the next writes add wait for a
+			 close that may never come; a close still queued behind this one
+			 already retired the loop again and owns what happens next. */
+			if closingCount == 1 {
+				scheduleSave()
 			}
 		}
 		return outcome
@@ -299,9 +310,10 @@ actor HistoricLogStore {
 
 	private func scheduleSave() {
 		guard saveTask == nil else { return }
+		let interval = saveInterval
 		saveTask = Task { [weak self] in
 			while !Task.isCancelled {
-				try? await Task.sleep(for: .seconds(120))
+				try? await Task.sleep(for: interval)
 				guard !Task.isCancelled, let self else { return }
 				_ = await saveData()
 			}

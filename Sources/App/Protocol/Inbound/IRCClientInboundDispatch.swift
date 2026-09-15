@@ -86,8 +86,11 @@ private extension IRCClient {
 		world?.noteMessageReceived(length: UInt(data.utf16.count))
 		rawDataLogIncomingTraffic(data)
 
-		let normalizedData = environment.preferences.removeAllFormatting ? (data as NSString).stripIRCEffects : data
-		guard var message = Message(line: normalizedData, on: self),
+		/* The line is parsed as it arrived. "Remove formatting" is about what the
+		 transcript shows, and it is applied where a line is printed: stripping
+		 the raw line took control codes out of channel names, tags and CTCP
+		 arguments too, which then named things the server had never sent. */
+		guard var message = Message(line: data, on: self),
 		      let interceptedMessage = PluginDispatcher.interceptServerInput(message, for: self)
 		else { return }
 		message = interceptedMessage

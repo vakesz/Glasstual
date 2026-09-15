@@ -174,19 +174,27 @@ public extension IRCClient {
 		   operatorPrefix == nil,
 		   supportInfo.groupsMultipleTargets(forCommand: invocation.outbound.wireCommand)
 		{
-			let groupedChannels = destinations.compactMap { destinationName -> Channel? in
-				guard let channel = self.findChannel(destinationName), channel.isChannel, channel.isActive else {
-					return nil
-				}
-				return channel
+			/* Channels are found under the server's casemapping, so `#Chat` and
+			 `#chat` are one channel: it is grouped once, and every spelling of it
+			 is taken out of the per-destination loop below. Matching the typed
+			 names against the channels' own spelling left `#Chat` behind and sent
+			 the message a second time. */
+			var groupedChannels: [Channel] = []
+			var groupedIdentities: Set<ObjectIdentifier> = []
+			for destinationName in destinations {
+				guard let channel = findChannel(destinationName), channel.isChannel, channel.isActive,
+				      groupedIdentities.insert(ObjectIdentifier(channel)).inserted
+				else { continue }
+				groupedChannels.append(channel)
 			}
 			if groupedChannels.count > 1 {
 				sendText(arguments, as: remoteCommand(for: invocation.outbound), toChannels: groupedChannels)
 				if environment.preferences.giveFocusOnMessageCommand {
 					destinationToSelect = groupedChannels.first
 				}
-				let groupedNames = Set(groupedChannels.map(\.name))
-				destinations.removeAll { groupedNames.contains($0) }
+				destinations.removeAll { destinationName in
+					findChannel(destinationName).map { groupedIdentities.contains(ObjectIdentifier($0)) } ?? false
+				}
 			}
 		}
 

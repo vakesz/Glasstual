@@ -25,6 +25,7 @@ struct OnboardingTests {
 	private func identifiedModel(nickname: String = "alice") -> OnboardingModel {
 		let settings = OnboardingSettings()
 		settings.nickname = nickname
+		settings.realName = "Alice Example"
 		return OnboardingModel(settings: settings, notificationAuthorization: testAuthorization)
 	}
 
@@ -52,6 +53,7 @@ struct OnboardingTests {
 		authorization.soundDeliveryDidChange = { refreshes.count += 1 }
 		let settings = OnboardingSettings()
 		settings.nickname = "alice"
+		settings.realName = "Alice Example"
 		let model = OnboardingModel(settings: settings, notificationAuthorization: authorization)
 
 		advance(model, to: .network)
@@ -63,6 +65,38 @@ struct OnboardingTests {
 		#expect(refreshes.count == 1)
 	}
 
+	/// The notifications step reads the permission from its view's task. The
+	/// model started a second read of its own on every visit to the step.
+	@Test("Moving onto the notifications step leaves the permission read to its view")
+	func movingOntoNotificationsReadsNothing() async {
+		let reads = SoundDeliveryRefreshes()
+		var authorization = OnboardingNotificationAuthorization(
+			currentStatus: { @MainActor in
+				reads.count += 1
+				return .authorized
+			},
+			request: { true }
+		)
+		authorization.soundDeliveryDidChange = {}
+		let settings = OnboardingSettings()
+		settings.nickname = "alice"
+		settings.realName = "Alice Example"
+		let model = OnboardingModel(settings: settings, notificationAuthorization: authorization)
+
+		advance(model, to: .notifications)
+		model.moveBack()
+		model.skip()
+		await model.completePendingWork()
+
+		#expect(model.currentStep == .notifications)
+		#expect(reads.count == 0)
+
+		await model.refreshNotificationPermission()
+
+		#expect(reads.count == 1)
+		#expect(model.notificationPermissionMessage == OnboardingStrings.Notifications.permissionGranted)
+	}
+
 	/// Skipping the notifications step is a refusal, so it must not raise the
 	/// system permission prompt either.
 	@Test("Skipping the notifications step asks for no permission")
@@ -72,6 +106,7 @@ struct OnboardingTests {
 		authorization.soundDeliveryDidChange = { refreshes.count += 1 }
 		let settings = OnboardingSettings()
 		settings.nickname = "alice"
+		settings.realName = "Alice Example"
 		let model = OnboardingModel(settings: settings, notificationAuthorization: authorization)
 
 		advance(model, to: .notifications)
@@ -103,8 +138,29 @@ struct OnboardingTests {
 
 		model.settings.alternateNickname = ""
 		model.settings.realName = "Alice\nExample"
-		#expect(model.realNameProblem == CommonValidationStrings.singleLineRequired)
+		#expect(model.realNameProblem == CommonValidationStrings.invalidRealName)
 		#expect(model.isCurrentStepValid == false)
+	}
+
+	/** Onboarding accepted an empty real name that the server properties sheet
+	 then refused, so the connection it created could not be saved again
+	 without first fixing a field onboarding had let through. */
+	@Test("A real name the server properties sheet refuses is refused here too", arguments: ["", "   ", "Alice\nExample"])
+	func realNameFollowsTheServerPropertiesRule(_ realName: String) {
+		let model = identifiedModel()
+		model.settings.realName = realName
+
+		#expect(model.realNameProblem == CommonValidationStrings.invalidRealName)
+		#expect(model.isCurrentStepValid == false)
+
+		var config = ClientConfig(connectionName: "Libera")
+		config.serverList = [Server(serverAddress: "irc.libera.chat", serverPort: 6697)]
+		config.nickname = "alice"
+		config.username = "alice"
+		config.realName = realName
+		let sheet = ServerPropertiesModel(config: config)
+
+		#expect(sheet.validationFault?.message == CommonValidationStrings.invalidRealName)
 	}
 
 	@Test("A valid identity advances and is normalized")

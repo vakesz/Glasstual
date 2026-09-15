@@ -455,12 +455,18 @@ actor ConnectionSocket {
 
 			/* The final bytes (typically an ERROR line with the reason for the
 			 disconnect) can arrive together with the EOF. */
-			if content.isEmpty == false {
-				readIn(content)
-				let (drained, continuation) = AsyncStream<Void>.makeStream()
-				events.yield(.readDrained(continuation))
-				// This wait never occupies the host's command or writer task.
-				for await _ in drained {}
+			let lines = content.isEmpty ? [] : readIn(content)
+
+			if lines.isEmpty == false {
+				/* The end-to-end flow control: nothing more is read until the
+				 application has handled these lines and said so, so a server
+				 that outpaces it fills the TCP window instead of a queue between
+				 the processes. Ending the connection cancels this task, which
+				 ends the wait too. The wait never occupies the host's command or
+				 writer task. */
+				let (acknowledgement, acknowledged) = AsyncStream<Void>.makeStream()
+				events.yield(.received(lines, acknowledged: acknowledged))
+				for await _ in acknowledgement {}
 				try Task.checkCancellation()
 			}
 
@@ -475,7 +481,7 @@ actor ConnectionSocket {
 		}
 	}
 
-	/** Cuts `data` into lines and reports each one as it completes.
+	/** Cuts `data` into lines and returns the ones it completes, in order.
 
 	 Terminators are found a line at a time rather than a byte at a time, and
 	 the common case — a read that carries whole lines and nothing was left
@@ -489,9 +495,10 @@ actor ConnectionSocket {
 	 parameter, where nothing downstream may carry it: it reached the transcript
 	 as an invisible control character and made the plugin adapter refuse every
 	 message of the MOTD as one that would end the line. */
-	private func readIn(_ data: Data) {
-		guard disconnected == false, disconnecting == false else { return }
+	private func readIn(_ data: Data) -> [Data] {
+		guard disconnected == false, disconnecting == false else { return [] }
 
+		var lines: [Data] = []
 		var remaining = data[...]
 
 		while let terminator = remaining.firstIndex(of: 0x0A) {
@@ -508,26 +515,31 @@ actor ConnectionSocket {
 				}
 
 				if trimmed.isEmpty == false {
-					events.yield(.received(Data(trimmed)))
+					lines.append(Data(trimmed))
 				}
 
 				continue
 			}
 
-			guard bufferPartialLine(line) else { return }
+			/* A line too long to buffer closes the connection, and nothing
+			 after it on this read is framed. The lines before it are still the
+			 server's, and they go out ahead of the disconnect. */
+			guard bufferPartialLine(line) else { return lines }
 
 			while readInBuffer.last == 0x0D {
 				readInBuffer.removeLast()
 			}
 			if readInBuffer.isEmpty == false {
-				events.yield(.received(readInBuffer))
+				lines.append(readInBuffer)
 			}
 			readInBuffer.removeAll(keepingCapacity: true)
 		}
 
-		guard remaining.isEmpty == false else { return }
+		if remaining.isEmpty == false {
+			_ = bufferPartialLine(remaining)
+		}
 
-		_ = bufferPartialLine(remaining)
+		return lines
 	}
 
 	/// Holds `bytes` until the rest of their line arrives, disconnecting a peer

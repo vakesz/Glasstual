@@ -84,7 +84,7 @@ private extension LogController {
 		}
 		let viewIdentifier = associatedItem.uniqueIdentifier
 		let replay = transcriptProjection.beginReplay()
-		let context = makeRenderContext()
+		let context = makeHistoryRenderContext()
 		let generation = renderGeneration
 		let fetch = historyPageFetcher
 		let limitDate = Date(timeIntervalSince1970: viewLoadedTimestamp)
@@ -437,14 +437,18 @@ extension LogController {
 				}
 				return
 			}
-			prependHistoricLogLines(lines, before: request.oldestLineNumber) { [weak self] accepted in
+			prependHistoricLogLines(
+				lines,
+				before: request.oldestLineNumber,
+				archivesForStorage: true
+			) { [weak self] accepted, entries in
 				guard let self, serverHistoryRequest?.id == request.id else { return }
 				serverHistoryRequest = nil
 				serverHistoryCompletedBefore = nil
 				guard !accepted.isEmpty else { return }
 				let acceptedIdentifiers = Set(accepted)
-				for line in lines where acceptedIdentifiers.contains(line.uniqueIdentifier) {
-					historicLog.writeNewEntry(with: line, forView: uniqueIdentifier)
+				for (line, entry) in zip(lines, entries) where acceptedIdentifiers.contains(line.uniqueIdentifier) {
+					historicLog.writeNewEntry(entry, for: line)
 				}
 				// The local store was already exhausted before this older server page.
 				locallyExhaustedBefore = oldestLineNumber
@@ -497,16 +501,22 @@ extension LogController {
 		prependHistoricLogLines(logLines, before: nil)
 	}
 
+	/** Renders older lines and puts them above what the view shows.
+
+	 `archivesForStorage` is for lines the store does not have yet, a server
+	 page: they are archived beside the render, off the main actor, and handed
+	 to `completion` with the identifiers the view accepted. */
 	private func prependHistoricLogLines(
 		_ logLines: [LogLine], before expectedOldest: String?, cursors: [HistoricLogRowCursor?] = [],
-		completion: (@MainActor ([String]) -> Void)? = nil
+		archivesForStorage: Bool = false,
+		completion: (@MainActor (_ accepted: [String], _ entries: [HistoricLogEntry]) -> Void)? = nil
 	) {
 		guard !terminating, !logLines.isEmpty, let associatedItem else {
-			completion?([])
+			completion?([], [])
 			return
 		}
 		let viewIdentifier = associatedItem.uniqueIdentifier
-		let context = makeRenderContext()
+		let context = makeHistoryRenderContext()
 		let lines = logLines.enumerated().map {
 			LogLineSnapshot(
 				$0.element,
@@ -518,19 +528,22 @@ extension LogController {
 		 the render job that follows is a function of the snapshots alone. */
 		let snapshots = Self.applyingMessageRenderers(to: lines)
 		enqueueRenderJob {
-			Self.renderJob(snapshots, context: context)
-		} apply: { [weak self] (results: [LogLineRenderResult]) in
+			(
+				results: Self.renderJob(snapshots, context: context),
+				entries: archivesForStorage ? logLines.map { $0.historicEntry(forView: viewIdentifier) } : []
+			)
+		} apply: { [weak self] (rendered: (results: [LogLineRenderResult], entries: [HistoricLogEntry])) in
 			guard let self else { return }
 			let generation = renderGeneration
 			let apply: @MainActor () -> Void = { [weak self] in
 				guard let self, acceptsRenderGeneration(generation) else { return }
 				let accepted = applyPrependedLines(
 					logLines,
-					results: results,
+					results: rendered.results,
 					before: expectedOldest,
 					forView: viewIdentifier
 				)
-				completion?(accepted)
+				completion?(accepted, rendered.entries)
 			}
 			if reloadingHistory {
 				deferredPrepends.append(apply)
@@ -538,6 +551,18 @@ extension LogController {
 				apply()
 			}
 		}
+	}
+
+	/** The render context for lines that come back from history.
+
+	 The same as a live line's, except that none of them fetches its inline
+	 images on its own: every relaunch replays the stored page, and a preview
+	 fetched for it asks the linked host again for a message the reader saw
+	 days ago. */
+	func makeHistoryRenderContext() -> LogLineRenderContext {
+		var context = makeRenderContext(includingMembers: true)
+		context.inlineMediaEnabled = false
+		return context
 	}
 
 	private func applyPrependedLines(

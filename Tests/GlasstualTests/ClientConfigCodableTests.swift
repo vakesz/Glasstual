@@ -166,6 +166,27 @@ struct ClientConfigCodableTests {
 		#expect(config.showConnectionPrefersIPv4Warning)
 	}
 
+	/// A version 0 configuration that never wrote a port was connecting to the
+	/// standard one; reading it as port 0 cancelled the whole server list.
+	@Test("A version 0 endpoint without a port migrates on the standard port", arguments: [nil, UInt16(6697)])
+	func versionZeroEndpointMigratesItsPort(_ storedPort: UInt16?) throws {
+		var dictionary: [String: PropertyListValue] = [
+			"serverAddress": "irc.example.net",
+			"prefersSecuredConnection": true,
+		]
+		if let storedPort {
+			dictionary["serverPort"] = .integer(Int(storedPort))
+		}
+
+		let config = try #require(PropertyListModel.decode(ClientConfig.self, from: dictionary))
+		let server = try #require(config.serverList.first)
+
+		#expect(config.serverList.count == 1)
+		#expect(server.serverAddress == "irc.example.net")
+		#expect(server.serverPort == (storedPort ?? IRCConnectionDefaults.serverPort))
+		#expect(server.prefersSecuredConnection)
+	}
+
 	@Test("A malformed highlight condition is dropped rather than loaded")
 	func malformedHighlightConditionsAreDropped() throws {
 		let config = try #require(PropertyListModel.decode(ClientConfig.self, from: [

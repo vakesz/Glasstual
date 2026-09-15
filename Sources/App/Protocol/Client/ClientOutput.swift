@@ -65,10 +65,12 @@ protocol TreeItemPresentation: AnyObject {
 	var presentationIdentifier: String { get }
 
 	func print(_ logLine: LogLine, completionBlock: LogControllerPrintOperationCompletion?)
-	/* Main actor: the newest printed line is the controller's own state, and
+	/** Main actor: the newest printed line is the controller's own state, and
 	 both callers (`Channel.lastLine`, `IRCClient.lastLine`) are already
 	 there. */
 	func lastPrintedLine() -> LogLine?
+	/// The newest line on screen a read marker may be placed at: a conversation
+	/// line the server stamped, per ``IRCChatHistoryPolicy/marksReadPosition(lineType:messageIdentifier:)``.
 	func lastRenderedLineDate() -> Date?
 	/** The newest line a person wrote that this view knows about, ignoring the
 	 events the client narrates — a join, a mode, a topic. A line printed in this
@@ -98,7 +100,10 @@ protocol TreeItemPresentation: AnyObject {
 
 extension TreeItemPresentation {
 	func lastRenderedLineDate() -> Date? {
-		lastPrintedLine()?.receivedAt
+		lastPrintedLine().flatMap {
+			IRCChatHistoryPolicy.marksReadPosition(lineType: $0.lineType, messageIdentifier: $0.messageIdentifier)
+				? $0.receivedAt : nil
+		}
 	}
 
 	/// A presentation that keeps no history of its own answers from the last line
@@ -229,6 +234,27 @@ protocol ClientMenuPresenting: AnyObject {
 	/// Reveals a folder of the application's in the Finder. What "reveal" means
 	/// is the app layer's business; the protocol layer only knows the folder.
 	func revealInFinder(_ url: URL)
+}
+
+/** The public channel list a server sends in answer to `LIST`.
+
+ Kept apart from `ClientOutput` because the application's scenes own the list
+ window, not the main window. The protocol layer reports the listing as it
+ arrives and never creates a list of its own: a reply for a list nobody has
+ open is dropped by the receiver, which is what keeps a late `RPL_LIST` from
+ reopening a closed window or asking the server again. */
+@MainActor
+protocol ClientChannelListPresenting: AnyObject {
+	/// Shows `client`'s channel list and asks the server for a fresh one.
+	func openChannelList(for client: IRCClient)
+	/// Closes `client`'s channel list, if one is open.
+	func closeChannelList(for client: IRCClient)
+	/// `RPL_LISTSTART`: the server is starting a listing over.
+	func channelListDidStart(for client: IRCClient)
+	/// One `RPL_LIST` row.
+	func channelListDidReceive(channelNamed name: String, memberCount: UInt, topic: String?, for client: IRCClient)
+	/// `RPL_LISTEND`, or a reply saying the listing is not coming.
+	func channelListDidFinish(for client: IRCClient)
 }
 
 /** Application-wide state the protocol layer branches on. A separate seam from

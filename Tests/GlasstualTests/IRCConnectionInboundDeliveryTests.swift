@@ -9,7 +9,7 @@ import Foundation
 import Security
 import Testing
 
-@Suite("Inbound connection delivery")
+@Suite("Inbound connection delivery", .timeLimit(.minutes(1)))
 @MainActor
 struct IRCConnectionInboundDeliveryTests {
 	@Test("A missing XPC service ends startup explicitly")
@@ -49,7 +49,7 @@ struct IRCConnectionInboundDeliveryTests {
 		let (client, connection) = connectedClient()
 		let receiver = connection.callbackReceiver
 		try await observe(.IRCClientDidDisconnect, from: client) {
-			receiver.ircConnectionDidReceive(Data("ERROR :Final rejection".utf8))
+			receiver.ircConnectionDidReceive([Data("ERROR :Final rejection".utf8)]) {}
 			receiver.ircConnectionDidCloseReadStream()
 			receiver.ircConnectionDidDisconnectWithError(nil)
 		}
@@ -58,35 +58,44 @@ struct IRCConnectionInboundDeliveryTests {
 		#expect(client.socket == nil)
 	}
 
-	@Test("App input overload delivers its admitted prefix then fails explicitly")
-	func inputOverloadFailsAfterPrefix() async throws {
+	/// The application used to hold a bounded queue of its own between the host
+	/// and the main actor, and a burst past 8,192 lines — a `/LIST` on a large
+	/// network, a bouncer's playback — overflowed it and tore the connection
+	/// down. The host now waits for each read to be acknowledged, so however
+	/// much arrives, all of it is handled and the connection stays up.
+	@Test("A burst larger than the old application queue is handled in full without a disconnect")
+	func largeBurstIsDeliveredWithoutOverload() async throws {
 		let (client, connection) = connectedClient()
-		let receiver = connection.callbackReceiver
-		try await observe(.IRCClientDidDisconnect, from: client) {
-			for index in 0 ... ConnectionInputBudget.maximumEntries {
-				receiver.ircConnectionDidReceive(Data("PING :\(index)".utf8))
-			}
-			receiver.ircConnectionDidReceive(Data("PING :must-not-pass-overload".utf8))
-		}
-		#expect(client.sentLines.count == ConnectionInputBudget.maximumEntries)
-		#expect(client.sentLines as? [String] == (0 ..< ConnectionInputBudget.maximumEntries).map { "PONG \($0)" })
-		#expect(client.socket == nil)
-		let expectedError = NSError(domain: NSPOSIXErrorDomain, code: Int(ENOBUFS)).localizedDescription
-		let bodies = client.printedLines.compactMap { ($0 as? [String: Any])?["messageBody"] as? String }
-		#expect(bodies.contains(expectedError))
+		let burst = (0 ..< 10000).map { Data("PING :\($0)".utf8) }
+
+		try await deliver(burst, to: connection.callbackReceiver)
+
+		#expect(client.sentLines as? [String] == (0 ..< 10000).map { "PONG \($0)" })
+		#expect(client.socket === connection)
 	}
 
-	@Test("Input byte accounting resumes admission after consumption and latches failure")
-	func inputByteBudget() {
-		let budget = ConnectionInputBudget()
-		#expect(budget.admit(bytes: ConnectionInputBudget.maximumBytes) == .accepted)
-		budget.consumed(bytes: ConnectionInputBudget.maximumBytes)
-		#expect(budget.snapshot.bytes == 0)
-		#expect(budget.admit(bytes: 1) == .accepted)
-		#expect(budget.admit(bytes: ConnectionInputBudget.maximumBytes) == .overflow)
-		budget.consumed(bytes: 1)
-		#expect(budget.admit(bytes: 1) == .closed)
-		#expect(budget.snapshot.bytes == 0)
+	@Test("A read is acknowledged only after every one of its lines was handled")
+	func acknowledgementFollowsTheLastLine() async throws {
+		let (client, connection) = connectedClient()
+		let receiver = connection.callbackReceiver
+
+		try await deliver((0 ..< 200).map { Data("PING :first-\($0)".utf8) }, to: receiver)
+		#expect(client.sentLines.count == 200)
+
+		try await deliver([Data("PING :second".utf8)], to: receiver)
+		#expect(client.sentLines.lastObject as? String == "PONG second")
+	}
+
+	/// The host reads nothing more until it hears back, so a read that lands
+	/// after the client moved on must still be answered.
+	@Test("A read for a connection the client no longer owns is acknowledged without being handled")
+	func retiredConnectionStillAcknowledges() async throws {
+		let (client, _) = connectedClient()
+		let retired = Connection(config: IRCConnectionConfig(), onClient: client)
+
+		try await deliver([Data("PING :stale".utf8)], to: retired.callbackReceiver)
+
+		#expect(client.sentLines.count == 0)
 	}
 
 	@Test("Wire STS preserves pending and keychain PASS through reset", arguments: [true, false])
@@ -133,17 +142,18 @@ struct IRCConnectionInboundDeliveryTests {
 			secured.callbackReceiver.ircConnectionDidConnect(toHost: endpoint.serverAddress)
 		}
 		let passwords = client.sentLines.compactMap { $0 as? String }.filter { $0.hasPrefix("PASS ") }
-		#expect(passwords == [SendingMessage.string(command: "PASS", arguments: ["endpoint-secret"])])
+		let expectedPassword = try SendingMessage.string(command: "PASS", arguments: ["endpoint-secret"])
+		#expect(passwords == [expectedPassword])
 	}
 
 	@Test("Same-host STS requires an origin match and /conn never inherits endpoint secrets")
 	func endpointCredentialPolicies() {
 		let origin = Server(serverAddress: "origin.invalid", pendingServerPassword: .set("secret"))
-		#expect(PendingIRCEndpoint(host: "ORIGIN.invalid", port: 6697, origin: origin, reason: .stsUpgrade)
+		#expect(PendingIRCEndpoint(host: "ORIGIN.invalid", port: 6697, secured: true, origin: origin, reason: .stsUpgrade)
 			.credentialEndpoint == origin)
-		#expect(PendingIRCEndpoint(host: "other.invalid", port: 6697, origin: origin, reason: .stsUpgrade)
+		#expect(PendingIRCEndpoint(host: "other.invalid", port: 6697, secured: true, origin: origin, reason: .stsUpgrade)
 			.credentialEndpoint == nil)
-		#expect(PendingIRCEndpoint(host: "origin.invalid", port: 6667, origin: origin, reason: .userCommand)
+		#expect(PendingIRCEndpoint(host: "origin.invalid", port: 6667, secured: false, origin: origin, reason: .userCommand)
 			.credentialEndpoint == nil)
 	}
 
@@ -179,6 +189,97 @@ struct IRCConnectionInboundDeliveryTests {
 		#expect(client.sentLines.compactMap { $0 as? String }.contains { $0.hasPrefix("PASS ") } == false)
 	}
 
+	/// Once the upgrade is decided the plaintext socket is being abandoned, and
+	/// anything negotiated on it goes to a server the client resolved not to
+	/// talk to in clear.
+	@Test("An STS upgrade negotiates nothing more on the plaintext socket")
+	func stsUpgradeAbandonsNegotiation() async throws {
+		let (client, _) = connectedClient()
+		defer { client.stopAllTimers() }
+		let origin = Server(serverAddress: "sts-abandon-test.invalid")
+		client.config.serverList = [origin]
+		client.server = origin
+		var config = IRCConnectionConfig()
+		config.serverAddress = origin.serverAddress
+		config.serverPort = 6667
+		let plain = Connection(config: config, onClient: client)
+		client.socket = plain
+		try await observe(.IRCClientDidConnect, from: client) {
+			plain.callbackReceiver.ircConnectionDidConnect(toHost: origin.serverAddress)
+		}
+		client.sentCapabilityCommands.removeAllObjects()
+
+		client.ircConnection(plain, didReceiveData: "CAP * LS :sts=port=6697 multi-prefix server-time")
+
+		try #require(client.isDisconnecting)
+		#expect(client.sentCapabilityCommands.count == 0)
+	}
+
+	/// A redirect is server-controlled input; one that could turn TLS off would
+	/// hand the registration credentials to whoever answers in clear.
+	@Test("A redirect is as encrypted as the session it replaces", arguments: [true, false])
+	func redirectKeepsTransportSecurity(_ secured: Bool) async throws {
+		let (client, _) = connectedClient()
+		defer { client.stopAllTimers() }
+		let origin = Server(serverAddress: "origin.invalid", prefersSecuredConnection: secured)
+		client.config.serverList = [origin]
+		var config = IRCConnectionConfig()
+		config.serverAddress = origin.serverAddress
+		config.connectionPrefersSecuredConnection = secured
+		let socket = Connection(config: config, onClient: client)
+		client.socket = socket
+		try await observe(.IRCClientDidConnect, from: client) {
+			socket.callbackReceiver.ircConnectionDidConnect(toHost: origin.serverAddress)
+		}
+
+		client.ircConnection(socket, didReceiveData: ":server 010 me redirect.invalid 6667 :Try another server")
+		try #require(client.isDisconnecting)
+		client.invokeDisconnectCallbacks()
+
+		let pending = try #require(client.pendingEndpoint)
+		#expect(pending.secured == secured)
+		client.resetAllPropertyValues()
+		let endpoint = try #require(client.takeConnectionEndpoint())
+		#expect(endpoint.serverAddress == "redirect.invalid")
+		#expect(endpoint.connectionPrefersSecuredConnection == secured)
+	}
+
+	/// After 001 the client has a session worth keeping; a 010 then is shown,
+	/// not obeyed.
+	@Test("A redirect after registration is not followed")
+	func redirectAfterRegistrationIsIgnored() {
+		let (client, socket) = connectedClient()
+		client.markAsLoggedIn()
+
+		client.ircConnection(socket, didReceiveData: ":server 010 me redirect.invalid 6697 :Try another server")
+
+		#expect(client.isDisconnecting == false)
+		#expect(client.pendingEndpoint == nil)
+		#expect(client.disconnectType != .serverRedirect)
+	}
+
+	@Test("/conn keeps the encryption of the session it replaces", arguments: [true, false])
+	func connectCommandKeepsTransportSecurity(_ secured: Bool) {
+		let client = TestClient()
+		var config = IRCConnectionConfig()
+		config.connectionPrefersSecuredConnection = secured
+		client.socket = Connection(config: config, onClient: client)
+
+		let endpoint = client.connectCommandEndpoint(host: "other.invalid")
+
+		#expect(endpoint.secured == secured)
+		#expect(endpoint.port == (secured ? IRCConnectionDefaults.serverPortSecure : IRCConnectionDefaults.serverPort))
+		#expect(endpoint.credentialEndpoint == nil)
+	}
+
+	@Test("With no socket, /conn follows the server entry the client connects to", arguments: [true, false])
+	func connectCommandFollowsTheServerEntry(_ secured: Bool) {
+		let client = TestClient()
+		client.config.serverList = [Server(serverAddress: "origin.invalid", prefersSecuredConnection: secured)]
+
+		#expect(client.connectCommandEndpoint(host: "other.invalid").secured == secured)
+	}
+
 	private func connectedClient() -> (TestClient, Connection) {
 		let client = TestClient()
 		client.forwardsProcessedMessages = true
@@ -186,6 +287,21 @@ struct IRCConnectionInboundDeliveryTests {
 		let connection = Connection(config: IRCConnectionConfig(), onClient: client)
 		client.socket = connection
 		return (client, connection)
+	}
+
+	/// Hands `lines` to `receiver` as one read and waits for the reply the host
+	/// would be waiting on.
+	private func deliver(_ lines: [Data], to receiver: any RemoteConnectionClientProtocol) async throws {
+		let (acknowledgements, acknowledge) = AsyncStream<Void>.makeStream(bufferingPolicy: .bufferingOldest(1))
+		receiver.ircConnectionDidReceive(lines) {
+			acknowledge.yield()
+			acknowledge.finish()
+		}
+		var acknowledged = false
+		for await _ in acknowledgements {
+			acknowledged = true
+		}
+		try #require(acknowledged, "The read was never acknowledged")
 	}
 
 	/// Register before injecting callbacks, so even synchronous completion is observed.

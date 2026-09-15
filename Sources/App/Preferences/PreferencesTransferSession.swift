@@ -136,10 +136,11 @@ final class PreferencesTransferSession {
 
 	/** How long the QUIT barrier waits for the connections an import closes.
 
-	 `IRCConnection.beginCloseDeadline` invalidates a socket that has not closed
-	 five seconds after QUIT, so waiting longer than that is waiting on a
-	 callback that is never coming. */
-	private static let closeDeadline = Duration.seconds(5)
+	 The transport gives a socket five seconds after QUIT before it invalidates
+	 it and reports the disconnect itself. Waiting exactly that long raced that
+	 report, so the barrier waits past it: a connection still open after this
+	 is one the transport never let go of. */
+	static let closeWait = Duration.seconds(8)
 
 	private(set) var state = PreferencesTransferState.idle
 	var host = PreferencesTransferHost.mainWindow
@@ -163,14 +164,15 @@ final class PreferencesTransferSession {
 		return false
 	}
 
+	private let closeWait: Duration
+
 	init(stores: PreferencesTransferStores = .live, recoveryDirectory: URL? = nil,
-	     clientSource: PreferencesTransferClientSource = .application)
+	     clientSource: PreferencesTransferClientSource = .application, closeWait: Duration = closeWait)
 	{
 		self.stores = stores
 		self.clientSource = clientSource
-		let support = recoveryDirectory ?? (PathInfo.applicationSupportURL ?? URL.applicationSupportDirectory)
-			.appendingPathComponent("Configuration Backups", isDirectory: true)
-		recoveryStore = PreferencesRecoveryStore(directory: support)
+		self.closeWait = closeWait
+		recoveryStore = PreferencesRecoveryStore(directory: recoveryDirectory ?? PreferencesRecoveryStore.defaultDirectory)
 	}
 
 	// MARK: - Derived state
@@ -390,7 +392,9 @@ final class PreferencesTransferSession {
 
 	 The work either side of the QUIT barrier is different enough to be told
 	 apart: everything before it is teardown that can be abandoned, and
-	 everything after it is a reconciliation that has to run to the end. */
+	 everything after it is a reconciliation that has to run to the end. An
+	 import abandoned at the barrier has already disconnected servers, so it
+	 puts back the connections it took down before reporting why. */
 	private func commit(_ plan: PreferencesTransferPlan) async throws {
 		guard let world else {
 			guard case .stored = clientSource else { throw PreferencesTransferError.invalidDocument }
@@ -401,8 +405,16 @@ final class PreferencesTransferSession {
 		world.isImportingConfiguration = true
 		defer { world.isImportingConfiguration = false }
 		let changed = clientsAffected(by: plan, in: world)
-		try await closeConnections(of: changed)
-		try checkStillApplicable(plan, changed: changed)
+		let interrupted = changed.filter { $0.isConnecting || $0.isConnected || $0.isReconnecting }
+		do {
+			try await closeConnections(of: changed)
+			try checkStillApplicable(plan, changed: changed)
+		} catch is CancellationError {
+			throw CancellationError()
+		} catch {
+			resumeConnections(of: interrupted)
+			throw error
+		}
 		apply(plan, to: world, changed: changed)
 	}
 
@@ -421,10 +433,9 @@ final class PreferencesTransferSession {
 	/** The QUIT barrier.
 
 	 Every affected connection's QUIT starts together, so Restore waits one
-	 close deadline rather than one per server, and the wait is bounded by that
-	 same deadline: a connection that never reports back is one the transport
-	 has already given up on, and the check that follows decides whether the
-	 import may still go ahead. */
+	 close deadline rather than one per server. The wait outlasts the
+	 transport's own deadline, so a connection that has not reported back by
+	 then is refused as its own error rather than mistaken for a stale preview. */
 	private func closeConnections(of clients: [IRCClient]) async throws {
 		for client in clients {
 			client.cancelReconnect()
@@ -432,26 +443,54 @@ final class PreferencesTransferSession {
 		}
 		let closing = clients.filter { $0.isConnecting || $0.isConnected }
 		guard closing.isEmpty == false else { return }
-		let (disconnections, completion) = AsyncStream<Void>.makeStream()
-		defer { completion.finish() }
+		let (disconnections, continuation) = AsyncStream<Void>.makeStream()
+		defer { continuation.finish() }
 		for client in closing {
-			client.addDisconnectCallback { completion.yield() }
+			client.addDisconnectCallback { continuation.yield() }
 			client.quit()
 		}
-		let deadline = Task {
-			try? await Task.sleep(for: Self.closeDeadline)
-			completion.finish()
-		}
-		defer { deadline.cancel() }
-		var remaining = closing.count
-		for await _ in disconnections {
-			try Task.checkCancellation()
-			remaining -= 1
-			if remaining <= 0 {
-				break
+		let expected = closing.count
+		let closeWait = closeWait
+		let allClosed = await withTaskGroup(of: Bool.self) { group in
+			group.addTask {
+				var remaining = expected
+				for await _ in disconnections {
+					remaining -= 1
+					if remaining == 0 {
+						return true
+					}
+				}
+				return false
 			}
+			group.addTask {
+				try? await Task.sleep(for: closeWait)
+				return false
+			}
+			let first = await group.next() ?? false
+			group.cancelAll()
+			return first
 		}
 		try Task.checkCancellation()
+		guard allClosed || closing.allSatisfy({ !$0.isConnecting && !$0.isConnected }) else {
+			throw PreferencesTransferError.connectionsDidNotClose
+		}
+	}
+
+	/** Puts back the connections an abandoned import took down.
+
+	 A client still closing reconnects once its disconnect lands; one that has
+	 already closed reconnects now. Neither waits on the auto-reconnect
+	 setting, because the user never asked for these servers to go offline. */
+	private func resumeConnections(of clients: [IRCClient]) {
+		for client in clients where client.isTerminating == false {
+			if client.isConnecting || client.isConnected {
+				client.addDisconnectCallback { [weak client] in
+					client?.connect(.reconnect)
+				}
+			} else {
+				client.connect(.reconnect)
+			}
+		}
 	}
 
 	/// Nothing may have moved between the barrier and the write.

@@ -37,6 +37,7 @@
  *********************************************************************** */
 
 import Foundation
+import UserNotifications
 
 /// Where one event's alert sound comes from.
 enum IRCNotificationSoundPlayback: Equatable {
@@ -174,11 +175,31 @@ enum IRCNotificationPolicy {
 		}
 	}
 
+	/// What a notification carries back when it is clicked or answered.
+	/// `queryName` is the nickname of a private message, so a reply can open
+	/// the query again after it was closed.
 	static func notificationUserInfo(
 		clientIdentifier: String,
-		channelIdentifier: String?
+		channelIdentifier: String?,
+		queryName: String? = nil
 	) -> NotificationPayload {
-		NotificationPayload(clientIdentifier: clientIdentifier, channelIdentifier: channelIdentifier)
+		NotificationPayload(
+			clientIdentifier: clientIdentifier,
+			channelIdentifier: channelIdentifier,
+			queryName: queryName
+		)
+	}
+
+	/** How strongly one event's notification interrupts.
+
+	 Someone joining, leaving or quitting a channel is worth a line in
+	 Notification Center, not a banner and a sound, so those arrive passive.
+	 Everything else interrupts the way any notification does. */
+	static func interruptionLevel(for event: NotificationEvent) -> UNNotificationInterruptionLevel {
+		switch event {
+		case .userJoined, .userParted, .userDisconnected: .passive
+		default: .active
+		}
 	}
 }
 

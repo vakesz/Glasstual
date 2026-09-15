@@ -123,6 +123,19 @@ final class RecordingWorldObserver: WorldObserver {
 	}
 }
 
+/// Registers another observer the first time it hears the client list change.
+@MainActor
+private final class RegisteringWorldObserver: WorldObserver {
+	let late = RecordingWorldObserver()
+	private var registered = false
+
+	func worldClientListDidChange(_ world: World) {
+		guard registered == false else { return }
+		registered = true
+		world.addObserver(late)
+	}
+}
+
 @MainActor
 private struct WorldFixture {
 	let fixture = ClientEnvironmentFixture()
@@ -154,6 +167,22 @@ struct WorldObserverTests {
 		#expect(context.observer.events.contains(.addedClient(client.uniqueIdentifier, 0)))
 		#expect(context.observer.events.contains(.clientListChanged))
 		#expect(context.observer.events.contains(.navigationListChanged))
+	}
+
+	/// Registering from inside an event wrote to the observer list while the
+	/// delivery loop held it, and the loop then restored the list it started
+	/// with.
+	@Test("An observer registered from inside an event is kept and hears the events after it")
+	func observerRegisteredDuringDeliveryIsKept() {
+		let context = WorldFixture()
+		let registering = RegisteringWorldObserver()
+		context.world.addObserver(registering)
+
+		let first = context.makeClient(named: "First")
+		#expect(registering.late.events.contains(.addedClient(first.uniqueIdentifier, 0)) == false)
+
+		let second = context.makeClient(named: "Second")
+		#expect(registering.late.events.contains(.addedClient(second.uniqueIdentifier, 1)))
 	}
 
 	@Test("The first client is the one the world asks to be selected")
