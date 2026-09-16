@@ -4,8 +4,11 @@
 # The quality gate has to mean the same thing on every machine and on every CI
 # run, so each tool is pinned to one release and one SHA-256. A copy already on
 # PATH at the pinned version is used as it is; otherwise the release artifact is
-# downloaded, checked against its digest and unpacked under build/tools, which
-# the Makefile puts first on PATH. Nothing is installed system-wide.
+# downloaded, checked against its digest and unpacked under build/tools. Either
+# way the tool ends up behind a wrapper in build/tools/bin, and the Makefile
+# runs that wrapper by its full path: Apple's GNU Make 3.81 (/usr/bin/make on
+# the CI runner) ignores a PATH exported from the Makefile when it execs a
+# recipe line itself. Nothing is installed system-wide.
 #
 # Usage
 #   scripts/ensure-tool.sh <swiftformat|swiftlint|actionlint|shellcheck|xcodegen>
@@ -76,13 +79,12 @@ installed_version_matches() {
 	[[ "$output" =~ (^|[^0-9.])${version//./\\.}($|[^0-9.]) ]]
 }
 
-if found="$(command -v "$tool")" && installed_version_matches "$found"; then
-	exit 0
-fi
-
-install_dir="$tools_root/$tool-$version"
 bin_dir="$tools_root/bin"
-if [ ! -x "$install_dir/$executable" ]; then
+install_dir="$tools_root/$tool-$version"
+target="$install_dir/$executable"
+if found="$(command -v "$tool")" && installed_version_matches "$found"; then
+	target="$found"
+elif [ ! -x "$target" ]; then
 	if [ -n "${found:-}" ]; then
 		echo "ensure-tool: $found is not $tool $version; installing the pinned release under $tools_root" >&2
 	else
@@ -117,7 +119,7 @@ fi
 # The wrapper runs the real binary by its full path, where a symlink would not,
 # so XcodeGen still finds its presets beside it.
 mkdir -p "$bin_dir"
-printf '#!/bin/bash\nexec %q "$@"\n' "$install_dir/$executable" > "$bin_dir/$tool"
+printf '#!/bin/bash\nexec %q "$@"\n' "$target" > "$bin_dir/$tool"
 chmod +x "$bin_dir/$tool"
 installed_version_matches "$bin_dir/$tool" ||
-	fail "$install_dir/$executable does not report version $version"
+	fail "$target does not report version $version"

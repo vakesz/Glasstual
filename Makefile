@@ -18,11 +18,12 @@ E2E_HELPER   := $(abspath $(DERIVED_DATA))/Build/Products/Debug/GlasstualE2EHarn
 XCODEBUILD_FLAGS ?=
 XCODEBUILD   := xcodebuild -project $(PROJECT) -scheme $(SCHEME) -destination '$(DESTINATION)' -derivedDataPath $(DERIVED_DATA) $(XCODEBUILD_FLAGS)
 
-# scripts/ensure-tool.sh installs pinned tool releases here. It comes first on
-# PATH, so a pinned copy wins over another version installed elsewhere, and
-# `make clean` removes it with the rest of build/.
+# scripts/ensure-tool.sh puts a wrapper for each pinned tool here, and every
+# recipe runs the tool through that wrapper by its full path. Exporting PATH
+# from the Makefile is not enough: Apple's GNU Make 3.81, the /usr/bin/make on
+# the CI runner, execs a plain recipe line with its own PATH, not the exported
+# one. `make clean` removes the wrappers with the rest of build/.
 TOOLS_BIN    := $(CURDIR)/build/tools/bin
-export PATH  := $(TOOLS_BIN):$(PATH)
 
 .PHONY: help generate validate-generated-metadata build archive run test tsan smoke e2e e2e-build e2e-fixtures coverage lint format format-check ensure-xcodegen ensure-formatters ensure-linters clean
 
@@ -34,7 +35,7 @@ ensure-xcodegen:
 
 generate: ensure-xcodegen ## Regenerate Glasstual.xcodeproj from project.yml
 	rm -rf "$(GENERATED_XCODE_DIR)"
-	xcodegen generate --spec project.yml
+	$(TOOLS_BIN)/xcodegen generate --spec project.yml
 	$(MAKE) validate-generated-metadata
 
 # The list travels NUL-separated so a newline in a path cannot split one name
@@ -100,18 +101,18 @@ ensure-linters: ensure-formatters
 	@scripts/ensure-tool.sh shellcheck
 
 lint: ensure-linters format-check ## Run whole-tree linters and format checks
-	swiftlint lint --strict --no-cache --config .swiftlint.yml Sources Tests
-	actionlint
-	shellcheck scripts/*.sh
+	$(TOOLS_BIN)/swiftlint lint --strict --no-cache --config .swiftlint.yml Sources Tests
+	$(TOOLS_BIN)/actionlint
+	$(TOOLS_BIN)/shellcheck scripts/*.sh
 	@set -euo pipefail; git ls-files --cached --others --exclude-standard -z -- '*.entitlements' '*.plist' '*.strings' '*.xcprivacy' | while IFS= read -r -d '' file; do if [ -f "$$file" ] && [ ! -L "$$file" ]; then plutil -lint "$$file" >/dev/null || exit 1; fi; done
 	@set -euo pipefail; git ls-files --cached --others --exclude-standard -z -- '*.xib' '*.xcscheme' '*.xcworkspacedata' | while IFS= read -r -d '' file; do if [ -f "$$file" ] && [ ! -L "$$file" ]; then xmllint --noout "$$file" || exit 1; fi; done
 	git diff --check
 
 format: ensure-formatters ## Format Swift sources in place
-	swiftformat --cache ignore Sources Tests
+	$(TOOLS_BIN)/swiftformat --cache ignore Sources Tests
 
 format-check: ensure-formatters ## Verify formatting without changing files
-	swiftformat --lint --cache ignore Sources Tests
+	$(TOOLS_BIN)/swiftformat --lint --cache ignore Sources Tests
 
 clean: ## Remove build products and ignored generated metadata
 	rm -rf "$(DERIVED_DATA)" build "Build Results" .tmp "$(GENERATED_XCODE_DIR)"
