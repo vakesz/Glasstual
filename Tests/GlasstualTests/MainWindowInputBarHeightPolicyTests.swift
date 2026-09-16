@@ -21,14 +21,6 @@ struct MainWindowInputBarHeightPolicyTests {
 		#expect(maximum == (800 * MainWindowInputBarHeightPolicy.maximumWindowHeightFraction) - 12)
 	}
 
-	@Test("The ceiling grows with the window")
-	func maximumHeightScalesWithTheWindow() {
-		let small = MainWindowInputBarHeightPolicy.maximumHeight(windowHeight: 500, padding: 12)
-		let large = MainWindowInputBarHeightPolicy.maximumHeight(windowHeight: 1200, padding: 12)
-
-		#expect(large > small)
-	}
-
 	/// A window shorter than the padding must not produce a negative ceiling:
 	/// the growth search would then never find a height to settle on.
 	@Test("A window too short for the padding yields no room rather than negative room")

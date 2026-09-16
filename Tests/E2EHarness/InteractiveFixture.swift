@@ -6,7 +6,6 @@ struct InteractiveFixture {
 	var dccPort: UInt16 = 0
 	var finished: Bool {
 		switch kind {
-		case .pluginSmiley: stage == 3
 		case .burstResponsiveness: stage == 4
 		case .dccSuccess, .dccCancel: stage == 2
 		default: false
@@ -15,15 +14,6 @@ struct InteractiveFixture {
 
 	mutating func receive(_ line: String, joined: Bool) throws -> [String]? {
 		guard line.hasPrefix("PRIVMSG fixture :E2E_") else { return nil }
-		if kind == .pluginSmiley {
-			let tokens = ["E2E_SMILEY_OFF", "E2E_SMILEY_ON", "E2E_SMILEY_OFF_AGAIN"]
-			guard joined, stage < tokens.count, line == "PRIVMSG fixture :" + tokens[stage] else {
-				throw HarnessFailure.assertion("Smiley fixture ordering mismatch")
-			}
-			let marker = tokens[stage]
-			stage += 1
-			return [":fixture!fixture@localhost PRIVMSG #e2e :\(marker) :-)"]
-		}
 		if kind == .burstResponsiveness {
 			let expected = stage == 0 ? "E2E_BURST_START" : "E2E_BURST_SWITCH_\(stage)"
 			guard joined, stage < 4, line == "PRIVMSG fixture :" + expected else {

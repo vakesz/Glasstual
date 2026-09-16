@@ -6,8 +6,8 @@
 import CocoaExtensions
 import Foundation
 
-/// Legacy plugin payload spelling belongs at the declaration boundary. These
-/// checks prevent permissive plugin readers from silently dropping imported rules.
+/// Legacy property-list spelling belongs at the declaration boundary. These
+/// checks prevent permissive readers from silently dropping imported rules.
 nonisolated enum PreferencesPayloadValidation { // nonisolated: value
 	static func nicknameColors(_ value: PropertyListValue) -> Bool {
 		guard let overrides = value.dictionary else { return false }
@@ -23,7 +23,7 @@ nonisolated enum PreferencesPayloadValidation { // nonisolated: value
 		}
 	}
 
-	static func chatFilters(_ value: PropertyListValue) -> Bool {
+	static func messageRules(_ value: PropertyListValue) -> Bool {
 		guard let rules = value.array else { return false }
 		var identifiers: Set<String> = []
 		for rule in rules {
@@ -35,9 +35,9 @@ nonisolated enum PreferencesPayloadValidation { // nonisolated: value
 		return true
 	}
 
-	/// The title and action of every chat filter in a stored rule list, by
+	/// The title and action of every message rule in a stored rule list, by
 	/// identifier.
-	static func chatFilterActions(in value: PropertyListValue?) -> [String: (title: String, action: String)] {
+	static func messageRuleActions(in value: PropertyListValue?) -> [String: (title: String, action: String)] {
 		var actions: [String: (title: String, action: String)] = [:]
 		for rule in value?.array ?? [] {
 			guard let dictionary = rule.dictionary, let identifier = dictionary["uniqueIdentifier"]?.string else {
@@ -54,15 +54,15 @@ nonisolated enum PreferencesPayloadValidation { // nonisolated: value
 	/** Payloads that can lose one bad field instead of a whole rule.
 
 	 The generic repair drops a collection element the declaration refuses. A
-	 chat filter is a dictionary of independent fields, so one field written by
-	 a hand edit or an older build costs that field — the plugin reads a missing
+	 message rule is a dictionary of independent fields, so one field written by
+	 a hand edit or an older build costs that field — the engine reads a missing
 	 field as its default — and a rule without a usable identifier is given a
-	 new one, which is what the plugin itself does when it loads one. */
+	 new one, which is what loading one does anyway. */
 	static let repairs: [String: @Sendable (PropertyListValue) -> PropertyListValue] = [
-		FirstPartyPluginPreferences.chatFilters: repairedChatFilters,
+		Preferences.Rules.messageRules.name: repairedMessageRules,
 	]
 
-	private static func repairedChatFilters(_ value: PropertyListValue) -> PropertyListValue {
+	private static func repairedMessageRules(_ value: PropertyListValue) -> PropertyListValue {
 		guard let rules = value.array else { return value }
 		var identifiers: Set<String> = []
 		return .array(rules.map { rule in
@@ -86,7 +86,7 @@ nonisolated enum PreferencesPayloadValidation { // nonisolated: value
 	/** The value a rule may keep for one field, or `nil` when the field has to go.
 
 	 A field this build does not know is kept as it is: a newer build may have
-	 written it, and the plugin reads rules by the names it knows. */
+	 written it, and the engine reads rules by the names it knows. */
 	private static func repairedFilterField(_ name: String, _ value: PropertyListValue) -> PropertyListValue? {
 		switch name {
 		case "uniqueIdentifier", "filterAction", "filterForwardToDestination", "filterMatch", "filterNotes",

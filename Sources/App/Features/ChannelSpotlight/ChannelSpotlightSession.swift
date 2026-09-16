@@ -56,7 +56,7 @@ final class ChannelSpotlightModel {
 
 	func populate() {
 		var admitted: Set<ChannelSpotlightSearchResult.ID> = []
-		allResults = AppController.shared.world.clientList
+		allResults = AppServices.world.clientList
 			.flatMap(\.channelList)
 			.map(ChannelSpotlightSearchResult.init(channel:))
 			.filter { admitted.insert($0.id).inserted }
@@ -65,7 +65,7 @@ final class ChannelSpotlightModel {
 
 	func updateClientRestriction() {
 		if Preferences.Appearance.channelNavigationIsServerSpecific.value {
-			restrictedClientID = AppController.shared.mainWindow.selectedClient?.uniqueIdentifier ?? ""
+			restrictedClientID = AppServices.delegate.mainWindow.selectedClient?.uniqueIdentifier ?? ""
 		} else {
 			restrictedClientID = nil
 		}
@@ -119,13 +119,13 @@ final class ChannelSpotlightSession {
 		notifications.observe(.ircWorldClientListWasModified) { [weak self] _ in
 			self?.reloadResults()
 		}
-		notifications.observe(.IRCClientChannelListWasModified) { [weak self] _ in
+		notifications.observe(.ClientChannelListWasModified) { [weak self] _ in
 			self?.reloadResults()
 		}
 		notifications.observe(.mainWindowSelectionChanged) { [weak self] _ in
 			self?.model.updateClientRestriction()
 		}
-		notifications.observe(.textualUserDefaultsDidChange) { [weak self] notification in
+		notifications.observe(.glasstualUserDefaultsDidChange) { [weak self] notification in
 			guard notification.userInfo?[PreferenceChangeNotification.changedKeyUserInfoKey] as? String
 				== Preferences.Appearance.channelNavigationIsServerSpecific.name
 			else { return }
@@ -143,9 +143,9 @@ final class ChannelSpotlightSession {
 		/* The row holds the channel's identity rather than the channel: one can
 		 close while the spotlight is open, and the world is what knows. */
 		guard let result,
-		      let channel = AppController.shared.world.findItem(withId: result.id) as? Channel
+		      let channel = AppServices.world.findItem(withId: result.id) as? Channel
 		else { return }
-		AppController.shared.mainWindow.select(channel)
+		AppServices.delegate.mainWindow.select(channel)
 	}
 
 	func close() {

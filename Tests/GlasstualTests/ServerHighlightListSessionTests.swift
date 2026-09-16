@@ -118,9 +118,4 @@ struct ServerHighlightListSessionTests {
 		#expect(session.model.rows.isEmpty)
 		#expect(client.cachedHighlights.isEmpty)
 	}
-
-	@Test("The legacy highlight nib is no longer bundled")
-	func legacyNibIsRemoved() {
-		#expect(Bundle.main.path(forResource: "TDCServerHighlightListSheet", ofType: "nib") == nil)
-	}
 }

@@ -1,0 +1,110 @@
+/* *********************************************************************
+ *                  _____         _               _
+ *                 |_   _|____  _| |_ _   _  __ _| |
+ *                   | |/ _ \ \/ / __| | | |/ _` | |
+ *                   | |  __/>  <| |_| |_| | (_| | |
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
+ *
+ * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
+ * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+ *       Please see Acknowledgements.pdf for additional information.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *  * Neither the name of Textual, "Codeux Software, LLC", nor the
+ *    names of its contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ *
+ *********************************************************************** */
+
+import Foundation
+
+enum AddressBookLookupPolicy {
+	/// A nickname as the hostmask a user-tracking rule is written with.
+	static func trackingHostmask(forNickname nickname: String) -> String {
+		"\(nickname)!*@*"
+	}
+
+	/// Both keys a hostmask's match may be cached under: the hostmask itself,
+	/// and the tracking mask its nickname alone is looked up by.
+	static func cacheKeys(forHostmask hostmask: String) -> [String] {
+		[hostmask, trackingHostmask(forNickname: (hostmask as NSString).nicknameFromHostmask)]
+	}
+
+	/** The tracking rule inside a match, or `nil` when the match only ignores.
+
+	 The cache answers with whatever rule the hostmask matched, and an
+	 `/ignore spammer` matches `spammer!*@*` exactly as a tracking rule for the
+	 same person does. Taking the match unfiltered made WATCH and MONITOR
+	 numerics treat an ignore as something to report presence for, and left the
+	 nickname on the watch list because the ignore looked like a reason to keep
+	 it there. A `.mixed` match is the merge the cache built, so the tracking
+	 half is one of its parents — and it is the parent, not the merge, that
+	 carries the nickname being tracked. */
+	static func userTrackingEntry(in match: AddressBookEntry?) -> AddressBookEntry? {
+		guard let match else {
+			return nil
+		}
+
+		if match.entryType == .userTracking {
+			return match.trackUserActivity ? match : nil
+		}
+
+		guard match.entryType == .mixed else {
+			return nil
+		}
+
+		return match.parentEntries?.first { $0.entryType == .userTracking && $0.trackUserActivity }
+	}
+}
+
+extension Client {
+	func findIgnores(forHostmask hostmask: String) -> [AddressBookEntry] {
+		addressBookMatchCache.findIgnores(forHostmask: hostmask)
+	}
+
+	func findUserTrackingAddressBookEntry(forHostmask hostmask: String) -> AddressBookEntry? {
+		findUserTrackingAddressBookEntry(forNickname: (hostmask as NSString).nicknameFromHostmask)
+	}
+
+	func findUserTrackingAddressBookEntry(forNickname nickname: String) -> AddressBookEntry? {
+		AddressBookLookupPolicy.userTrackingEntry(
+			in: findAddressBookEntry(
+				forHostmask: AddressBookLookupPolicy.trackingHostmask(forNickname: nickname)
+			)
+		)
+	}
+
+	func findAddressBookEntry(forHostmask hostmask: String) -> AddressBookEntry? {
+		addressBookMatchCache.findAddressBookEntry(forHostmask: hostmask)
+	}
+
+	func clearAddressBookCache() {
+		addressBookMatchCache.clearCachedMatches()
+	}
+
+	func clearAddressBookCache(forHostmask hostmask: String) {
+		for cacheKey in AddressBookLookupPolicy.cacheKeys(forHostmask: hostmask) {
+			addressBookMatchCache.clearCachedMatches(forHostmask: cacheKey)
+		}
+	}
+}

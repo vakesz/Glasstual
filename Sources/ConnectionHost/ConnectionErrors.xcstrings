@@ -1,0 +1,990 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "certificate-not-trusted" : {
+      "comment" : "Error shown when the user declines a server certificate the system would not trust on its own.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The certificate for this server is not trusted"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A kiszolgáló tanúsítványa nem megbízható"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Zertifikat dieses Servers ist nicht vertrauenswürdig"
+          }
+        }
+      }
+    },
+    "connection-already-open" : {
+      "comment" : "Error reported to the application when it asks the connection host to open a connection that is already open.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A connection is already open on this host"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ezen a gépen már nyitva van egy kapcsolat"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auf diesem Host ist bereits eine Verbindung geöffnet"
+          }
+        }
+      }
+    },
+    "connection-timed-out" : {
+      "comment" : "Error shown when an IRC connection attempt exceeds its timeout. Migrated from legacy key Connection timed out.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection timed out"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A kapcsolat időtúllépés miatt megszakadt"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeitüberschreitung der Verbindung"
+          }
+        }
+      }
+    },
+    "dns-error" : {
+      "comment" : "DNS connection error. Arguments are the DNS error reason and numeric error code. Migrated from legacy key DNS Error: %@ (%ld).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DNS Error: %1$@ (%2$ld)"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DNS-hiba: %1$@ (%2$ld)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DNS-Fehler: %1$@ (%2$ld)"
+          }
+        }
+      }
+    },
+    "dns-reason-already-registered" : {
+      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Already registered"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Már regisztrálva"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bereits registriert"
+          }
+        }
+      }
+    },
+    "dns-reason-bad-flags" : {
+      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bad flags"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hibás jelzők"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ungültige Flags"
+          }
+        }
+      }
+    },
+    "dns-reason-bad-interface-index" : {
+      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bad interface index"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hibás interfészindex"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ungültiger Schnittstellenindex"
+          }
+        }
+      }
+    },
+    "dns-reason-bad-key" : {
+      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bad key"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hibás kulcs"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ungültiger Schlüssel"
+          }
+        }
+      }
+    },
+    "dns-reason-bad-parameter" : {
+      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bad parameter"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hibás paraméter"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ungültiger Parameter"
+          }
+        }
+      }
+    },
+    "dns-reason-bad-reference" : {
+      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bad reference"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hibás hivatkozás"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ungültige Referenz"
+          }
+        }
+      }
+    },
+    "dns-reason-bad-signature" : {
+      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bad signature"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hibás aláírás"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ungültige Signatur"
+          }
+        }
+      }
+    },
+    "dns-reason-bad-state" : {
+      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bad state"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hibás állapot"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ungültiger Zustand"
+          }
+        }
+      }
+    },
+    "dns-reason-bad-time" : {
+      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bad time"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hibás időpont"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ungültige Zeit"
+          }
+        }
+      }
+    },
+    "dns-reason-double-nat" : {
+      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Double NAT"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kettős NAT"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Doppeltes NAT"
+          }
+        }
+      }
+    },
+    "dns-reason-firewall" : {
+      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Firewall"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tűzfal"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Firewall"
+          }
+        }
+      }
+    },
+    "dns-reason-incompatible" : {
+      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Incompatible"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nem kompatibilis"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht kompatibel"
+          }
+        }
+      }
+    },
+    "dns-reason-invalid" : {
+      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Érvénytelen"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ungültig"
+          }
+        }
+      }
+    },
+    "dns-reason-name-conflict" : {
+      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name conflict"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Névütközés"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Namenskonflikt"
+          }
+        }
+      }
+    },
+    "dns-reason-nat-port-mapping-disabled" : {
+      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NAT port mapping disabled"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NAT-portleképezés letiltva"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NAT-Portzuordnung deaktiviert"
+          }
+        }
+      }
+    },
+    "dns-reason-nat-port-mapping-unsupported" : {
+      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NAT port mapping unsupported"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NAT-portleképezés nem támogatott"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NAT-Portzuordnung nicht unterstützt"
+          }
+        }
+      }
+    },
+    "dns-reason-nat-traversal" : {
+      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NAT traversal"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NAT-átjárás"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NAT-Traversal"
+          }
+        }
+      }
+    },
+    "dns-reason-no-authentication" : {
+      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No authentication"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nincs hitelesítés"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Authentifizierung"
+          }
+        }
+      }
+    },
+    "dns-reason-no-memory" : {
+      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No memory"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nincs memória"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Speicher verfügbar"
+          }
+        }
+      }
+    },
+    "dns-reason-no-router" : {
+      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No router"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nincs útválasztó"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Router"
+          }
+        }
+      }
+    },
+    "dns-reason-no-such-key" : {
+      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No such key"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nincs ilyen kulcs"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schlüssel nicht vorhanden"
+          }
+        }
+      }
+    },
+    "dns-reason-no-such-name" : {
+      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No such name"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nincs ilyen név"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name nicht vorhanden"
+          }
+        }
+      }
+    },
+    "dns-reason-no-such-record" : {
+      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No such record"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nincs ilyen rekord"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datensatz nicht vorhanden"
+          }
+        }
+      }
+    },
+    "dns-reason-not-initialized" : {
+      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not initialized"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nincs inicializálva"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht initialisiert"
+          }
+        }
+      }
+    },
+    "dns-reason-polling-mode" : {
+      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Polling mode"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lekérdezéses mód"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abfragemodus"
+          }
+        }
+      }
+    },
+    "dns-reason-refused" : {
+      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refused"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elutasítva"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abgelehnt"
+          }
+        }
+      }
+    },
+    "dns-reason-service-not-running" : {
+      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Service not running"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A szolgáltatás nem fut"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dienst läuft nicht"
+          }
+        }
+      }
+    },
+    "dns-reason-timeout" : {
+      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Timeout"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Időtúllépés"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeitüberschreitung"
+          }
+        }
+      }
+    },
+    "dns-reason-transient" : {
+      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transient"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Átmeneti hiba"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorübergehender Fehler"
+          }
+        }
+      }
+    },
+    "dns-reason-unsupported" : {
+      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unsupported"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nem támogatott"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht unterstützt"
+          }
+        }
+      }
+    },
+    "error-reason-unknown" : {
+      "comment" : "Reason shown inside a DNS or POSIX connection error when the system reports a status this build has no name for.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unknown"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ismeretlen"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unbekannt"
+          }
+        }
+      }
+    },
+    "peer-line-too-long" : {
+      "comment" : "Error shown when an IRC peer sends a line exceeding the supported buffer limit. Migrated from legacy key Peer sent a line that is too long.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Peer sent a line that is too long"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A partner túl hosszú sort küldött"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Gegenstelle hat eine zu lange Zeile gesendet"
+          }
+        }
+      }
+    },
+    "posix-error" : {
+      "comment" : "POSIX connection error. Arguments are the POSIX error reason and numeric error code. Migrated from legacy key POSIX Error: %@ (%ld).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "POSIX Error: %1$@ (%2$ld)"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "POSIX-hiba: %1$@ (%2$ld)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "POSIX-Fehler: %1$@ (%2$ld)"
+          }
+        }
+      }
+    },
+    "proxy-address-missing" : {
+      "comment" : "Error shown when a configured IRC proxy has no address. Migrated from legacy key Proxy address is missing.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Proxy address is missing"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hiányzik a proxy címe"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Proxyadresse fehlt"
+          }
+        }
+      }
+    },
+    "unknown-error" : {
+      "comment" : "Shown in place of the certificate failure reason when the system evaluates a chain as untrusted without saying why.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unknown error"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ismeretlen hiba"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unbekannter Fehler"
+          }
+        }
+      }
+    },
+    "unsupported-proxy-type" : {
+      "comment" : "Error shown for an IRC proxy type unsupported by the connection service. Migrated from legacy key Unsupported proxy type.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unsupported proxy type"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nem támogatott proxytípus"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht unterstützter Proxytyp"
+          }
+        }
+      }
+    },
+    "wifi-aware-error" : {
+      "comment" : "Error shown when a connection fails somewhere in Wi-Fi Aware, which reports no reason of its own.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wi-Fi Aware error"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wi-Fi Aware hiba"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wi-Fi-Aware-Fehler"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

@@ -44,23 +44,23 @@ import Testing
 private final class RecordingChannelListPresentation: ClientChannelListPresenting {
 	private(set) var events: [String] = []
 
-	func openChannelList(for _: IRCClient) {
+	func openChannelList(for _: Client) {
 		events.append("open")
 	}
 
-	func closeChannelList(for _: IRCClient) {
+	func closeChannelList(for _: Client) {
 		events.append("close")
 	}
 
-	func channelListDidStart(for _: IRCClient) {
+	func channelListDidStart(for _: Client) {
 		events.append("start")
 	}
 
-	func channelListDidReceive(channelNamed name: String, memberCount: UInt, topic: String?, for _: IRCClient) {
+	func channelListDidReceive(channelNamed name: String, memberCount: UInt, topic: String?, for _: Client) {
 		events.append("\(name) \(memberCount) \(topic ?? "")")
 	}
 
-	func channelListDidFinish(for _: IRCClient) {
+	func channelListDidFinish(for _: Client) {
 		events.append("finish")
 	}
 }
@@ -302,11 +302,6 @@ struct ServerChannelListTests {
 		#expect(model.selectedCopyItems.count == 1)
 		#expect(copied.contains("#Rust\t300\tsystems programming"))
 		#expect(copied.contains("\n"))
-	}
-
-	@Test("The channel-list scene no longer bundles a nib")
-	func nativeSceneHasNoNib() {
-		#expect(Bundle.main.path(forResource: "TDCServerChannelListDialog", ofType: "nib") == nil)
 	}
 
 	@Test("The list stops growing at its cap and says how much it is showing")

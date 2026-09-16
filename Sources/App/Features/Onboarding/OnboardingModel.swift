@@ -32,7 +32,7 @@ struct OnboardingNotificationAuthorization {
 	 it again — otherwise it spends the rest of the session believing sounds are
 	 the application's job and plays them itself. */
 	var soundDeliveryDidChange: @MainActor () async -> Void = {
-		await SharedApplication.sharedNotificationController().refreshSoundDelivery()
+		await AppServices.notifications.refreshSoundDelivery()
 	}
 
 	static let live = OnboardingNotificationAuthorization(

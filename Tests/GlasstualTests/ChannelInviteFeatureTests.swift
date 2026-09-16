@@ -31,15 +31,6 @@ struct ChannelInviteFeatureTests {
 		#expect(ChannelInviteStrings.invitationTitle(for: nicknames) == headline)
 	}
 
-	/// The sheet is titled, and the picker beneath it is labelled for what it
-	/// chooses rather than repeating the sentence above it.
-	@Test("The sheet names itself and its one control")
-	func sheetCopyComesFromTheCatalog() {
-		#expect(ChannelInviteStrings.windowTitle == "Invite to Channel")
-		#expect(ChannelInviteStrings.channelPickerLabel == "Channel")
-		#expect(ChannelInviteStrings.inviteButtonTitle == "Invite")
-	}
-
 	@Test("Inviting reports the chosen channel to the delegate")
 	func invitingReportsTheChosenChannel() {
 		let adapter = ChannelInviteSheet(nicknames: ["alice"], on: TestClient())

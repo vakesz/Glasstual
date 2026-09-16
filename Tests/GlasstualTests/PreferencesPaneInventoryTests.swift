@@ -23,15 +23,6 @@ struct PreferencesPaneInventoryTests {
 		#expect(PreferencesDestination.builtIn.allSatisfy { $0.matches(searchText: " \n ") })
 	}
 
-	@Test("Add-on settings are searchable by their localized title")
-	func settingsSearchIncludesAddOns() {
-		let destination = PreferencesDestination(
-			.plugin(bundleIdentifier: "example.addon"), symbol: "puzzlepiece.extension", title: "Café", panes: []
-		)
-		#expect(destination.matches(searchText: "cafe"))
-		#expect(destination.matches(searchText: "irrelevant") == false)
-	}
-
 	@Test("Every catalogued pane declares the keys it binds")
 	func everyPaneDeclaresItsKeys() {
 		let declared = Set(PreferencesPaneKeys.keysByPane.keys)
@@ -139,8 +130,6 @@ struct PreferencesPaneInventoryTests {
 			let stored = destination.selection.storedIdentifier
 			#expect(PreferencesSelection(storedIdentifier: stored) == destination.selection)
 		}
-		let addOn = PreferencesSelection.plugin(bundleIdentifier: "com.example.addon")
-		#expect(PreferencesSelection(storedIdentifier: addOn.storedIdentifier) == addOn)
 	}
 
 	/** A name written before the sidebar was flattened points at a pane rather
@@ -157,8 +146,9 @@ struct PreferencesPaneInventoryTests {
 	@Test("An identifier nothing answers to names no row")
 	func unknownIdentifiersAreRejected() {
 		#expect(PreferencesSelection(storedIdentifier: "not-a-pane") == nil)
-		#expect(PreferencesSelection(storedIdentifier: "plugin-9999") == nil)
-		#expect(PreferencesSelection(storedIdentifier: "plugin:") == nil)
+		// The Add-ons row and the rows its bundles supplied are gone.
+		#expect(PreferencesSelection(storedIdentifier: "addons") == nil)
+		#expect(PreferencesSelection(storedIdentifier: "plugin:com.example.addon") == nil)
 		// The Behavior pane was folded into General and Controls.
 		#expect(PreferencesSelection(storedIdentifier: "behavior") == nil)
 	}
@@ -166,7 +156,7 @@ struct PreferencesPaneInventoryTests {
 	@Test("Every sidebar row is a destination the model accepts")
 	func everyRowIsSelectable() {
 		let model = PreferencesPaneModel()
-		model.destinations = PreferencesSession.destinations()
+		model.destinations = PreferencesDestination.builtIn
 		var changes: [PreferencesSelection] = []
 		model.onSelectionChange = { changes.append($0) }
 
@@ -181,12 +171,12 @@ struct PreferencesPaneInventoryTests {
 	@Test("A row the sidebar is not listing is rejected without publishing")
 	func invalidSelectionIsRejected() {
 		let model = PreferencesPaneModel()
-		model.destinations = PreferencesSession.destinations()
+		model.destinations = PreferencesDestination.builtIn.filter { $0.selection != .fileTransfers }
 		let original = model.selection
 		var changeCount = 0
 		model.onSelectionChange = { _ in changeCount += 1 }
 
-		#expect(model.select(.plugin(bundleIdentifier: "com.example.absent")) == false)
+		#expect(model.select(.fileTransfers) == false)
 		#expect(model.selection == original)
 		#expect(changeCount == 0)
 	}
@@ -381,7 +371,7 @@ struct PreferencesFacadeBindingTests {
 		)
 
 		// The old bound let a file store a count whose Double round trip traps.
-		TextualUserDefaults.container.set(NSNumber(value: UInt.max), forKey: key.name)
+		GlasstualUserDefaults.container.set(NSNumber(value: UInt.max), forKey: key.name)
 		let stored = preferences.sliderBinding(for: key).wrappedValue
 		#expect(stored.rounded().formatted(.number.precision(.fractionLength(0))).isEmpty == false)
 	}

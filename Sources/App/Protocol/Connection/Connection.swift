@@ -125,18 +125,18 @@ private final class ConnectionClientShim: NSObject, RemoteConnectionClientProtoc
 	}
 }
 
-/** Owned by `IRCClient` on the main actor. The connection host's callbacks
+/** Owned by `Client` on the main actor. The connection host's callbacks
  arrive on an NSXPC queue and are forwarded through `events`, which the main
  actor drains in order; nothing else on this type is touched off-main. */
-public final class Connection: NSObject {
-	public private(set) weak var client: IRCClient?
-	public private(set) var config: IRCConnectionConfig
-	public private(set) var isConnected = false
-	public private(set) var isConnectedWithClientSideCertificate = false
-	public private(set) var isConnecting = false
-	public private(set) var isDisconnecting = false
-	public private(set) var isSecured = false
-	public private(set) var certificateTrustWasOverridden = false
+final class Connection: NSObject {
+	private(set) weak var client: Client?
+	private(set) var config: ConnectionConfig
+	private(set) var isConnected = false
+	private(set) var isConnectedWithClientSideCertificate = false
+	private(set) var isConnecting = false
+	private(set) var isDisconnecting = false
+	private(set) var isSecured = false
+	private(set) var certificateTrustWasOverridden = false
 
 	/// Whether TLS is established *and* the server's chain validated on its own.
 	///
@@ -144,15 +144,15 @@ public final class Connection: NSObject {
 	/// through the trust panel or the connection is configured to skip chain
 	/// validation. Anything that outlives the connection — an STS policy, for
 	/// instance — has to key on this instead.
-	public var isSecuredWithValidatedCertificate: Bool {
+	var isSecuredWithValidatedCertificate: Bool {
 		isSecured
 			&& certificateTrustWasOverridden == false
 			&& config.connectionShouldValidateCertificateChain
 	}
 
-	public private(set) var EOFReceived = false
-	public private(set) var connectedAddress: String?
-	public private(set) var uniqueIdentifier: String
+	private(set) var EOFReceived = false
+	private(set) var connectedAddress: String?
+	private(set) var uniqueIdentifier: String
 
 	/** The longest line this server carries, CR LF included.
 
@@ -160,7 +160,7 @@ public final class Connection: NSObject {
 	 also what a reconnect goes back to, because the next server has not said
 	 anything yet. Everything upstream already sizes its text from the same
 	 figure; this is where the assembled line is measured against it. */
-	public var maximumLineLength = IRCProtocolLimits.maximumBodyLength + IRCProtocolLimits.lineTerminatorLength
+	var maximumLineLength = ProtocolLimits.maximumBodyLength + ProtocolLimits.lineTerminatorLength
 
 	/// The host's callbacks, in arrival order, on their way to the main actor.
 	private nonisolated let events: AsyncStream<ConnectionEvent> // nonisolated: let
@@ -187,17 +187,17 @@ public final class Connection: NSObject {
 	private var trustResponse: TrustDecisionHandler?
 
 	@available(*, unavailable)
-	override public init() {
+	override init() {
 		fatalError("init() is unavailable; use init(config:onClient:)")
 	}
 
-	public convenience init(config: IRCConnectionConfig, onClient client: IRCClient) {
+	convenience init(config: ConnectionConfig, onClient client: Client) {
 		self.init(config: config, onClient: client, closeClock: .continuous)
 	}
 
 	init(
-		config: IRCConnectionConfig,
-		onClient client: IRCClient,
+		config: ConnectionConfig,
+		onClient client: Client,
 		closeClock: TimerClock,
 		makeService: @escaping () -> NSXPCConnection = {
 			NSXPCConnection(serviceName: "com.vakesz.glasstual.IRCConnectionHost")
@@ -314,7 +314,7 @@ public final class Connection: NSObject {
 
 	private func willWrite(_ data: Data) {
 		guard let string = convertFromCommonEncoding(data) else { return }
-		pendingStartupEvent = if IRCStartupCommandPolicy.identifiesNickServOnWire(string) {
+		pendingStartupEvent = if StartupCommandPolicy.identifiesNickServOnWire(string) {
 			.identificationWritten
 		} else if !recordedFirstJoin, Message(line: string, on: nil)?.command == "JOIN" {
 			.firstJoin
@@ -344,7 +344,7 @@ public final class Connection: NSObject {
 			let error = NSError(
 				domain: connectionErrorDomain,
 				code: Int(ConnectionErrorCode.other.rawValue),
-				userInfo: [NSLocalizedDescriptionKey: IRCConnectionStrings.serviceClosedUnexpectedly]
+				userInfo: [NSLocalizedDescriptionKey: ConnectionStrings.serviceClosedUnexpectedly]
 			)
 			didDisconnect(with: error)
 		}
@@ -352,7 +352,7 @@ public final class Connection: NSObject {
 
 	func resetState() {
 		/* The next server advertises its own `LINELEN`, or none at all. */
-		maximumLineLength = IRCProtocolLimits.maximumBodyLength + IRCProtocolLimits.lineTerminatorLength
+		maximumLineLength = ProtocolLimits.maximumBodyLength + ProtocolLimits.lineTerminatorLength
 		isConnecting = false
 		isConnected = false
 		isConnectedWithClientSideCertificate = false
@@ -400,7 +400,7 @@ public final class Connection: NSObject {
 		} as? RemoteConnectionServerProtocol
 	}
 
-	public func open() {
+	func open() {
 		guard terminal == false, client?.isTerminating == false,
 		      isConnecting == false, isConnected == false, isDisconnecting == false else { return }
 		config.diagnostics?.record(.serviceRequested)
@@ -420,7 +420,7 @@ public final class Connection: NSObject {
 		remoteObjectProxy()?.disableSuddenTermination()
 	}
 
-	public func close() {
+	func close() {
 		guard terminal == false, isDisconnecting == false else { return }
 		beginCloseDeadline()
 		closeInsecureCertificateTrustPanel()
@@ -444,12 +444,12 @@ public final class Connection: NSObject {
 		}
 	}
 
-	public func enforceFloodControl() {
+	func enforceFloodControl() {
 		guard isConnected else { return }
 		remoteObjectProxy()?.enforceFloodControl()
 	}
 
-	public func openSecuredConnectionCertificateModal() {
+	func openSecuredConnectionCertificateModal() {
 		exportSecureConnectionInformation { information in
 			/* The hop comes first, and the `SecTrust` is rebuilt on the other
 			 side of it. What crosses is `SecureConnectionInformation`, which is
@@ -620,7 +620,7 @@ public final class Connection: NSObject {
 		return client.convert(toCommonEncoding: string)
 	}
 
-	public func sendLine(_ line: String) {
+	func sendLine(_ line: String) {
 		let body = line
 			.replacingOccurrences(of: "\r", with: "")
 			.replacingOccurrences(of: "\n", with: "")
@@ -628,8 +628,8 @@ public final class Connection: NSObject {
 		 but nothing measured the assembled line, so a long enough command went
 		 out over what the protocol carries and the server cut it where it
 		 landed — mid-character for anything but ASCII. */
-		let bodyLimit = IRCProtocolLimits.bodyLimit(forAdvertisedLineLength: maximumLineLength)
-		let enforcedBody = IRCProtocolLimits.enforcedWireLine(body, bodyLimit: bodyLimit)
+		let bodyLimit = ProtocolLimits.bodyLimit(forAdvertisedLineLength: maximumLineLength)
+		let enforcedBody = ProtocolLimits.enforcedWireLine(body, bodyLimit: bodyLimit)
 
 		if enforcedBody != body {
 			connectionLogger.error(
@@ -667,7 +667,7 @@ public final class Connection: NSObject {
 		line.hasPrefix("PONG") || line.hasPrefix("QUIT")
 	}
 
-	public func clearSendQueue() {
+	func clearSendQueue() {
 		remoteObjectProxy()?.clearSendQueue()
 	}
 

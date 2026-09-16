@@ -15,22 +15,22 @@ import Foundation
 
 nonisolated enum ServerNicknameChangeStrings { // nonisolated: value
 	static var changeButtonTitle: String {
-		String(localized: .TDCServerChangeNicknameSheet.changeButton)
+		String(localized: .ServerProperties.changeButton)
 	}
 
 	static var currentNicknameLabel: String {
-		String(localized: .TDCServerChangeNicknameSheet.currentNicknameLabel)
+		String(localized: .ServerProperties.currentNicknameLabel)
 	}
 
 	static var newNicknameLabel: String {
-		String(localized: .TDCServerChangeNicknameSheet.newNicknameLabel)
+		String(localized: .ServerProperties.newNicknameLabel)
 	}
 
 	static var newNicknamePlaceholder: String {
-		String(localized: .TDCServerChangeNicknameSheet.newNicknamePlaceholder)
+		String(localized: .ServerProperties.newNicknamePlaceholder)
 	}
 
 	static var changeDescription: String {
-		String(localized: .TDCServerChangeNicknameSheet.nicknameChangeDescription)
+		String(localized: .ServerProperties.nicknameChangeDescription)
 	}
 }

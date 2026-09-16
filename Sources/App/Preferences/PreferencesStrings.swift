@@ -17,10 +17,6 @@ enum PreferencesStrings {
 		String(localized: .Settings.accessibilityLabelSettings)
 	}
 
-	static var addOnPaneTitle: String {
-		String(localized: .Settings.fallbackTitleAdd)
-	}
-
 	static var downloadDestinationAccessibilityLabel: String {
 		String(localized: .Settings.downloadDestination)
 	}

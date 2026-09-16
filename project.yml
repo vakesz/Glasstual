@@ -56,7 +56,6 @@ settings:
     GLASSTUAL_IRC_PROVISIONING_PROFILE: ""
 
     # ---- Platform ---------------------------------------------------------
-    SDKROOT: macosx
     MACOSX_DEPLOYMENT_TARGET: "26.0"
     # Releases support Apple Silicon only. Keep this explicit rather than
     # accepting Xcode's recommendation to build a universal product.
@@ -78,12 +77,9 @@ settings:
     SWIFT_EMIT_LOC_STRINGS: YES
 
     # ---- Build behaviour --------------------------------------------------
-    ALWAYS_SEARCH_USER_PATHS: NO
     APPLY_RULES_IN_COPY_FILES: YES
     ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS: YES
-    COPY_PHASE_STRIP: NO
     DEAD_CODE_STRIPPING: YES
-    DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
     ENABLE_USER_SCRIPT_SANDBOXING: YES
     GCC_GENERATE_DEBUGGING_SYMBOLS: YES
     GENERATE_INFOPLIST_FILE: NO
@@ -100,18 +96,17 @@ settings:
 
   configs:
     Debug:
-      SWIFT_ACTIVE_COMPILATION_CONDITIONS: "$(inherited) DEBUG"
-      SWIFT_OPTIMIZATION_LEVEL: "-Onone"
       SWIFT_COMPILATION_MODE: singlefile
       DEPLOYMENT_POSTPROCESSING: NO
-      ENABLE_TESTABILITY: YES
       VALIDATE_PRODUCT: NO
       # Hardened runtime blocks attaching the debugger to XPC services.
       ENABLE_HARDENED_RUNTIME: NO
       CODE_SIGN_INJECT_BASE_ENTITLEMENTS: YES
     Release:
-      SWIFT_OPTIMIZATION_LEVEL: "-O"
-      SWIFT_COMPILATION_MODE: wholemodule
+      # A release is archived and notarized, so it carries its symbols
+      # separately. A Debug build keeps them in the binary, which is Xcode's
+      # default and what the debugger reads.
+      DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
       DEPLOYMENT_POSTPROCESSING: YES
       ENABLE_TESTABILITY: NO
       VALIDATE_PRODUCT: YES
@@ -137,54 +132,12 @@ targetTemplates:
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
 
-  # Shared metadata for loadable and test bundles.
-  GlasstualBundle:
-    templates: [GlasstualTarget]
-    info:
-      properties:
-        CFBundleExecutable: $(EXECUTABLE_NAME)
-        CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
-        CFBundleName: $(PRODUCT_NAME)
-        CFBundlePackageType: BNDL
-
-  # Plugins bundled in Glasstual.app/Contents/Resources/Bundled Extensions.
-  # A plugin links only against GlasstualPluginKit and CocoaExtensions; it
-  # resolves nothing from the host binary, so it links with the default
-  # undefined-symbol checking rather than -undefined dynamic_lookup.
-  GlasstualExtension:
-    templates: [GlasstualBundle]
-    type: bundle
-    info:
-      properties:
-        MinimumGlasstualVersion: 8.0.0
-        GlasstualPluginInterfaceVersion: 1
-    settings:
-      base:
-        # Plugins are UI/app-state code loaded into the app; main actor by default.
-        SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
-        # X.bundle/Contents/MacOS -> Contents/MacOS -> X.bundle -> Bundled
-        # Extensions -> Resources -> Contents, which holds Frameworks.
-        LD_RUNPATH_SEARCH_PATHS:
-          - $(inherited)
-          - "@loader_path/../../../../../Frameworks"
-    # Every bundled plugin links the two frameworks that define the ABI it is
-    # written against. The app embeds both, so a plugin never carries a copy.
-    dependencies:
-      - target: CocoaExtensions
-        embed: false
-      - target: GlasstualPluginKit
-        embed: false
-
   # Services in Glasstual.app/Contents/XPCServices.
   GlasstualXPCService:
     templates: [GlasstualTarget]
     type: xpc-service
     info:
       properties:
-        CFBundleExecutable: $(EXECUTABLE_NAME)
-        CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
-        CFBundleName: $(PRODUCT_NAME)
-        CFBundlePackageType: XPC!
         XPCService:
           ServiceType: Application
     entitlements:
@@ -204,13 +157,6 @@ targetTemplates:
   GlasstualFramework:
     templates: [GlasstualTarget]
     type: framework
-    info:
-      properties:
-        CFBundleDevelopmentRegion: $(DEVELOPMENT_LANGUAGE)
-        CFBundleExecutable: $(EXECUTABLE_NAME)
-        CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
-        CFBundleName: $(PRODUCT_NAME)
-        CFBundlePackageType: FMWK
     settings:
       base:
         # Swift emits .swiftmodule files directly; these frameworks have no
@@ -226,8 +172,6 @@ targetTemplates:
         CODE_SIGN_IDENTITY: ""
         FRAMEWORK_VERSION: A
         INSTALL_PATH: "@rpath"
-        SKIP_INSTALL: YES
-        DYLIB_INSTALL_NAME_BASE: "@rpath"
         LD_RUNPATH_SEARCH_PATHS: "@loader_path/../Frameworks"
 
 # ---------------------------------------------------------------------------
@@ -239,45 +183,29 @@ targets:
 
   CocoaExtensions:
     templates: [GlasstualFramework]
-    productName: CocoaExtensions
     settings:
       base:
-        PRODUCT_NAME: CocoaExtensions
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.frameworks.CocoaExtensions
     info:
       properties:
         NSHumanReadableCopyright: Part of Glasstual, an independent fork of Textual. Copyright © 2015 - 2020 Codeux Software, LLC and respective contributors.
     sources:
-      - path: Sources/Frameworks/Cocoa Extensions/Classes
-      - path: Sources/Frameworks/Cocoa Extensions/Resources/Language Files
+      - path: Sources/CocoaExtensions
         excludes:
-          # Notes for whoever edits the catalogues; not a shipped resource.
+          # Notes for whoever edits the catalogues and the vendoring record;
+          # not shipped resources.
           - LocalizationCatalogNotices.md
-      - path: Sources/Frameworks/Cocoa Extensions/LICENSE.txt
+          - PROVENANCE.md
+          - LICENSE.txt
+          - ACKNOWLEDGEMENT.txt
+      - path: Sources/CocoaExtensions/LICENSE.txt
         buildPhase: resources
-      - path: Sources/Frameworks/Cocoa Extensions/ACKNOWLEDGEMENT.txt
+      - path: Sources/CocoaExtensions/ACKNOWLEDGEMENT.txt
         buildPhase: resources
     dependencies:
       - sdk: Foundation.framework
       - sdk: AppKit.framework
       - sdk: Security.framework
-
-  GlasstualPluginKit:
-    templates: [GlasstualFramework]
-    productName: GlasstualPluginKit
-    settings:
-      base:
-        PRODUCT_NAME: GlasstualPluginKit
-        PRODUCT_MODULE_NAME: GlasstualPluginKit
-        PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.frameworks.plugin-kit
-    info:
-      properties:
-        NSHumanReadableCopyright: Part of Glasstual, an independent fork of Textual. Copyright © 2010 - 2026 Codeux Software, LLC and respective contributors.
-    sources:
-      - path: Sources/Frameworks/Plugin Kit
-    dependencies:
-      - sdk: AppKit.framework
-      - sdk: Foundation.framework
 
   # ---- XPC service --------------------------------------------------------
 
@@ -305,143 +233,35 @@ targets:
           - "$(AppIdentifierPrefix)$(GLASSTUAL_BUNDLE_IDENTIFIER).connection-host"
         com.apple.security.network.client: true
     sources:
-      - path: Sources/Services/IRC Connection Host/Classes
-      - path: Sources/Services/IRC Connection Host/Resources/Language Files
+      - path: Sources/ConnectionHost
         excludes:
           # Notes for whoever edits the catalogues; not a shipped resource.
           - LocalizationCatalogNotices.md
-      - path: Sources/Services/IRC Connection Host/Resources/PrivacyInfo.xcprivacy
+          - PrivacyInfo.xcprivacy
+      - path: Sources/ConnectionHost/PrivacyInfo.xcprivacy
         buildPhase: resources
-      - path: Sources/Shared/IRC/IRCConnectionConfig.swift
-      - path: Sources/Shared/IRC/ConnectionErrorCode.swift
-      - path: Sources/Shared/Services/RemoteConnectionProtocols.swift
-      - path: Sources/Shared/Services/SecureConnectionInformation.swift
-      - path: Sources/Shared/Preferences/AppSleepPreference.swift
+      - path: Sources/Shared/ConnectionConfig.swift
+      - path: Sources/Shared/ConnectionErrorCode.swift
+      - path: Sources/Shared/RemoteConnectionProtocols.swift
+      - path: Sources/Shared/SecureConnectionInformation.swift
+      - path: Sources/Shared/AppSleepPreference.swift
     dependencies:
       - sdk: Security.framework
       - sdk: SecurityInterface.framework
       - sdk: SystemConfiguration.framework
-
-  # ---- Bundled extensions -------------------------------------------------
-
-  Caffeine:
-    templates: [GlasstualExtension]
-    productName: Caffeine
-    settings:
-      base:
-        PRODUCT_NAME: Caffeine
-        PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.extensions.caffeine
-    info:
-      properties:
-        NSHumanReadableCopyright: Part of Glasstual, an independent fork of Textual. Copyright © 2015 - 2020 Codeux Software, LLC and respective contributors.
-        NSPrincipalClass: TPI_Caffeine
-    sources:
-      - path: Sources/Plugins/Caffeine/Classes
-      - path: Sources/Plugins/Shared/FirstPartyPluginPreferences.swift
-      - path: Sources/Plugins/Shared/PluginDefaultsObservation.swift
-      - path: Sources/Plugins/Caffeine/Resources
-
-  ChatFilter:
-    templates: [GlasstualExtension]
-    productName: Chat Filters
-    settings:
-      base:
-        PRODUCT_NAME: Chat Filters
-        PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.extensions.chat-filter
-    info:
-      properties:
-        CFBundleDevelopmentRegion: $(DEVELOPMENT_LANGUAGE)
-        NSHumanReadableCopyright: Part of Glasstual, an independent fork of Textual. Copyright © 2015 - 2020 Codeux Software, LLC and respective contributors.
-        NSPrincipalClass: TPI_ChatFilterExtension
-    sources:
-      - path: Sources/Plugins/Chat Filter/Classes
-      - path: Sources/Plugins/Shared/FirstPartyPluginPreferences.swift
-      - path: Sources/Plugins/Shared/PluginDefaultsObservation.swift
-      - path: Sources/Plugins/Chat Filter/Resources
-
-  SmileyConverter:
-    templates: [GlasstualExtension]
-    productName: Smiley Converter
-    settings:
-      base:
-        PRODUCT_NAME: Smiley Converter
-        PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.extensions.smiley-converter
-    info:
-      properties:
-        NSHumanReadableCopyright: Part of Glasstual, an independent fork of Textual. Copyright © 2013 - 2020 Codeux Software, LLC and respective contributors.
-        NSPrincipalClass: TPISmileyConverter
-    sources:
-      - path: Sources/Plugins/Smiley Converter/Classes
-      - path: Sources/Plugins/Shared/FirstPartyPluginPreferences.swift
-      - path: Sources/Plugins/Shared/PluginDefaultsObservation.swift
-      - path: Sources/Plugins/Smiley Converter/Resources
-
-  SystemProfiler:
-    templates: [GlasstualExtension]
-    productName: System Info
-    settings:
-      base:
-        PRODUCT_NAME: System Info
-        PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.extensions.system-profiler
-    info:
-      properties:
-        NSHumanReadableCopyright: Part of Glasstual, an independent fork of Textual. Copyright © 2012 - 2020 Codeux Software, LLC and respective contributors.
-        NSPrincipalClass: TPISystemProfiler
-    sources:
-      - path: Sources/Plugins/System Profiler/Classes
-      - path: Sources/Plugins/Shared/FirstPartyPluginPreferences.swift
-      - path: Sources/Plugins/System Profiler/Resources
-    dependencies:
-      - sdk: Metal.framework
-
-  UserInsights:
-    templates: [GlasstualExtension]
-    productName: User Insights
-    settings:
-      base:
-        PRODUCT_NAME: User Insights
-        PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.extensions.user-insights
-    info:
-      properties:
-        NSHumanReadableCopyright: Part of Glasstual, an independent fork of Textual. Copyright © 2013 - 2018 Codeux Software, LLC and respective contributors.
-        NSPrincipalClass: TPIUserInsights
-    sources:
-      - path: Sources/Plugins/User Insights/Classes
-      - path: Sources/Plugins/User Insights/Resources
-
-  ZNCAdditions:
-    templates: [GlasstualExtension]
-    productName: ZNC Additions
-    settings:
-      base:
-        PRODUCT_NAME: ZNC Additions
-        PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.extensions.znc-additions
-    info:
-      properties:
-        NSHumanReadableCopyright: Part of Glasstual, an independent fork of Textual. Copyright © 2011 - 2018 Codeux Software, LLC and respective contributors.
-        NSPrincipalClass: TPI_ZNCAdditions
-    sources:
-      - path: Sources/Plugins/ZNC Additions/Classes
-      - path: Sources/Plugins/ZNC Additions/Resources
-    dependencies:
-      - sdk: Security.framework
-      - sdk: SecurityInterface.framework
 
   # ---- Application --------------------------------------------------------
 
   Glasstual:
     templates: [GlasstualTarget]
     type: application
-    productName: Glasstual
     settings:
       base:
         # The app is AppKit UI and app state; main actor by default. Helpers,
         # parsers and value types opt out with an explicit `nonisolated`.
         SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
         REGISTER_APP_GROUPS: YES
-        PRODUCT_NAME: Glasstual
         PRODUCT_BUNDLE_IDENTIFIER: $(GLASSTUAL_BUNDLE_IDENTIFIER)
-        PRODUCT_MODULE_NAME: Glasstual
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         # Empty unless CI names a profile, so both configurations sign the
         # same way wherever they are built.
@@ -460,21 +280,7 @@ targets:
             LSHandlerRank: Alternate
             LSItemContentTypes:
               - com.apple.applescript.script
-          # com.apple.bundle claimed every .bundle, .app and .framework on the
-          # system. The importer only ever accepts a `.bundle` directory, so
-          # declare that narrower type and claim it instead.
-          - CFBundleTypeName: Glasstual IRC Client Extension
-            CFBundleTypeRole: Viewer
-            CFBundleTypeIconSystemGenerated: 1
-            LSHandlerRank: Alternate
-            LSItemContentTypes:
-              - com.vakesz.glasstual.extension
-        CFBundleExecutable: $(EXECUTABLE_NAME)
         CFBundleIconName: AppIcon
-        CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
-        CFBundleInfoDictionaryVersion: "6.0"
-        CFBundleName: $(PRODUCT_NAME)
-        CFBundlePackageType: APPL
         CFBundleURLTypes:
           # Two types, because they are two things: the system's chooser lists
           # the name beside the scheme, and "Internet Relay Chat" was a poor
@@ -499,15 +305,7 @@ targets:
         # relaxed nothing the native URLSession image loader uses anyway.
         NSAppleEventsUsageDescription: $(PRODUCT_NAME) runs user scripts that can control other applications.
         NSHumanReadableCopyright: Glasstual is an independent fork of Textual, continuing it on macOS 26 and later. Copyright © 2010 - 2026 Codeux Software, LLC and respective contributors.
-        NSPrincipalClass: TXApplication
-        UTExportedTypeDeclarations:
-          - UTTypeIdentifier: com.vakesz.glasstual.extension
-            UTTypeDescription: Glasstual IRC Client Extension
-            UTTypeConformsTo:
-              - com.apple.bundle
-            UTTypeTagSpecification:
-              public.filename-extension:
-                - bundle
+        NSPrincipalClass: GlasstualApplication
     # Debug and Release use the same sandbox. In Release the hardened runtime
     # keeps library validation on, and no entitlement turns it off, so only
     # Apple-signed or same-Team-ID bundles load.
@@ -535,28 +333,29 @@ targets:
       - path: Sources/App/Application
       - path: Sources/App/Features
       - path: Sources/App/Localization
-      - path: Sources/App/Preferences
-      - path: Sources/App/Protocol
-      - path: Sources/App/UI
-      - path: Sources/Shared
-      # The bundled plugins and the app agree on these names and defaults, so
-      # the declarations live with the plugins and the app compiles them too.
-      # Sources/Shared holds the app-side preference store and the declarations
-      # the connection host shares; only the files the IRCConnectionHost target
-      # lists actually cross that process boundary.
-      - path: Sources/Plugins/Shared/FirstPartyPluginPreferences.swift
-      # Resources -----------------------------------------------------------
-      - path: Sources/App/Resources/Images/Application/AppIcon.icon
-        type: file
-        buildPhase: resources
-      - path: Sources/App/Resources/Language Files
         excludes:
           # Notes for whoever edits the catalogues; not a shipped resource.
           - LocalizationCatalogNotices.md
-      - path: Sources/App/Resources/Property Lists
-      - path: Sources/App/Resources/Scripting/Script Files/Bundled Scripts
+      - path: Sources/App/Preferences
+      - path: Sources/App/Protocol
+      - path: Sources/App/UI
+      # Sources/Shared holds the app-side preference store and the declarations
+      # the connection host shares; only the files the IRCConnectionHost target
+      # lists actually cross that process boundary.
+      - path: Sources/Shared
+      # Resources -----------------------------------------------------------
+      - path: Sources/App/Resources/AppIcon.icon
+        type: file
+        buildPhase: resources
+      - path: Sources/App/Resources/IRCNetworks.plist
+      - path: Sources/App/Resources/PrivacyInfo.xcprivacy
+      - path: Sources/App/Resources/StaticStore.plist
+      - path: Sources/App/Resources/TVCMainWindowAppearance.plist
+      - path: Sources/App/Resources/TVCMainWindowTextViewAppearance.plist
+      # The leaf name is a runtime bundle path, so it keeps its spelling and
+      # ships as a folder reference.
+      - path: Sources/App/Resources/Bundled Scripts
         type: folder
-      - path: Sources/App/Resources/User Interface
       - path: Sources/App/Resources/Documentation
         type: folder
         buildPhase: resources
@@ -576,80 +375,29 @@ targets:
       - target: CocoaExtensions
         embed: true
         codeSign: true
-      - target: GlasstualPluginKit
-        embed: true
-        codeSign: true
       - target: IRCConnectionHost
         embed: true
         codeSign: true
-      - target: Caffeine
-        embed: true
-        codeSign: true
-        copy:
-          destination: resources
-          subpath: Bundled Extensions
-      - target: ChatFilter
-        embed: true
-        codeSign: true
-        copy:
-          destination: resources
-          subpath: Bundled Extensions
-      - target: SmileyConverter
-        embed: true
-        codeSign: true
-        copy:
-          destination: resources
-          subpath: Bundled Extensions
-      - target: SystemProfiler
-        embed: true
-        codeSign: true
-        copy:
-          destination: resources
-          subpath: Bundled Extensions
-      - target: UserInsights
-        embed: true
-        codeSign: true
-        copy:
-          destination: resources
-          subpath: Bundled Extensions
-      - target: ZNCAdditions
-        embed: true
-        codeSign: true
-        copy:
-          destination: resources
-          subpath: Bundled Extensions
 
   # ---- Tests --------------------------------------------------------------
 
   # Unit tests run inside Glasstual.app so that they can use the app's
   # classes directly. Network fixtures use loopback listeners.
   GlasstualTests:
-    templates: [GlasstualBundle]
+    templates: [GlasstualTarget]
     type: bundle.unit-test
-    productName: GlasstualTests
     settings:
       base:
         # Matches the app: the bundle is loaded into the host process and most
         # of what it exercises is main-actor. A suite that tests a nonisolated
         # type says so, the same way the app's own value types do.
         SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
-        PRODUCT_NAME: GlasstualTests
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.tests
-    info:
-      properties:
-        CFBundleDevelopmentRegion: $(DEVELOPMENT_LANGUAGE)
     # No entitlements: a unit-test bundle is loaded into the host process and
     # runs under the host's sandbox. A sandbox/inherit pair on its own
     # signature is never consulted.
     sources:
       - path: Tests/GlasstualTests
-      - path: Sources/Plugins/Chat Filter/Classes/ChatFilter.swift
-      - path: Sources/Plugins/Chat Filter/Classes/ChatFilterEngine.swift
-      - path: Sources/Plugins/Chat Filter/Classes/ChatFilterStore.swift
-      - path: Sources/Plugins/Chat Filter/Resources/Language Files/ChatFilter.xcstrings
-        buildPhase: resources
-      - path: Sources/Plugins/Chat Filter/Resources/Language Files/ChatFilterLogic.xcstrings
-        buildPhase: resources
       # Specification corpora the IRCSpec suites read back at runtime. Only
       # the JSON vectors ship. The upstream LICENSE stays beside them in the
       # source tree, as Tests/Corpora/IRCSpec/README.md describes.
@@ -668,22 +416,15 @@ targets:
       - target: Glasstual
       - target: CocoaExtensions
         embed: false
-      - target: GlasstualPluginKit
-        embed: false
 
   # Public AX/NSWorkspace driver and scripted loopback peer, outside the app sandbox.
   GlasstualE2EHarness:
     templates: [GlasstualTarget]
     type: tool
-    info:
-      properties:
-        CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
-        CFBundleName: $(PRODUCT_NAME)
     sources:
       - path: Tests/E2EHarness
     settings:
       base:
-        PRODUCT_NAME: GlasstualE2EHarness
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.e2e-harness
         CREATE_INFOPLIST_SECTION_IN_BINARY: YES
         SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
@@ -697,13 +438,12 @@ targets:
 
   # A Swift Testing bundle loaded by the test runner, not Glasstual.app.
   GlasstualE2ETests:
-    templates: [GlasstualBundle]
+    templates: [GlasstualTarget]
     type: bundle.unit-test
     sources:
       - path: Tests/GlasstualE2ETests
     settings:
       base:
-        PRODUCT_NAME: GlasstualE2ETests
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.e2e-tests
         SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
         TEST_HOST: ""

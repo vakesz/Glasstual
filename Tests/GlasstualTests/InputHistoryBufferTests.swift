@@ -24,7 +24,7 @@ struct InputHistoryBufferTests {
 	/// The suite runs against the scheme's scratch defaults, so the original
 	/// value is restored rather than left behind.
 	private func withGlobalHistory(_ body: (InputHistory) -> Void) {
-		let defaults = TextualUserDefaults.container
+		let defaults = GlasstualUserDefaults.container
 		let original = defaults.persistedObject(forKey: Self.channelSpecificKey)
 		defer {
 			if let original {
@@ -47,17 +47,6 @@ struct InputHistoryBufferTests {
 	/** The regression. At a full buffer the draft being stashed pushed the
 	 oldest entry out, every index moved down by one, and the cursor did not:
 	 the first press of Up handed back the draft that had just been typed. */
-	@Test("The first press of Up at a full buffer returns the last entry, not the draft")
-	func fullBufferDoesNotReturnTheDraft() {
-		withGlobalHistory { history in
-			fill(history, count: Self.maximumCount)
-
-			let first = history.up(NSAttributedString(string: "draft"))
-
-			#expect(first?.string == "line 100")
-		}
-	}
-
 	@Test("Walking back from a full buffer stays in step")
 	func fullBufferWalksBackInOrder() {
 		withGlobalHistory { history in

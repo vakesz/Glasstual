@@ -15,7 +15,7 @@ struct ColorHexadecimalTests {
 	}
 
 	private func components(_ value: String) throws -> Channels {
-		let color = try #require(NSColor.textual_color(hexadecimalValue: value))
+		let color = try #require(NSColor.color(hexadecimal: value))
 		let converted = try #require(color.usingColorSpace(.sRGB))
 
 		return Channels(
@@ -35,7 +35,7 @@ struct ColorHexadecimalTests {
 	func componentsThatAreNotNumbersFormat() {
 		let color = NSColor(srgbRed: .nan, green: .infinity, blue: -.infinity, alpha: 1)
 
-		#expect(color.textualHexadecimalValue == "#00FF00")
+		#expect(color.hexadecimalString == "#00FF00")
 	}
 
 	@Test("A channel byte of one is nearly black, not full intensity")
@@ -90,25 +90,25 @@ struct ColorHexadecimalTests {
 		arguments: ["#F", "#FF", "#AABBC", "#AABBCCD", "#AABBCCDDEE", "#"]
 	)
 	func invalidLengthsAreRefused(value: String) {
-		#expect(NSColor.textual_color(hexadecimalValue: value) == nil)
+		#expect(NSColor.color(hexadecimal: value) == nil)
 	}
 
 	@Test("Non-hexadecimal digits are refused")
 	func nonHexadecimalDigitsAreRefused() {
-		#expect(NSColor.textual_color(hexadecimalValue: "#ZZZZZZ") == nil)
+		#expect(NSColor.color(hexadecimal: "#ZZZZZZ") == nil)
 	}
 
 	@Test("A catalog colour still yields a hexadecimal value")
 	func catalogColorFormats() {
 		/* These used to raise an uncatchable exception on component access. */
-		#expect(NSColor.labelColor.textualHexadecimalValue.hasPrefix("#"))
-		#expect(NSColor.textColor.textualHexadecimalValue.count == 7)
+		#expect(NSColor.labelColor.hexadecimalString.hasPrefix("#"))
+		#expect(NSColor.textColor.hexadecimalString.count == 7)
 	}
 
 	@Test("Formatting round-trips a parsed colour")
 	func formattingRoundTrips() throws {
-		let color = try #require(NSColor.textual_color(hexadecimalValue: "#3C6E71"))
+		let color = try #require(NSColor.color(hexadecimal: "#3C6E71"))
 
-		#expect(color.textualHexadecimalValue == "#3C6E71")
+		#expect(color.hexadecimalString == "#3C6E71")
 	}
 }

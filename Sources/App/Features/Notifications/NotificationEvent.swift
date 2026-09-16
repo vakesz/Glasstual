@@ -38,7 +38,7 @@
 
 import Foundation
 
-public enum NotificationEvent: UInt, CaseIterable, Sendable {
+enum NotificationEvent: UInt, CaseIterable, Sendable {
 	case highlight = 1000
 	case newPrivateMessage
 	case channelMessage

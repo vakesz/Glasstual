@@ -15,19 +15,19 @@ import AppKit
 /// Handles a key-down event before AppKit's own dispatch gets it. The key
 /// window and its first responder are each offered the event in turn.
 @MainActor
-public protocol CustomKeyboardEventResponder: AnyObject {
+protocol CustomKeyboardEventResponder: AnyObject {
 	func performedCustomKeyboardEvent(_ event: NSEvent) -> Bool
 }
 
-@objc(TXApplication)
-public final class Application: NSApplication, CustomKeyboardEventResponder {
-	private var applicationController: ApplicationController!
+@objc(GlasstualApplication)
+final class Application: NSApplication, CustomKeyboardEventResponder {
+	private var applicationController: ApplicationDelegate!
 	private var menuController: MenuController!
 
-	override public init() {
+	override init() {
 		super.init()
 
-		let applicationController = ApplicationController()
+		let applicationController = ApplicationDelegate()
 		let menuController = MenuController()
 		applicationController.menuController = menuController
 		delegate = applicationController
@@ -40,7 +40,7 @@ public final class Application: NSApplication, CustomKeyboardEventResponder {
 		fatalError("Application does not support decoding")
 	}
 
-	override public func sendEvent(_ event: NSEvent) {
+	override func sendEvent(_ event: NSEvent) {
 		if performedCustomKeyboardEvent(event) {
 			return
 		}
@@ -48,7 +48,7 @@ public final class Application: NSApplication, CustomKeyboardEventResponder {
 		super.sendEvent(event)
 	}
 
-	public func performedCustomKeyboardEvent(_ event: NSEvent) -> Bool {
+	func performedCustomKeyboardEvent(_ event: NSEvent) -> Bool {
 		guard event.type == .keyDown else {
 			return false
 		}
@@ -64,7 +64,7 @@ public final class Application: NSApplication, CustomKeyboardEventResponder {
 		return false
 	}
 
-	public func sendCustomKeyboardEvent(_ event: NSEvent, to object: AnyObject?) -> Bool {
+	func sendCustomKeyboardEvent(_ event: NSEvent, to object: AnyObject?) -> Bool {
 		guard let responder = object as? any CustomKeyboardEventResponder else {
 			return false
 		}

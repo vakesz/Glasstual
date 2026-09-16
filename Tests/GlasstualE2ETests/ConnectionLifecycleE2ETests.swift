@@ -5,7 +5,7 @@ import Testing
 @Suite(.serialized)
 struct ConnectionLifecycleE2ETests {
 	nonisolated static let scenarios = [ // nonisolated: let
-		"onboardingSkip", "onboardingFinish", "pluginSmiley", "dccSuccess", "dccCancel", "burstResponsiveness",
+		"onboardingSkip", "onboardingFinish", "dccSuccess", "dccCancel", "burstResponsiveness",
 		"rejectionRetry",
 		"repeatedRejection",
 		"channelMessaging",
@@ -202,11 +202,6 @@ struct ConnectionLifecycleE2ETests {
 	}
 
 	private func checkAdditionalEvidence(scenario: String, originalPID: Int32, in root: URL) throws {
-		if scenario ==
-			"pluginSmiley"
-		{
-			try #require(try read("plugin-effect", in: root) == "raw; converted; raw via loaded plugin Settings")
-		}
 		if scenario == "burstResponsiveness" {
 			try #require(try read("burst-complete", in: root) == "10000 names; 5000 messages")
 			try #require(try read("burst-batches", in: root) == "100")

@@ -5,7 +5,7 @@ It is not a customer database and does not claim coverage of every historic OS
 or damaged store. Its schema is copied verbatim from tag `v1.0.7`, commit
 `6ade81a8e9b6040728963d29541c4b51477c5172`, at:
 
-`Sources/App/Features/ChannelView/History/HistoricLogFileStorageModel.xcdatamodeld/LogControllerStorageModel (model 3).xcdatamodel/contents`
+`Sources/App/Features/Transcript/Scrollback/HistoricLogFileStorageModel.xcdatamodeld/LogControllerStorageModel (model 3).xcdatamodel/contents`
 
 The frozen encoder in `GenerateFixture.swift` follows `LogLineArchive.encode`
 and `LogLine.historicEntry` from that same revision, including the `TVCLogLine`

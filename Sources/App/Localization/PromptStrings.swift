@@ -217,16 +217,8 @@ nonisolated enum PromptStrings { // nonisolated: value
 			String(localized: .Prompts.intentionallyEmptyInformativeText)
 		}
 
-		static var extensionRestartBody: String {
-			String(localized: .Prompts.restartGlasstualToLoadThisExtension)
-		}
-
 		static func documentOpenTitle(filename: String) -> String {
 			String(localized: .Prompts.areYouSureYouWantToOpenTheFileNamed(filename))
-		}
-
-		static func extensionInstalledTitle(name: String) -> String {
-			String(localized: .Prompts.extensionNamedHasBeenSuccessfullyInstalled(name))
 		}
 
 		static func scriptCommandBody(name: String) -> String {
@@ -273,28 +265,6 @@ nonisolated enum PromptStrings { // nonisolated: value
 
 		static func lastError(_ description: String) -> String {
 			String(localized: .Prompts.lastKnownErrorMessage(description))
-		}
-	}
-
-	enum Plugin {
-		static var incompatibleReminderButtonTitle: String {
-			String(localized: .Prompts.remindMeNextLaunch)
-		}
-
-		static var unsignedBody: String {
-			String(localized: .Prompts.pluginsInstalledOutsideOfGlasstualMust)
-		}
-
-		static var viewFilesButtonTitle: String {
-			String(localized: .Prompts.viewFiles)
-		}
-
-		static func incompatibleTitle(pluginNames: String) -> String {
-			String(localized: .Prompts.versionOfGlasstual(pluginNames))
-		}
-
-		static func unsignedTitle(pluginNames: String) -> String {
-			String(localized: .Prompts.glasstualRefusedToLoadTheseAddons(pluginNames))
 		}
 	}
 

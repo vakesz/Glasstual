@@ -51,13 +51,6 @@ struct LogLineArchiveCompatibilityTests {
 		#expect(line.sessionIdentifier == 657_739)
 	}
 
-	@Test("The archive still names TVCLogLine as its root class")
-	func archiveNamesTheRuntimeClass() throws {
-		let text = try #require(String(data: Self.fixtureData, encoding: .isoLatin1))
-
-		#expect(text.contains("TVCLogLine"))
-	}
-
 	@Test("A legacy line can be stored as Codable without losing any fields")
 	func legacyArchiveRewritesAsCodable() throws {
 		let legacy = try #require(LogLine(data: Self.fixtureData))

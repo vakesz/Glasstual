@@ -28,18 +28,18 @@ struct MainWindowColumnAlignmentTests {
 
 	@Test("The transcript and the member list start their content on the same line")
 	func columnsStartAtTheSafeAreaTop() throws {
-		let client = IRCClient(config: ClientConfig())
+		let client = Client(config: ClientConfig())
 		let window = MainWindow(
 			contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
 			styleMask: [.titled, .fullSizeContentView],
 			backing: .buffered,
 			defer: false
 		)
-		let controller = LogController(client: client, in: window)
+		let controller = TranscriptController(client: client, in: window)
 		let logView = controller.ensureBackingView()
 		let memberList = MemberList()
 		let host = NSHostingController(rootView: HStack(spacing: 0) {
-			MainWindowTranscriptRepresentable(logView: logView)
+			TranscriptViewRepresentable(logView: logView)
 			MemberListView(model: memberList, redirectTyping: { _ in })
 				.scrollEdgeEffectStyle(.soft, for: .top)
 				.frame(width: 200)

@@ -20,7 +20,7 @@ struct MenuFactoryTests {
 			.deletingLastPathComponent()
 			.deletingLastPathComponent()
 			.deletingLastPathComponent()
-			.appending(path: "Sources/App/Resources/Language Files/TVCMainWindow.xcstrings")
+			.appending(path: "Sources/App/Features/MainWindow/MainWindow.xcstrings")
 		let catalog = try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any]
 		let strings = catalog?["strings"] as? [String: Any] ?? [:]
 
@@ -80,7 +80,7 @@ struct MenuFactoryTests {
 			.filter { $0.title.isEmpty == false }
 			/* The transcript's Search item names whichever service the system
 			 is set to use, dropped into `search-provider-menu-title` in
-			 BasicLanguage rather than held whole in this catalog. */
+			 the Application catalog rather than held whole in this one. */
 			.filter { $0.command != .webSearch }
 			.map(\.title)
 			.filter { values.contains($0) == false }
@@ -98,11 +98,11 @@ struct MenuFactoryTests {
 		let mainMenu = try #require(NSApp.mainMenu)
 
 		let search = try #require(mainMenu.item(for: .searchChannels))
-		#expect(search.action == #selector(MenuActionCoordinator.focusSearchField(_:)))
+		#expect(search.action == #selector(MenuActionController.focusSearchField(_:)))
 		#expect(search.target === controller.actionCoordinator)
 
 		let spotlight = try #require(mainMenu.item(for: .channelSpotlight))
-		#expect(spotlight.action == #selector(MenuActionCoordinator.showChannelSpotlightWindow(_:)))
+		#expect(spotlight.action == #selector(MenuActionController.showChannelSpotlightWindow(_:)))
 		#expect(spotlight.title == MenuStrings.Navigation.channelSpotlight)
 	}
 
@@ -480,7 +480,7 @@ struct MenuFactoryTests {
 	/// images, and the symbol pass drew them there anyway.
 	@Test("The menu bar's Channel and Query menus carry no symbols")
 	func menuBarChannelAndQueryMenusAreDrawnPlain() throws {
-		let controller = try #require(AppController.shared?.menuController)
+		let controller = try #require(AppServices.delegate?.menuController)
 
 		for menu in [controller.mainMenuChannelMenu, controller.mainMenuQueryMenu] {
 			#expect(allItems(of: menu).allSatisfy { $0.image == nil })

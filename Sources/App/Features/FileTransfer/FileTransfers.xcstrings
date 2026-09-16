@@ -4,233 +4,1107 @@
     "accept-transfer": {
       "comment": "Primary action title for an incoming file transfer that has been offered but not started.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Accept" } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accept"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elfogadás"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annehmen"
+          }
+        }
+      }
     },
     "all": {
       "comment": "File-transfer filter showing every transfer.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "All" } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Összes"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle"
+          }
+        }
+      }
     },
     "cancel-transfer": {
       "comment": "Action that stops an active or pending file transfer.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Cancel Transfer" } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel Transfer"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Átvitel megszakítása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Übertragung abbrechen"
+          }
+        }
+      }
     },
     "clear-all-stopped-transfers": {
       "comment": "Action that removes every finished, stopped, or failed transfer from the list.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Clear All Stopped Transfers" } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear All Stopped Transfers"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Összes leállított átvitel eltávolítása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle beendeten Übertragungen entfernen"
+          }
+        }
+      }
     },
     "file-transfers": {
       "comment": "Title and accessibility label for the file-transfer window.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "File Transfers" } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "File Transfers"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fájlátvitelek"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dateiübertragungen"
+          }
+        }
+      }
     },
     "no-file-transfers": {
       "comment": "Empty-state title in the file-transfer window.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "No File Transfers" } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No File Transfers"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincsenek fájlátvitelek"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Dateiübertragungen"
+          }
+        }
+      }
     },
     "of-s-received": {
       "comment": "Incoming transfer progress. Arguments are processed size, total size, speed, and peer nickname. Legacy key: 7dk-lp.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "%1$@ of %2$@ (%3$@/s) received from %4$@" } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ of %2$@ (%3$@/s) received from %4$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fogadva: %1$@ / %2$@ (%3$@/s), küldő: %4$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ von %2$@ (%3$@/s) von %4$@ empfangen"
+          }
+        }
+      }
     },
     "of-s-received-from-remaining": {
       "comment": "Incoming transfer progress with estimated time remaining. Arguments are processed size, total size, speed, peer nickname, and remaining time. Legacy key: 9xn-7j.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "%1$@ of %2$@ (%3$@/s) received from %4$@ — %5$@ remaining" } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ of %2$@ (%3$@/s) received from %4$@ — %5$@ remaining"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fogadva: %1$@ / %2$@ (%3$@/s), küldő: %4$@. Hátralévő idő: %5$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ von %2$@ (%3$@/s) von %4$@ empfangen. Noch %5$@"
+          }
+        }
+      }
     },
     "of-s-sent": {
       "comment": "Outgoing transfer progress. Arguments are processed size, total size, speed, and peer nickname. Legacy key: nvm-nd.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "%1$@ of %2$@ (%3$@/s) sent to %4$@" } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ of %2$@ (%3$@/s) sent to %4$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elküldve: %1$@ / %2$@ (%3$@/s), címzett: %4$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ von %2$@ (%3$@/s) an %4$@ gesendet"
+          }
+        }
+      }
     },
     "of-s-sent-to-remaining": {
       "comment": "Outgoing transfer progress with estimated time remaining. Arguments are processed size, total size, speed, peer nickname, and remaining time. Legacy key: u17-ql.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "%1$@ of %2$@ (%3$@/s) sent to %4$@ — %5$@ remaining" } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ of %2$@ (%3$@/s) sent to %4$@ — %5$@ remaining"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elküldve: %1$@ / %2$@ (%3$@/s), címzett: %4$@. Hátralévő idő: %5$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ von %2$@ (%3$@/s) an %4$@ gesendet. Noch %5$@"
+          }
+        }
+      }
     },
     "open-file": {
       "comment": "Action that opens a transferred file.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Open File" } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open File"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fájl megnyitása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Datei öffnen"
+          }
+        }
+      }
     },
     "preparing-the-transfer": {
       "comment": "Status covering every step between starting a transfer and reaching the peer: mapping the listening port, determining the local IP address, and initializing. Replaces the legacy per-step entries 495-90, j1z-88, 6t1-mb, onl-av, 42z-mg and pcv-kg, none of which told the user anything actionable.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Preparing the transfer…" } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparing the transfer…"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Átvitel előkészítése…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Übertragung wird vorbereitet…"
+          }
+        }
+      }
     },
     "quick-look": {
       "comment": "Action that previews a transferred file with Quick Look.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Quick Look" } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quick Look"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gyorsnézet"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Übersicht"
+          }
+        }
+      }
     },
     "receiving": {
       "comment": "File-transfer filter showing incoming transfers.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Receiving" } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receiving"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fogadás"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empfangen"
+          }
+        }
+      }
     },
     "remove-from-list": {
       "comment": "Action that permanently removes selected transfers from the list.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Remove From List" } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove From List"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eltávolítás a listából"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aus Liste entfernen"
+          }
+        }
+      }
     },
     "retry-transfer": {
       "comment": "Primary action title for a file transfer that failed and can be tried again.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Try Again" } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try Again"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Újrapróbálkozás"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erneut versuchen"
+          }
+        }
+      }
     },
     "sending": {
       "comment": "File-transfer filter showing outgoing transfers.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Sending" } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sending"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Küldés"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Senden"
+          }
+        }
+      }
     },
     "sent-to-without-a-peer-acknowledgement": {
       "comment": "File transfer status. The argument is the recipient's IRC nickname. All offered bytes were sent and the peer closed cleanly, but the peer sent no DCC acknowledgement. Do not imply verified receipt or storage.",
       "extractionState": "manual",
       "generatesSymbol": true,
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Sent to %@ without a peer acknowledgement." } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sent to %@ without a peer acknowledgement."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elküldve %@ részére, átvételi visszaigazolás nélkül."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ohne Empfangsbestätigung an %@ gesendet."
+          }
+        }
+      }
     },
     "share": {
       "comment": "Action that opens the system share picker for transferred files.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Share…" } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share…"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Megosztás…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teilen…"
+          }
+        }
+      }
     },
     "show": {
       "comment": "Label for choosing which file-transfer directions are visible.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Show" } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Megjelenítés"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anzeigen"
+          }
+        }
+      }
     },
     "show-in-finder": {
       "comment": "Action that reveals transferred files in Finder.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Show in Finder" } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show in Finder"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Megjelenítés a Finderben"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Im Finder anzeigen"
+          }
+        }
+      }
     },
     "start-transfer": {
       "comment": "Action that starts or resumes a file transfer.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Start Transfer" } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start Transfer"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Átvitel indítása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Übertragung starten"
+          }
+        }
+      }
     },
     "status-while-connecting": {
       "comment": "Status while connecting to a file-transfer peer. The argument is the peer nickname. Legacy key: 7nf-fr.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Connecting to %@…" } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connecting to %@…"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapcsolódás: %@…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbindung zu %@ wird hergestellt…"
+          }
+        }
+      }
     },
     "transfer-from-failed-because-the-sender": {
       "comment": "Error shown when a peer sends more data than the file transfer announced. The argument is the peer nickname. Legacy key: dcc-ovr.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "%@ sent more than the offer stated, so the transfer was stopped." } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ sent more than the offer stated, so the transfer was stopped."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ a jelzettnél több adatot küldött, ezért az átvitel leállt."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ hat mehr Daten als angekündigt gesendet. Die Übertragung wurde gestoppt."
+          }
+        }
+      }
     },
     "transfer-from-is-complete": {
       "comment": "Status of a completed incoming transfer. The argument is the peer nickname. Legacy key: 6gu-za. Previously keyed transfer-from-is-complete-control-click.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Received from %@." } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Received from %@."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A fájl megérkezett. Küldő: %@."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Von %@ empfangen."
+          }
+        }
+      }
     },
     "transfer-from-is-ready": {
       "comment": "Status while an incoming transfer waits for the peer to connect. The argument is the peer nickname. Legacy key: pip-z6. Previously keyed transfer-from-is-ready-control-click.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Waiting for %@ to connect." } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waiting for %@ to connect."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Várakozás %@ kapcsolódására."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warten auf Verbindung von %@."
+          }
+        }
+      }
     },
     "transfer-from-is-stopped": {
       "comment": "Status of an incoming transfer that is idle. The argument is the peer nickname. Legacy key: jvh-u7. Previously keyed transfer-from-is-stopped-control-click.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Transfer from %@ has not started. Choose Start Transfer to begin." } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transfer from %@ has not started. Choose Start Transfer to begin."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ fájljának fogadása még nem kezdődött el. Az indításhoz válaszd az Átvitel indítása lehetőséget."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Übertragung von %@ wurde noch nicht gestartet. Wähle Übertragung starten, um zu beginnen."
+          }
+        }
+      }
     },
     "transfer-from-waiting-for-response": {
       "comment": "Status while waiting for the peer to accept resuming an incoming transfer. The argument is the peer nickname. Legacy key: gxq-zu.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Waiting for %@ to agree to resume." } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waiting for %@ to agree to resume."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Várakozás az átvitel folytatásának jóváhagyására. Partner: %@."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warten auf die Zustimmung von %@ zum Fortsetzen."
+          }
+        }
+      }
     },
     "transfer-progress": {
       "comment": "Accessibility label for a file transfer's progress indicator.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Transfer progress" } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transfer progress"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Átvitel állapota"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Übertragungsfortschritt"
+          }
+        }
+      }
     },
     "transfer-to-is-complete": {
       "comment": "Status of a completed outgoing transfer. The argument is the peer nickname. Legacy key: rx7-xy.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Sent to %@." } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sent to %@."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elküldve %@ részére."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An %@ gesendet."
+          }
+        }
+      }
     },
     "transfer-to-is-ready-waiting": {
       "comment": "Status while an outgoing transfer waits for the peer to accept. This consolidates the identical legacy ca5-2v and cku-24 entries. Legacy key: ca5-2v.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Waiting for %@ to accept." } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waiting for %@ to accept."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Várakozás %@ jóváhagyására."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warten auf Annahme durch %@."
+          }
+        }
+      }
     },
     "transfer-to-is-stopped": {
       "comment": "Status of an outgoing transfer that is idle. The argument is the peer nickname. Legacy key: w3h-p8. Previously keyed transfer-to-is-stopped-control-click.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Transfer to %@ has not started. Choose Start Transfer to begin." } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transfer to %@ has not started. Choose Start Transfer to begin."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A fájl küldése %@ részére még nem kezdődött el. Az indításhoz válaszd az Átvitel indítása lehetőséget."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Übertragung an %@ wurde noch nicht gestartet. Wähle Übertragung starten, um zu beginnen."
+          }
+        }
+      }
     },
     "transfer-total-size": {
       "comment": "Accessibility label for a file transfer's size. The argument is the total size, already formatted.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Total size: %@" } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total size: %@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teljes méret: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gesamtgröße: %@"
+          }
+        }
+      }
     },
     "transfer-with-failed": {
       "comment": "File-transfer error wrapping an underlying error. Arguments are the peer nickname and error description. Legacy key: s79-3a.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Transfer with %@ failed: %@" } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transfer with %@ failed: %@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A fájlátvitel sikertelen. Partner: %@. Hiba: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Übertragung mit %@ fehlgeschlagen: %@"
+          }
+        }
+      }
     },
     "transfer-with-failed-could-not-establish": {
       "comment": "File-transfer error when the connection could not be established. The argument is the peer nickname. Legacy key: fn8-sx.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Could not connect to %@. They may be offline or behind a firewall." } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not connect to %@. They may be offline or behind a firewall."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nem sikerült kapcsolódni %@ gépéhez. Lehet, hogy nincs csatlakozva, vagy tűzfal mögött van."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbindung zu %@ nicht möglich. Die Person ist möglicherweise offline oder hinter einer Firewall."
+          }
+        }
+      }
     },
     "transfer-with-failed-could-not-read": {
       "comment": "File-transfer error when the source file cannot be opened or read. The argument is the peer nickname. Legacy key: nab-dx.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Could not read the file being sent to %@. Check that it still exists and that you can open it." } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not read the file being sent to %@. Check that it still exists and that you can open it."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nem sikerült olvasni a(z) %@ részére küldendő fájlt. Ellenőrizd, hogy még létezik-e, és meg tudod-e nyitni."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die an %@ zu sendende Datei konnte nicht gelesen werden. Prüfe, ob sie noch vorhanden ist und du sie öffnen kannst."
+          }
+        }
+      }
     },
     "transfer-with-failed-file-handler-threw": {
       "comment": "File-transfer error when writing the destination file fails. The argument is the peer nickname. Legacy key: 05g-c8.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Could not write the file from %@. Check that the destination folder still exists and that you can write to it." } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not write the file from %@. Check that the destination folder still exists and that you can write to it."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nem sikerült menteni %@ fájlját. Ellenőrizd, hogy a célmappa még létezik-e, és tudsz-e bele írni."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Datei von %@ konnte nicht geschrieben werden. Prüfe, ob der Zielordner noch vorhanden ist und du darin schreiben darfst."
+          }
+        }
+      }
     },
     "transfer-with-failed-no-answer": {
       "comment": "File-transfer error when the peer never answered the connection attempt. The argument is the peer nickname.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "%@ did not answer in time. They may be offline or behind a firewall." } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ did not answer in time. They may be offline or behind a firewall."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ nem válaszolt időben. Lehet, hogy nincs csatlakozva, vagy tűzfal mögött van."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ hat nicht rechtzeitig geantwortet. Die Person ist möglicherweise offline oder hinter einer Firewall."
+          }
+        }
+      }
     },
     "transfer-with-failed-no-space-left": {
       "comment": "File-transfer error when the destination device has no remaining space. The argument is the peer nickname. Legacy key: 79f-s0.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "There is not enough free space to save the file from %@. Free some space, then start the transfer again." } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There is not enough free space to save the file from %@. Free some space, then start the transfer again."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincs elég szabad hely %@ fájljának mentéséhez. Szabadíts fel helyet, majd indítsd újra az átvitelt."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es ist nicht genügend Speicherplatz vorhanden, um die Datei von %@ zu sichern. Gib Speicherplatz frei und starte die Übertragung erneut."
+          }
+        }
+      }
     },
     "transfer-with-failed-peer-closed": {
       "comment": "File-transfer error when the peer closed the connection early. The argument is the peer nickname.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "%@ closed the connection before the transfer finished. Start it again to resume." } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ closed the connection before the transfer finished. Start it again to resume."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ lezárta a kapcsolatot az átvitel befejezése előtt. A folytatáshoz indítsd el újra az átvitelt."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ hat die Verbindung vor Abschluss der Übertragung geschlossen. Starte sie erneut, um fortzufahren."
+          }
+        }
+      }
     },
     "transfer-with-failed-proposed-resume-position": {
       "comment": "File-transfer error when resuming is impossible: the peer's resume position does not match the partly transferred file, or that file is gone or larger than the offer. Try Again starts the file over under a new name and keeps the partial file. The argument is the peer nickname. Legacy key: 0ov-tr.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Could not resume the transfer with %@. Choose Try Again to start it over from the beginning." } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not resume the transfer with %@. Choose Try Again to start it over from the beginning."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nem sikerült folytatni az átvitelt %@ gépével. Az Újrapróbálkozás lehetőséggel elölről kezdheted."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Übertragung mit %@ konnte nicht fortgesetzt werden. Wähle Erneut versuchen, um von vorne zu beginnen."
+          }
+        }
+      }
     },
     "transfer-with-failed-resume-not-answered": {
       "comment": "File-transfer error when the peer never answered a request to resume. Try Again starts the file over under a new name and keeps the partial file. The argument is the peer nickname.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "%@ did not agree to resume the transfer. Choose Try Again to start it over from the beginning." } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ did not agree to resume the transfer. Choose Try Again to start it over from the beginning."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ nem hagyta jóvá az átvitel folytatását. Az Újrapróbálkozás lehetőséggel elölről kezdheted."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ hat dem Fortsetzen nicht zugestimmt. Wähle Erneut versuchen, um von vorne zu beginnen."
+          }
+        }
+      }
     },
     "transfer-with-failed-stalled": {
       "comment": "File-transfer error when the connection to the peer stopped moving data: a write that did not complete, or a download that received nothing for too long. The argument is the peer nickname.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "The connection to %@ stopped responding, so the transfer was cancelled. Start it again to resume." } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The connection to %@ stopped responding, so the transfer was cancelled. Start it again to resume."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kapcsolata nem válaszolt, ezért az átvitel megszakadt. A folytatáshoz indítsd el újra."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Verbindung zu %@ hat nicht mehr reagiert. Die Übertragung wurde abgebrochen. Starte sie erneut, um fortzufahren."
+          }
+        }
+      }
     },
     "transfer-with-failed-there-is-no": {
       "comment": "File-transfer error when no listening port is available. The argument is the peer nickname. Legacy key: vxc-sd.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "No port was free for the transfer with %@. Widen the port range in File Transfer settings, then try again." } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No port was free for the transfer with %@. Widen the port range in File Transfer settings, then try again."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincs szabad port a(z) %@ gépével végzett átvitelhez. Bővítsd a porttartományt a Fájlátvitel beállításaiban, majd próbáld újra."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kein Port für die Übertragung mit %@ verfügbar. Erweitere den Portbereich in den Dateiübertragungseinstellungen und versuche es erneut."
+          }
+        }
+      }
     },
     "transfer-with-failed-unknown-source-ip": {
       "comment": "File-transfer error when the local source IP address cannot be determined. The argument is the peer nickname. Legacy key: 47s-1s.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Could not work out this Mac’s IP address for the transfer with %@. Enter one in File Transfer settings, then try again." } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not work out this Mac’s IP address for the transfer with %@. Enter one in File Transfer settings, then try again."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nem sikerült meghatározni a Mac IP-címét a(z) %@ gépével végzett átvitelhez. Add meg a Fájlátvitel beállításaiban, majd próbáld újra."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die IP-Adresse dieses Mac für die Übertragung mit %@ konnte nicht ermittelt werden. Gib sie in den Dateiübertragungseinstellungen ein und versuche es erneut."
+          }
+        }
+      }
     },
     "transfer-with-failed-you-are-not": {
       "comment": "File-transfer error when the associated IRC connection is offline. The argument is the peer nickname. Legacy key: 12p-0v.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Transfer with %@ stopped because the connection to the server was lost. Reconnect, then start it again." } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transfer with %@ stopped because the connection to the server was lost. Reconnect, then start it again."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A(z) %@ gépével végzett átvitel leállt, mert megszakadt a kapcsolat a kiszolgálóval. Csatlakozz újra, majd indítsd el az átvitelt."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Übertragung mit %@ wurde gestoppt, da die Serververbindung verloren ging. Stelle die Verbindung wieder her und starte sie erneut."
+          }
+        }
+      }
     },
     "transfers": {
       "comment": "Count of file transfers visible under the current filter. The argument is the count.",
@@ -239,8 +1113,54 @@
         "en": {
           "variations": {
             "plural": {
-              "one": { "stringUnit": { "state": "translated", "value": "%ld Transfer" } },
-              "other": { "stringUnit": { "state": "translated", "value": "%ld Transfers" } }
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%ld Transfer"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%ld Transfers"
+                }
+              }
+            }
+          }
+        },
+        "hu": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%ld átvitel"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%ld átvitel"
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%ld Übertragung"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%ld Übertragungen"
+                }
+              }
             }
           }
         }
@@ -249,7 +1169,26 @@
     "transfers-appear-here": {
       "comment": "Empty-state explanation in the file-transfer window.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Incoming and outgoing transfers appear here." } } }
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incoming and outgoing transfers appear here."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Itt jelennek meg a bejövő és kimenő átvitelek."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hier erscheinen eingehende und ausgehende Übertragungen."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -16,70 +16,70 @@ import Foundation
 /// `BasicLanguage` table.
 nonisolated enum ApplicationStrings { // nonisolated: value
 	static var unknownValue: String {
-		String(localized: .BasicLanguage.unknownValuePlaceholder)
+		String(localized: .Application.unknownValuePlaceholder)
 	}
 
 	static var defaultQuitMessage: String {
-		String(localized: .BasicLanguage.glasstualIrcClient)
+		String(localized: .Application.glasstualIrcClient)
 	}
 
 	static var untitledConnection: String {
-		String(localized: .BasicLanguage.untitledConnection)
+		String(localized: .Application.untitledConnection)
 	}
 
 	static var sleepQuitMessage: String {
-		String(localized: .BasicLanguage.myMacHasGoneToSleep)
+		String(localized: .Application.myMacHasGoneToSleep)
 	}
 
 	static var closeQuery: String {
-		String(localized: .BasicLanguage.closeQuery)
+		String(localized: .Application.closeQuery)
 	}
 
 	static var closeWindow: String {
-		String(localized: .BasicLanguage.closeWindow)
+		String(localized: .Application.closeWindow)
 	}
 
 	static var leaveChannel: String {
-		String(localized: .BasicLanguage.leaveChannel)
+		String(localized: .Application.leaveChannel)
 	}
 
 	static var quitApplication: String {
-		String(localized: .BasicLanguage.quitGlasstual)
+		String(localized: .Application.quitGlasstual)
 	}
 
 	static func disconnect(from networkName: String) -> String {
-		String(localized: .BasicLanguage.disconnectMenuTitle(networkName))
+		String(localized: .Application.disconnectMenuTitle(networkName))
 	}
 
 	static var lookUpInDictionary: String {
-		String(localized: .BasicLanguage.lookUpInDictionary)
+		String(localized: .Application.lookUpInDictionary)
 	}
 
 	static func lookUpInDictionary(_ selection: String) -> String {
-		String(localized: .BasicLanguage.lookUp(selection))
+		String(localized: .Application.lookUp(selection))
 	}
 
 	static func search(with providerName: String) -> String {
-		String(localized: .BasicLanguage.searchProviderMenuTitle(providerName))
+		String(localized: .Application.searchProviderMenuTitle(providerName))
 	}
 
 	static var requiredField: String {
-		String(localized: .BasicLanguage.fillOutThisField)
+		String(localized: .Application.fillOutThisField)
 	}
 
 	static var invalidRegularExpression: String {
-		String(localized: .BasicLanguage.invalidRegularExpression)
+		String(localized: .Application.invalidRegularExpression)
 	}
 
 	static var ircColors: String {
-		String(localized: .BasicLanguage.ircColors)
+		String(localized: .Application.ircColors)
 	}
 
 	static func ircColor(at index: Int) -> String {
-		String(localized: .BasicLanguage.ircColorListEntry(index))
+		String(localized: .Application.ircColorListEntry(index))
 	}
 
 	static func duplicatedName(_ name: String) -> String {
-		String(localized: .BasicLanguage.duplicatedConnectionName(name))
+		String(localized: .Application.duplicatedConnectionName(name))
 	}
 }

@@ -1,0 +1,39 @@
+import ApplicationServices
+import Foundation
+
+enum BurstResponsivenessScenario {
+	static func run(driver: AccessibilityDriver) async throws {
+		try await driver.typeAndSend("/join #e2e")
+		try await driver.waitForTranscript("E2E_CHANNEL_READY")
+		try await driver.typeAndSend("/msg fixture E2E_BURST_START")
+		for index in 1 ... 3 {
+			guard try !HarnessFiles.exists("burst-complete")
+			else { throw HarnessFailure.assertion("Burst ended before UI switching") }
+			let settings = try await driver.settingsWindow()
+			try await driver.selectPreferencePage("General", in: settings)
+			try await driver.wait("Settings remains responsive during burst") { deadline in
+				try driver.named(
+					"Request confirmation before quitting Glasstual",
+					role: kAXCheckBoxRole,
+					from: settings,
+					deadline: deadline
+				) != nil
+			}
+			try await driver.closeWindow(settings)
+			try await driver.selectChannel("#e2e", joined: true)
+			try await driver.typeAndSend("/msg fixture E2E_BURST_SWITCH_\(index)")
+			try await driver.selectChannel("#e2e", joined: true)
+			try await driver.waitForTranscript("E2E_BURST_SWITCH_\(index)_ACK")
+			try HarnessFiles.write("Settings and channel responded", to: "burst-ui-switch-\(index)")
+		}
+		try await driver.waitForTranscript("E2E_BURST_END")
+		try await driver.wait("burst peer complete and 10002 channel members") { deadline in
+			guard try HarnessFiles.exists("burst-complete"), let window = try driver.identified(
+				"main-window",
+				from: driver.root,
+				deadline: deadline
+			) else { return false }
+			return try driver.text(window, kAXTitleAttribute, deadline: deadline).contains("10,002")
+		}
+	}
+}

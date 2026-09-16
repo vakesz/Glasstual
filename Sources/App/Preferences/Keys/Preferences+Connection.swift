@@ -39,21 +39,21 @@ import Foundation
 
 // MARK: - Identity
 
-public nonisolated extension Preferences { // nonisolated: value
+nonisolated extension Preferences { // nonisolated: value
 	/// The identity a new connection is seeded with.
 	enum Identity {
-		public static let nickname = PreferenceKey("DefaultIdentity -> Nickname", default: "Guest")
-		public static let awayNickname = PreferenceKey("DefaultIdentity -> AwayNickname", default: "")
-		public static let username = PreferenceKey("DefaultIdentity -> Username", default: "glasstual")
-		public static let realName = PreferenceKey("DefaultIdentity -> Realname", default: "Glasstual User")
+		static let nickname = PreferenceKey("DefaultIdentity -> Nickname", default: "Guest")
+		static let awayNickname = PreferenceKey("DefaultIdentity -> AwayNickname", default: "")
+		static let username = PreferenceKey("DefaultIdentity -> Username", default: "glasstual")
+		static let realName = PreferenceKey("DefaultIdentity -> Realname", default: "Glasstual User")
 
-		public static let ctcpVersionMasquerade = PreferenceKey(
+		static let ctcpVersionMasquerade = PreferenceKey(
 			"ApplicationCTCPVersionMasquerade",
 			default: "",
 			traits: .unregistered
 		)
 
-		public static let onboardingCompleted = PreferenceKey("Onboarding -> Completed", default: false)
+		static let onboardingCompleted = PreferenceKey("Onboarding -> Completed", default: false)
 
 		static let all: [any AnyPreferenceKey] = [
 			nickname, awayNickname, username, realName, ctcpVersionMasquerade, onboardingCompleted,
@@ -63,38 +63,48 @@ public nonisolated extension Preferences { // nonisolated: value
 
 // MARK: - Connection
 
-public nonisolated extension Preferences { // nonisolated: value
+nonisolated extension Preferences { // nonisolated: value
 	/// Connecting, joining, and the behaviour of the connection itself.
 	enum Connection {
-		public static let autojoinOnInvite = PreferenceKey("AutojoinChannelOnInvite", default: false)
+		static let autojoinOnInvite = PreferenceKey("AutojoinChannelOnInvite", default: false)
 
-		public static let autojoinDelayAfterIdentification = PreferenceKey(
+		static let autojoinDelayAfterIdentification = PreferenceKey(
 			"AutojoinDelayAfterIdentification",
 			default: 0.0,
 			validation: { $0.isFinite && $0 >= 0 && $0 < Double(Int64.max) / 1_000_000_000 }
 		)
 
-		public static let disconnectOnSleep = PreferenceKey("AutomaticallyDisconnectForSleepMode", default: true)
-		public static let awayOnScreenSleep = PreferenceKey("SetAwayOnScreenSleep", default: false)
-		public static let preferModernCiphers = PreferenceKey("PreferModernCiphers", default: false)
-		public static let displayServerMOTD = PreferenceKey("DisplayServerMessageOfTheDayOnConnect", default: true)
-		public static let rejoinOnKick = PreferenceKey("RejoinChannelOnLocalKick", default: false)
-		public static let sendTypingNotifications = PreferenceKey("SendTypingNotifications", default: true)
-		public static let displayTypingNotifications = PreferenceKey(
+		static let disconnectOnSleep = PreferenceKey("AutomaticallyDisconnectForSleepMode", default: true)
+
+		/** Holds off idle system sleep while a server is logged in.
+
+		 The stored name is the one the setting had when it belonged to a
+		 bundled extension, so the user's choice survives that extension going
+		 away. */
+		static let preventSleepWhileConnected = PreferenceKey(
+			"Private Extension Store -> Caffeine Extension -> Prevent Sleep",
+			default: false
+		)
+		static let awayOnScreenSleep = PreferenceKey("SetAwayOnScreenSleep", default: false)
+		static let preferModernCiphers = PreferenceKey("PreferModernCiphers", default: false)
+		static let displayServerMOTD = PreferenceKey("DisplayServerMessageOfTheDayOnConnect", default: true)
+		static let rejoinOnKick = PreferenceKey("RejoinChannelOnLocalKick", default: false)
+		static let sendTypingNotifications = PreferenceKey("SendTypingNotifications", default: true)
+		static let displayTypingNotifications = PreferenceKey(
 			"IRC -> Display Typing Notifications",
 			default: true
 		)
-		public static let confirmQuit = PreferenceKey("ConfirmApplicationQuit", default: true)
-		public static let requestChatHistory = PreferenceKey(
+		static let confirmQuit = PreferenceKey("ConfirmApplicationQuit", default: true)
+		static let requestChatHistory = PreferenceKey(
 			"IRC -> Request Chat History",
 			default: true
 		)
-		public static let synchronizeReadMarkers = PreferenceKey(
+		static let synchronizeReadMarkers = PreferenceKey(
 			"IRC -> Synchronize Read Markers",
 			default: true
 		)
 
-		public static let echoMessageCapability = PreferenceKey(
+		static let echoMessageCapability = PreferenceKey(
 			"IRC -> Enable echo-message Capability",
 			default: false
 		)
@@ -104,90 +114,90 @@ public nonisolated extension Preferences { // nonisolated: value
 		 Absence is the enabled state, so a capability added to the registry
 		 later starts enabled without a migration, and a name left behind by a
 		 capability that was removed does nothing. */
-		public static let disabledCapabilities = PreferenceKey(
+		static let disabledCapabilities = PreferenceKey(
 			"IRC -> Disabled Capabilities",
 			default: [String]()
 		)
 
-		public static let stsPolicies = UntypedPreferenceKey(
+		static let stsPolicies = UntypedPreferenceKey(
 			"IRC -> STS Policies",
 			default: .emptyDictionary,
 			traits: .excludedFromExport
 		)
 
-		public static let clientList = UntypedPreferenceKey(worldClientListDefaultsKey)
+		static let clientList = UntypedPreferenceKey(worldClientListDefaultsKey)
 
 		static let all: [any AnyPreferenceKey] = [
 			autojoinOnInvite, autojoinDelayAfterIdentification, disconnectOnSleep, awayOnScreenSleep,
 			preferModernCiphers,
 			displayServerMOTD, rejoinOnKick, sendTypingNotifications, displayTypingNotifications,
 			confirmQuit, requestChatHistory, synchronizeReadMarkers, echoMessageCapability,
-			disabledCapabilities, stsPolicies, clientList,
+			disabledCapabilities, stsPolicies, clientList, preventSleepWhileConnected,
 		]
 	}
 }
 
 // MARK: - Commands
 
-public nonisolated extension Preferences { // nonisolated: value
+nonisolated extension Preferences { // nonisolated: value
 	/// Command defaults and the "apply to all connections" switches.
 	enum Commands {
-		public static let amsgAllConnections = PreferenceKey(
+		static let amsgAllConnections = PreferenceKey(
 			"ApplyCommandToAllConnections -> amsg",
 			default: false
 		)
 
-		public static let awayAllConnections = PreferenceKey(
+		static let awayAllConnections = PreferenceKey(
 			"ApplyCommandToAllConnections -> away",
 			default: false
 		)
 
-		public static let clearAllConnections = PreferenceKey(
+		static let clearAllConnections = PreferenceKey(
 			"ApplyCommandToAllConnections -> clearall",
 			default: true
 		)
 
-		public static let nickAllConnections = PreferenceKey(
+		static let nickAllConnections = PreferenceKey(
 			"ApplyCommandToAllConnections -> nick",
 			default: false
 		)
 
-		public static let kickMessage = PreferenceKey(
+		static let kickMessage = PreferenceKey(
 			"ChannelOperatorDefaultLocalization -> Kick Reason",
 			default: "Your behavior is not conducive to the desired environment."
 		)
 
-		public static let irCopGlineMessage = PreferenceKey(
+		static let irCopGlineMessage = PreferenceKey(
 			"IRCopDefaultLocalizaiton -> G:Line Reason",
 			default: "35d Your behavior is not conducive to the desired environment."
 		)
 
-		public static let irCopKillMessage = PreferenceKey(
+		static let irCopKillMessage = PreferenceKey(
 			"IRCopDefaultLocalizaiton -> Kill Reason",
 			default: "Your behavior is not conducive to the desired environment."
 		)
 
-		public static let irCopShunMessage = PreferenceKey(
+		static let irCopShunMessage = PreferenceKey(
 			"IRCopDefaultLocalizaiton -> Shun Reason",
 			default: "1d Shunned."
 		)
 
-		public static let banFormat = PreferenceKey(
+		static let banFormat = PreferenceKey(
 			"DefaultBanCommandHostmaskFormat",
 			default: HostmaskBanFormat.whainn
 		)
 
-		public static let noticeDestination = PreferenceKey(
+		static let noticeDestination = PreferenceKey(
 			"DestinationOfNonserverNotices",
 			default: NoticeSendLocation.serverConsole
 		)
 
-		public static let giveFocusOnMessageCommand = PreferenceKey(
+		static let giveFocusOnMessageCommand = PreferenceKey(
 			"FocusSelectionOnMessageCommandExecution",
 			default: true
 		)
 
-		public static let developerMode = PreferenceKey("GlasstualDeveloperEnvironment", default: false)
+		static let developerMode = PreferenceKey("GlasstualDeveloperEnvironment", default: false)
 
 		static let all: [any AnyPreferenceKey] = [
 			amsgAllConnections, awayAllConnections, clearAllConnections, nickAllConnections,

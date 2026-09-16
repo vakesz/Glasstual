@@ -43,7 +43,7 @@ import Testing
 nonisolated struct IRCSpecNumericCase: CustomTestStringConvertible { // nonisolated: value
 	let name: String
 	let value: UInt
-	let numeric: IRCNumeric
+	let numeric: ServerNumeric
 
 	var testDescription: String {
 		"\(value) \(name)"
@@ -139,7 +139,7 @@ struct IRCSpecNumericsTests {
 	/// something else.
 	@Test("No two numerics share a value")
 	func numericValuesAreUnique() {
-		let values = IRCNumeric.allCases.map(\.rawValue)
+		let values = ServerNumeric.allCases.map(\.rawValue)
 
 		#expect(Set(values).count == values.count)
 	}
@@ -155,15 +155,15 @@ struct IRCSpecNumericsTests {
 		]
 	)
 	func errorBandIsClassified(_ testCase: (numeric: UInt, isError: Bool)) {
-		#expect(IRCNumeric.isErrorReply(testCase.numeric) == testCase.isError)
+		#expect(ServerNumeric.isErrorReply(testCase.numeric) == testCase.isError)
 	}
 
 	/// A server may send an error numeric this table has no name for, and it
 	/// still has to reach the error path rather than being printed as a reply.
 	@Test("An unnamed numeric in the error band is still an error")
 	func unnamedErrorNumericsAreStillErrors() {
-		#expect(IRCNumeric(rawValue: 483) == nil)
-		#expect(IRCNumeric.isErrorReply(483))
+		#expect(ServerNumeric(rawValue: 483) == nil)
+		#expect(ServerNumeric.isErrorReply(483))
 	}
 
 	/// A parsed numeric command reaches the numeric path, and a word command

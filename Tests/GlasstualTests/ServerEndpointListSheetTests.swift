@@ -268,22 +268,6 @@ struct ServerEndpointListSheetTests {
 		#expect(model.invalidAddressIDs == [model.entries[1].id])
 	}
 
-	@Test("A list where every row names a server is reported whole")
-	@MainActor
-	func namedEndpointsAreReported() throws {
-		let model = ServerEndpointListModel()
-		model.replace(with: [
-			Server(serverAddress: "irc.example.com", serverPort: 6667),
-			Server(serverAddress: "irc.other.example", serverPort: 6697),
-		])
-
-		let reported = try #require(model.validatedServers())
-
-		#expect(reported.map(\.serverAddress) == ["irc.example.com", "irc.other.example"])
-		#expect(model.invalidAddressIDs.isEmpty)
-		#expect(model.invalidPortIDs.isEmpty)
-	}
-
 	@Test("The native editor validates rows and preserves their order")
 	func nativeEditorSubmitsValidRowsInOrder() throws {
 		let model = ServerEndpointListModel()

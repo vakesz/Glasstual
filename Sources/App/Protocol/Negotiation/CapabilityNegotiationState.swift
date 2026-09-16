@@ -17,7 +17,7 @@ import Foundation
  timeout fires — the same bound that already covers a server which never sends
  `CAP LS` at all.
 
- The bitset every caller reads through `IRCClient.capabilities` is stored rather
+ The bitset every caller reads through `Client.capabilities` is stored rather
  than projected on each read: `isCapabilityEnabled(_:)` sits on the path of
  every inbound line, and the projection walks the registry to a fixed point.
  Each mutation below refreshes it, which is why the stores it derives from are
@@ -49,10 +49,10 @@ struct CapabilityNegotiationState {
 	/// Bits that do not come from `CAP` at all: SASL results and the ISUPPORT
 	/// tokens that stand in for a capability. They survive a `CAP DEL` of a
 	/// name carrying the same bit, and vice versa.
-	private(set) var facts: ClientIRCv3SupportedCapability = []
+	private(set) var facts: CapabilitySet = []
 
 	/// `acknowledgedNames` projected onto the bitset, plus `facts`.
-	private(set) var capabilities: ClientIRCv3SupportedCapability = []
+	private(set) var capabilities: CapabilitySet = []
 
 	/// Whether a multi-line `CAP LS` is still arriving. Nothing may be
 	/// requested until its last line lands.
@@ -194,7 +194,7 @@ struct CapabilityNegotiationState {
 	 Bits the registry knows are recorded as the acknowledged name that carries
 	 them, so a later `CAP DEL` of that name takes them away again. Bits it does
 	 not know are facts. */
-	mutating func enable(_ capability: ClientIRCv3SupportedCapability) {
+	mutating func enable(_ capability: CapabilitySet) {
 		facts.formUnion(capability.subtracting(registry.knownIdentifiers))
 
 		var remaining = capability.intersection(registry.knownIdentifiers)
@@ -208,7 +208,7 @@ struct CapabilityNegotiationState {
 		recomputeCapabilities()
 	}
 
-	mutating func disable(_ capability: ClientIRCv3SupportedCapability) {
+	mutating func disable(_ capability: CapabilitySet) {
 		facts.subtract(capability)
 		acknowledgedNames.removeAll { name in
 			guard let entry = registry.capability(named: name) else { return false }
@@ -217,21 +217,13 @@ struct CapabilityNegotiationState {
 		recomputeCapabilities()
 	}
 
-	/// The setter behind the public `IRCClient.capabilities`, kept for plugin
-	/// compatibility: it replaces the projection outright rather than merging.
-	mutating func replaceProjection(with capability: ClientIRCv3SupportedCapability) {
-		facts = []
-		acknowledgedNames.removeAll()
-		enable(capability)
-	}
-
-	mutating func addFacts(_ capability: ClientIRCv3SupportedCapability) {
+	mutating func addFacts(_ capability: CapabilitySet) {
 		guard facts.contains(capability) == false else { return }
 		facts.formUnion(capability)
 		recomputeCapabilities()
 	}
 
-	mutating func removeFacts(_ capability: ClientIRCv3SupportedCapability) {
+	mutating func removeFacts(_ capability: CapabilitySet) {
 		guard facts.isDisjoint(with: capability) == false else { return }
 		facts.subtract(capability)
 		recomputeCapabilities()
@@ -257,8 +249,8 @@ struct CapabilityNegotiationState {
 	// MARK: - Private
 
 	private mutating func claimNames(
-		for remaining: inout ClientIRCv3SupportedCapability,
-		matching supplies: (ClientIRCv3SupportedCapability, Capability) -> Bool
+		for remaining: inout CapabilitySet,
+		matching supplies: (CapabilitySet, Capability) -> Bool
 	) {
 		for entry in registry.capabilities where supplies(remaining, entry) {
 			if acknowledgedNames.contains(entry.name) == false {

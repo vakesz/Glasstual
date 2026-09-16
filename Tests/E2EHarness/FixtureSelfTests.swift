@@ -156,14 +156,6 @@ enum FixtureSelfTests {
 	}
 
 	private static func interactionValidatorChecks() throws {
-		var smiley = InteractiveFixture(kind: .pluginSmiley)
-		try mustReject { _ = try smiley.receive("PRIVMSG fixture :E2E_SMILEY_OFF", joined: false) }
-		try mustReject { _ = try smiley.receive("PRIVMSG fixture :E2E_SMILEY_ON", joined: true) }
-		for token in ["E2E_SMILEY_OFF", "E2E_SMILEY_ON", "E2E_SMILEY_OFF_AGAIN"] {
-			_ = try smiley.receive("PRIVMSG fixture :" + token, joined: true)
-		}
-		guard smiley.finished else { throw HarnessFailure.assertion("Smiley fixture never finished") }
-		try mustReject { _ = try smiley.receive("PRIVMSG fixture :E2E_SMILEY_OFF_AGAIN", joined: true) }
 		var burst = InteractiveFixture(kind: .burstResponsiveness)
 		try mustReject { _ = try burst.receive("PRIVMSG fixture :E2E_BURST_SWITCH_1", joined: true) }
 		_ = try burst.receive("PRIVMSG fixture :E2E_BURST_START", joined: true)
@@ -175,12 +167,7 @@ enum FixtureSelfTests {
 			try await client.send("JOIN #e2e\r\n")
 			try await wait { client.contains("E2E_CHANNEL_READY\r\n") }
 		}
-		if kind == .pluginSmiley {
-			for marker in ["E2E_SMILEY_OFF", "E2E_SMILEY_ON", "E2E_SMILEY_OFF_AGAIN"] {
-				try await client.send("PRIVMSG fixture :\(marker)\r\n")
-				try await wait { client.contains(marker + " :-)\r\n") }
-			}
-		} else if kind == .burstResponsiveness {
+		if kind == .burstResponsiveness {
 			try await client.send("PRIVMSG fixture :E2E_BURST_START\r\n")
 			for index in 1 ... 3 {
 				try await client.send("PRIVMSG fixture :E2E_BURST_SWITCH_\(index)\r\n")

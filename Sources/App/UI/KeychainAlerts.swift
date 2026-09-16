@@ -41,3 +41,10 @@ enum KeychainAlerts {
 		}
 	}
 }
+
+extension KeychainPersistence {
+	/// Compose the process-wide writer with the application's error presenter.
+	static let shared = KeychainPersistence(reportFailure: { error, retry in
+		KeychainAlerts.showFailure(error, retry: retry)
+	})
+}

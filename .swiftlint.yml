@@ -29,7 +29,7 @@ function_body_length:
 function_parameter_count:
   # Initializers are exempt from this rule, so it only ever applies to free
   # functions and methods. The widest in the tree take seven — the transcript's
-  # history loader, the plugin dispatch entry points and the trust panel among
+  # history loader, the message rule entry points and the trust panel among
   # them — and each one's arity is fixed by the request or callback it builds.
   # Ten keeps those readable without forcing call-site dictionaries or untyped
   # argument bags, while making further growth an error.
@@ -56,7 +56,7 @@ identifier_name:
 type_name:
   max_length:
     # Feature-scoped controller names are intentionally explicit while AppKit
-    # runtime names remain part of nib loading and plugin discovery.
+    # runtime names remain part of archive and XPC compatibility.
     warning: 50
     error: 60
 
@@ -142,6 +142,6 @@ custom_rules:
   raw_defaults_key:
     name: "Raw User Defaults Key"
     included: 'Sources/.*\.swift'
-    regex: '(?:UserDefaults|TextualUserDefaults)[^\n]*forKey:\s*"'
+    regex: '(?:UserDefaults|GlasstualUserDefaults)[^\n]*forKey:\s*"'
     message: "Read or write through a typed PreferenceKey declaration."
     severity: error

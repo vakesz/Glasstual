@@ -14,7 +14,7 @@
 import Foundation
 
 /// The virtual key codes the window and the message field bind shortcuts to.
-public enum KeyCode: UInt16, Sendable {
+enum KeyCode: UInt16, Sendable {
 	/// `kVK_ANSI_A`. Zero is a real key code, not "no key".
 	case keyA = 0x00
 	case returnKey = 0x24

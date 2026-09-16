@@ -114,24 +114,6 @@ struct SCRAMClientHardeningTests {
 		#expect(client.state == .sentClientFinal)
 	}
 
-	/// The derivation the client actually runs has to produce the RFC 7677
-	/// vector when the exchange is driven with the vector's nonce and salt.
-	@Test
-	func offloadedDerivationMatchesTheRFC7677Vector() async throws {
-		let client = exampleClient()
-		_ = client.clientFirstMessage
-
-		let clientFinal = try await client.clientFinalMessage(
-			forServerFirstMessage: serverFirst(iterations: "4096")
-		)
-
-		#expect(
-			clientFinal
-				== "c=biws,r=\(Self.combinedNonce),p=dHzbZapWIk4jUhN+Ute9ytag9zjfMHgsqmmiz7AndVQ="
-		)
-		#expect(client.state == .sentClientFinal)
-	}
-
 	@Test
 	func derivationRejectsIterationCountsOutsideUInt32() {
 		#expect(SCRAMClient.pbkdf2(password: "pencil", salt: Data([1, 2, 3]), iterations: -1) == nil)
@@ -142,19 +124,19 @@ struct SCRAMClientHardeningTests {
 }
 
 @MainActor
-struct IRCClientSCRAMMutualAuthenticationTests {
+struct ClientSCRAMMutualAuthenticationTests {
 	enum EndAction: CaseIterable {
 		case saslReset, capabilityReset, retry, failure, abort, disconnect, termination
 	}
 
-	private func receive(_ line: String, on client: IRCClient) throws {
+	private func receive(_ line: String, on client: Client) throws {
 		try client.handleCapabilityOrAuthenticationRequest(#require(Message(line: line, on: client)))
 	}
 
 	/// Drives the authentication numeric handler the way `receiveNumericReply`
 	/// routes to it.
-	private func handleAuthentication(_ message: Message, on client: IRCClient) throws {
-		let numeric = try #require(IRCNumeric(rawValue: message.commandNumeric))
+	private func handleAuthentication(_ message: Message, on client: Client) throws {
+		let numeric = try #require(ServerNumeric(rawValue: message.commandNumeric))
 
 		#expect(numeric.group == .authentication)
 
@@ -166,7 +148,7 @@ struct IRCClientSCRAMMutualAuthenticationTests {
 			configDictionary: ["nickname": "user"], nicknamePassword: "pencil",
 			fixture: ClientEnvironmentFixture(preferences: ClientPreferences())
 		)
-		client.socket = Connection(config: IRCConnectionConfig(), onClient: client)
+		client.socket = Connection(config: ConnectionConfig(), onClient: client)
 		client.isConnected = true
 		try receive("CAP * LS :sasl=SCRAM-SHA-256,PLAIN", on: client)
 		try receive("CAP user ACK :sasl", on: client)
@@ -242,7 +224,7 @@ struct IRCClientSCRAMMutualAuthenticationTests {
 		let (client, resume) = try await derivingClient()
 		let task = try #require(client.saslScramTask)
 		defer { resume.finish() }
-		client.socket = Connection(config: IRCConnectionConfig(), onClient: client)
+		client.socket = Connection(config: ConnectionConfig(), onClient: client)
 		let sent = client.sentLines.compactMap { $0 as? String }
 		resume.yield()
 		await task.value

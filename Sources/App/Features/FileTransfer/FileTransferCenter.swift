@@ -47,7 +47,7 @@ enum FileTransferConstants {
 }
 
 @MainActor
-public final class FileTransferCenter {
+final class FileTransferCenter {
 	let model = FileTransferCenterModel()
 
 	var maintenanceTask: Task<Void, Never>?
@@ -73,11 +73,11 @@ public final class FileTransferCenter {
 	}
 
 	func present() {
-		SharedApplication.sharedApplicationScenes().openFileTransfers()
+		AppServices.scenes.openFileTransfers()
 	}
 
 	func dismiss() {
-		SharedApplication.sharedApplicationScenes().closeFileTransfers()
+		AppServices.scenes.closeFileTransfers()
 	}
 
 	isolated deinit {

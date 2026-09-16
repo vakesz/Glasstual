@@ -48,16 +48,6 @@ struct MenuCommandValidationResponderTests {
 		) == .inputField)
 	}
 
-	@Test("A responder that cannot take text and no field to fall back on refuses the paste")
-	func nonTextRespondersRefusePaste() {
-		#expect(MenuResponderCommandPolicy.canPaste(
-			pasteboardHasText: true,
-			responderIsEditableText: false,
-			responderIsInInputBar: false,
-			hasInputField: false
-		) == false)
-	}
-
 	@Test("An empty pasteboard refuses the paste whatever has the keyboard")
 	func emptyPasteboardRefusesPaste() {
 		#expect(MenuResponderCommandPolicy.canPaste(

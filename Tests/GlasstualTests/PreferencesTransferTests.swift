@@ -6,7 +6,6 @@
 import CocoaExtensions
 import Foundation
 @testable import Glasstual
-import GlasstualPluginKit
 import SwiftUI
 import Testing
 
@@ -341,15 +340,6 @@ struct PreferencesTransferTests {
 			4000,
 			in: [Preferences.FileTransfers.portRangeStart.name: 5000]
 		) == false)
-	}
-
-	@Test("Add-on row identities do not depend on their position in the loaded inventory")
-	func stableAddOnRowIdentity() {
-		let bundle = "com.example.preference-plugin"
-		let identifier = PreferencesSelection.plugin(bundleIdentifier: bundle).storedIdentifier
-		#expect(PreferencesSelection(storedIdentifier: identifier) == .plugin(bundleIdentifier: bundle))
-		#expect(PreferencesSelection(storedIdentifier: "plugin:") == nil)
-		#expect(PreferencesSelection(storedIdentifier: "plugin-0") == nil)
 	}
 
 	@Test("Imported servers have auto-connect cleared while the exported source is unchanged")

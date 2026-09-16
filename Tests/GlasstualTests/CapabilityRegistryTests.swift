@@ -45,11 +45,11 @@ struct CapabilityRegistryTests {
 	private func registry() -> CapabilityRegistry {
 		let tags = Capability.capability(
 			named: "message-tags",
-			identifier: ClientIRCv3SupportedCapability.messageTags
+			identifier: CapabilitySet.messageTags
 		)
 		let gated = Capability(
 			name: "echo-message",
-			identifier: ClientIRCv3SupportedCapability.echoMessage,
+			identifier: CapabilitySet.echoMessage,
 			requestedByDefault: true,
 			preference: .echoMessage
 		)
@@ -99,7 +99,7 @@ struct CapabilityRegistryTests {
 		#expect(registry.capability(named: "Message-Tags") == nil)
 		#expect(registry.capability(named: "unknown") == nil)
 		#expect(registry.capability(for: .echoMessage)?.name == "echo-message")
-		#expect(registry.capability(for: ClientIRCv3SupportedCapability.batch) == nil)
+		#expect(registry.capability(for: CapabilitySet.batch) == nil)
 	}
 
 	@Test("A capability whose preference gate is closed is neither requested nor supported")

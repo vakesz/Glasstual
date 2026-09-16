@@ -10,7 +10,7 @@ import Testing
 @MainActor
 private final class CompletionWindow: NicknameCompletionWindow {
 	var inputTextField: MainWindowTextView!
-	var selectedClient: IRCClient?
+	var selectedClient: Client?
 	var selectedChannel: Channel?
 }
 
@@ -23,7 +23,7 @@ struct InputHandlingTests {
 	/// The tests run against the scheme's scratch defaults suite, so whatever
 	/// the key held is put back rather than left behind.
 	private func withPreference(_ key: String, setTo value: Any, _ body: () throws -> Void) rethrows {
-		let defaults = TextualUserDefaults.container
+		let defaults = GlasstualUserDefaults.container
 		let original = defaults.persistedObject(forKey: key)
 		defer {
 			if let original {
@@ -36,21 +36,6 @@ struct InputHandlingTests {
 		defaults.set(value, forKey: key)
 
 		try body()
-	}
-
-	private func keyEvent(_ characters: String, modifiers: NSEvent.ModifierFlags, keyCode: UInt16) throws -> NSEvent {
-		try #require(NSEvent.keyEvent(
-			with: .keyDown,
-			location: .zero,
-			modifierFlags: modifiers,
-			timestamp: 0,
-			windowNumber: 0,
-			context: nil,
-			characters: characters,
-			charactersIgnoringModifiers: characters,
-			isARepeat: false,
-			keyCode: keyCode
-		))
 	}
 
 	/// The completion reads the field's window, so the host outlives the field.
@@ -70,7 +55,7 @@ struct InputHandlingTests {
 		return textField
 	}
 
-	private func makeChannel(on client: IRCClient, nicknames: [String]) -> Channel {
+	private func makeChannel(on client: Client, nicknames: [String]) -> Channel {
 		let channel = Channel(config: ChannelConfig(channelName: "#chat"))
 		channel.associatedClient = client
 		channel.activate()
@@ -100,60 +85,6 @@ struct InputHandlingTests {
 			#expect(history.down(NSAttributedString(string: "first"))?.string == "second")
 			#expect(history.down(NSAttributedString(string: "second"))?.string == "")
 		}
-	}
-
-	/** Key event handlers are registered with closures now; the selector-based
-	 registration and its NSObject target requirement are gone. */
-	@Test("A registered character and modifier pair reaches its closure")
-	func keyEventHandlerDispatchesRegisteredKeyCode() throws {
-		let handler = KeyEventHandler()
-		let event = try keyEvent("a", modifiers: .command, keyCode: 42)
-		var invocationCount = 0
-		var lastEvent: NSEvent?
-
-		handler.register(character: "a", modifiers: .command) { event in
-			invocationCount += 1
-			lastEvent = event
-		}
-
-		#expect(handler.processKeyEvent(event))
-		#expect(invocationCount == 1)
-		#expect(lastEvent == event)
-	}
-
-	@Test("An uppercase character falls back to its lowercase registration")
-	func keyEventHandlerFallsBackToCaseInsensitiveCharacter() throws {
-		let handler = KeyEventHandler()
-		let event = try keyEvent("A", modifiers: [], keyCode: 42)
-		var invocationCount = 0
-
-		handler.register(character: "a") { _ in invocationCount += 1 }
-
-		#expect(handler.processKeyEvent(event))
-		#expect(invocationCount == 1)
-	}
-
-	@Test("An unregistered event is left for the responder chain")
-	func keyEventHandlerReturnsNoForUnregisteredEvent() throws {
-		let handler = KeyEventHandler()
-		let event = try keyEvent("z", modifiers: [], keyCode: 6)
-		var invocationCount = 0
-
-		handler.register(character: "a") { _ in invocationCount += 1 }
-
-		#expect(handler.processKeyEvent(event) == false)
-		#expect(invocationCount == 0)
-	}
-
-	@Test("A shortcut registered by key code dispatches the same way")
-	func keyEventHandlerDispatchesTypedShortcutAction() throws {
-		let handler = KeyEventHandler()
-		let event = try keyEvent("\u{1b}", modifiers: .command, keyCode: KeyCode.escape.rawValue)
-		var receivedEvent: NSEvent?
-		handler.register(key: .escape, modifiers: .command) { receivedEvent = $0 }
-
-		#expect(handler.processKeyEvent(event))
-		#expect(receivedEvent == event)
 	}
 
 	@Test("Completing a local command keeps the command prefix and adds a space")

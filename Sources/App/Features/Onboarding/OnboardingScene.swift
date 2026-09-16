@@ -6,7 +6,7 @@
 import AppKit
 import SwiftUI
 
-struct OnboardingApplicationScene: Scene {
+struct OnboardingScene: Scene {
 	var body: some Scene {
 		Window(OnboardingStrings.Window.title, id: ApplicationSceneID.onboarding) {
 			OnboardingSceneRoot()

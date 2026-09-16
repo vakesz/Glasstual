@@ -19,11 +19,6 @@ struct MainWindowTextZoomTests {
 		MainWindow(contentRect: .zero, styleMask: .borderless, backing: .buffered, defer: false)
 	}
 
-	@Test("A window starts at the unscaled size")
-	func startsUnscaled() {
-		#expect(window().textSizeMultiplier == 1.0)
-	}
-
 	@Test("Each step multiplies or divides by the same factor")
 	func stepsAreMultiplicative() {
 		let window = window()

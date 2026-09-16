@@ -20,14 +20,14 @@ struct ServerPropertiesSheetValueTests {
 	@Test(
 		"Only SOCKS5 and HTTP proxies take an address",
 		arguments: [
-			(IRCConnectionProxyType.none, false),
+			(ConnectionProxyType.none, false),
 			(.automatic, false),
 			(.socks5, true),
 			(.HTTP, true),
 			(.tor, false),
 		]
 	)
-	func proxyTypesThatTakeAnAddress(type: IRCConnectionProxyType, takesAddress: Bool) {
+	func proxyTypesThatTakeAnAddress(type: ConnectionProxyType, takesAddress: Bool) {
 		#expect(ServerPropertiesModel.proxyTypeUsesAddress(type) == takesAddress)
 	}
 
@@ -61,7 +61,7 @@ struct ServerPropertiesSheetValueTests {
 	@Test("The advanced encodings preference is read from the shared container")
 	func advancedEncodingsKeyLivesInTheContainer() {
 		let key = Preferences.Internals.includeAdvancedEncodings.name
-		let container = TextualUserDefaults.container
+		let container = GlasstualUserDefaults.container
 		let original = container.object(forKey: key)
 		defer {
 			if let original {
@@ -75,7 +75,7 @@ struct ServerPropertiesSheetValueTests {
 		#expect(container.bool(forKey: key))
 		// A handle taken away from the main actor has to be on this suite -- not
 		// on UserDefaults.standard -- and read the same value back.
-		let detached = TextualUserDefaults.suite()
+		let detached = GlasstualUserDefaults.suite()
 		#expect(detached.suiteName == container.suiteName)
 		#expect(detached.bool(forKey: key))
 	}

@@ -74,7 +74,7 @@ struct PrivacyManifestTests {
 			Service(
 				bundleName: "IRC Connection Host.xpc",
 				sourceDirectories: [
-					"Sources/Services/IRC Connection Host",
+					"Sources/ConnectionHost",
 					"Sources/Shared",
 				]
 			),

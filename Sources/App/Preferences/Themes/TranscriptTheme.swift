@@ -15,20 +15,20 @@ import Foundation
 
 /// A portable sRGB colour. Theme files use components rather than archived
 /// `NSColor` objects so they remain readable and stable across macOS releases.
-public nonisolated struct TranscriptThemeColor: Codable, Equatable, Sendable { // nonisolated: value
-	public var red: Double
-	public var green: Double
-	public var blue: Double
-	public var alpha: Double
+nonisolated struct TranscriptThemeColor: Codable, Equatable, Sendable { // nonisolated: value
+	var red: Double
+	var green: Double
+	var blue: Double
+	var alpha: Double
 
-	public init(red: Double, green: Double, blue: Double, alpha: Double = 1) {
+	init(red: Double, green: Double, blue: Double, alpha: Double = 1) {
 		self.red = red
 		self.green = green
 		self.blue = blue
 		self.alpha = alpha
 	}
 
-	public init?(_ color: NSColor) {
+	init?(_ color: NSColor) {
 		guard let color = color.usingColorSpace(.sRGB) else {
 			return nil
 		}
@@ -40,7 +40,7 @@ public nonisolated struct TranscriptThemeColor: Codable, Equatable, Sendable { /
 		)
 	}
 
-	public var color: NSColor {
+	var color: NSColor {
 		NSColor(srgbRed: red, green: green, blue: blue, alpha: alpha)
 	}
 
@@ -57,19 +57,19 @@ public nonisolated struct TranscriptThemeColor: Codable, Equatable, Sendable { /
  somebody chose: the shipped palette has one for every role, and a colour the
  reader picked themselves speaks for itself in both settings, which is why
  editing `light` or `dark` drops the variant beside it. */
-public nonisolated struct AdaptiveTranscriptColor: Codable, Equatable, Sendable { // nonisolated: value
-	public var light: TranscriptThemeColor {
+nonisolated struct AdaptiveTranscriptColor: Codable, Equatable, Sendable { // nonisolated: value
+	var light: TranscriptThemeColor {
 		didSet { highContrastLight = nil }
 	}
 
-	public var dark: TranscriptThemeColor {
+	var dark: TranscriptThemeColor {
 		didSet { highContrastDark = nil }
 	}
 
-	public private(set) var highContrastLight: TranscriptThemeColor?
-	public private(set) var highContrastDark: TranscriptThemeColor?
+	private(set) var highContrastLight: TranscriptThemeColor?
+	private(set) var highContrastDark: TranscriptThemeColor?
 
-	public init(light: TranscriptThemeColor, dark: TranscriptThemeColor) {
+	init(light: TranscriptThemeColor, dark: TranscriptThemeColor) {
 		self.light = light
 		self.dark = dark
 	}
@@ -86,7 +86,7 @@ public nonisolated struct AdaptiveTranscriptColor: Codable, Equatable, Sendable 
 		self.highContrastDark = highContrastDark
 	}
 
-	public func resolved(isDark: Bool, increasesContrast: Bool = false) -> NSColor {
+	func resolved(isDark: Bool, increasesContrast: Bool = false) -> NSColor {
 		let stronger = increasesContrast ? (isDark ? highContrastDark : highContrastLight) : nil
 		return (stronger ?? (isDark ? dark : light)).color
 	}
@@ -103,34 +103,34 @@ public nonisolated struct AdaptiveTranscriptColor: Codable, Equatable, Sendable 
 	}
 }
 
-public nonisolated enum TranscriptThemeLayout: String, Codable, CaseIterable, Sendable { // nonisolated: value
+nonisolated enum TranscriptThemeLayout: String, Codable, CaseIterable, Sendable { // nonisolated: value
 	case lines
 	case bubbles
 }
 
 /// Every colour the native transcript draws, named by purpose rather than by
 /// where a former stylesheet happened to use it.
-public nonisolated struct TranscriptThemePalette: Codable, Equatable, Sendable { // nonisolated: value
-	public var background: AdaptiveTranscriptColor
-	public var primaryText: AdaptiveTranscriptColor
-	public var secondaryText: AdaptiveTranscriptColor
+nonisolated struct TranscriptThemePalette: Codable, Equatable, Sendable { // nonisolated: value
+	var background: AdaptiveTranscriptColor
+	var primaryText: AdaptiveTranscriptColor
+	var secondaryText: AdaptiveTranscriptColor
 	/// The clock beside each line, quieter than the secondary text it used to
 	/// share but still legible: the default is the quietest grey that keeps
 	/// 4.5:1 against the default ground. Themes written before the role existed
 	/// decode it as their secondary text.
-	public var timestampText: AdaptiveTranscriptColor
-	public var eventText: AdaptiveTranscriptColor
-	public var link: AdaptiveTranscriptColor
-	public var localNickname: AdaptiveTranscriptColor
-	public var remoteNickname: AdaptiveTranscriptColor
-	public var highlightBackground: AdaptiveTranscriptColor
-	public var highlightText: AdaptiveTranscriptColor
-	public var bubbleIncoming: AdaptiveTranscriptColor
-	public var bubbleOutgoing: AdaptiveTranscriptColor
-	public var unreadMarker: AdaptiveTranscriptColor
-	public var failure: AdaptiveTranscriptColor
+	var timestampText: AdaptiveTranscriptColor
+	var eventText: AdaptiveTranscriptColor
+	var link: AdaptiveTranscriptColor
+	var localNickname: AdaptiveTranscriptColor
+	var remoteNickname: AdaptiveTranscriptColor
+	var highlightBackground: AdaptiveTranscriptColor
+	var highlightText: AdaptiveTranscriptColor
+	var bubbleIncoming: AdaptiveTranscriptColor
+	var bubbleOutgoing: AdaptiveTranscriptColor
+	var unreadMarker: AdaptiveTranscriptColor
+	var failure: AdaptiveTranscriptColor
 
-	public init(
+	init(
 		background: AdaptiveTranscriptColor,
 		primaryText: AdaptiveTranscriptColor,
 		secondaryText: AdaptiveTranscriptColor,
@@ -164,7 +164,7 @@ public nonisolated struct TranscriptThemePalette: Codable, Equatable, Sendable {
 
 	/// Themes written before `timestampText` existed decode it as their
 	/// secondary text, which is the colour their timestamps had.
-	public init(from decoder: any Decoder) throws {
+	init(from decoder: any Decoder) throws {
 		let container = try decoder.container(keyedBy: CodingKeys.self)
 		background = try container.decode(AdaptiveTranscriptColor.self, forKey: .background)
 		primaryText = try container.decode(AdaptiveTranscriptColor.self, forKey: .primaryText)
@@ -213,27 +213,27 @@ public nonisolated struct TranscriptThemePalette: Codable, Equatable, Sendable {
 /// The one native transcript theme format. It is both the runtime model and
 /// the payload written by Export Theme, avoiding adapters between preference,
 /// file, and rendering representations.
-public nonisolated struct TranscriptTheme: Codable, Equatable, Sendable { // nonisolated: value
+nonisolated struct TranscriptTheme: Codable, Equatable, Sendable { // nonisolated: value
 	/// Version 2 replaced the `<>` around nicknames in the default format with
 	/// a trailing colon; version 3 gave every colour role a variant for the
 	/// system's increased-contrast setting. An older document is read and
 	/// carried forward, see `migrated()`.
-	public static let currentFormatVersion = 3
-	public static let supportedFormatVersions = 1 ... currentFormatVersion
+	static let currentFormatVersion = 3
+	static let supportedFormatVersions = 1 ... currentFormatVersion
 
-	public var formatVersion = currentFormatVersion
-	public var name: String
-	public var layout: TranscriptThemeLayout
-	public var fontName: String
-	public var fontSize: Double
-	public var timestampFormat: String
-	public var nicknameFormat: String
-	public var lineSpacing: Double
-	public var messageSpacing: Double
-	public var horizontalPadding: Double
-	public var palette: TranscriptThemePalette
+	var formatVersion = currentFormatVersion
+	var name: String
+	var layout: TranscriptThemeLayout
+	var fontName: String
+	var fontSize: Double
+	var timestampFormat: String
+	var nicknameFormat: String
+	var lineSpacing: Double
+	var messageSpacing: Double
+	var horizontalPadding: Double
+	var palette: TranscriptThemePalette
 
-	public init(
+	init(
 		name: String,
 		layout: TranscriptThemeLayout,
 		fontName: String = ".AppleSystemUIFont",
@@ -260,13 +260,13 @@ public nonisolated struct TranscriptTheme: Codable, Equatable, Sendable { // non
 		self.palette = palette
 	}
 
-	public static let lines = TranscriptTheme(
+	static let lines = TranscriptTheme(
 		name: "Lines",
 		layout: .lines,
 		palette: defaultPalette
 	)
 
-	public static let bubbles = TranscriptTheme(
+	static let bubbles = TranscriptTheme(
 		name: "Bubbles",
 		layout: .bubbles,
 		messageSpacing: 7,
@@ -282,7 +282,7 @@ public nonisolated struct TranscriptTheme: Codable, Equatable, Sendable { // non
 	 step above the 4.5:1 the ordinary pair holds — and the dark ground itself
 	 drops to black so the whole transcript gains from it.
 	 `ThemePaletteContrastTests` holds both floors. */
-	public static let defaultPalette = TranscriptThemePalette(
+	static let defaultPalette = TranscriptThemePalette(
 		background: pair(light: 0xFFFFFF, dark: 0x1E1E1E, contrastLight: 0xFFFFFF, contrastDark: 0x000000),
 		primaryText: pair(light: 0x202124, dark: 0xF2F2F2, contrastLight: 0x000000, contrastDark: 0xFFFFFF),
 		secondaryText: pair(light: 0x6E6E73, dark: 0xA1A1A6, contrastLight: 0x3A3A3C, contrastDark: 0xE5E5EA),
@@ -360,11 +360,11 @@ public nonisolated struct TranscriptTheme: Codable, Equatable, Sendable { // non
 	 They differ exactly when `migrated()` moved the document forward, which is
 	 what tells a caller to write the upgraded document back instead of
 	 migrating the same file again at every launch. */
-	public nonisolated struct Document: Equatable, Sendable { // nonisolated: value
-		public let theme: TranscriptTheme
-		public let formatVersion: Int
+	nonisolated struct Document: Equatable, Sendable { // nonisolated: value
+		let theme: TranscriptTheme
+		let formatVersion: Int
 
-		public var wasMigrated: Bool {
+		var wasMigrated: Bool {
 			formatVersion != theme.formatVersion
 		}
 	}
@@ -372,7 +372,7 @@ public nonisolated struct TranscriptTheme: Codable, Equatable, Sendable { // non
 	/** The one way a stored or imported property list becomes a theme: decode,
 	 refuse a version this build does not know, carry an older one forward, and
 	 refuse anything the renderer could not draw. */
-	public static func decoded(from data: Data) throws -> Document {
+	static func decoded(from data: Data) throws -> Document {
 		let decoded: Self
 		do {
 			decoded = try PropertyListDecoder().decode(Self.self, from: data)
@@ -417,11 +417,11 @@ public nonisolated struct TranscriptTheme: Codable, Equatable, Sendable { // non
 
 /// Why a stored or imported theme document was refused, in the words the theme
 /// sheet shows.
-public nonisolated enum TranscriptThemeCodingError: LocalizedError, Equatable, Sendable { // nonisolated: value
+nonisolated enum TranscriptThemeCodingError: LocalizedError, Equatable, Sendable { // nonisolated: value
 	case invalidDocument
 	case unsupportedVersion(Int)
 
-	public var errorDescription: String? {
+	var errorDescription: String? {
 		switch self {
 		case .invalidDocument:
 			TranscriptThemeStrings.invalidDocument

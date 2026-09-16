@@ -287,12 +287,12 @@ struct InboundNumericHandlingTests {
 		#expect(printedBodies(on: client, forCommand: "338").isEmpty == false)
 	}
 
-	// MARK: - Plugin subscription
+	// MARK: - Wire spelling
 
-	/** A plugin subscribes to the wire token, which is always three digits.
-	 `String(commandNumeric)` drops the leading zeros, so nothing a plugin
-	 subscribed to below 100 could ever match what the client compared. */
-	@Test("A numeric keeps the leading zeros a plugin subscribed to")
+	/** A numeric is written on the wire as three digits.
+	 `String(commandNumeric)` drops the leading zeros, so a comparison against
+	 it would never match a numeric below 100. */
+	@Test("A numeric keeps the leading zeros it was sent with")
 	func numericKeepsItsLeadingZeros() throws {
 		let client = client()
 		let message = try #require(Message(line: ":irc.example.net 001 me :Welcome", on: client))

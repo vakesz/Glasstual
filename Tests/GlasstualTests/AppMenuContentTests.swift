@@ -5,7 +5,6 @@
 
 import AppKit
 @testable import Glasstual
-import GlasstualPluginKit
 import SwiftUI
 import Testing
 
@@ -103,7 +102,7 @@ struct AppMenuContentTests {
 			let coordinator = controller.actionCoordinator
 			coordinator.pointedClient = client
 			coordinator.pointedChannel = nil
-			for item in [other as TreeItem?, nil] {
+			for item in [other as ChatItem?, nil] {
 				let entries = AppMenuEntry.validating(
 					controller.mainMenuChannelMenu,
 					context: AppMenuContext(coordinator: coordinator, item: item)
@@ -235,7 +234,7 @@ struct AppMenuContentTests {
 			let coordinator = controller.actionCoordinator
 			let owner = NSObject()
 			var dismissed = false
-			window.presentationModel.presentSheet(MainWindowSheetPresentation(owner: owner, content: EmptyView()) {
+			window.presentationModel.presentSheet(PresentedSheet(owner: owner, content: EmptyView()) {
 				dismissed = true
 			})
 			defer { window.presentationModel.dismissSheet(ownedBy: owner) }
@@ -301,7 +300,7 @@ struct AppMenuContentTests {
 	private func withChannelMenu(
 		_ body: (MenuController, MainWindow, TestClient, TestClient) throws -> Void
 	) async throws {
-		let app = try #require(AppController.shared)
+		let app = try #require(AppServices.delegate)
 		try #require(app.applicationIsLaunched)
 		let window = MainWindow(
 			contentRect: NSRect(x: 100, y: 100, width: 640, height: 480),

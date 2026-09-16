@@ -6,7 +6,6 @@
 import CocoaExtensions
 import Foundation
 @testable import Glasstual
-import GlasstualPluginKit
 import SwiftUI
 import Testing
 
@@ -79,7 +78,7 @@ struct PreferencesTransferBoundsTests {
 	func launchRepairKeepsAcceptedElements() throws {
 		let fixture = try Fixture()
 		defer { fixture.cleanUp() }
-		let filters = Preferences.Extensions.chatFilters
+		let filters = Preferences.Rules.messageRules
 		let keywords = Preferences.Highlights.matchKeywords
 		let colors = Preferences.Messages.nicknameColorStyleOverrides
 		let storedFilters: PropertyListValue = .array([

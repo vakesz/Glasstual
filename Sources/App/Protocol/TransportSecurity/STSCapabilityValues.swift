@@ -41,15 +41,15 @@ import Foundation
 
  A value: capability negotiation parses one, the policy store reads it, and
  nothing keeps it past the negotiation that built it. */
-public struct STSCapabilityValues: Hashable, Sendable, CustomStringConvertible {
-	public private(set) var port: UInt16 = 0
-	public private(set) var hasDuration = false
-	public private(set) var duration: TimeInterval = 0
-	public private(set) var preload = false
+struct STSCapabilityValues: Hashable, Sendable, CustomStringConvertible {
+	private(set) var port: UInt16 = 0
+	private(set) var hasDuration = false
+	private(set) var duration: TimeInterval = 0
+	private(set) var preload = false
 
 	private init() {}
 
-	public static func values(fromCapabilityValues values: [String]) -> STSCapabilityValues? {
+	static func values(fromCapabilityValues values: [String]) -> STSCapabilityValues? {
 		var result = STSCapabilityValues()
 		var recognizedKey = false
 
@@ -83,7 +83,7 @@ public struct STSCapabilityValues: Hashable, Sendable, CustomStringConvertible {
 		return recognizedKey ? result : nil
 	}
 
-	public var description: String {
+	var description: String {
 		"<STSCapabilityValues port=\(port) duration=\(String(format: "%.0f", duration)) preload=\(preload ? 1 : 0)>"
 	}
 

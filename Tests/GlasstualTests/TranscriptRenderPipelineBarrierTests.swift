@@ -13,7 +13,7 @@ import Testing
 struct TranscriptRenderPipelineBarrierTests {
 	@Test("Cancelling a barrier ends it instead of leaving it waiting", .timeLimit(.minutes(1)))
 	func aCancelledBarrierEnds() async {
-		let pipeline = LogRenderPipeline()
+		let pipeline = TranscriptRenderPipeline()
 		let task = Task { await pipeline.barrier() }
 		task.cancel()
 		await task.value

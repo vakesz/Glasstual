@@ -1,7 +1,6 @@
 import CocoaExtensions
 import Foundation
 @testable import Glasstual
-import GlasstualPluginKit
 import Testing
 
 @MainActor
@@ -43,8 +42,8 @@ struct ClientConfigPersistenceTests {
 			"connectionName": "Libera Chat",
 			"nickname": "swift-user",
 			"autoConnect": true,
-			"addressType": IRCConnectionAddressType.v6.rawValue,
-			"proxyType": IRCConnectionProxyType.socks5.rawValue,
+			"addressType": ConnectionAddressType.v6.rawValue,
+			"proxyType": ConnectionProxyType.socks5.rawValue,
 			"proxyAddress": "proxy.example.test",
 			"proxyPort": 1081,
 			"serverList": [[

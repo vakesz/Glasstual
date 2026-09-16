@@ -38,7 +38,7 @@
 
 import Foundation
 
-public nonisolated enum ModeParser { // nonisolated: value
+nonisolated enum ModeParser { // nonisolated: value
 	/** The channel modes RFC 1459 2.3 defines, for a server that has not said
 	 which it has.
 
@@ -65,9 +65,9 @@ public nonisolated enum ModeParser { // nonisolated: value
 	 `PREFIX` modes is one no `CHANMODES` has been read into yet; once one has,
 	 the server's answer stands even where it is narrower than the RFC's.
 	 Anything that has to know whether a mode takes a parameter — the parser
-	 here, `IRCISupportInfo.modeHasParameter` — asks through this, because a
+	 here, `ISupport.modeHasParameter` — asks through this, because a
 	 second copy of the rule is a second answer. */
-	public static func effectiveChannelModeKinds(
+	static func effectiveChannelModeKinds(
 		_ channelModeKinds: [Character: ChannelModeKind]
 	) -> [Character: ChannelModeKind] {
 		let hasAdvertisedChannelModes = channelModeKinds.values.contains { $0 != .userPrefix }
@@ -79,7 +79,7 @@ public nonisolated enum ModeParser { // nonisolated: value
 		return rfc1459ChannelModeKinds.merging(channelModeKinds) { _, advertised in advertised }
 	}
 
-	public static func parse(
+	static func parse(
 		_ modeString: String,
 		channelModeKinds: [Character: ChannelModeKind]
 	) -> [ModeInfo] {

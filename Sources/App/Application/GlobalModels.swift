@@ -36,15 +36,13 @@
  *********************************************************************** */
 
 import Foundation
-import GlasstualPluginKit
 
 /* The helpers below were `@_cdecl` C entry points for the Objective-C half of
  the application, which no longer exists. Every caller is Swift, so they are
- ordinary Swift functions, and no `@_cdecl` is left anywhere in the tree:
- `PluginManager` admits a bundle only when it ships inside the application or
- carries the application's own Team ID, so there is no foreign binary left to
- reach one by its C name. The date formatters also existed twice, once taking
- `AnyObject` and once `Any`; only the `Any` form is kept. */
+ ordinary Swift functions, and no `@_cdecl` is left anywhere in the tree: there
+ is no foreign binary that could reach one by its C name. The date formatters
+ also existed twice, once taking `AnyObject` and once `Any`; only the `Any` form
+ is kept. */
 
 /** The one ISO 8601 representation the protocol layer reads and writes.
 
@@ -52,7 +50,7 @@ import GlasstualPluginKit
  one of them could set `dateFormat` on it and silently change how every other
  timestamp in the application parsed. A format style is a value: there is
  nothing shared left to reconfigure. */
-public nonisolated struct ISOStandardDateFormatter: Sendable { // nonisolated: value
+nonisolated struct ISOStandardDateFormatter: Sendable { // nonisolated: value
 	private static let style = Date.ISO8601FormatStyle(
 		includingFractionalSeconds: true,
 		timeZone: TimeZone(identifier: "UTC") ?? .gmt
@@ -69,18 +67,16 @@ public nonisolated struct ISOStandardDateFormatter: Sendable { // nonisolated: v
 	 a round by nudging the moment first. */
 	private static let millisecondRoundingBias: TimeInterval = 0.000_5
 
-	public init() {}
-
-	public func string(from date: Date) -> String {
+	func string(from date: Date) -> String {
 		Self.style.format(date.addingTimeInterval(Self.millisecondRoundingBias))
 	}
 
-	public func date(from string: String) -> Date? {
+	func date(from string: String) -> Date? {
 		try? Self.style.parse(string)
 	}
 }
 
-public nonisolated func formattedTimestamp(_ date: NSDate, _ format: NSString) -> String? { // nonisolated: pure
+nonisolated func formattedTimestamp(_ date: NSDate, _ format: NSString) -> String? { // nonisolated: pure
 	/* The date can come off disk: a historic log row carries an archived
 	 `NSDate`, and one that is not a moment `localtime_r` can name traps on the
 	 narrowing rather than reporting it. Every caller already falls back to the
@@ -107,19 +103,65 @@ public nonisolated func formattedTimestamp(_ date: NSDate, _ format: NSString) -
 	return String(bytes: bytes, encoding: .utf8)
 }
 
-public nonisolated func humanReadableTimeInterval( // nonisolated: pure
-	_ dateInterval: TimeInterval,
-	_ shortValue: Bool,
-	_ orderMatrix: UInt
+/** One unit a span can be reported in, largest first.
+
+ Two spellings of the same unit meet here: `Calendar.Component` measures the
+ span and `Date.ComponentsFormatStyle.Field` prints it. One row per unit keeps
+ them together instead of in two switches that have to agree. */
+private nonisolated let measurableUnits: [( // nonisolated: let
+	component: Calendar.Component,
+	field: Date.ComponentsFormatStyle.Field
+)] = [
+	(.year, .year),
+	(.month, .month),
+	(.day, .day),
+	(.hour, .hour),
+	(.minute, .minute),
+	(.second, .second),
+]
+
+/** `interval` written out in words, in the reader's locale.
+
+ `shortValue` reports only the largest unit the span actually fills; `fields`
+ narrows which units may be used at all, and an empty set means every one. */
+nonisolated func humanReadableTimeInterval( // nonisolated: pure
+	_ interval: TimeInterval,
+	shortValue: Bool,
+	fields requestedFields: Set<Date.ComponentsFormatStyle.Field> = []
 ) -> String {
-	PluginHost.humanReadableTimeInterval(
-		dateInterval,
-		shortValue: shortValue,
-		units: NSCalendar.Unit(rawValue: orderMatrix)
-	)
+	let requested = requestedFields.isEmpty
+		? measurableUnits
+		: measurableUnits.filter { requestedFields.contains($0.field) }
+	let calendar = Calendar.autoupdatingCurrent
+	let startDate = Date()
+	/* The interval can be server text a caller read as a `Double`, and
+	 `Double("nan")` parses. Foundation clamps the resulting date rather than
+	 trapping, which turns a NaN into a plausible-looking span in the wrong
+	 direction; nothing to measure reads as nothing. */
+	let endDate = startDate.addingTimeInterval(interval.isFinite ? interval : 0)
+	let dateRange = min(startDate, endDate) ..< max(startDate, endDate)
+	let fields: Set<Date.ComponentsFormatStyle.Field>
+
+	if shortValue {
+		let values = calendar.dateComponents(
+			Set(requested.map(\.component)),
+			from: dateRange.lowerBound,
+			to: dateRange.upperBound
+		)
+		let largest = requested.first { values.value(for: $0.component) != 0 }
+		fields = [largest?.field ?? .second]
+	} else {
+		fields = Set(requested.map(\.field))
+	}
+
+	return Date.ComponentsFormatStyle(
+		style: .wide,
+		calendar: calendar,
+		fields: fields.isEmpty ? [.second] : fields
+	).format(dateRange)
 }
 
-public nonisolated func formatDate( // nonisolated: pure
+nonisolated func formatDate( // nonisolated: pure
 	_ dateObject: Any,
 	_ dateStyle: DateFormatter.Style,
 	_ timeStyle: DateFormatter.Style,
@@ -221,7 +263,7 @@ private nonisolated func parseDateValue(_ string: String) -> Date? { // nonisola
  that advances, and taking it by value drew from a copy and left the caller's
  own generator where it was — so two draws in a row from the same generator
  answered the same number. */
-public nonisolated func randomNumber( // nonisolated: pure
+nonisolated func randomNumber( // nonisolated: pure
 	_ maximum: UInt32,
 	using generator: inout some RandomNumberGenerator
 ) -> UInt {
@@ -233,12 +275,8 @@ public nonisolated func randomNumber( // nonisolated: pure
 /// The same number from the system generator, for the callers that want one and
 /// have no generator of their own. It holds no state of ours: every draw goes to
 /// the operating system.
-public nonisolated func randomNumber(_ maximum: UInt32) -> UInt { // nonisolated: pure
+nonisolated func randomNumber(_ maximum: UInt32) -> UInt { // nonisolated: pure
 	var generator = SystemRandomNumberGenerator()
 
 	return randomNumber(maximum, using: &generator)
-}
-
-public nonisolated func formattedNumber(_ number: Int) -> String { // nonisolated: pure
-	PluginHost.formattedNumber(number)
 }

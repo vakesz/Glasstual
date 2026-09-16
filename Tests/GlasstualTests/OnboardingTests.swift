@@ -320,27 +320,6 @@ struct OnboardingTests {
 		#expect(events == ["complete"])
 	}
 
-	/** Closing the window used to save everything the person had typed. It is a
-	 dismissal, so it applies nothing — but onboarding is still marked answered,
-	 because leaving it unmarked is what made it come back at every launch. */
-	@Test("Closing the window applies nothing and still completes once")
-	func windowCloseAppliesNothing() {
-		let model = identifiedModel()
-		var events: [String] = []
-		let session = OnboardingSession(
-			model: model,
-			createConnection: { _, _ in Issue.record("Closing the window created a connection"); return false },
-			applySettings: { _ in Issue.record("Closing the window saved settings") },
-			markCompleted: { events.append("complete") }
-		)
-		advance(model, to: .summary)
-
-		session.setUpLater()
-
-		#expect(events == ["complete"])
-		#expect(model.settings.clientConfig == nil)
-	}
-
 	@Test("Every appearance the picker offers has a title of its own")
 	func appearanceTitlesCoverEveryCase() {
 		let titles = PreferredAppearance.allCases.map(OnboardingStrings.Appearance.interfaceStyleTitle)

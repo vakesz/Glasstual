@@ -9,7 +9,6 @@ enum ScenarioKind: String, CaseIterable {
 	case settingsSnapshot
 	case onboardingSkip
 	case onboardingFinish
-	case pluginSmiley
 	case dccSuccess
 	case dccCancel
 	case burstResponsiveness
@@ -54,11 +53,11 @@ enum ScenarioKind: String, CaseIterable {
 	}
 
 	var interactive: Bool {
-		[.pluginSmiley, .dccSuccess, .dccCancel, .burstResponsiveness].contains(self)
+		[.dccSuccess, .dccCancel, .burstResponsiveness].contains(self)
 	}
 
 	var usesChannel: Bool {
-		messaging || self == .pluginSmiley || self == .burstResponsiveness
+		messaging || self == .burstResponsiveness
 	}
 
 	/// The single list of modes `make e2e-fixtures` runs; the script asks the

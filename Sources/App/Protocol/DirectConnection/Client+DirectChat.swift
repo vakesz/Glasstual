@@ -1,0 +1,299 @@
+/* *********************************************************************
+ *                  _____         _               _
+ *                 |_   _|____  _| |_ _   _  __ _| |
+ *                   | |/ _ \ \/ / __| | | |/ _` | |
+ *                   | |  __/>  <| |_| |_| | (_| | |
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
+ *
+ * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
+ * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+ *       Please see Acknowledgements.pdf for additional information.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *  * Neither the name of Textual, "Codeux Software, LLC", nor the
+ *    names of its contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ *
+ *********************************************************************** */
+
+import CocoaExtensions
+import Foundation
+import os
+
+private let directChatClientLogger = Logger(
+	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
+	category: "DCCDirectChat"
+)
+
+struct DCCChatOffer: Equatable {
+	let address: String
+	let port: UInt16
+	let token: String?
+
+	var isPassive: Bool {
+		port == 0
+	}
+}
+
+enum DCCChatPolicy {
+	static func parseOffer(_ source: String) -> DCCChatOffer? {
+		var input = CommandTokenizer(source)
+		/* A DCC CHAT offer names the DCC subcommand and then the chat protocol,
+		 both spelled "CHAT". The two reads look identical because the tokens
+		 are. */
+		let dccSubcommand = input.nextUppercaseToken()
+		let chatProtocol = input.nextUppercaseToken()
+		guard dccSubcommand == "CHAT", chatProtocol == "CHAT" else { return nil }
+		let address = DCCWireFormat.displayAddress(input.nextToken())
+		let portText = input.nextToken()
+		let rawToken = input.nextToken()
+		let tokenText = rawToken.hasPrefix("T") ? String(rawToken.dropFirst()) : rawToken
+		let token = tokenText.isEmpty ? nil : tokenText
+		guard portText.allSatisfy(\.isNumber), let portValue = Int(portText),
+		      portValue >= 0, portValue <= 65535,
+		      portValue > 0 || token != nil,
+		      token?.allSatisfy(\.isNumber) ?? true
+		else { return nil }
+		if portValue > 0, !address.isIPAddress {
+			return nil
+		}
+		return DCCChatOffer(address: address, port: UInt16(portValue), token: token)
+	}
+
+	/** Whether the client is willing to dial the address the offer names.
+
+	 An active offer decides which host this client connects to, exactly as a
+	 DCC SEND offer does, so it goes through the same refusal: loopback, a
+	 private network and the documentation ranges are not addresses a peer gets
+	 to point us at. A passive offer names none — the peer connects to us — so
+	 there is nothing to refuse. */
+	static func isDialable(_ offer: DCCChatOffer) -> Bool {
+		offer.isPassive || DCCWireFormat.isDialableAddress(offer.address)
+	}
+
+	static func listeningArguments(address: String, port: UInt16, token: String?) -> String {
+		let base = "chat \(address) \(port)"
+		return token.map { "\(base) \($0)" } ?? base
+	}
+
+	static func channelName(for nickname: String) -> String {
+		"=\(nickname)"
+	}
+}
+
+@MainActor
+extension Client {
+	func directChatChannelName(forNickname nickname: String) -> String {
+		DCCChatPolicy.channelName(for: nickname)
+	}
+
+	func directChatChannel(for connection: DirectChatSession) -> Channel? {
+		channelList.first { $0.isDirectChat && $0.directChatConnection === connection }
+	}
+
+	func directChatChannel(forNickname nickname: String) -> Channel? {
+		let channel = findChannel(directChatChannelName(forNickname: nickname))
+		return channel?.isDirectChat == true ? channel : nil
+	}
+
+	func handleDCCCommand(
+		_ input: CommandArguments,
+		command: String,
+		targetChannel: Channel?
+	) {
+		var input = input
+		switch input.next().uppercased() {
+		case "CHAT":
+			guard isLoggedIn else {
+				printDebugInformation(toConsole: TransportStrings.notConnected)
+				return
+			}
+			var nickname = input.next()
+			if nickname.isEmpty, let targetChannel {
+				if targetChannel.isPrivateMessage {
+					nickname = targetChannel.name
+				} else if targetChannel.isDirectChat {
+					nickname = targetChannel.directChatConnection?
+						.peerNickname ?? String(targetChannel.name.dropFirst())
+				}
+			}
+			guard !nickname.isEmpty, stringIsNickname(nickname) else {
+				printInvalidSyntaxMessage(for: command)
+				return
+			}
+			startDirectChat(withNickname: nickname)
+		case "SEND":
+			let nickname = input.next()
+			let path = (input.rest.trimmingCharacters(in: .whitespacesAndNewlines) as NSString).expandingTildeInPath
+			guard !nickname.isEmpty, stringIsNickname(nickname), !path.isEmpty else {
+				printInvalidSyntaxMessage(for: command)
+				return
+			}
+			AppServices.fileTransfers.offerSender(
+				for: self, nickname: nickname, path: path, autoOpen: true
+			) { [weak self] identifier in
+				if identifier == nil {
+					self?.printDebugInformation(DirectChatStrings.fileCouldNotBeOffered(path: path))
+				}
+			}
+		default:
+			printInvalidSyntaxMessage(for: command)
+		}
+	}
+
+	func receivedDCCChatQuery(_ sender: String, text: String) {
+		guard let offer = DCCChatPolicy.parseOffer(text) else {
+			printInvalidDCCChatRequest(from: sender)
+			return
+		}
+		if !offer.isPassive, offer.token != nil {
+			guard directChatChannel(forNickname: sender)?.directChatConnection?.state == .listening else {
+				directChatClientLogger.error(
+					"Received a passive DCC CHAT reply from \(sender, privacy: .public) without a matching request"
+				)
+				return
+			}
+		} else if admitsDCCOffer(from: sender) == false {
+			/* Each unsolicited offer puts a prompt in front of the user, so a
+			 flood of them is dropped here, before any prompt is made. */
+			return
+		}
+
+		if DCCChatPolicy.isDialable(offer) == false {
+			directChatClientLogger.error("Refused a DCC CHAT offer for a non-routable address")
+			printDebugInformation(
+				toConsole: ConnectionSafetyStrings.DirectChat.refusedAddress(
+					sender: sender, address: offer.address
+				)
+			)
+			return
+		}
+
+		print(DirectChatStrings.incomingRequest(sender: sender), by: nil, in: nil,
+		      as: .dccFileTransfer, command: LogLineFormat.defaultCommand)
+		/* The address is what the user is actually being asked to approve — the
+		 nickname alone says nothing about where the connection would go. */
+		let body = offer.isPassive
+			? PromptStrings.DirectChat.body(sender: sender)
+			: ConnectionSafetyStrings.DirectChat.requestBody(sender: sender, address: offer.address)
+		let request = AlertRequest(
+			title: PromptStrings.DirectChat.title(sender: sender),
+			body: body,
+			defaultButton: PromptStrings.DirectChat.acceptButtonTitle,
+			alternateButton: PromptStrings.DirectChat.declineButtonTitle
+		)
+		output?.presentAlertSheet(
+			request,
+			completion: { [weak self] outcome in
+				guard let self else { return }
+				guard outcome.response == .default else {
+					print(DirectChatStrings.declined(sender: sender), by: nil, in: nil,
+					      as: .dccFileTransfer, command: LogLineFormat.defaultCommand)
+					return
+				}
+				guard isLoggedIn else { return }
+				if offer.isPassive {
+					openDirectChat(withNickname: sender, listeningWithToken: offer.token, offeredAddress: offer.address)
+				} else {
+					openDirectChat(withNickname: sender, address: offer.address, port: offer.port)
+				}
+			}
+		)
+	}
+
+	func startDirectChat(withNickname nickname: String) {
+		guard !nicknameIsMyself(nickname) else { return }
+		openDirectChat(withNickname: nickname, listeningWithToken: nil)
+	}
+
+	func prepareDirectChatChannel(forNickname nickname: String) -> Channel? {
+		guard let channel = findChannelOrCreate(
+			directChatChannelName(forNickname: nickname), as: .directChat
+		) else { return nil }
+		channel.closeDirectChatConnection()
+		if channel.isActive {
+			channel.deactivate()
+		}
+		return channel
+	}
+
+	func openDirectChat(withNickname nickname: String, address: String, port: UInt16) {
+		guard let channel = prepareDirectChatChannel(forNickname: nickname) else { return }
+		let connection = DirectChatSession.connection(
+			toPeer: nickname, address: address, port: port, onClient: self
+		)
+		channel.directChatConnection = connection
+		printDebugInformation(
+			DirectChatStrings.connecting(nickname: nickname, address: address, port: port),
+			in: channel
+		)
+		output?.select(channel)
+		connection.open()
+	}
+
+	func openDirectChat(
+		withNickname nickname: String,
+		listeningWithToken token: String?,
+		offeredAddress: String? = nil
+	) {
+		guard let channel = prepareDirectChatChannel(forNickname: nickname) else { return }
+		let connection = DirectChatSession.listeningConnection(
+			forPeer: nickname, token: token, offeredAddress: offeredAddress, onClient: self
+		)
+		channel.directChatConnection = connection
+		printDebugInformation(DirectChatStrings.offering(to: nickname), in: channel)
+		output?.select(channel)
+		connection.open()
+	}
+
+	func sendDirectChatText(
+		_ string: NSAttributedString,
+		as command: RemoteCommand,
+		to channel: Channel
+	) {
+		guard let connection = channel.directChatConnection, connection.isConnected else {
+			printDebugInformation(DirectChatStrings.notConnected, in: channel)
+			return
+		}
+		let isAction = command == .privmsgAction
+		let lineType: LogLineType = isAction ? .action : .privateMessage
+		var cursor = OutboundTextCursor(string)
+		enqueueOutboundText(channels: [channel]) { client in
+			guard channel.directChatConnection === connection, connection.isConnected,
+			      let message = cursor.next(for: channel.name, on: client, as: lineType) else { return false }
+			if isAction {
+				connection.sendAction(message)
+			} else {
+				connection.sendMessage(message)
+			}
+			client.print(message, by: client.userNickname, in: channel, as: lineType, command: "PRIVMSG",
+			             receivedAt: Date(), isEncrypted: false)
+			return true
+		}
+	}
+
+	private func printInvalidDCCChatRequest(from sender: String) {
+		print(DirectChatStrings.unprocessableRequest(sender: sender), by: nil, in: nil,
+		      as: .dccFileTransfer, command: LogLineFormat.defaultCommand)
+	}
+}

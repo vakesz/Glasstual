@@ -86,7 +86,7 @@ struct IRCSpecBatchTests {
 		]
 	)
 	func wellFormedReferencesAreRead(_ testCase: (reference: String, opens: Bool)) throws {
-		let parsed = try #require(IRCBatchPolicy.normalizedToken(testCase.reference))
+		let parsed = try #require(BatchPolicy.normalizedToken(testCase.reference))
 
 		#expect(parsed.opens == testCase.opens)
 		#expect(parsed.token == String(testCase.reference.dropFirst()))
@@ -99,7 +99,7 @@ struct IRCSpecBatchTests {
 		arguments: ["", "+", "-", "abc", "+a.b", "+a b", "*abc", "+a/b"]
 	)
 	func malformedReferencesAreRejected(_ reference: String) {
-		#expect(IRCBatchPolicy.normalizedToken(reference) == nil)
+		#expect(BatchPolicy.normalizedToken(reference) == nil)
 	}
 
 	/// `batch`: `BATCH +<reference> <type> [params...]`.
@@ -226,7 +226,7 @@ struct IRCSpecBatchTests {
 	/// children would otherwise drive an unbounded walk on every message.
 	@Test("batch: nesting depth is bounded")
 	func nestingDepthIsBounded() {
-		#expect(IRCBatchPolicy.maximumParentDepth == 16)
+		#expect(BatchPolicy.maximumParentDepth == 16)
 	}
 
 	/// A batch may not grow without bound either — chathistory replies are
@@ -240,12 +240,12 @@ struct IRCSpecBatchTests {
 	/// write them, including the `draft/` form chathistory shipped under.
 	@Test("batch: the types the client treats specially")
 	func specialBatchTypesAreRecognised() {
-		#expect(IRCBatchPolicy.isChatHistory("chathistory"))
-		#expect(IRCBatchPolicy.isChatHistory("draft/chathistory"))
-		#expect(IRCBatchPolicy.isChatHistory("netsplit") == false)
-		#expect(IRCBatchPolicy.isNetsplit("netsplit"))
-		#expect(IRCBatchPolicy.isNetsplit("netjoin"))
-		#expect(IRCBatchPolicy.isNetsplit(nil) == false)
+		#expect(BatchPolicy.isChatHistory("chathistory"))
+		#expect(BatchPolicy.isChatHistory("draft/chathistory"))
+		#expect(BatchPolicy.isChatHistory("netsplit") == false)
+		#expect(BatchPolicy.isNetsplit("netsplit"))
+		#expect(BatchPolicy.isNetsplit("netjoin"))
+		#expect(BatchPolicy.isNetsplit(nil) == false)
 	}
 
 	// MARK: - labeled-response
@@ -455,15 +455,15 @@ struct IRCSpecBatchTests {
 	/// Which inbound commands can carry a label at all.
 	@Test("labeled-response: the responses that resolve a label")
 	func responseKindsAreClassified() {
-		#expect(IRCLabeledResponsePolicy.responseKind(command: "ACK") == .acknowledgement)
-		#expect(IRCLabeledResponsePolicy.responseKind(command: "FAIL") == .failure)
-		#expect(IRCLabeledResponsePolicy.responseKind(command: "PRIVMSG") == .echo)
-		#expect(IRCLabeledResponsePolicy.responseKind(command: "NOTICE") == .echo)
-		#expect(IRCLabeledResponsePolicy.responseKind(command: "TAGMSG") == .echo)
-		#expect(IRCLabeledResponsePolicy.responseKind(command: "JOIN") == .unrelated)
+		#expect(LabeledResponsePolicy.responseKind(command: "ACK") == .acknowledgement)
+		#expect(LabeledResponsePolicy.responseKind(command: "FAIL") == .failure)
+		#expect(LabeledResponsePolicy.responseKind(command: "PRIVMSG") == .echo)
+		#expect(LabeledResponsePolicy.responseKind(command: "NOTICE") == .echo)
+		#expect(LabeledResponsePolicy.responseKind(command: "TAGMSG") == .echo)
+		#expect(LabeledResponsePolicy.responseKind(command: "JOIN") == .unrelated)
 		// The command is matched however the server spelled its case.
-		#expect(IRCLabeledResponsePolicy.responseKind(command: "ack") == .acknowledgement)
+		#expect(LabeledResponsePolicy.responseKind(command: "ack") == .acknowledgement)
 		// A command whose name merely starts the same way is not one of them.
-		#expect(IRCLabeledResponsePolicy.responseKind(command: "NOTE") == .unrelated)
+		#expect(LabeledResponsePolicy.responseKind(command: "NOTE") == .unrelated)
 	}
 }

@@ -112,28 +112,28 @@ private final class InputHistoryObject {
 /** The input history follows the focused view, so it lives where the text field
  does: on the main actor. That is what makes the plain stored state safe. */
 @MainActor
-public final class InputHistory: NSObject {
+final class InputHistory: NSObject {
 	private weak var window: MainWindow?
 	private var historyObjects: [InputHistoryScope: InputHistoryObject] = [:]
 	private var currentTreeItem: String?
 
 	@available(*, unavailable)
-	override public convenience init() {
+	override convenience init() {
 		fatalError("Use init(window:)")
 	}
 
-	public init(window: MainWindow) {
+	init(window: MainWindow) {
 		self.window = window
 
 		super.init()
 	}
 
-	public func destroy(_ treeItem: TreeItem) {
+	func destroy(_ treeItem: ChatItem) {
 		guard Preferences.Input.historyIsChannelSpecific.value else {
 			return
 		}
 
-		if let client = treeItem as? IRCClient {
+		if let client = treeItem as? Client {
 			for channel in client.channelList {
 				destroy(channel)
 			}
@@ -147,7 +147,7 @@ public final class InputHistory: NSObject {
 		}
 	}
 
-	public func moveFocus(to treeItem: TreeItem) {
+	func moveFocus(to treeItem: ChatItem) {
 		guard Preferences.Input.historyIsChannelSpecific.value,
 		      let textView = window?.inputTextField
 		else {
@@ -167,9 +167,9 @@ public final class InputHistory: NSObject {
 		}
 	}
 
-	public func noteInputHistoryObjectScopeDidChange() {
+	func noteInputHistoryObjectScopeDidChange() {
 		if Preferences.Input.historyIsChannelSpecific.value {
-			for client in AppController.shared.world.clientList {
+			for client in AppServices.world.clientList {
 				applyGlobalHistory(to: client.uniqueIdentifier)
 
 				for channel in client.channelList {
@@ -184,15 +184,15 @@ public final class InputHistory: NSObject {
 		}
 	}
 
-	public func add(_ string: NSAttributedString) {
+	func add(_ string: NSAttributedString) {
 		currentObjectForFocusedTreeView()?.add(string)
 	}
 
-	public func up(_ string: NSAttributedString) -> NSAttributedString? {
+	func up(_ string: NSAttributedString) -> NSAttributedString? {
 		currentObjectForFocusedTreeView()?.up(string)
 	}
 
-	public func down(_ string: NSAttributedString) -> NSAttributedString? {
+	func down(_ string: NSAttributedString) -> NSAttributedString? {
 		currentObjectForFocusedTreeView()?.down(string)
 	}
 

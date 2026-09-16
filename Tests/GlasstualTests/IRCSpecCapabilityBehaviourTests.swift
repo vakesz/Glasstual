@@ -37,7 +37,6 @@
 
 import Foundation
 @testable import Glasstual
-import GlasstualPluginKit
 import Testing
 
 /// The IRCv3 extensions that change what an ordinary message means:

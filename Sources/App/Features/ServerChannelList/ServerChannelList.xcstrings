@@ -10,6 +10,18 @@
             "state": "translated",
             "value": "Change the search or update the list from the server."
           }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Módosítsd a keresést, vagy frissítsd a listát a kiszolgálóról."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ändere die Suche oder aktualisiere die Liste vom Server."
+          }
         }
       }
     },
@@ -22,6 +34,18 @@
             "state": "translated",
             "value": "Channel Name"
           }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csatornanév"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kanalname"
+          }
         }
       }
     },
@@ -33,6 +57,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Join Selected Channels"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csatlakozás a kijelölt csatornákhoz"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausgewählten Kanälen beitreten"
           }
         }
       }
@@ -58,6 +94,42 @@
               }
             }
           }
+        },
+        "hu": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "A kiszolgáló több csatornát küldött, mint amennyit ez az ablak megőriz. Itt az első látható. A többi megtekintéséhez szűkítsd a kiszolgálón végzett keresést."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "A kiszolgáló több csatornát küldött, mint amennyit ez az ablak megőriz. Itt az első %ld látható. A többi megtekintéséhez szűkítsd a kiszolgálón végzett keresést."
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Der Server hat mehr Kanäle gesendet, als dieses Fenster speichert. Hier wird der erste angezeigt. Grenze die Suche auf dem Server ein, um die übrigen zu sehen."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Der Server hat mehr Kanäle gesendet, als dieses Fenster speichert. Hier werden die ersten %ld angezeigt. Grenze die Suche auf dem Server ein, um die übrigen zu sehen."
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -69,6 +141,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Member Count"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tagok száma"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mitgliederzahl"
           }
         }
       }
@@ -82,6 +166,18 @@
             "state": "translated",
             "value": "Minimum users"
           }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minimális taglétszám"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mindestanzahl Benutzer"
+          }
         }
       }
     },
@@ -93,6 +189,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "No Channel List"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincs csatornalista"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Kanalliste"
           }
         }
       }
@@ -106,6 +214,18 @@
             "state": "translated",
             "value": "Ask a server for its public channels from the Server menu."
           }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A Kiszolgáló menüből kérheted le egy kiszolgáló nyilvános csatornáit."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frage über das Servermenü die öffentlichen Kanäle eines Servers ab."
+          }
         }
       }
     },
@@ -118,6 +238,18 @@
             "state": "translated",
             "value": "No Public Channels"
           }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincsenek nyilvános csatornák"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine öffentlichen Kanäle"
+          }
         }
       }
     },
@@ -129,6 +261,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "The server applies this filter, so smaller channels are never sent."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ezt a szűrőt a kiszolgáló alkalmazza, így a kisebb csatornákat nem küldi el."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Server wendet diesen Filter an. Kleinere Kanäle werden daher nicht gesendet."
           }
         }
       }
@@ -154,6 +298,42 @@
               }
             }
           }
+        },
+        "hu": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%ld nyilvános csatorna"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%ld nyilvános csatorna"
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%ld öffentlicher Kanal"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%ld öffentliche Kanäle"
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -165,6 +345,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Public Channel List"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nyilvános csatornák listája"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffentliche Kanalliste"
           }
         }
       }
@@ -178,6 +370,18 @@
             "state": "translated",
             "value": "Requesting channel list…"
           }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csatornalista lekérése…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kanalliste wird angefordert…"
+          }
         }
       }
     },
@@ -189,6 +393,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Search channels"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csatornák keresése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kanäle suchen"
           }
         }
       }
@@ -202,6 +418,18 @@
             "state": "translated",
             "value": "Topic"
           }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Téma"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thema"
+          }
         }
       }
     },
@@ -214,6 +442,18 @@
             "state": "translated",
             "value": "Refresh"
           }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frissítés"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktualisieren"
+          }
         }
       }
     },
@@ -225,6 +465,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Channel List"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csatornalista"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kanalliste"
           }
         }
       }

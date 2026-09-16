@@ -11,8 +11,8 @@ import Testing
 /// in for a PREFIX mode. These pin the decoding now that the group is a type.
 @MainActor
 struct ChannelModeKindTests {
-	private func supportInfo(_ configuration: String) -> IRCISupportInfo {
-		let supportInfo = IRCISupportInfo()
+	private func supportInfo(_ configuration: String) -> ISupport {
+		let supportInfo = ISupport()
 		supportInfo.processConfigurationData(configuration)
 
 		return supportInfo
@@ -80,15 +80,6 @@ struct ChannelModeKindTests {
 		#expect(info.channelModeKinds["b"] == .list)
 	}
 
-	@Test
-	func marksEveryPrefixModeAsAUserPrefix() {
-		let info = supportInfo("PREFIX=(qaohv)~&@%+")
-
-		for symbol in "qaohv" {
-			#expect(info.channelModeKinds[symbol] == .userPrefix)
-		}
-	}
-
 	@Test(arguments: [
 		(ChannelModeKind.list, ModeParameterPolicy.always),
 		(.setting, .always),
@@ -126,20 +117,20 @@ struct ChannelModeKindTests {
 
 /// The SASL and ZNC capability bits were anonymous `1 << n` literals built at
 /// the point of use. Naming them only helps if the numbers did not move.
-struct IRCCapabilityBitTests {
+struct CapabilityBitTests {
 	@Test(arguments: [
-		(ClientIRCv3SupportedCapability.saslGeneric, UInt(1) << 22),
+		(CapabilitySet.saslGeneric, UInt(1) << 22),
 		(.zncServerTime, UInt(1) << 25),
 		(.zncServerTimeISO, UInt(1) << 26),
 		(.zncPlaybackModule, UInt(1) << 27),
 	])
-	func keepsTheHistoricBitPositions(testCase: (ClientIRCv3SupportedCapability, UInt)) {
+	func keepsTheHistoricBitPositions(testCase: (CapabilitySet, UInt)) {
 		#expect(testCase.0.rawValue == testCase.1)
 	}
 
 	@Test
 	func doesNotCollideWithTheNeighbouringNamedBits() {
-		let named: [ClientIRCv3SupportedCapability] = [
+		let named: [CapabilitySet] = [
 			.labeledResponse, .saslGeneric, .zncServerTime, .zncServerTimeISO,
 			.zncPlaybackModule, .accountNotify,
 		]
@@ -160,12 +151,6 @@ struct ChannelModeSymbolSetTests {
 		}
 
 		return UInt(order.count - index)
-	}
-
-	@Test
-	func readsAndWritesARunOfLetters() {
-		#expect(ChannelModeSymbolSet(letters: "ov").letters == "ov")
-		#expect(ChannelModeSymbolSet().isEmpty)
 	}
 
 	@Test

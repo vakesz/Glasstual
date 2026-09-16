@@ -39,7 +39,6 @@
 import AppKit
 import CocoaExtensions
 import Foundation
-import GlasstualPluginKit
 import SwiftUI
 
 // MARK: - View controls and input
@@ -50,7 +49,7 @@ extension MainWindow {
 		static let allowedRange = 0.5 ... 3.0
 	}
 
-	public func changeTextSize(_ bigger: Bool) {
+	func changeTextSize(_ bigger: Bool) {
 		let next = bigger ? textSizeMultiplier * TextZoomPolicy.step : textSizeMultiplier / TextZoomPolicy.step
 		guard TextZoomPolicy.allowedRange.contains(next) else { return }
 		textSizeMultiplier = next
@@ -62,7 +61,7 @@ extension MainWindow {
 	/// Actual Size: back to the unscaled text, in as many steps as it took to
 	/// leave it. The controllers only know how to step, so the window walks
 	/// them back rather than teaching them a second way to be told.
-	public func resetTextSize() {
+	func resetTextSize() {
 		while textSizeMultiplier > 1.0 {
 			let previous = textSizeMultiplier
 			changeTextSize(false)
@@ -80,14 +79,14 @@ extension MainWindow {
 		textSizeMultiplier = 1.0
 	}
 
-	private var logControllersInWorld: [LogController] {
+	private var logControllersInWorld: [TranscriptController] {
 		guard let world else { return [] }
 		return world.clientList.flatMap { client in
 			[client.logController].compactMap(\.self) + client.channelList.compactMap(\.logController)
 		}
 	}
 
-	public func markAllAsRead() {
+	func markAllAsRead() {
 		guard let world else { return }
 		let markScrollback = Preferences.Messages.autoAddScrollbackMark.value
 		for client in world.clientList {
@@ -105,19 +104,19 @@ extension MainWindow {
 		reloadTree()
 	}
 
-	public func reloadTheme() {
+	func reloadTheme() {
 		for controller in logControllersInWorld {
 			controller.reloadTheme()
 		}
 	}
 
-	public func clearContents(of client: IRCClient) {
+	func clearContents(of client: Client) {
 		client.resetState()
 		client.logController?.clear()
 		reloadTreeItem(client)
 	}
 
-	public func clearContents(of channel: Channel) {
+	func clearContents(of channel: Channel) {
 		channel.resetState()
 		channel.logController?.clear()
 		reloadTreeItem(channel)
@@ -242,11 +241,11 @@ extension MainWindow {
 		makeFirstResponder(view)
 	}
 
-	public func textEntered() {
+	func textEntered() {
 		inputTextAsCommand(.privmsg)
 	}
 
-	private func inputTextAsCommand(_ command: IRCRemoteCommand) {
+	private func inputTextAsCommand(_ command: RemoteCommand) {
 		nicknameCompletionStatus.clear()
 		let value = inputTextField.attributedStringValue
 		guard value.length > 0 else { return }
@@ -256,7 +255,7 @@ extension MainWindow {
 		inputText(value, asCommand: command)
 	}
 
-	public func inputText(_ string: Any, asCommand command: IRCRemoteCommand) {
+	func inputText(_ string: Any, asCommand command: RemoteCommand) {
 		guard selectedItem != nil else { return }
 		selectedClient?.inputText(string, as: command)
 	}
@@ -264,7 +263,7 @@ extension MainWindow {
 
 // MARK: - Gestures and window utilities
 
-public extension MainWindow {
+extension MainWindow {
 	override func swipe(with event: NSEvent) {
 		let x = event.deltaX * (event.isDirectionInvertedFromDevice ? -1 : 1)
 		if x > 0 {
@@ -359,13 +358,13 @@ public extension MainWindow {
 
 // MARK: - Selection and transcript view
 
-public extension MainWindow {
-	var previouslySelectedItem: TreeItem? {
+extension MainWindow {
+	var previouslySelectedItem: ChatItem? {
 		guard let previousSelectedItemId else { return nil }
 		return world?.findItem(withId: previousSelectedItemId)
 	}
 
-	var selectedClient: IRCClient? {
+	var selectedClient: Client? {
 		selectedItem?.associatedClient
 	}
 
@@ -374,18 +373,18 @@ public extension MainWindow {
 		return selectedItem as? Channel
 	}
 
-	var selectedViewController: LogController? {
+	var selectedViewController: TranscriptController? {
 		if let controller = selectedChannel?.logController {
 			return controller
 		}
 		return selectedClient?.logController
 	}
 
-	func isItemVisible(_ item: TreeItem) -> Bool {
+	func isItemVisible(_ item: ChatItem) -> Bool {
 		isItemSelected(item)
 	}
 
-	func isItemSelected(_ item: TreeItem?) -> Bool {
+	func isItemSelected(_ item: ChatItem?) -> Bool {
 		item != nil && selectedItem === item
 	}
 
@@ -422,7 +421,7 @@ public extension MainWindow {
 
 		memberList.assign(to: changedTo.isChannel ? changedTo as? Channel : nil)
 		if Preferences.Input.focusTextViewOnSelectionChange.value,
-		   Accessibility.isVoiceOverEnabled == false
+		   NSWorkspace.shared.isVoiceOverEnabled == false
 		{
 			inputTextField.focus()
 		}
@@ -518,7 +517,7 @@ public extension MainWindow {
 		/* An import is replacing the world underneath: whatever the screen is
 		 showing is what it keeps showing until that finishes. */
 		guard world.isImportingConfiguration == false else { return false }
-		guard AppController.shared.applicationIsLaunched else {
+		guard AppServices.delegate.applicationIsLaunched else {
 			loadingScreen.showProgressView(withReason: MainWindowStrings.Loading.configuration)
 			return false
 		}
@@ -533,8 +532,8 @@ public extension MainWindow {
 
 // MARK: - Window title
 
-public extension MainWindow {
-	func updateTitle(for item: TreeItem) {
+extension MainWindow {
+	func updateTitle(for item: ChatItem) {
 		/* The topic bar carries the channel's modes as a caption, and the same
 		 events that retitle the window are what change them. Nothing in the IRC
 		 layer addresses one transcript when a mode lands, so the redraw rides
@@ -560,7 +559,7 @@ public extension MainWindow {
 
 // MARK: - Server list model and selection
 
-public extension MainWindow {
+extension MainWindow {
 	func saveSelection() {
 		MainWindowStateStore().saveSelection(itemIdentifier: selectedItem?.uniqueIdentifier)
 	}
@@ -602,7 +601,7 @@ public extension MainWindow {
 		menuController.actionCoordinator.populateNavigationChannelList()
 	}
 
-	func selectedChannel(on client: IRCClient) -> Channel? {
+	func selectedChannel(on client: Client) -> Channel? {
 		selectedClient === client ?
 			selectedChannel : nil
 	}
@@ -611,11 +610,11 @@ public extension MainWindow {
 	 these is the same instruction: rebuild them. The three names are
 	 `ClientOutput` requirements that the IRC layer calls at different
 	 granularities; the sidebar has only one. */
-	func reloadTreeItem(_: TreeItem) {
+	func reloadTreeItem(_: ChatItem) {
 		serverList.setNeedsRefresh()
 	}
 
-	func reloadTreeGroup(_: TreeItem) {
+	func reloadTreeGroup(_: ChatItem) {
 		serverList.setNeedsRefresh()
 	}
 
@@ -623,7 +622,7 @@ public extension MainWindow {
 		serverList.setNeedsRefresh()
 	}
 
-	func expandClient(_ client: IRCClient) {
+	func expandClient(_ client: Client) {
 		serverList.expandItem(client)
 	}
 
@@ -648,7 +647,7 @@ public extension MainWindow {
 		select(previous)
 	}
 
-	func select(_ item: TreeItem?) {
+	func select(_ item: ChatItem?) {
 		guard let item else {
 			selectReplacement(excluding: [])
 			return
@@ -661,16 +660,16 @@ public extension MainWindow {
 		selectionDidChange()
 	}
 
-	func deselect(_ item: TreeItem) {
+	func deselect(_ item: ChatItem) {
 		guard selectedItem === item else { return }
 		selectReplacement(excluding: [ObjectIdentifier(item)])
 	}
 
-	func deselectGroup(_ item: TreeItem) {
+	func deselectGroup(_ item: ChatItem) {
 		guard item.isClient, let client = item.associatedClient,
 		      selectedItem?.associatedClient === client
 		else { return }
-		selectReplacement(excluding: Set(([client] as [TreeItem] + client.channelList).map(ObjectIdentifier.init)))
+		selectReplacement(excluding: Set(([client] as [ChatItem] + client.channelList).map(ObjectIdentifier.init)))
 	}
 
 	/** Moves the selection off the rows that are going away.
@@ -699,7 +698,7 @@ public extension MainWindow {
 
 // MARK: - Outline view data source and delegate
 
-public extension MainWindow {
+extension MainWindow {
 	func serverListItemDoubleClicked() {
 		guard let client = selectedClient else { return }
 		if let channel = selectedChannel {

@@ -26,7 +26,7 @@ final class NotificationController: NSObject {
 	var areNotificationsDisabled = false {
 		didSet {
 			guard oldValue != areNotificationsDisabled else { return }
-			SharedApplication.sharedSpeechSynthesizer().setNotificationsMuted(
+			AppServices.speech.setNotificationsMuted(
 				areNotificationsDisabled || Preferences.Notifications.soundIsMuted.value
 			)
 			guard areNotificationsDisabled else { return }
@@ -76,7 +76,7 @@ final class NotificationController: NSObject {
 	 first events of a launch arrive, and it is not here at all until the person
 	 has answered the permission prompt. `nil` says so rather than claiming the
 	 system plays nothing, which would have the application and the notification
-	 each play the same sound. `IRCNotificationPolicy.soundPlayback` is what
+	 each play the same sound. `NotificationPolicy.soundPlayback` is what
 	 reads it. */
 	private(set) var systemSoundDelivery: NotificationSoundDelivery?
 
@@ -172,7 +172,7 @@ final class NotificationController: NSObject {
 	}
 
 	private func mainWindowSelectionChanged(_: Notification) {
-		guard let mainWindow = AppController.shared.mainWindow,
+		guard let mainWindow = AppServices.delegate.mainWindow,
 		      let client = mainWindow.selectedClient
 		else {
 			return
@@ -241,7 +241,7 @@ final class NotificationController: NSObject {
 		title: String,
 		message: String,
 		for channel: Channel?,
-		on client: IRCClient
+		on client: Client
 	) {
 		post(
 			title: title,
@@ -287,7 +287,7 @@ final class NotificationController: NSObject {
 		}
 	}
 
-	func dismissNotifications(for channel: Channel?, on client: IRCClient) {
+	func dismissNotifications(for channel: Channel?, on client: Client) {
 		let clientId = client.uniqueIdentifier
 		let channelId = channel?.uniqueIdentifier
 

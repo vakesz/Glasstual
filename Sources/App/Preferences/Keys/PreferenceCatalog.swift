@@ -41,7 +41,7 @@ import Foundation
 /** Every declaration in one place, with the registration domain and catalogue
  used by import, export, storage routing, and defaults registration derived
  directly from those declarations. */
-public nonisolated extension Preferences { // nonisolated: value
+nonisolated extension Preferences { // nonisolated: value
 	static let allKeys: [any AnyPreferenceKey] =
 		Identity.all
 			+ Connection.all
@@ -57,7 +57,7 @@ public nonisolated extension Preferences { // nonisolated: value
 			+ Highlights.all
 			+ Reactions.all
 			+ FileTransfers.all
-			+ Extensions.all
+			+ Rules.all
 			+ Internals.all
 			+ LinkSchemes.all
 

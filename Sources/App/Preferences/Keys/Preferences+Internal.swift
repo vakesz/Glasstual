@@ -38,11 +38,11 @@
 import CocoaExtensions
 import Foundation
 
-public nonisolated extension Preferences { // nonisolated: value
+nonisolated extension Preferences { // nonisolated: value
 	/// Bookkeeping the application keeps about itself, and the handful of keys
 	/// AppKit or a vendored library reads out of `UserDefaults.standard`.
 	enum Internals {
-		public static let dictionaryVersion = PreferenceKey(
+		static let dictionaryVersion = PreferenceKey(
 			"TPCPreferencesDictionaryVersion",
 			default: UInt(0),
 			traits: .unregistered
@@ -50,18 +50,27 @@ public nonisolated extension Preferences { // nonisolated: value
 
 		/** How many times the application has been launched.
 
-		 The count is raised on every launch and reported as an `Int` by the
-		 System Profiler plugin, so it is bounded the way the other counts are:
+		 The count is raised on every launch and read back as an `Int`, so it is
+		 bounded the way the other counts are:
 		 `Int32.max` launches is past any real number of them, and the launch
 		 scrub drops a stored value above it. */
-		public static let runCount = PreferenceKey(
+		static let runCount = PreferenceKey(
 			"TXRunCount",
 			default: UInt(0),
 			traits: [.unregistered, .excludedFromExport],
 			validation: { $0 <= UInt(Int32.max) }
 		)
 
-		public static let runTime = PreferenceKey(
+		/// Foundation reads the per-app language override from the standard domain.
+		/// Leave it unregistered so the global language preference remains inherited.
+		static let appLanguages = PreferenceKey(
+			"AppleLanguages",
+			default: [String](),
+			storage: .standard,
+			traits: [.unregistered, .excludedFromExport]
+		)
+
+		static let runTime = PreferenceKey(
 			"TXRunTime",
 			default: 0.0,
 			traits: [.unregistered, .excludedFromExport]
@@ -69,13 +78,13 @@ public nonisolated extension Preferences { // nonisolated: value
 
 		/// Which pane the preferences window reopens on. Restored state of one
 		/// window, so it is not part of the catalogue.
-		public static let selectedPreferencePane = PreferenceKey(
+		static let selectedPreferencePane = PreferenceKey(
 			"TDCPreferencesController -> Selected Pane",
 			default: "",
 			traits: [.unregistered, .uncatalogued]
 		)
 
-		public static let includeAdvancedEncodings = PreferenceKey(
+		static let includeAdvancedEncodings = PreferenceKey(
 			"Server Properties Window Sheet -> Include Advanced Encodings",
 			default: false,
 			traits: .unregistered
@@ -85,7 +94,7 @@ public nonisolated extension Preferences { // nonisolated: value
 		 unlike everything else this one genuinely belongs in `.standard`. The
 		 declaration is what says so; it used to be an undocumented exception at
 		 the call site. */
-		public static let appSleepDisabled = PreferenceKey(
+		static let appSleepDisabled = PreferenceKey(
 			AppSleepPreference.name,
 			default: false,
 			storage: .standard,
@@ -94,17 +103,17 @@ public nonisolated extension Preferences { // nonisolated: value
 
 		static let all: [any AnyPreferenceKey] = [
 			dictionaryVersion, runCount, runTime, selectedPreferencePane,
-			includeAdvancedEncodings, appSleepDisabled,
+			includeAdvancedEncodings, appSleepDisabled, appLanguages,
 		]
 	}
 }
 
-public nonisolated extension Preferences { // nonisolated: value
+nonisolated extension Preferences { // nonisolated: value
 	/// The scheme allowlist the transcript's link parser consults. The names and
 	/// the standard domain are the ones the AutoHyperlinks framework it replaced
 	/// used, so a customization carries over.
 	enum LinkSchemes {
-		public static let permittedDefault = PreferenceKey(
+		static let permittedDefault = PreferenceKey(
 			"com.adiumX.AutoHyperlinks.permittedSchemesDefault",
 			default: [
 				"feed", "ftp", "gopher", "irc", "ircs", "itms", "sftp", "ssh",
@@ -113,7 +122,7 @@ public nonisolated extension Preferences { // nonisolated: value
 			storage: .standard
 		)
 
-		public static let permitted = PreferenceKey(
+		static let permitted = PreferenceKey(
 			"com.adiumX.AutoHyperlinks.permittedSchemes",
 			default: [String](),
 			storage: .standard,
@@ -122,7 +131,7 @@ public nonisolated extension Preferences { // nonisolated: value
 
 		/// Makes every scheme a link. A decision this Mac's user makes for
 		/// themselves, so no configuration file carries it in or out.
-		public static let permitAny = PreferenceKey(
+		static let permitAny = PreferenceKey(
 			"com.adiumX.AutoHyperlinks.permittedSchemesAny",
 			default: false,
 			storage: .standard,
@@ -133,30 +142,30 @@ public nonisolated extension Preferences { // nonisolated: value
 	}
 }
 
-public nonisolated extension Preferences { // nonisolated: value
+nonisolated extension Preferences { // nonisolated: value
 	/// Key families whose individual names are made at runtime.
 	enum Families {
 		/// Per-window saved frames, written by AppKit into the standard domain.
-		public static let windowFrames = PreferenceKeyFamily(
+		static let windowFrames = PreferenceKeyFamily(
 			"NSWindow Frame -> Internal (v3) -> ",
 			storage: .standard,
 			traits: .excludedFromExport
 		)
 
 		/// A style's own key-value store, keyed by style name.
-		public static let themeSettings = PreferenceKeyFamily(
+		static let themeSettings = PreferenceKeyFamily(
 			"Internal Theme Settings Key-value Store -> ",
 			traits: .excludedFromExport,
 			coerce: { _, value in value.dictionary == nil ? nil : value }
 		)
 
 		/// "Do not ask me again" flags, one per prompt.
-		public static let alertSuppression = PreferenceKeyFamily(
+		static let alertSuppression = PreferenceKeyFamily(
 			"Text Input Prompt Suppression -> ",
 			traits: .excludedFromExport
 		)
 
-		public static let mainWindowState = PreferenceKeyFamily(
+		static let mainWindowState = PreferenceKeyFamily(
 			"Window -> Main Window ",
 			traits: [.excludedFromExport, .uncatalogued]
 		)

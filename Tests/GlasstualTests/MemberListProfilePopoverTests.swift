@@ -5,7 +5,6 @@
 
 import AppKit
 @testable import Glasstual
-import GlasstualPluginKit
 import Testing
 
 /// The profile a click opens, and the rank the row draws it for. Both used to

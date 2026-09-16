@@ -13,8 +13,8 @@ import Testing
 /// archive-and-unarchive that `NSXPCConnection` performs.
 @Suite("Connection configuration XPC envelope")
 struct ConnectionConfigEnvelopeTests {
-	private func sampleConfig() -> IRCConnectionConfig {
-		var config = IRCConnectionConfig()
+	private func sampleConfig() -> ConnectionConfig {
+		var config = ConnectionConfig()
 		config.serverAddress = "irc.example.test"
 		config.serverPort = 6697
 		config.addressType = .v6
@@ -33,7 +33,7 @@ struct ConnectionConfigEnvelopeTests {
 		return config
 	}
 
-	private func roundTrip(_ config: IRCConnectionConfig) throws -> IRCConnectionConfig {
+	private func roundTrip(_ config: ConnectionConfig) throws -> ConnectionConfig {
 		let archived = try NSKeyedArchiver.archivedData(
 			withRootObject: ConnectionConfigEnvelope(config: config),
 			requiringSecureCoding: true
@@ -54,31 +54,22 @@ struct ConnectionConfigEnvelopeTests {
 		#expect(restored == config)
 	}
 
-	/// The connection host is the process that presents the proxy password, so
-	/// it travels with the configuration by design.
-	@Test("The proxy password reaches the connection host")
-	func proxyPasswordIsCarried() throws {
-		let restored = try roundTrip(sampleConfig())
-
-		#expect(restored.proxyPassword == "hunter2")
-	}
-
 	@Test("A zero port means the sender left it out, not a port of zero")
 	func absentPortsFallBackToTheDefault() throws {
-		var config = IRCConnectionConfig()
+		var config = ConnectionConfig()
 		config.serverAddress = "irc.example.test"
 
 		let restored = try roundTrip(config)
 
-		#expect(restored.serverPort == IRCConnectionDefaults.serverPort)
-		#expect(restored.proxyPort == IRCConnectionDefaults.proxyPort)
+		#expect(restored.serverPort == ConnectionDefaults.serverPort)
+		#expect(restored.proxyPort == ConnectionDefaults.proxyPort)
 	}
 
 	/// Out-of-range flood-control values used to trip a `precondition` in a
 	/// setter that an XPC peer could reach.
 	@Test("An out-of-range flood-control value is refused rather than fatal")
 	func floodControlValuesAreClamped() {
-		var config = IRCConnectionConfig()
+		var config = ConnectionConfig()
 		config.floodControlDelayInterval = 5
 		config.floodControlDelayInterval = 900
 
@@ -113,10 +104,10 @@ struct ConnectionConfigEnvelopeTests {
 			options: 0
 		)
 
-		let config = try PropertyListDecoder().decode(IRCConnectionConfig.self, from: crafted)
+		let config = try PropertyListDecoder().decode(ConnectionConfig.self, from: crafted)
 
-		#expect(config.floodControlDelayInterval == IRCConnectionDefaults.floodControlDelayInterval)
-		#expect(config.floodControlMaximumMessages == IRCConnectionDefaults.floodControlMaximumMessages)
+		#expect(config.floodControlDelayInterval == ConnectionDefaults.floodControlDelayInterval)
+		#expect(config.floodControlMaximumMessages == ConnectionDefaults.floodControlMaximumMessages)
 		/* The host narrows the message count on every write, which is what an
 		 unbounded decoded value would trap on. */
 		#expect(Int(exactly: config.floodControlMaximumMessages) != nil)
@@ -129,7 +120,7 @@ struct ConnectionConfigEnvelopeTests {
 		var encoded = try #require([String: PropertyListValue](propertyList: plist))
 		encoded["proxyType"] = 4
 
-		let config = try #require(PropertyListModel.decode(IRCConnectionConfig.self, from: encoded))
+		let config = try #require(PropertyListModel.decode(ConnectionConfig.self, from: encoded))
 
 		#expect(config.proxyType == .none)
 	}

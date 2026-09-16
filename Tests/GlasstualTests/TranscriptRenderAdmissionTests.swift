@@ -13,9 +13,9 @@ import Testing
 struct TranscriptRenderAdmissionTests {
 	@Test("A render that produces no output releases its admission ticket")
 	func declinedRenderReleasesTicket() async {
-		let client = IRCClient(config: ClientConfig())
+		let client = Client(config: ClientConfig())
 		let window = MainWindow(contentRect: .zero, styleMask: .borderless, backing: .buffered, defer: false)
-		let controller = LogController(client: client, in: window)
+		let controller = TranscriptController(client: client, in: window)
 		defer { controller.tearDown(.permanentRemoval) }
 		controller.enqueueRenderJob(render: { Int?.none }, apply: { _ in Issue.record("Absent output applied") })
 		#expect(client.renderAdmission.pendingCount == 1)
@@ -68,10 +68,10 @@ struct TranscriptRenderAdmissionTests {
 
 	@Test("Application and view retirement release submitted work")
 	func workLivesThroughApplication() async {
-		let client = IRCClient(config: ClientConfig())
+		let client = Client(config: ClientConfig())
 		let window = MainWindow(contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
 		                        styleMask: .borderless, backing: .buffered, defer: false)
-		let controller = LogController(client: client, in: window)
+		let controller = TranscriptController(client: client, in: window)
 		defer { controller.tearDown(.permanentRemoval) }
 		var applied = false
 		controller.enqueueRenderJob(render: { 42 }, apply: { _ in applied = true })
@@ -94,7 +94,7 @@ struct TranscriptRenderAdmissionTests {
 		client.renderAdmission = TranscriptRenderAdmission(capacity: 1)
 		let ticket = client.renderAdmission.submit(for: "test-view")
 		defer { client.renderAdmission.finish(ticket) }
-		let connection = Connection(config: IRCConnectionConfig(), onClient: client)
+		let connection = Connection(config: ConnectionConfig(), onClient: client)
 		client.socket = connection
 		let (acknowledgements, acknowledge) = AsyncStream<Void>.makeStream(bufferingPolicy: .bufferingOldest(1))
 		connection.callbackReceiver.ircConnectionDidReceive([Data("PING :bounded".utf8)]) {

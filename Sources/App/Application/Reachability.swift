@@ -44,12 +44,12 @@ enum ReachabilityPathEvent: Int {
 	case becameUnreachable = 2
 }
 
-/** Reachability changes drive `World`, which lives on the main actor, so the
+/** Reachability changes drive `ClientDirectory`, which lives on the main actor, so the
  notifier does too: no lock, no queue hop, no opting out of the checker. */
 @MainActor
-public final class Reachability: NSObject {
-	public var reachableBlock: ((Reachability) -> Void)?
-	public var unreachableBlock: ((Reachability) -> Void)?
+final class Reachability: NSObject {
+	var reachableBlock: ((Reachability) -> Void)?
+	var unreachableBlock: ((Reachability) -> Void)?
 
 	private var monitorTask: Task<Void, Never>?
 	private var currentlyReachable = false
@@ -60,11 +60,11 @@ public final class Reachability: NSObject {
 	 never reported. */
 	private var receivedInitialPath = false
 
-	public var reachable: Bool {
+	var reachable: Bool {
 		currentlyReachable
 	}
 
-	public static func reachabilityForInternetConnection() -> Reachability {
+	static func reachabilityForInternetConnection() -> Reachability {
 		Reachability()
 	}
 
@@ -76,7 +76,7 @@ public final class Reachability: NSObject {
 	}
 
 	@discardableResult
-	public func startNotifier() -> Bool {
+	func startNotifier() -> Bool {
 		/* A path monitor is single use: once cancelled it never delivers
 		 another update. Create a fresh one for every start. */
 		monitorTask?.cancel()
@@ -94,7 +94,7 @@ public final class Reachability: NSObject {
 		return true
 	}
 
-	public func stopNotifier() {
+	func stopNotifier() {
 		monitorTask?.cancel()
 		monitorTask = nil
 	}

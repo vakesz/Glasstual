@@ -1,0 +1,1830 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "-9800" : {
+      "comment" : "Reason for errSSLProtocol.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Generic protocol error"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Általános protokollhiba"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allgemeiner Protokollfehler"
+          }
+        }
+      }
+    },
+    "-9801" : {
+      "comment" : "Reason for errSSLNegotiation.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cipher suite negotiation failure"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A titkosítási csomag egyeztetése sikertelen"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aushandlung der Cipher-Suite fehlgeschlagen"
+          }
+        }
+      }
+    },
+    "-9802" : {
+      "comment" : "Reason for errSSLFatalAlert.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fatal alert"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Végzetes riasztás"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schwerwiegende Warnmeldung"
+          }
+        }
+      }
+    },
+    "-9803" : {
+      "comment" : "Reason for errSSLWouldBlock.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I/O would block"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A bemeneti/kimeneti művelet blokkolna"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein-/Ausgabe würde blockieren"
+          }
+        }
+      }
+    },
+    "-9804" : {
+      "comment" : "Reason for errSSLSessionNotFound.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Attempt to restore an unknown session"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ismeretlen munkamenet visszaállítási kísérlete"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versuch, eine unbekannte Sitzung wiederherzustellen"
+          }
+        }
+      }
+    },
+    "-9805" : {
+      "comment" : "Reason for errSSLClosedGraceful.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection was closed gracefully"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A kapcsolat szabályosan lezárult"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindung ordnungsgemäß geschlossen"
+          }
+        }
+      }
+    },
+    "-9806" : {
+      "comment" : "Reason for errSSLClosedAbort.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection was closed as a result of an error"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A kapcsolat hiba miatt lezárult"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindung aufgrund eines Fehlers geschlossen"
+          }
+        }
+      }
+    },
+    "-9807" : {
+      "comment" : "Reason for errSSLXCertChainInvalid.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid certificate chain"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Érvénytelen tanúsítványlánc"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ungültige Zertifikatskette"
+          }
+        }
+      }
+    },
+    "-9808" : {
+      "comment" : "Reason for errSSLBadCert.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid certificate format"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Érvénytelen tanúsítványformátum"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ungültiges Zertifikatsformat"
+          }
+        }
+      }
+    },
+    "-9809" : {
+      "comment" : "Reason for errSSLCrypto.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Underlying cryptographic error"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mögöttes kriptográfiai hiba"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zugrunde liegender kryptografischer Fehler"
+          }
+        }
+      }
+    },
+    "-9810" : {
+      "comment" : "Reason for errSSLInternal.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Internal error"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Belső hiba"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Interner Fehler"
+          }
+        }
+      }
+    },
+    "-9811" : {
+      "comment" : "Reason for errSSLModuleAttach.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Module attach failure"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modul csatolása sikertelen"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einbinden des Moduls fehlgeschlagen"
+          }
+        }
+      }
+    },
+    "-9812" : {
+      "comment" : "Reason for errSSLUnknownRootCert.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valid certificate chain with an untrusted root"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Érvényes tanúsítványlánc nem megbízható gyökértanúsítvánnyal"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gültige Zertifikatskette mit nicht vertrauenswürdigem Stammzertifikat"
+          }
+        }
+      }
+    },
+    "-9813" : {
+      "comment" : "Reason for errSSLNoRootCert.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No root certificate for the certificate chain"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A tanúsítványlánchoz nincs gyökértanúsítvány"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Stammzertifikat für die Zertifikatskette vorhanden"
+          }
+        }
+      }
+    },
+    "-9814" : {
+      "comment" : "Reason for errSSLCertExpired.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate chain has an expired certificate"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A tanúsítványlánc lejárt tanúsítványt tartalmaz"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Zertifikatskette enthält ein abgelaufenes Zertifikat"
+          }
+        }
+      }
+    },
+    "-9815" : {
+      "comment" : "Reason for errSSLCertNotYetValid.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate chain has a certificate that is not yet valid"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A tanúsítványlánc még nem érvényes tanúsítványt tartalmaz"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Zertifikatskette enthält ein noch nicht gültiges Zertifikat"
+          }
+        }
+      }
+    },
+    "-9816" : {
+      "comment" : "Reason for errSSLClosedNoNotify.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server closed session with no notification"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A kiszolgáló értesítés nélkül lezárta a munkamenetet"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Server hat die Sitzung ohne Benachrichtigung geschlossen"
+          }
+        }
+      }
+    },
+    "-9817" : {
+      "comment" : "Reason for errSSLBufferOverflow.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insufficient buffer provided"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A megadott puffer túl kicsi"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der bereitgestellte Puffer ist zu klein"
+          }
+        }
+      }
+    },
+    "-9818" : {
+      "comment" : "Reason for errSSLBadCipherSuite.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Improperly configured cipher suite"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hibásan beállított titkosítási csomag"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falsch konfigurierte Cipher-Suite"
+          }
+        }
+      }
+    },
+    "-9819" : {
+      "comment" : "Reason for errSSLPeerUnexpectedMsg.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unexpected message received"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Váratlan üzenet érkezett"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unerwartete Nachricht empfangen"
+          }
+        }
+      }
+    },
+    "-9820" : {
+      "comment" : "Reason for errSSLPeerBadRecordMac.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bad MAC"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hibás üzenethitelesítési kód"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ungültiger Nachrichtenauthentifizierungscode"
+          }
+        }
+      }
+    },
+    "-9821" : {
+      "comment" : "Reason for errSSLPeerDecryptionFail.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Decryption failed"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sikertelen visszafejtés"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entschlüsselung fehlgeschlagen"
+          }
+        }
+      }
+    },
+    "-9822" : {
+      "comment" : "Reason for errSSLPeerRecordOverflow.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Record overflow"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rekordtúlcsordulás"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datensatzüberlauf"
+          }
+        }
+      }
+    },
+    "-9823" : {
+      "comment" : "Reason for errSSLPeerDecompressFail.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Decompression failure"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sikertelen kitömörítés"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dekomprimierung fehlgeschlagen"
+          }
+        }
+      }
+    },
+    "-9824" : {
+      "comment" : "Reason for errSSLPeerHandshakeFail.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Handshake failure"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sikertelen kézfogás"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Handshake fehlgeschlagen"
+          }
+        }
+      }
+    },
+    "-9825" : {
+      "comment" : "Reason for errSSLPeerBadCert.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bad certificate"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hibás tanúsítvány"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fehlerhaftes Zertifikat"
+          }
+        }
+      }
+    },
+    "-9826" : {
+      "comment" : "Reason for errSSLPeerUnsupportedCert.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid or unsupported certificate format"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Érvénytelen vagy nem támogatott tanúsítványformátum"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ungültiges oder nicht unterstütztes Zertifikatsformat"
+          }
+        }
+      }
+    },
+    "-9827" : {
+      "comment" : "Reason for errSSLPeerCertRevoked.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate revoked"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Visszavont tanúsítvány"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zertifikat widerrufen"
+          }
+        }
+      }
+    },
+    "-9828" : {
+      "comment" : "Reason for errSSLPeerCertExpired.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate expired"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lejárt tanúsítvány"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zertifikat abgelaufen"
+          }
+        }
+      }
+    },
+    "-9829" : {
+      "comment" : "Reason for errSSLPeerCertUnknown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unknown certificate"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ismeretlen tanúsítvány"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unbekanntes Zertifikat"
+          }
+        }
+      }
+    },
+    "-9830" : {
+      "comment" : "Reason for errSSLIllegalParam.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Illegal parameter"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Érvénytelen paraméter"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unzulässiger Parameter"
+          }
+        }
+      }
+    },
+    "-9831" : {
+      "comment" : "Reason for errSSLPeerUnknownCA.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unknown certificate authority"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ismeretlen hitelesítésszolgáltató"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unbekannte Zertifizierungsstelle"
+          }
+        }
+      }
+    },
+    "-9832" : {
+      "comment" : "Reason for errSSLPeerAccessDenied.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Access denied"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hozzáférés megtagadva"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zugriff verweigert"
+          }
+        }
+      }
+    },
+    "-9833" : {
+      "comment" : "Reason for errSSLPeerDecodeError.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Decoding error"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dekódolási hiba"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dekodierungsfehler"
+          }
+        }
+      }
+    },
+    "-9834" : {
+      "comment" : "Reason for errSSLPeerDecryptError.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Decryption error"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Visszafejtési hiba"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entschlüsselungsfehler"
+          }
+        }
+      }
+    },
+    "-9835" : {
+      "comment" : "Reason for errSSLPeerExportRestriction.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export restriction"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportkorlátozás"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportbeschränkung"
+          }
+        }
+      }
+    },
+    "-9836" : {
+      "comment" : "Reason for errSSLPeerProtocolVersion.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid protocol version"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Érvénytelen protokollverzió"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ungültige Protokollversion"
+          }
+        }
+      }
+    },
+    "-9837" : {
+      "comment" : "Reason for errSSLPeerInsufficientSecurity.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insufficient security"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elégtelen biztonság"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unzureichende Sicherheit"
+          }
+        }
+      }
+    },
+    "-9838" : {
+      "comment" : "Reason for errSSLPeerInternalError.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Internal error"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Belső hiba"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Interner Fehler"
+          }
+        }
+      }
+    },
+    "-9839" : {
+      "comment" : "Reason for errSSLPeerUserCancelled.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User canceled"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A felhasználó megszakította"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vom Benutzer abgebrochen"
+          }
+        }
+      }
+    },
+    "-9840" : {
+      "comment" : "Reason for errSSLPeerNoRenegotiation.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renegotiation is not allowed"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Az újraegyeztetés nem engedélyezett"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erneute Aushandlung ist nicht erlaubt"
+          }
+        }
+      }
+    },
+    "-9841" : {
+      "comment" : "Reason for errSSLPeerAuthCompleted.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Peer certificate is valid or was ignored if verification is disabled"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A partner tanúsítványa érvényes, vagy kikapcsolt ellenőrzés mellett figyelmen kívül maradt"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Zertifikat der Gegenstelle ist gültig oder wurde bei deaktivierter Prüfung ignoriert"
+          }
+        }
+      }
+    },
+    "-9842" : {
+      "comment" : "Reason for errSSLClientCertRequested.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server has requested a client-side certificate"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A kiszolgáló kliensoldali tanúsítványt kért"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Server hat ein Clientzertifikat angefordert"
+          }
+        }
+      }
+    },
+    "-9843" : {
+      "comment" : "Reason for errSSLHostNameMismatch.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Host mismatch"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eltérő gépnév"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hostname stimmt nicht überein"
+          }
+        }
+      }
+    },
+    "-9844" : {
+      "comment" : "Reason for errSSLConnectionRefused.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Peer dropped connection before responding"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A partner válaszadás előtt bontotta a kapcsolatot"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Gegenstelle hat die Verbindung vor einer Antwort getrennt"
+          }
+        }
+      }
+    },
+    "-9845" : {
+      "comment" : "Reason for errSSLDecryptionFail.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Decryption failure"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sikertelen visszafejtés"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entschlüsselung fehlgeschlagen"
+          }
+        }
+      }
+    },
+    "-9846" : {
+      "comment" : "Reason for errSSLBadRecordMac.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bad MAC"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hibás üzenethitelesítési kód"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ungültiger Nachrichtenauthentifizierungscode"
+          }
+        }
+      }
+    },
+    "-9847" : {
+      "comment" : "Reason for errSSLRecordOverflow.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Record overflow"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rekordtúlcsordulás"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datensatzüberlauf"
+          }
+        }
+      }
+    },
+    "-9848" : {
+      "comment" : "Reason for errSSLBadConfiguration.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configuration error"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beállítási hiba"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konfigurationsfehler"
+          }
+        }
+      }
+    },
+    "-9849" : {
+      "comment" : "Reason for errSSLUnexpectedRecord.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unexpected (skipped) record in DTLS"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Váratlan (kihagyott) DTLS-rekord"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unerwarteter (übersprungener) DTLS-Datensatz"
+          }
+        }
+      }
+    },
+    "-9850" : {
+      "comment" : "Reason for errSSLWeakPeerEphemeralDHKey.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server has a weak ephemeral Diffie-Hellman public key"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A kiszolgáló ideiglenes Diffie–Hellman nyilvános kulcsa gyenge"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Server verwendet einen schwachen temporären öffentlichen Diffie-Hellman-Schlüssel"
+          }
+        }
+      }
+    },
+    "-9851" : {
+      "comment" : "Reason for errSSLClientHelloReceived.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hello received"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hello üzenet érkezett"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hello-Nachricht empfangen"
+          }
+        }
+      }
+    },
+    "-9852" : {
+      "comment" : "Reason for errSSLTransportReset.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Socket shutdown (e.g. TCP RST or FIN)"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hálózati kapcsolat lezárása (például TCP RST vagy FIN)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Socket geschlossen (z. B. TCP RST oder FIN)"
+          }
+        }
+      }
+    },
+    "-9853" : {
+      "comment" : "Reason for errSSLNetworkTimeout.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Network timeout"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hálózati időtúllépés"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Netzwerk-Zeitüberschreitung"
+          }
+        }
+      }
+    },
+    "-9854" : {
+      "comment" : "Reason for errSSLConfigurationFailed.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configuration failed"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beállítás sikertelen"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konfiguration fehlgeschlagen"
+          }
+        }
+      }
+    },
+    "-9855" : {
+      "comment" : "Reason for errSSLUnsupportedExtension.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unsupported extension"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nem támogatott kiterjesztés"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht unterstützte Erweiterung"
+          }
+        }
+      }
+    },
+    "-9856" : {
+      "comment" : "Reason for errSSLUnexpectedMessage.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Peer rejected unexpected message"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A partner elutasította a váratlan üzenetet"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Gegenstelle hat eine unerwartete Nachricht abgelehnt"
+          }
+        }
+      }
+    },
+    "-9857" : {
+      "comment" : "Reason for errSSLDecompressFail.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Decompression failed"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sikertelen kitömörítés"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dekomprimierung fehlgeschlagen"
+          }
+        }
+      }
+    },
+    "-9858" : {
+      "comment" : "Reason for errSSLHandshakeFail.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Handshake failed"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sikertelen kézfogás"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Handshake fehlgeschlagen"
+          }
+        }
+      }
+    },
+    "-9859" : {
+      "comment" : "Reason for errSSLDecodeError.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Decode failed"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sikertelen dekódolás"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dekodierung fehlgeschlagen"
+          }
+        }
+      }
+    },
+    "-9860" : {
+      "comment" : "Reason for errSSLInappropriateFallback.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inappropriate fallback"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nem megfelelő visszalépés"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ungeeigneter Fallback"
+          }
+        }
+      }
+    },
+    "-9861" : {
+      "comment" : "Reason for errSSLMissingExtension.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Missing extension"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hiányzó kiterjesztés"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fehlende Erweiterung"
+          }
+        }
+      }
+    },
+    "-9862" : {
+      "comment" : "Reason for errSSLBadCertificateStatusResponse.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bad OCSP response"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hibás OCSP-válasz"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ungültige OCSP-Antwort"
+          }
+        }
+      }
+    },
+    "-9863" : {
+      "comment" : "Reason for errSSLCertificateRequired.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate required"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tanúsítvány szükséges"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zertifikat erforderlich"
+          }
+        }
+      }
+    },
+    "-9864" : {
+      "comment" : "Reason for errSSLUnknownPSKIdentity.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unknown PSK identity"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ismeretlen PSK-azonosító"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unbekannte PSK-Identität"
+          }
+        }
+      }
+    },
+    "-9865" : {
+      "comment" : "Reason for errSSLUnrecognizedName.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unknown or unrecognized name"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ismeretlen vagy fel nem ismert név"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unbekannter oder nicht erkannter Name"
+          }
+        }
+      }
+    },
+    "-9880" : {
+      "comment" : "Reason for errSSLATSViolation.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ATS violation"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ATS-szabálysértés"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ATS-Verstoß"
+          }
+        }
+      }
+    },
+    "-9881" : {
+      "comment" : "Reason for errSSLATSMinimumVersionViolation.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ATS violation: minimum protocol version is not ATS compliant"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ATS-szabálysértés: a minimális protokollverzió nem felel meg az ATS követelményeinek"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ATS-Verstoß: Die minimale Protokollversion entspricht nicht den ATS-Anforderungen"
+          }
+        }
+      }
+    },
+    "-9882" : {
+      "comment" : "Reason for errSSLATSCiphersuiteViolation.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ATS violation: selected ciphersuite is not ATS compliant"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ATS-szabálysértés: a kiválasztott titkosítási csomag nem felel meg az ATS követelményeinek"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ATS-Verstoß: Die ausgewählte Cipher-Suite entspricht nicht den ATS-Anforderungen"
+          }
+        }
+      }
+    },
+    "-9883" : {
+      "comment" : "Reason for errSSLATSMinimumKeySizeViolation.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ATS violation: peer key size is not ATS compliant"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ATS-szabálysértés: a partner kulcsmérete nem felel meg az ATS követelményeinek"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ATS-Verstoß: Die Schlüsselgröße der Gegenstelle entspricht nicht den ATS-Anforderungen"
+          }
+        }
+      }
+    },
+    "-9884" : {
+      "comment" : "Reason for errSSLATSLeafCertificateHashAlgorithmViolation.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ATS violation: peer leaf certificate hash algorithm is not ATS compliant"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ATS-szabálysértés: a partner végtanúsítványának kivonatoló algoritmusa nem felel meg az ATS követelményeinek"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ATS-Verstoß: Der Hashalgorithmus des Endzertifikats entspricht nicht den ATS-Anforderungen"
+          }
+        }
+      }
+    },
+    "-9885" : {
+      "comment" : "Reason for errSSLATSCertificateHashAlgorithmViolation.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ATS violation: peer certificate hash algorithm is not ATS compliant"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ATS-szabálysértés: a partner tanúsítványának kivonatoló algoritmusa nem felel meg az ATS követelményeinek"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ATS-Verstoß: Der Hashalgorithmus des Zertifikats der Gegenstelle entspricht nicht den ATS-Anforderungen"
+          }
+        }
+      }
+    },
+    "-9886" : {
+      "comment" : "Reason for errSSLATSCertificateTrustViolation.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ATS violation: peer certificate is not issued by trusted peer"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ATS-szabálysértés: a partner tanúsítványát nem megbízható fél állította ki"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ATS-Verstoß: Das Zertifikat der Gegenstelle wurde nicht von einer vertrauenswürdigen Stelle ausgestellt"
+          }
+        }
+      }
+    },
+    "-9890" : {
+      "comment" : "Reason for errSSLEarlyDataRejected.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Early application data rejected by peer"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A partner elutasította a korai alkalmazásadatokat"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Frühe Anwendungsdaten von der Gegenstelle abgelehnt"
+          }
+        }
+      }
+    },
+    "-9999" : {
+      "comment" : "Reason for errSSLUnknownError, which is defined by this library rather than Secure Transport.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unknown"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ismeretlen"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unbekannt"
+          }
+        }
+      }
+    },
+    "error-description" : {
+      "comment" : "Complete Secure Transport error description. Arguments are the localized reason and numeric OSStatus code. Migrated from legacy key heading.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Secure Transport Error: %1$@ (%2$ld)"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Secure Transport hiba: %1$@ (%2$ld)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Secure-Transport-Fehler: %1$@ (%2$ld)"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

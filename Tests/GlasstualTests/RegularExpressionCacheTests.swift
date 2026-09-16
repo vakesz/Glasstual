@@ -2,7 +2,7 @@ import CocoaExtensions
 import Foundation
 import Testing
 
-/// User- and plugin-supplied patterns are evaluated once per incoming message,
+/// User-supplied patterns are evaluated once per incoming message,
 /// so the compiled expression is cached. Caching must not change the answers.
 @Suite("Regular expression cache")
 @MainActor

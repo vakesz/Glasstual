@@ -22,47 +22,47 @@ nonisolated enum MenuStrings {} // nonisolated: value
 extension MenuStrings {
 	enum MenuBar {
 		static var application: String {
-			String(localized: .TVCMainWindow.menuBarApplication)
+			String(localized: .MainWindow.menuBarApplication)
 		}
 
 		static var file: String {
-			String(localized: .TVCMainWindow.menuBarFile)
+			String(localized: .MainWindow.menuBarFile)
 		}
 
 		static var edit: String {
-			String(localized: .TVCMainWindow.menuBarEdit)
+			String(localized: .MainWindow.menuBarEdit)
 		}
 
 		static var format: String {
-			String(localized: .TVCMainWindow.menuBarFormat)
+			String(localized: .MainWindow.menuBarFormat)
 		}
 
 		static var view: String {
-			String(localized: .TVCMainWindow.menuBarView)
+			String(localized: .MainWindow.menuBarView)
 		}
 
 		static var server: String {
-			String(localized: .TVCMainWindow.menuBarServer)
+			String(localized: .MainWindow.menuBarServer)
 		}
 
 		static var channel: String {
-			String(localized: .TVCMainWindow.menuBarChannel)
+			String(localized: .MainWindow.menuBarChannel)
 		}
 
 		static var query: String {
-			String(localized: .TVCMainWindow.menuBarQuery)
+			String(localized: .MainWindow.menuBarQuery)
 		}
 
 		static var navigation: String {
-			String(localized: .TVCMainWindow.menuBarNavigation)
+			String(localized: .MainWindow.menuBarNavigation)
 		}
 
 		static var window: String {
-			String(localized: .TVCMainWindow.menuBarWindow)
+			String(localized: .MainWindow.menuBarWindow)
 		}
 
 		static var help: String {
-			String(localized: .TVCMainWindow.menuBarHelp)
+			String(localized: .MainWindow.menuBarHelp)
 		}
 	}
 }
@@ -72,31 +72,31 @@ extension MenuStrings {
 extension MenuStrings {
 	enum Application {
 		static var about: String {
-			String(localized: .TVCMainWindow.menuApplicationAbout)
+			String(localized: .MainWindow.menuApplicationAbout)
 		}
 
 		static var settings: String {
-			String(localized: .TVCMainWindow.menuApplicationSettings)
+			String(localized: .MainWindow.menuApplicationSettings)
 		}
 
 		static var services: String {
-			String(localized: .TVCMainWindow.menuApplicationServices)
+			String(localized: .MainWindow.menuApplicationServices)
 		}
 
 		static var hide: String {
-			String(localized: .TVCMainWindow.menuApplicationHide)
+			String(localized: .MainWindow.menuApplicationHide)
 		}
 
 		static var hideOthers: String {
-			String(localized: .TVCMainWindow.menuApplicationHideOthers)
+			String(localized: .MainWindow.menuApplicationHideOthers)
 		}
 
 		static var showAll: String {
-			String(localized: .TVCMainWindow.menuApplicationShowAll)
+			String(localized: .MainWindow.menuApplicationShowAll)
 		}
 
 		static var quit: String {
-			String(localized: .TVCMainWindow.menuApplicationQuit)
+			String(localized: .MainWindow.menuApplicationQuit)
 		}
 	}
 }
@@ -106,19 +106,19 @@ extension MenuStrings {
 extension MenuStrings {
 	enum File {
 		static var importSettings: String {
-			String(localized: .TVCMainWindow.menuFileImportSettings)
+			String(localized: .MainWindow.menuFileImportSettings)
 		}
 
 		static var exportSettings: String {
-			String(localized: .TVCMainWindow.menuFileExportSettings)
+			String(localized: .MainWindow.menuFileExportSettings)
 		}
 
 		static var print: String {
-			String(localized: .TVCMainWindow.menuFilePrint)
+			String(localized: .MainWindow.menuFilePrint)
 		}
 
 		static var closeWindow: String {
-			String(localized: .TVCMainWindow.menuFileCloseWindow)
+			String(localized: .MainWindow.menuFileCloseWindow)
 		}
 	}
 }
@@ -130,11 +130,11 @@ extension MenuStrings {
 	/// the Dock menu both offer.
 	enum Notifications {
 		static var muteNotifications: String {
-			String(localized: .TVCMainWindow.menuMuteNotifications)
+			String(localized: .MainWindow.menuMuteNotifications)
 		}
 
 		static var muteNotificationSounds: String {
-			String(localized: .TVCMainWindow.menuMuteNotificationSounds)
+			String(localized: .MainWindow.menuMuteNotificationSounds)
 		}
 	}
 }
@@ -144,143 +144,143 @@ extension MenuStrings {
 extension MenuStrings {
 	enum Edit {
 		static var undo: String {
-			String(localized: .TVCMainWindow.menuEditUndo)
+			String(localized: .MainWindow.menuEditUndo)
 		}
 
 		static var redo: String {
-			String(localized: .TVCMainWindow.menuEditRedo)
+			String(localized: .MainWindow.menuEditRedo)
 		}
 
 		static var cut: String {
-			String(localized: .TVCMainWindow.menuEditCut)
+			String(localized: .MainWindow.menuEditCut)
 		}
 
 		static var copy: String {
-			String(localized: .TVCMainWindow.menuEditCopy)
+			String(localized: .MainWindow.menuEditCopy)
 		}
 
 		static var paste: String {
-			String(localized: .TVCMainWindow.menuEditPaste)
+			String(localized: .MainWindow.menuEditPaste)
 		}
 
 		static var delete: String {
-			String(localized: .TVCMainWindow.menuEditDelete)
+			String(localized: .MainWindow.menuEditDelete)
 		}
 
 		static var selectAll: String {
-			String(localized: .TVCMainWindow.menuEditSelectAll)
+			String(localized: .MainWindow.menuEditSelectAll)
 		}
 
 		static var useSelectionForFind: String {
-			String(localized: .TVCMainWindow.menuEditUseSelectionForFind)
+			String(localized: .MainWindow.menuEditUseSelectionForFind)
 		}
 
 		static var pasteAndMatchStyle: String {
-			String(localized: .TVCMainWindow.menuEditPasteAndMatchStyle)
+			String(localized: .MainWindow.menuEditPasteAndMatchStyle)
 		}
 
 		static var spellingAndGrammar: String {
-			String(localized: .TVCMainWindow.menuEditSpellingAndGrammar)
+			String(localized: .MainWindow.menuEditSpellingAndGrammar)
 		}
 
 		static var showSpellingAndGrammar: String {
-			String(localized: .TVCMainWindow.menuEditShowSpellingAndGrammar)
+			String(localized: .MainWindow.menuEditShowSpellingAndGrammar)
 		}
 
 		static var checkDocumentNow: String {
-			String(localized: .TVCMainWindow.menuEditCheckDocumentNow)
+			String(localized: .MainWindow.menuEditCheckDocumentNow)
 		}
 
 		static var checkSpellingWhileTyping: String {
-			String(localized: .TVCMainWindow.menuEditCheckSpellingWhileTyping)
+			String(localized: .MainWindow.menuEditCheckSpellingWhileTyping)
 		}
 
 		static var checkGrammarWithSpelling: String {
-			String(localized: .TVCMainWindow.menuEditCheckGrammarWithSpelling)
+			String(localized: .MainWindow.menuEditCheckGrammarWithSpelling)
 		}
 
 		static var correctSpellingAutomatically: String {
-			String(localized: .TVCMainWindow.menuEditCorrectSpellingAutomatically)
+			String(localized: .MainWindow.menuEditCorrectSpellingAutomatically)
 		}
 
 		static var substitutions: String {
-			String(localized: .TVCMainWindow.menuEditSubstitutions)
+			String(localized: .MainWindow.menuEditSubstitutions)
 		}
 
 		static var showSubstitutions: String {
-			String(localized: .TVCMainWindow.menuEditShowSubstitutions)
+			String(localized: .MainWindow.menuEditShowSubstitutions)
 		}
 
 		static var smartCopyPaste: String {
-			String(localized: .TVCMainWindow.menuEditSmartCopyPaste)
+			String(localized: .MainWindow.menuEditSmartCopyPaste)
 		}
 
 		static var smartQuotes: String {
-			String(localized: .TVCMainWindow.menuEditSmartQuotes)
+			String(localized: .MainWindow.menuEditSmartQuotes)
 		}
 
 		static var smartDashes: String {
-			String(localized: .TVCMainWindow.menuEditSmartDashes)
+			String(localized: .MainWindow.menuEditSmartDashes)
 		}
 
 		static var smartLinks: String {
-			String(localized: .TVCMainWindow.menuEditSmartLinks)
+			String(localized: .MainWindow.menuEditSmartLinks)
 		}
 
 		static var dataDetectors: String {
-			String(localized: .TVCMainWindow.menuEditDataDetectors)
+			String(localized: .MainWindow.menuEditDataDetectors)
 		}
 
 		static var textReplacement: String {
-			String(localized: .TVCMainWindow.menuEditTextReplacement)
+			String(localized: .MainWindow.menuEditTextReplacement)
 		}
 
 		static var transformations: String {
-			String(localized: .TVCMainWindow.menuEditTransformations)
+			String(localized: .MainWindow.menuEditTransformations)
 		}
 
 		static var makeUpperCase: String {
-			String(localized: .TVCMainWindow.menuEditMakeUpperCase)
+			String(localized: .MainWindow.menuEditMakeUpperCase)
 		}
 
 		static var makeLowerCase: String {
-			String(localized: .TVCMainWindow.menuEditMakeLowerCase)
+			String(localized: .MainWindow.menuEditMakeLowerCase)
 		}
 
 		static var capitalize: String {
-			String(localized: .TVCMainWindow.menuEditCapitalize)
+			String(localized: .MainWindow.menuEditCapitalize)
 		}
 
 		static var speech: String {
-			String(localized: .TVCMainWindow.menuEditSpeech)
+			String(localized: .MainWindow.menuEditSpeech)
 		}
 
 		static var startSpeaking: String {
-			String(localized: .TVCMainWindow.menuEditStartSpeaking)
+			String(localized: .MainWindow.menuEditStartSpeaking)
 		}
 
 		static var stopSpeaking: String {
-			String(localized: .TVCMainWindow.menuEditStopSpeaking)
+			String(localized: .MainWindow.menuEditStopSpeaking)
 		}
 
 		static var skipSpokenNotification: String {
-			String(localized: .TVCMainWindow.menuEditSkipSpokenNotification)
+			String(localized: .MainWindow.menuEditSkipSpokenNotification)
 		}
 
 		static var find: String {
-			String(localized: .TVCMainWindow.menuEditFind)
+			String(localized: .MainWindow.menuEditFind)
 		}
 
 		static var findText: String {
-			String(localized: .TVCMainWindow.menuEditFindText)
+			String(localized: .MainWindow.menuEditFindText)
 		}
 
 		static var findNext: String {
-			String(localized: .TVCMainWindow.menuEditFindNext)
+			String(localized: .MainWindow.menuEditFindNext)
 		}
 
 		static var findPrevious: String {
-			String(localized: .TVCMainWindow.menuEditFindPrevious)
+			String(localized: .MainWindow.menuEditFindPrevious)
 		}
 	}
 }
@@ -290,51 +290,51 @@ extension MenuStrings {
 extension MenuStrings {
 	enum View {
 		static var markScrollback: String {
-			String(localized: .TVCMainWindow.menuViewMarkScrollback)
+			String(localized: .MainWindow.menuViewMarkScrollback)
 		}
 
 		static var scrollbackMarker: String {
-			String(localized: .TVCMainWindow.menuViewScrollbackMarker)
+			String(localized: .MainWindow.menuViewScrollbackMarker)
 		}
 
 		static var markAllAsRead: String {
-			String(localized: .TVCMainWindow.menuViewMarkAllAsRead)
+			String(localized: .MainWindow.menuViewMarkAllAsRead)
 		}
 
 		static var clearScrollback: String {
-			String(localized: .TVCMainWindow.menuViewClearScrollback)
+			String(localized: .MainWindow.menuViewClearScrollback)
 		}
 
 		static var increaseFontSize: String {
-			String(localized: .TVCMainWindow.menuViewIncreaseFontSize)
+			String(localized: .MainWindow.menuViewIncreaseFontSize)
 		}
 
 		static var decreaseFontSize: String {
-			String(localized: .TVCMainWindow.menuViewDecreaseFontSize)
+			String(localized: .MainWindow.menuViewDecreaseFontSize)
 		}
 
 		static var actualSize: String {
-			String(localized: .TVCMainWindow.menuViewActualSize)
+			String(localized: .MainWindow.menuViewActualSize)
 		}
 
 		static var appearance: String {
-			String(localized: .TVCMainWindow.menuViewAppearance)
+			String(localized: .MainWindow.menuViewAppearance)
 		}
 
 		static var appearanceSystem: String {
-			String(localized: .TVCMainWindow.menuViewAppearanceSystem)
+			String(localized: .MainWindow.menuViewAppearanceSystem)
 		}
 
 		static var appearanceLight: String {
-			String(localized: .TVCMainWindow.menuViewAppearanceLight)
+			String(localized: .MainWindow.menuViewAppearanceLight)
 		}
 
 		static var appearanceDark: String {
-			String(localized: .TVCMainWindow.menuViewAppearanceDark)
+			String(localized: .MainWindow.menuViewAppearanceDark)
 		}
 
 		static var enterFullScreen: String {
-			String(localized: .TVCMainWindow.menuViewEnterFullScreen)
+			String(localized: .MainWindow.menuViewEnterFullScreen)
 		}
 	}
 }
@@ -344,47 +344,47 @@ extension MenuStrings {
 extension MenuStrings {
 	enum Server {
 		static var connect: String {
-			String(localized: .TVCMainWindow.menuServerConnect)
+			String(localized: .MainWindow.menuServerConnect)
 		}
 
 		static var connectWithoutProxy: String {
-			String(localized: .TVCMainWindow.menuServerConnectWithoutProxy)
+			String(localized: .MainWindow.menuServerConnectWithoutProxy)
 		}
 
 		static var disconnect: String {
-			String(localized: .TVCMainWindow.menuServerDisconnect)
+			String(localized: .MainWindow.menuServerDisconnect)
 		}
 
 		static var cancelReconnect: String {
-			String(localized: .TVCMainWindow.menuServerCancelReconnect)
+			String(localized: .MainWindow.menuServerCancelReconnect)
 		}
 
 		static var channelList: String {
-			String(localized: .TVCMainWindow.menuServerChannelList)
+			String(localized: .MainWindow.menuServerChannelList)
 		}
 
 		static var changeNickname: String {
-			String(localized: .TVCMainWindow.menuServerChangeNickname)
+			String(localized: .MainWindow.menuServerChangeNickname)
 		}
 
 		static var addServer: String {
-			String(localized: .TVCMainWindow.menuServerAddServer)
+			String(localized: .MainWindow.menuServerAddServer)
 		}
 
 		static var duplicateServer: String {
-			String(localized: .TVCMainWindow.menuServerDuplicateServer)
+			String(localized: .MainWindow.menuServerDuplicateServer)
 		}
 
 		static var deleteServer: String {
-			String(localized: .TVCMainWindow.menuServerDeleteServer)
+			String(localized: .MainWindow.menuServerDeleteServer)
 		}
 
 		static var addChannel: String {
-			String(localized: .TVCMainWindow.menuServerAddChannel)
+			String(localized: .MainWindow.menuServerAddChannel)
 		}
 
 		static var serverProperties: String {
-			String(localized: .TVCMainWindow.menuServerProperties)
+			String(localized: .MainWindow.menuServerProperties)
 		}
 	}
 }
@@ -394,63 +394,63 @@ extension MenuStrings {
 extension MenuStrings {
 	enum Channel {
 		static var joinChannel: String {
-			String(localized: .TVCMainWindow.menuChannelJoin)
+			String(localized: .MainWindow.menuChannelJoin)
 		}
 
 		static var leaveChannel: String {
-			String(localized: .TVCMainWindow.menuChannelLeave)
+			String(localized: .MainWindow.menuChannelLeave)
 		}
 
 		static var deleteChannel: String {
-			String(localized: .TVCMainWindow.menuChannelDelete)
+			String(localized: .MainWindow.menuChannelDelete)
 		}
 
 		static var viewLogs: String {
-			String(localized: .TVCMainWindow.menuChannelViewLogs)
+			String(localized: .MainWindow.menuChannelViewLogs)
 		}
 
 		static var modifyTopic: String {
-			String(localized: .TVCMainWindow.menuChannelModifyTopic)
+			String(localized: .MainWindow.menuChannelModifyTopic)
 		}
 
 		static var modes: String {
-			String(localized: .TVCMainWindow.menuChannelModes)
+			String(localized: .MainWindow.menuChannelModes)
 		}
 
 		static var modeModerated: String {
-			String(localized: .TVCMainWindow.menuChannelModeModerated)
+			String(localized: .MainWindow.menuChannelModeModerated)
 		}
 
 		static var modeInviteOnly: String {
-			String(localized: .TVCMainWindow.menuChannelModeInviteOnly)
+			String(localized: .MainWindow.menuChannelModeInviteOnly)
 		}
 
 		static var modeManageAll: String {
-			String(localized: .TVCMainWindow.menuChannelModeManageAll)
+			String(localized: .MainWindow.menuChannelModeManageAll)
 		}
 
 		static var bans: String {
-			String(localized: .TVCMainWindow.menuChannelBans)
+			String(localized: .MainWindow.menuChannelBans)
 		}
 
 		static var banExceptions: String {
-			String(localized: .TVCMainWindow.menuChannelBanExceptions)
+			String(localized: .MainWindow.menuChannelBanExceptions)
 		}
 
 		static var inviteExceptions: String {
-			String(localized: .TVCMainWindow.menuChannelInviteExceptions)
+			String(localized: .MainWindow.menuChannelInviteExceptions)
 		}
 
 		static var quiets: String {
-			String(localized: .TVCMainWindow.menuChannelQuiets)
+			String(localized: .MainWindow.menuChannelQuiets)
 		}
 
 		static var channelProperties: String {
-			String(localized: .TVCMainWindow.menuChannelProperties)
+			String(localized: .MainWindow.menuChannelProperties)
 		}
 
 		static var copyUniqueIdentifier: String {
-			String(localized: .TVCMainWindow.menuChannelCopyUniqueIdentifier)
+			String(localized: .MainWindow.menuChannelCopyUniqueIdentifier)
 		}
 	}
 }
@@ -460,11 +460,11 @@ extension MenuStrings {
 extension MenuStrings {
 	enum Query {
 		static var closeQuery: String {
-			String(localized: .TVCMainWindow.menuQueryClose)
+			String(localized: .MainWindow.menuQueryClose)
 		}
 
 		static var queryLogs: String {
-			String(localized: .TVCMainWindow.menuQueryLogs)
+			String(localized: .MainWindow.menuQueryLogs)
 		}
 	}
 }
@@ -474,91 +474,91 @@ extension MenuStrings {
 extension MenuStrings {
 	enum Navigation {
 		static var servers: String {
-			String(localized: .TVCMainWindow.menuNavigationServers)
+			String(localized: .MainWindow.menuNavigationServers)
 		}
 
 		static var nextServer: String {
-			String(localized: .TVCMainWindow.menuNavigationNextServer)
+			String(localized: .MainWindow.menuNavigationNextServer)
 		}
 
 		static var previousServer: String {
-			String(localized: .TVCMainWindow.menuNavigationPreviousServer)
+			String(localized: .MainWindow.menuNavigationPreviousServer)
 		}
 
 		static var nextActiveServer: String {
-			String(localized: .TVCMainWindow.menuNavigationNextActiveServer)
+			String(localized: .MainWindow.menuNavigationNextActiveServer)
 		}
 
 		static var previousActiveServer: String {
-			String(localized: .TVCMainWindow.menuNavigationPreviousActiveServer)
+			String(localized: .MainWindow.menuNavigationPreviousActiveServer)
 		}
 
 		static var channels: String {
-			String(localized: .TVCMainWindow.menuNavigationChannels)
+			String(localized: .MainWindow.menuNavigationChannels)
 		}
 
 		static var nextChannel: String {
-			String(localized: .TVCMainWindow.menuNavigationNextChannel)
+			String(localized: .MainWindow.menuNavigationNextChannel)
 		}
 
 		static var previousChannel: String {
-			String(localized: .TVCMainWindow.menuNavigationPreviousChannel)
+			String(localized: .MainWindow.menuNavigationPreviousChannel)
 		}
 
 		static var nextActiveChannel: String {
-			String(localized: .TVCMainWindow.menuNavigationNextActiveChannel)
+			String(localized: .MainWindow.menuNavigationNextActiveChannel)
 		}
 
 		static var previousActiveChannel: String {
-			String(localized: .TVCMainWindow.menuNavigationPreviousActiveChannel)
+			String(localized: .MainWindow.menuNavigationPreviousActiveChannel)
 		}
 
 		static var nextUnreadChannel: String {
-			String(localized: .TVCMainWindow.menuNavigationNextUnreadChannel)
+			String(localized: .MainWindow.menuNavigationNextUnreadChannel)
 		}
 
 		static var previousUnreadChannel: String {
-			String(localized: .TVCMainWindow.menuNavigationPreviousUnreadChannel)
+			String(localized: .MainWindow.menuNavigationPreviousUnreadChannel)
 		}
 
 		static var moveBackward: String {
-			String(localized: .TVCMainWindow.menuNavigationMoveBackward)
+			String(localized: .MainWindow.menuNavigationMoveBackward)
 		}
 
 		static var moveForward: String {
-			String(localized: .TVCMainWindow.menuNavigationMoveForward)
+			String(localized: .MainWindow.menuNavigationMoveForward)
 		}
 
 		static var previousSelection: String {
-			String(localized: .TVCMainWindow.menuNavigationPreviousSelection)
+			String(localized: .MainWindow.menuNavigationPreviousSelection)
 		}
 
 		static var nextHighlight: String {
-			String(localized: .TVCMainWindow.menuNavigationNextHighlight)
+			String(localized: .MainWindow.menuNavigationNextHighlight)
 		}
 
 		static var previousHighlight: String {
-			String(localized: .TVCMainWindow.menuNavigationPreviousHighlight)
+			String(localized: .MainWindow.menuNavigationPreviousHighlight)
 		}
 
 		static var jumpToCurrentSession: String {
-			String(localized: .TVCMainWindow.menuNavigationJumpToCurrentSession)
+			String(localized: .MainWindow.menuNavigationJumpToCurrentSession)
 		}
 
 		static var jumpToPresent: String {
-			String(localized: .TVCMainWindow.menuNavigationJumpToPresent)
+			String(localized: .MainWindow.menuNavigationJumpToPresent)
 		}
 
 		static var channelList: String {
-			String(localized: .TVCMainWindow.menuNavigationChannelList)
+			String(localized: .MainWindow.menuNavigationChannelList)
 		}
 
 		static var searchChannels: String {
-			String(localized: .TVCMainWindow.menuNavigationSearchChannels)
+			String(localized: .MainWindow.menuNavigationSearchChannels)
 		}
 
 		static var channelSpotlight: String {
-			String(localized: .TVCMainWindow.menuNavigationChannelSpotlight)
+			String(localized: .MainWindow.menuNavigationChannelSpotlight)
 		}
 	}
 }
@@ -568,47 +568,47 @@ extension MenuStrings {
 extension MenuStrings {
 	enum Window {
 		static var minimize: String {
-			String(localized: .TVCMainWindow.menuWindowMinimize)
+			String(localized: .MainWindow.menuWindowMinimize)
 		}
 
 		static var zoom: String {
-			String(localized: .TVCMainWindow.menuWindowZoom)
+			String(localized: .MainWindow.menuWindowZoom)
 		}
 
 		static var sortChannelList: String {
-			String(localized: .TVCMainWindow.menuWindowSortChannelList)
+			String(localized: .MainWindow.menuWindowSortChannelList)
 		}
 
 		static var centerWindow: String {
-			String(localized: .TVCMainWindow.menuWindowCenter)
+			String(localized: .MainWindow.menuWindowCenter)
 		}
 
 		static var resetWindow: String {
-			String(localized: .TVCMainWindow.menuWindowResetSize)
+			String(localized: .MainWindow.menuWindowResetSize)
 		}
 
 		static var mainWindow: String {
-			String(localized: .TVCMainWindow.menuWindowMainWindow)
+			String(localized: .MainWindow.menuWindowMainWindow)
 		}
 
 		static var addressBook: String {
-			String(localized: .TVCMainWindow.menuWindowAddressBook)
+			String(localized: .MainWindow.menuWindowAddressBook)
 		}
 
 		static var viewLogs: String {
-			String(localized: .TVCMainWindow.menuWindowViewLogs)
+			String(localized: .MainWindow.menuWindowViewLogs)
 		}
 
 		static var highlightList: String {
-			String(localized: .TVCMainWindow.menuWindowHighlightList)
+			String(localized: .MainWindow.menuWindowHighlightList)
 		}
 
 		static var fileTransfers: String {
-			String(localized: .TVCMainWindow.menuWindowFileTransfers)
+			String(localized: .MainWindow.menuWindowFileTransfers)
 		}
 
 		static var bringAllToFront: String {
-			String(localized: .TVCMainWindow.menuWindowBringAllToFront)
+			String(localized: .MainWindow.menuWindowBringAllToFront)
 		}
 	}
 }
@@ -618,35 +618,35 @@ extension MenuStrings {
 extension MenuStrings {
 	enum Help {
 		static var acknowledgements: String {
-			String(localized: .TVCMainWindow.menuHelpAcknowledgements)
+			String(localized: .MainWindow.menuHelpAcknowledgements)
 		}
 
 		static var connectToHelpChannel: String {
-			String(localized: .TVCMainWindow.menuHelpConnectToHelpChannel)
+			String(localized: .MainWindow.menuHelpConnectToHelpChannel)
 		}
 
 		static var connectToTestingChannel: String {
-			String(localized: .TVCMainWindow.menuHelpConnectToTestingChannel)
+			String(localized: .MainWindow.menuHelpConnectToTestingChannel)
 		}
 
 		static var advanced: String {
-			String(localized: .TVCMainWindow.menuHelpAdvanced)
+			String(localized: .MainWindow.menuHelpAdvanced)
 		}
 
 		static var developerMode: String {
-			String(localized: .TVCMainWindow.menuHelpDeveloperMode)
+			String(localized: .MainWindow.menuHelpDeveloperMode)
 		}
 
 		static var hiddenSettings: String {
-			String(localized: .TVCMainWindow.menuHelpHiddenSettings)
+			String(localized: .MainWindow.menuHelpHiddenSettings)
 		}
 
 		static var resetWarnings: String {
-			String(localized: .TVCMainWindow.menuHelpResetWarnings)
+			String(localized: .MainWindow.menuHelpResetWarnings)
 		}
 
 		static var welcome: String {
-			String(localized: .TVCMainWindow.menuHelpWelcome)
+			String(localized: .MainWindow.menuHelpWelcome)
 		}
 	}
 }
@@ -656,11 +656,11 @@ extension MenuStrings {
 extension MenuStrings {
 	enum Transcript {
 		static var lookUpInDictionary: String {
-			String(localized: .TVCMainWindow.menuTranscriptLookUpInDictionary)
+			String(localized: .MainWindow.menuTranscriptLookUpInDictionary)
 		}
 
 		static var copyURL: String {
-			String(localized: .TVCMainWindow.menuTranscriptCopyUrl)
+			String(localized: .MainWindow.menuTranscriptCopyUrl)
 		}
 	}
 }
@@ -670,119 +670,119 @@ extension MenuStrings {
 extension MenuStrings {
 	enum Member {
 		static var addIgnore: String {
-			String(localized: .TVCMainWindow.menuMemberAddIgnore)
+			String(localized: .MainWindow.menuMemberAddIgnore)
 		}
 
 		static var modifyIgnore: String {
-			String(localized: .TVCMainWindow.menuMemberModifyIgnore)
+			String(localized: .MainWindow.menuMemberModifyIgnore)
 		}
 
 		static var removeIgnore: String {
-			String(localized: .TVCMainWindow.menuMemberRemoveIgnore)
+			String(localized: .MainWindow.menuMemberRemoveIgnore)
 		}
 
 		static var inviteTo: String {
-			String(localized: .TVCMainWindow.menuMemberInviteTo)
+			String(localized: .MainWindow.menuMemberInviteTo)
 		}
 
 		static var whois: String {
-			String(localized: .TVCMainWindow.menuMemberWhois)
+			String(localized: .MainWindow.menuMemberWhois)
 		}
 
 		static var privateMessage: String {
-			String(localized: .TVCMainWindow.menuMemberPrivateMessage)
+			String(localized: .MainWindow.menuMemberPrivateMessage)
 		}
 
 		static var giveOp: String {
-			String(localized: .TVCMainWindow.menuMemberGiveOp)
+			String(localized: .MainWindow.menuMemberGiveOp)
 		}
 
 		static var giveHalfop: String {
-			String(localized: .TVCMainWindow.menuMemberGiveHalfop)
+			String(localized: .MainWindow.menuMemberGiveHalfop)
 		}
 
 		static var giveVoice: String {
-			String(localized: .TVCMainWindow.menuMemberGiveVoice)
+			String(localized: .MainWindow.menuMemberGiveVoice)
 		}
 
 		static var takeOp: String {
-			String(localized: .TVCMainWindow.menuMemberTakeOp)
+			String(localized: .MainWindow.menuMemberTakeOp)
 		}
 
 		static var takeHalfop: String {
-			String(localized: .TVCMainWindow.menuMemberTakeHalfop)
+			String(localized: .MainWindow.menuMemberTakeHalfop)
 		}
 
 		static var takeVoice: String {
-			String(localized: .TVCMainWindow.menuMemberTakeVoice)
+			String(localized: .MainWindow.menuMemberTakeVoice)
 		}
 
 		static var ban: String {
-			String(localized: .TVCMainWindow.menuMemberBan)
+			String(localized: .MainWindow.menuMemberBan)
 		}
 
 		static var kick: String {
-			String(localized: .TVCMainWindow.menuMemberKick)
+			String(localized: .MainWindow.menuMemberKick)
 		}
 
 		static var kickban: String {
-			String(localized: .TVCMainWindow.menuMemberKickban)
+			String(localized: .MainWindow.menuMemberKickban)
 		}
 
 		static var ctcp: String {
-			String(localized: .TVCMainWindow.menuMemberCtcp)
+			String(localized: .MainWindow.menuMemberCtcp)
 		}
 
 		static var sendFile: String {
-			String(localized: .TVCMainWindow.menuMemberSendFile)
+			String(localized: .MainWindow.menuMemberSendFile)
 		}
 
 		static var ctcpPing: String {
-			String(localized: .TVCMainWindow.menuMemberCtcpPing)
+			String(localized: .MainWindow.menuMemberCtcpPing)
 		}
 
 		static var ctcpTime: String {
-			String(localized: .TVCMainWindow.menuMemberCtcpTime)
+			String(localized: .MainWindow.menuMemberCtcpTime)
 		}
 
 		static var ctcpClientInfo: String {
-			String(localized: .TVCMainWindow.menuMemberCtcpClientInfo)
+			String(localized: .MainWindow.menuMemberCtcpClientInfo)
 		}
 
 		static var ctcpVersion: String {
-			String(localized: .TVCMainWindow.menuMemberCtcpVersion)
+			String(localized: .MainWindow.menuMemberCtcpVersion)
 		}
 
 		static var ctcpFinger: String {
-			String(localized: .TVCMainWindow.menuMemberCtcpFinger)
+			String(localized: .MainWindow.menuMemberCtcpFinger)
 		}
 
 		static var ctcpUserInfo: String {
-			String(localized: .TVCMainWindow.menuMemberCtcpUserInfo)
+			String(localized: .MainWindow.menuMemberCtcpUserInfo)
 		}
 
 		static var ircOperator: String {
-			String(localized: .TVCMainWindow.menuMemberIrcOperator)
+			String(localized: .MainWindow.menuMemberIrcOperator)
 		}
 
 		static var setVirtualHost: String {
-			String(localized: .TVCMainWindow.menuMemberSetVirtualHost)
+			String(localized: .MainWindow.menuMemberSetVirtualHost)
 		}
 
 		static var kill: String {
-			String(localized: .TVCMainWindow.menuMemberKill)
+			String(localized: .MainWindow.menuMemberKill)
 		}
 
 		static var shun: String {
-			String(localized: .TVCMainWindow.menuMemberShun)
+			String(localized: .MainWindow.menuMemberShun)
 		}
 
 		static var gline: String {
-			String(localized: .TVCMainWindow.menuMemberGline)
+			String(localized: .MainWindow.menuMemberGline)
 		}
 
 		static var changeColor: String {
-			String(localized: .TVCMainWindow.menuMemberChangeColor)
+			String(localized: .MainWindow.menuMemberChangeColor)
 		}
 	}
 }

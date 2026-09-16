@@ -33,15 +33,15 @@ struct MainWindowTextViewAppearanceSchema: Decodable, Sendable {
 	}
 }
 
-public final class MainWindowTextViewAppearance: ApplicationAppearance {
-	public private(set) var textViewInset: NSSize = .zero
-	public private(set) var textViewTextColor: NSColor?
-	public private(set) var textViewPlaceholderTextColor: NSColor?
-	public private(set) var textViewPreferredFontSize: MainWindowTextFontSize = .normal
-	public private(set) var backgroundViewContentBorderPadding: CGFloat = 0
+final class MainWindowTextViewAppearance: ApplicationAppearance {
+	private(set) var textViewInset: NSSize = .zero
+	private(set) var textViewTextColor: NSColor?
+	private(set) var textViewPlaceholderTextColor: NSColor?
+	private(set) var textViewPreferredFontSize: MainWindowTextFontSize = .normal
+	private(set) var backgroundViewContentBorderPadding: CGFloat = 0
 
 	@MainActor
-	public init?() {
+	init?() {
 		super.init(applicationProperties: Self.currentApplicationProperties)
 
 		guard let schema = AppearanceSchema.load(
@@ -58,13 +58,13 @@ public final class MainWindowTextViewAppearance: ApplicationAppearance {
 		backgroundViewContentBorderPadding = schema.backgroundView.contentBorderPadding
 	}
 
-	public func preferredTextViewFontChanged() -> Bool {
+	func preferredTextViewFontChanged() -> Bool {
 		textViewPreferredFontSize != Preferences.Input.textViewFontSize.value
 	}
 
 	/// Records the size it resolved, so `preferredTextViewFontChanged()` can
 	/// tell whether the preference moved since the font was last handed out.
-	public func makeTextViewPreferredFont() -> NSFont {
+	func makeTextViewPreferredFont() -> NSFont {
 		let preferredFontSize = Preferences.Input.textViewFontSize.value
 		textViewPreferredFontSize = preferredFontSize
 

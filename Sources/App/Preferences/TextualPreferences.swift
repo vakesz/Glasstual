@@ -40,4 +40,4 @@ import Foundation
 
 /// Namespace for the application's preference helpers, which are declared in
 /// the feature that owns each of them.
-public enum TextualPreferences {}
+enum TextualPreferences {}

@@ -5,7 +5,7 @@
 
 import SwiftUI
 
-struct ServerHighlightListApplicationScene: Scene {
+struct ServerHighlightListScene: Scene {
 	let scenes: ApplicationScenes
 
 	var body: some Scene {

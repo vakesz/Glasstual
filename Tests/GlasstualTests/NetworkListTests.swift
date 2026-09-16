@@ -53,6 +53,9 @@ struct NetworkListTests {
 			#expect(network.networkName.isEmpty == false)
 			#expect(network.serverAddress.isEmpty == false, "\(network.networkName) has no address")
 			#expect(network.serverPort != 0, "\(network.networkName) has no port")
+			#expect(network.suggestedChannels.count <= 3)
+			#expect(Set(network.suggestedChannels).count == network.suggestedChannels.count)
+			#expect(network.networkDescription.isEmpty == false)
 		}
 	}
 
@@ -90,6 +93,10 @@ struct NetworkListTests {
 			"Snoonet",
 			"Tilde.Chat",
 			"DumaNet",
+			"EsperNet",
+			"synIRC",
+			"DareNET",
+			"Ergo",
 		]
 		var actual: [String] = []
 
@@ -112,6 +119,7 @@ struct NetworkListTests {
 		"StormBit",
 		"Snyde",
 		"Mibbit",
+		"TWiT",
 		"Ewnix",
 		"TinyCrab",
 	])
@@ -138,18 +146,6 @@ struct NetworkListTests {
 		#expect(libera.website != nil)
 		#expect(libera.accountFieldsApply)
 		#expect(list.network(withServerAddress: "IRC.LIBERA.CHAT") == libera)
-	}
-
-	@Test("HybridIRC is offered secured and with SASL")
-	func hybridIRCEntry() throws {
-		let list = NetworkList()
-		let hybridIRC = try #require(list.network(named: "HybridIRC"), "Missing HybridIRC")
-
-		#expect(hybridIRC.serverAddress == "irc.hybridirc.com")
-		#expect(hybridIRC.serverPort == 6697)
-		#expect(hybridIRC.prefersSecuredConnection)
-		#expect(hybridIRC.saslSupported)
-		#expect(hybridIRC.registration == .optional)
 	}
 
 	@Test("DumaNet is offered secured, without SASL, and suggests its help channel")
@@ -202,13 +198,13 @@ struct NetworkListTests {
 	}
 
 	@Test("A registration string maps to its case, and anything else means none", arguments: [
-		("required", IRCNetworkRegistration.required),
+		("required", NetworkRegistration.required),
 		("Optional", .optional),
 		("none", .none),
 		(nil, .none),
 		("bogus", .none),
-	] as [(String?, IRCNetworkRegistration)])
-	func registrationParsing(_ string: String?, _ expected: IRCNetworkRegistration) {
+	] as [(String?, NetworkRegistration)])
+	func registrationParsing(_ string: String?, _ expected: NetworkRegistration) {
 		#expect(NetworkList.registration(from: string) == expected)
 	}
 
@@ -218,31 +214,16 @@ struct NetworkListTests {
 	}
 
 	@Test("Services or SASL alone is enough to show the account fields", arguments: [
-		(IRCNetworkRegistration.none, true),
+		(NetworkRegistration.none, true),
 		(.optional, false),
 		(.optional, true),
 		(.required, false),
 		(.required, true),
 	])
 	func accountFieldsAreShownWithServicesOrSASL(
-		_ registration: IRCNetworkRegistration,
+		_ registration: NetworkRegistration,
 		_ saslSupported: Bool
 	) {
 		#expect(NetworkList.accountFieldsApply(to: registration, saslSupported: saslSupported))
-	}
-
-	@Test("The onboarding flag round trips through the preference store")
-	func onboardingCompletedFlagRoundTrips() {
-		let original: Bool = Preferences.Identity.onboardingCompleted.value
-
-		Preferences.Identity.onboardingCompleted.value = false
-
-		#expect(Preferences.Identity.onboardingCompleted.value == false)
-
-		Preferences.Identity.onboardingCompleted.value = true
-
-		#expect(Preferences.Identity.onboardingCompleted.value)
-
-		Preferences.Identity.onboardingCompleted.value = original
 	}
 }

@@ -12,7 +12,7 @@ struct FileTransferScopeTests {
 	}
 
 	private func receiver(
-		on client: IRCClient,
+		on client: Client,
 		nickname: String = "alice",
 		filename: String = "photo.jpg"
 	) throws -> FileTransferController {

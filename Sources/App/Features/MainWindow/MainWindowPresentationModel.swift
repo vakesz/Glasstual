@@ -31,7 +31,7 @@ final class MainWindowPresentationModel {
 	 as `isHiddenByUser`, a second store of the same fact that six call sites
 	 kept in step with this one. */
 	private(set) var userPrefersMemberList = true
-	var transcript: LogView?
+	var transcript: TranscriptView?
 	/// Whether the loading overlay covers the conversation. The transcript
 	/// host hides its AppKit view while it does.
 	var isConversationObscured = false
@@ -50,7 +50,7 @@ final class MainWindowPresentationModel {
 	var areNotificationsDisabled = false
 	/// The outermost sheet the window is showing; each one holds whatever it
 	/// raised on top of itself.
-	private(set) var presentedSheet: MainWindowSheetPresentation?
+	private(set) var presentedSheet: PresentedSheet?
 
 	@ObservationIgnored weak var window: MainWindow?
 	@ObservationIgnored private var transferFileSelection: (([URL]) -> Void)?
@@ -69,8 +69,8 @@ final class MainWindowPresentationModel {
 	/// The commands the sidebar's footer menus issue. They are the menu bar's
 	/// commands, sent to the object that performs them, rather than eight
 	/// methods on this model that only renamed them.
-	var commands: MenuActionCoordinator? {
-		AppController.shared.menuController?.actionCoordinator
+	var commands: MenuActionController? {
+		AppServices.delegate.menuController?.actionCoordinator
 	}
 
 	/** Applies a selection to the member-list column.
@@ -145,7 +145,7 @@ final class MainWindowPresentationModel {
 
 	/// Raises a sheet: the first one on the window, any after it on whichever
 	/// sheet is innermost.
-	func presentSheet(_ presentation: MainWindowSheetPresentation) {
+	func presentSheet(_ presentation: PresentedSheet) {
 		guard let innermost = presentedSheet?.chain.last else {
 			presentedSheet = presentation
 			return
@@ -166,7 +166,7 @@ final class MainWindowPresentationModel {
 	}
 
 	/// Takes `presentation` down, and everything it raised with it.
-	func dismiss(_ presentation: MainWindowSheetPresentation?) {
+	func dismiss(_ presentation: PresentedSheet?) {
 		guard let presentation else { return }
 		if presentedSheet === presentation {
 			presentedSheet = nil

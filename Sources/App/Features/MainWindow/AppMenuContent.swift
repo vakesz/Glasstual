@@ -9,21 +9,21 @@ import SwiftUI
 /// The rows a contextual menu was opened on, and the coordinator that
 /// resolves commands against them.
 struct AppMenuContext {
-	let coordinator: MenuActionCoordinator
-	let context: MenuActionCoordinator.MenuContext
+	let coordinator: MenuActionController
+	let context: MenuActionController.MenuContext
 
-	init(coordinator: MenuActionCoordinator, item: TreeItem?) {
+	init(coordinator: MenuActionController, item: ChatItem?) {
 		self.coordinator = coordinator
 		context = .treeItem(item)
 	}
 
-	init(coordinator: MenuActionCoordinator, members: [ChannelUser]) {
+	init(coordinator: MenuActionController, members: [ChannelUser]) {
 		self.coordinator = coordinator
 		context = .members(members)
 	}
 
 	/// The server-list row this context names, if it names one at all.
-	var treeItem: TreeItem? {
+	var treeItem: ChatItem? {
 		guard case let .treeItem(item) = context else { return nil }
 		return item
 	}

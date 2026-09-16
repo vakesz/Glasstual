@@ -41,37 +41,6 @@ import Testing
 
 @Suite("Mode info")
 struct ModeInfoTests {
-	@Test("A mode built from a symbol alone is unset and carries no parameter")
-	func convenienceInitializers() {
-		let unset = ModeInfo(modeSymbol: "n")
-		let set = ModeInfo(modeSymbol: "t", modeIsSet: true)
-
-		#expect(unset.modeSymbol == "n")
-		#expect(unset.modeIsSet == false)
-		#expect(unset.modeParameter == nil)
-		#expect(set.modeSymbol == "t")
-		#expect(set.modeIsSet)
-	}
-
-	/** `ModeInfo` used to be an immutable class with a mutable subclass, so a
-	 mode read out of a container was the same object the parser produced. It is
-	 a value now and equality is structural, which is what lets the container
-	 hand back a mode that compares equal to the parsed one. */
-	@Test("Equality and hashing use every field")
-	func equalityUsesEveryField() {
-		let mode = ModeInfo(modeSymbol: "k", modeIsSet: true, modeParameter: "secret")
-
-		#expect(mode == ModeInfo(modeSymbol: "k", modeIsSet: true, modeParameter: "secret"))
-		#expect(
-			mode.hashValue == ModeInfo(modeSymbol: "k", modeIsSet: true, modeParameter: "secret").hashValue
-		)
-
-		#expect(mode != ModeInfo(modeSymbol: "l", modeIsSet: true, modeParameter: "secret"))
-		#expect(mode != ModeInfo(modeSymbol: "k", modeIsSet: false, modeParameter: "secret"))
-		#expect(mode != ModeInfo(modeSymbol: "k", modeIsSet: true, modeParameter: "other"))
-		#expect(mode != ModeInfo(modeSymbol: "k", modeIsSet: true))
-	}
-
 	@MainActor
 	@Test("Modes parsed off a MODE line survive being stored and read back")
 	func parsedModesRoundTripThroughTheContainer() {

@@ -106,8 +106,8 @@ nonisolated enum ApplicationLink: Equatable { // nonisolated: value
 			}
 		}
 		let defaultPort = connectSecurely
-			? IRCConnectionDefaults.serverPortSecure
-			: IRCConnectionDefaults.serverPort
+			? ConnectionDefaults.serverPortSecure
+			: ConnectionDefaults.serverPort
 		guard let port = UInt16(exactly: components.port ?? Int(defaultPort)), port > 0 else {
 			return nil
 		}
@@ -129,7 +129,7 @@ enum ApplicationLinkHandler {
 		case let .applicationAction(action, source):
 			perform(action, source: source)
 		case let .connect(intent):
-			ServerConnectionCoordinator.connect(using: intent)
+			ServerConnectionController.connect(using: intent)
 		case nil:
 			/* A link the application was handed and could not read. It is not
 			 the reader's mistake to answer for, but dropping it without a
@@ -147,16 +147,16 @@ enum ApplicationLinkHandler {
 		case .applicationSupportFolder:
 			reveal(PathInfo.groupContainerApplicationSupportURL, with: menu)
 		case .customScriptsFolder:
-			reveal(SharedApplication.sharedPluginManager().customScriptsURL, with: menu)
+			reveal(AppServices.scripts.customScriptsURL, with: menu)
 		case .diagnosticReportsFolder:
 			reveal(PathInfo.userDiagnosticReportsURL, with: menu)
 			reveal(PathInfo.systemDiagnosticReportsURL, with: menu)
 		case .goto:
 			menu?.navigateToTreeItem(at: source)
 		case .supportChannel:
-			ServerConnectionCoordinator.connect(to: .help)
+			ServerConnectionController.connect(to: .help)
 		case .testingChannel:
-			ServerConnectionCoordinator.connect(to: .testing)
+			ServerConnectionController.connect(to: .testing)
 		case let .unknown(name):
 			/* A link naming something this build does not have. Say which,
 			 rather than dropping it silently. */

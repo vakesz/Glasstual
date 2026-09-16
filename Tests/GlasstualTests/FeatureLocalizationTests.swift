@@ -23,15 +23,15 @@ struct FeatureLocalizationTests {
 	@Test("Channel properties preserve catalog symbols and corrected English copy")
 	func channelPropertiesStringsPreserveLegacyValues() throws {
 		try expectLocalizedCopy(ChannelPropertiesStrings.invalidChannelName,
-		                        .TDCChannelPropertiesSheet.pleaseEnterAProperlyFormattedChannel,
+		                        .ChannelProperties.pleaseEnterAProperlyFormattedChannel,
 		                        "Enter a channel name beginning with a channel prefix, such as #example.")
 		/* The alert asks whether to reload and offers Cancel and Reload, so
 		 neither half of it may name a "Yes" button that is not there. */
 		try expectLocalizedCopy(ChannelPropertiesStrings.configurationChangedTitle,
-		                        .TDCChannelPropertiesSheet.thisChannelsConfigurationHasChangedDo,
+		                        .ChannelProperties.thisChannelsConfigurationHasChangedDo,
 		                        "Reload the channel’s settings?")
 		try expectLocalizedCopy(ChannelPropertiesStrings.unsavedChangesWarning,
-		                        .TDCChannelPropertiesSheet.youWillLooseUnsavedChangesIf,
+		                        .ChannelProperties.youWillLooseUnsavedChangesIf,
 		                        "Your unsaved changes will be discarded.")
 	}
 
@@ -171,9 +171,9 @@ struct FeatureLocalizationTests {
 		)
 		let rows = PreferencesDestination.builtIn
 		try expectLocalizedCopy(
-			rows.first { $0.selection == .addOns }?.title,
-			.Settings.addOns,
-			"Add-ons"
+			rows.first { $0.selection == .rules }?.title,
+			.Settings.rules,
+			"Rules"
 		)
 		try expectLocalizedCopy(
 			rows.first { $0.selection == .advanced }?.title,

@@ -47,26 +47,6 @@ struct FileTransferCenterTests {
 		)
 	}
 
-	@Test("A selection that matches nothing leaves an empty table")
-	func aSelectionMatchingNothingIsEmpty() {
-		#expect(
-			FileTransferSelection.receiving.shownTransfers(
-				in: [sending, alsoSending],
-				isSender: \.isSender
-			).isEmpty
-		)
-	}
-
-	@Test("Filtering keeps the order the transfers were added in")
-	func filteringKeepsOrder() {
-		let ordered = [alsoSending, receiving, sending]
-
-		#expect(
-			FileTransferSelection.sending.shownTransfers(in: ordered, isSender: \.isSender)
-				== [alsoSending, sending]
-		)
-	}
-
 	// MARK: - Real transfers
 
 	@Test("The filter reads the direction off a real transfer")
@@ -203,13 +183,8 @@ struct FileTransferCenterTests {
 		#expect(model.startActionTitle(for: [offered.uniqueIdentifier]) == FileTransferStrings.startTransfer)
 	}
 
-	@Test("The feature ships no legacy nib")
-	func featureUsesNativeSwiftUI() {
-		#expect(Bundle.main.path(forResource: "TDCFileTransferDialog", ofType: "nib") == nil)
-	}
-
 	private func transfer(
-		on client: IRCClient,
+		on client: Client,
 		filename: String
 	) throws -> FileTransferController {
 		try #require(FileTransferController.receiver(

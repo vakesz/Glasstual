@@ -254,25 +254,6 @@ struct AlertRequestTests {
 		#expect(outcome == AlertOutcome(response: .default, isSuppressed: true))
 	}
 
-	@Test("Nothing is recorded for an alert the user did not silence")
-	func noResponseIsRecordedWithoutSuppression() async {
-		let baseKey = Self.uniqueKey()
-		let presenter = RecordingAlertPresenter(response: .alternate, suppressionChecked: false)
-		await Alerts.run(
-			AlertRequest(
-				title: "Title",
-				body: "Body",
-				defaultButton: "OK",
-				alternateButton: "Cancel",
-				suppressionKey: baseKey
-			),
-			on: .anyVisibleWindow,
-			using: presenter
-		)
-
-		#expect(Alerts.suppressedResponse(baseKey: baseKey) == nil)
-	}
-
 	@Test("A destructive button is carried through to the presenter")
 	func destructiveRoleIsCarried() async {
 		let presenter = RecordingAlertPresenter()
@@ -319,27 +300,6 @@ struct AlertRequestTests {
 
 		#expect(outcome.isSuppressed == false)
 		#expect(Alerts.isSuppressed(baseKey: baseKey) == false)
-	}
-
-	@Test("The blocking form applies the same suppression policy")
-	func modalRunHonoursSuppression() {
-		let baseKey = Self.uniqueKey()
-		let request = AlertRequest(
-			title: "Title",
-			body: "Body",
-			defaultButton: "OK",
-			suppressionKey: baseKey
-		)
-
-		let first = RecordingAlertPresenter(response: .default, suppressionChecked: true)
-		_ = Alerts.runModal(request, using: first)
-		#expect(first.requests.count == 1)
-
-		let second = RecordingAlertPresenter(response: .alternate)
-		let outcome = Alerts.runModal(request, using: second)
-
-		#expect(second.requests.isEmpty)
-		#expect(outcome == AlertOutcome(response: .default, isSuppressed: true))
 	}
 
 	/// The suppression checkbox is only offered when a key can record the

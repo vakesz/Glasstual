@@ -45,8 +45,8 @@ import Testing
 @Suite("ISUPPORT tokens")
 @MainActor
 struct IRCSpecISupportTests {
-	private func supportInfo(_ tokens: String...) -> IRCISupportInfo {
-		let info = IRCISupportInfo()
+	private func supportInfo(_ tokens: String...) -> ISupport {
+		let info = ISupport()
 
 		for token in tokens {
 			info.processConfigurationData(token)
@@ -319,7 +319,7 @@ struct IRCSpecISupportTests {
 	@Test("MODES: the mode count per command, with an RFC default")
 	func modeCountPerCommand() {
 		#expect(supportInfo("MODES=6").maximumModeCount == 6)
-		#expect(supportInfo().maximumModeCount == UInt(IRCProtocolLimits.maximumNodesPerModeCommand))
+		#expect(supportInfo().maximumModeCount == UInt(ProtocolLimits.maximumNodesPerModeCommand))
 	}
 
 	// MARK: - Length limits
@@ -385,7 +385,7 @@ struct IRCSpecISupportTests {
 
 		info.processConfigurationData("-NICKLEN -CHANTYPES -SAFELIST -WHOX")
 
-		#expect(info.maximumNicknameLength == UInt(IRCProtocolLimits.defaultNicknameMaximumLength))
+		#expect(info.maximumNicknameLength == UInt(ProtocolLimits.defaultNicknameMaximumLength))
 		#expect(info.channelNamePrefixes == ["#"])
 		#expect(info.safeListSupported == false)
 		#expect(info.whoxSupported == false)

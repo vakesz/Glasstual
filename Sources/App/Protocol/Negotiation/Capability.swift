@@ -61,7 +61,7 @@ enum CapabilityNegotiation: Sendable, Equatable {
 
 struct Capability: Sendable {
 	let name: String
-	let identifier: ClientIRCv3SupportedCapability
+	let identifier: CapabilitySet
 	let requestedByDefault: Bool
 	let preference: CapabilityPreference
 	let dependencies: [String]
@@ -77,7 +77,7 @@ struct Capability: Sendable {
 
 	static func capability(
 		named name: String,
-		identifier: ClientIRCv3SupportedCapability,
+		identifier: CapabilitySet,
 		requestedByDefault: Bool = true,
 		specification: URL? = nil
 	) -> Capability {
@@ -94,7 +94,7 @@ struct Capability: Sendable {
 
 	init(
 		name: String,
-		identifier: ClientIRCv3SupportedCapability,
+		identifier: CapabilitySet,
 		requestedByDefault: Bool,
 		preference: CapabilityPreference = .always,
 		dependencies: [String] = [],
@@ -132,7 +132,7 @@ struct CapabilityRegistry: Sendable {
 		capabilitiesByName[name]
 	}
 
-	func capability(for identifier: ClientIRCv3SupportedCapability) -> Capability? {
+	func capability(for identifier: CapabilitySet) -> Capability? {
 		guard identifier.rawValue != 0 else {
 			return nil
 		}
@@ -202,7 +202,7 @@ struct CapabilityRegistry: Sendable {
 	func capabilitiesToRequest(
 		fromOffered offered: [String: [String]],
 		preferences: ClientPreferences,
-		enabledCapabilities: ClientIRCv3SupportedCapability = []
+		enabledCapabilities: CapabilitySet = []
 	) -> [Capability] {
 		capabilities.filter {
 			isRequestable(
@@ -215,15 +215,15 @@ struct CapabilityRegistry: Sendable {
 		}
 	}
 
-	var knownIdentifiers: ClientIRCv3SupportedCapability {
+	var knownIdentifiers: CapabilitySet {
 		capabilities.reduce(into: []) { $0.formUnion($1.identifier) }
 	}
 
 	/// Dependencies are semantic identifiers, so a surviving vendor alias can
 	/// still supply server-time. Iterate to a fixed point for transitive needs.
-	func projection(of names: [String]) -> ClientIRCv3SupportedCapability {
+	func projection(of names: [String]) -> CapabilitySet {
 		let acknowledged = names.compactMap { capability(named: $0) }
-		var result: ClientIRCv3SupportedCapability = []
+		var result: CapabilitySet = []
 		for _ in 0 ... capabilities.count {
 			let previous = result
 			for capability in acknowledged where dependenciesSatisfied(for: capability, by: result) {
@@ -236,7 +236,7 @@ struct CapabilityRegistry: Sendable {
 		return result
 	}
 
-	func dependenciesSatisfied(for capability: Capability, by enabled: ClientIRCv3SupportedCapability) -> Bool {
+	func dependenciesSatisfied(for capability: Capability, by enabled: CapabilitySet) -> Bool {
 		capability.dependencies.allSatisfy { name in
 			guard let dependency = self.capability(named: name) else { return false }
 			return enabled.contains(dependency.identifier)
@@ -247,7 +247,7 @@ struct CapabilityRegistry: Sendable {
 		_ capability: Capability,
 		fromOffered offered: [String: [String]],
 		preferences: ClientPreferences,
-		enabledCapabilities: ClientIRCv3SupportedCapability,
+		enabledCapabilities: CapabilitySet,
 		depth: Int
 	) -> Bool {
 		guard depth <= 8,

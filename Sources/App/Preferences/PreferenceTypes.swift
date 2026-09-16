@@ -40,58 +40,58 @@ import Foundation
 
 nonisolated let preferencesDictionaryVersion: UInt = 602 // nonisolated: let
 
-public enum NicknameHighlightMatchMode: UInt, Sendable {
+enum NicknameHighlightMatchMode: UInt, Sendable {
 	case partial
 	case exact
 	case regularExpression
 }
 
-public enum TabKeyAction: UInt, Sendable {
+enum TabKeyAction: UInt, Sendable {
 	case nicknameComplete = 0
 	case unreadChannel = 1
 	case none = 100
 }
 
-public enum UserDoubleClickAction: UInt, Sendable {
+enum UserDoubleClickAction: UInt, Sendable {
 	case whois = 100
 	case privateMessage = 200
 	case insertTextField = 300
 }
 
-public enum NoticeSendLocation: UInt, Sendable {
+enum NoticeSendLocation: UInt, Sendable {
 	case serverConsole
 	case selectedChannel
 	case query
 }
 
-public enum CommandWShortcutAction: UInt, Sendable {
+enum CommandWShortcutAction: UInt, Sendable {
 	case closeWindow
 	case partChannel
 	case disconnect
 	case terminate
 }
 
-public enum HostmaskBanFormat: UInt, Sendable {
+enum HostmaskBanFormat: UInt, Sendable {
 	case whnin
 	case whainn
 	case whanni
 	case exact
 }
 
-public enum MainWindowTextFontSize: UInt, Sendable {
+enum MainWindowTextFontSize: UInt, Sendable {
 	case normal = 1
 	case large
 	case extraLarge
 	case humongous
 }
 
-public enum FileTransferRequestBehavior: UInt, Sendable {
+enum FileTransferRequestBehavior: UInt, Sendable {
 	case ignore = 1
 	case openDialog
 	case automaticallyDownload
 }
 
-public enum FileTransferIPAddressSource: UInt, Sendable {
+enum FileTransferIPAddressSource: UInt, Sendable {
 	// Raw values preserve existing preferences.
 	case routerOnly = 3
 	case routerAndFirstParty = 1
@@ -104,7 +104,7 @@ public enum FileTransferIPAddressSource: UInt, Sendable {
  The case order is the order the appearance picker offers, because the picker
  builds its rows from `allCases`. The conformance is here rather than beside the
  picker because the synthesis only happens in the file that declares the enum. */
-public enum PreferredAppearance: UInt, CaseIterable, Sendable {
+enum PreferredAppearance: UInt, CaseIterable, Sendable {
 	case inherited
 	case light
 	case dark

@@ -1,0 +1,6750 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "prevent-sleep-explanation": {
+      "comment": "Explanation below the Caffeine preference toggle.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do not allow your Mac to go to sleep, which would disconnect it from the Internet, while Glasstual has at least one connection open."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ne engedje a Macet alvó állapotba lépni, ami bontaná az internetkapcsolatot, amíg a Glasstualnak legalább egy nyitott kapcsolata van."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verhindere den Ruhezustand des Mac und damit die Trennung der Internetverbindung, solange Glasstual mindestens eine offene Verbindung hat."
+          }
+        }
+      }
+    },
+    "prevent-sleep-while-connected": {
+      "comment": "Toggle that keeps the Mac awake while Glasstual is connected.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prevent sleep while Glasstual is connected"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alvó állapot megakadályozása, amíg a Glasstual kapcsolódik"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ruhezustand verhindern, solange Glasstual verbunden ist"
+          }
+        }
+      }
+    },
+    "rules": {
+      "comment": "Title of the Rules row in the Settings sidebar, where message rules are edited.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rules"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Szabályok"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Regeln"
+          }
+        }
+      }
+    },
+    "search-placeholder": {
+      "comment": "Placeholder in the Settings sidebar search field. Search matches localized pane titles and setting labels.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search Settings"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keresés a beállításokban"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einstellungen durchsuchen"
+          }
+        }
+      }
+    },
+    "accessibility-label-settings": {
+      "comment": "Accessibility label for the Settings sidebar. Legacy key: sb-tt.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beállítások"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einstellungen"
+          }
+        }
+      }
+    },
+    "channel-management": {
+      "comment": "Title of the Channel Management pane in the Settings sidebar. Legacy key: sb-channelManagement.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Channel Management"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csatornakezelés"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kanalverwaltung"
+          }
+        }
+      }
+    },
+    "channel-management-ban-format-exact": {
+      "comment": "Ban format matching the exact hostmask.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "nickname!username@address"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "nickname!username@address"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "nickname!username@address"
+          }
+        }
+      }
+    },
+    "channel-management-ban-format-label": {
+      "comment": "Label of the popup choosing the default hostmask ban format.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hostmask ban format"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kitiltási címmaszk formátuma"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Format der Bann-Hostmaske"
+          }
+        }
+      }
+    },
+    "channel-management-ban-format-note": {
+      "comment": "Explanation below the hostmask ban format popup.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When used in the context of a hostmask, an asterisk (*) represents a wildcard character that is matched by any possible value."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Címmaszkban a csillag (*) helyettesítő karakter, amely bármilyen értékre illeszkedik."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In einer Hostmaske steht ein Sternchen (*) als Platzhalter für einen beliebigen Wert."
+          }
+        }
+      }
+    },
+    "channel-management-ban-format-whainn": {
+      "comment": "Ban format matching every nickname for one user name at one address.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "*!ident@address"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "*!ident@address"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "*!ident@address"
+          }
+        }
+      }
+    },
+    "channel-management-ban-format-whanni": {
+      "comment": "Ban format matching one nickname at one address.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "nickname!*@address"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "nickname!*@address"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "nickname!*@address"
+          }
+        }
+      }
+    },
+    "channel-management-ban-format-whnin": {
+      "comment": "Ban format matching every nickname and user name at one address.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "*!*@address"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "*!*@address"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "*!*@address"
+          }
+        }
+      }
+    },
+    "channel-management-kick-reason-label": {
+      "comment": "Label of the default kick reason field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Default kick reason"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alapértelmezett kirúgási indok"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Standard-Kick-Begründung"
+          }
+        }
+      }
+    },
+    "combo-presets-help": {
+      "comment": "Help tag and accessibility label of the pop-up button beside a text field that offers preset values.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a preset value"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Előre megadott érték választása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vorgabewert auswählen"
+          }
+        }
+      }
+    },
+    "command-scope": {
+      "comment": "Title of the Command Scope pane in the Settings sidebar. Legacy key: sb-commandScope.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Command Scope"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parancsok hatóköre"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geltungsbereich von Befehlen"
+          }
+        }
+      }
+    },
+    "command-scope-amsg": {
+      "comment": "Checkbox in the Command Scope pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "/amsg and /ame apply to all connections"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Az /amsg és /ame minden kapcsolatra érvényes"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "/amsg und /ame gelten für alle Verbindungen"
+          }
+        }
+      }
+    },
+    "command-scope-away": {
+      "comment": "Checkbox in the Command Scope pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "/away applies to all connections"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Az /away minden kapcsolatra érvényes"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "/away gilt für alle Verbindungen"
+          }
+        }
+      }
+    },
+    "command-scope-clearall": {
+      "comment": "Checkbox in the Command Scope pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "/clearall applies to all connections"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A /clearall minden kapcsolatra érvényes"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "/clearall gilt für alle Verbindungen"
+          }
+        }
+      }
+    },
+    "command-scope-focus-on-message": {
+      "comment": "Checkbox in the Command Scope pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Give focus to the destination of the /msg command"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fókusz áthelyezése a /msg parancs céljához"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zum Ziel des Befehls /msg wechseln"
+          }
+        }
+      }
+    },
+    "command-scope-nick": {
+      "comment": "Checkbox in the Command Scope pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "/nick applies to all connections"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A /nick minden kapcsolatra érvényes"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "/nick gilt für alle Verbindungen"
+          }
+        }
+      }
+    },
+    "command-scope-notice-label": {
+      "comment": "Label of the radio buttons choosing where notices are shown.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forward notices to"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Értesítések továbbítása ide"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hinweise weiterleiten an"
+          }
+        }
+      }
+    },
+    "command-scope-notice-query": {
+      "comment": "Notices are shown in a private message.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Private Message"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privát üzenet"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Private Nachricht"
+          }
+        }
+      }
+    },
+    "command-scope-notice-selected-channel": {
+      "comment": "Notices are shown in the selected channel.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selected Channel"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kijelölt csatorna"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausgewählten Kanal"
+          }
+        }
+      }
+    },
+    "command-scope-notice-server-console": {
+      "comment": "Notices are shown in the server console.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server Console"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kiszolgálókonzol"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serverkonsole"
+          }
+        }
+      }
+    },
+    "controls-command-return-action": {
+      "comment": "Checkbox in the Controls pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Command Return (⌘⏎) sends message as an action"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A Command Return (⌘⏎) cselekvésként küldi el az üzenetet"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Command-Return (⌘⏎) sendet die Nachricht als Aktion"
+          }
+        }
+      }
+    },
+    "controls-command-w-close-window": {
+      "comment": "Command-W closes the main window.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close Main Window"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Főablak bezárása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hauptfenster schließen"
+          }
+        }
+      }
+    },
+    "controls-command-w-disconnect": {
+      "comment": "Command-W disconnects from the selected server.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnect from Selected Server"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapcsolat bontása a kijelölt kiszolgálóval"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbindung zum ausgewählten Server trennen"
+          }
+        }
+      }
+    },
+    "controls-command-w-label": {
+      "comment": "Label of the popup choosing what Command-W does.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⌘W key action"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A ⌘W billentyűparancs művelete"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktion für ⌘W"
+          }
+        }
+      }
+    },
+    "controls-command-w-part-channel": {
+      "comment": "Command-W leaves the selected channel or closes the selected query.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close Selected Query or Part Selected Channel"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kijelölt beszélgetés bezárása vagy csatorna elhagyása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausgewähltes Gespräch schließen oder ausgewählten Kanal verlassen"
+          }
+        }
+      }
+    },
+    "controls-command-w-terminate": {
+      "comment": "Command-W quits the application.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnect and Quit Application"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapcsolatok bontása és kilépés az alkalmazásból"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbindungen trennen und App beenden"
+          }
+        }
+      }
+    },
+    "controls-completion-preview": {
+      "comment": "Preview of tab completion: a sample nickname followed by the chosen suffix.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "JohnDoe%@…"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "JohnDoe%@…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "JohnDoe%@…"
+          }
+        }
+      }
+    },
+    "controls-completion-preview-label": {
+      "comment": "Label before the tab completion suffix preview.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preview"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Előnézet"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vorschau"
+          }
+        }
+      }
+    },
+    "controls-completion-suffix-accessibility": {
+      "comment": "Accessibility label for the tab completion suffix field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tab Key Autocompletion Suffix"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tab billentyűs kiegészítés utótagja"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suffix für Tab-Vervollständigung"
+          }
+        }
+      }
+    },
+    "controls-completion-suffix-label": {
+      "comment": "Label of the tab completion suffix field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autocomplete suffix"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatikus kiegészítés utótagja"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vervollständigungssuffix"
+          }
+        }
+      }
+    },
+    "controls-connect-on-double-click": {
+      "comment": "Checkbox in the Controls pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect to server on double click"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapcsolódás a kiszolgálóhoz dupla kattintással"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mit Doppelklick zum Server verbinden"
+          }
+        }
+      }
+    },
+    "controls-control-enter-sends": {
+      "comment": "Checkbox in the Controls pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Control Enter (⌃⎆) sends message instead of inserting new line"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A Control Enter (⌃⎆) új sor helyett elküldi az üzenetet"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Control-Enter (⌃⎆) sendet die Nachricht, statt eine neue Zeile einzufügen"
+          }
+        }
+      }
+    },
+    "controls-copy-on-select": {
+      "comment": "Checkbox in the Controls pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatically copy selected text"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kijelölt szöveg automatikus másolása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausgewählten Text automatisch kopieren"
+          }
+        }
+      }
+    },
+    "controls-copy-on-select-note": {
+      "comment": "Explanation below the automatic copy checkbox.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hold the Option key (⌥) while selecting text to temporarily disable this feature."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A funkció ideiglenes kikapcsolásához tartsd lenyomva az Option (⌥) billentyűt szövegkijelölés közben."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Halte beim Auswählen die Wahltaste (⌥) gedrückt, um diese Funktion vorübergehend zu deaktivieren."
+          }
+        }
+      }
+    },
+    "controls-disconnect-on-double-click": {
+      "comment": "Checkbox in the Controls pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnect from server on double click"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapcsolat bontása a kiszolgálóval dupla kattintással"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serververbindung mit Doppelklick trennen"
+          }
+        }
+      }
+    },
+    "controls-grammar-check": {
+      "comment": "Checkbox in the Controls pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check grammar while typing"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nyelvhelyesség ellenőrzése gépelés közben"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grammatik während der Eingabe prüfen"
+          }
+        }
+      }
+    },
+    "controls-heading-keyboard-mouse": {
+      "comment": "Section heading in the Controls pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keyboard & Mouse"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Billentyűzet és egér"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tastatur und Maus"
+          }
+        }
+      }
+    },
+    "controls-heading-text-field": {
+      "comment": "Section heading in the Controls pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Main Text Field"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fő szövegbeviteli mező"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Haupteingabefeld"
+          }
+        }
+      }
+    },
+    "controls-history-per-selection": {
+      "comment": "Checkbox in the Controls pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save input history for each channel rather than globally"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beviteli előzmények tárolása csatornánként, nem közösen"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eingabeverlauf für jeden Kanal getrennt speichern"
+          }
+        }
+      }
+    },
+    "controls-join-on-double-click": {
+      "comment": "Checkbox in the Controls pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Join channel on double click"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csatlakozás a csatornához dupla kattintással"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kanal mit Doppelklick beitreten"
+          }
+        }
+      }
+    },
+    "controls-leave-on-double-click": {
+      "comment": "Checkbox in the Controls pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave channel on double click"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csatorna elhagyása dupla kattintással"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kanal mit Doppelklick verlassen"
+          }
+        }
+      }
+    },
+    "controls-navigation-server-specific": {
+      "comment": "Checkbox in the Controls pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Channel navigation is limited to the selected server"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csatornák közötti váltás csak a kijelölt kiszolgálón"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kanalnavigation auf den ausgewählten Server beschränken"
+          }
+        }
+      }
+    },
+    "controls-open-links-in-background": {
+      "comment": "Checkbox in the Controls pane. Legacy key: behavior-open-links-in-background.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open browser links in the background"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Böngészőhivatkozások megnyitása a háttérben"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Browserlinks im Hintergrund öffnen"
+          }
+        }
+      }
+    },
+    "controls-spell-check": {
+      "comment": "Checkbox in the Controls pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check spelling while typing"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Helyesírás ellenőrzése gépelés közben"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rechtschreibung während der Eingabe prüfen"
+          }
+        }
+      }
+    },
+    "controls-spell-correction": {
+      "comment": "Checkbox in the Controls pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Correct spelling automatically"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Helyesírás automatikus javítása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rechtschreibung automatisch korrigieren"
+          }
+        }
+      }
+    },
+    "controls-tab-key-complete": {
+      "comment": "The Tab key completes the word being typed.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Complete nicknames, channels, and commands"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Becenevek, csatornák és parancsok kiegészítése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nicknamen, Kanäle und Befehle vervollständigen"
+          }
+        }
+      }
+    },
+    "controls-tab-key-label": {
+      "comment": "Label of the popup choosing what the Tab key does.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tab key action"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A Tab billentyű művelete"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktion der Tabulatortaste"
+          }
+        }
+      }
+    },
+    "controls-tab-key-none": {
+      "comment": "The Tab key does nothing.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Perform no action"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincs művelet"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Aktion"
+          }
+        }
+      }
+    },
+    "controls-tab-key-unread": {
+      "comment": "The Tab key moves to the next unread channel.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move to next unread channel"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ugrás a következő olvasatlan csatornára"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zum nächsten ungelesenen Kanal wechseln"
+          }
+        }
+      }
+    },
+    "controls-text-size-extra-large": {
+      "comment": "Input text field size.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extra Large"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extra nagy"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sehr groß"
+          }
+        }
+      }
+    },
+    "controls-text-size-humongous": {
+      "comment": "Input text field size.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Humongous"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Óriási"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Riesig"
+          }
+        }
+      }
+    },
+    "controls-text-size-label": {
+      "comment": "Label of the input text field size popup.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text size of the input text field"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beviteli mező szövegmérete"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Textgröße des Eingabefelds"
+          }
+        }
+      }
+    },
+    "controls-text-size-large": {
+      "comment": "Input text field size.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Large"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nagy"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Groß"
+          }
+        }
+      }
+    },
+    "controls-text-size-normal": {
+      "comment": "Input text field size.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normal"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normál"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normal"
+          }
+        }
+      }
+    },
+    "controls-user-double-click-insert": {
+      "comment": "Double clicking a user writes the nickname into the text field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Insert Name Into Text Field"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Név beszúrása a szövegmezőbe"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Namen in das Eingabefeld einfügen"
+          }
+        }
+      }
+    },
+    "controls-user-double-click-label": {
+      "comment": "Label of the popup choosing what a double click on a user does.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Double-clicking a user"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dupla kattintás egy felhasználóra"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Doppelklick auf einen Benutzer"
+          }
+        }
+      }
+    },
+    "controls-user-double-click-query": {
+      "comment": "Double clicking a user opens a private message.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Query"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privát beszélgetés megnyitása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privates Gespräch öffnen"
+          }
+        }
+      }
+    },
+    "controls-user-double-click-whois": {
+      "comment": "Double clicking a user runs a WHOIS.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whois User"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Felhasználói adatok lekérése (WHOIS)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Benutzerinformationen abfragen (WHOIS)"
+          }
+        }
+      }
+    },
+    "default-identity": {
+      "comment": "Title of the Default Identity pane in the Settings sidebar. Legacy key: sb-defaultIdentity.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Default Identity"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alapértelmezett személyazonosság"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Standardidentität"
+          }
+        }
+      }
+    },
+    "default-identity-all-optional": {
+      "comment": "Explanation at the bottom of the Default Identity pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All fields are optional"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minden mező kitöltése opcionális"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle Felder sind optional"
+          }
+        }
+      }
+    },
+    "default-identity-away-nickname": {
+      "comment": "Label of the default away nickname field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Away nickname"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Távolléti becenév"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abwesenheitsnickname"
+          }
+        }
+      }
+    },
+    "default-identity-nickname": {
+      "comment": "Label of the default nickname field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nickname"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Becenév"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nickname"
+          }
+        }
+      }
+    },
+    "default-identity-note": {
+      "comment": "Explanation at the top of the Default Identity pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The following information will be filled in when creating a NEW connection."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Az alábbi adatok ÚJ kapcsolat létrehozásakor lesznek kitöltve."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die folgenden Angaben werden beim Erstellen einer NEUEN Verbindung eingetragen."
+          }
+        }
+      }
+    },
+    "default-identity-optional": {
+      "comment": "Placeholder of an optional default identity field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nem kötelező"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional"
+          }
+        }
+      }
+    },
+    "default-identity-realname": {
+      "comment": "Label of the default real name field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Real name"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Valódi név"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Echter Name"
+          }
+        }
+      }
+    },
+    "default-identity-username": {
+      "comment": "Label of the default user name field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Username"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Felhasználónév"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Benutzername"
+          }
+        }
+      }
+    },
+    "download-destination": {
+      "comment": "Accessibility label for the file-transfer download destination control. Legacy key: ax-download-folder.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download Destination"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Letöltések célmappája"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloadziel"
+          }
+        }
+      }
+    },
+    "failure-apply-theme-recovery": {
+      "comment": "Recovery sentence under the transcript theme change failure.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore the value you changed, or reset the theme to its defaults."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Állítsd vissza a módosított értéket, vagy a téma alapértékeit."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stelle den geänderten Wert wieder her oder setze das Design auf die Standardwerte zurück."
+          }
+        }
+      }
+    },
+    "failure-apply-theme-title": {
+      "comment": "Alert title shown when an edited transcript theme is rejected.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The transcript theme could not be changed"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nem sikerült módosítani a beszélgetés témáját"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Chatdesign konnte nicht geändert werden"
+          }
+        }
+      }
+    },
+    "failure-download-folder-recovery": {
+      "comment": "Recovery sentence under the download folder failure.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a folder you can write to."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Válassz olyan mappát, amelybe írhatsz."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wähle einen Ordner, in den du schreiben darfst."
+          }
+        }
+      }
+    },
+    "failure-download-folder-title": {
+      "comment": "Alert title shown when a chosen download folder cannot be used.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The download folder could not be changed"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nem sikerült módosítani a letöltési mappát"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Downloadordner konnte nicht geändert werden"
+          }
+        }
+      }
+    },
+    "failure-export-theme-recovery": {
+      "comment": "Recovery sentence under the transcript theme export failure.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a folder you can write to and try again."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Válassz olyan mappát, amelybe írhatsz, majd próbáld újra."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wähle einen beschreibbaren Ordner und versuche es erneut."
+          }
+        }
+      }
+    },
+    "failure-export-theme-title": {
+      "comment": "Alert title shown when the transcript theme cannot be written to a file.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The transcript theme could not be exported"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nem sikerült exportálni a beszélgetés témáját"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Chatdesign konnte nicht exportiert werden"
+          }
+        }
+      }
+    },
+    "failure-import-theme-recovery": {
+      "comment": "Recovery sentence under the transcript theme import failure.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a theme file that this version of Glasstual exported."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Válassz a Glasstual ezen verziójával exportált témafájlt."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wähle eine Designdatei, die mit dieser Glasstual-Version exportiert wurde."
+          }
+        }
+      }
+    },
+    "failure-import-theme-title": {
+      "comment": "Alert title shown when a chosen transcript theme file cannot be read.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The transcript theme could not be imported"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nem sikerült importálni a beszélgetés témáját"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Chatdesign konnte nicht importiert werden"
+          }
+        }
+      }
+    },
+    "failure-transcript-folder-recovery": {
+      "comment": "Recovery sentence under the transcript folder failure.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a folder you can write to."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Válassz olyan mappát, amelybe írhatsz."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wähle einen Ordner, in den du schreiben darfst."
+          }
+        }
+      }
+    },
+    "failure-transcript-folder-title": {
+      "comment": "Alert title shown when a chosen transcript folder cannot be used.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The transcript folder could not be changed"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nem sikerült módosítani a beszélgetésnaplók mappáját"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Ordner für Gesprächsprotokolle konnte nicht geändert werden"
+          }
+        }
+      }
+    },
+    "fallback-title-add": {
+      "comment": "Fallback title for an add-on supplied Settings pane. Legacy key: sb-plugin.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add-on"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kiegészítő"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add-on"
+          }
+        }
+      }
+    },
+    "file-transfers": {
+      "comment": "Title of the File Transfers pane in the Settings sidebar. Legacy key: sb-fileTransfers.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "File Transfers"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fájlátvitelek"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dateiübertragungen"
+          }
+        }
+      }
+    },
+    "file-transfers-destination-label": {
+      "comment": "Label of the popup choosing the download folder.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download files to the folder"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fájlok letöltése ebbe a mappába"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dateien in diesen Ordner laden"
+          }
+        }
+      }
+    },
+    "file-transfers-destination-note": {
+      "comment": "Explanation below the download folder popup.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You will be asked where to save downloaded files each time you start a file transfer if a destination is not configured."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ha nincs beállítva célmappa, minden fájlátvitel indításakor meg kell adnod, hová szeretnéd menteni a letöltött fájlt."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wenn kein Ziel festgelegt ist, wirst du bei jeder Dateiübertragung nach einem Speicherort gefragt."
+          }
+        }
+      }
+    },
+    "file-transfers-detection-accessibility": {
+      "comment": "Accessibility label for the address detection popup.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IP Address Detection Method"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IP-cím meghatározásának módja"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Methode zur IP-Adressermittlung"
+          }
+        }
+      }
+    },
+    "file-transfers-detection-label": {
+      "comment": "Label of the popup choosing how the public address is discovered.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IP address detection method"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IP-cím meghatározásának módja"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Methode zur IP-Adressermittlung"
+          }
+        }
+      }
+    },
+    "file-transfers-detection-manual": {
+      "comment": "Address detection using an address the user types.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manually Enter Address"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cím kézi megadása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adresse manuell eingeben"
+          }
+        }
+      }
+    },
+    "file-transfers-detection-router-first-party": {
+      "comment": "Address detection falling back to api.ipify.org.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ask router with api.ipify.org as fallback"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Útválasztó lekérdezése, tartalékként api.ipify.org"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Router fragen, ersatzweise api.ipify.org"
+          }
+        }
+      }
+    },
+    "file-transfers-detection-router-only": {
+      "comment": "Address detection asking only the router.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ask router with no fallback"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Útválasztó lekérdezése, tartalék nélkül"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Router fragen, ohne Ersatz"
+          }
+        }
+      }
+    },
+    "file-transfers-detection-router-third-party": {
+      "comment": "Address detection falling back to a third-party website.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ask router with 3rd-party website as fallback"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Útválasztó lekérdezése, tartalékként külső weboldal"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Router fragen, ersatzweise eine externe Website"
+          }
+        }
+      }
+    },
+    "file-transfers-manual-address-accessibility": {
+      "comment": "Accessibility label for the manually entered address field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manually Specified IP Address"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kézzel megadott IP-cím"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manuell angegebene IP-Adresse"
+          }
+        }
+      }
+    },
+    "file-transfers-manual-address-label": {
+      "comment": "Label of the manually entered address field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manually entered IP address"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kézzel megadott IP-cím"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manuell eingegebene IP-Adresse"
+          }
+        }
+      }
+    },
+    "file-transfers-port-range-first": {
+      "comment": "Accessibility label for the first port of the range.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "File Transfer Port Range First Port"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fájlátviteli porttartomány első portja"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erster Port des Dateiübertragungsbereichs"
+          }
+        }
+      }
+    },
+    "file-transfers-port-range-label": {
+      "comment": "Label of the two fields bounding the listening port range.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "File transfer port range"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fájlátviteli porttartomány"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Portbereich für Dateiübertragungen"
+          }
+        }
+      }
+    },
+    "file-transfers-port-range-last": {
+      "comment": "Accessibility label for the last port of the range.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "File Transfer Port Range Last Port"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fájlátviteli porttartomány utolsó portja"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Letzter Port des Dateiübertragungsbereichs"
+          }
+        }
+      }
+    },
+    "file-transfers-port-range-separator": {
+      "comment": "Word between the first and last port of the file transfer port range.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "to"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "–"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "bis"
+          }
+        }
+      }
+    },
+    "file-transfers-prevent-sleep": {
+      "comment": "Checkbox in the File Transfers pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do not allow Mac to go to sleep while transferring a file"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A Mac ne aludjon el fájlátvitel közben"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ruhezustand des Mac während einer Dateiübertragung verhindern"
+          }
+        }
+      }
+    },
+    "file-transfers-reply-action-accessibility": {
+      "comment": "Accessibility label for the file transfer reply action popup.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Action to Perform when File Transfer Request is Received"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Művelet fájlátviteli kérés érkezésekor"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktion bei eingehender Dateiübertragungsanfrage"
+          }
+        }
+      }
+    },
+    "file-transfers-reply-action-label": {
+      "comment": "Label of the popup choosing how an incoming file transfer is answered.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When a file transfer request is received"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fájlátviteli kérés érkezésekor"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bei einer Dateiübertragungsanfrage"
+          }
+        }
+      }
+    },
+    "file-transfers-reply-download": {
+      "comment": "Incoming file transfers are downloaded without asking.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatically Download"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatikus letöltés"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatisch laden"
+          }
+        }
+      }
+    },
+    "file-transfers-reply-ignore": {
+      "comment": "Incoming file transfers are ignored.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ignore"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mellőzés"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ignorieren"
+          }
+        }
+      }
+    },
+    "file-transfers-reply-open-dialog": {
+      "comment": "Incoming file transfers open the transfer dialog.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Dialog"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Párbeszédablak megnyitása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dialog öffnen"
+          }
+        }
+      }
+    },
+    "file-transfers-reverse-dcc": {
+      "comment": "Checkbox in the File Transfers pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send passive file transfer requests"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passzív fájlátviteli kérések küldése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passive Dateiübertragungsanfragen senden"
+          }
+        }
+      }
+    },
+    "flood-control": {
+      "comment": "Title of the Flood Control pane in the Settings sidebar. Legacy key: sb-floodControl.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flood Control"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elárasztás elleni védelem"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flood-Schutz"
+          }
+        }
+      }
+    },
+    "flood-control-count-value": {
+      "comment": "Current value of the WHO channel-size slider. %@ is the count.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ users"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ felhasználó"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ Benutzer"
+          }
+        }
+      }
+    },
+    "flood-control-disabled-marker": {
+      "comment": "Lower end of the WHO command channel size slider, where polling is off.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "0 (disable)"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "0 (letiltás)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "0 (deaktivieren)"
+          }
+        }
+      }
+    },
+    "flood-control-identify-delay-label": {
+      "comment": "Label of the slider setting the delay before joins that do not wait for NickServ confirmation.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delay before channel joins"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Késleltetés a csatornákhoz csatlakozás előtt"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verzögerung vor dem Kanalbeitritt"
+          }
+        }
+      }
+    },
+    "flood-control-identify-delay-note": {
+      "comment": "Explanation below the delay before channel joins slider.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delay before joining channels, in seconds. NickServ identification uses confirmation instead and joins immediately when confirmed or after its 30-second deadline."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Késleltetés másodpercben a csatornákhoz csatlakozás előtt. NickServ-azonosítás esetén ehelyett a megerősítést várjuk: csatlakozás azonnal a megerősítéskor vagy a 30 másodperces határidő után."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verzögerung vor dem Kanalbeitritt in Sekunden. Bei NickServ-Identifizierung wird stattdessen auf die Bestätigung gewartet und danach sofort oder nach Ablauf von 30 Sekunden beigetreten."
+          }
+        }
+      }
+    },
+    "flood-control-note": {
+      "comment": "Flood-control explanation below the channel join delay sliders.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Joining too many channels at once may be detected as an attack by some IRC networks. You could be disconnected or banned as a result. A moderate delay of about 2.5 seconds is recommended when joining a large number of channels."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ha túl sok csatornához csatlakozol egyszerre, egyes IRC-hálózatok ezt támadásnak tekinthetik. Emiatt bonthatják a kapcsolatot vagy kitilthatnak. Sok csatorna esetén körülbelül 2,5 másodperces késleltetés ajánlott."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der gleichzeitige Beitritt zu zu vielen Kanälen kann von manchen IRC-Netzwerken als Angriff erkannt werden. Das kann zur Trennung oder zu einem Bann führen. Bei vielen Kanälen wird eine Verzögerung von etwa 2,5 Sekunden empfohlen."
+          }
+        }
+      }
+    },
+    "flood-control-seconds-value": {
+      "comment": "Current value of the join-delay slider. %@ is the number of seconds.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ seconds"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ másodperc"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ Sekunden"
+          }
+        }
+      }
+    },
+    "flood-control-who-limit-label": {
+      "comment": "Label of the slider limiting which channels are polled for away status.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "WHO command maximum channel size"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A WHO parancs legnagyobb csatornamérete"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maximale Kanalgröße für WHO"
+          }
+        }
+      }
+    },
+    "flood-control-who-limit-note": {
+      "comment": "Explanation below the WHO command channel size slider.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstual must periodically poll the channels that you are in to find out when the away status of each user changes. This setting defines the maximum number of users a channel can contain before the channel is skipped over.\n\nA lower value is always better especially when in a large number of channels."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A Glasstualnak rendszeresen le kell kérdeznie a csatornákat a felhasználók távolléti állapotának követéséhez. Ez a beállítás határozza meg azt a taglétszámot, amely felett egy csatorna kimarad.\n\nAz alacsonyabb érték előnyösebb, különösen sok csatorna esetén."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstual muss deine Kanäle regelmäßig abfragen, um Änderungen am Abwesenheitsstatus der Benutzer zu erkennen. Diese Einstellung legt fest, ab welcher Benutzerzahl ein Kanal übersprungen wird.\n\nEin niedrigerer Wert ist besser, besonders bei vielen Kanälen."
+          }
+        }
+      }
+    },
+    "general-autojoin-on-invite": {
+      "comment": "Checkbox in the General pane. Legacy key: behavior-autojoin-on-invite.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatically join a channel when invited"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatikus csatlakozás meghíváskor"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einladungen zu Kanälen automatisch annehmen"
+          }
+        }
+      }
+    },
+    "general-away-on-screen-sleep": {
+      "comment": "Checkbox in the General pane. Legacy key: behavior-away-on-screen-sleep.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toggle away status when your display goes to sleep"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Távolléti állapot váltása a kijelző elalvásakor"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abwesenheitsstatus beim Ruhezustand des Displays umschalten"
+          }
+        }
+      }
+    },
+    "general-confirm-quit": {
+      "comment": "Checkbox in the General pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Request confirmation before quitting Glasstual"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Megerősítés kérése a Glasstual bezárása előtt"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vor dem Beenden von Glasstual nachfragen"
+          }
+        }
+      }
+    },
+    "general-heading-channels": {
+      "comment": "Header of the General section that holds what happens when you are kicked from or invited to a channel.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Channels"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csatornák"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kanäle"
+          }
+        }
+      }
+    },
+    "general-heading-on-launch": {
+      "comment": "Header of the General section that holds what is restored when Glasstual starts.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On Launch"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indításkor"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beim Start"
+          }
+        }
+      }
+    },
+    "general-rejoin-on-kick": {
+      "comment": "Checkbox in the General pane. Legacy key: behavior-rejoin-on-kick.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatically rejoin a channel when kicked"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatikus visszacsatlakozás kirúgás után"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nach einem Kick automatisch erneut beitreten"
+          }
+        }
+      }
+    },
+    "general-reload-scrollback": {
+      "comment": "Checkbox in the General pane. Legacy key: behavior-reload-scrollback.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore scrollback from previous session"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Előző munkamenet előzményeinek visszaállítása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verlauf der vorherigen Sitzung wiederherstellen"
+          }
+        }
+      }
+    },
+    "general-remember-queries": {
+      "comment": "Checkbox in the General pane. Legacy key: behavior-remember-queries.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore the state of queries from previous session"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privát beszélgetések állapotának visszaállítása az előző munkamenetből"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zustand privater Gespräche aus der vorherigen Sitzung wiederherstellen"
+          }
+        }
+      }
+    },
+    "heading-general": {
+      "comment": "Section heading used by several Settings panes.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "General"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Általános"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allgemein"
+          }
+        }
+      }
+    },
+    "hidden-app-nap": {
+      "comment": "Checkbox in the Hidden pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enable App Nap"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App Nap engedélyezése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App Nap aktivieren"
+          }
+        }
+      }
+    },
+    "hidden-load-history-lazily": {
+      "comment": "Checkbox in the Hidden pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Load history lazily"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Előzmények betöltése igény szerint"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verlauf bei Bedarf laden"
+          }
+        }
+      }
+    },
+    "hidden-restart-note": {
+      "comment": "Explanation at the bottom of the Hidden pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some settings may require a restart of Glasstual to take effect."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Egyes beállítások érvényesítéséhez újra kell indítani a Glasstualt."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einige Einstellungen werden erst nach einem Neustart von Glasstual wirksam."
+          }
+        }
+      }
+    },
+    "hidden-scrollback-visible-limit": {
+      "comment": "Label of the visible scrollback limit field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scrollback visible limit"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Látható előzmények korlátja"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Limit für sichtbaren Verlauf"
+          }
+        }
+      }
+    },
+    "hidden-scrollback-visible-limit-note": {
+      "comment": "Explanation beside the visible scrollback limit field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "0 = use default limit"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "0 = alapértelmezett korlát"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "0 = Standardlimit verwenden"
+          }
+        }
+      }
+    },
+    "hidden-sidebar-translucency": {
+      "comment": "Checkbox in the Hidden pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server list and user list appear transparent"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Átlátszó kiszolgáló- és felhasználólista"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server- und Benutzerliste transparent darstellen"
+          }
+        }
+      }
+    },
+    "hidden-warning": {
+      "comment": "Footer of the Hidden section, warning that the settings above are unsupported.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warning: Do not change these settings unless you know why you are doing so."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Figyelem: Csak akkor módosítsd ezeket a beállításokat, ha tudod, miért teszed."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Achtung: Ändere diese Einstellungen nur, wenn du weißt, warum du das tust."
+          }
+        }
+      }
+    },
+    "highlights-add-excluded": {
+      "comment": "Accessibility label for the button that adds an excluded keyword.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Excluded Keyword"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kizárt kulcsszó hozzáadása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausgeschlossenes Schlüsselwort hinzufügen"
+          }
+        }
+      }
+    },
+    "highlights-add-keyword": {
+      "comment": "Accessibility label for the button that adds a highlight keyword.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Highlight Keyword"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kiemelési kulcsszó hozzáadása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schlüsselwort für Hervorhebungen hinzufügen"
+          }
+        }
+      }
+    },
+    "highlights-exclude-words-label": {
+      "comment": "Label above the excluded keyword list.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exclude words"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kizárt szavak"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausgeschlossene Wörter"
+          }
+        }
+      }
+    },
+    "highlights-log-to-window": {
+      "comment": "Checkbox in the Highlights pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log highlights to separate window"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Említések naplózása külön ablakba"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hervorhebungen in einem eigenen Fenster protokollieren"
+          }
+        }
+      }
+    },
+    "highlights-match-type-exact": {
+      "comment": "Highlight matching method: whole words only.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Full Word Matches"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teljes szavak egyezése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ganze Wörter"
+          }
+        }
+      }
+    },
+    "highlights-match-type-label": {
+      "comment": "Accessibility label for the highlight matching method popup.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Highlight match type"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kiemelési egyezés típusa"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Art der Hervorhebungssuche"
+          }
+        }
+      }
+    },
+    "highlights-match-type-partial": {
+      "comment": "Highlight matching method: any occurrence of the word.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partial Matches"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Részleges egyezések"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teilweise Übereinstimmungen"
+          }
+        }
+      }
+    },
+    "highlights-match-type-regex": {
+      "comment": "Highlight matching method: an ICU regular expression.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Regular Expression (ICU)"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reguláris kifejezés (ICU)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Regulärer Ausdruck (ICU)"
+          }
+        }
+      }
+    },
+    "highlights-new-keyword": {
+      "comment": "Placeholder shown in an empty highlight keyword field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New keyword"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Új kulcsszó"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neues Schlüsselwort"
+          }
+        }
+      }
+    },
+    "highlights-remove-excluded": {
+      "comment": "Accessibility label for the button that removes the selected excluded keyword.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove Selected Excluded Keyword"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kijelölt kizárt kulcsszó eltávolítása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausgewähltes ausgeschlossenes Schlüsselwort entfernen"
+          }
+        }
+      }
+    },
+    "highlights-remove-keyword": {
+      "comment": "Accessibility label for the button that removes the selected highlight keyword.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove Selected Highlight Keyword"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kijelölt kiemelési kulcsszó eltávolítása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausgewähltes Hervorhebungsschlüsselwort entfernen"
+          }
+        }
+      }
+    },
+    "highlights-track-local-nickname": {
+      "comment": "Checkbox in the Highlights pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Highlight current nickname"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktuális becenév kiemelése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktuellen Nicknamen hervorheben"
+          }
+        }
+      }
+    },
+    "highlights-words-label": {
+      "comment": "Label above the highlight keyword list.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Highlight words"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kiemelt szavak"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hervorgehobene Wörter"
+          }
+        }
+      }
+    },
+    "incoming-data": {
+      "comment": "Title of the Incoming Data pane in the Settings sidebar. Legacy key: sb-incomingData.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incoming Data"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bejövő adatok"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eingehende Daten"
+          }
+        }
+      }
+    },
+    "incoming-data-highlight-spam": {
+      "comment": "Checkbox in the Incoming Data pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatically ignore highlight spam"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Említési spam automatikus mellőzése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erwähnungsspam automatisch ignorieren"
+          }
+        }
+      }
+    },
+    "incoming-data-highlight-spam-note": {
+      "comment": "Explanation below the highlight spam checkbox.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do not notify you of a highlight if at least ten nicknames make up three quarters of a message."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ne értesítsen említésről, ha egy üzenet háromnegyedét legalább tíz becenév teszi ki."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Benachrichtigung über eine Erwähnung, wenn drei Viertel der Nachricht aus mindestens zehn Nicknamen bestehen."
+          }
+        }
+      }
+    },
+    "incoming-data-remove-formatting": {
+      "comment": "Checkbox in the Incoming Data pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove formatting from incoming messages"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bejövő üzenetek formázásának eltávolítása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Formatierung eingehender Nachrichten entfernen"
+          }
+        }
+      }
+    },
+    "incoming-data-remove-formatting-note": {
+      "comment": "Explanation below the remove formatting checkbox.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removes formatting such as bold, colors, underline, etc."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eltávolítja például a félkövér, színes és aláhúzott formázást."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entfernt Formatierungen wie Fettdruck, Farben und Unterstreichungen."
+          }
+        }
+      }
+    },
+    "incoming-data-reply-ctcp": {
+      "comment": "Checkbox in the Incoming Data pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatically reply to Client-to-Client (CTCP) requests"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatikus válasz a kliensközi (CTCP) kérésekre"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Client-to-Client-Anfragen (CTCP) automatisch beantworten"
+          }
+        }
+      }
+    },
+    "incoming-data-unicode-spam": {
+      "comment": "Checkbox in the Incoming Data pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replace combining diacritical marks with a placeholder"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kombináló mellékjelek lecserélése helyettesítő karakterre"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kombinierende diakritische Zeichen durch Platzhalter ersetzen"
+          }
+        }
+      }
+    },
+    "incoming-data-unicode-spam-note": {
+      "comment": "Explanation below the combining diacritical marks checkbox, which filters unicode spam.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These characters are often combined to form “Zalgo text”, which is used by some users to disrupt chatrooms."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ezeket a karaktereket gyakran \"Zalgo-szöveggé\" kombinálják, amellyel egyes felhasználók megzavarják a csevegést."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Zeichen werden oft zu \"Zalgo-Text\" kombiniert, den manche Benutzer zur Störung von Chaträumen einsetzen."
+          }
+        }
+      }
+    },
+    "interface-appearance-dark": {
+      "comment": "Dark appearance choice.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dark"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sötét"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dunkel"
+          }
+        }
+      }
+    },
+    "interface-appearance-label": {
+      "comment": "Label of the appearance popup in the Interface pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Main window appearance"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Főablak megjelenése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erscheinungsbild des Hauptfensters"
+          }
+        }
+      }
+    },
+    "interface-appearance-light": {
+      "comment": "Light appearance choice.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Light"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Világos"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hell"
+          }
+        }
+      }
+    },
+    "interface-appearance-system": {
+      "comment": "Appearance choice following the system setting.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rendszer"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System"
+          }
+        }
+      }
+    },
+    "interface-heading-server-list-colors": {
+      "comment": "Section heading in the Interface pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server List Colors"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kiszolgálólista színei"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Farben der Serverliste"
+          }
+        }
+      }
+    },
+    "interface-heading-user-list-colors": {
+      "comment": "Section heading in the Interface pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "User List Colors"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Felhasználólista színei"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Farben der Benutzerliste"
+          }
+        }
+      }
+    },
+    "interface-mode-channel-administrator": {
+      "comment": "Label of the colour well for channel administrators.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Channel administrator (+a)"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csatornaadminisztrátor (+a)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kanaladministrator (+a)"
+          }
+        }
+      }
+    },
+    "interface-mode-channel-half-operator": {
+      "comment": "Label of the colour well for channel half-operators.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Channel half-operator (+h)"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csatorna-féloperátor (+h)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kanal-Halboperator (+h)"
+          }
+        }
+      }
+    },
+    "interface-mode-channel-operator": {
+      "comment": "Label of the colour well for channel operators.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Channel operator (+o)"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csatornaoperátor (+o)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kanaloperator (+o)"
+          }
+        }
+      }
+    },
+    "interface-mode-channel-owner": {
+      "comment": "Label of the colour well for channel owners.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Channel owner (+q)"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csatornatulajdonos (+q)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kanalinhaber (+q)"
+          }
+        }
+      }
+    },
+    "interface-mode-server-staff": {
+      "comment": "Label of the colour well for server staff members (+y).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server staff member"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kiszolgálóüzemeltető"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Servermitarbeiter"
+          }
+        }
+      }
+    },
+    "interface-mode-voiced-user": {
+      "comment": "Label of the colour well for voiced users.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voiced user (+v)"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hozzászólási jogú felhasználó (+v)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Benutzer mit Sprechrecht (+v)"
+          }
+        }
+      }
+    },
+    "interface-no-mode-symbol": {
+      "comment": "Checkbox in the Interface pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use “x” to indicate user with no mode set in user list"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mód nélküli felhasználók jelölése \"x\" jellel a listában"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Benutzer ohne Modus in der Benutzerliste mit \"x\" kennzeichnen"
+          }
+        }
+      }
+    },
+    "interface-popover-updates-on-scroll": {
+      "comment": "Checkbox in the Interface pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "User list info popover updates while scrolling"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Felhasználói adatablak frissítése görgetés közben"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Benutzerinfo beim Scrollen aktualisieren"
+          }
+        }
+      }
+    },
+    "interface-reset": {
+      "comment": "Button that restores one colour to its default.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Visszaállítás"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zurücksetzen"
+          }
+        }
+      }
+    },
+    "interface-reset-colors-confirmation": {
+      "comment": "Title of the alert confirming that every member-list colour the user picked will be replaced by the defaults.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset the member list colors to their defaults?"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Visszaállítod a taglista alapértelmezett színeit?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Farben der Mitgliederliste auf die Standardwerte zurücksetzen?"
+          }
+        }
+      }
+    },
+    "interface-reset-colors-confirmation-body": {
+      "comment": "Body of the alert confirming a reset of the member-list colors. Says what is lost.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The colors you chose will be replaced and cannot be brought back."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A választott színek felülíródnak, és nem állíthatók vissza."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deine gewählten Farben werden ersetzt und können nicht wiederhergestellt werden."
+          }
+        }
+      }
+    },
+    "interface-reset-theme-confirmation": {
+      "comment": "Title of the alert confirming that the customised transcript theme will be replaced by a default one.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset the transcript theme to its defaults?"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Visszaállítod a beszélgetés témáját az alapértékekre?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Chatdesign auf die Standardwerte zurücksetzen?"
+          }
+        }
+      }
+    },
+    "interface-reset-theme-confirmation-body": {
+      "comment": "Body of the alert confirming a reset of the transcript theme. Says what is lost.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The fonts and colors you chose will be replaced and cannot be brought back. Export the theme first to keep a copy."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A választott betűtípusok és színek felülíródnak, és nem állíthatók vissza. Másolat megőrzéséhez először exportáld a témát."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deine gewählten Schriften und Farben werden ersetzt und können nicht wiederhergestellt werden. Exportiere das Design vorher, um eine Kopie zu behalten."
+          }
+        }
+      }
+    },
+    "interface-reset-to-defaults": {
+      "comment": "Button that restores every user list colour to its default.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset to Defaults"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alapértékek visszaállítása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf Standardwerte zurücksetzen"
+          }
+        }
+      }
+    },
+    "interface-reset-unread-highlight-color": {
+      "comment": "Accessibility label for the button resetting the unread badge colour.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset Background Color for Unread Badge with Highlight"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Említést jelző olvasatlan jelvény háttérszínének visszaállítása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hintergrundfarbe des Ungelesen-Zählers mit Hervorhebung zurücksetzen"
+          }
+        }
+      }
+    },
+    "interface-reset-user-list-colors": {
+      "comment": "Accessibility label for the button resetting every user list colour.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset User List Colors to Default Values"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Felhasználólista színeinek visszaállítása az alapértékekre"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Farben der Benutzerliste auf Standardwerte zurücksetzen"
+          }
+        }
+      }
+    },
+    "interface-right-to-left-text": {
+      "comment": "Checkbox in the Interface pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Right to left text"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jobbról balra írt szöveg"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text von rechts nach links"
+          }
+        }
+      }
+    },
+    "interface-staff-at-top": {
+      "comment": "Checkbox in the Interface pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Place known server staff members at top of user list"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ismert kiszolgálóüzemeltetők a felhasználólista tetején"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bekannte Servermitarbeiter oben in der Benutzerliste anzeigen"
+          }
+        }
+      }
+    },
+    "interface-unread-highlight-color-label": {
+      "comment": "Label of the colour well for the highlighted unread badge.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Background color for unread badge with highlight"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Említést jelző olvasatlan jelvény háttérszíne"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hintergrundfarbe des Ungelesen-Zählers mit Hervorhebung"
+          }
+        }
+      }
+    },
+    "interface-user-list-colors-note": {
+      "comment": "Explanation above the user list mode colour wells.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These colors represent the various user modes shown on the user list for each channel."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ezek a színek a csatornák felhasználólistájában megjelenő különböző felhasználói módokat jelölik."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Farben kennzeichnen die verschiedenen Benutzermodi in der Benutzerliste jedes Kanals."
+          }
+        }
+      }
+    },
+    "ircop-gline-label": {
+      "comment": "Label of the default G:Line reason field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Default G:Line reason"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alapértelmezett G:Line-indok"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Standard-G:Line-Begründung"
+          }
+        }
+      }
+    },
+    "ircop-includes-ban-length": {
+      "comment": "Note that the reason begins with the length of the ban.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "(Includes Ban Length)"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "(A kitiltás időtartamával együtt)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "(Einschließlich Banndauer)"
+          }
+        }
+      }
+    },
+    "ircop-kill-label": {
+      "comment": "Label of the default kill reason field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Default kill reason"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alapértelmezett kill-indok"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Standard-Kill-Begründung"
+          }
+        }
+      }
+    },
+    "ircop-messages": {
+      "comment": "Title of the IRC operator messages pane in the Settings sidebar. Legacy key: sb-defaultIRCopMessages.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IRCop Messages"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IRC-operátori üzenetek"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IRCop-Meldungen"
+          }
+        }
+      }
+    },
+    "ircop-shun-label": {
+      "comment": "Label of the default shun reason field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Default shun reason"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alapértelmezett shun-indok"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Standard-Shun-Begründung"
+          }
+        }
+      }
+    },
+    "ircv3-capabilities": {
+      "comment": "Heading above the per-capability switches in the IRCv3 Settings pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capabilities"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Képességek"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fähigkeiten"
+          }
+        }
+      }
+    },
+    "ircv3-capability-accessibility-label": {
+      "comment": "Accessibility label pairing an IRCv3 capability name with its summary.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@. %2$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@. %2$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@. %2$@"
+          }
+        }
+      }
+    },
+    "ircv3-capability-account-notify": {
+      "comment": "Summary of the account-notify IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows when someone signs in to or out of a network account."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jelzi, ha valaki be- vagy kijelentkezik egy hálózati fiókból."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zeigt an, wenn sich jemand bei einem Netzwerkkonto an- oder abmeldet."
+          }
+        }
+      }
+    },
+    "ircv3-capability-account-tag": {
+      "comment": "Summary of the account-tag IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marks each message with the network account its sender is signed in to."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minden üzenethez hozzárendeli a küldő hálózati fiókját."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kennzeichnet jede Nachricht mit dem Netzwerkkonto des Absenders."
+          }
+        }
+      }
+    },
+    "ircv3-capability-away-notify": {
+      "comment": "Summary of the away-notify IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows when people go away or come back without asking the server."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A kiszolgáló lekérdezése nélkül jelzi a távollétet és a visszatérést."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zeigt Abwesenheit und Rückkehr ohne Abfragen beim Server an."
+          }
+        }
+      }
+    },
+    "ircv3-capability-batch": {
+      "comment": "Summary of the batch IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lets the server group related messages so they arrive together."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lehetővé teszi a kapcsolódó üzenetek csoportosítását, hogy együtt érkezzenek."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erlaubt dem Server, zusammengehörige Nachrichten gemeinsam zu übermitteln."
+          }
+        }
+      }
+    },
+    "ircv3-capability-cap-notify": {
+      "comment": "Summary of the cap-notify IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Picks up features a server turns on or off while you stay connected."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Követi a kiszolgáló által kapcsolódás közben be- vagy kikapcsolt funkciókat."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erkennt Funktionen, die der Server während der Verbindung ein- oder ausschaltet."
+          }
+        }
+      }
+    },
+    "ircv3-capability-chghost": {
+      "comment": "Summary of the chghost IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Follows a person's address changing without showing them leave and rejoin."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Követi a felhasználó címváltozását kilépés és újracsatlakozás megjelenítése nélkül."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verfolgt Adressänderungen, ohne ein Verlassen und erneutes Beitreten anzuzeigen."
+          }
+        }
+      }
+    },
+    "ircv3-capability-extended-join": {
+      "comment": "Summary of the extended-join IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows the account and real name of each person as they join a channel."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csatlakozáskor megjeleníti a felhasználók fiókját és valódi nevét."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zeigt beim Kanalbeitritt das Konto und den echten Namen an."
+          }
+        }
+      }
+    },
+    "ircv3-capability-extended-monitor": {
+      "comment": "Summary of the extended-monitor IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extends away, account and name notices to the people you watch for."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A távolléti, fiók- és névértesítéseket a követett felhasználókra is kiterjeszti."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erweitert Abwesenheits-, Konto- und Namensmeldungen auf beobachtete Benutzer."
+          }
+        }
+      }
+    },
+    "ircv3-capability-invite-notify": {
+      "comment": "Summary of the invite-notify IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows invitations other members send to a channel you are in."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Megjeleníti a többi tag által küldött meghívásokat a csatornán."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zeigt Einladungen an, die andere Mitglieder in einen deiner Kanäle senden."
+          }
+        }
+      }
+    },
+    "ircv3-capability-labeled-response": {
+      "comment": "Summary of the labeled-response IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Matches each server reply to the command that asked for it."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minden kiszolgálóválaszt a hozzá tartozó parancshoz rendel."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ordnet jede Serverantwort dem auslösenden Befehl zu."
+          }
+        }
+      }
+    },
+    "ircv3-capability-message-tags": {
+      "comment": "Summary of the message-tags IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Carries the extra detail other features attach to a message, such as its time."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Továbbítja az üzenetekhez kapcsolt kiegészítő adatokat, például az időpontot."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Überträgt zusätzliche Nachrichtendetails wie den Zeitstempel."
+          }
+        }
+      }
+    },
+    "ircv3-capability-multi-prefix": {
+      "comment": "Summary of the multi-prefix IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows every rank a person holds in a channel instead of only the highest."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A felhasználó minden csatornarangját megjeleníti, nem csak a legmagasabbat."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zeigt alle Kanalränge einer Person statt nur des höchsten an."
+          }
+        }
+      }
+    },
+    "ircv3-capability-pre-away": {
+      "comment": "Summary of the pre-away IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marks you away as the connection starts, before you join anything."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Már a kapcsolódás kezdetén távollétet jelez, mielőtt csatlakoznál bárhová."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Markiert dich beim Verbindungsaufbau als abwesend, noch bevor du einem Kanal beitrittst."
+          }
+        }
+      }
+    },
+    "ircv3-capability-sasl": {
+      "comment": "Summary of the sasl IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signs in to the network with your account before joining anything."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A csatornákhoz csatlakozás előtt bejelentkezik a hálózati fiókodba."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meldet dich vor jedem Kanalbeitritt mit deinem Konto beim Netzwerk an."
+          }
+        }
+      }
+    },
+    "ircv3-capability-server-time": {
+      "comment": "Summary of the server-time IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timestamps a message with when the server saw it, not when it reached you."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Az üzenet időpontja az lesz, amikor a kiszolgáló megkapta, nem amikor hozzád megérkezett."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verwendet den Empfangszeitpunkt des Servers als Nachrichtenzeit statt deiner lokalen Empfangszeit."
+          }
+        }
+      }
+    },
+    "ircv3-capability-setname": {
+      "comment": "Summary of the setname IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows when a person changes their real name."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jelzi, ha valaki módosítja a valódi nevét."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zeigt Änderungen des echten Namens an."
+          }
+        }
+      }
+    },
+    "ircv3-capability-specification": {
+      "comment": "Link beside an IRCv3 capability switch, opening the document that defines it.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Specification"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Specifikáció"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spezifikation"
+          }
+        }
+      }
+    },
+    "ircv3-capability-standard-replies": {
+      "comment": "Summary of the standard-replies IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lets the server describe a failure in a form the client can explain."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A kiszolgáló a kliens által értelmezhető formában írhatja le a hibákat."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erlaubt dem Server, Fehler in einer vom Client verständlichen Form zu beschreiben."
+          }
+        }
+      }
+    },
+    "ircv3-capability-userhost-in-names": {
+      "comment": "Summary of the userhost-in-names IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Learns each member's full address while a channel's member list arrives."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A csatorna taglistájával együtt lekéri minden tag teljes címét."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erhält mit der Mitgliederliste die vollständige Adresse jedes Mitglieds."
+          }
+        }
+      }
+    },
+    "ircv3-capability-znc-playback": {
+      "comment": "Summary of the znc.in/playback IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Asks a ZNC bouncer for the messages you missed and nothing else."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csak az elmulasztott üzeneteket kéri le a ZNC-közvetítőtől."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fordert vom ZNC-Bouncer nur die verpassten Nachrichten an."
+          }
+        }
+      }
+    },
+    "ircv3-capability-znc-self-message": {
+      "comment": "Summary of the znc.in/self-message IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Includes messages you sent from another client in ZNC playback."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A másik kliensből küldött üzeneteket is megjeleníti a ZNC-előzményekben."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bezieht von einem anderen Client gesendete Nachrichten in die ZNC-Wiedergabe ein."
+          }
+        }
+      }
+    },
+    "ircv3-capability-znc-server-time": {
+      "comment": "Summary of the znc.in/server-time IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timestamps ZNC playback with when each message was originally sent."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A ZNC-előzményekben az üzenetek eredeti küldési időpontját használja."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verwendet in der ZNC-Wiedergabe die ursprüngliche Sendezeit jeder Nachricht."
+          }
+        }
+      }
+    },
+    "ircv3-capability-znc-server-time-iso": {
+      "comment": "Summary of the znc.in/server-time-iso IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timestamps ZNC playback on bouncers too old for the standard capability."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A szabványos képességet nem támogató régi közvetítőknél is időbélyegzi a ZNC-előzményeket."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verwendet Zeitstempel für ZNC-Wiedergaben auch bei Bouncern, die für die Standardfähigkeit zu alt sind."
+          }
+        }
+      }
+    },
+    "ircv3-capability-znc-tlsinfo": {
+      "comment": "Summary of the znc.in/tlsinfo IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reports the encryption a ZNC bouncer uses to reach the network."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jelzi a ZNC-közvetítő és a hálózat közötti titkosítást."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meldet die Verschlüsselung zwischen ZNC-Bouncer und Netzwerk."
+          }
+        }
+      }
+    },
+    "ircv3-connected-servers": {
+      "comment": "Heading above the negotiated IRCv3 capability list for live connections.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connected Servers"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csatlakoztatott kiszolgálók"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbundene Server"
+          }
+        }
+      }
+    },
+    "ircv3-disconnected": {
+      "comment": "Status beside an IRC server that is not connected.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnected"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapcsolat bontva"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Getrennt"
+          }
+        }
+      }
+    },
+    "ircv3-display-typing-notifications": {
+      "comment": "Switch in the IRCv3 Settings pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show typing notifications from other people"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mások gépelési jelzéseinek megjelenítése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tippanzeigen anderer Personen anzeigen"
+          }
+        }
+      }
+    },
+    "ircv3-echo-message": {
+      "comment": "Switch in the IRCv3 Settings pane for the echo-message capability.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use server-confirmed outgoing messages"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kiszolgáló által visszaigazolt kimenő üzenetek használata"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vom Server bestätigte ausgehende Nachrichten verwenden"
+          }
+        }
+      }
+    },
+    "ircv3-history": {
+      "comment": "Heading for IRCv3 history and read marker settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "History"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Előzmények"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verlauf"
+          }
+        }
+      }
+    },
+    "ircv3-history-note": {
+      "comment": "Explanation below IRCv3 history and read marker switches.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These features are used only when the server advertises the matching capability."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ezek a funkciók csak akkor használhatók, ha a kiszolgáló jelzi a megfelelő képesség támogatását."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Funktionen werden nur verwendet, wenn der Server die jeweilige Fähigkeit unterstützt."
+          }
+        }
+      }
+    },
+    "ircv3-messages": {
+      "comment": "Heading for IRCv3 message behavior settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Messages"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Üzenetek"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nachrichten"
+          }
+        }
+      }
+    },
+    "ircv3-no-capabilities": {
+      "comment": "Shown when a server has no negotiated IRCv3 capabilities.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No IRCv3 capabilities negotiated"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincsenek egyeztetett IRCv3-képességek"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine IRCv3-Fähigkeiten ausgehandelt"
+          }
+        }
+      }
+    },
+    "ircv3-no-connections": {
+      "comment": "Shown when there are no configured IRC servers to summarize.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No servers configured"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincsenek beállított kiszolgálók"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Server konfiguriert"
+          }
+        }
+      }
+    },
+    "ircv3-reconnect-note": {
+      "comment": "Explanation below IRCv3 capability switches that affect negotiation.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capability changes take effect the next time each server connects."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A képességek módosításai a kiszolgálók következő kapcsolódásakor lépnek életbe."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Änderungen an Fähigkeiten gelten ab der nächsten Verbindung zum jeweiligen Server."
+          }
+        }
+      }
+    },
+    "ircv3-request-chat-history": {
+      "comment": "Switch in the IRCv3 Settings pane for chathistory.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore recent messages from the server"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Legutóbbi üzenetek visszaállítása a kiszolgálóról"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Letzte Nachrichten vom Server wiederherstellen"
+          }
+        }
+      }
+    },
+    "ircv3-send-typing-notifications": {
+      "comment": "Switch in the IRCv3 Settings pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share when I am typing"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gépelési állapotom megosztása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meinen Tippstatus teilen"
+          }
+        }
+      }
+    },
+    "ircv3-synchronize-read-markers": {
+      "comment": "Switch in the IRCv3 Settings pane for read-marker.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Synchronize read position with the server"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Olvasási pozíció szinkronizálása a kiszolgálóval"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leseposition mit dem Server synchronisieren"
+          }
+        }
+      }
+    },
+    "log-location": {
+      "comment": "Title of the Log Location pane in the Settings sidebar. Legacy key: sb-logLocation.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log Location"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Naplók helye"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protokollspeicherort"
+          }
+        }
+      }
+    },
+    "log-location-clear-destination": {
+      "comment": "Menu item that forgets the chosen folder.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear Destination"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Célmappa törlése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ziel entfernen"
+          }
+        }
+      }
+    },
+    "log-location-folder-label": {
+      "comment": "Label of the folder picker that chooses where transcripts are written.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transcript folder"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beszélgetésnaplók mappája"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ordner für Gesprächsprotokolle"
+          }
+        }
+      }
+    },
+    "log-location-select-destination": {
+      "comment": "Menu item that opens a folder chooser.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select Destination…"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Célmappa kiválasztása…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ziel auswählen…"
+          }
+        }
+      }
+    },
+    "log-location-toggle": {
+      "comment": "Switch in the Log Location pane that turns on writing channel transcripts to a folder.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save transcripts to disk"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beszélgetésnaplók mentése lemezre"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gesprächsprotokolle auf dem Laufwerk sichern"
+          }
+        }
+      }
+    },
+    "no-location-selected": {
+      "comment": "Placeholder when no file-transfer download folder is selected. Legacy key: 721-ie.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Location Selected"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincs kiválasztott hely"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kein Speicherort ausgewählt"
+          }
+        }
+      }
+    },
+    "no-log-location-selected": {
+      "comment": "Placeholder when no transcript log folder is selected. Legacy key: 70s-c6.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Log Location Selected"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincs kiválasztott naplózási hely"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kein Protokollspeicherort ausgewählt"
+          }
+        }
+      }
+    },
+    "no-selection-message": {
+      "comment": "Message under the Settings detail placeholder when no sidebar row is selected.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a section in the sidebar."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Válassz egy részt az oldalsávban."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wähle einen Bereich in der Seitenleiste."
+          }
+        }
+      }
+    },
+    "no-selection-title": {
+      "comment": "Shown in the Settings detail column when no sidebar section is selected.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Section Selected"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincs kijelölt rész"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kein Bereich ausgewählt"
+          }
+        }
+      }
+    },
+    "notifications-dock-badge-private": {
+      "comment": "Checkbox in the Notifications pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show number of unread private messages on Glasstual's Dock icon"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Olvasatlan privát üzenetek számának megjelenítése a Glasstual Dock-ikonján"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anzahl ungelesener privater Nachrichten im Dock-Symbol von Glasstual anzeigen"
+          }
+        }
+      }
+    },
+    "notifications-dock-badge-public": {
+      "comment": "Checkbox in the Notifications pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show number of unread channel messages on Glasstual's Dock icon"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Olvasatlan csatornaüzenetek számának megjelenítése a Glasstual Dock-ikonján"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anzahl ungelesener Kanalnachrichten im Dock-Symbol von Glasstual anzeigen"
+          }
+        }
+      }
+    },
+    "notifications-heading-alerts": {
+      "comment": "Section heading in the Notifications pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alerts"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jelzések"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hinweise"
+          }
+        }
+      }
+    },
+    "notifications-heading-delivery": {
+      "comment": "Header of the Notifications section that holds when notifications are shown.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delivery"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kézbesítés"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zustellung"
+          }
+        }
+      }
+    },
+    "notifications-heading-dock-icon": {
+      "comment": "Header of the Notifications section that holds the Dock badge switches.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dock Icon"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dock-ikon"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dock-Symbol"
+          }
+        }
+      }
+    },
+    "notifications-heading-speech": {
+      "comment": "Section heading in the Notifications pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speech"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beszéd"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sprachausgabe"
+          }
+        }
+      }
+    },
+    "notifications-heading-speech-include": {
+      "comment": "Header of the Notifications section that holds what a spoken channel message includes.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Include When Speaking a Channel Message"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csatornaüzenet felolvasásakor belefoglalva"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bei der Sprachausgabe von Kanalnachrichten einbeziehen"
+          }
+        }
+      }
+    },
+    "notifications-only-speak-selection": {
+      "comment": "Checkbox in the Notifications pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only speak Channel Messages for the selected channel"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csak a kijelölt csatorna üzeneteinek felolvasása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur Nachrichten des ausgewählten Kanals vorlesen"
+          }
+        }
+      }
+    },
+    "notifications-post-while-in-focus": {
+      "comment": "Checkbox in the Notifications pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show notifications when Glasstual is focused"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Értesítések megjelenítése, amikor a Glasstual az aktív alkalmazás"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Benachrichtigungen anzeigen, wenn Glasstual im Vordergrund ist"
+          }
+        }
+      }
+    },
+    "notifications-speak-channel-name": {
+      "comment": "Checkbox choosing whether the channel name is spoken.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Channel name"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csatornanév"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kanalname"
+          }
+        }
+      }
+    },
+    "notifications-speak-nickname": {
+      "comment": "Checkbox choosing whether the sender nickname is spoken.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nickname"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Becenév"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nickname"
+          }
+        }
+      }
+    },
+    "style-auto-scrollback-marker": {
+      "comment": "Checkbox in the Style pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatically add scrollback markers"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Előzményjelölők automatikus hozzáadása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verlaufsmarkierungen automatisch hinzufügen"
+          }
+        }
+      }
+    },
+    "style-color-accessibility": {
+      "comment": "Accessibility label of a transcript colour well. %1$@ is the colour role, %2$@ is Light or Dark.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %2$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %2$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %2$@"
+          }
+        }
+      }
+    },
+    "style-disable-nickname-colors": {
+      "comment": "Checkbox in the Style pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disable nickname colors"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Becenévszínek letiltása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nickname-Farben deaktivieren"
+          }
+        }
+      }
+    },
+    "style-font-change": {
+      "comment": "Button that opens the font panel.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Módosítás"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ändern"
+          }
+        }
+      }
+    },
+    "style-font-description": {
+      "comment": "Channel view font shown as its name followed by its point size.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ %2$@pt"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ %2$@ pt"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ %2$@ pt"
+          }
+        }
+      }
+    },
+    "style-font-label": {
+      "comment": "Label of the channel view font.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Font"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Betűtípus"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schrift"
+          }
+        }
+      }
+    },
+    "style-font-picker-choose": {
+      "comment": "Button that applies the font chosen in the font sheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kiválasztás"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auswählen"
+          }
+        }
+      }
+    },
+    "style-font-picker-title": {
+      "comment": "Title of the sheet that chooses the transcript font.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose Font"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Betűtípus kiválasztása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schrift auswählen"
+          }
+        }
+      }
+    },
+    "style-font-size-label": {
+      "comment": "Label of the point-size field in the font sheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Size"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Méret"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Größe"
+          }
+        }
+      }
+    },
+    "style-format-symbols-label": {
+      "comment": "Leading word of the list of placeholders a format string accepts.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Symbols"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Szimbólumok"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Symbole"
+          }
+        }
+      }
+    },
+    "style-heading-layout": {
+      "comment": "Header of the Style section that holds the transcript spacing and format fields.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Layout"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elrendezés"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Layout"
+          }
+        }
+      }
+    },
+    "style-heading-scrollback": {
+      "comment": "Section heading in the Style pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scrollback"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beszélgetési előzmények"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nachrichtenverlauf"
+          }
+        }
+      }
+    },
+    "style-nickname-format-label": {
+      "comment": "Label of the nickname format field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nickname format"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Becenév formátuma"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nickname-Format"
+          }
+        }
+      }
+    },
+    "style-nickname-format-symbol-mode": {
+      "comment": "What the user mode placeholder of the nickname format stands for.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "User mode"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Felhasználói mód"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Benutzermodus"
+          }
+        }
+      }
+    },
+    "style-nickname-format-symbol-nickname": {
+      "comment": "What the nickname placeholder of the nickname format stands for.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "User nickname"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Felhasználó beceneve"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Benutzer-Nickname"
+          }
+        }
+      }
+    },
+    "style-scrollback-save-limit": {
+      "comment": "Label of the scrollback save limit field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scrollback save limit"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mentett előzmények korlátja"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Limit für gespeicherten Verlauf"
+          }
+        }
+      }
+    },
+    "style-scrollback-save-limit-note": {
+      "comment": "Explanation below the scrollback save limit field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The maximum number of messages, per-channel, that are accessible through the scrollback.\n\nMessages are not saved between app launches unless “Restore scrollback from previous session” in the Behavior section of Settings is enabled."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A beszélgetési előzményekben csatornánként elérhető üzenetek maximális száma.\n\nAz üzenetek csak akkor maradnak meg az alkalmazás újraindításakor, ha a Beállítások Viselkedés részében engedélyezed az \"Előző munkamenet előzményeinek visszaállítása\" lehetőséget."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maximale Anzahl der pro Kanal im Verlauf verfügbaren Nachrichten.\n\nNachrichten bleiben zwischen App-Starts nur erhalten, wenn unter Einstellungen › Verhalten die Option \"Verlauf der vorherigen Sitzung wiederherstellen\" aktiviert ist."
+          }
+        }
+      }
+    },
+    "style-show-date-changes": {
+      "comment": "Checkbox in the Style pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show date changes"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dátumváltások megjelenítése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Datumswechsel anzeigen"
+          }
+        }
+      }
+    },
+    "style-show-join-leave": {
+      "comment": "Checkbox in the Style pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show general event messages"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Általános eseményüzenetek megjelenítése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allgemeine Ereignismeldungen anzeigen"
+          }
+        }
+      }
+    },
+    "style-show-motd": {
+      "comment": "Checkbox in the Style pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show server Message of the Day (MOTD)"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kiszolgáló napi üzenetének (MOTD) megjelenítése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Servernachricht des Tages (MOTD) anzeigen"
+          }
+        }
+      }
+    },
+    "style-timestamp-format-label": {
+      "comment": "Label of the timestamp format field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timestamp format"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Időbélyeg formátuma"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zeitstempelformat"
+          }
+        }
+      }
+    },
+    "style-timestamp-format-note": {
+      "comment": "Explanation of the placeholders accepted by the timestamp format.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A list of formatting symbols can be found at OpenGroup.org"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A formázási szimbólumok listája az OpenGroup.org oldalon található"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eine Liste der Formatierungssymbole findest du auf OpenGroup.org"
+          }
+        }
+      }
+    },
+    "title-of-the-advanced": {
+      "comment": "Title of the Advanced group in the Settings sidebar. Legacy key: sb-gr-av.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Advanced"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Haladó"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erweitert"
+          }
+        }
+      }
+    },
+    "title-of-the-commands": {
+      "comment": "Title of the Commands pane in the Settings sidebar.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Commands"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parancsok"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Befehle"
+          }
+        }
+      }
+    },
+    "title-of-the-connection": {
+      "comment": "Title of the Connection pane in the Settings sidebar. Legacy key: advanced-connection.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connection"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapcsolat"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbindung"
+          }
+        }
+      }
+    },
+    "title-of-the-controls": {
+      "comment": "Title of the Controls pane in the Settings sidebar. Legacy key: sb-controls.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Controls"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vezérlés"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bedienung"
+          }
+        }
+      }
+    },
+    "title-of-the-general": {
+      "comment": "Title of the General pane in the Settings sidebar. Legacy key: sb-general.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "General"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Általános"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allgemein"
+          }
+        }
+      }
+    },
+    "title-of-the-hidden": {
+      "comment": "Title of the Hidden pane in the Settings sidebar. Legacy key: sb-hidden.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hidden"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rejtett"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausgeblendet"
+          }
+        }
+      }
+    },
+    "title-of-the-highlights": {
+      "comment": "Title of the Highlights pane in the Settings sidebar. Legacy key: sb-highlights.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Highlights"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Említések"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hervorhebungen"
+          }
+        }
+      }
+    },
+    "title-of-the-identity": {
+      "comment": "Title of the Identity pane in the Settings sidebar. Legacy key: advanced-identity.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Identity"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Személyazonosság"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Identität"
+          }
+        }
+      }
+    },
+    "title-of-the-interface": {
+      "comment": "Title of the Interface pane in the Settings sidebar. Legacy key: sb-interface.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Interface"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Felület"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oberfläche"
+          }
+        }
+      }
+    },
+    "title-of-the-ircv3": {
+      "comment": "Title of the IRCv3 pane in the Settings sidebar.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IRCv3"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IRCv3"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IRCv3"
+          }
+        }
+      }
+    },
+    "title-of-the-notifications": {
+      "comment": "Title of the Notifications pane in the Settings sidebar. Legacy key: sb-notifications.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Értesítések"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Benachrichtigungen"
+          }
+        }
+      }
+    },
+    "title-of-the-style": {
+      "comment": "Title of the Style pane in the Settings sidebar. Legacy key: sb-style.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Style"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stílus"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stil"
+          }
+        }
+      }
+    },
+    "transcript-folder": {
+      "comment": "Accessibility label for the transcript folder selection control. Legacy key: ax-transcript-folder.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transcript Folder"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beszélgetésnaplók mappája"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ordner für Gesprächsprotokolle"
+          }
+        }
+      }
+    },
+    "app-language": {
+      "comment": "App language preference in General settings. Changes apply after relaunch.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App language"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alkalmazás nyelve"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App-Sprache"
+          }
+        }
+      }
+    },
+    "language-system-default": {
+      "comment": "App language preference in General settings. Changes apply after relaunch.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System Default"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rendszer alapértelmezése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Systemstandard"
+          }
+        }
+      }
+    },
+    "language-english": {
+      "comment": "App language setting. Language names stay in their own language so users can recognize them.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "English"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "English"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "English"
+          }
+        }
+      }
+    },
+    "language-hungarian": {
+      "comment": "App language setting. Language names stay in their own language so users can recognize them.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Magyar"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Magyar"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Magyar"
+          }
+        }
+      }
+    },
+    "language-german": {
+      "comment": "App language setting. Language names stay in their own language so users can recognize them.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deutsch"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deutsch"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deutsch"
+          }
+        }
+      }
+    },
+    "language-restart-help": {
+      "comment": "App language preference in General settings. Changes apply after relaunch.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quit and reopen Glasstual to apply a language change."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A nyelv módosításához lépj ki a Glasstualból, majd nyisd meg újra."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beende Glasstual und öffne die App erneut, um die Sprache zu ändern."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

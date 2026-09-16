@@ -7,7 +7,6 @@ import AppKit
 import CocoaExtensions
 import Foundation
 @testable import Glasstual
-import GlasstualPluginKit
 import Testing
 
 /// A channel writes only the settings that differ from the default, plus its

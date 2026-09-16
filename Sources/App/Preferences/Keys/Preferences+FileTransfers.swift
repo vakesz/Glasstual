@@ -38,17 +38,17 @@
 import CocoaExtensions
 import Foundation
 
-public nonisolated extension Preferences { // nonisolated: value
+nonisolated extension Preferences { // nonisolated: value
 	/// DCC transfers: how a request is answered and how the listener is reached.
 	enum FileTransfers {
 		private static let prefix = "File Transfers -> File Transfer "
 
-		public static let requestReplyAction = PreferenceKey(
+		static let requestReplyAction = PreferenceKey(
 			prefix + "Request Reply Action",
 			default: FileTransferRequestBehavior.openDialog
 		)
 
-		public static let ipAddressDetectionMethod = PreferenceKey(
+		static let ipAddressDetectionMethod = PreferenceKey(
 			prefix + "IP Address Detection Method",
 			default: FileTransferIPAddressSource.routerAndFirstParty
 		)
@@ -58,7 +58,7 @@ public nonisolated extension Preferences { // nonisolated: value
 		 Anything below 1024 is privileged, and a sandboxed process cannot bind
 		 one at all, so this is what a valid port is here rather than a
 		 suggestion the field makes. */
-		public static let portRange: ClosedRange<UInt16> = 1024 ... 65535
+		static let portRange: ClosedRange<UInt16> = 1024 ... 65535
 
 		/** The ordered-pair rule, written once for both ends of the range.
 
@@ -77,38 +77,38 @@ public nonisolated extension Preferences { // nonisolated: value
 			}
 		}
 
-		public static let portRangeStart: PreferenceKey<UInt16> = PreferenceKey(
+		static let portRangeStart: PreferenceKey<UInt16> = PreferenceKey(
 			prefix + "Port Range Start", default: UInt16(1115),
 			validation: { Self.portRange.contains($0) },
 			relatedValidation: ordered(against: portRangeEnd, <=)
 		)
-		public static let portRangeEnd: PreferenceKey<UInt16> = PreferenceKey(
+		static let portRangeEnd: PreferenceKey<UInt16> = PreferenceKey(
 			prefix + "Port Range End", default: UInt16(1130),
 			validation: { Self.portRange.contains($0) },
 			relatedValidation: ordered(against: portRangeStart, >=)
 		)
-		public static let requestsAreReversed = PreferenceKey(prefix + "Requests Use Reverse DCC", default: false)
+		static let requestsAreReversed = PreferenceKey(prefix + "Requests Use Reverse DCC", default: false)
 
-		public static let manuallyEnteredIPAddress = PreferenceKey(
+		static let manuallyEnteredIPAddress = PreferenceKey(
 			prefix + "Manually Entered IP Address",
 			default: "",
 			traits: .unregistered
 		)
 
-		public static let ipAddressInterfaceName = PreferenceKey(
+		static let ipAddressInterfaceName = PreferenceKey(
 			prefix + "IP Address Interface Name",
 			default: "",
 			traits: .unregistered
 		)
 
 		/// A security-scoped bookmark, meaningless in another user account.
-		public static let downloadFolderBookmark = PreferenceKey(
+		static let downloadFolderBookmark = PreferenceKey(
 			prefix + "Download Folder Bookmark",
 			default: Data(),
 			traits: [.unregistered, .excludedFromExport]
 		)
 
-		public static let preventIdleSystemSleep = PreferenceKey(
+		static let preventIdleSystemSleep = PreferenceKey(
 			"File Transfers -> Idle System Sleep Prevented During File Transfer",
 			default: true
 		)
@@ -118,57 +118,5 @@ public nonisolated extension Preferences { // nonisolated: value
 			requestsAreReversed, manuallyEnteredIPAddress, ipAddressInterfaceName,
 			downloadFolderBookmark, preventIdleSystemSleep,
 		]
-	}
-}
-
-public nonisolated extension Preferences { // nonisolated: value
-	/// Settings owned by the bundled extensions, declared here so they are
-	/// catalogued and travel with an exported configuration.
-	enum Extensions {
-		public static let chatFilters = UntypedPreferenceKey(
-			FirstPartyPluginPreferences.chatFilters, validation: PreferencesPayloadValidation.chatFilters
-		)
-
-		public static let caffeinePreventSleep = PreferenceKey(
-			FirstPartyPluginPreferences.caffeinePreventSleep.name,
-			default: FirstPartyPluginPreferences.caffeinePreventSleep.defaultValue,
-			traits: .unregistered
-		)
-
-		public static let smileyServiceEnabled = PreferenceKey(
-			FirstPartyPluginPreferences.smileyServiceEnabled.name,
-			default: FirstPartyPluginPreferences.smileyServiceEnabled.defaultValue,
-			traits: .unregistered
-		)
-
-		public static let smileyExtraEmoticons = PreferenceKey(
-			FirstPartyPluginPreferences.smileyExtraEmoticons.name,
-			default: FirstPartyPluginPreferences.smileyExtraEmoticons.defaultValue,
-			traits: .unregistered
-		)
-
-		public static let wikiLinkServiceEnabled = PreferenceKey(
-			"Wiki-style Link Parser Extension -> Service Enabled",
-			default: false,
-			traits: .unregistered
-		)
-
-		public static let wikiLinkPrefixes = UntypedPreferenceKey(
-			"Wiki-style Link Parser Extension -> Link Prefixes", validation: { $0.dictionary != nil }
-		)
-
-		/// The seven "Feature Disabled" switches of the system profiler.
-		public static let systemProfilerFeatures = FirstPartyPluginPreferences.systemProfilerFeatures.map {
-			PreferenceKey(
-				$0.name,
-				default: $0.defaultValue,
-				traits: .unregistered
-			)
-		}
-
-		static let all: [any AnyPreferenceKey] = [
-			chatFilters, caffeinePreventSleep, smileyServiceEnabled, smileyExtraEmoticons,
-			wikiLinkServiceEnabled, wikiLinkPrefixes,
-		] + systemProfilerFeatures
 	}
 }

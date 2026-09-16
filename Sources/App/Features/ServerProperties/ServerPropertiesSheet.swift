@@ -6,7 +6,6 @@
 
 import AppKit
 import CocoaExtensions
-import GlasstualPluginKit
 import Security
 import SecurityInterface
 import SwiftUI
@@ -32,17 +31,17 @@ enum ServerPropertiesSelection: CaseIterable, Hashable {
 }
 
 @MainActor
-public protocol ServerPropertiesSheetDelegate: AnyObject {
+protocol ServerPropertiesSheetDelegate: AnyObject {
 	func serverPropertiesSheet(_ sender: ServerPropertiesSheet, onOk config: ClientConfig)
 }
 
 @MainActor
-public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
+final class ServerPropertiesSheet: SheetSession, ClientScoped,
 	AddressBookSheetDelegate, ChannelPropertiesSheetDelegate, HighlightEntrySheetDelegate,
 	ServerEndpointListSheetDelegate
 {
-	public private(set) var client: IRCClient?
-	public private(set) var clientId: String?
+	private(set) var client: Client?
+	private(set) var clientId: String?
 	let model: ServerPropertiesModel
 
 	private let notifications = NotificationSubscriptions()
@@ -59,7 +58,7 @@ public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 	private weak var serverEndpointSheet: ServerEndpointListSheet?
 	private weak var clientCertificatePanel: SFChooseIdentityPanel?
 
-	public init(client: IRCClient?) {
+	init(client: Client?) {
 		self.client = client
 		clientId = client?.uniqueIdentifier
 		if let client {
@@ -143,7 +142,7 @@ public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 		}
 	}
 
-	override public func submit() {
+	override func submit() {
 		guard !model.isSaving else { return }
 		let pendingCertificate = certificateSelection.isResolvingReference ? certificateSelection.task : nil
 		if pendingCertificate == nil {
@@ -185,7 +184,7 @@ public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 		super.submit()
 	}
 
-	override public func cancel() {
+	override func cancel() {
 		guard !model.isSaving else { return }
 		saveTask?.cancel()
 		saveTask = nil
@@ -203,7 +202,7 @@ public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 		serverEndpointSheet = controller
 	}
 
-	public func serverEndpointListSheet(_: ServerEndpointListSheet, onOk serverList: [Server]) {
+	func serverEndpointListSheet(_: ServerEndpointListSheet, onOk serverList: [Server]) {
 		model.applyServerList(serverList)
 	}
 
@@ -231,7 +230,7 @@ public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 		model.selectedChannelID = nil
 	}
 
-	public func channelPropertiesSheet(_: ChannelPropertiesSheet, onOk config: ChannelConfig) {
+	func channelPropertiesSheet(_: ChannelPropertiesSheet, onOk config: ChannelConfig) {
 		if let index = model.config.channelList.firstIndex(where: { $0.uniqueIdentifier == config.uniqueIdentifier }) {
 			model.config.channelList[index] = config
 		} else {
@@ -264,7 +263,7 @@ public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 		model.selectedHighlightID = nil
 	}
 
-	public func highlightEntrySheet(_: HighlightEntrySheet, didSave config: HighlightMatchCondition) {
+	func highlightEntrySheet(_: HighlightEntrySheet, didSave config: HighlightMatchCondition) {
 		if let index = model.config.highlightList
 			.firstIndex(where: { $0.uniqueIdentifier == config.uniqueIdentifier })
 		{
@@ -304,7 +303,7 @@ public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 		model.selectedAddressBookEntryID = nil
 	}
 
-	public func addressBookSheet(_: AddressBookSheet, onOk entry: AddressBookEntry) {
+	func addressBookSheet(_: AddressBookSheet, onOk entry: AddressBookEntry) {
 		if let index = model.config.ignoreList.firstIndex(where: { $0.uniqueIdentifier == entry.uniqueIdentifier }) {
 			model.config.ignoreList[index] = entry
 		} else {
@@ -348,7 +347,7 @@ public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 		clientCertificatePanel = panel
 		panel.setInformativeText(ServerPropertiesStrings.Certificate.chooseExplanation)
 		panel.setAlternateButtonTitle(PromptStrings.Action.cancel)
-		guard let hostWindow = AppController.shared.mainWindow?.ceDeepestWindow else { return }
+		guard let hostWindow = AppServices.delegate.mainWindow?.frontmostAttachedSheet else { return }
 		let request = UUID()
 		certificatePanelRequest = request
 		panel.beginSheet(
@@ -386,7 +385,7 @@ public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 
 	private func addConfigurationDidChangeObserver() {
 		guard let client else { return }
-		notifications.observe(.IRCClientConfigurationWasUpdated, object: client) { [weak self] notification in
+		notifications.observe(.ClientConfigurationWasUpdated, object: client) { [weak self] notification in
 			self?.underlyingConfigurationChanged(notification)
 		}
 	}
@@ -402,7 +401,7 @@ public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 	 over the edits it is asking about. Keeping what is typed is the default;
 	 reloading is the destructive answer, because it throws those edits away. */
 	private func underlyingConfigurationChanged(_ notification: Notification) {
-		guard let client = notification.object as? IRCClient else { return }
+		guard let client = notification.object as? Client else { return }
 		Alerts.alertSheet(
 			body: ServerPropertiesStrings.ExternalChange.unsavedChangesWarning,
 			title: ServerPropertiesStrings.ExternalChange.reloadTitle,
@@ -435,7 +434,7 @@ public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 		serverEndpointSheet?.cancel()
 	}
 
-	override public func sheetDidEnd() {
+	override func sheetDidEnd() {
 		closeChildSheets()
 		removeConfigurationDidChangeObserver()
 	}

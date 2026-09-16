@@ -38,7 +38,6 @@
 
 import AppKit
 @testable import Glasstual
-import GlasstualPluginKit
 import Testing
 
 @MainActor

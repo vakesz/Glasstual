@@ -45,7 +45,7 @@ struct AddressBookMatchCacheTests {
 	@Test("One matching entry is returned with the flags it was configured with")
 	func singleMatchingEntryIsReturned() throws {
 		let client = makeClient(ignoreList: [[
-			"entryType": IRCAddressBookEntryType.ignore.rawValue as NSNumber,
+			"entryType": AddressBookEntryType.ignore.rawValue as NSNumber,
 			"hostmask": "nick!*@example.com" as NSString,
 			"ignorePrivateMessages": true as NSNumber,
 		]])
@@ -61,12 +61,12 @@ struct AddressBookMatchCacheTests {
 	func multipleMatchesAreMerged() throws {
 		let client = makeClient(ignoreList: [
 			[
-				"entryType": IRCAddressBookEntryType.ignore.rawValue as NSNumber,
+				"entryType": AddressBookEntryType.ignore.rawValue as NSNumber,
 				"hostmask": "*!user@example.com" as NSString,
 				"ignorePrivateMessages": true as NSNumber,
 			],
 			[
-				"entryType": IRCAddressBookEntryType.ignore.rawValue as NSNumber,
+				"entryType": AddressBookEntryType.ignore.rawValue as NSNumber,
 				"hostmask": "nick!*@example.com" as NSString,
 				"ignorePublicMessages": true as NSNumber,
 			],
@@ -86,7 +86,7 @@ struct AddressBookMatchCacheTests {
 	@Test("A hostmask nothing matches yields no entry and no ignores")
 	func absentMatchReturnsNilAndNoIgnores() {
 		let client = makeClient(ignoreList: [[
-			"entryType": IRCAddressBookEntryType.ignore.rawValue as NSNumber,
+			"entryType": AddressBookEntryType.ignore.rawValue as NSNumber,
 			"hostmask": "nick!*@example.com" as NSString,
 		]])
 		let cache = AddressBookMatchCache(client: client)

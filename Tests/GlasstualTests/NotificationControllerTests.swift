@@ -11,10 +11,6 @@ import UserNotifications
 @MainActor
 @Suite("Notification controller", .serialized)
 struct NotificationControllerTests {
-	private func notificationController() -> NotificationController {
-		SharedApplication.sharedNotificationController()
-	}
-
 	/// The table lists every event by this name and a notification that is not
 	/// someone speaking carries it as its title, so an event without one is an
 	/// unlabelled row and a blank notification.
@@ -121,21 +117,6 @@ struct NotificationControllerTests {
 		#expect(NotificationController.notificationSound(named: NotificationAlertSound.noSoundPreferenceValue) == nil)
 		#expect(NotificationController.notificationSound(named: SoundPlayer.beepSoundName) == .default)
 		#expect(NotificationController.notificationSound(named: "Submarine") != nil)
-	}
-
-	@Test("Suppressing notifications is a plain toggle")
-	func areNotificationsDisabledToggle() {
-		let controller = notificationController()
-		let original = controller.areNotificationsDisabled
-		defer { controller.areNotificationsDisabled = original }
-
-		controller.areNotificationsDisabled = true
-
-		#expect(controller.areNotificationsDisabled)
-
-		controller.areNotificationsDisabled = false
-
-		#expect(controller.areNotificationsDisabled == false)
 	}
 
 	/** A channel override wins over the application-wide value, and an

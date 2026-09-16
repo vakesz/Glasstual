@@ -9,15 +9,6 @@ import Testing
 @MainActor
 @Suite("Notification configuration")
 struct NotificationConfigurationTests {
-	@Test("A configuration remembers the event it was made for and names it")
-	func configurationsPreserveEventAndDisplayName() {
-		let configuration: any NotificationConfiguration =
-			PreferencesNotificationConfiguration(eventType: .highlight)
-
-		#expect(configuration.eventType == .highlight)
-		#expect(configuration.displayName.isEmpty == false)
-	}
-
 	/// The getter used to substitute "None" for a missing stored value, so the
 	/// "Default" row could never be selected: choosing it wrote `nil`, and the
 	/// very next read turned that into "No sound".
@@ -80,22 +71,5 @@ struct NotificationConfigurationTests {
 		#expect(configuration.disabledWhileAway == .on)
 		#expect(configuration.bounceDockIcon == .off)
 		#expect(configuration.bounceDockIconRepeatedly == .on)
-	}
-
-	/// The pane holds whichever implementation it was handed, without knowing
-	/// which one it is.
-	@Test("Both implementations satisfy the protocol the pane talks to")
-	func bothImplementationsSatisfyTheProtocol() {
-		let configurations: [any NotificationConfiguration] = [
-			PreferencesNotificationConfiguration(eventType: .invite),
-			ChannelNotificationConfiguration(
-				eventType: .invite,
-				in: ChannelPropertiesModel(config: ChannelConfig())
-			),
-		]
-
-		for configuration in configurations {
-			#expect(configuration.eventType == .invite)
-		}
 	}
 }

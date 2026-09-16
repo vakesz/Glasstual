@@ -8,7 +8,7 @@ import Foundation
 import Testing
 
 /// Interface Builder resources reintroduce stringly typed classes, outlets,
-/// actions and bindings. All application and first-party plugin views are now
+/// actions and bindings. Every application view is now
 /// constructed in Swift or SwiftUI, so keep that architectural boundary
 /// explicit instead of retaining runtime-name tests for resources that no
 /// longer exist.

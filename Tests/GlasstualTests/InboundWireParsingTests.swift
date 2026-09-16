@@ -32,14 +32,14 @@ struct InboundWireParsingTests {
 		let parameters = (0 ..< 400).map { _ in "a" }.joined(separator: " ")
 		let parsed = try #require(LineParser.parsedLine(fromLine: "PRIVMSG \(parameters)"))
 
-		#expect(parsed.parameters.count == IRCProtocolLimits.maximumInboundParameterCount)
+		#expect(parsed.parameters.count == ProtocolLimits.maximumInboundParameterCount)
 		#expect(parsed.parameters.dropLast().allSatisfy { $0 == "a" })
 
 		/* Nothing is thrown away: the overflow arrives as one trailing value. */
 		let tail = try #require(parsed.parameters.last)
 
 		#expect(tail.hasPrefix("a a "))
-		#expect(tail.split(separator: " ").count == 400 - (IRCProtocolLimits.maximumInboundParameterCount - 1))
+		#expect(tail.split(separator: " ").count == 400 - (ProtocolLimits.maximumInboundParameterCount - 1))
 	}
 
 	@Test("A line inside the cap is unchanged")
@@ -60,7 +60,7 @@ struct InboundWireParsingTests {
 	@Test("ACTION is recognised however it is cased")
 	func actionIsRecognisedInAnyAsciiCasing() {
 		for verb in ["ACTION", "action", "AcTiOn"] {
-			let classification = IRCInboundTextPolicy.classify(
+			let classification = InboundTextPolicy.classify(
 				command: "PRIVMSG",
 				payload: "\u{1}\(verb) waves\u{1}"
 			)
@@ -72,14 +72,14 @@ struct InboundWireParsingTests {
 
 	@Test("A verb that only starts like ACTION is not one")
 	func actionPrefixIsNotMatchedLoosely() {
-		let plural = IRCInboundTextPolicy.classify(command: "PRIVMSG", payload: "\u{1}ACTIONS are loud\u{1}")
+		let plural = InboundTextPolicy.classify(command: "PRIVMSG", payload: "\u{1}ACTIONS are loud\u{1}")
 
 		#expect(plural.lineType == .ctcpQuery)
 		#expect(plural.text == "ACTIONS are loud")
 
 		/* A verb that only folds to ACTION under Unicode rules is not one
 		 either, and the payload reaches the handler byte for byte. */
-		let turkish = IRCInboundTextPolicy.classify(command: "PRIVMSG", payload: "\u{1}ACT\u{130}ON hi\u{1}")
+		let turkish = InboundTextPolicy.classify(command: "PRIVMSG", payload: "\u{1}ACT\u{130}ON hi\u{1}")
 
 		#expect(turkish.lineType == .ctcpQuery)
 		#expect(turkish.text == "ACT\u{130}ON hi")
@@ -87,7 +87,7 @@ struct InboundWireParsingTests {
 
 	@Test("An emote keeps its text exactly as it was sent")
 	func actionTextSurvivesUnchanged() {
-		let classification = IRCInboundTextPolicy.classify(
+		let classification = InboundTextPolicy.classify(
 			command: "PRIVMSG",
 			payload: "\u{1}ACTION \u{130}stanbul \u{1F468}\u{200D}\u{1F469}\u{200D}\u{1F467}\u{1}"
 		)
@@ -98,7 +98,7 @@ struct InboundWireParsingTests {
 
 	@Test("A NOTICE is never an emote")
 	func noticeIsNeverAnEmote() {
-		let classification = IRCInboundTextPolicy.classify(command: "NOTICE", payload: "\u{1}ACTION waves\u{1}")
+		let classification = InboundTextPolicy.classify(command: "NOTICE", payload: "\u{1}ACTION waves\u{1}")
 
 		#expect(classification.lineType == .ctcpReply)
 	}
@@ -165,10 +165,10 @@ struct InboundWireParsingTests {
 	 `sort` requires. */
 	@Test("A member comparison folds both nicknames under one table")
 	func memberComparisonFoldsBothSidesWithOneTable() {
-		let rfc1459 = IRCUserPrefixTable(
+		let rfc1459 = UserPrefixTable(
 			modeSymbols: ["o", "v"], prefixCharacters: ["@", "+"], caseMapping: .rfc1459
 		)
-		let ascii = IRCUserPrefixTable(
+		let ascii = UserPrefixTable(
 			modeSymbols: ["o", "v"], prefixCharacters: ["@", "+"], caseMapping: .ascii
 		)
 		let bracket = ChannelUser(user: User(nickname: "nick[home]"), prefixes: rfc1459)
@@ -191,7 +191,7 @@ struct InboundWireParsingTests {
 	/// whole ordering rather than once per comparison.
 	@Test("Conversation weight orders the heaviest speaker first")
 	func conversationWeightOrdersTheHeaviestFirst() {
-		let table = IRCUserPrefixTable()
+		let table = UserPrefixTable()
 		var heavy = ChannelUser(user: User(nickname: "zoe"), prefixes: table)
 		heavy.incomingConversation()
 		let light = ChannelUser(user: User(nickname: "alice"), prefixes: table)

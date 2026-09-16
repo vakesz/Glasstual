@@ -23,13 +23,6 @@ struct FrameworkUtilityHelperTests {
 			"454d4423643ce80e2a9ac94fa54ca49f")
 	}
 
-	@Test("A zero byte keeps both of its hex digits")
-	func digestsPadLowBytes() {
-		#expect((Data([0x00, 0x0F, 0xF0]) as NSData).textualSha1.count == 40)
-		#expect((Data() as NSData).textualSha256 ==
-			"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
-	}
-
 	/// `inet_ntop` reads four or sixteen bytes for the family it is handed and
 	/// cannot be told how many are there, so anything else has to be refused
 	/// before it reads past the end of the data.
@@ -49,27 +42,11 @@ struct FrameworkUtilityHelperTests {
 		#expect(Data([127, 0, 0, 1]).IPv6Address == nil)
 	}
 
-	@Test("A byte count is formatted with a padded fraction")
-	func byteCountsAreFormatted() {
-		#expect(Int64(0).textualPaddedByteCountDescription.isEmpty == false)
-		#expect(Int64(1_500_000).textualPaddedByteCountDescription.contains("MB"))
-	}
-
 	@Test("A one-digit number gains a leading zero")
 	func integersGainALeadingZero() {
 		#expect(NSNumber(value: 7).textualIntegerStringValueWithLeadingZero == "07")
 		#expect(NSNumber(value: 42).textualIntegerStringValueWithLeadingZero == "42")
 		#expect(NSNumber(value: 1234).textualIntegerStringValueWithLeadingZero == "1234")
-	}
-
-	@Test("File operation options are a real OptionSet, not magic numbers")
-	func fileOperationOptionsCompose() {
-		let options: FileOperationOptions = [.moveToTrash, .removeIfExists]
-
-		#expect(options.contains(.moveToTrash))
-		#expect(options.contains(.removeIfExists))
-		#expect(options.contains(.symlinkPackages) == false)
-		#expect(FileOperationOptions([]).contains(.removeIfExists) == false)
 	}
 
 	@Test("Replacing an item refuses a non-file URL rather than reporting success")

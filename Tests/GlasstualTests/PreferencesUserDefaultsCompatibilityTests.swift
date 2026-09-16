@@ -13,14 +13,14 @@ import Testing
 struct PreferencesUserDefaultsCompatibilityTests {
 	@Test("A scalar write announces the key it changed")
 	func scalarWritePostsPreferenceNotification() async {
-		let defaults = TextualUserDefaults.container
+		let defaults = GlasstualUserDefaults.container
 		let key = "PreferencesUserDefaultsCompatibilityTests.\(UUID().uuidString)"
 		let center = NotificationCenter.default
 		defer { defaults.removeObject(forKey: key) }
 
 		await confirmation("The preference change notification is posted") { changed in
 			let token = center.addObserver(
-				forName: .textualUserDefaultsDidChange,
+				forName: .glasstualUserDefaultsDidChange,
 				object: defaults,
 				queue: nil
 			) { notification in
@@ -37,7 +37,7 @@ struct PreferencesUserDefaultsCompatibilityTests {
 
 	@Test("The scalar setters still write the defaults keys the stored schema uses")
 	func scalarSettersKeepTheirEstablishedDefaultsKeys() {
-		let defaults = TextualUserDefaults.container
+		let defaults = GlasstualUserDefaults.container
 		let soundKey = "Notification Sound Is Muted"
 		let portKey = "File Transfers -> File Transfer Port Range Start"
 		let oldSound = defaults.object(forKey: soundKey)

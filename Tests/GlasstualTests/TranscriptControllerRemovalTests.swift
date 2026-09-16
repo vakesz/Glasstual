@@ -1,0 +1,84 @@
+/* *********************************************************************
+ * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+ * Please see Acknowledgements.pdf for additional information.
+ *********************************************************************** */
+
+import AppKit
+@testable import Glasstual
+import Testing
+
+@MainActor
+@Suite("Controller removal history policy", .serialized)
+struct TranscriptControllerRemovalTests {
+	@Test("Removal preserves stored rows independently of launch-reload preferences",
+	      arguments: [false, true], [false, true])
+	func removalPolicy(preservingLocalData: Bool, reloadScrollback: Bool) async throws {
+		let previousReload = Preferences.Logging.reloadScrollbackOnLaunch.value
+		Preferences.Logging.reloadScrollbackOnLaunch.value = reloadScrollback
+		defer { Preferences.Logging.reloadScrollbackOnLaunch.value = previousReload }
+		let directory = FileManager.default.temporaryDirectory.appendingPathComponent(
+			UUID().uuidString,
+			isDirectory: true
+		)
+		try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+		defer { try? FileManager.default.removeItem(at: directory) }
+		let store = ScrollbackStore(filenameStore: ScrollbackFilenameFixture("removal.sqlite"))
+		let historyClient = ScrollbackClient(
+			store: store, databaseDirectory: { directory.path }, reportFailure: { Issue.record(Comment(rawValue: $0)) }
+		)
+		let history = Scrollback(client: historyClient)
+		let client = Client(config: ClientConfig())
+		let window = MainWindow(contentRect: .zero, styleMask: .borderless, backing: .buffered, defer: false)
+		let controller = TranscriptController(
+			client: client, in: window, inlineImageLoader: InlineImageLoader(), historicLog: history
+		)
+		controller.loadsHistoryLazily = { false }
+		controller.historyPageFetcher = { await historyClient.fetchOutcome($0) }
+		var line = LogLine()
+		line.messageBody = "retained archive"
+		line.lineType = .privateMessage
+		let entry = line.historicEntry(forView: client.uniqueIdentifier)
+		#expect(!entry.data.isEmpty)
+		#expect(await historyClient.retryLoading())
+		await historyClient.writeEntry(entry)
+		await store.saveData()
+		let view = controller.ensureBackingView()
+		await controller.drainRenderJobs()
+		if !reloadScrollback {
+			let context = TranscriptRenderContext()
+			let request = TranscriptRenderRequest(line: LogLineSnapshot(line, in: context), context: context)
+			view.appendLines([TranscriptController.renderJob(request).transcriptLine])
+		}
+		#expect(view.displayedLines
+			.map { $0.historyCursor?.lineIdentifier ?? $0.lineNumber } == [line.uniqueIdentifier])
+		var completed = false
+		controller.print(LogLine()) { _ in completed = true }
+		let presentation: any ChatItemPresentation = controller
+		presentation.tearDown(preservingLocalData ? .preservingRemoval : .permanentRemoval)
+		#expect(controller.backingView == nil)
+		#expect(!controller.viewIsLoaded)
+		#expect(view.displayedLines.isEmpty)
+		#expect((controller.historicLogMutationTask == nil) == preservingLocalData)
+		await controller.historicLogMutationTask?.value
+		await controller.drainRenderJobs()
+		#expect(!completed)
+		// Later registry/application teardown must not turn a preserving removal into deletion.
+		presentation.tearDown(.applicationTermination)
+		presentation.tearDown(.permanentRemoval)
+		if preservingLocalData {
+			#expect(controller.historicLogMutationTask == nil)
+		}
+		await historyClient.prepareForTermination()
+		#expect(await store.openDatabase(inDirectory: directory.path).isOpen)
+		let request = ScrollbackFetchRequest(
+			viewIdentifier: client.uniqueIdentifier, kind: .newest(ascending: true, fetchLimit: 10, limitToDate: nil)
+		)
+		switch await store.fetchOutcome(request) {
+		case let .page(entries):
+			#expect(entries.map(\.uniqueIdentifier) == (preservingLocalData ? [entry.uniqueIdentifier] : []))
+			#expect(entries.map(\.data) == (preservingLocalData ? [entry.data] : []))
+		default: Issue.record("Could not read the isolated store after removal")
+		}
+		await store.close()
+	}
+}

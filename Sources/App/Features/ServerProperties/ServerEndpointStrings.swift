@@ -14,58 +14,58 @@ import Foundation
 
 nonisolated enum ServerEndpointStrings { // nonisolated: value
 	static var windowTitle: String {
-		String(localized: .TDCServerEndpointListSheet.windowTitle)
+		String(localized: .ServerEndpointList.windowTitle)
 	}
 
 	static var explanation: String {
-		String(localized: .TDCServerEndpointListSheet.explanation)
+		String(localized: .ServerEndpointList.explanation)
 	}
 
 	static var serverAddress: String {
-		String(localized: .TDCServerEndpointListSheet.serverAddress)
+		String(localized: .ServerEndpointList.serverAddress)
 	}
 
 	static var port: String {
-		String(localized: .TDCServerEndpointListSheet.port)
+		String(localized: .ServerEndpointList.port)
 	}
 
 	static var connectSecurely: String {
-		String(localized: .TDCServerEndpointListSheet.connectSecurely)
+		String(localized: .ServerEndpointList.connectSecurely)
 	}
 
 	static var serverPassword: String {
-		String(localized: .TDCServerEndpointListSheet.serverPassword)
+		String(localized: .ServerEndpointList.serverPassword)
 	}
 
 	static var serverPasswordHelp: String {
-		String(localized: .TDCServerEndpointListSheet.serverPasswordHelp)
+		String(localized: .ServerEndpointList.serverPasswordHelp)
 	}
 
 	static var serverList: String {
-		String(localized: .TDCServerEndpointListSheet.serverList)
+		String(localized: .ServerEndpointList.serverList)
 	}
 
 	static var addServer: String {
-		String(localized: .TDCServerEndpointListSheet.addServer)
+		String(localized: .ServerEndpointList.addServer)
 	}
 
 	static var removeServer: String {
-		String(localized: .TDCServerEndpointListSheet.removeServer)
+		String(localized: .ServerEndpointList.removeServer)
 	}
 
 	static var moveUp: String {
-		String(localized: .TDCServerEndpointListSheet.moveUp)
+		String(localized: .ServerEndpointList.moveUp)
 	}
 
 	static var moveDown: String {
-		String(localized: .TDCServerEndpointListSheet.moveDown)
+		String(localized: .ServerEndpointList.moveDown)
 	}
 
 	static var invalidAddress: String {
-		String(localized: .TDCServerEndpointListSheet.valueYouEnteredIsNot)
+		String(localized: .ServerEndpointList.valueYouEnteredIsNot)
 	}
 
 	static var invalidPort: String {
-		String(localized: .TDCServerEndpointListSheet.enterAWholeNumberBetween1)
+		String(localized: .ServerEndpointList.enterAWholeNumberBetween1)
 	}
 }

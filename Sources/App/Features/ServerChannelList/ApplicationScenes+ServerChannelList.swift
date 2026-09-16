@@ -43,23 +43,23 @@
  only ever reaches a list that is already open: opening one is the single path
  that makes a session and asks the server for a listing. */
 extension ApplicationScenes: ClientChannelListPresenting {
-	func openChannelList(for client: IRCClient) {
+	func openChannelList(for client: Client) {
 		openServerChannelList(for: client)
 	}
 
-	func closeChannelList(for client: IRCClient) {
+	func closeChannelList(for client: Client) {
 		closeServerChannelList(for: client.uniqueIdentifier)
 	}
 
-	func channelListDidStart(for client: IRCClient) {
+	func channelListDidStart(for client: Client) {
 		serverChannelList(for: client.uniqueIdentifier)?.receiveListStart()
 	}
 
-	func channelListDidReceive(channelNamed name: String, memberCount: UInt, topic: String?, for client: IRCClient) {
+	func channelListDidReceive(channelNamed name: String, memberCount: UInt, topic: String?, for client: Client) {
 		serverChannelList(for: client.uniqueIdentifier)?.addChannel(name, count: memberCount, topic: topic)
 	}
 
-	func channelListDidFinish(for client: IRCClient) {
+	func channelListDidFinish(for client: Client) {
 		serverChannelList(for: client.uniqueIdentifier)?.finishRefresh()
 	}
 }

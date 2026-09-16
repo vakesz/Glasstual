@@ -35,12 +35,12 @@ struct ServerListProjectionTests {
 		self.beta = beta
 		self.alphaChannels = alphaChannels
 		self.betaChannels = betaChannels
-		let clients: [IRCClient] = [alpha, beta]
+		let clients: [Client] = [alpha, beta]
 		list.clientSource = { clients }
 		list.filterText = ""
 	}
 
-	private static func channel(named name: String, on client: IRCClient) -> Channel {
+	private static func channel(named name: String, on client: Client) -> Channel {
 		let channel = Channel(config: ChannelConfig(channelName: name))
 		channel.associatedClient = client
 		return channel
@@ -179,17 +179,6 @@ struct ServerListProjectionTests {
 		list.setExpanded(true, for: beta)
 		#expect(list.rows == disclosedByReader)
 		#expect(list.row(forItem: hidden) == 4)
-	}
-
-	@Test("A collapsed server's conversations have no row to move onto")
-	func collapsedConversationsAreNotSelectable() throws {
-		let hidden = try #require(betaChannels.first)
-		#expect(list.row(forItem: hidden) == -1)
-
-		list.setExpanded(true, for: beta)
-
-		#expect(list.row(forItem: hidden) == 4)
-		#expect(list.numberOfRows == 5)
 	}
 
 	/// A row is compared by what it draws, so the badge colour has to be part

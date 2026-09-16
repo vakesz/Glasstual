@@ -42,7 +42,7 @@ import SwiftUI
 
 /// Which of an alert's up to three buttons the user chose. The names describe
 /// button position, which is what the nib-era API promised its callers.
-public nonisolated enum AlertResponse: UInt, Sendable { // nonisolated: value
+nonisolated enum AlertResponse: UInt, Sendable { // nonisolated: value
 	case `default` = 1000
 	case alternate = 1001
 	case other = 1002
@@ -54,7 +54,7 @@ extension AlertResponse: PreferenceEnum {}
 /// Everything one alert needs. Building the request is separate from showing
 /// it, which is what lets the suppression policy be exercised without a window
 /// server.
-public nonisolated enum AlertStyle: Sendable { // nonisolated: value
+nonisolated enum AlertStyle: Sendable { // nonisolated: value
 	case informational
 	case warning
 	case critical
@@ -63,29 +63,29 @@ public nonisolated enum AlertStyle: Sendable { // nonisolated: value
 /// Which of an alert's buttons destroys something. The panel gives that button
 /// the destructive role, which is what tints it and tells VoiceOver the action
 /// cannot be taken back.
-public nonisolated enum AlertDestructiveButton: Sendable { // nonisolated: value
+nonisolated enum AlertDestructiveButton: Sendable { // nonisolated: value
 	case `default`
 	case alternate
 }
 
-public nonisolated struct AlertRequest: Sendable { // nonisolated: value
-	public var title: String
-	public var body: String
-	public var defaultButton: String
-	public var alternateButton: String?
-	public var otherButton: String?
-	public var destructiveButton: AlertDestructiveButton?
+nonisolated struct AlertRequest: Sendable { // nonisolated: value
+	var title: String
+	var body: String
+	var defaultButton: String
+	var alternateButton: String?
+	var otherButton: String?
+	var destructiveButton: AlertDestructiveButton?
 	/// Which button Escape presses. An alert with an alternate button assumes
 	/// that one; name another where the way out is somewhere else, as it is
 	/// when the third button is the one that changes nothing.
-	public var cancelButton: AlertResponse?
+	var cancelButton: AlertResponse?
 	/// The base key recording a "do not show again" choice. Without one the
 	/// checkbox is not offered, because nothing would remember the answer.
-	public var suppressionKey: String?
-	public var suppressionText: String?
-	public var style: AlertStyle
+	var suppressionKey: String?
+	var suppressionText: String?
+	var style: AlertStyle
 
-	public init(
+	init(
 		title: String,
 		body: String,
 		defaultButton: String,
@@ -113,7 +113,7 @@ public nonisolated struct AlertRequest: Sendable { // nonisolated: value
 
 	 Every alert has one: an alert with no way out but its own action is a trap,
 	 and Escape on a single-button alert means "I have read it". */
-	public var escapeButton: AlertResponse {
+	var escapeButton: AlertResponse {
 		if let cancelButton {
 			return cancelButton
 		}
@@ -125,7 +125,7 @@ public nonisolated struct AlertRequest: Sendable { // nonisolated: value
 	 Never the destructive one: a confirmation whose Return key erases something
 	 turns a reflex into a loss. Where the destructive button is the only one,
 	 nothing is defaulted and the reader has to choose.  */
-	public var returnButton: AlertResponse? {
+	var returnButton: AlertResponse? {
 		guard destructiveButton == .default else {
 			return .default
 		}
@@ -134,24 +134,19 @@ public nonisolated struct AlertRequest: Sendable { // nonisolated: value
 }
 
 /// What an alert came back with.
-public nonisolated struct AlertOutcome: Equatable, Sendable { // nonisolated: value
-	public let response: AlertResponse
+nonisolated struct AlertOutcome: Equatable, Sendable { // nonisolated: value
+	let response: AlertResponse
 	/// Whether the alert will not be shown again — either because the user
 	/// ticked the checkbox now, or because a previous run recorded the choice
 	/// and this run was skipped entirely.
-	public let isSuppressed: Bool
-
-	public init(response: AlertResponse, isSuppressed: Bool) {
-		self.response = response
-		self.isSuppressed = isSuppressed
-	}
+	let isSuppressed: Bool
 }
 
-public typealias AlertCompletion = @MainActor (AlertOutcome) -> Void
+typealias AlertCompletion = @MainActor (AlertOutcome) -> Void
 
 /// Where an alert appears.
 @MainActor
-public enum AlertPresentation {
+enum AlertPresentation {
 	/// Blocks in its own modal loop.
 	case applicationModal
 	/// A state-driven sheet on the application's main window. Reveals the
@@ -205,7 +200,7 @@ enum AlertHostPolicy {
  knows only this much of it, so an alert does not have to reach into the
  feature's presentation model to be shown there. */
 @MainActor
-public protocol SheetPresentationHost: AnyObject {
+protocol SheetPresentationHost: AnyObject {
 	/// The window the sheets attach to, asked whether it is on screen.
 	var sheetHostWindow: NSWindow { get }
 	/// Raises `content` on top of whatever the host is already showing.
@@ -221,34 +216,29 @@ public protocol SheetPresentationHost: AnyObject {
 
 /// Where alerts and prompts find the window that hosts them.
 @MainActor
-public enum SheetPresentation {
+enum SheetPresentation {
 	/// Installed by the application once its main window exists; `nil`
 	/// before then, which is when an alert runs application modal.
-	public weak static var host: (any SheetPresentationHost)?
+	weak static var host: (any SheetPresentationHost)?
 }
 
 /// The presentation half of showing an alert: build the panel, run it, report the
 /// button and whether the suppression checkbox ended up ticked. Injected so
 /// `Alerts`'s suppression policy is testable on its own.
 @MainActor
-public protocol AlertPresenter {
+protocol AlertPresenter {
 	func present(_ request: AlertRequest, in presentation: AlertPresentation) async -> AlertPresenterResult
 	func presentModal(_ request: AlertRequest) -> AlertPresenterResult
 }
 
-public nonisolated struct AlertPresenterResult: Equatable, Sendable { // nonisolated: value
-	public let response: AlertResponse
-	public let suppressionChecked: Bool
-
-	public init(response: AlertResponse, suppressionChecked: Bool) {
-		self.response = response
-		self.suppressionChecked = suppressionChecked
-	}
+nonisolated struct AlertPresenterResult: Equatable, Sendable { // nonisolated: value
+	let response: AlertResponse
+	let suppressionChecked: Bool
 }
 
 // MARK: - The one operation
 
-public enum Alerts {
+enum Alerts {
 	private static let suppressionPrefix = Preferences.Families.alertSuppression.pattern
 
 	/// Whether the alert has to be shown, or the answer a previous run recorded.
@@ -263,7 +253,7 @@ public enum Alerts {
 	/// checkbox on a "No" keeps answering "No".
 	@MainActor
 	@discardableResult
-	public static func run(
+	static func run(
 		_ request: AlertRequest,
 		on presentation: AlertPresentation,
 		using presenter: any AlertPresenter = SwiftUIAlertPresenter()
@@ -282,7 +272,7 @@ public enum Alerts {
 	/// The blocking form for launch and migration before a scene exists.
 	@MainActor
 	@discardableResult
-	public static func runModal(
+	static func runModal(
 		_ request: AlertRequest,
 		using presenter: any AlertPresenter = SwiftUIAlertPresenter()
 	) -> AlertOutcome {
@@ -337,7 +327,7 @@ public enum Alerts {
 
 // MARK: - Suppression
 
-public extension Alerts {
+extension Alerts {
 	/// Distinguishes the flag from the response recorded beside it. Both live
 	/// in the alert suppression family, so both stay out of an export.
 	private static var responseSuffix: String {
@@ -356,7 +346,7 @@ public extension Alerts {
 		recordedResponse(fullKey: suppressionKey(withBase: baseKey))
 	}
 
-	internal static func isSuppressed(fullKey: String) -> Bool {
+	static func isSuppressed(fullKey: String) -> Bool {
 		suppressionFlag(fullKey).value
 	}
 
@@ -727,12 +717,10 @@ private final class AlertPresentationSession {
 /// one, and a blocking window during launch and migration, before any scene
 /// exists.
 @MainActor
-public struct SwiftUIAlertPresenter: AlertPresenter {
-	public init() {}
-
+struct SwiftUIAlertPresenter: AlertPresenter {
 	/// Cancelling the task that awaits the answer takes the alert down, and it
 	/// answers with its Escape button.
-	public func present(_ request: AlertRequest, in presentation: AlertPresentation) async -> AlertPresenterResult {
+	func present(_ request: AlertRequest, in presentation: AlertPresentation) async -> AlertPresenterResult {
 		guard !Task.isCancelled else {
 			return AlertPresenterResult(response: request.escapeButton, suppressionChecked: false)
 		}
@@ -786,7 +774,7 @@ public struct SwiftUIAlertPresenter: AlertPresenter {
 		}
 	}
 
-	public func presentModal(_ request: AlertRequest) -> AlertPresenterResult {
+	func presentModal(_ request: AlertRequest) -> AlertPresenterResult {
 		/* The session has to outlive the modal loop it runs: the panel holds it
 		 weakly, so a temporary would be gone before the first button press. */
 		let session = AlertPresentationSession(request: request)
@@ -796,7 +784,7 @@ public struct SwiftUIAlertPresenter: AlertPresenter {
 
 // MARK: - Convenience wrappers
 
-public extension Alerts {
+extension Alerts {
 	/// A blocking two-button question. `true` is the default button.
 	@MainActor
 	static func modalAlert(

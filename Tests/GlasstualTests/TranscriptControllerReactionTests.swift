@@ -1,0 +1,61 @@
+/* *********************************************************************
+ * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+ * Please see Acknowledgements.pdf for additional information.
+ *********************************************************************** */
+
+import AppKit
+@testable import Glasstual
+import Testing
+
+/// A reaction arrives for a line that is already drawn, so recording it is only
+/// half the job: the transcript has to be told, or the reaction stays invisible
+/// until the view is cleared and history reloaded.
+@MainActor
+@Suite("Live message reactions", .serialized)
+struct TranscriptControllerReactionTests {
+	private func textView(in root: NSView) -> NSTextView? {
+		root.subviews.lazy.compactMap { view in
+			(view as? NSTextView) ?? textView(in: view)
+		}.first
+	}
+
+	@Test("A reaction to a line already on screen is drawn without a history reload")
+	func reactionReachesTheTranscript() async throws {
+		/* The transcript only draws live lines once the initial history load has
+		 finished; loading it lazily waits for a visible view, which a headless
+		 window never becomes. */
+		let client = Client(config: ClientConfig())
+		let window = MainWindow(
+			contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
+			styleMask: .borderless,
+			backing: .buffered,
+			defer: false
+		)
+		let controller = window.logControllers.controller(for: client)
+		controller.loadsHistoryLazily = { false }
+		let logView = controller.ensureBackingView()
+		logView.frame = NSRect(x: 0, y: 0, width: 800, height: 600)
+		window.contentView = logView
+		await controller.drainRenderJobs()
+
+		var line = LogLine()
+		line.messageBody = "shipping it"
+		line.lineType = .privateMessage
+		line.nickname = "alice"
+		line.messageIdentifier = "msg-\(UUID().uuidString)"
+		controller.print(line)
+
+		let transcript = try #require(textView(in: logView))
+		await controller.drainRenderJobs()
+		try #require(transcript.string.contains("shipping it"))
+
+		try controller.noteReaction(
+			"\u{1f44d}",
+			fromNickname: "bob",
+			toMessageIdentifier: #require(line.messageIdentifier)
+		)
+		await controller.drainRenderJobs()
+
+		#expect(visibleTranscriptText(transcript.attributedString()).contains("\u{1f44d} 1"))
+	}
+}

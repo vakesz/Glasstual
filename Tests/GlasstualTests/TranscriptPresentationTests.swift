@@ -90,7 +90,7 @@ struct TranscriptPresentationTests {
 	func restoredRowsAnswerToBothIdentifiers() {
 		let logView = makeLogView()
 		var restored = line("row-uri")
-		restored.historyCursor = HistoricLogRowCursor(
+		restored.historyCursor = ScrollbackRowCursor(
 			timestamp: 0,
 			insertionIdentifier: 1,
 			lineIdentifier: "printed-line",
@@ -111,7 +111,7 @@ struct TranscriptPresentationTests {
 	 neither the tooltip nor Copy Topic answers with it. */
 	@Test("The topic bar captions the topic with the channel's modes, and copies only the topic")
 	func topicBarCaptionsChannelModes() throws {
-		let client = IRCClient(config: ClientConfig())
+		let client = Client(config: ClientConfig())
 		client.supportInfo.processConfigurationData("CHANMODES=beI,k,l,imnpst PREFIX=(ov)@+")
 		/* Built here rather than asked of the client: `findChannelOrCreate` goes
 		 through the world, which a client made for one test does not have. */
@@ -128,7 +128,7 @@ struct TranscriptPresentationTests {
 		)
 		/* The view holds its controller weakly, so the controller has to outlive
 		 the assertions for the bar to have a channel to read modes from. */
-		let controller = LogController(channel: channel, in: window)
+		let controller = TranscriptController(channel: channel, in: window)
 		let logView = controller.ensureBackingView()
 		logView.setTopic("House rules")
 
@@ -150,15 +150,15 @@ struct TranscriptPresentationTests {
 		#expect(visibleTranscriptText(logView.topicField.attributedStringValue) == "House rules")
 	}
 
-	private func makeLogView(bufferLimit: Int = 1000) -> LogView {
-		let client = IRCClient(config: ClientConfig())
+	private func makeLogView(bufferLimit: Int = 1000) -> TranscriptView {
+		let client = Client(config: ClientConfig())
 		let window = MainWindow(
 			contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
 			styleMask: .borderless,
 			backing: .buffered,
 			defer: false
 		)
-		let controller = LogController(client: client, in: window)
+		let controller = TranscriptController(client: client, in: window)
 		let logView = controller.ensureBackingView()
 		logView.frame = NSRect(x: 0, y: 0, width: 800, height: 600)
 		window.contentView = logView
@@ -166,8 +166,8 @@ struct TranscriptPresentationTests {
 		return logView
 	}
 
-	private func line(_ text: String, isHighlight: Bool = false) -> TranscriptLine {
-		TranscriptLine(
+	private func line(_ text: String, isHighlight: Bool = false) -> TranscriptRow {
+		TranscriptRow(
 			lineNumber: text,
 			receivedAt: Date(),
 			nickname: "alice",

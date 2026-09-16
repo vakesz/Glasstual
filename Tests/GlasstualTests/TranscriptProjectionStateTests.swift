@@ -21,9 +21,9 @@ private func projectionLine(_ body: String) -> LogLine {
 	return line
 }
 
-private func projectionResult(for line: LogLine) -> LogLineRenderResult {
-	LogLineRenderResult(
-		transcriptLine: TranscriptLine(
+private func projectionResult(for line: LogLine) -> TranscriptRenderResult {
+	TranscriptRenderResult(
+		transcriptLine: TranscriptRow(
 			lineNumber: line.uniqueIdentifier,
 			receivedAt: line.receivedAt,
 			nickname: nil,
@@ -157,10 +157,10 @@ struct TranscriptProjectionStateTests {
 
 	@Test("The default and custom buffer policies match the theme API")
 	func bufferPolicy() {
-		#expect(LogViewBufferPolicy(preference: 0) == LogViewBufferPolicy(
+		#expect(TranscriptBufferPolicy(preference: 0) == TranscriptBufferPolicy(
 			preference: UInt.max
 		))
-		#expect(LogViewBufferPolicy(preference: 0).hardLimit == 1000)
-		#expect(LogViewBufferPolicy(preference: 450).hardLimit == 450)
+		#expect(TranscriptBufferPolicy(preference: 0).hardLimit == 1000)
+		#expect(TranscriptBufferPolicy(preference: 450).hardLimit == 450)
 	}
 }

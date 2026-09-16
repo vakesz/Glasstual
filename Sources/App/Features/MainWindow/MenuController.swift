@@ -40,7 +40,7 @@ import AppKit
 
 /** The menus themselves, and the AppKit delegate protocol that reaches them.
 
- Commands live on ``MenuActionCoordinator``. The menu items target it directly,
+ Commands live on ``MenuActionController``. The menu items target it directly,
  so a command is one `@objc` method rather than a forwarder, an enum case and a
  switch arm. AppKit asks an item's target to validate it, so validation lives
  there too. What is left here is what only a menu controller can be. That is
@@ -48,58 +48,58 @@ import AppKit
  notification that the tree changed, and the seam the protocol layer raises
  sheets through. */
 @MainActor
-public final class MenuController: NSObject, NSMenuDelegate {
-	public var channelViewChannelNameMenu = NSMenu()
-	public var channelViewGeneralMenu = NSMenu()
-	public var channelViewURLMenu = NSMenu()
-	public var dockMenu = NSMenu()
-	public var mainMenuNavigationChannelListMenu = NSMenu()
-	public var mainMenuChannelMenu = NSMenu()
-	public var mainMenuQueryMenu = NSMenu()
-	public var mainMenuChannelMenuItem: NSMenuItem?
-	public var mainMenuQueryMenuItem: NSMenuItem?
-	public var mainMenuServerMenuItem: NSMenuItem?
-	public var mainMenuFormatMenuItem: NSMenuItem?
-	public var serverListNoSelectionMenu = NSMenu()
-	public var userControlMenu = NSMenu()
-	public var muteNotificationsDockMenuItem: NSMenuItem?
-	public var muteNotificationsFileMenuItem: NSMenuItem?
-	public var muteNotificationsSoundsDockMenuItem: NSMenuItem?
-	public var muteNotificationsSoundsFileMenuItem: NSMenuItem?
+final class MenuController: NSObject, NSMenuDelegate {
+	var channelViewChannelNameMenu = NSMenu()
+	var channelViewGeneralMenu = NSMenu()
+	var channelViewURLMenu = NSMenu()
+	var dockMenu = NSMenu()
+	var mainMenuNavigationChannelListMenu = NSMenu()
+	var mainMenuChannelMenu = NSMenu()
+	var mainMenuQueryMenu = NSMenu()
+	var mainMenuChannelMenuItem: NSMenuItem?
+	var mainMenuQueryMenuItem: NSMenuItem?
+	var mainMenuServerMenuItem: NSMenuItem?
+	var mainMenuFormatMenuItem: NSMenuItem?
+	var serverListNoSelectionMenu = NSMenu()
+	var userControlMenu = NSMenu()
+	var muteNotificationsDockMenuItem: NSMenuItem?
+	var muteNotificationsFileMenuItem: NSMenuItem?
+	var muteNotificationsSoundsDockMenuItem: NSMenuItem?
+	var muteNotificationsSoundsFileMenuItem: NSMenuItem?
 
-	public let actionCoordinator = MenuActionCoordinator()
+	let actionCoordinator = MenuActionController()
 
-	override public init() {
+	override init() {
 		super.init()
 		actionCoordinator.menuController = self
 		MenuFactory.install(on: self)
 	}
 
-	public func prepareInitialState() {
+	func prepareInitialState() {
 		actionCoordinator.prepareInitialState()
 	}
 
-	public func prepareForApplicationTermination() {
+	func prepareForApplicationTermination() {
 		actionCoordinator.prepareForApplicationTermination()
 	}
 
-	public func menuWillOpen(_ menu: NSMenu) {
+	func menuWillOpen(_ menu: NSMenu) {
 		actionCoordinator.menuWillOpen(menu)
 	}
 
-	public func menuDidClose(_ menu: NSMenu) {
+	func menuDidClose(_ menu: NSMenu) {
 		actionCoordinator.menuDidClose(menu)
 	}
 }
 
 /** The menus the connection tree feeds. The world tells the controller when the
  shape of that tree changed rather than being called into. */
-extension MenuController: WorldObserver {
-	func worldNavigationListDidChange(_: World) {
+extension MenuController: ClientDirectoryObserver {
+	func worldNavigationListDidChange(_: ClientDirectory) {
 		actionCoordinator.populateNavigationChannelList()
 	}
 
-	func worldPreferencesDidChange(_: World) {
+	func worldPreferencesDidChange(_: ClientDirectory) {
 		actionCoordinator.preferencesChanged()
 	}
 }
@@ -114,7 +114,7 @@ extension MenuController: ClientMenuPresenting {
 		actionCoordinator.setNotificationSoundsMuted(muted)
 	}
 
-	func showServerPropertiesSheet(for client: IRCClient, selection: ServerPropertiesDestination) {
+	func showServerPropertiesSheet(for client: Client, selection: ServerPropertiesDestination) {
 		actionCoordinator.showServerProperties(for: client, selection: selection)
 	}
 

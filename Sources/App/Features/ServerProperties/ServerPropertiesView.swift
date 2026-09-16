@@ -61,11 +61,11 @@ struct ServerPropertiesView: View {
 
 	/* The pickers list their options in a deliberate order rather than the
 	 declaration order of the enums, so each carries its own array. */
-	private static let addressTypes: [IRCConnectionAddressType] = [.default, .v4, .v6]
+	private static let addressTypes: [ConnectionAddressType] = [.default, .v4, .v6]
 	private static let cipherSuiteCollections: [CipherSuiteCollection] = [
 		.default, .mozilla2017, .mozilla2015, .none,
 	]
-	private static let proxyTypes: [IRCConnectionProxyType] = [.none, .automatic, .socks5, .HTTP, .tor]
+	private static let proxyTypes: [ConnectionProxyType] = [.none, .automatic, .socks5, .HTTP, .tor]
 
 	/// Built once for the process: the list is the same for every sheet, and
 	/// sorting several hundred encoding names is not work to repeat per view.

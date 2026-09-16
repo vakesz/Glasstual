@@ -619,7 +619,7 @@ struct FileTransferControllerTests {
 		#expect(lines == ["PRIVMSG \(nickname) :\u{1}DCC SEND source 2130706433 5000 1\u{1}"])
 	}
 
-	private func receiver(on client: IRCClient, port: UInt16 = 1234, size: UInt64 = 2048,
+	private func receiver(on client: Client, port: UInt16 = 1234, size: UInt64 = 2048,
 	                      token: String? = nil) throws -> FileTransferController
 	{
 		try #require(FileTransferController.receiver(

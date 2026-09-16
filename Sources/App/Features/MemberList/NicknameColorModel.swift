@@ -42,7 +42,7 @@ final class NicknameColorModel {
 	/// sheet is offering to pin nothing.
 	var previewColor: NSColor {
 		usesDefaultColor
-			? UserNicknameColorStyleGenerator.generatedColor(for: nickname)
+			? NicknameColors.generatedColor(for: nickname)
 			: selectedColor
 	}
 

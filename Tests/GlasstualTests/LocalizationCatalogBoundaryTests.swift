@@ -21,38 +21,38 @@ struct LocalizationCatalogBoundaryTests {
 
 	@Test("A channel access list names its own mode, and a maximum of zero states no limit")
 	func channelAccessListCopyAndFormatting() {
-		#expect(ChannelAccessListStrings.heading(for: .ban, channelName: "#swift") == "Bans in #swift")
+		#expect(ChannelBanListStrings.heading(for: .ban, channelName: "#swift") == "Bans in #swift")
 		#expect(
-			ChannelAccessListStrings.heading(for: .banException, channelName: "#swift") == "Ban Exceptions in #swift"
+			ChannelBanListStrings.heading(for: .banException, channelName: "#swift") == "Ban Exceptions in #swift"
 		)
 		#expect(
-			ChannelAccessListStrings.heading(for: .inviteException, channelName: "#swift")
+			ChannelBanListStrings.heading(for: .inviteException, channelName: "#swift")
 				== "Invite Exceptions in #swift"
 		)
-		#expect(ChannelAccessListStrings.heading(for: .quiet, channelName: "#swift") == "Quiets in #swift")
-		#expect(ChannelAccessListStrings.entryCount(4, maximum: 0, isTruncated: false) == "4 entries")
-		#expect(ChannelAccessListStrings.entryCount(4, maximum: 100, isTruncated: false) == "4 of 100 entries")
+		#expect(ChannelBanListStrings.heading(for: .quiet, channelName: "#swift") == "Quiets in #swift")
+		#expect(ChannelBanListStrings.entryCount(4, maximum: 0, isTruncated: false) == "4 entries")
+		#expect(ChannelBanListStrings.entryCount(4, maximum: 100, isTruncated: false) == "4 of 100 entries")
 		/* A list cut at the window's cap must not read as a complete one that
 		 happens to be exactly that long. */
-		#expect(ChannelAccessListStrings.entryCount(4, maximum: 100, isTruncated: true) == "First 4 entries")
+		#expect(ChannelBanListStrings.entryCount(4, maximum: 100, isTruncated: true) == "First 4 entries")
 		/* The notice under the list says why the count is not the whole of it;
 		 repeating the count in it said the same thing twice. */
 		#expect(
-			ChannelAccessListStrings.truncationNotice
+			ChannelBanListStrings.truncationNotice
 				== "The server sent more entries than this window keeps."
 		)
 	}
 
-	/** The three counts above an access list used to mix `formattedNumber`'s
+	/** The three counts above an access list used to mix the number format style's
 	 grouped output with a raw `%ld`, so the same number was grouped in one of
 	 them and printed bare in the others. */
 	@Test("Every count above an access list formats its number the same way")
 	func accessListCountsFormatOneNumberOneWay() {
 		let formatted = 20000.formatted(.number)
 
-		#expect(ChannelAccessListStrings.entryCount(20000, maximum: 0, isTruncated: false).contains(formatted))
-		#expect(ChannelAccessListStrings.entryCount(20000, maximum: 50000, isTruncated: false).contains(formatted))
-		#expect(ChannelAccessListStrings.entryCount(20000, maximum: 50000, isTruncated: true).contains(formatted))
+		#expect(ChannelBanListStrings.entryCount(20000, maximum: 0, isTruncated: false).contains(formatted))
+		#expect(ChannelBanListStrings.entryCount(20000, maximum: 50000, isTruncated: false).contains(formatted))
+		#expect(ChannelBanListStrings.entryCount(20000, maximum: 50000, isTruncated: true).contains(formatted))
 	}
 
 	@Test("Channel spotlight pluralizes its unread and highlight counts")

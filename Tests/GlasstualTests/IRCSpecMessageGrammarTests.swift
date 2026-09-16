@@ -179,7 +179,7 @@ struct IRCSpecMessageGrammarTests {
 	}
 
 	/// RFC 2812 §2.3 caps a message at 512 bytes including CR-LF, which is the
-	/// 510-byte body `IRCProtocolLimits` reserves for. A longer line still has
+	/// 510-byte body `ProtocolLimits` reserves for. A longer line still has
 	/// to parse: truncation is the server's job, and dropping the message
 	/// would lose traffic the user can see in the raw view.
 	@Test("RFC 2812 §2.3: an over-long line still parses")
@@ -188,7 +188,7 @@ struct IRCSpecMessageGrammarTests {
 		let parsed = try #require(LineParser.parsedLine(fromLine: "PRIVMSG #chan :\(body)"))
 
 		#expect(parsed.parameters == ["#chan", body])
-		#expect(IRCProtocolLimits.maximumBodyLength == 510)
+		#expect(ProtocolLimits.maximumBodyLength == 510)
 	}
 
 	// MARK: - IRCv3 message-tags
@@ -297,7 +297,7 @@ struct IRCSpecMessageGrammarTests {
 		#expect(tags["+typing"] == "active")
 		#expect(tags["+draft/reply"] == "abc")
 
-		let clientTags = IRCIdentityPolicy.clientTags(from: tags)
+		let clientTags = IdentityPolicy.clientTags(from: tags)
 
 		#expect(clientTags == ["typing": "active", "draft/reply": "abc"])
 	}

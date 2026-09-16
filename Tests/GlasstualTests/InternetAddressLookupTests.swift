@@ -66,7 +66,7 @@ struct InternetAddressLookupTests {
 
 	@Test("An oversized chunked lookup is cancelled before the server finishes its body", .timeLimit(.minutes(1)))
 	func streamedBodyIsBounded() async throws {
-		let listening = try await DCCTransport.startListener(portRange: TransferFixture.portRange)
+		let listening = try await DCCSocket.startListener(portRange: TransferFixture.portRange)
 		defer { listening.task.cancel() }
 		let (sent, continuation) = AsyncStream<Bool>.makeStream()
 		let server = Task {
@@ -89,12 +89,12 @@ struct InternetAddressLookupTests {
 		defer { server.cancel() }
 		let url = try #require(URL(string: "http://127.0.0.1:\(listening.port)/address"))
 		let lookup = Task { await InternetAddressLookup.address(from: url) }
-		let didSend = try await DCCTransport.withTimeout(.seconds(3), failingWith: .connectTimeout) {
+		let didSend = try await DCCSocket.withTimeout(.seconds(3), failingWith: .connectTimeout) {
 			var iterator = sent.makeAsyncIterator()
 			return await iterator.next()
 		}
 		#expect(didSend == true)
-		let address = try await DCCTransport.withTimeout(.seconds(3), failingWith: .connectTimeout) {
+		let address = try await DCCSocket.withTimeout(.seconds(3), failingWith: .connectTimeout) {
 			await lookup.value
 		}
 		#expect(address == nil)

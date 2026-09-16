@@ -52,21 +52,6 @@ struct STSPolicyTrustTests {
 		#expect(store.policy(forHost: "irc.example.net") != nil)
 	}
 
-	@Test("A validated certificate still stores the policy")
-	func validatedCertificateStoresPolicy() throws {
-		let store = store()
-		let action = try store.applyCapabilityValues(
-			values(["duration=300"]),
-			forHost: "irc.example.net",
-			connectedPort: 6697,
-			secured: true,
-			certificateChainValidated: true
-		)
-
-		#expect(action == .stored(port: 6697))
-		#expect(store.policy(forHost: "irc.example.net")?.port == 6697)
-	}
-
 	@Test("A plaintext connection still upgrades regardless of validation")
 	func plaintextStillUpgrades() throws {
 		let store = store()

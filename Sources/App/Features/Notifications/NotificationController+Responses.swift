@@ -22,7 +22,7 @@ extension NotificationController: UNUserNotificationCenterDelegate {
 		_: UNUserNotificationCenter,
 		openSettingsFor _: UNNotification?
 	) {
-		AppController.shared.menuController?.actionCoordinator.showNotificationPreferences(nil)
+		AppServices.delegate.menuController?.actionCoordinator.showNotificationPreferences(nil)
 	}
 
 	func userNotificationCenter(
@@ -71,7 +71,7 @@ extension NotificationController: UNUserNotificationCenterDelegate {
 			return
 		}
 
-		guard let world = AppController.shared.world else {
+		guard let world = AppServices.world else {
 			return
 		}
 
@@ -83,7 +83,7 @@ extension NotificationController: UNUserNotificationCenterDelegate {
 		}
 
 		NSApp.activate()
-		AppController.shared.mainWindow.makeKeyAndOrderFront(nil)
+		AppServices.delegate.mainWindow.makeKeyAndOrderFront(nil)
 
 		guard let clientId = payload.clientIdentifier else {
 			return
@@ -91,7 +91,7 @@ extension NotificationController: UNUserNotificationCenterDelegate {
 
 		guard let channelId = payload.channelIdentifier else {
 			if let client = world.findClient(withId: clientId) {
-				AppController.shared.mainWindow.select(client)
+				AppServices.delegate.mainWindow.select(client)
 			}
 
 			return
@@ -101,10 +101,10 @@ extension NotificationController: UNUserNotificationCenterDelegate {
 			return
 		}
 
-		AppController.shared.mainWindow.select(channel)
+		AppServices.delegate.mainWindow.select(channel)
 	}
 
-	private func sendReply(_ replyMessage: String?, for payload: NotificationPayload, in world: World) {
+	private func sendReply(_ replyMessage: String?, for payload: NotificationPayload, in world: ClientDirectory) {
 		guard let replyMessage, replyMessage.isEmpty == false else {
 			return
 		}
@@ -125,7 +125,7 @@ extension NotificationController: UNUserNotificationCenterDelegate {
 	 message closed since the notification arrived opens again under the
 	 nickname the notification carries: the reply used to go nowhere, without a
 	 word, once the query was gone. `nil` when the connection is gone as well. */
-	static func replyDestination(for payload: NotificationPayload, in world: World) -> Channel? {
+	static func replyDestination(for payload: NotificationPayload, in world: ClientDirectory) -> Channel? {
 		guard let clientId = payload.clientIdentifier else {
 			return nil
 		}
@@ -148,7 +148,7 @@ extension NotificationController: UNUserNotificationCenterDelegate {
 		identifier: String,
 		payload: NotificationPayload
 	) {
-		let center = SharedApplication.sharedFileTransferCenter()
+		let center = AppServices.fileTransfers
 		let clientIdentifier = payload.clientIdentifier
 
 		if actionIdentifier == NotificationCategory.Action.declineFileTransfer.rawValue {

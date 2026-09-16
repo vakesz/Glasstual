@@ -14,30 +14,30 @@ import Foundation
 
 nonisolated enum NicknameColorStrings { // nonisolated: value
 	static var colorPickerAccessibilityHint: String {
-		String(localized: .NicknameColor.colorPickerAccessibilityHint)
+		String(localized: .MemberList.colorPickerAccessibilityHint)
 	}
 
 	static var colorPickerLabel: String {
-		String(localized: .NicknameColor.colorPickerLabel)
+		String(localized: .MemberList.colorPickerLabel)
 	}
 
 	static var useDefaultColorAccessibilityHint: String {
-		String(localized: .NicknameColor.useDefaultColorAccessibilityHint)
+		String(localized: .MemberList.useDefaultColorAccessibilityHint)
 	}
 
 	static var useDefaultColorTitle: String {
-		String(localized: .NicknameColor.useDefaultColor)
+		String(localized: .MemberList.useDefaultColor)
 	}
 
 	static func windowTitle(nickname: String) -> String {
-		String(localized: .NicknameColor.windowTitle(nickname))
+		String(localized: .MemberList.windowTitle(nickname))
 	}
 
 	static var changeColor: String {
-		String(localized: .NicknameColor.changeColor)
+		String(localized: .MemberList.changeColor)
 	}
 
 	static func previewAccessibilityLabel(nickname: String) -> String {
-		String(localized: .NicknameColor.previewAccessibilityLabel(nickname))
+		String(localized: .MemberList.previewAccessibilityLabel(nickname))
 	}
 }

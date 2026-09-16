@@ -119,7 +119,7 @@ struct PreferencesArchiveTests {
 		let target = try Fixture()
 		defer { source.cleanUp(); target.cleanUp() }
 		let lists: [(any AnyPreferenceKey, PropertyListValue)] = [
-			(Preferences.Extensions.chatFilters, .array([.dictionary(["uniqueIdentifier": "kept-filter"])])),
+			(Preferences.Rules.messageRules, .array([.dictionary(["uniqueIdentifier": "kept-filter"])])),
 			(Preferences.Highlights.matchKeywords, .array([.dictionary(["string": "kept keyword"])])),
 			(Preferences.LinkSchemes.permitted, .array(["kept-scheme"])),
 			(Preferences.Input.tabCompletionSuffix, "kept, "),

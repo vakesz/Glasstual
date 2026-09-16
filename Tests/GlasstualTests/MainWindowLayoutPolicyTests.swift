@@ -78,10 +78,4 @@ struct MainWindowToggleTitleTests {
 		#expect(shown.isEmpty == false)
 		#expect(hidden.isEmpty == false)
 	}
-
-	@Test("The resize handle carries a label and a keyboard hint")
-	func resizeHandleIsDescribed() {
-		#expect(MainWindowStrings.Toolbar.memberListWidth.isEmpty == false)
-		#expect(MainWindowStrings.Toolbar.memberListWidthHint.isEmpty == false)
-	}
 }

@@ -11,6 +11,18 @@
             "state" : "translated",
             "value" : "When a password is saved, this account name is also sent as your IRC username. Turning off SASL keeps the password for NickServ identification."
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ha elmentesz egy jelszót, ezt a fióknevet IRC-felhasználónévként is elküldjük. A SASL kikapcsolása után a jelszó megmarad a NickServ-azonosításhoz."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wenn ein Passwort gespeichert ist, wird dieser Kontoname auch als IRC-Benutzername gesendet. Beim Deaktivieren von SASL bleibt das Passwort für die NickServ-Identifizierung erhalten."
+          }
         }
       }
     },
@@ -22,6 +34,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Account name"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fióknév"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kontoname"
           }
         }
       }
@@ -35,6 +59,18 @@
             "state" : "translated",
             "value" : "All Networks"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Összes hálózat"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle Netzwerke"
+          }
         }
       }
     },
@@ -46,6 +82,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Alternate nickname"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Másodlagos becenév"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alternativer Nickname"
           }
         }
       }
@@ -59,6 +107,18 @@
             "state" : "translated",
             "value" : "Chat style"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beszélgetés stílusa"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chatstil"
+          }
         }
       }
     },
@@ -70,6 +130,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Choose a network or enter a server address."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Válassz hálózatot, vagy adj meg egy kiszolgálócímet."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wähle ein Netzwerk oder gib eine Serveradresse ein."
           }
         }
       }
@@ -83,6 +155,18 @@
             "state" : "translated",
             "value" : "Choose a network to see suggested channels."
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Az ajánlott csatornák megtekintéséhez válassz hálózatot."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wähle ein Netzwerk, um empfohlene Kanäle zu sehen."
+          }
         }
       }
     },
@@ -94,6 +178,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Choose how conversations are displayed. You can change this later in Settings."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Válaszd ki a beszélgetések megjelenését. Ezt később módosíthatod a Beállításokban."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wähle, wie Gespräche angezeigt werden. Du kannst dies später in den Einstellungen ändern."
           }
         }
       }
@@ -107,6 +203,18 @@
             "state" : "translated",
             "value" : "Choose what Glasstual should tell you about while you are busy with something else."
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Válaszd ki, miről értesítsen a Glasstual, amikor mással foglalkozol."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wähle, worüber Glasstual dich informieren soll, während du mit etwas anderem beschäftigt bist."
+          }
         }
       }
     },
@@ -118,6 +226,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Classic line-by-line view"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klasszikus, soronkénti nézet"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klassische zeilenweise Ansicht"
           }
         }
       }
@@ -131,6 +251,18 @@
             "state" : "translated",
             "value" : "Connect to any IRC server by address"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kapcsolódás bármely IRC-kiszolgálóhoz a címe alapján"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Über die Adresse mit einem beliebigen IRC-Server verbinden"
+          }
         }
       }
     },
@@ -142,6 +274,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Connect when finished"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kapcsolódás a beállítás végén"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nach Abschluss verbinden"
           }
         }
       }
@@ -156,6 +300,18 @@
             "state" : "translated",
             "value" : "The connection could not be created."
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nem sikerült létrehozni a kapcsolatot."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Verbindung konnte nicht erstellt werden."
+          }
         }
       }
     },
@@ -169,6 +325,18 @@
             "state" : "translated",
             "value" : "Try again, or go back and continue without a network."
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Próbáld újra, vagy lépj vissza, és folytasd hálózat nélkül."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versuche es erneut oder gehe zurück und fahre ohne Netzwerk fort."
+          }
         }
       }
     },
@@ -180,6 +348,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Custom Server"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Egyéni kiszolgáló"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eigener Server"
           }
         }
       }
@@ -193,6 +373,18 @@
             "state" : "translated",
             "value" : "Enter a port between 1 and 65535."
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adj meg egy 1 és 65535 közötti portszámot."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gib einen Port zwischen 1 und 65535 ein."
+          }
         }
       }
     },
@@ -204,6 +396,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Glasstual is an IRC client built for the Mac. Start by choosing how others will see you."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A Glasstual egy Macre készült IRC-kliens. Először válaszd ki, hogyan lássanak mások."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glasstual ist ein IRC-Client für den Mac. Wähle zuerst, wie andere dich sehen sollen."
           }
         }
       }
@@ -217,6 +421,18 @@
             "state" : "translated",
             "value" : "Glasstual will ask macOS for permission to show notifications when you continue. You can change this at any time in System Settings."
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A folytatáskor a Glasstual engedélyt kér a macOS-től az értesítések megjelenítésére. Ezt bármikor módosíthatod a Rendszerbeállításokban."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wenn du fortfährst, bittet Glasstual macOS um Erlaubnis für Benachrichtigungen. Du kannst dies jederzeit in den Systemeinstellungen ändern."
+          }
         }
       }
     },
@@ -228,6 +444,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Good morning everyone"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jó reggelt mindenkinek"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guten Morgen zusammen"
           }
         }
       }
@@ -242,6 +470,18 @@
             "state" : "translated",
             "value" : "Enter a valid IRC username and a password without control characters."
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adj meg érvényes IRC-felhasználónevet és vezérlőkarakterek nélküli jelszót."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gib einen gültigen IRC-Benutzernamen und ein Passwort ohne Steuerzeichen ein."
+          }
         }
       }
     },
@@ -250,6 +490,18 @@
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "irc.example.org"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "irc.example.org"
+          }
+        },
+        "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "irc.example.org"
@@ -266,6 +518,18 @@
             "state" : "translated",
             "value" : "Look and Feel"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Megjelenés"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Darstellung"
+          }
         }
       }
     },
@@ -277,6 +541,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Messages in rounded bubbles"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Üzenetek lekerekített buborékokban"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nachrichten in abgerundeten Sprechblasen"
           }
         }
       }
@@ -290,6 +566,18 @@
             "state" : "translated",
             "value" : "Morning! Anyone tried the new build?"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jó reggelt! Próbálta már valaki az új verziót?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Morgen! Hat jemand die neue Version ausprobiert?"
+          }
         }
       }
     },
@@ -301,6 +589,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Account"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fiók"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konto"
           }
         }
       }
@@ -314,6 +614,18 @@
             "state" : "translated",
             "value" : "Networks"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hálózatok"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Netzwerke"
+          }
         }
       }
     },
@@ -325,6 +637,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Password"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jelszó"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passwort"
           }
         }
       }
@@ -338,6 +662,18 @@
             "state" : "translated",
             "value" : "Popular"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Népszerű"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beliebt"
+          }
         }
       }
     },
@@ -346,6 +682,18 @@
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Port"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Port"
+          }
+        },
+        "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Port"
@@ -362,6 +710,18 @@
             "state" : "translated",
             "value" : "Nickname"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Becenév"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nickname"
+          }
         }
       }
     },
@@ -373,6 +733,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Notifications are allowed for Glasstual."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A Glasstual értesítései engedélyezve vannak."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Benachrichtigungen für Glasstual sind erlaubt."
           }
         }
       }
@@ -386,6 +758,18 @@
             "state" : "translated",
             "value" : "Notifications are turned off for Glasstual in System Settings."
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A Glasstual értesítései ki vannak kapcsolva a Rendszerbeállításokban."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Benachrichtigungen für Glasstual sind in den Systemeinstellungen deaktiviert."
+          }
         }
       }
     },
@@ -397,6 +781,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Notify me about private messages"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Értesítés a privát üzenetekről"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bei privaten Nachrichten benachrichtigen"
           }
         }
       }
@@ -410,6 +806,18 @@
             "state" : "translated",
             "value" : "Notify me when someone mentions me"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Értesítés, ha valaki megemlít"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bei Erwähnungen benachrichtigen"
+          }
         }
       }
     },
@@ -421,6 +829,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pick a network to join. You can add more networks later from the Server menu."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Válassz egy hálózatot a csatlakozáshoz. Később a Kiszolgáló menüből további hálózatokat is hozzáadhatsz."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wähle ein Netzwerk zum Beitreten. Weitere Netzwerke kannst du später über das Servermenü hinzufügen."
           }
         }
       }
@@ -434,6 +854,18 @@
             "state" : "translated",
             "value" : "Play sounds"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hangjelzések lejátszása"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Töne abspielen"
+          }
         }
       }
     },
@@ -445,6 +877,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Real name"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valódi név"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Echter Name"
           }
         }
       }
@@ -458,6 +902,18 @@
             "state" : "translated",
             "value" : "Registration required"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Regisztráció szükséges"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registrierung erforderlich"
+          }
         }
       }
     },
@@ -469,6 +925,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Search networks"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hálózatok keresése"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Netzwerke suchen"
           }
         }
       }
@@ -482,6 +950,18 @@
             "state" : "translated",
             "value" : "Secure connection"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Biztonságos kapcsolat"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sichere Verbindung"
+          }
         }
       }
     },
@@ -493,6 +973,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Server address"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kiszolgáló címe"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serveradresse"
           }
         }
       }
@@ -506,6 +998,18 @@
             "state" : "translated",
             "value" : "Sign in with SASL"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bejelentkezés SASL-lel"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit SASL anmelden"
+          }
         }
       }
     },
@@ -514,6 +1018,18 @@
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "09:41"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "09:41"
+          }
+        },
+        "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "09:41"
@@ -530,6 +1046,18 @@
             "state" : "translated",
             "value" : "alice"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "alice"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "alice"
+          }
         }
       }
     },
@@ -542,6 +1070,18 @@
             "state" : "translated",
             "value" : "Appearance"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Megjelenés"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erscheinungsbild"
+          }
         }
       }
     },
@@ -550,6 +1090,18 @@
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "bob"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "bob"
+          }
+        },
+        "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "bob"
@@ -566,6 +1118,18 @@
             "state" : "translated",
             "value" : "Bubbles"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buborékok"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sprechblasen"
+          }
         }
       }
     },
@@ -577,6 +1141,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dark"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sötét"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dunkel"
           }
         }
       }
@@ -590,6 +1166,18 @@
             "state" : "translated",
             "value" : "Large"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nagy"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Groß"
+          }
         }
       }
     },
@@ -601,6 +1189,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Light"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Világos"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hell"
           }
         }
       }
@@ -614,6 +1214,18 @@
             "state" : "translated",
             "value" : "Lines"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sorok"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeilen"
+          }
         }
       }
     },
@@ -625,6 +1237,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Medium"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Közepes"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mittel"
           }
         }
       }
@@ -638,6 +1262,18 @@
             "state" : "translated",
             "value" : "Small"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kicsi"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klein"
+          }
         }
       }
     },
@@ -646,6 +1282,18 @@
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rendszer"
+          }
+        },
+        "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "System"
@@ -662,6 +1310,18 @@
             "state" : "translated",
             "value" : "you"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "te"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "du"
+          }
         }
       }
     },
@@ -674,6 +1334,18 @@
             "state" : "translated",
             "value" : "Notifications"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Értesítések"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Benachrichtigungen"
+          }
         }
       }
     },
@@ -682,6 +1354,18 @@
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nickname"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Becenév"
+          }
+        },
+        "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nickname"
@@ -699,6 +1383,18 @@
             "state" : "translated",
             "value" : "Enter a nickname."
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adj meg egy becenevet."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gib einen Nicknamen ein."
+          }
         }
       }
     },
@@ -707,6 +1403,18 @@
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Optional"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nem kötelező"
+          }
+        },
+        "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Optional"
@@ -723,6 +1431,18 @@
             "state" : "translated",
             "value" : "Suggested channels"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajánlott csatornák"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Empfohlene Kanäle"
+          }
         }
       }
     },
@@ -735,6 +1455,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ready to Go"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Minden készen áll"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alles bereit"
           }
         }
       }
@@ -749,6 +1481,18 @@
             "state" : "translated",
             "value" : "Appearance"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Megjelenés"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erscheinungsbild"
+          }
         }
       }
     },
@@ -761,6 +1505,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Channels"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Csatornák"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kanäle"
           }
         }
       }
@@ -775,6 +1531,18 @@
             "state" : "translated",
             "value" : "Chat style"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beszélgetés stílusa"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chatstil"
+          }
         }
       }
     },
@@ -787,6 +1555,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mentions"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Említések"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erwähnungen"
           }
         }
       }
@@ -801,6 +1581,18 @@
             "state" : "translated",
             "value" : "Network"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hálózat"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Netzwerk"
+          }
         }
       }
     },
@@ -810,6 +1602,18 @@
       "generatesSymbol" : true,
       "localizations" : {
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nickname"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Becenév"
+          }
+        },
+        "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nickname"
@@ -827,6 +1631,18 @@
             "state" : "translated",
             "value" : "None"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nincs"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine"
+          }
         }
       }
     },
@@ -839,6 +1655,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Notifications"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Értesítések"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Benachrichtigungen"
           }
         }
       }
@@ -853,6 +1681,18 @@
             "state" : "translated",
             "value" : "Private messages"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privát üzenetek"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Private Nachrichten"
+          }
         }
       }
     },
@@ -865,6 +1705,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Review your choices. You can change any of them later in Settings."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ellenőrizd a választásaidat. Később bármelyiket módosíthatod a Beállításokban."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prüfe deine Auswahl. Du kannst sie später in den Einstellungen ändern."
           }
         }
       }
@@ -879,6 +1731,18 @@
             "state" : "translated",
             "value" : "Setting things up…"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beállítás folyamatban…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einrichtung läuft…"
+          }
         }
       }
     },
@@ -891,6 +1755,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sounds"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hangok"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Töne"
           }
         }
       }
@@ -905,6 +1781,18 @@
             "state" : "translated",
             "value" : "Text size"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Szövegméret"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Textgröße"
+          }
         }
       }
     },
@@ -916,6 +1804,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Text size"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Szövegméret"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Textgröße"
           }
         }
       }
@@ -929,6 +1829,18 @@
             "state" : "translated",
             "value" : "Use SSL/TLS"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SSL/TLS használata"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SSL/TLS verwenden"
+          }
         }
       }
     },
@@ -940,6 +1852,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Used when your nickname is already taken. Optional."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Akkor használjuk, ha a beceneved már foglalt. Nem kötelező."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wird verwendet, wenn dein Nickname bereits vergeben ist. Optional."
           }
         }
       }
@@ -953,6 +1877,18 @@
             "state" : "translated",
             "value" : "Welcome to Glasstual"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Üdvözöl a Glasstual"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Willkommen bei Glasstual"
+          }
         }
       }
     },
@@ -964,6 +1900,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Back"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vissza"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zurück"
           }
         }
       }
@@ -977,6 +1925,18 @@
             "state" : "translated",
             "value" : "Continue"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Folytatás"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fortfahren"
+          }
         }
       }
     },
@@ -988,6 +1948,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Finish"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Befejezés"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fertig"
           }
         }
       }
@@ -1001,6 +1973,18 @@
             "state" : "translated",
             "value" : "Set Up Later"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beállítás később"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Später einrichten"
+          }
         }
       }
     },
@@ -1012,6 +1996,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Skip"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kihagyás"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Überspringen"
           }
         }
       }
@@ -1025,6 +2021,18 @@
             "state" : "translated",
             "value" : "Step %1$ld of %2$ld"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$ld. lépés, összesen %2$ld"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schritt %1$ld von %2$ld"
+          }
         }
       }
     },
@@ -1036,6 +2044,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Welcome to Glasstual"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Üdvözöl a Glasstual"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Willkommen bei Glasstual"
           }
         }
       }
@@ -1049,6 +2069,18 @@
             "state" : "translated",
             "value" : "Yes, it works well so far."
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Igen, eddig jól működik."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ja, bisher funktioniert sie gut."
+          }
         }
       }
     },
@@ -1061,6 +2093,18 @@
             "state" : "translated",
             "value" : "Your First Network"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Az első hálózatod"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dein erstes Netzwerk"
+          }
         }
       }
     },
@@ -1072,6 +2116,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Your name, or anything you like"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A neved, vagy bármi más"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dein Name oder etwas anderes"
           }
         }
       }

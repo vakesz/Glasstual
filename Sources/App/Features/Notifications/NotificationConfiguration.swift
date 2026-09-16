@@ -10,14 +10,14 @@
  *
  *********************************************************************** */
 
-public enum NotificationAlertSound {
-	public static let noSoundPreferenceValue = "None"
+enum NotificationAlertSound {
+	static let noSoundPreferenceValue = "None"
 
-	@MainActor public static var localizedDefaultTitle: String {
+	@MainActor static var localizedDefaultTitle: String {
 		NotificationSoundStrings.defaultSound
 	}
 
-	@MainActor public static var localizedNoSoundTitle: String {
+	@MainActor static var localizedNoSoundTitle: String {
 		NotificationSoundStrings.noSound
 	}
 }
@@ -27,7 +27,7 @@ public enum NotificationAlertSound {
 /// `doesNotRecognizeSelector` so that the two real implementations had to
 /// override it; the compiler enforces that now.
 @MainActor
-public protocol NotificationConfiguration: AnyObject {
+protocol NotificationConfiguration: AnyObject {
 	var eventType: NotificationEvent { get }
 	var alertSound: String? { get set }
 	var speakEvent: ChannelEventOverride { get set }
@@ -37,7 +37,7 @@ public protocol NotificationConfiguration: AnyObject {
 	var bounceDockIconRepeatedly: ChannelEventOverride { get set }
 }
 
-public extension NotificationConfiguration {
+extension NotificationConfiguration {
 	var displayName: String {
 		NotificationStrings.eventTypeTitle(for: eventType)
 	}
@@ -46,7 +46,7 @@ public extension NotificationConfiguration {
 /// An entry in the notification pane's event list: either an event or the
 /// separator that groups them.
 @MainActor
-public enum NotificationConfigurationItem {
+enum NotificationConfigurationItem {
 	case configuration(any NotificationConfiguration)
 	case separator
 
@@ -60,42 +60,42 @@ public enum NotificationConfigurationItem {
 
 /// The application-wide settings for an event.
 @MainActor
-public final class PreferencesNotificationConfiguration: NotificationConfiguration {
-	public let eventType: NotificationEvent
+final class PreferencesNotificationConfiguration: NotificationConfiguration {
+	let eventType: NotificationEvent
 
-	public init(eventType: NotificationEvent) {
+	init(eventType: NotificationEvent) {
 		self.eventType = eventType
 	}
 
 	/// `nil` is the picker's "Default" row: no sound has been chosen for this
 	/// event. Substituting "None" for it made "Default" unreachable — picking it
 	/// stored `nil`, and the next read turned that straight back into "None".
-	public var alertSound: String? {
+	var alertSound: String? {
 		get { Preferences.Notifications.sound(eventType).storedValue }
 		set { Preferences.Notifications.sound(eventType).storedValue = newValue }
 	}
 
-	public var pushNotification: ChannelEventOverride {
+	var pushNotification: ChannelEventOverride {
 		get { Preferences.Notifications.flag(eventType, .enabled).value ? .on : .off }
 		set { Preferences.Notifications.flag(eventType, .enabled).value = newValue == .on }
 	}
 
-	public var speakEvent: ChannelEventOverride {
+	var speakEvent: ChannelEventOverride {
 		get { Preferences.Notifications.flag(eventType, .speak).value ? .on : .off }
 		set { Preferences.Notifications.flag(eventType, .speak).value = newValue == .on }
 	}
 
-	public var disabledWhileAway: ChannelEventOverride {
+	var disabledWhileAway: ChannelEventOverride {
 		get { Preferences.Notifications.flag(eventType, .disabledWhileAway).value ? .on : .off }
 		set { Preferences.Notifications.flag(eventType, .disabledWhileAway).value = newValue == .on }
 	}
 
-	public var bounceDockIcon: ChannelEventOverride {
+	var bounceDockIcon: ChannelEventOverride {
 		get { Preferences.Notifications.flag(eventType, .bounceDockIcon).value ? .on : .off }
 		set { Preferences.Notifications.flag(eventType, .bounceDockIcon).value = newValue == .on }
 	}
 
-	public var bounceDockIconRepeatedly: ChannelEventOverride {
+	var bounceDockIconRepeatedly: ChannelEventOverride {
 		get { Preferences.Notifications.flag(eventType, .bounceDockIconRepeatedly).value ? .on : .off }
 		set { Preferences.Notifications.flag(eventType, .bounceDockIconRepeatedly).value = newValue == .on }
 	}
@@ -103,8 +103,8 @@ public final class PreferencesNotificationConfiguration: NotificationConfigurati
 
 /// One channel's override of the application-wide settings.
 @MainActor
-public final class ChannelNotificationConfiguration: NotificationConfiguration {
-	public let eventType: NotificationEvent
+final class ChannelNotificationConfiguration: NotificationConfiguration {
+	let eventType: NotificationEvent
 
 	private weak var channel: ChannelPropertiesModel?
 
@@ -113,32 +113,32 @@ public final class ChannelNotificationConfiguration: NotificationConfiguration {
 		self.channel = channel
 	}
 
-	public var alertSound: String? {
+	var alertSound: String? {
 		get { config?.sound(forEvent: eventType) }
 		set { channel?.config.setSound(newValue, forEvent: eventType) }
 	}
 
-	public var pushNotification: ChannelEventOverride {
+	var pushNotification: ChannelEventOverride {
 		get { config?.notificationEnabled(forEvent: eventType) ?? .inherited }
 		set { channel?.config.setNotificationEnabled(newValue, forEvent: eventType) }
 	}
 
-	public var speakEvent: ChannelEventOverride {
+	var speakEvent: ChannelEventOverride {
 		get { config?.speakEvent(eventType) ?? .inherited }
 		set { channel?.config.setEventIsSpoken(newValue, forEvent: eventType) }
 	}
 
-	public var disabledWhileAway: ChannelEventOverride {
+	var disabledWhileAway: ChannelEventOverride {
 		get { config?.disabledWhileAway(forEvent: eventType) ?? .inherited }
 		set { channel?.config.setDisabledWhileAway(newValue, forEvent: eventType) }
 	}
 
-	public var bounceDockIcon: ChannelEventOverride {
+	var bounceDockIcon: ChannelEventOverride {
 		get { config?.bounceDockIcon(forEvent: eventType) ?? .inherited }
 		set { channel?.config.setBounceDockIcon(newValue, forEvent: eventType) }
 	}
 
-	public var bounceDockIconRepeatedly: ChannelEventOverride {
+	var bounceDockIconRepeatedly: ChannelEventOverride {
 		get { config?.bounceDockIconRepeatedly(forEvent: eventType) ?? .inherited }
 		set { channel?.config.setBounceDockIconRepeatedly(newValue, forEvent: eventType) }
 	}

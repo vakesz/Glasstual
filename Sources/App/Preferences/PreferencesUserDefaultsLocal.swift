@@ -40,7 +40,7 @@ import Foundation
 /** These questions used to be answered by loading a plist and comparing the
  name against every entry with a per-entry comparator. They are now answered by
  the key declarations, which is the same data without the second copy. */
-public extension TextualUserDefaults {
+extension GlasstualUserDefaults {
 	static func keyAppearsInPreferenceCatalog(_ defaultName: String) -> Bool {
 		Preferences.isCatalogued(defaultName)
 	}

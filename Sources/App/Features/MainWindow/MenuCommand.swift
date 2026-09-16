@@ -44,7 +44,7 @@ import AppKit
 ///
 /// Separators carry no command: nothing looks one up now that validation
 /// disables items instead of hiding them.
-public enum MenuCommand: Int, CaseIterable, Sendable {
+enum MenuCommand: Int, CaseIterable, Sendable {
 	case applicationMenu = 1 // Glasstual
 	case fileMenu = 2 // File
 	case editMenu = 3 // Edit
@@ -215,7 +215,7 @@ public enum MenuCommand: Int, CaseIterable, Sendable {
 
 // MARK: - Validation grouping
 
-public extension MenuCommand {
+extension MenuCommand {
 	/// Which command-specific validator owns a command. The previous code
 	/// derived this from the tag's numeric band, so a tag filed in the wrong
 	/// hundred silently got the wrong validator; the mapping is explicit here.
@@ -284,9 +284,8 @@ public extension MenuCommand {
 		}
 	}
 
-	/// Commands that stay live even before the application finishes launching.
-	/// Launching finishes when the plugins have loaded, and nothing about
-	/// Settings, About or Welcome waits on a plugin.
+	/// Commands that stay live even before the application finishes launching:
+	/// nothing about Settings, About or Welcome waits on the rest of launch.
 	var isEssential: Bool {
 		switch self {
 		case .about, .settings, .quit, .printLog, .closeWindow, .paste, .mainWindow,
@@ -300,7 +299,7 @@ public extension MenuCommand {
 
 // MARK: - Menu symbols
 
-public extension MenuCommand {
+extension MenuCommand {
 	/// The SF Symbol drawn next to the command, if it takes one.
 	///
 	/// Contextual menus only. The menu bar is plain, because macOS draws no
@@ -310,7 +309,7 @@ public extension MenuCommand {
 		Self.symbolNames[self]
 	}
 
-	internal static let symbolNames: [MenuCommand: String] = [
+	static let symbolNames: [MenuCommand: String] = [
 		.connect: "bolt", .connectWithoutProxy: "bolt.badge.clock",
 		.disconnect: "bolt.slash", .cancelReconnect: "xmark.circle",
 		.channelList: "list.bullet", .changeNickname: "pencil",
@@ -341,7 +340,7 @@ public extension MenuCommand {
 
 // MARK: - AppKit bridging
 
-public extension NSMenuItem {
+extension NSMenuItem {
 	/// The command this item issues. Programmatic menus store this in the item
 	/// identifier so AppKit's numeric tag namespace remains available to controls
 	/// and third-party menu items.
@@ -361,7 +360,7 @@ public extension NSMenuItem {
 	}
 }
 
-public extension NSMenu {
+extension NSMenu {
 	func item(for command: MenuCommand) -> NSMenuItem? {
 		for item in items {
 			if item.command == command {

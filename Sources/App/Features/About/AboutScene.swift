@@ -6,7 +6,7 @@
 import AppKit
 import SwiftUI
 
-struct AboutApplicationScene: Scene {
+struct AboutScene: Scene {
 	var body: some Scene {
 		/* An About box is a panel: it belongs above the windows it describes, it
 		 is not something the Window menu lists or the system restores at the
@@ -25,7 +25,7 @@ private struct AboutSceneRoot: View {
 			content: .current,
 			applicationIcon: Image(nsImage: NSApp.applicationIconImage),
 			openAcknowledgements: {
-				AppController.shared.menuController?.actionCoordinator.openAcknowledgements(nil)
+				AppServices.delegate.menuController?.actionCoordinator.openAcknowledgements(nil)
 			}
 		)
 	}

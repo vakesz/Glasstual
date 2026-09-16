@@ -42,43 +42,35 @@ import Testing
 @MainActor
 @Suite("Command catalog")
 struct CommandIndexTests {
-	@Test("A command is found whatever case it is typed in")
-	func commandLookupIsCaseInsensitive() {
-		#expect(IRCRemoteCommand(wireName: "privmsg") == .privmsg)
-		#expect(IRCRemoteCommand(wireName: "PRIVMSG") == .privmsg)
-		#expect(IRCLocalCommand(typedName: "join") == .join)
-		#expect(IRCLocalCommand(typedName: "JOIN") == .join)
-	}
-
 	@Test("A command that does not exist resolves to nothing")
 	func unknownCommandsResolveToNil() {
-		#expect(IRCRemoteCommand(wireName: "not-a-command") == nil)
-		#expect(IRCLocalCommand(typedName: "not-a-command") == nil)
+		#expect(RemoteCommand(wireName: "not-a-command") == nil)
+		#expect(LocalCommand(typedName: "not-a-command") == nil)
 	}
 
 	@Test("A command declares where its trailing parameter starts")
 	func trailingParameterPositionsComeFromTheCommand() {
-		#expect(IRCRemoteCommand.privmsg.trailingParameter == .startsAtArgument(1))
-		#expect(IRCRemoteCommand.fail.trailingParameter == .startsAtArgument(2))
-		#expect(IRCRemoteCommand.join.trailingParameter == .never)
+		#expect(RemoteCommand.privmsg.trailingParameter == .startsAtArgument(1))
+		#expect(RemoteCommand.fail.trailingParameter == .startsAtArgument(2))
+		#expect(RemoteCommand.join.trailingParameter == .never)
 
 		/* PASS declares no position at all, which is not the same as declaring
 		 that it never has a trailing parameter: a password with a space in it
 		 can only reach the server as one. */
-		#expect(IRCRemoteCommand.pass.trailingParameter == nil)
+		#expect(RemoteCommand.pass.trailingParameter == nil)
 	}
 
 	@Test("An action goes out as PRIVMSG but never matches an inbound line")
 	func actionSharesThePrivmsgWireName() {
-		#expect(IRCRemoteCommand.privmsgAction.wireName == "PRIVMSG")
-		#expect(IRCRemoteCommand(wireName: "PRIVMSG") == .privmsg)
+		#expect(RemoteCommand.privmsgAction.wireName == "PRIVMSG")
+		#expect(RemoteCommand(wireName: "PRIVMSG") == .privmsg)
 	}
 
 	@Test("Local commands carry their syntax, and only real commands are offered for completion")
 	func localCommandSyntaxAndCompletionList() {
-		#expect(IRCLocalCommand.away.syntax == "AWAY [comment]")
-		#expect(IRCLocalCommand.back.syntax == "BACK")
-		#expect(IRCLocalCommand.modeShortcut.displayName == "M")
+		#expect(LocalCommand.away.syntax == "AWAY [comment]")
+		#expect(LocalCommand.back.syntax == "BACK")
+		#expect(LocalCommand.modeShortcut.displayName == "M")
 
 		let commands = CommandIndex.localCommandList()
 

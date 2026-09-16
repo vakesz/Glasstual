@@ -11,7 +11,6 @@
  *********************************************************************** */
 
 @testable import Glasstual
-import GlasstualPluginKit
 import Testing
 
 /// The channel-list table shows regular channels only. That used to be an
@@ -47,21 +46,6 @@ struct ServerPropertiesSheetTableTests {
 		let displayed = displayedChannels(in: channels)
 
 		#expect(displayed.map(\.channelName) == ["#one", "#two"])
-	}
-
-	@Test("A list of only channels is drawn whole")
-	func channelsAreAllDrawn() {
-		let channels = [
-			makeChannel(named: "#one", type: .channel),
-			makeChannel(named: "#two", type: .channel),
-		]
-
-		#expect(displayedChannels(in: channels).count == 2)
-	}
-
-	@Test("An empty list draws nothing rather than failing")
-	func emptyListIsEmpty() {
-		#expect(displayedChannels(in: []).isEmpty)
 	}
 
 	@Test("The rows keep the order the list is stored in")

@@ -41,14 +41,14 @@ import CocoaExtensions
 import Foundation
 import SwiftUI
 
-public extension Notification.Name {
+extension Notification.Name {
 	static let mainWindowAppearanceChanged = Notification.Name("TVCMainWindowAppearanceChangedNotification")
 	/// The one declaration of the selection notification; an observer that
 	/// spells the name itself is watching a name nobody posts.
 	static let mainWindowSelectionChanged = Notification.Name("TVCMainWindowSelectionChangedNotification")
 }
 
-public enum ServerListNavigationMovement: UInt {
+enum ServerListNavigationMovement: UInt {
 	case all
 	case active
 	case unread
@@ -93,36 +93,36 @@ nonisolated enum MainWindowConstants { // nonisolated: value
 
 @MainActor
 @objc(TVCMainWindow)
-public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, CustomKeyboardEventResponder {
-	public private(set) var formattingMenu: TextViewIRCFormattingMenu!
+final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, CustomKeyboardEventResponder {
+	private(set) var formattingMenu: TextViewIRCFormattingMenu!
 	private(set) var inputContentView: MainWindowTextViewContentView!
 	let presentationModel = MainWindowPresentationModel()
 	private var hostingController: NSHostingController<MainWindowRootView>?
 
 	/// The input field is built by its content view so it can use TextKit 2.
-	public var inputTextField: MainWindowTextView! {
+	var inputTextField: MainWindowTextView! {
 		inputContentView?.textView
 	}
 
-	public private(set) var loadingScreen: MainWindowLoadingScreen!
-	public private(set) var memberList: MemberList!
-	public private(set) var serverList: ServerList!
+	private(set) var loadingScreen: MainWindowLoadingScreen!
+	private(set) var memberList: MemberList!
+	private(set) var serverList: ServerList!
 	var inputHistory: InputHistory!
 	var nicknameCompletionStatus: NicknameCompletionStatus!
 	/// The views the tree items are drawn into. The window owns them; the items
 	/// hold only a weak back-reference the registry installs.
-	private(set) lazy var logControllers = LogControllerRegistry(window: self)
+	private(set) lazy var logControllers = TranscriptControllerRegistry(window: self)
 	private var appearanceStorage: MainWindowAppearance?
 	/// The application-wide snapshot ``appearanceStorage`` was built from.
 	private var appearanceSnapshot: AppearancePropertyCollection?
-	public var userInterfaceObjects: MainWindowAppearance {
+	var userInterfaceObjects: MainWindowAppearance {
 		guard let appearanceStorage else {
 			preconditionFailure("Main-window appearance requested before initialization finished")
 		}
 		return appearanceStorage
 	}
 
-	public internal(set) var selectedItem: TreeItem?
+	var selectedItem: ChatItem?
 	var previousSelectedItemId: String?
 	private var keyEventHandler: KeyEventHandler!
 	/** The transcript zoom the View menu last left.
@@ -130,7 +130,7 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 	 Stored beside the column widths rather than held for the session only: the
 	 zoom is a reading preference, and it used to be back at 100% on the next
 	 launch. Every new transcript view reads it as it loads. */
-	public internal(set) var textSizeMultiplier = 1.0 {
+	var textSizeMultiplier = 1.0 {
 		didSet {
 			guard textSizeMultiplier != oldValue else { return }
 			MainWindowStateStore().saveTextSizeMultiplier(textSizeMultiplier)
@@ -140,9 +140,9 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 	private var hasConfigured = false
 	private let notifications = NotificationSubscriptions()
 
-	public var ignoreServerListSelectionChanges = false
+	var ignoreServerListSelectionChanges = false
 
-	override public init(
+	override init(
 		contentRect: NSRect,
 		styleMask style: NSWindow.StyleMask,
 		backing bufferingType: NSWindow.BackingStoreType,
@@ -176,7 +176,7 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 	}
 
 	/// Completes the programmatic window graph and starts the application.
-	public func configure() {
+	func configure() {
 		guard hasConfigured == false else {
 			return
 		}
@@ -186,7 +186,7 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 	}
 
 	private func finishConfiguration() {
-		let controller: ApplicationController = AppController.shared
+		let controller: ApplicationDelegate = AppServices.delegate
 		controller.applicationWakeStepOne()
 
 		inputContentView.configure()
@@ -201,7 +201,7 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 		updateAppearance()
 		reloadLoadingScreen()
 		loadWindowState()
-		SharedApplication.sharedThemeController().reload()
+		AppServices.theme.reload()
 		controller.menuController?.prepareInitialState()
 		registerKeyHandlers()
 		/* Both have to be listening before the stored clients are restored:
@@ -216,12 +216,12 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 
 	/// The world the window draws. It is `nil` until the application finishes
 	/// waking, which window restoration can precede.
-	var world: World? {
-		AppController.shared.world
+	var world: ClientDirectory? {
+		AppServices.world
 	}
 
 	var menuController: MenuController {
-		guard let menuController = AppController.shared.menuController else {
+		guard let menuController = AppServices.delegate.menuController else {
 			preconditionFailure("Menu controller is unavailable while the main window is loading")
 		}
 		return menuController
@@ -282,7 +282,7 @@ extension MainWindow {
 		}
 	}
 
-	public var isUsingDarkAppearance: Bool {
+	var isUsingDarkAppearance: Bool {
 		userInterfaceObjects.isDarkAppearance
 	}
 
@@ -349,7 +349,7 @@ extension MainWindow {
 		defaults.removeObject(forKey: MainWindowConstants.legacyFrameKey)
 	}
 
-	public func prepareForApplicationTermination() {
+	func prepareForApplicationTermination() {
 		notifications.cancelAll()
 		saveContentSplitViewState()
 		saveSelection()
@@ -360,12 +360,12 @@ extension MainWindow {
 		 closed, and the next launch then has nothing to restore. */
 	}
 
-	public static func restoreWindow(
+	static func restoreWindow(
 		withIdentifier _: NSUserInterfaceItemIdentifier,
 		state _: NSCoder,
 		completionHandler: @escaping (NSWindow?, (any Error)?) -> Void
 	) {
-		completionHandler(AppController.shared.mainWindow, nil)
+		completionHandler(AppServices.delegate.mainWindow, nil)
 	}
 
 	/* The selected item is not encoded into the window's restorable state.
@@ -381,17 +381,17 @@ extension MainWindow {
 
 // MARK: - Window delegate
 
-public extension MainWindow {
+extension MainWindow {
 	/// The dock tile is drawn for the screen the window is on, so a move
 	/// between displays redraws it. Nothing else about the window changes.
 	private func redrawDockIconForScreenChange() {
-		guard AppController.shared.applicationIsTerminating == false else { return }
+		guard AppServices.delegate.applicationIsTerminating == false else { return }
 		DockIcon.resetCachedCount()
 		DockIcon.updateDockIcon()
 	}
 
 	private func resetSelectedItemState() {
-		guard AppController.shared.applicationIsTerminating == false else { return }
+		guard AppServices.delegate.applicationIsTerminating == false else { return }
 		if let selectedItem {
 			selectedItem.resetState()
 			noteItemWasViewed(selectedItem)
@@ -399,7 +399,7 @@ public extension MainWindow {
 		DockIcon.updateDockIcon()
 	}
 
-	func noteItemWasViewed(_ item: TreeItem) {
+	func noteItemWasViewed(_ item: ChatItem) {
 		guard isKeyWindow, let channel = item.associatedChannel else { return }
 		channel.associatedClient.markChannel(asRead: channel)
 	}
@@ -430,7 +430,7 @@ public extension MainWindow {
 	}
 
 	func windowShouldZoom(_: NSWindow, toFrame _: NSRect) -> Bool {
-		ceIsInFullscreenMode == false
+		styleMask.contains(.fullScreen) == false
 	}
 }
 
@@ -540,11 +540,11 @@ extension MainWindow {
 		}
 	}
 
-	public func performedCustomKeyboardEvent(_ event: NSEvent) -> Bool {
+	func performedCustomKeyboardEvent(_ event: NSEvent) -> Bool {
 		keyEventHandler.processKeyEvent(event)
 	}
 
-	public func redirectKeyDown(_ event: NSEvent) {
+	func redirectKeyDown(_ event: NSEvent) {
 		inputTextField.focus()
 		guard event.keyCode != KeyCode.enter.rawValue, event.keyCode != KeyCode.returnKey.rawValue else { return }
 		inputTextField.keyDown(with: event)
@@ -599,7 +599,7 @@ extension MainWindow {
 
 // MARK: - Navigation
 
-public extension MainWindow {
+extension MainWindow {
 	/** Moves the selection to the next row that qualifies.
 
 	 `rows` is rotated so the walk starts one past the current selection and
@@ -608,7 +608,7 @@ public extension MainWindow {
 	 selected, or a row the filter has taken out of the list -- has nowhere to
 	 walk from, so nothing moves. */
 	private func navigate(
-		_ rows: [TreeItem],
+		_ rows: [ChatItem],
 		from startingPoint: Int,
 		isMovingDown: Bool,
 		navigationType: ServerListNavigationMovement,
@@ -616,7 +616,7 @@ public extension MainWindow {
 	) {
 		guard rows.indices.contains(startingPoint) else { return }
 		let count = rows.count
-		let rotated = (1 ..< count).lazy.map { offset -> TreeItem in
+		let rotated = (1 ..< count).lazy.map { offset -> ChatItem in
 			let position = isMovingDown ? startingPoint + offset : startingPoint - offset + count
 			return rows[position % count]
 		}
@@ -626,7 +626,7 @@ public extension MainWindow {
 		select(destination)
 	}
 
-	private static func item(_ item: TreeItem, is selectionType: ServerListNavigationSelection) -> Bool {
+	private static func item(_ item: ChatItem, is selectionType: ServerListNavigationSelection) -> Bool {
 		switch selectionType {
 		case .any:
 			true
@@ -637,7 +637,7 @@ public extension MainWindow {
 		}
 	}
 
-	private static func item(_ item: TreeItem, matches navigationType: ServerListNavigationMovement) -> Bool {
+	private static func item(_ item: ChatItem, matches navigationType: ServerListNavigationMovement) -> Bool {
 		switch navigationType {
 		case .all:
 			true

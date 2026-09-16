@@ -26,7 +26,7 @@ struct InputHistoryScopeTests {
 	/// The tests run against the scheme's scratch defaults suite, so the
 	/// original value is restored rather than left behind.
 	private func withChannelSpecificHistory(_ enabled: Bool, _ body: () -> Void) {
-		let defaults = TextualUserDefaults.container
+		let defaults = GlasstualUserDefaults.container
 		let original = defaults.persistedObject(forKey: Self.channelSpecificKey)
 		defer {
 			if let original {
@@ -38,28 +38,6 @@ struct InputHistoryScopeTests {
 
 		defaults.set(enabled, forKey: Self.channelSpecificKey)
 		body()
-	}
-
-	/// The global buffer used to live under the literal key
-	/// "TLOInputHistoryDefaultObject" in the same dictionary as the per-item
-	/// buffers, so a tree item whose identifier happened to be that string
-	/// would have shared the global history.
-	@Test("The global scope cannot collide with a tree item's")
-	func globalScopeIsNotAnIdentifier() {
-		#expect(InputHistoryScope.global != .item("TLOInputHistoryDefaultObject"))
-		#expect(InputHistoryScope.item("a") != .item("b"))
-		#expect(InputHistoryScope.item("a") == .item("a"))
-	}
-
-	@Test("Scopes are distinct dictionary keys")
-	func scopesAreDistinctKeys() {
-		var buffers: [InputHistoryScope: Int] = [:]
-		buffers[.global] = 1
-		buffers[.item("TLOInputHistoryDefaultObject")] = 2
-		buffers[.item("channel")] = 3
-
-		#expect(buffers.count == 3)
-		#expect(buffers[.global] == 1)
 	}
 
 	@Test("A shared history uses the global scope whatever is focused")

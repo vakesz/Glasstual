@@ -39,15 +39,15 @@
 import SwiftUI
 
 @MainActor
-public protocol HighlightEntrySheetDelegate: AnyObject {
+protocol HighlightEntrySheetDelegate: AnyObject {
 	func highlightEntrySheet(_ sender: HighlightEntrySheet, didSave configuration: HighlightMatchCondition)
 }
 
 @MainActor
-public final class HighlightEntrySheet: MainWindowSheetSession {
+final class HighlightEntrySheet: SheetSession {
 	let model: HighlightEntryModel
 
-	public init(config: HighlightMatchCondition?, channels: [ChannelConfig]) {
+	init(config: HighlightMatchCondition?, channels: [ChannelConfig]) {
 		model = HighlightEntryModel(
 			configuration: config,
 			channels: channels.map {
@@ -72,11 +72,11 @@ public final class HighlightEntrySheet: MainWindowSheetSession {
 		setContent(rootView)
 	}
 
-	public func start() {
+	func start() {
 		startSheet()
 	}
 
-	override public func submit() {
+	override func submit() {
 		guard model.validateForSubmission() else {
 			return
 		}

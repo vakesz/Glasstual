@@ -41,13 +41,13 @@ import Foundation
 /// Applies the application-wide part of menu validation after the selected
 /// command has passed its command-specific checks.
 @MainActor
-public enum MenuValidationPolicy {
+enum MenuValidationPolicy {
 	/** Whether the command is available at all, given what has the keyboard.
 
 	 The pointer used to be part of this: a command was live while the main
 	 window merely sat under the mouse, so what a menu offered depended on where
 	 the pointer happened to be rather than on what was focused. */
-	public static func validate(
+	static func validate(
 		command: MenuCommand?,
 		commandSpecificResult: Bool,
 		applicationIsLaunched: Bool,

@@ -16,23 +16,23 @@ import Foundation
  synthesizer only needs to know which client a queued item belongs to, and
  holding weak references to main-actor models across the queue turned an
  ordinary deallocation into a crash. */
-public struct SpokenNotification: Sendable {
-	public let clientIdentifier: String?
-	public let channelIdentifier: String?
-	public let nickname: String?
-	public let text: String?
-	public let lineType: LogLineType
-	public let notificationType: NotificationEvent
+struct SpokenNotification: Sendable {
+	let clientIdentifier: String?
+	let channelIdentifier: String?
+	let nickname: String?
+	let text: String?
+	let lineType: LogLineType
+	let notificationType: NotificationEvent
 
 	/** The text the synthesizer speaks. Formatting reads main-actor client state,
 	 so the producer fills it in before the notification is queued. */
-	public var spokenText: String?
+	var spokenText: String?
 
 	@MainActor
-	public init(
+	init(
 		notificationType: NotificationEvent,
 		lineType: LogLineType,
-		target: TreeItem?,
+		target: ChatItem?,
 		nickname: String?,
 		text: String?
 	) {
@@ -53,7 +53,7 @@ public struct SpokenNotification: Sendable {
 }
 
 /** What the synthesizer's queue holds. */
-public enum SpeechItem: Sendable {
+enum SpeechItem: Sendable {
 	case text(String)
 	case notification(SpokenNotification)
 

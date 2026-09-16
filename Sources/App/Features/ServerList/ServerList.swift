@@ -47,15 +47,15 @@ import SwiftUI
 /// independent of protocol mutation details.
 @MainActor
 @Observable
-public final class ServerList {
-	public private(set) var selectedItemIdentifier: String?
+final class ServerList {
+	private(set) var selectedItemIdentifier: String?
 	/// What the view draws. Rebuilt whenever the tree reports a change, so a
 	/// row is never asked to notice one on its own.
 	private(set) var rows: [ServerRow] = []
 	/// What the sidebar's search field holds. While it is non-empty the list
 	/// shows every channel whose name contains it, under its server, whether or
 	/// not that server is disclosed.
-	public var filterText = "" {
+	var filterText = "" {
 		didSet {
 			selectableItemsStorage = nil
 			rebuildRows()
@@ -70,10 +70,10 @@ public final class ServerList {
 	 below be exercised against a tree that was built rather than connected to:
 	 the world itself is the application's, and a test that filled it would be
 	 editing the reader's own conversations. */
-	@ObservationIgnored var clientSource: @MainActor () -> [IRCClient] = { [] }
+	@ObservationIgnored var clientSource: @MainActor () -> [Client] = { [] }
 	/// The world those servers live in, held as a source for the same reason:
 	/// reordering is answered here rather than reached for through the window.
-	@ObservationIgnored var worldSource: @MainActor () -> World? = { nil }
+	@ObservationIgnored var worldSource: @MainActor () -> ClientDirectory? = { nil }
 
 	/** The index space, resolved once per change rather than per question.
 
@@ -83,7 +83,7 @@ public final class ServerList {
 	 is derived from changes -- and dropped rather than rebuilt, because a
 	 change arrives before the rows are rebuilt and the answer has to be
 	 current for the selection that follows it in the same turn. */
-	@ObservationIgnored private var selectableItemsStorage: [TreeItem]?
+	@ObservationIgnored private var selectableItemsStorage: [ChatItem]?
 
 	/// Bookkeeping for the coalescing below, and nothing the view draws: observed
 	/// it would mark the model changed on every inbound burst -- a list update
@@ -92,7 +92,7 @@ public final class ServerList {
 	@ObservationIgnored private var updateIsPending = false
 	@ObservationIgnored private var refreshTask: Task<Void, Never>?
 
-	public init() {}
+	init() {}
 
 	/** No rows are built here: the window attaches before the world exists, and
 	 the world's first `addItem` is what fills them. */
@@ -159,7 +159,7 @@ public final class ServerList {
 	 read out of the defaults for itself was invisible to that comparison: the
 	 preference changed, every row's value was unchanged, and nothing redrew. */
 	private var unreadBadgeTint: NSColor? {
-		guard let color = TextualUserDefaults.container
+		guard let color = GlasstualUserDefaults.container
 			.storedColor(for: Preferences.Badges.serverListUnreadHighlight),
 			color.alphaComponent > 0
 		else {
@@ -192,11 +192,11 @@ public final class ServerList {
 		)
 	}
 
-	public var clients: [IRCClient] {
+	var clients: [Client] {
 		clientSource()
 	}
 
-	private var world: World? {
+	private var world: ClientDirectory? {
 		worldSource()
 	}
 
@@ -215,7 +215,7 @@ public final class ServerList {
 	 do have rows. Leaving them out meant clicking one answered `selectedRow`
 	 with -1, and ⌥↑/⌥↓ walked from a row that was not in the list. Whatever is
 	 drawn is selectable; nothing that is drawn is left out. */
-	var selectableItems: [TreeItem] {
+	var selectableItems: [ChatItem] {
 		if let selectableItemsStorage {
 			return selectableItemsStorage
 		}
@@ -224,8 +224,8 @@ public final class ServerList {
 		return items
 	}
 
-	private func builtSelectableItems() -> [TreeItem] {
-		clients.flatMap { client -> [TreeItem] in
+	private func builtSelectableItems() -> [ChatItem] {
+		clients.flatMap { client -> [ChatItem] in
 			if isExpanded(client) {
 				return [client] + client.channelList
 			}
@@ -233,35 +233,35 @@ public final class ServerList {
 		}
 	}
 
-	public var numberOfRows: Int {
+	var numberOfRows: Int {
 		selectableItems.count
 	}
 
-	public var selectedRow: Int {
+	var selectedRow: Int {
 		guard let selectedItemIdentifier else { return -1 }
 		return selectableItems.firstIndex { $0.uniqueIdentifier == selectedItemIdentifier } ?? -1
 	}
 
-	public var selectedItem: TreeItem? {
+	var selectedItem: ChatItem? {
 		guard let selectedItemIdentifier else { return nil }
 		return world?.findItem(withId: selectedItemIdentifier)
 	}
 
-	public var groupItems: [TreeItem] {
+	var groupItems: [ChatItem] {
 		clients
 	}
 
-	public func item(atRow row: Int) -> Any? {
+	func item(atRow row: Int) -> Any? {
 		selectableItems.indices.contains(row) ? selectableItems[row] : nil
 	}
 
-	public func row(forItem item: Any?) -> Int {
-		guard let item = item as? TreeItem else { return -1 }
+	func row(forItem item: Any?) -> Int {
+		guard let item = item as? ChatItem else { return -1 }
 		return selectableItems.firstIndex { $0 === item } ?? -1
 	}
 
 	/// Selects `item`, if it is one of the rows the sidebar is showing.
-	public func select(_ item: TreeItem?) {
+	func select(_ item: ChatItem?) {
 		guard let item, row(forItem: item) >= 0 else { return }
 		selectedItemIdentifier = item.uniqueIdentifier
 	}
@@ -272,15 +272,15 @@ public final class ServerList {
 		mainWindow?.serverListSelectionDidChangeFromSwiftUI()
 	}
 
-	public func items(inContainingGroupOf item: Any) -> [TreeItem]? {
-		guard let item = item as? TreeItem, let client = item.associatedClient else { return nil }
+	func items(inContainingGroupOf item: Any) -> [ChatItem]? {
+		guard let item = item as? ChatItem, let client = item.associatedClient else { return nil }
 		return client.channelList
 	}
 
 	/// Whether the server's conversations are disclosed. `setExpanded` is the
 	/// only writer: the cached index space is dropped there, and a flag set
 	/// behind the list's back would leave it holding the old rows.
-	public func isExpanded(_ client: IRCClient) -> Bool {
+	func isExpanded(_ client: Client) -> Bool {
 		client.sidebarItemIsExpanded
 	}
 
@@ -303,13 +303,13 @@ public final class ServerList {
 	 Disclosure is the outline's to apply: the rows carry the whole tree so that
 	 a server keeps its chevron while it is closed, and only the filter takes
 	 conversations out of them. */
-	private func listedChannels(for client: IRCClient) -> [Channel] {
+	private func listedChannels(for client: Client) -> [Channel] {
 		guard isFiltering else { return client.channelList }
 		return client.channelList.filter { $0.label.localizedStandardContains(filterQuery) }
 	}
 
 	/// A server row stays while it, or a channel under it, matches the filter.
-	private func isVisible(_ client: IRCClient) -> Bool {
+	private func isVisible(_ client: Client) -> Bool {
 		guard isFiltering else { return true }
 		return client.label.localizedStandardContains(filterQuery)
 			|| listedChannels(for: client).isEmpty == false
@@ -322,11 +322,11 @@ public final class ServerList {
 	 -- and those arrive in the same turn as the rows the world has just
 	 published. ``setExpanded(_:forServerID:)`` is the reader's chevron and is
 	 the one that animates. */
-	public func setExpanded(_ expanded: Bool, for client: IRCClient) {
+	func setExpanded(_ expanded: Bool, for client: Client) {
 		setExpanded(expanded, for: client, animated: false)
 	}
 
-	private func setExpanded(_ expanded: Bool, for client: IRCClient, animated: Bool) {
+	private func setExpanded(_ expanded: Bool, for client: Client, animated: Bool) {
 		guard client.sidebarItemIsExpanded != expanded else { return }
 		client.sidebarItemIsExpanded = expanded
 		selectableItemsStorage = nil
@@ -351,16 +351,16 @@ public final class ServerList {
 		setExpanded(expanded, for: client, animated: true)
 	}
 
-	public func expandItem(_ item: Any?) {
-		guard let client = (item as? TreeItem)?.associatedClient else { return }
+	func expandItem(_ item: Any?) {
+		guard let client = (item as? ChatItem)?.associatedClient else { return }
 		setExpanded(true, for: client)
 	}
 
-	public func beginUpdates() {
+	func beginUpdates() {
 		updateDepth += 1
 	}
 
-	public func endUpdates() {
+	func endUpdates() {
 		guard updateDepth > 0 else { return }
 		updateDepth -= 1
 		if updateDepth == 0, updateIsPending {
@@ -391,12 +391,12 @@ public final class ServerList {
 	 seven entry points carrying insertion indices, parents and occlusion
 	 flags from the outline view the sidebar no longer is, every one of them
 	 ignoring its arguments while the callers still computed them. */
-	public func setNeedsRefresh() {
+	func setNeedsRefresh() {
 		contentsChanged()
 	}
 
 	/// The same, for an item that is going away: it cannot stay selected.
-	public func itemWasRemoved(_ item: TreeItem) {
+	func itemWasRemoved(_ item: ChatItem) {
 		if item.uniqueIdentifier == selectedItemIdentifier {
 			selectedItemIdentifier = nil
 		}
@@ -405,13 +405,13 @@ public final class ServerList {
 
 	/// A new appearance changes what the rows draw, so they are rebuilt at
 	/// once rather than coalesced with the next inbound burst.
-	public func applicationAppearanceChanged() {
+	func applicationAppearanceChanged() {
 		selectableItemsStorage = nil
 		rebuildRows()
 	}
 
 	func menu(for identifiers: Set<String>) -> (menu: NSMenu, context: AppMenuContext)? {
-		guard let controller = AppController.shared.menuController else { return nil }
+		guard let controller = AppServices.delegate.menuController else { return nil }
 		let item = identifiers.first.flatMap { world?.findItem(withId: $0) }
 		let menu: NSMenu? = if let item {
 			if item.isClient {
@@ -476,10 +476,10 @@ nonisolated struct ServerListRowMove: Equatable { // nonisolated: value
 }
 
 nonisolated enum ServerListReorderPolicy { // nonisolated: value
-	/** The move a drag asks for, as `World` performs it.
+	/** The move a drag asks for, as `ClientDirectory` performs it.
 
 	 A list names the place a row is being inserted *before*, counted in the
-	 order the rows are in now. `World` takes the row out before putting it
+	 order the rows are in now. `ClientDirectory` takes the row out before putting it
 	 back, so a destination past the row's own place has already shifted up by
 	 one; not correcting for that left the last position unreachable.
 

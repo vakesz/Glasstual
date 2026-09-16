@@ -48,14 +48,14 @@ final class MessageTagsTests {
 	private let originalTypingPreference: Bool?
 
 	init() {
-		let defaults = TextualUserDefaults.container
+		let defaults = GlasstualUserDefaults.container
 		originalTypingPreference = defaults
 			.persistedObject(forKey: Self.typingPreferenceKey) as? Bool
 		defaults.set(true, forKey: Self.typingPreferenceKey)
 	}
 
 	isolated deinit {
-		let defaults = TextualUserDefaults.container
+		let defaults = GlasstualUserDefaults.container
 		if let originalTypingPreference {
 			defaults.set(originalTypingPreference, forKey: Self.typingPreferenceKey)
 		} else {
@@ -163,7 +163,7 @@ final class MessageTagsTests {
 
 	@Test("Nothing is sent while the typing notification preference is off")
 	func typingRespectsPreference() throws {
-		TextualUserDefaults.container.set(false, forKey: Self.typingPreferenceKey)
+		GlasstualUserDefaults.container.set(false, forKey: Self.typingPreferenceKey)
 		let client = makeMessageTagsClient()
 		let channel = try addChannel(named: "#chat", to: client)
 
@@ -315,7 +315,7 @@ final class MessageTagsTests {
 		return channel
 	}
 
-	private func message(_ line: String, on client: IRCClient) throws -> Message {
+	private func message(_ line: String, on client: Client) throws -> Message {
 		try #require(Message(line: line, on: client))
 	}
 

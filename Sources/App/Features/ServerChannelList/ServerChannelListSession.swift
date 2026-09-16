@@ -43,7 +43,7 @@ import Foundation
 /// IRC client. Window lifecycle and restoration belong to SwiftUI.
 @MainActor
 final class ServerChannelListSession {
-	let client: IRCClient
+	let client: Client
 	let model = ServerChannelListModel()
 
 	/** How long a listing may go without a reply before the window stops
@@ -59,7 +59,7 @@ final class ServerChannelListSession {
 	private var replyWatchdog: Task<Void, Never>?
 	private var connectionObservation: Task<Void, Never>?
 
-	init(client: IRCClient, replyTimeout: Duration = .seconds(60)) {
+	init(client: Client, replyTimeout: Duration = .seconds(60)) {
 		self.client = client
 		self.replyTimeout = replyTimeout
 		observeConnection()

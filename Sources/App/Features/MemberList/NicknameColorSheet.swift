@@ -39,7 +39,7 @@ import AppKit
 import SwiftUI
 
 @MainActor
-public final class NicknameColorSheet: MainWindowSheetSession {
+final class NicknameColorSheet: SheetSession {
 	/* The style generator normalises with lowercased() before looking an
 	 override up, so the sheet has to read and write under the same key or the
 	 override it stores is never applied. */
@@ -49,12 +49,12 @@ public final class NicknameColorSheet: MainWindowSheetSession {
 	/// draws a nickname in it.
 	var colorDidChange: (() -> Void)?
 
-	public init(nickname: String) {
+	init(nickname: String) {
 		let normalizedKey = nickname.lowercased()
 		overrideKey = normalizedKey
 		model = NicknameColorModel(
 			nickname: nickname,
-			overrideColor: UserNicknameColorStyleGenerator.nicknameColorStyleOverride(forKey: normalizedKey)
+			overrideColor: NicknameColors.nicknameColorStyleOverride(forKey: normalizedKey)
 		)
 
 		super.init(window: nil)
@@ -69,12 +69,12 @@ public final class NicknameColorSheet: MainWindowSheetSession {
 		))
 	}
 
-	public func start() {
+	func start() {
 		startSheet()
 	}
 
-	override public func submit() {
-		UserNicknameColorStyleGenerator.setNicknameColorStyleOverride(
+	override func submit() {
+		NicknameColors.setNicknameColorStyleOverride(
 			model.colorForPersistence,
 			forKey: overrideKey
 		)

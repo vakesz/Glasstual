@@ -37,11 +37,11 @@ struct UIApplicationLinkParsingTests {
 	@Test("A bracketed IPv6 address without a port takes the scheme's default")
 	func loopbackWithoutPort() throws {
 		let plain = try #require(connectionIntent(for: "irc://[::1]/chat"))
-		#expect(plain.serverPort == UInt16(IRCConnectionDefaults.serverPort))
+		#expect(plain.serverPort == UInt16(ConnectionDefaults.serverPort))
 		#expect(plain.connectSecurely == false)
 
 		let secured = try #require(connectionIntent(for: "ircs://[::1]/chat"))
-		#expect(secured.serverPort == UInt16(IRCConnectionDefaults.serverPortSecure))
+		#expect(secured.serverPort == UInt16(ConnectionDefaults.serverPortSecure))
 	}
 
 	@Test("A channel written as a fragment names the same channel as a path")

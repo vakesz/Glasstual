@@ -38,18 +38,18 @@
 
 import Foundation
 
-public final class ChannelModeState: NSObject {
-	private weak var client: IRCClient?
+final class ChannelModeState: NSObject {
+	private weak var client: Client?
 	private weak var channel: Channel?
 
-	public private(set) var modes: ChannelModeContainer
+	private(set) var modes: ChannelModeContainer
 
 	@available(*, unavailable)
-	override public init() {
+	override init() {
 		fatalError("Use ChannelModeState.init(channel:)")
 	}
 
-	public init(channel: Channel) {
+	init(channel: Channel) {
 		guard let associatedClient = channel.associatedClient else {
 			fatalError("ChannelModeState requires an associated client")
 		}
@@ -61,7 +61,7 @@ public final class ChannelModeState: NSObject {
 		super.init()
 	}
 
-	public func updateModes(_ modeString: String) -> [ModeInfo] {
+	func updateModes(_ modeString: String) -> [ModeInfo] {
 		guard let client else {
 			return []
 		}
@@ -89,7 +89,7 @@ public final class ChannelModeState: NSObject {
 	 parameterised addition with no text cannot be expressed and is left out.
 
 	 Returns no group where nothing changed. */
-	public func changeGroups(for modes: ChannelModeContainer) -> [ModeChangeGroup] {
+	func changeGroups(for modes: ChannelModeContainer) -> [ModeChangeGroup] {
 		guard let client else {
 			return []
 		}
@@ -177,23 +177,23 @@ public final class ChannelModeState: NSObject {
 		return string
 	}
 
-	public func clear() {
+	func clear() {
 		modes.clear()
 	}
 
-	public func modeIsDefined(_ modeSymbol: String) -> Bool {
+	func modeIsDefined(_ modeSymbol: String) -> Bool {
 		modes.modeIsDefined(modeSymbol)
 	}
 
-	public func modeInfo(for modeSymbol: String) -> ModeInfo? {
+	func modeInfo(for modeSymbol: String) -> ModeInfo? {
 		modes.modeInfo(for: modeSymbol)
 	}
 
-	public var string: String {
+	var string: String {
 		string(maskingPassword: false)
 	}
 
-	public var stringWithMaskedPassword: String {
+	var stringWithMaskedPassword: String {
 		string(maskingPassword: true)
 	}
 
@@ -231,20 +231,20 @@ public final class ChannelModeState: NSObject {
 	}
 }
 
-public final class ChannelModeContainer: NSObject, NSCopying {
-	private weak var client: IRCClient?
+final class ChannelModeContainer: NSObject, NSCopying {
+	private weak var client: Client?
 	private var modeObjects: [String: ModeInfo] = [:]
 
-	public init(client: IRCClient?) {
+	init(client: Client?) {
 		self.client = client
 		super.init()
 	}
 
-	public func clear() {
+	func clear() {
 		modeObjects.removeAll()
 	}
 
-	public var modes: [String: ModeInfo] {
+	var modes: [String: ModeInfo] {
 		modeObjects
 	}
 
@@ -256,7 +256,7 @@ public final class ChannelModeContainer: NSObject, NSCopying {
 			return []
 		}
 
-		return [IRCISupportInfoListType.ban, .banException, .inviteException, .quiet]
+		return [ISupportListType.ban, .banException, .inviteException, .quiet]
 			.compactMap { supportInfo.modeSymbol(forList: $0) }
 	}
 
@@ -272,27 +272,27 @@ public final class ChannelModeContainer: NSObject, NSCopying {
 		return true
 	}
 
-	public func modeIsDefined(_ modeSymbol: String) -> Bool {
+	func modeIsDefined(_ modeSymbol: String) -> Bool {
 		modes[modeSymbol] != nil
 	}
 
 	/** A pure lookup. Materialising a placeholder here made the channel's change
 	 command emit `-mode` for modes the channel never had. */
-	public func modeInfo(for modeSymbol: String) -> ModeInfo? {
+	func modeInfo(for modeSymbol: String) -> ModeInfo? {
 		modeObjects[modeSymbol]
 	}
 
-	public func apply(_ modes: [ModeInfo]) {
+	func apply(_ modes: [ModeInfo]) {
 		for mode in modes {
 			changeMode(mode.modeSymbol, modeIsSet: mode.modeIsSet, modeParameter: mode.modeParameter)
 		}
 	}
 
-	public func changeMode(_ modeSymbol: String, modeIsSet: Bool) {
+	func changeMode(_ modeSymbol: String, modeIsSet: Bool) {
 		changeMode(modeSymbol, modeIsSet: modeIsSet, modeParameter: nil)
 	}
 
-	public func changeMode(_ modeSymbol: String, modeIsSet: Bool, modeParameter: String?) {
+	func changeMode(_ modeSymbol: String, modeIsSet: Bool, modeParameter: String?) {
 		guard modeIsPermitted(modeSymbol) else {
 			return
 		}
@@ -302,7 +302,7 @@ public final class ChannelModeContainer: NSObject, NSCopying {
 		modeObjects[modeSymbol] = modeUpdated
 	}
 
-	public func copy(with _: NSZone? = nil) -> Any {
+	func copy(with _: NSZone? = nil) -> Any {
 		let object = ChannelModeContainer(client: client)
 		object.modeObjects = modeObjects
 

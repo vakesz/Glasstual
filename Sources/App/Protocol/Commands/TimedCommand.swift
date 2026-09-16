@@ -38,24 +38,24 @@
 
 import Foundation
 
-public final class TimedCommand: NSObject {
+final class TimedCommand: NSObject {
 	private static var lastIdentifier = 0
 
-	public let identifier: String
-	public let clientId: String
-	public let channelId: String?
-	public let command: String
+	let identifier: String
+	let clientId: String
+	let channelId: String?
+	let command: String
 
 	/// The timer the command runs on. Callers read its interval, iteration and
 	/// activity off it directly.
 	private(set) var timer: ClientTimer!
 
 	@available(*, unavailable)
-	override public init() {
+	override init() {
 		fatalError("Use init(command:onClient:inChannel:)")
 	}
 
-	public init(command: String, onClient client: IRCClient, inChannel channel: Channel? = nil) {
+	init(command: String, onClient client: Client, inChannel channel: Channel? = nil) {
 		identifier = Self.nextIdentifier()
 		clientId = client.uniqueIdentifier
 		channelId = channel?.uniqueIdentifier
@@ -76,17 +76,17 @@ public final class TimedCommand: NSObject {
 		timer.stop()
 	}
 
-	public func start(_ interval: TimeInterval, onRepeat repeatTimer: Bool = false, iterations: UInt = 0) {
+	func start(_ interval: TimeInterval, onRepeat repeatTimer: Bool = false, iterations: UInt = 0) {
 		timer.start(interval, repeats: repeatTimer, iterations: iterations)
 	}
 
-	public func stop() {
+	func stop() {
 		timer.stop()
 	}
 
 	/// Runs the command's last interval again, or reports that it never ran
 	/// one: the timer's interval is zero until the first `start`.
-	public func restart() -> Bool {
+	func restart() -> Bool {
 		guard timer.interval > 0 else {
 			return false
 		}

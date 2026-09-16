@@ -50,7 +50,7 @@ struct IRCSpecWhoTests {
 		let channel = try joinedChannel("#names", on: client)
 		let list = MemberList()
 		list.assign(to: channel)
-		let connection = Connection(config: IRCConnectionConfig(), onClient: client)
+		let connection = Connection(config: ConnectionConfig(), onClient: client)
 		client.socket = connection
 		client.isConnected = true
 		let revision = list.presentationRevision
@@ -80,11 +80,11 @@ struct IRCSpecWhoTests {
 		firstList.selectedMemberIDs = [user.id]
 		secondList.selectedMemberIDs = [user.id]
 		let revisions = [firstList.presentationRevision, secondList.presentationRevision]
-		let connection = Connection(config: IRCConnectionConfig(), onClient: client)
+		let connection = Connection(config: ConnectionConfig(), onClient: client)
 		client.socket = connection
 		client.isConnected = true
 		let line = whox
-			? ":server 354 me \(IRCServerQuirks.whoxToken) #first ali example.org alice G* account :Alice Example"
+			? ":server 354 me \(ServerQuirks.whoxToken) #first ali example.org alice G* account :Alice Example"
 			: ":server 352 me #first ali example.org server alice G* :0 Alice Example"
 		client.ircConnection(connection, didReceiveData: line)
 		for (index, list) in [firstList, secondList].enumerated() {
@@ -167,21 +167,21 @@ struct IRCSpecWhoTests {
 			}
 		}
 
-		let away = IRCWHOFlags.parse(
+		let away = WHOFlags.parse(
 			"G@", monitorAwayStatus: true, botFlag: nil, modeForPrefix: modeForPrefix
 		)
 
 		#expect(away.isAway)
 		#expect(away.userModes == "o")
 
-		let here = IRCWHOFlags.parse(
+		let here = WHOFlags.parse(
 			"H+", monitorAwayStatus: true, botFlag: nil, modeForPrefix: modeForPrefix
 		)
 
 		#expect(here.isAway == false)
 		#expect(here.userModes == "v")
 
-		let operatorFlags = IRCWHOFlags.parse(
+		let operatorFlags = WHOFlags.parse(
 			"H*@", monitorAwayStatus: true, botFlag: nil, modeForPrefix: modeForPrefix
 		)
 
@@ -193,16 +193,16 @@ struct IRCSpecWhoTests {
 	/// with nothing on a server that named none.
 	@Test("352: the bot flag is the character the ISUPPORT BOT token names")
 	func botFlagIsTheISupportCharacter() {
-		let supported = IRCWHOFlags.parse(
+		let supported = WHOFlags.parse(
 			"HB", monitorAwayStatus: false, botFlag: "B", modeForPrefix: { _ in nil }
 		)
-		let unsupported = IRCWHOFlags.parse(
+		let unsupported = WHOFlags.parse(
 			"HB", monitorAwayStatus: false, botFlag: nil, modeForPrefix: { _ in nil }
 		)
-		let otherCharacter = IRCWHOFlags.parse(
+		let otherCharacter = WHOFlags.parse(
 			"Hb", monitorAwayStatus: false, botFlag: "b", modeForPrefix: { _ in nil }
 		)
-		let wrongCharacter = IRCWHOFlags.parse(
+		let wrongCharacter = WHOFlags.parse(
 			"HB", monitorAwayStatus: false, botFlag: "b", modeForPrefix: { _ in nil }
 		)
 
@@ -231,7 +231,7 @@ struct IRCSpecWhoTests {
 	func whoxRepliesCarryTheAccount() throws {
 		let client = client()
 		let channel = try joinedChannel("#chan", on: client)
-		let token = IRCServerQuirks.whoxToken
+		let token = ServerQuirks.whoxToken
 
 		try receive(
 			":irc.example.net 354 me \(token) #chan ali example.org alice H aliceacct :Alice Example",
@@ -266,7 +266,7 @@ struct IRCSpecWhoTests {
 	func whoxZeroMeansNoAccount() throws {
 		let client = client()
 		let channel = try joinedChannel("#chan", on: client)
-		let token = IRCServerQuirks.whoxToken
+		let token = ServerQuirks.whoxToken
 
 		try receive(
 			":irc.example.net 354 me \(token) #chan b example.net bob H 0 :Bob Example",

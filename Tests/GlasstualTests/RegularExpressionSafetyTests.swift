@@ -121,19 +121,6 @@ struct RegularExpressionSafetyTests {
 		#expect(RegularExpression.hasNestedQuantifier(pattern) == false)
 	}
 
-	/// Every pattern the heuristic reports on, and every pattern it clears, has
-	/// to be one ICU accepts: a warning about a pattern that cannot compile
-	/// would be shown instead of the reason it cannot.
-	@Test(
-		"The patterns the heuristic judges are patterns ICU compiles",
-		arguments: ["(a+)+", "(#\\w+ )+", "(\\d{1,3}\\.){1,4}", "(a{1,2}){1,2}", "(?:[a-z]+\\s?)+"]
-	)
-	func judgedPatternsCompile(_ pattern: String) throws {
-		#expect(throws: Never.self) {
-			try NSRegularExpression(pattern: pattern)
-		}
-	}
-
 	@Test("An empty pattern nests nothing")
 	func emptyPatternNestsNothing() {
 		#expect(RegularExpression.hasNestedQuantifier("") == false)

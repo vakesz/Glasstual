@@ -284,7 +284,7 @@ nonisolated struct ConnectionHostSendOrderingTests { // nonisolated: value
 		client.forwardsSentLines = true
 		client.forwardsProcessedMessages = true
 		_ = try #require(client.findChannelOrCreate("#order"))
-		var config = IRCConnectionConfig()
+		var config = ConnectionConfig()
 		config.serverAddress = "127.0.0.1"
 		config.serverPort = port
 		config.diagnostics = ConnectionDiagnostics()
@@ -339,7 +339,7 @@ nonisolated struct ConnectionHostSendOrderingTests { // nonisolated: value
 	func stalledHandshakeDoesNotBlockControl() async throws {
 		let server = try LoopbackTCPServer()
 		let port = try await server.start()
-		var config = IRCConnectionConfig()
+		var config = ConnectionConfig()
 		config.serverAddress = "127.0.0.1"
 		config.serverPort = port
 		config.connectionPrefersSecuredConnection = true
@@ -383,7 +383,7 @@ nonisolated struct ConnectionHostSendOrderingTests { // nonisolated: value
 	func backpressuredWriterDoesNotBlockControl() async throws {
 		let server = try LoopbackTCPServer(readsTraffic: false)
 		let port = try await server.start()
-		var config = IRCConnectionConfig()
+		var config = ConnectionConfig()
 		config.serverAddress = "127.0.0.1"
 		config.serverPort = port
 		config.connectionPrefersSecuredConnection = false
@@ -444,7 +444,7 @@ nonisolated struct ConnectionHostSendOrderingTests { // nonisolated: value
 		}
 		let server = try LoopbackTCPServer()
 		let port = try await server.start()
-		var config = IRCConnectionConfig()
+		var config = ConnectionConfig()
 		config.serverAddress = "127.0.0.1"
 		config.serverPort = port
 		let (events, continuation) = AsyncStream<ConnectionEvent>.makeStream()
@@ -617,7 +617,7 @@ nonisolated struct ConnectionHostSendOrderingTests { // nonisolated: value
 	private static func receiveFromPeer(_ chunks: [Data]) async throws -> [ConnectionEvent] {
 		let server = try LoopbackTCPServer()
 		let port = try await server.start()
-		var config = IRCConnectionConfig()
+		var config = ConnectionConfig()
 		config.serverAddress = "127.0.0.1"
 		config.serverPort = port
 		let (events, continuation) = AsyncStream<ConnectionEvent>.makeStream()
@@ -677,7 +677,7 @@ nonisolated struct ConnectionHostSendOrderingTests { // nonisolated: value
 		let server = try LoopbackTCPServer()
 		let port = try await server.start()
 
-		var config = IRCConnectionConfig()
+		var config = ConnectionConfig()
 		config.serverAddress = "127.0.0.1"
 		config.serverPort = port
 		config.connectionPrefersSecuredConnection = false

@@ -324,7 +324,7 @@ nonisolated enum NotificationStrings { // nonisolated: value
 
 	enum Availability {
 		static func message(
-			for status: IRCAddressBookUserTrackingStatus,
+			for status: AddressBookUserTrackingStatus,
 			nickname: String
 		) -> String? {
 			switch status {
@@ -381,56 +381,56 @@ nonisolated enum NotificationStrings { // nonisolated: value
 
 nonisolated enum NotificationSoundStrings { // nonisolated: value
 	static var defaultSound: String {
-		String(localized: .NotificationSettings.defaultSound)
+		String(localized: .Notifications.defaultSound)
 	}
 
 	static var noSound: String {
-		String(localized: .NotificationSettings.noSound)
+		String(localized: .Notifications.noSound)
 	}
 }
 
 nonisolated enum NotificationConfigurationStrings { // nonisolated: value
 	static var event: String {
-		String(localized: .NotificationSettings.event)
+		String(localized: .Notifications.event)
 	}
 
 	static var showNotification: String {
-		String(localized: .NotificationSettings.showNotification)
+		String(localized: .Notifications.showNotification)
 	}
 
 	static var speak: String {
-		String(localized: .NotificationSettings.speak)
+		String(localized: .Notifications.speak)
 	}
 
 	static var disableWhileAway: String {
-		String(localized: .NotificationSettings.disableWhileAway)
+		String(localized: .Notifications.disableWhileAway)
 	}
 
 	static var bounceDockIcon: String {
-		String(localized: .NotificationSettings.bounceDockIcon)
+		String(localized: .Notifications.bounceDockIcon)
 	}
 
 	static var bounceRepeatedly: String {
-		String(localized: .NotificationSettings.bounceRepeatedly)
+		String(localized: .Notifications.bounceRepeatedly)
 	}
 
 	static var sound: String {
-		String(localized: .NotificationSettings.sound)
+		String(localized: .Notifications.sound)
 	}
 
 	static var inherit: String {
-		String(localized: .NotificationSettings.inherit)
+		String(localized: .Notifications.inherit)
 	}
 
 	static var off: String {
-		String(localized: .NotificationSettings.off)
+		String(localized: .Notifications.off)
 	}
 
 	static var on: String {
-		String(localized: .NotificationSettings.on)
+		String(localized: .Notifications.on)
 	}
 
 	static var noEvents: String {
-		String(localized: .NotificationSettings.noNotificationEvents)
+		String(localized: .Notifications.noNotificationEvents)
 	}
 }

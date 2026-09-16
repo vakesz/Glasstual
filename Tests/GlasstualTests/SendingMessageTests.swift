@@ -39,7 +39,7 @@
 @testable import Glasstual
 import Testing
 
-/// Migrated from the Objective-C IRCSendingMessage test suite.
+/// Migrated from the Objective-C SendingMessage test suite.
 @MainActor
 @Suite("Outgoing message building")
 struct SendingMessageTests {

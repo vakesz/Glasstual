@@ -14,17 +14,17 @@ import SwiftUI
 
 @MainActor
 @Observable
-public final class MainWindowInputAccessoryModel {
-	public private(set) var replyMessageIdentifier: String?
-	public private(set) var replyNickname: String?
-	public private(set) var replyExcerpt: String?
-	public private(set) var typingNicknames: [String] = []
+final class MainWindowInputAccessoryModel {
+	private(set) var replyMessageIdentifier: String?
+	private(set) var replyNickname: String?
+	private(set) var replyExcerpt: String?
+	private(set) var typingNicknames: [String] = []
 
-	public var hasContent: Bool {
+	var hasContent: Bool {
 		replyMessageIdentifier != nil || typingNicknames.isEmpty == false
 	}
 
-	public func showReply(
+	func showReply(
 		toMessageIdentifier messageIdentifier: String,
 		nickname: String?,
 		excerpt: String?
@@ -34,13 +34,13 @@ public final class MainWindowInputAccessoryModel {
 		replyExcerpt = excerpt
 	}
 
-	public func hideReply() {
+	func hideReply() {
 		replyMessageIdentifier = nil
 		replyNickname = nil
 		replyExcerpt = nil
 	}
 
-	public func setTypingNicknames(_ nicknames: [String]) {
+	func setTypingNicknames(_ nicknames: [String]) {
 		typingNicknames = nicknames
 	}
 }
@@ -58,14 +58,14 @@ public final class MainWindowInputAccessoryModel {
  half of the question, and both have to hold. */
 @MainActor
 @Observable
-public final class MainWindowInputFocusModel {
+final class MainWindowInputFocusModel {
 	/// Whether the field is its window's first responder.
-	public internal(set) var isFirstResponder = false
+	var isFirstResponder = false
 	/// Whether that window is the one the keyboard is going to.
-	public internal(set) var windowIsKey = false
+	var windowIsKey = false
 
 	/// What the capsule draws its ring from.
-	public var isFocused: Bool {
+	var isFocused: Bool {
 		isFirstResponder && windowIsKey
 	}
 }

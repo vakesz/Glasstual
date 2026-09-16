@@ -6,17 +6,17 @@
 import Observation
 import SwiftUI
 
-public struct InputPromptRequest: Equatable, Sendable {
-	public let title: String
-	public let message: String
+struct InputPromptRequest: Equatable, Sendable {
+	let title: String
+	let message: String
 	/// What the empty field shows: an example of what to type, not a
 	/// restatement of the question the message above already asks.
-	public let placeholder: String
-	public let submitButtonTitle: String
-	public let cancelButtonTitle: String
-	public let initialValue: String
+	let placeholder: String
+	let submitButtonTitle: String
+	let cancelButtonTitle: String
+	let initialValue: String
 
-	public init(
+	init(
 		title: String,
 		message: String,
 		placeholder: String = "",
@@ -33,7 +33,7 @@ public struct InputPromptRequest: Equatable, Sendable {
 	}
 }
 
-public enum InputPromptOutcome: Equatable, Sendable {
+enum InputPromptOutcome: Equatable, Sendable {
 	case submitted(String)
 	case cancelled
 }
@@ -120,11 +120,11 @@ struct InputPromptView: View {
 	}
 }
 
-public enum InputPrompt {
+enum InputPrompt {
 	/// Asks on the window installed as ``SheetPresentation/host``. Before one
 	/// exists there is nowhere to ask, and the prompt answers as cancelled.
 	@MainActor
-	public static func present(
+	static func present(
 		_ request: InputPromptRequest,
 		completion: @escaping @MainActor (InputPromptOutcome) -> Void
 	) {

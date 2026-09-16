@@ -11,7 +11,6 @@
  *********************************************************************** */
 
 import Foundation
-import GlasstualPluginKit
 
 nonisolated enum MemberListStrings { // nonisolated: value
 	static var userIsAway: String {

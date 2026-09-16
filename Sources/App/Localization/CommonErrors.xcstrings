@@ -1,0 +1,186 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "internet-port-invalid" : {
+      "comment" : "Validation error for an invalid internet port. Migrated from legacy key l0c-nb.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter a whole number between 1 and 65,535."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adj meg egy 1 és 65 535 közötti egész számot."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gib eine ganze Zahl zwischen 1 und 65.535 ein."
+          }
+        }
+      }
+    },
+    "maximum-length" : {
+      "comment" : "Validation error for text too long to send over IRC, such as a disconnect message in the server properties Messages pane. The argument is the maximum length in bytes of UTF-8, which is what the IRC protocol limits. Migrated from legacy key 2cb-af.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Maximum length is %ld byte."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Maximum length is %ld bytes."
+                }
+              }
+            }
+          }
+        },
+        "hu" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "A maximális hossz %ld bájt."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "A maximális hossz %ld bájt."
+                }
+              }
+            }
+          }
+        },
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Die maximale Länge beträgt %ld Byte."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Die maximale Länge beträgt %ld Byte."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "nickname-invalid" : {
+      "comment" : "Validation error for an invalid IRC nickname. Migrated from legacy key och-j5.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A nickname can contain letters, digits and - [ ] \\ ` _ ^ { | } and cannot start with a digit."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A becenév betűket, számjegyeket és a - [ ] \\ ` _ ^ { | } karaktereket tartalmazhatja, és nem kezdődhet számjeggyel."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Nickname darf Buchstaben, Ziffern und - [ ] \\ ` _ ^ { | } enthalten und nicht mit einer Ziffer beginnen."
+          }
+        }
+      }
+    },
+    "real-name-invalid" : {
+      "comment" : "Validation error shown beside the real name field, in the server properties Identity pane and on the onboarding identity step, when the name is empty or spans more than one line. Legacy key: agy-bp.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter a real name on one line."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add meg a valódi nevedet egy sorban."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gib deinen echten Namen in einer Zeile ein."
+          }
+        }
+      }
+    },
+    "server-address-invalid" : {
+      "comment" : "Validation error for an invalid IRC server address. Migrated from legacy key yyx-l3.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter a host name such as irc.libera.chat, or pick a network from the list."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adj meg egy gépnevet, például irc.libera.chat, vagy válassz hálózatot a listából."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gib einen Hostnamen wie irc.libera.chat ein oder wähle ein Netzwerk aus der Liste."
+          }
+        }
+      }
+    },
+    "single-line-required" : {
+      "comment" : "Validation error for text containing more than one line. Migrated from legacy key gas-v8.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cannot contain more than one line."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nem tartalmazhat egynél több sort."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Darf nicht mehr als eine Zeile enthalten."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

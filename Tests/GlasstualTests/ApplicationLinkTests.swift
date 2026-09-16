@@ -6,7 +6,6 @@
 import CocoaExtensions
 import Foundation
 @testable import Glasstual
-import GlasstualPluginKit
 import Testing
 
 @MainActor
@@ -90,7 +89,7 @@ struct ApplicationLinkTests {
 		#expect(ApplicationLink.parse(location) == nil)
 	}
 
-	@Test("Application action aliases are typed and unknown plugin names remain inert")
+	@Test("Application action aliases are typed and unknown action names remain inert")
 	func applicationActions() {
 		for alias in ["custom-scripts-folder", "unsupervised-script-folder", "unsupervised-scripts-folder"] {
 			guard case let .applicationAction(action, source) = ApplicationLink.parse("glasstual://\(alias)") else {
@@ -101,7 +100,7 @@ struct ApplicationLinkTests {
 			#expect(source.host == alias)
 		}
 		#expect(ApplicationLink.Action(name: "contributors") == .acknowledgements)
-		#expect(ApplicationLink.Action(name: "future-plugin-action") == .unknown("future-plugin-action"))
+		#expect(ApplicationLink.Action(name: "future-action") == .unknown("future-action"))
 		guard case let .applicationAction(action, source) = ApplicationLink.parse("textual://goto/item%2Fname") else {
 			Issue.record("Expected the legacy scheme to reach the typed adapter")
 			return
@@ -129,7 +128,7 @@ struct ApplicationLinkTests {
 		var confirmations = 0
 		var merged: [ServerConnectionRequest] = []
 		var created: [ServerConnectionRequest] = []
-		await ServerConnectionCoordinator.resolve(
+		await ServerConnectionController.resolve(
 			using: request,
 			clients: [client],
 			confirmMerge: { candidate, address, channels in
@@ -167,7 +166,7 @@ struct ApplicationLinkTests {
 			client.config.validateServerCertificateChain = false
 		}
 		var created = 0
-		await ServerConnectionCoordinator.resolve(
+		await ServerConnectionController.resolve(
 			using: request,
 			clients: [client],
 			confirmMerge: { _, _, _ in
@@ -195,7 +194,7 @@ struct ApplicationLinkTests {
 		channel.associatedClient = client
 		client.add(channel)
 		try #require(client.canJoin(channel))
-		await ServerConnectionCoordinator.resolve(
+		await ServerConnectionController.resolve(
 			using: request,
 			clients: [client],
 			confirmMerge: { _, _, _ in .useExisting },
@@ -211,7 +210,7 @@ struct ApplicationLinkTests {
 				connectWhenCreated: true, mergeConnectionIfPossible: true, selectFirstChannelAdded: false
 			)
 		))
-		await ServerConnectionCoordinator.resolve(
+		await ServerConnectionController.resolve(
 			using: command,
 			clients: [client],
 			confirmMerge: { _, _, _ in .useExisting },
@@ -229,7 +228,7 @@ struct ApplicationLinkTests {
 			serverAddress: "irc.example.test", serverPort: 6697, prefersSecuredConnection: true
 		)]
 		var created = false
-		await ServerConnectionCoordinator.resolve(
+		await ServerConnectionController.resolve(
 			using: request,
 			clients: [client],
 			confirmMerge: { _, _, _ in
@@ -249,14 +248,14 @@ struct ApplicationLinkTests {
 		client.config.serverList = [Server(
 			serverAddress: "irc.example.test", serverPort: 6697, prefersSecuredConnection: true
 		)]
-		var socketConfig = IRCConnectionConfig()
+		var socketConfig = ConnectionConfig()
 		socketConfig.serverAddress = "other.example.test"
 		socketConfig.serverPort = 6697
 		socketConfig.connectionPrefersSecuredConnection = true
 		socketConfig.connectionShouldValidateCertificateChain = true
 		client.socket = Connection(config: socketConfig, onClient: client)
 		defer { client.socket = nil }
-		#expect(ServerConnectionCoordinator.canReuse(client, for: request) == false)
+		#expect(ServerConnectionController.canReuse(client, for: request) == false)
 	}
 
 	@Test("Server info that is empty, malformed or out of port range is rejected")
@@ -289,7 +288,7 @@ struct ApplicationLinkTests {
 			serverAddress: "irc.example.test", serverPort: 6697, prefersSecuredConnection: true
 		)]
 
-		await ServerConnectionCoordinator.resolve(
+		await ServerConnectionController.resolve(
 			using: request,
 			clients: [client],
 			confirmMerge: { _, _, _ in

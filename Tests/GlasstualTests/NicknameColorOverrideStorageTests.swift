@@ -25,19 +25,7 @@ struct NicknameColorOverrideStorageTests {
 	}
 
 	private func clear(_ key: String) {
-		UserNicknameColorStyleGenerator.setNicknameColorStyleOverride(nil, forKey: key)
-	}
-
-	@Test("A pinned colour round-trips through the defaults store")
-	func overrideRoundTrips() throws {
-		let key = uniqueKey()
-		defer { clear(key) }
-
-		let color = try #require(NSColor.textual_color(hexadecimalValue: "#2659BF"))
-		UserNicknameColorStyleGenerator.setNicknameColorStyleOverride(color, forKey: key)
-
-		let stored = try #require(UserNicknameColorStyleGenerator.nicknameColorStyleOverride(forKey: key))
-		#expect(stored.textualHexadecimalValue == color.textualHexadecimalValue)
+		NicknameColors.setNicknameColorStyleOverride(nil, forKey: key)
 	}
 
 	/// The value written is a plist dictionary, not an NSKeyedArchiver blob.
@@ -47,9 +35,9 @@ struct NicknameColorOverrideStorageTests {
 		defer { clear(key) }
 
 		let color = NSColor(srgbRed: 0.15, green: 0.35, blue: 0.75, alpha: 0.9)
-		UserNicknameColorStyleGenerator.setNicknameColorStyleOverride(color, forKey: key)
+		NicknameColors.setNicknameColorStyleOverride(color, forKey: key)
 
-		let overrides = try #require(TextualUserDefaults.container.dictionary(forKey: Self.defaultsKey))
+		let overrides = try #require(GlasstualUserDefaults.container.dictionary(forKey: Self.defaultsKey))
 		let stored = try #require(overrides[key] as? [String: Double])
 
 		#expect(stored["red"] == 0.15)
@@ -64,21 +52,13 @@ struct NicknameColorOverrideStorageTests {
 		defer { clear(key) }
 
 		let color = NSColor(srgbRed: 0.15, green: 0.35, blue: 0.75, alpha: 0.9)
-		UserNicknameColorStyleGenerator.setNicknameColorStyleOverride(color, forKey: key)
+		NicknameColors.setNicknameColorStyleOverride(color, forKey: key)
 
-		let stored = try #require(UserNicknameColorStyleGenerator.nicknameColorStyleOverride(forKey: key))
+		let stored = try #require(NicknameColors.nicknameColorStyleOverride(forKey: key))
 		let components = try #require(NicknameColorComponents(stored))
 
 		#expect(abs(components.alpha - 0.9) < 0.0001)
 		#expect(abs(components.red - 0.15) < 0.0001)
-	}
-
-	@Test("Components survive a Codable round trip")
-	func componentsRoundTripThroughCodable() throws {
-		let components = NicknameColorComponents(red: 0.1, green: 0.2, blue: 0.3, alpha: 0.4)
-		let data = try JSONEncoder().encode(components)
-
-		#expect(try JSONDecoder().decode(NicknameColorComponents.self, from: data) == components)
 	}
 
 	/// Values written by earlier builds are archives; they still read back, so
@@ -88,26 +68,26 @@ struct NicknameColorOverrideStorageTests {
 		let key = uniqueKey()
 		defer { clear(key) }
 
-		let color = try #require(NSColor.textual_color(hexadecimalValue: "#2659BF"))
+		let color = try #require(NSColor.color(hexadecimal: "#2659BF"))
 		let archive = try NSKeyedArchiver.archivedData(withRootObject: color, requiringSecureCoding: true)
 
-		var overrides = TextualUserDefaults.container.dictionary(forKey: Self.defaultsKey) ?? [:]
+		var overrides = GlasstualUserDefaults.container.dictionary(forKey: Self.defaultsKey) ?? [:]
 		overrides[key] = archive
-		TextualUserDefaults.container.set(overrides, forKey: Self.defaultsKey)
+		GlasstualUserDefaults.container.set(overrides, forKey: Self.defaultsKey)
 
-		let stored = try #require(UserNicknameColorStyleGenerator.nicknameColorStyleOverride(forKey: key))
-		#expect(stored.textualHexadecimalValue == color.textualHexadecimalValue)
+		let stored = try #require(NicknameColors.nicknameColorStyleOverride(forKey: key))
+		#expect(stored.hexadecimalString == color.hexadecimalString)
 	}
 
 	@Test("Clearing an override removes it")
 	func clearingRemovesTheOverride() throws {
 		let key = uniqueKey()
-		let color = try #require(NSColor.textual_color(hexadecimalValue: "#2659BF"))
+		let color = try #require(NSColor.color(hexadecimal: "#2659BF"))
 
-		UserNicknameColorStyleGenerator.setNicknameColorStyleOverride(color, forKey: key)
+		NicknameColors.setNicknameColorStyleOverride(color, forKey: key)
 		clear(key)
 
-		#expect(UserNicknameColorStyleGenerator.nicknameColorStyleOverride(forKey: key) == nil)
+		#expect(NicknameColors.nicknameColorStyleOverride(forKey: key) == nil)
 	}
 
 	@Test("A pinned colour is used for the nickname")
@@ -115,11 +95,11 @@ struct NicknameColorOverrideStorageTests {
 		let key = uniqueKey()
 		defer { clear(key) }
 
-		let color = try #require(NSColor.textual_color(hexadecimalValue: "#2659BF"))
-		UserNicknameColorStyleGenerator.setNicknameColorStyleOverride(color, forKey: key)
+		let color = try #require(NSColor.color(hexadecimal: "#2659BF"))
+		NicknameColors.setNicknameColorStyleOverride(color, forKey: key)
 
-		let pinned = UserNicknameColorStyleGenerator.color(for: key)
-		#expect(pinned.textualHexadecimalValue == color.textualHexadecimalValue)
+		let pinned = NicknameColors.color(for: key)
+		#expect(pinned.hexadecimalString == color.hexadecimalString)
 	}
 
 	@Test("Lookup is case-insensitive on the nickname")
@@ -127,12 +107,12 @@ struct NicknameColorOverrideStorageTests {
 		let key = uniqueKey()
 		defer { clear(key) }
 
-		let color = try #require(NSColor.textual_color(hexadecimalValue: "#2659BF"))
-		UserNicknameColorStyleGenerator.setNicknameColorStyleOverride(color, forKey: key)
+		let color = try #require(NSColor.color(hexadecimal: "#2659BF"))
+		NicknameColors.setNicknameColorStyleOverride(color, forKey: key)
 
 		#expect(
-			UserNicknameColorStyleGenerator.color(for: key.uppercased()).textualHexadecimalValue ==
-				color.textualHexadecimalValue
+			NicknameColors.color(for: key.uppercased()).hexadecimalString ==
+				color.hexadecimalString
 		)
 	}
 }

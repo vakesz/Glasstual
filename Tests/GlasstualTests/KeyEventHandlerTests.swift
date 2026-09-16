@@ -97,6 +97,21 @@ struct KeyEventHandlerTests {
 		#expect(firedCount == 1)
 	}
 
+	/// Character shortcuts are keyed by modifier set in a table of their own,
+	/// so a character registered with ⌘ has to be found under ⌘.
+	@Test("A character shortcut registered with modifiers reaches its closure")
+	func characterShortcutWithModifiersReachesItsClosure() throws {
+		let handler = KeyEventHandler()
+		var receivedEvent: NSEvent?
+
+		handler.register(character: "a", modifiers: .command) { receivedEvent = $0 }
+
+		let event = try #require(keyEvent(code: 42, characters: "a", modifiers: .command))
+
+		#expect(handler.processKeyEvent(event))
+		#expect(receivedEvent == event)
+	}
+
 	@Test("The handler hands the event it matched to the action")
 	func actionReceivesTheEvent() throws {
 		let handler = KeyEventHandler()

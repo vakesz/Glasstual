@@ -38,7 +38,7 @@ nonisolated struct ServerChannelListEntry: Identifiable, Hashable, Sendable { //
 	}
 
 	var plainTopic: String {
-		IRCFormattingParser.parse(unformattedTopic).string
+		FormattingParser.parse(unformattedTopic).string
 	}
 
 	var copyText: String {

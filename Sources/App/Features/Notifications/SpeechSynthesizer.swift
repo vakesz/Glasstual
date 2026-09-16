@@ -17,7 +17,7 @@ import Foundation
  type removes the recursive lock that used to be held across a synchronous
  main-queue hop while formatting a notification. */
 @MainActor
-public final class SpeechSynthesizer: NSObject, SpeechSynthesizerEngineDelegate {
+final class SpeechSynthesizer: NSObject, SpeechSynthesizerEngineDelegate {
 	/** What the queue believes the engine is doing.
 
 	 The engine's own `isSpeaking` is the authority on `.speaking`: a completion
@@ -39,11 +39,11 @@ public final class SpeechSynthesizer: NSObject, SpeechSynthesizerEngineDelegate 
 	static let maximumPendingNotifications = 64
 	static let maximumNotificationBytes = 16 * 1024
 
-	override public convenience init() {
+	override convenience init() {
 		self.init(engine: AVSpeechSynthesizerEngine())
 	}
 
-	public init(engine: SpeechSynthesizerEngine) {
+	init(engine: SpeechSynthesizerEngine) {
 		self.engine = engine
 
 		super.init()
@@ -51,7 +51,7 @@ public final class SpeechSynthesizer: NSObject, SpeechSynthesizerEngineDelegate 
 		engine.delegate = self
 	}
 
-	public var isStopped: Bool {
+	var isStopped: Bool {
 		get {
 			stopped
 		}
@@ -68,7 +68,7 @@ public final class SpeechSynthesizer: NSObject, SpeechSynthesizerEngineDelegate 
 		}
 	}
 
-	public func speak(_ item: SpeechItem) {
+	func speak(_ item: SpeechItem) {
 		guard !stopped else {
 			return
 		}
@@ -88,15 +88,15 @@ public final class SpeechSynthesizer: NSObject, SpeechSynthesizerEngineDelegate 
 		speakNextItem()
 	}
 
-	public func speak(text: String) {
+	func speak(text: String) {
 		speak(.text(text))
 	}
 
-	public func clearQueue() {
+	func clearQueue() {
 		pendingItems.removeAll()
 	}
 
-	public func setNotificationsMuted(_ muted: Bool) {
+	func setNotificationsMuted(_ muted: Bool) {
 		notificationsMuted = muted
 		guard muted else { return }
 		pendingItems.removeAll(where: \.isNotification)
@@ -105,7 +105,7 @@ public final class SpeechSynthesizer: NSObject, SpeechSynthesizerEngineDelegate 
 		}
 	}
 
-	public func clearQueue(for client: IRCClient) {
+	func clearQueue(for client: Client) {
 		let clientIdentifier = client.uniqueIdentifier
 
 		pendingItems.removeAll { $0.belongs(to: clientIdentifier) }
@@ -113,7 +113,7 @@ public final class SpeechSynthesizer: NSObject, SpeechSynthesizerEngineDelegate 
 
 	/// Skips whatever is being said. An engine that has already gone quiet
 	/// without reporting it is not left holding the queue up.
-	public func stopSpeakingAndMoveForward() {
+	func stopSpeakingAndMoveForward() {
 		if stopCurrentUtterance() == false {
 			/* Nothing was cancelled, so no cancel callback is coming to move
 			 the queue on. Move it on from here instead. */
@@ -137,11 +137,11 @@ public final class SpeechSynthesizer: NSObject, SpeechSynthesizerEngineDelegate 
 		return true
 	}
 
-	public var pendingItemCount: UInt {
+	var pendingItemCount: UInt {
 		UInt(pendingItems.count)
 	}
 
-	public func speechSynthesizerEngineDidCompleteUtterance() {
+	func speechSynthesizerEngineDidCompleteUtterance() {
 		engineState = .idle
 		speakNextItem()
 	}

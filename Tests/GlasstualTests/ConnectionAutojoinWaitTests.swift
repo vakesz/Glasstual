@@ -62,14 +62,14 @@ struct ConnectionAutojoinWaitTests {
 			client.onAutojoinDelayedWarningTimer()
 		}
 
-		#expect(client.autojoinDelayedWarningCount == IRCClientAutojoinPolicy.maximumDelayedWarningCount)
+		#expect(client.autojoinDelayedWarningCount == ClientAutojoinPolicy.maximumDelayedWarningCount)
 		#expect(client.autojoinDelayedWarningTimer.isActive == false)
 
 		let bodies = (client.printedLines as NSArray).compactMap {
 			($0 as? [String: Any])?["messageBody"] as? String
 		}
 
-		#expect(bodies.contains(IRCConnectionStrings.autojoinDelayedForIdentification))
+		#expect(bodies.contains(ConnectionStrings.autojoinDelayedForIdentification))
 	}
 
 	/// The user asked not to have the warnings, which is not the same as asking

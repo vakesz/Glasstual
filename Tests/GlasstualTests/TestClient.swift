@@ -45,7 +45,7 @@ import Foundation
 /// opening a socket. Tests opt into real incoming-message handling when they
 /// need to exercise the production state machine.
 @MainActor
-final class TestClient: IRCClient {
+final class TestClient: Client {
 	let sentCapabilityCommands = NSMutableArray()
 	let sentLines = NSMutableArray()
 	let processedMessages = NSMutableArray()
@@ -66,7 +66,7 @@ final class TestClient: IRCClient {
 	}
 
 	/** The password is applied after construction so that
-	 `IRCClient.init(config:)` finds nothing pending and writes nothing: reads
+	 `Client.init(config:)` finds nothing pending and writes nothing: reads
 	 come back from the pending value and never reach the real keychain. */
 	@MainActor convenience init(
 		configDictionary dictionary: [String: Any],
@@ -93,7 +93,7 @@ final class TestClient: IRCClient {
 		fixture.output
 	}
 
-	static func testChannelUser(nickname: String, on client: IRCClient) -> ChannelUser {
+	static func testChannelUser(nickname: String, on client: Client) -> ChannelUser {
 		ChannelUser(user: User(nickname: nickname), prefixes: client.currentUserPrefixes)
 	}
 
@@ -129,7 +129,7 @@ final class TestClient: IRCClient {
 		}
 	}
 
-	private func recordPrintedLine(_ request: IRCLinePrintRequest) {
+	private func recordPrintedLine(_ request: LinePrintRequest) {
 		var line: [String: Any] = [
 			"messageBody": request.messageBody,
 			"lineType": NSNumber(value: request.lineType.rawValue),

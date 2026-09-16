@@ -116,7 +116,7 @@ nonisolated struct ConnectionHostHandshakeAbortTests { // nonisolated: value
 		let server = try AbortingLoopbackServer()
 		let port = try await server.start()
 
-		var config = IRCConnectionConfig()
+		var config = ConnectionConfig()
 		config.serverAddress = "localhost"
 		config.serverPort = port
 		config.connectionPrefersSecuredConnection = true
