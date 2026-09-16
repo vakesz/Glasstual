@@ -40,7 +40,7 @@ struct TextFormatterMenuTargetTests {
 
 	@Test("An unattached menu finds nothing while no window is key")
 	func unattachedMenuFindsNothing() {
-		let menu = TextViewIRCFormattingMenu()
+		let menu = IRCFormattingMenu()
 		let (window, _) = makeWindow()
 
 		#expect(NSApp.keyWindow !== window)
@@ -58,7 +58,7 @@ struct TextFormatterMenuTargetTests {
 	@Test("Installing the formatting menu does not build the shared colour panel")
 	func installingTheMenuLeavesTheColorPanelUnbuilt() {
 		let existedBefore = NSColorPanel.sharedColorPanelExists
-		let menu = TextViewIRCFormattingMenu()
+		let menu = IRCFormattingMenu()
 		let (window, _) = makeWindow()
 		menu.attach(to: window)
 		_ = menu.makeMenu()
@@ -68,7 +68,7 @@ struct TextFormatterMenuTargetTests {
 
 	@Test("The attached window's first responder is the target, key or not")
 	func attachedWindowSuppliesTheTarget() {
-		let menu = TextViewIRCFormattingMenu()
+		let menu = IRCFormattingMenu()
 		let (window, _) = makeWindow()
 		menu.attach(to: window)
 
@@ -78,7 +78,7 @@ struct TextFormatterMenuTargetTests {
 
 	@Test("A window whose responder is not a formatting field is no target")
 	func nonFormattingResponderIsNoTarget() {
-		let menu = TextViewIRCFormattingMenu()
+		let menu = IRCFormattingMenu()
 		let window = NSWindow(
 			contentRect: NSRect(x: 0, y: 0, width: 320, height: 120),
 			styleMask: [.titled],
@@ -97,7 +97,7 @@ struct TextFormatterMenuTargetTests {
 	/// read, so a reader who could not see the swatch could not pick a colour.
 	@Test("Every palette colour names itself to VoiceOver")
 	func paletteColoursCarryTheirNames() throws {
-		let menu = TextViewIRCFormattingMenu()
+		let menu = IRCFormattingMenu()
 
 		for palette in try [#require(menu.foregroundColorMenu), #require(menu.backgroundColorMenu)] {
 			let colourItems = palette.items.filter {
