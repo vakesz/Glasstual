@@ -22,8 +22,7 @@ struct HistoricLogShippedFixtureTests {
 			.appendingPathComponent("Corpora/History/v1.0.7-history.sqlite")
 		let destination = directory.appendingPathComponent("fixture.sqlite")
 		try FileManager.default.copyItem(at: source, to: destination)
-		let context = try HistoricLogDatabase.makeStack(at: destination)
-		let original = try await context.perform {
+		let original = try await HistoricLogFixture.withContext(at: destination) { context in
 			let request = NSFetchRequest<NSManagedObject>(entityName: HistoricLogDatabase.entityName)
 			return try context.fetch(request).map { object in
 				try (#require(HistoricLogEntry(managedObject: object)),

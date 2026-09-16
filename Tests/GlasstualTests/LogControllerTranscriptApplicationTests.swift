@@ -324,7 +324,7 @@ struct LogControllerTranscriptApplicationTests {
 		#expect(view.displayedLines.map(\.lineNumber) == [previous.uniqueIdentifier, current.uniqueIdentifier])
 	}
 
-	@Test("A failed older fetch leaves its cursor retryable and merges reactions on prepend")
+	@Test("A failed older fetch leaves its cursor retryable and restores archived reactions")
 	func failedPageDoesNotAdvanceCursor() async throws {
 		let client = IRCClient(config: ClientConfig())
 		let window = window()
@@ -347,13 +347,14 @@ struct LogControllerTranscriptApplicationTests {
 		older.reactions = ["+1": ["alice"]]
 		let identifier = try #require(older.messageIdentifier)
 		let entry = older.historicEntry(forView: controller.uniqueIdentifier)
+		// A reaction to an unknown message is deliberately outside retention.
 		controller.noteReaction("+1", fromNickname: "bob", toMessageIdentifier: identifier)
 		controller.historyPageFetcher = { _ in .page([entry]) }
 		controller.loadOlderHistory()
 		await controller.drainRenderJobs()
 		#expect(!controller.olderHistoryFailed)
 		#expect(controller.oldestLineNumber == older.uniqueIdentifier)
-		#expect(view.displayedLines.first?.reactions == ["+1": ["alice", "bob"]])
+		#expect(view.displayedLines.first?.reactions == ["+1": ["alice"]])
 	}
 
 	@Test("Batched production prints preserve completion order and visible bounds after trimming")

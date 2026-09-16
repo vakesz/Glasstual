@@ -103,7 +103,7 @@ struct LogViewLifecycleTests {
 
 		let topicField = try #require(
 			descendants(of: NSTextField.self, in: logView)
-				.first { $0.stringValue == "Native AppKit discussion" }
+				.first { visibleTranscriptText($0.attributedStringValue) == "Native AppKit discussion" }
 		)
 		#expect(topicField.isHidden == false)
 		#expect(topicField.frame.height > 0)
@@ -236,7 +236,7 @@ struct LogViewLifecycleTests {
 
 		let topicField = try #require(
 			descendants(of: NSTextField.self, in: logView)
-				.first { $0.stringValue == topic }
+				.first { visibleTranscriptText($0.attributedStringValue) == topic }
 		)
 		let attributedTopic = topicField.attributedStringValue
 		var links: [URL] = []

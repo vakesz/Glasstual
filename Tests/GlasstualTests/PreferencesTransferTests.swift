@@ -15,6 +15,26 @@ import Testing
 struct PreferencesTransferTests {
 	private typealias Fixture = PreferencesTransferFixture
 
+	@Test("Cancelled transfer preparation publishes no preview or export")
+	func cancelledPreparationLeavesSessionIdle() async throws {
+		let fixture = try Fixture()
+		defer { fixture.cleanUp() }
+		let session = fixture.session()
+		let snapshot = try session.liveSnapshot()
+		let url = try fixture.write(snapshot.encoded())
+		let preparation = Task { await session.prepareImport(from: url) }
+		preparation.cancel()
+		await preparation.value
+		#expect(session.preview == nil)
+		#expect(!session.isBusy)
+		#expect(session.errorMessage == nil)
+		let export = Task { try await session.exportData() }
+		export.cancel()
+		await #expect(throws: CancellationError.self) { try await export.value }
+		#expect(!session.isBusy)
+		#expect(try session.liveSnapshot() == snapshot)
+	}
+
 	private func client(_ name: String) -> ClientConfig {
 		var config = ClientConfig(connectionName: name)
 		config.nickname = "TestNick"

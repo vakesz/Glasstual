@@ -103,6 +103,11 @@ final class PreferencesPaneModel {
 
 	/// The sidebar's rows, in order, with the panes each one shows.
 	var destinations: [PreferencesDestination] = []
+	var searchText = ""
+
+	var matchingDestinations: [PreferencesDestination] {
+		destinations.filter { $0.matches(searchText: searchText) }
+	}
 
 	private(set) var selection = PreferencesSelection.general
 

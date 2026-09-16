@@ -154,13 +154,13 @@ struct ScriptExecutionSupportTests {
 		}
 	}
 
-	/// Writes `byteCount` bytes and closes the handle. Blocking on purpose: a
+	/// Writes `data` and closes the handle. Blocking on purpose: a
 	/// pipe holds about 64 KB, so this returns only once something else has
 	/// drained what it wrote.
 	@concurrent
-	private static func write(byteCount: Int, to handle: FileHandle) async {
-		try? handle.write(contentsOf: Data(repeating: 0x41, count: byteCount))
-		try? handle.close()
+	private static func write(_ data: Data, to handle: FileHandle) async throws {
+		defer { try? handle.close() }
+		try handle.write(contentsOf: data)
 	}
 
 	/// A script's output used to be read only after it had terminated, which
@@ -170,23 +170,37 @@ struct ScriptExecutionSupportTests {
 	func outputLargerThanThePipeBufferIsDrained() async throws {
 		let pipe = Pipe()
 		let byteCount = 512 * 1024
+		let expected = Data((0 ..< byteCount).map { UInt8(truncatingIfNeeded: $0) })
 		let output = Task { try await ScriptExecutionSupport.readOutput(from: pipe.fileHandleForReading) }
 
-		await Self.write(byteCount: byteCount, to: pipe.fileHandleForWriting)
+		try await Self.write(expected, to: pipe.fileHandleForWriting)
 
 		let data = try await output.value
 		try? pipe.fileHandleForReading.close()
 
-		#expect(data.count == byteCount)
+		#expect(data == expected)
 	}
 
-	/// The reader used to block in `read(2)` on a cooperative-pool thread for as
-	/// long as its script ran. A handful of long-running scripts took every
-	/// thread the pool has, and nothing else off the main actor ran until one
-	/// of them exited.
-	@Test("Readers waiting on silent scripts leave the concurrency pool free", .timeLimit(.minutes(1)))
+	/// Silent pipes must not delay another reader. Cleanup has its own task so
+	/// a regression reports an assertion instead of hanging behind the read.
+	@Test("Silent script readers do not block independent output", .timeLimit(.minutes(1)))
 	func idleReadersLeaveThePoolFree() async throws {
 		let idlePipes = (0 ..< 64).map { _ in Pipe() }
+		var requiredCleanup = false
+		let cleanup = Task {
+			do { try await Task.sleep(for: .seconds(10)) } catch { return }
+			requiredCleanup = true
+			for idle in idlePipes {
+				try? idle.fileHandleForWriting.close()
+			}
+		}
+		defer {
+			cleanup.cancel()
+			for idle in idlePipes {
+				try? idle.fileHandleForWriting.close()
+				try? idle.fileHandleForReading.close()
+			}
+		}
 
 		try await withThrowingTaskGroup(of: Data.self) { group in
 			for idle in idlePipes {
@@ -195,9 +209,10 @@ struct ScriptExecutionSupportTests {
 
 			let pipe = Pipe()
 			let output = Task { try await ScriptExecutionSupport.readOutput(from: pipe.fileHandleForReading) }
-			await Self.write(byteCount: 16, to: pipe.fileHandleForWriting)
+			try await Self.write(Data(repeating: 0x41, count: 16), to: pipe.fileHandleForWriting)
 
 			#expect(try await output.value.count == 16)
+			#expect(requiredCleanup == false, "The completed reader waited for silent pipes to close")
 			try? pipe.fileHandleForReading.close()
 
 			for idle in idlePipes {
@@ -207,19 +222,46 @@ struct ScriptExecutionSupportTests {
 				#expect(data.isEmpty)
 			}
 		}
+	}
 
-		for idle in idlePipes {
-			try? idle.fileHandleForReading.close()
+	@Test("Cancelling an idle reader completes without waiting for its writer", .timeLimit(.minutes(1)))
+	func cancellationStopsIdleRead() async {
+		let pipe = Pipe()
+		var requiredWriterClosure = false
+		let cleanup = Task {
+			do { try await Task.sleep(for: .seconds(10)) } catch { return }
+			requiredWriterClosure = true
+			try? pipe.fileHandleForWriting.close()
 		}
+		defer {
+			cleanup.cancel()
+			try? pipe.fileHandleForReading.close()
+			try? pipe.fileHandleForWriting.close()
+		}
+		let output = Task { try await ScriptExecutionSupport.readOutput(from: pipe.fileHandleForReading) }
+		// Cancellation before the reader starts only tests its initial guard.
+		// Wait for the native readiness bridge so the suspended stream and its
+		// handler teardown are both exercised, with a deadline for regressions.
+		let deadline = ContinuousClock.now.advanced(by: .seconds(5))
+		while pipe.fileHandleForReading.readabilityHandler == nil,
+		      ContinuousClock.now < deadline, !Task.isCancelled
+		{
+			await Task.yield()
+		}
+		#expect(pipe.fileHandleForReading.readabilityHandler != nil)
+		output.cancel()
+		await #expect(throws: CancellationError.self) { try await output.value }
+		#expect(requiredWriterClosure == false, "Cancellation waited for the writer to close")
+		#expect(pipe.fileHandleForReading.readabilityHandler == nil)
 	}
 
 	@Test("Oversized output is drained but rejected, never returned as partial commands")
-	func outputPastTheCeilingIsRejected() async {
+	func outputPastTheCeilingIsRejected() async throws {
 		let pipe = Pipe()
 		let byteCount = ScriptExecutionSupport.maximumOutputBytes + (128 * 1024)
 		let output = Task { try await ScriptExecutionSupport.readOutput(from: pipe.fileHandleForReading) }
 
-		await Self.write(byteCount: byteCount, to: pipe.fileHandleForWriting)
+		try await Self.write(Data(repeating: 0x41, count: byteCount), to: pipe.fileHandleForWriting)
 
 		let result = await output.result
 		try? pipe.fileHandleForReading.close()
@@ -242,13 +284,15 @@ struct ScriptExecutionSupportTests {
 		#expect(try ScriptExecutionSupport.decodedOutput(data).utf8.count == data.count)
 	}
 
-	@Test("A read failure is propagated instead of returning the bytes read so far")
+	@Test("A valid write-only pipe handle is rejected before installing a reader")
 	func outputReadFailureIsReported() async throws {
 		let pipe = Pipe()
-		try pipe.fileHandleForReading.close()
-		try pipe.fileHandleForWriting.close()
-		await #expect(throws: (any Error).self) {
-			try await ScriptExecutionSupport.readOutput(from: pipe.fileHandleForReading)
+		defer {
+			try? pipe.fileHandleForReading.close()
+			try? pipe.fileHandleForWriting.close()
+		}
+		await #expect(throws: POSIXError(.EBADF)) {
+			try await ScriptExecutionSupport.readOutput(from: pipe.fileHandleForWriting)
 		}
 	}
 }

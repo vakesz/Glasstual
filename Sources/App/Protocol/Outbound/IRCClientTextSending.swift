@@ -233,13 +233,41 @@ public extension IRCClient {
 			return
 		}
 
-		let lines = text.splitIntoLines
-		let shouldWarn = lines.count > 4 || text.length > 2040
-		if shouldWarn, potentialFloodAlert() == false {
+		let source = NSAttributedString(attributedString: text)
+		let replyIdentifier = nextMessageReplyIdentifier
+		nextMessageReplyIdentifier = nil
+		var warningCursor = OutboundInputCursor(source)
+		var lineCount = 0
+		while lineCount <= 4, warningCursor.next() != nil {
+			lineCount += 1
+		}
+		let shouldWarn = lineCount > 4 || source.length > 2040
+		if shouldWarn {
+			let destinationName = destination.name
+			requestConfirmation(Self.potentialFloodAlert, isCurrent: { client in
+				destination === client || (destination.name == destinationName &&
+					client.channelList.contains { $0 === destination })
+			}, perform: { client in
+				client.sendInputLines(source, as: command, destination: destination, replyIdentifier: replyIdentifier)
+			})
 			return
 		}
+		sendInputLines(source, as: command, destination: destination, replyIdentifier: replyIdentifier)
+	}
 
-		for originalLine in lines {
+	private func sendInputLines(_ text: NSAttributedString, as command: IRCRemoteCommand, destination: TreeItem,
+	                            replyIdentifier: String?)
+	{
+		var remaining = OutboundInputCursor(text)
+		var pendingReply = replyIdentifier
+		enqueueOutboundText(channels: (destination as? Channel).map { [$0] } ?? []) { [weak destination] client in
+			guard let destination, let originalLine = remaining.next() else { return false }
+			let laterReply = client.nextMessageReplyIdentifier
+			client.nextMessageReplyIdentifier = pendingReply
+			defer {
+				pendingReply = client.nextMessageReplyIdentifier
+				client.nextMessageReplyIdentifier = laterReply
+			}
 			var line = originalLine
 			let source = line.string
 			let isPrefixed = source.hasPrefix("/")
@@ -248,23 +276,24 @@ public extension IRCClient {
 				if isPrefixed {
 					line = line.attributedSubstring(fromIndex: 1)
 				}
-				sendCommand(line)
-				continue
+				client.sendCommand(line, completeTarget: false)
+				return true
 			}
 
 			guard let channel = (destination as AnyObject) as? Channel else {
 				assertionFailure("Non-client IRC tree destinations must be channels")
-				continue
+				return false
 			}
 
 			if isPrefixed, source.hasPrefix("//") == false, line.length > 1 {
-				sendCommand(line.attributedSubstring(fromIndex: 1))
+				client.sendCommand(line.attributedSubstring(fromIndex: 1), target: channel.name)
 			} else {
 				if isPrefixed, line.length > 1 {
 					line = line.attributedSubstring(fromIndex: 1)
 				}
-				sendText(line, as: command, to: channel)
+				client.sendText(line, as: command, to: channel)
 			}
+			return true
 		}
 	}
 
@@ -288,44 +317,36 @@ public extension IRCClient {
 			replyIdentifier = nil
 		}
 
-		for line in text.splitIntoLines {
-			var cursor = IRCLineCursor(line)
-			while let message = cursor.nextLine(
-				forChannel: channel.name,
-				on: self,
-				with: outbound.lineType
-			) {
-				let lineReplyIdentifier = replyIdentifier
-				replyIdentifier = nil
-				nextLineReplyToMessageIdentifier = lineReplyIdentifier
-
-				let redactedMessage = WireRedaction.redactedServiceMessage(message, sentTo: channel.name)
-				let deliveryLabel = printLocallyIfNeeded(
-					redactedMessage,
-					channel: channel,
-					outbound: outbound
-				)
-
-				let wireMessage = outbound.lineType == .action ? CTCPPayload.action(message) : message
-				nextLineReplyToMessageIdentifier = nil
-
-				var tags: [String: String] = [:]
-				if let deliveryLabel {
-					tags["label"] = deliveryLabel
-				}
-				if let lineReplyIdentifier {
-					tags["+draft/reply"] = lineReplyIdentifier
-				}
-
-				if tags.isEmpty {
-					send(outbound.wireCommand, arguments: [channel.name, wireMessage])
-				} else {
-					sendCommand(outbound.wireCommand, arguments: [channel.name, wireMessage], tags: tags)
-				}
+		var cursor = OutboundTextCursor(text)
+		let originalMessage = text.string
+		enqueueOutboundText(channels: [channel]) { client in
+			guard let message = cursor.next(for: channel.name, on: client, as: outbound.lineType) else {
+				client.processBundlesUserMessage(originalMessage, command: outbound.wireCommand)
+				return false
 			}
-		}
+			let lineReplyIdentifier = replyIdentifier
+			replyIdentifier = nil
+			client.nextLineReplyToMessageIdentifier = lineReplyIdentifier
 
-		processBundlesUserMessage(text.string, command: outbound.wireCommand)
+			let redactedMessage = WireRedaction.redactedServiceMessage(message, sentTo: channel.name)
+			let deliveryLabel = client.printLocallyIfNeeded(redactedMessage, channel: channel, outbound: outbound)
+			let wireMessage = outbound.lineType == .action ? CTCPPayload.action(message) : message
+			client.nextLineReplyToMessageIdentifier = nil
+
+			var tags: [String: String] = [:]
+			if let deliveryLabel {
+				tags["label"] = deliveryLabel
+			}
+			if let lineReplyIdentifier {
+				tags["+draft/reply"] = lineReplyIdentifier
+			}
+			if tags.isEmpty {
+				client.send(outbound.wireCommand, arguments: [channel.name, wireMessage])
+			} else {
+				client.sendCommand(outbound.wireCommand, arguments: [channel.name, wireMessage], tags: tags)
+			}
+			return true
+		}
 	}
 
 	@MainActor
@@ -348,24 +369,22 @@ public extension IRCClient {
 		guard groupedChannels.isEmpty == false else { return }
 		let targetGroups = ISupportTokenParser.chunkTargets(groupedChannels.map(\.name), limit: targetLimit)
 		var groupOffset = 0
-		for targetGroup in targetGroups {
-			let groupChannels = Array(groupedChannels[groupOffset ..< groupOffset + targetGroup.count])
-			groupOffset += targetGroup.count
-			let targetList = targetGroup.joined(separator: ",")
-			for line in text.splitIntoLines {
-				var cursor = IRCLineCursor(line)
-				while let message = cursor.nextLine(
-					forChannel: targetList,
-					on: self,
-					with: outbound.lineType
-				) {
+		var groupIndex = 0
+		let source = NSAttributedString(attributedString: text)
+		var cursor = OutboundTextCursor(source)
+		enqueueOutboundText(channels: groupedChannels) { client in
+			while groupIndex < targetGroups.count {
+				let targetGroup = targetGroups[groupIndex]
+				let groupChannels = Array(groupedChannels[groupOffset ..< groupOffset + targetGroup.count])
+				let targetList = targetGroup.joined(separator: ",")
+				if let message = cursor.next(for: targetList, on: client, as: outbound.lineType) {
 					/* One command carries one label, so only the first channel in
 					 the group registers a delivery; the rest print untracked. The
 					 label used to be discarded here, which left every grouped
 					 message uncorrelated. */
 					var deliveryLabel: String?
 					for (index, channel) in groupChannels.enumerated() {
-						let label = printLocallyIfNeeded(
+						let label = client.printLocallyIfNeeded(
 							WireRedaction.redactedServiceMessage(message, sentTo: channel.name),
 							channel: channel,
 							outbound: outbound,
@@ -380,18 +399,23 @@ public extension IRCClient {
 						? CTCPPayload.action(message)
 						: message
 					if let deliveryLabel {
-						sendCommand(
+						client.sendCommand(
 							outbound.wireCommand,
 							arguments: [targetList, wireMessage],
 							tags: ["label": deliveryLabel]
 						)
 					} else {
-						send(outbound.wireCommand, arguments: [targetList, wireMessage])
+						client.send(outbound.wireCommand, arguments: [targetList, wireMessage])
 					}
+					return true
 				}
+				groupIndex += 1
+				groupOffset += targetGroup.count
+				cursor = OutboundTextCursor(source)
 			}
+			client.processBundlesUserMessage(source.string, command: outbound.wireCommand)
+			return false
 		}
-		processBundlesUserMessage(text.string, command: outbound.wireCommand)
 	}
 
 	private func attributedInput(_ input: Any) -> NSAttributedString? {
@@ -405,22 +429,20 @@ public extension IRCClient {
 		return nil
 	}
 
-	/** `true` when the user is content to send a burst this large.
+	/** The confirmation for a message large enough to flood the conversation.
 
 	 Send/Cancel, not Yes/No: the question is whether to send, so the button
 	 that does it says so -- and the one that answers Escape says that nothing
 	 was sent. */
-	private func potentialFloodAlert() -> Bool {
-		output?.confirmModally(
-			AlertRequest(
-				title: IRCTransportStrings.largeMessageWarning,
-				body: IRCTransportStrings.confirmLargeMessage,
-				defaultButton: PromptStrings.Action.send,
-				alternateButton: PromptStrings.Action.cancel,
-				suppressionKey: OutboundTextSuppressionKey.potentialFlood.rawValue,
-				style: .warning
-			)
-		) ?? true
+	private static var potentialFloodAlert: AlertRequest {
+		AlertRequest(
+			title: IRCTransportStrings.largeMessageWarning,
+			body: IRCTransportStrings.confirmLargeMessage,
+			defaultButton: PromptStrings.Action.send,
+			alternateButton: PromptStrings.Action.cancel,
+			suppressionKey: OutboundTextSuppressionKey.potentialFlood.rawValue,
+			style: .warning
+		)
 	}
 
 	private func printLocallyIfNeeded(
@@ -482,20 +504,18 @@ public extension IRCClient {
 		let wireTarget = prefix.flatMap { destinationIsChannel ? "\($0)\(destinationName)" : nil }
 			?? destinationName
 		var cursor = IRCLineCursor(text)
-		while let message = cursor.nextLine(
-			forChannel: wireTarget,
-			on: self,
-			with: invocation.outbound.lineType
-		) {
+		enqueueOutboundText(channels: channel.map { [$0] } ?? []) { client in
+			guard let message = cursor.nextLine(forChannel: wireTarget, on: client, with: invocation.outbound.lineType)
+			else { return false }
 			let redactedMessage = WireRedaction.redactedServiceMessage(message, sentTo: wireTarget)
 			let deliveryLabel: String?
 			if silentlyConnecting {
-				printDebugInformation(
+				client.printDebugInformation(
 					toConsole: IRCTransportStrings.connectCommand(target: wireTarget, redactedMessage: redactedMessage)
 				)
 				deliveryLabel = nil
 			} else if let channel, invocation.isSecretMessage == false {
-				deliveryLabel = printLocallyIfNeeded(
+				deliveryLabel = client.printLocallyIfNeeded(
 					redactedMessage,
 					channel: channel,
 					outbound: invocation.outbound,
@@ -509,14 +529,15 @@ public extension IRCClient {
 				? CTCPPayload.action(message)
 				: message
 			if let deliveryLabel {
-				sendCommand(
+				client.sendCommand(
 					invocation.outbound.wireCommand,
 					arguments: [wireTarget, wireMessage],
 					tags: ["label": deliveryLabel]
 				)
 			} else {
-				send(invocation.outbound.wireCommand, arguments: [wireTarget, wireMessage])
+				client.send(invocation.outbound.wireCommand, arguments: [wireTarget, wireMessage])
 			}
+			return true
 		}
 		return invocation.isSecretMessage ? nil : channel
 	}

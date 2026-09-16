@@ -284,14 +284,23 @@ public nonisolated extension ChannelConfig { // nonisolated: value
 		set { pendingSecretKey = PendingKeychainSecret(newValue) }
 	}
 
-	mutating func writeSecretKeyToKeychain() {
-		keychainItem.apply(pendingSecretKey)
-		pendingSecretKey = .unchanged
+	@discardableResult
+	mutating func writeSecretKeyToKeychain() -> KeychainWriteResult {
+		let result = keychainItem.apply(pendingSecretKey)
+		if result == .saved {
+			pendingSecretKey = .unchanged
+		}
+		return result
 	}
 
-	mutating func destroySecretKeyKeychainItem() {
-		keychainItem.delete()
-		pendingSecretKey = .unchanged
+	@discardableResult
+	mutating func destroySecretKeyKeychainItem() -> KeychainWriteResult {
+		pendingSecretKey = .cleared
+		let result = keychainItem.apply(pendingSecretKey)
+		if result == .saved {
+			pendingSecretKey = .unchanged
+		}
+		return result
 	}
 
 	/// A copy under a fresh identity, carrying the channel key across so the

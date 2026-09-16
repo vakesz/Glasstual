@@ -43,7 +43,6 @@ struct MemberListView: View {
 		 sidebar. The column's background is the caller's, and the divider
 		 beside it is the only edge. */
 		.listStyle(.inset)
-		.overlayScrollers()
 		.scrollContentBackground(.hidden)
 		.listSectionSeparator(.hidden)
 		.contextMenu(forSelectionType: User.ID.self) { identities in

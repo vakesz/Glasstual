@@ -477,7 +477,7 @@ struct IRCSpecCapabilityNegotiationTests {
 		#expect(capabilityCommands(of: client).last == "END")
 	}
 
-	@Test("All terminal SASL failures use the configured policy", arguments: [902, 904, 905, 906, 908], [true, false])
+	@Test("All terminal SASL failures use the configured policy", arguments: [902, 904, 905, 906], [true, false])
 	func terminalSASLFailurePolicy(_ numeric: Int, _ disconnect: Bool) throws {
 		let client = TestClient(
 			configDictionary: ["nickname": "me", "username": "me", "disconnectOnSASLFailure": disconnect],

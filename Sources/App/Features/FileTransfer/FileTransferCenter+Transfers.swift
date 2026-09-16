@@ -135,6 +135,8 @@ extension FileTransferCenter {
 	}
 
 	func prepareForApplicationTermination() {
+		senderPreparations.values.forEach { $0.cancel() }
+		senderPreparations.removeAll()
 		workspace.cancelPendingWork()
 		for transfer in model.transfers {
 			transfer.prepareForPermanentDestruction()
@@ -225,14 +227,31 @@ extension FileTransferCenter {
 		return controller.uniqueIdentifier
 	}
 
+	/// Owns file preparation started by a synchronous menu or IRC command.
+	func offerSender(
+		for client: IRCClient, nickname: String, path: String, autoOpen: Bool,
+		accessURL: URL? = nil, completion: @escaping (String?) -> Void = { _ in }
+	) {
+		let identifier = UUID()
+		senderPreparations[identifier] = Task { [weak self] in
+			guard let self else { return }
+			let result = await addSender(for: client, nickname: nickname, path: path,
+			                             autoOpen: autoOpen, accessURL: accessURL)
+			senderPreparations[identifier] = nil
+			guard !Task.isCancelled else { return }
+			completion(result)
+		}
+	}
+
 	func addSender(
 		for client: IRCClient,
 		nickname: String,
 		path: String,
 		autoOpen: Bool,
 		accessURL: URL? = nil
-	) -> String? {
-		guard let controller = FileTransferController.sender(
+	) async -> String? {
+		let session = client.startup.identifier
+		guard let controller = await FileTransferController.sender(
 			for: client,
 			nickname: nickname,
 			path: path,
@@ -241,6 +260,11 @@ extension FileTransferCenter {
 			return nil
 		}
 
+		guard !Task.isCancelled, !client.isTerminating, client.startup.identifier == session else {
+			controller.prepareForPermanentDestruction()
+			await controller.stopTask?.value
+			return nil
+		}
 		present()
 		model.add(controller)
 

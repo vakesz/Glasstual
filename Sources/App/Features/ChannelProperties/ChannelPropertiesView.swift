@@ -48,6 +48,7 @@ struct ChannelPropertiesView: View {
 			}
 			.padding(12)
 		}
+		.disabled(model.isSaving)
 		.frame(
 			minWidth: 560,
 			idealWidth: 620,

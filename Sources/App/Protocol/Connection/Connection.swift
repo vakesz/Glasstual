@@ -247,14 +247,17 @@ public final class Connection: NSObject {
 	 acknowledgement. */
 	private func receive(_ lines: [Data]) async {
 		for (index, line) in lines.enumerated() {
-			guard terminal == false, client?.socket === self else { return }
+			guard let client else { return }
+			await client.renderAdmission.waitForCapacity()
+			guard !Task.isCancelled, terminal == false, client.socket === self else { return }
 			if let string = convertFromCommonEncoding(line) {
-				client?.ircConnection(self, didReceiveData: string)
+				client.ircConnection(self, didReceiveData: string)
 			}
 			if (index + 1).isMultiple(of: Self.linesPerTurn) {
 				await Task.yield()
 			}
 		}
+		await client?.renderAdmission.waitForCapacity()
 	}
 
 	/// How many lines are handled before the main actor is offered to other work.

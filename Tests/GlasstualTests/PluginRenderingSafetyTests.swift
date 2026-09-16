@@ -22,6 +22,33 @@ import Testing
 @Suite("Plugin rendering safety")
 @MainActor
 struct PluginRenderingSafetyTests {
+	@Test("A plugin channel snapshot cannot target a renamed conversation")
+	func pluginChannelRejectsRenamedDestination() throws {
+		let client = TestClient()
+		let channel = try #require(client.findChannelOrCreate("alice", isPrivateMessage: true))
+		channel.activate()
+		let pluginClient = PluginHostAdapter.makeClient(client)
+		let destination = PluginHostAdapter.makeChannel(channel)
+		pluginClient.sendPrivateMessage("current", to: destination)
+		#expect(client.sentLines as? [String] == ["PRIVMSG alice :current"])
+		channel.name = "bob"
+		pluginClient.sendPrivateMessage("stale", to: destination)
+		#expect(client.sentLines as? [String] == ["PRIVMSG alice :current"])
+	}
+
+	@Test("An asynchronous plugin result belongs to the initiating IRC session")
+	func pluginClientRecognizesSessionReplacement() {
+		let client = IRCClient(config: ClientConfig())
+		let original = PluginHostAdapter.makeClient(client)
+		#expect(original.isCurrentSession)
+		client.startup = IRCStartupCoordinator()
+		#expect(!original.isCurrentSession)
+		let replacement = PluginHostAdapter.makeClient(client)
+		#expect(replacement.isCurrentSession)
+		client.isTerminating = true
+		#expect(!replacement.isCurrentSession)
+	}
+
 	private func makeHost(defaults: UserDefaults) -> PluginHostContext {
 		PluginHostContext(
 			defaults: defaults,

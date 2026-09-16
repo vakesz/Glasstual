@@ -224,7 +224,7 @@ public final class LogView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 	/* SwiftUI owns controls; this adapter only hosts one. */
 	let topicDisclosure = NSHostingView(rootView: TopicDisclosureButton(isExpanded: false, action: {}))
 	var isTopicExpanded = false
-	let scrollView = OverlayScrollView()
+	let scrollView = NSScrollView()
 	/* SwiftUI owns controls; this adapter only hosts them. */
 	let jumpToLatest = NSHostingView(rootView: TranscriptJumpToLatestButton(action: {}))
 	var jumpToLatestBottomConstraint: NSLayoutConstraint?

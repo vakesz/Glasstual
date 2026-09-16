@@ -11,6 +11,7 @@ import Observation
 @MainActor
 @Observable
 final class ServerPropertiesModel {
+	var isSaving = false
 	var config: ClientConfig
 	var selection: ServerPropertiesSelection = .general
 	var selectedAddressBookEntryID: String?
@@ -228,7 +229,7 @@ final class ServerPropertiesModel {
 			certificate = nil
 			return
 		}
-		let details = await KeychainSecretLoader.certificate(for: reference)
+		let details = await ClientCertificateLoader.certificate(for: reference)
 		guard Task.isCancelled == false, reference == config.identityClientSideCertificate else { return }
 		certificate = details
 	}

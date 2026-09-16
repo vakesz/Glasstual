@@ -287,6 +287,9 @@ public final class ChannelAccessListSession: ChannelScoped {
 	/// The server has sent the end of the list, so the spinner stops and the next
 	/// entry to arrive belongs to a new reply.
 	public func finishReceiving() {
+		if previousReplyIsOnScreen, replyIsComplete == false {
+			model.clear()
+		}
 		replyIsComplete = true
 		previousReplyIsOnScreen = true
 	}
@@ -295,9 +298,9 @@ public final class ChannelAccessListSession: ChannelScoped {
 	/// new reply's first entry arrives, so the table is never a mix of two
 	/// replies and never briefly empty either.
 	func updateList() {
+		guard let modeSymbol else { return }
 		previousReplyIsOnScreen = true
 		replyIsComplete = false
-		guard let modeSymbol else { return }
 		/* `MODE #channel +b` with no mask is the request for the list. */
 		client.sendModes([ModeChangeGroup(symbols: "+\(modeSymbol)")], inChannelNamed: channel.name)
 	}

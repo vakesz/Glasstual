@@ -134,6 +134,19 @@ struct ChannelPropertiesModelTests {
 		#expect(model.channelNameIsValid == false)
 	}
 
+	@Test("The key length caption counts UTF-8 bytes of the token that will be sent")
+	func keyLengthCountsSubmittedBytes() {
+		let client = TestClient()
+		client.supportInfo.processConfigurationData("KEYLEN=3")
+		let model = ChannelPropertiesModel(config: ChannelConfig(channelName: "#swift"), client: client)
+		model.secretKey = "  é ignored"
+		#expect(model.secretKeyLengthCaption == ChannelPropertiesStrings.secretKeyLength(2, maximum: 3))
+		#expect(model.secretKeyIsTooLong == false)
+
+		model.secretKey = "💬"
+		#expect(model.secretKeyIsTooLong)
+	}
+
 	/** Emptying the key field used to submit `nil`, which the configuration
 	 read as "no edit": the stored key stayed in the keychain, was sent on every
 	 later JOIN, and came back the next time the sheet opened. */

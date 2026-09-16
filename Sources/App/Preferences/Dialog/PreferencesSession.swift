@@ -85,6 +85,9 @@ public final class PreferencesSession {
 
 	func activate(selection: PreferencesSceneSelection) {
 		prepareNotifications()
+		// A menu request names a destination, including when it names the one
+		// already selected. An earlier search must not hide that destination.
+		model.searchText = ""
 		model.destinations = Self.destinations()
 		model.refreshAll()
 		select(selection)

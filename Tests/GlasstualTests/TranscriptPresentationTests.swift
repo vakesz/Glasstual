@@ -22,10 +22,11 @@ struct TranscriptPresentationTests {
 		logView.setTopic("\u{02}bold\u{02} and \u{03}04red\u{03} plain")
 
 		let topic = logView.topicField.attributedStringValue
-		#expect(topic.string == "bold and red plain")
+		#expect(visibleTranscriptText(topic) == "bold and red plain")
 		#expect(logView.topicField.toolTip == "bold and red plain")
 
-		let boldFont = try #require(topic.attribute(.font, at: 0, effectiveRange: nil) as? NSFont)
+		let boldRange = (topic.string as NSString).range(of: "bold")
+		let boldFont = try #require(topic.attribute(.font, at: boldRange.location, effectiveRange: nil) as? NSFont)
 		#expect(NSFontManager.shared.traits(of: boldFont).contains(.boldFontMask))
 	}
 
@@ -33,15 +34,18 @@ struct TranscriptPresentationTests {
 	/// form counts the control codes too, and lands the range on the wrong
 	/// characters.
 	@Test("A link in a formatted topic is attached to the words that spell it")
-	func topicLinkRangeFollowsTheRenderedText() {
+	func topicLinkRangeFollowsTheRenderedText() throws {
 		let logView = makeLogView()
 		logView.setTopic("\u{02}rules\u{02} at https://example.com/rules")
 
 		let topic = logView.topicField.attributedStringValue
+		let visibleURL = (topic.string as NSString).range(of: "https://example.com/rules")
+		try #require(visibleURL.location != NSNotFound)
 		var linkRange = NSRange(location: NSNotFound, length: 0)
-		let url = topic.attribute(.link, at: topic.length - 1, effectiveRange: &linkRange) as? URL
+		let url = topic.attribute(.link, at: visibleURL.location, effectiveRange: &linkRange) as? URL
 		#expect(url?.absoluteString == "https://example.com/rules")
 		#expect((topic.string as NSString).substring(with: linkRange) == "https://example.com/rules")
+		#expect(topic.attribute(.link, at: topic.length - 1, effectiveRange: nil) == nil)
 	}
 
 	/** The boundary is a claim about where the reader stopped reading, and the
@@ -128,7 +132,7 @@ struct TranscriptPresentationTests {
 		let logView = controller.ensureBackingView()
 		logView.setTopic("House rules")
 
-		let drawn = logView.topicField.attributedStringValue.string
+		let drawn = visibleTranscriptText(logView.topicField.attributedStringValue)
 		#expect(drawn.hasPrefix("House rules"))
 		#expect(drawn.hasSuffix("+knt ******"))
 		/* The key never reaches the bar, only the mask. */
@@ -143,7 +147,7 @@ struct TranscriptPresentationTests {
 		let logView = makeLogView()
 		logView.setTopic("House rules")
 
-		#expect(logView.topicField.attributedStringValue.string == "House rules")
+		#expect(visibleTranscriptText(logView.topicField.attributedStringValue) == "House rules")
 	}
 
 	private func makeLogView(bufferLimit: Int = 1000) -> LogView {

@@ -110,8 +110,8 @@ extension MainWindow: ClientOutput {
 		Alerts.alertSheet(request: request, completionBlock: completion)
 	}
 
-	func confirmModally(_ request: AlertRequest) -> Bool {
-		Alerts.runModal(request).response == .default
+	func confirm(_ request: AlertRequest) async -> Bool {
+		await Alerts.run(request, on: .mainWindow).response == .default
 	}
 
 	func closeSheets(for client: IRCClient) {

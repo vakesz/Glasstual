@@ -12,6 +12,69 @@
 
 import Foundation
 
+/// Counts submitted work until its transcript application completes. Network
+/// readers wait here before admitting another wire line, carrying the host's
+/// acknowledgement boundary through rendering and TextKit application.
+@MainActor
+final class TranscriptRenderAdmission {
+	private let capacity: Int
+	private var pending: [UUID: String] = [:]
+	private var waiters: [UUID: CheckedContinuation<Void, Never>] = [:]
+
+	init(capacity: Int = 256) {
+		precondition(capacity > 0)
+		self.capacity = capacity
+	}
+
+	var pendingCount: Int {
+		pending.count
+	}
+
+	var hasCapacity: Bool {
+		pending.count < capacity
+	}
+
+	var waitingProducerCount: Int {
+		waiters.count
+	}
+
+	func submit(for view: String) -> UUID {
+		let identifier = UUID()
+		pending[identifier] = view
+		return identifier
+	}
+
+	func finish(_ identifier: UUID) {
+		pending.removeValue(forKey: identifier)
+		resumeProducersIfReady()
+	}
+
+	func retire(view: String) {
+		pending = pending.filter { $0.value != view }
+		resumeProducersIfReady()
+	}
+
+	func waitForCapacity() async {
+		let identifier = UUID()
+		await withTaskCancellationHandler {
+			while pending.count >= capacity, !Task.isCancelled {
+				await withCheckedContinuation { waiters[identifier] = $0 }
+			}
+		} onCancel: {
+			Task { @MainActor in self.waiters.removeValue(forKey: identifier)?.resume() }
+		}
+	}
+
+	private func resumeProducersIfReady() {
+		guard pending.count < capacity else { return }
+		let ready = waiters.values
+		waiters.removeAll()
+		for waiter in ready {
+			waiter.resume()
+		}
+	}
+}
+
 /** One unit of work for a log view's render pipeline.
 
  The closure runs off the main actor and returns the main-actor half of the job
@@ -48,7 +111,7 @@ struct LogRenderSubmission: Sendable {
  in the order the client printed them.
 
  Nothing here is a lock or a queue: the ordering is the delivery chain, the
- back-pressure is the task group's width, and cancellation is ``stop()``, which
+ render concurrency is the task group's width, and cancellation is ``stop()``, which
  cancels the deliveries still in flight, plus the controller's own generation
  check for the one that has already reached the main actor. */
 actor LogRenderPipeline {
@@ -68,10 +131,10 @@ actor LogRenderPipeline {
 	private var drainWaiters: [UUID: CheckedContinuation<Void, Never>] = [:]
 
 	init() {
-		/* Unbounded on purpose. A dropping policy would silently lose lines
-		 under a burst — a netsplit rejoin prints hundreds in one turn — and the
-		 back-pressure that matters is on rendering, which the task group's width
-		 already applies. */
+		/* Submission preserves synchronous print order. The client's admission
+		 budget makes network producers suspend before another wire line, and
+		 counts this work through transcript application. A single wire event
+		 can fan out to several views; none of those lines may be dropped. */
 		let (stream, continuation) = AsyncStream<LogRenderSubmission>.makeStream(
 			bufferingPolicy: .unbounded
 		)

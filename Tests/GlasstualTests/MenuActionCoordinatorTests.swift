@@ -129,12 +129,19 @@ struct MenuActionCoordinatorTests {
 	}
 
 	@Test("Disconnect becomes disabled after its first invocation and cannot quit twice")
-	func disconnectActionAndValidationAgree() {
+	func disconnectActionAndValidationAgree() throws {
 		let controller = MenuController()
 		let coordinator = controller.actionCoordinator
 		let client = TestClient()
 		coordinator.pointedClient = client
-		client.isConnecting = true
+		let connection = Connection(config: IRCConnectionConfig(), onClient: client)
+		client.socket = connection
+		client.isConnected = true
+		client.markAsLoggedIn()
+		defer {
+			client.cancelDelayedDisconnect()
+			connection.close()
+		}
 		let item = NSMenuItem()
 		item.command = .disconnect
 
@@ -143,9 +150,21 @@ struct MenuActionCoordinatorTests {
 		#expect(client.isQuitting)
 		#expect(coordinator.validateServerCommand(item) == false)
 		#expect(item.isHidden == false)
+		let delayedDisconnect = try #require(client.pendingDisconnectTask)
+		#expect(client.sentLines.count == 1)
+		#expect((client.sentLines.firstObject as? String)?.hasPrefix("QUIT ") == true)
 		let titleUpdateCount = client.recordedOutput.titleUpdates.count
 		coordinator.disconnect(item)
 		#expect(client.recordedOutput.titleUpdates.count == titleUpdateCount)
+		#expect(client.sentLines.count == 1)
+		#expect(!delayedDisconnect.isCancelled)
+
+		client.cancelDelayedDisconnect()
+		connection.close()
+		#expect(!client.isQuitting)
+		#expect(!client.isConnected)
+		#expect(coordinator.validateServerCommand(item) == false)
+		#expect(item.isHidden)
 	}
 
 	@Test("Each appearance menu item names the appearance it selects")

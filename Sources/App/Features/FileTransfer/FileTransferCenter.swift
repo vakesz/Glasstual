@@ -51,6 +51,7 @@ public final class FileTransferCenter {
 	let model = FileTransferCenterModel()
 
 	var maintenanceTask: Task<Void, Never>?
+	var senderPreparations: [UUID: Task<Void, Never>] = [:]
 	var downloadDestinationURLPrivate: URL?
 	/// The lookup every transfer waiting on an address shares, so two concurrent
 	/// DCC offers ask the address service once between them.
@@ -82,6 +83,7 @@ public final class FileTransferCenter {
 	isolated deinit {
 		notifications.cancelAll()
 		maintenanceTask?.cancel()
+		senderPreparations.values.forEach { $0.cancel() }
 		networkChanges?.cancel()
 		ipAddressLookup?.cancel()
 		downloadDestinationURLPrivate?.stopAccessingSecurityScopedResource()

@@ -354,16 +354,20 @@ struct IRCSpecISupportTests {
 		#expect(ClientWireUtilities.truncated("abcdef", toByteCount: 0) == "abcdef")
 	}
 
-	/// A nickname the server cannot accept is not a nickname: the length bound
-	/// comes from `NICKLEN` once the server has advertised it.
-	@Test("NICKLEN bounds what the client will treat as a nickname")
+	/// NICKLEN limits local registration; services and bouncers may still send
+	/// longer names, bounded by the defensive inbound limit.
+	@Test("Inbound service names can exceed the advertised registration limit")
 	func nicknameLengthIsBounded() {
 		let client = TestClient()
 
 		client.supportInfo.processConfigurationData("NICKLEN=8")
 
 		#expect(client.stringIsNickname("shortnic"))
-		#expect(client.stringIsNickname("muchtoolongnickname") == false)
+		#expect(client.stringIsNickname("muchtoolongnickname"))
+		#expect(client.stringIsNickname(String(repeating: "a", count: 51)) == false)
+		client.isConnected = true
+		client.changeNickname("muchtoolongnickname")
+		#expect(client.sentLines.lastObject as? String == "NICK muchtool")
 	}
 
 	// MARK: - Token syntax

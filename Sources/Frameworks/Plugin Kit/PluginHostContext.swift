@@ -336,6 +336,12 @@ public final class PluginClient: Hashable {
 	public let isLoggedIn: Bool
 	public let isIRCop: Bool
 	public let localUser: PluginUser?
+	private let sessionValidator: () -> Bool
+	/// Whether delayed work still belongs to the connection that made this snapshot.
+	public var isCurrentSession: Bool {
+		sessionValidator()
+	}
+
 	/// Built on the first read and kept, for the reason ``PluginChannel/members`` gives.
 	public var channels: [PluginChannel] {
 		if let channelsSnapshot {
@@ -378,7 +384,8 @@ public final class PluginClient: Hashable {
 	private let highlightMarker: (PluginChannel) -> Void
 	private let sidebarRefresher: () -> Void
 
-	public init(
+	/// Keeps the original initializer available to previously compiled plugins.
+	public convenience init(
 		identifier: String,
 		userNickname: String,
 		networkName: String?,
@@ -416,7 +423,79 @@ public final class PluginClient: Hashable {
 		markHighlight: @escaping (PluginChannel) -> Void,
 		refreshSidebar: @escaping () -> Void
 	) {
+		self.init(
+			identifier: identifier,
+			userNickname: userNickname,
+			networkName: networkName,
+			serverAddress: serverAddress,
+			isConnected: isConnected,
+			isLoggedIn: isLoggedIn,
+			isIRCop: isIRCop,
+			localUser: localUser,
+			channels: channels(),
+			isConnectedToZNC: isConnectedToZNC,
+			zncCertificateChainData: zncCertificateChainData,
+			maximumNicknameLength: maximumNicknameLength,
+			nicknameMatchesZNCUser: nicknameMatchesZNCUser,
+			isChannelName: isChannelName,
+			findChannel: findChannel,
+			privateMessage: privateMessage,
+			utilityChannel: utilityChannel,
+			isCapabilityEnabled: isCapabilityEnabled,
+			printDebug: printDebug,
+			sendPrivateMessage: sendPrivateMessage,
+			sendCommand: sendCommand,
+			sendLine: sendLine,
+			joinChannel: joinChannel,
+			printMessage: printMessage,
+			markUnread: markUnread,
+			markHighlight: markHighlight,
+			refreshSidebar: refreshSidebar,
+			sessionIsCurrent: { true }
+		)
+	}
+
+	public init(
+		identifier: String,
+		userNickname: String,
+		networkName: String?,
+		serverAddress: String?,
+		isConnected: Bool,
+		isLoggedIn: Bool,
+		isIRCop: Bool,
+		localUser: PluginUser?,
+		channels: @autoclosure @escaping () -> [PluginChannel],
+		isConnectedToZNC: Bool,
+		zncCertificateChainData: Data?,
+		maximumNicknameLength: UInt,
+		nicknameMatchesZNCUser: @escaping (String, String) -> Bool,
+		isChannelName: @escaping (String) -> Bool,
+		findChannel: @escaping (String) -> PluginChannel?,
+		privateMessage: @escaping (String) -> PluginChannel?,
+		utilityChannel: @escaping (String) -> PluginChannel?,
+		isCapabilityEnabled: @escaping (UInt) -> Bool,
+		printDebug: @escaping (String, PluginChannel?) -> Void,
+		sendPrivateMessage: @escaping (String, PluginChannel) -> Void,
+		sendCommand: @escaping (String) -> Void,
+		sendLine: @escaping (String) -> Void,
+		joinChannel: @escaping (String) -> Void,
+		printMessage: @escaping (
+			String,
+			String?,
+			PluginChannel,
+			PluginMessageKind,
+			String,
+			Date,
+			Bool,
+			@escaping (_ isHighlight: Bool) -> Void
+		) -> Void,
+		markUnread: @escaping (PluginChannel, Bool) -> Void,
+		markHighlight: @escaping (PluginChannel) -> Void,
+		refreshSidebar: @escaping () -> Void,
+		sessionIsCurrent: @escaping () -> Bool
+	) {
 		self.identifier = identifier
+		sessionValidator = sessionIsCurrent
 		self.userNickname = userNickname
 		self.networkName = networkName
 		self.serverAddress = serverAddress

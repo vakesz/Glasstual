@@ -132,13 +132,22 @@ public nonisolated extension Server { // nonisolated: value
 		set { pendingServerPassword = PendingKeychainSecret(newValue) }
 	}
 
-	mutating func writeServerPasswordToKeychain() {
-		keychainItem.apply(pendingServerPassword)
-		pendingServerPassword = .unchanged
+	@discardableResult
+	mutating func writeServerPasswordToKeychain() -> KeychainWriteResult {
+		let result = keychainItem.apply(pendingServerPassword)
+		if result == .saved {
+			pendingServerPassword = .unchanged
+		}
+		return result
 	}
 
-	mutating func destroyServerPasswordKeychainItem() {
-		keychainItem.delete()
-		pendingServerPassword = .unchanged
+	@discardableResult
+	mutating func destroyServerPasswordKeychainItem() -> KeychainWriteResult {
+		pendingServerPassword = .cleared
+		let result = keychainItem.apply(pendingServerPassword)
+		if result == .saved {
+			pendingServerPassword = .unchanged
+		}
+		return result
 	}
 }

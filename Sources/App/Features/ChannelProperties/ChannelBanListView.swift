@@ -96,6 +96,7 @@ struct ChannelBanListView: View {
 					.disabled(model.selection.isEmpty)
 				Spacer()
 				Button(ChannelAccessListStrings.updateList, action: update)
+					.keyboardShortcut("r", modifiers: .command)
 					.disabled(model.isRefreshing)
 			}
 			.padding(12)

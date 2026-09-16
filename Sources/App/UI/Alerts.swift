@@ -154,14 +154,13 @@ public typealias AlertCompletion = @MainActor (AlertOutcome) -> Void
 public enum AlertPresentation {
 	/// Blocks in its own modal loop.
 	case applicationModal
-	/// A state-driven sheet on the application's main window. While that
-	/// window is off screen, because it is closed, minimised or hidden with the
-	/// application, the alert runs application modal instead. Nobody can
-	/// answer a sheet on a window they cannot see.
+	/// A state-driven sheet on the application's main window. Reveals the
+	/// installed window when it is closed, minimised or hidden. Before a
+	/// window is installed, the alert runs application modal instead.
 	case mainWindow
-	/// A sheet on the main window, or on any other visible window while the
-	/// main window is hidden. During launch and migration no window exists yet,
-	/// and the alert runs application modal instead.
+	/// A sheet on the main window, or on any other visible window. Reveals the
+	/// installed main window when none is visible. During launch and migration
+	/// no window exists yet, and the alert runs application modal instead.
 	case anyVisibleWindow
 }
 
@@ -269,6 +268,9 @@ public enum Alerts {
 		on presentation: AlertPresentation,
 		using presenter: any AlertPresenter = SwiftUIAlertPresenter()
 	) async -> AlertOutcome {
+		guard !Task.isCancelled else {
+			return AlertOutcome(response: request.escapeButton, isSuppressed: false)
+		}
 		guard case let .show(prepared, suppressionKey) = prepare(request) else {
 			return suppressedOutcome(for: request)
 		}
@@ -277,8 +279,7 @@ public enum Alerts {
 		return finish(result, suppressionKey: suppressionKey)
 	}
 
-	/// The blocking form, for the call sites that need the answer before they
-	/// can continue.
+	/// The blocking form for launch and migration before a scene exists.
 	@MainActor
 	@discardableResult
 	public static func runModal(
@@ -732,6 +733,9 @@ public struct SwiftUIAlertPresenter: AlertPresenter {
 	/// Cancelling the task that awaits the answer takes the alert down, and it
 	/// answers with its Escape button.
 	public func present(_ request: AlertRequest, in presentation: AlertPresentation) async -> AlertPresenterResult {
+		guard !Task.isCancelled else {
+			return AlertPresenterResult(response: request.escapeButton, suppressionChecked: false)
+		}
 		let session = AlertPresentationSession(request: request)
 
 		return await withTaskCancellationHandler {
@@ -745,6 +749,23 @@ public struct SwiftUIAlertPresenter: AlertPresenter {
 		_ session: AlertPresentationSession,
 		in presentation: AlertPresentation
 	) async -> AlertPresenterResult {
+		/* Once a scene exists, an explicit user action can reveal its window
+		 and await a sheet. A hidden main window must not start a nested modal
+		 loop. Before scene installation the launch adapter remains necessary. */
+		if case .applicationModal = presentation {
+			return session.presentModal()
+		}
+		if let host = SheetPresentation.host, !host.sheetHostWindow.isVisible {
+			let useMainWindow: Bool = switch presentation {
+			case .mainWindow: true
+			case .anyVisibleWindow: !NSApp.windows.contains(where: \.isVisible)
+			case .applicationModal: false
+			}
+			if useMainWindow {
+				host.sheetHostWindow.makeKeyAndOrderFront(nil)
+				NSApp.activate()
+			}
+		}
 		let sheetHost = SheetPresentation.host.flatMap { $0.sheetHostWindow.isVisible ? $0 : nil }
 		let otherWindow = NSApp.keyWindow.flatMap { $0.isVisible ? $0 : nil }
 			?? NSApp.windows.first(where: \.isVisible)

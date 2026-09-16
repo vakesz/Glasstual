@@ -229,6 +229,29 @@ struct ChannelAccessListSessionTests {
 		#expect(session.model.entries.map(\.entryMask) == ["*!*@second.example"])
 	}
 
+	@Test("An empty refresh removes the previous reply's rows and selection")
+	func emptyRefreshReplacesPreviousReply() throws {
+		let client = TestClient()
+		client.markAsLoggedIn()
+		client.supportInfo.processConfigurationData("CHANMODES=beI,k,l,imnpst PREFIX=(ov)@+")
+		let channel = try #require(client.findChannelOrCreate("#empty"))
+		let session = try #require(ChannelAccessListSession(entryType: .ban, in: channel))
+		session.receiveEntry(mask: "*!*@old.example", setBy: "alice", creationDate: nil)
+		session.finishReceiving()
+		session.model.selection = Set(session.model.entries.map(\.id))
+		// A duplicate completion must not erase a completed, nonempty reply.
+		session.finishReceiving()
+		#expect(session.model.entries.count == 1)
+
+		session.updateList()
+		#expect(session.model.entries.count == 1)
+		session.finishReceiving()
+
+		#expect(session.model.entries.isEmpty)
+		#expect(session.model.selection.isEmpty)
+		#expect(session.model.isRefreshing == false)
+	}
+
 	/** The reply reaches the window through a seam it shares with the transcript
 	 and used to carry nothing but the mask, so whichever list was current took
 	 it: a window open on `#one`'s bans filled with `#two`'s. The channel and the

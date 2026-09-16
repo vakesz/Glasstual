@@ -16,6 +16,34 @@ import Testing
 /// listening side, and a task owns the dialling side.
 @Suite("DCC CHAT over loopback")
 struct DCCChatLoopbackTests {
+	@Test("Closing while the consumer holds a batch releases the reader", .timeLimit(.minutes(1)))
+	func closeWhileAwaitingBatchAcknowledgement() async throws {
+		let listening = ChatFixture.listeningConnection()
+		await listening.start()
+		let port = try #require(await ChatFixture.listeningPort(of: listening))
+		let peer = ChatFixture.diallingConnection(port: port)
+		let writing = Task {
+			for await event in peer.events {
+				if case .connected = event {
+					try await peer.write(Data("one\n".utf8))
+					return
+				}
+			}
+		}
+		await peer.start()
+		var received: [String] = []
+		for await event in listening.events {
+			if case let .lines(batch, _) = event {
+				received.append(contentsOf: batch.map(ChatFixture.decode))
+				// Leave acknowledgement outstanding. Cancellation must still close the reader.
+				await listening.close()
+			}
+		}
+		try await writing.value
+		#expect(received == ["one"])
+		await peer.close()
+	}
+
 	@Test("A listener skips ports that are already in use", .timeLimit(.minutes(1)))
 	func listenerSkipsPortsThatAreAlreadyInUse() async throws {
 		let first = ChatFixture.listeningConnection()
@@ -54,8 +82,9 @@ struct DCCChatLoopbackTests {
 				try await listening.send(Data("first".utf8))
 				try await listening.send(Data("second".utf8))
 				try await listening.send(Data("third".utf8))
-			case let .line(data):
-				replies.append(ChatFixture.decode(data))
+			case let .lines(lines, acknowledged):
+				replies.append(contentsOf: lines.map(ChatFixture.decode))
+				acknowledged.finish()
 
 				if replies.count == 2 {
 					break events
@@ -239,7 +268,7 @@ enum ChatFixture {
 				await connection.start()
 			case .connected:
 				return
-			case .line, .closed:
+			case .lines, .closed:
 				/* Returning here would leave `prepare` unrun, and every
 				 assertion the caller makes on what it attached vacuously true,
 				 so the failure is recorded where it happened. */
@@ -265,11 +294,12 @@ enum ChatFixture {
 			var lines: [String] = []
 
 			for await event in events {
-				guard case let .line(data) = event else {
+				guard case let .lines(batch, acknowledged) = event else {
 					continue
 				}
 
-				lines.append(decode(data))
+				lines.append(contentsOf: batch.map(decode))
+				acknowledged.finish()
 
 				guard lines.count == expected else {
 					continue
@@ -293,6 +323,9 @@ enum ChatFixture {
 
 		return Task {
 			for await event in events {
+				if case let .lines(_, acknowledged) = event {
+					acknowledged.finish()
+				}
 				if case let .closed(error) = event {
 					return error
 				}
@@ -309,6 +342,9 @@ enum ChatFixture {
 			var collected: [DCCChatEvent] = []
 
 			for await event in events {
+				if case let .lines(_, acknowledged) = event {
+					acknowledged.finish()
+				}
 				collected.append(event)
 			}
 

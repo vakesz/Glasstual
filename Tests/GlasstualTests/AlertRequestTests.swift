@@ -91,6 +91,16 @@ struct AlertRequestTests {
 		#expect(unavoidable.escapeButton == .default)
 	}
 
+	@Test("A cancelled request never reaches the presenter")
+	func cancelledRequestDoesNotPresent() async {
+		let presenter = RecordingAlertPresenter()
+		let request = AlertRequest(title: "Title", body: "Body", defaultButton: "Continue", alternateButton: "Cancel")
+		let task = Task { await Alerts.run(request, on: .mainWindow, using: presenter) }
+		task.cancel()
+		#expect(await task.value.response == .alternate)
+		#expect(presenter.requests.isEmpty)
+	}
+
 	@Test("A request without a suppression key is presented as written")
 	func plainRequestIsPresented() async {
 		let presenter = RecordingAlertPresenter(response: .alternate)

@@ -150,8 +150,8 @@ struct ChannelModesFeatureTests {
 		model.updateSecretKey("abcde")
 		#expect(model.remainingKeyLength == -2)
 		#expect(model.fitsMaximumKeyLength == false)
-		#expect(ChannelModesStrings.keyLengthWarning(remaining: -2) == "2 characters too many")
-		#expect(ChannelModesStrings.keyLengthWarning(remaining: -1) == "1 character too many")
+		#expect(ChannelModesStrings.keyLengthWarning(remaining: -2) == "2 bytes too many")
+		#expect(ChannelModesStrings.keyLengthWarning(remaining: -1) == "1 byte too many")
 
 		let (_, unlimitedModel) = try makeModel(maximumKeyLength: 0)
 		unlimitedModel.updateSecretKey(String(repeating: "x", count: 1000))
@@ -217,6 +217,26 @@ struct ChannelModesFeatureTests {
 		let acceptedModerated = try #require(acceptedModes.modeInfo(for: ChannelMode.moderated.rawValue))
 		#expect(acceptedModerated.modeIsSet)
 		#expect(acceptedModes.modeInfo(for: ChannelMode.key.rawValue)?.modeParameter == "edited")
+	}
+
+	@Test("The submit action rejects a key above KEYLEN even when invoked from Return")
+	func submissionRespectsKeyLengthLimit() throws {
+		let client = TestClient()
+		client.supportInfo.processConfigurationData("CHANMODES=beI,k,l,imnpst PREFIX=(ov)@+ KEYLEN=3")
+		let channel = try #require(client.findChannelOrCreate("#swift"))
+		channel.activate()
+		let adapter = ChannelModifyModesSheet(channel: channel)
+		let delegate = ChannelModesDelegateSpy()
+		adapter.delegate = delegate
+		adapter.model.setMode(.key, enabled: true)
+		adapter.model.updateSecretKey("💬")
+
+		adapter.submit()
+		#expect(delegate.acceptedModes == nil)
+
+		adapter.model.updateSecretKey("key")
+		adapter.submit()
+		#expect(delegate.acceptedModes?.modeInfo(for: ChannelMode.key.rawValue)?.modeParameter == "key")
 	}
 
 	private func makeModel(

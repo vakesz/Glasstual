@@ -208,7 +208,7 @@ public final class PortMapper: NSObject {
 		}
 	}
 
-	private nonisolated static var rawLocalAddress: UInt32 { // nonisolated: pure
+	private static var rawLocalAddress: UInt32 {
 		var interfaces: UnsafeMutablePointer<ifaddrs>?
 		guard getifaddrs(&interfaces) == 0 else { return 0 }
 		defer { freeifaddrs(interfaces) }

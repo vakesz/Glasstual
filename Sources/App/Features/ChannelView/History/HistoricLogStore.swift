@@ -204,6 +204,7 @@ actor HistoricLogStore {
 			try HistoricLogDatabase.initialCounts(in: context, viewIdentifier: identifier)
 		}
 		views[identifier] = ViewState(totalLineCount: counts.lineCount, maximumIdentifier: counts.maximumIdentifier)
+		scheduleResize(identifier)
 	}
 
 	@discardableResult

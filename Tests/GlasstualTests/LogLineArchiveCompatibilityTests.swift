@@ -2,8 +2,8 @@ import Foundation
 @testable import Glasstual
 import Testing
 
-/** The historic log stores every line as a keyed archive whose root object is
- recorded as `TVCLogLine`. The fixture below was written by an older build and
+/** Older history stored keyed archives whose root object was `TVCLogLine`.
+ The fixture below was written by an older build and
  must keep decoding even though its obsolete renderer dictionary is ignored. */
 @MainActor
 struct LogLineArchiveCompatibilityTests {
@@ -56,6 +56,15 @@ struct LogLineArchiveCompatibilityTests {
 		let text = try #require(String(data: Self.fixtureData, encoding: .isoLatin1))
 
 		#expect(text.contains("TVCLogLine"))
+	}
+
+	@Test("A legacy line can be stored as Codable without losing any fields")
+	func legacyArchiveRewritesAsCodable() throws {
+		let legacy = try #require(LogLine(data: Self.fixtureData))
+		let entry = legacy.historicEntry(forView: "legacy-view")
+		let modern = try #require(LogLine(data: entry.data))
+		#expect(modern == legacy)
+		#expect(LogLineStoredPayload.receivedAt(in: entry.data) == legacy.receivedAt)
 	}
 
 	/** Every enumerated field is written as an unsigned raw value, so a negative

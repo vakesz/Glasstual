@@ -132,6 +132,7 @@ public final class MenuActionCoordinator: NSObject, NSMenuItemValidation {
 	/// The deferred selection reset a closing menu schedules, held so that
 	/// termination can cancel one that has not run yet.
 	var selectionResetTask: Task<Void, Never>?
+	var serverDuplicationTasks: [UUID: Task<Void, Never>] = [:]
 
 	var mainWindow: MainWindow {
 		AppController.shared.mainWindow
@@ -592,7 +593,7 @@ private extension MenuActionCoordinator {
 			guard let self, client.isLoggedIn else { return }
 			for nickname in nicknames {
 				for url in urls {
-					_ = fileTransferCenter.addSender(
+					fileTransferCenter.offerSender(
 						for: client,
 						nickname: nickname,
 						path: url.path,
@@ -622,7 +623,7 @@ public extension MenuActionCoordinator {
 			guard FileManager.default.fileExists(atPath: file, isDirectory: &isDirectory),
 			      isDirectory.boolValue == false
 			else { continue }
-			_ = fileTransferCenter.addSender(for: client, nickname: nickname, path: file, autoOpen: true)
+			fileTransferCenter.offerSender(for: client, nickname: nickname, path: file, autoOpen: true)
 		}
 	}
 }

@@ -161,6 +161,13 @@ enum SupportChannel: String, Sendable {
 
 @MainActor
 enum ServerConnectionCoordinator {
+	private static var pendingRequests: [UUID: Task<Void, Never>] = [:]
+
+	static func cancelPendingRequests() {
+		pendingRequests.values.forEach { $0.cancel() }
+		pendingRequests.removeAll()
+	}
+
 	static func connect(to channel: SupportChannel) {
 		connect(
 			to: SupportChannel.serverInfo,
@@ -185,31 +192,59 @@ enum ServerConnectionCoordinator {
 	}
 
 	static func connect(
+		using request: ServerConnectionRequest
+	) {
+		let identifier = UUID()
+		pendingRequests[identifier] = Task {
+			defer { pendingRequests.removeValue(forKey: identifier) }
+			await resolve(using: request)
+		}
+	}
+
+	static func resolve(
 		using request: ServerConnectionRequest,
 		clients: [IRCClient]? = nil,
-		confirmMerge: @MainActor (IRCClient, String, [String]) -> ServerConnectionMergeChoice = mergeChoice,
+		confirmMerge: @MainActor (IRCClient, String, [String]) async -> ServerConnectionMergeChoice = mergeChoice,
 		mergeConnection: @MainActor (ServerConnectionRequest, IRCClient) -> Void = merge,
 		createConnection: @MainActor (ServerConnectionRequest) -> Void = createClient
-	) {
+	) async {
+		guard !Task.isCancelled else { return }
 		var existingClient: IRCClient?
 		/* Whether or not the link names a channel. A link to a server alone
 		 used to skip this, so every one added another saved copy of a server
 		 the reader already had. */
 		if request.options.mergeConnectionIfPossible {
-			existingClient = (clients ?? ClientEnvironment.shared.world?.clientList ?? []).first {
-				canReuse($0, for: request)
+			for candidate in clients ?? ClientEnvironment.shared.world?.clientList ?? []
+				where await credentialsAllowReuse(candidate, for: request)
+			{
+				existingClient = candidate
+				break
 			}
 		}
+		guard !Task.isCancelled else { return }
 
 		/* The question is about adding channels to that connection. With no
 		 channel to add there is nothing to ask, and the existing connection is
 		 the one the link means. */
 		if let matchedClient = existingClient, request.channels.isEmpty == false {
-			switch confirmMerge(matchedClient, request.serverAddress, request.channels) {
-			case .useExisting: break
-			case .createNew: existingClient = nil
+			let session = matchedClient.startup.identifier
+			let connection = matchedClient.socket?.uniqueIdentifier
+			let choice = await confirmMerge(matchedClient, request.serverAddress, request.channels)
+			guard !Task.isCancelled else { return }
+			switch choice {
 			case .cancel: return
+			case .createNew:
+				createConnection(request)
+				return
+			case .useExisting: break
 			}
+			let stillMatches = await credentialsAllowReuse(matchedClient, for: request)
+			guard !Task.isCancelled, !matchedClient.isTerminating,
+			      matchedClient.startup.identifier == session,
+			      matchedClient.socket?.uniqueIdentifier == connection,
+			      stillMatches,
+			      (clients ?? ClientEnvironment.shared.world?.clientList ?? []).contains(where: { $0 === matchedClient })
+			else { return }
 		}
 
 		if let existingClient {
@@ -227,11 +262,6 @@ enum ServerConnectionCoordinator {
 		      config.cipherSuites == .default,
 		      request.connectSecurely == false || config.validateServerCertificateChain
 		else { return false }
-		if let password = request.serverPassword,
-		   config.serverList.first?.serverPassword != password
-		{
-			return false
-		}
 		// A live connection can still be using the endpoint from before an edit.
 		if let socket = client.socket {
 			guard socket.config.serverAddress.caseInsensitiveCompare(request.serverAddress) == .orderedSame,
@@ -242,6 +272,16 @@ enum ServerConnectionCoordinator {
 			else { return false }
 		}
 		return true
+	}
+
+	private static func credentialsAllowReuse(_ client: IRCClient, for request: ServerConnectionRequest) async -> Bool {
+		guard canReuse(client, for: request) else { return false }
+		guard let password = request.serverPassword else { return true }
+		guard let server = client.config.serverList.first else { return false }
+		let passwords = await KeychainSecretLoader.passwords(for: [server.keychainItem])
+		guard !Task.isCancelled, !client.isTerminating,
+		      client.config.serverList.first == server, canReuse(client, for: request) else { return false }
+		return server.pendingServerPassword.value(orStored: passwords[server.keychainItem]) == password
 	}
 
 	private static func merge(_ request: ServerConnectionRequest, into client: IRCClient) {
@@ -293,14 +333,14 @@ enum ServerConnectionCoordinator {
 		_ client: IRCClient,
 		address: String,
 		channels: [String]
-	) -> ServerConnectionMergeChoice {
+	) async -> ServerConnectionMergeChoice {
 		let hasMultipleChannels = channels.count > 1
 		let channelNames = hasMultipleChannels ? channels.joined(separator: ", ") : channels[0]
 
 		/* Three buttons, because the question has three answers. Making
 		 "Create New Connection" the Escape button meant dismissing the alert
 		 connected somewhere the reader had not agreed to go. */
-		let outcome = Alerts.runModal(AlertRequest(
+		let outcome = await Alerts.run(AlertRequest(
 			title: PromptStrings.ConnectionLink.title(
 				serverAddress: address,
 				channelNames: channelNames,
@@ -314,7 +354,7 @@ enum ServerConnectionCoordinator {
 			alternateButton: PromptStrings.Action.cancel,
 			otherButton: PromptStrings.ConnectionLink.createNewConnectionButtonTitle,
 			style: .warning
-		))
+		), on: .mainWindow)
 
 		return switch outcome.response {
 		case .default: .useExisting

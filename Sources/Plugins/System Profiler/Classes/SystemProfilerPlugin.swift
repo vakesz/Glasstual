@@ -43,6 +43,13 @@ final class SystemProfilerPlugin: NSObject, GlasstualPlugin, PluginCommandHandli
 	PluginPreferencesProviding
 {
 	private var host: PluginHostContext?
+	private var reports: [UUID: Task<Void, Never>] = [:]
+
+	isolated deinit {
+		for task in reports.values {
+			task.cancel()
+		}
+	}
 
 	var pluginPreferencesPane: PluginPreferencesPane? {
 		guard let host else { return nil }
@@ -58,11 +65,20 @@ final class SystemProfilerPlugin: NSObject, GlasstualPlugin, PluginCommandHandli
 	}
 
 	func pluginLoaded(using host: PluginHostContext) {
+		pluginWillUnload()
 		self.host = host
 		// Only the five historically default-disabled features enter the registration domain.
 		host.defaults.register(defaults: Dictionary(uniqueKeysWithValues:
 			FirstPartyPluginPreferences.systemProfilerFeatures.filter(\.defaultValue)
 				.map { ($0.name, $0.defaultValue) }))
+	}
+
+	func pluginWillUnload() {
+		for task in reports.values {
+			task.cancel()
+		}
+		reports.removeAll()
+		host = nil
 	}
 
 	func userInputCommandInvoked(_ invocation: PluginCommandInvocation) {
@@ -94,8 +110,11 @@ final class SystemProfilerPlugin: NSObject, GlasstualPlugin, PluginCommandHandli
 		switch command {
 		case "SYSINFO":
 			let defaults = host.defaults
-			Task { [weak self] in
+			let identifier = UUID()
+			reports[identifier] = Task { [weak self] in
+				defer { self?.reports.removeValue(forKey: identifier) }
 				let facts = await SystemProfileInformation.hardwareFacts()
+				guard !Task.isCancelled, invocation.client.isCurrentSession else { return }
 				self?.output(
 					SystemProfileReport.systemInformation(defaults: defaults, facts: facts, includesOnDeviceFacts: quiet),
 					quiet: quiet,
@@ -105,8 +124,11 @@ final class SystemProfilerPlugin: NSObject, GlasstualPlugin, PluginCommandHandli
 			}
 			return
 		case "DISKSPACE":
-			Task { [weak self] in
+			let identifier = UUID()
+			reports[identifier] = Task { [weak self] in
+				defer { self?.reports.removeValue(forKey: identifier) }
 				let volumes = await SystemProfileInformation.mountedVolumeCapacities()
+				guard !Task.isCancelled, invocation.client.isCurrentSession else { return }
 				self?.output(
 					SystemProfileReport.systemDiskSpaceInformation(volumes: volumes),
 					quiet: true,

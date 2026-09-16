@@ -75,7 +75,7 @@ struct ServerChannelListView: View {
 		}
 		.overlay {
 			if model.rows.isEmpty {
-				if model.isRefreshing {
+				if model.isRefreshing || model.isFiltering {
 					ProgressView(ServerChannelListStrings.requestingChannelList)
 				} else {
 					ContentUnavailableView(
@@ -117,13 +117,14 @@ struct ServerChannelListView: View {
 
 				Spacer()
 
-				if model.isRefreshing {
+				if model.isRefreshing || model.isFiltering {
 					ProgressView()
 						.controlSize(.small)
 						.accessibilityLabel(ServerChannelListStrings.requestingChannelList)
 				}
 
 				Button(ServerChannelListStrings.refresh, action: update)
+					.keyboardShortcut("r", modifiers: .command)
 					.disabled(model.isRefreshing)
 
 				Button(ServerChannelListStrings.joinSelectedChannels, action: joinSelected)

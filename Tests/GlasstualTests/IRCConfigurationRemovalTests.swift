@@ -118,6 +118,118 @@ struct IRCConfigurationRemovalTests {
 		#expect(presentation.permanentRemovals == 0)
 	}
 
+	@Test("Removing a client during credential preparation completes its disconnect", .timeLimit(.minutes(1)))
+	func removalDuringCredentialPreparation() async throws {
+		let fixture = ClientEnvironmentFixture()
+		var config = ClientConfig(connectionName: "Preparing removal")
+		config.serverList = [Server(serverAddress: "irc.example.test")]
+		let client = fixture.world.createClient(with: config)
+		let presentation = RemovalPresentation()
+		client.presentation = presentation
+		let (gate, release) = AsyncStream<Void>.makeStream()
+		let (started, didStart) = AsyncStream<Void>.makeStream()
+		// The backend can finish after cancellation, as a Security call can.
+		let response = Task { for await _ in gate {} }
+		defer {
+			release.finish()
+			response.cancel()
+		}
+		client.credentialLoader = { items in
+			didStart.yield(())
+			await response.value
+			return Dictionary(items.map { ($0, "late credential") }, uniquingKeysWith: { _, newest in newest })
+		}
+		client.connect()
+		let preparation = try #require(client.pendingCredentialTask)
+		var iterator = started.makeAsyncIterator()
+		_ = await iterator.next()
+		var disconnects = 0
+		client.addDisconnectCallback {
+			disconnects += 1
+			#expect(!client.isConnecting)
+			#expect(!client.isDisconnecting)
+		}
+
+		fixture.world.destroyClient(client, preservingLocalData: true)
+
+		#expect(fixture.world.clientList.isEmpty)
+		#expect(client.isTerminating)
+		#expect(client.pendingCredentialTask == nil)
+		#expect(preparation.isCancelled)
+		#expect(disconnects == 1)
+		#expect(client.disconnectCallbacks.isEmpty)
+		#expect(presentation.preservedRemovals == 1)
+		release.finish()
+		await preparation.value
+		#expect(client.socket == nil)
+		#expect(client.sessionNicknamePassword == nil)
+		#expect(disconnects == 1)
+	}
+
+	@Test("A pre-socket quit can reconnect before the old credential lookup finishes", .timeLimit(.minutes(1)))
+	func reconnectDuringCredentialPreparation() async throws {
+		let fixture = ClientEnvironmentFixture()
+		var config = ClientConfig(connectionName: "Preparing reconnect")
+		config.serverList = [Server(serverAddress: "old.example.test")]
+		let client = fixture.world.createClient(with: config)
+		let (oldGate, releaseOld) = AsyncStream<Void>.makeStream()
+		let (newGate, releaseNew) = AsyncStream<Void>.makeStream()
+		let (started, didStart) = AsyncStream<Int>.makeStream()
+		let oldResponse = Task { for await _ in oldGate {} }
+		let newResponse = Task { for await _ in newGate {} }
+		defer {
+			releaseOld.finish()
+			releaseNew.finish()
+			oldResponse.cancel()
+			newResponse.cancel()
+		}
+		client.credentialLoader = { items in
+			didStart.yield(1)
+			await oldResponse.value
+			return Dictionary(items.map { ($0, "old credential") }, uniquingKeysWith: { _, newest in newest })
+		}
+		client.connect()
+		let oldPreparation = try #require(client.pendingCredentialTask)
+		var iterator = started.makeAsyncIterator()
+		#expect(await iterator.next() == 1)
+		var disconnects = 0
+		client.addDisconnectCallback {
+			disconnects += 1
+			client.config.serverList = [Server(serverAddress: "new.example.test")]
+			client.credentialLoader = { _ in
+				didStart.yield(2)
+				await newResponse.value
+				return [:]
+			}
+			client.connect()
+		}
+
+		client.quit()
+
+		#expect(disconnects == 1)
+		#expect(await iterator.next() == 2)
+		let newPreparation = try #require(client.pendingCredentialTask)
+		let newSession = client.startup.identifier
+		releaseOld.finish()
+		await oldPreparation.value
+		#expect(client.isConnecting)
+		#expect(client.startup.identifier == newSession)
+		#expect(client.server?.serverAddress == "new.example.test")
+		#expect(client.pendingCredentialTask != nil)
+		#expect(!newPreparation.isCancelled)
+		#expect(client.socket == nil)
+		#expect(client.sessionNicknamePassword == nil)
+		client.addDisconnectCallback { disconnects += 1 }
+		client.cancelReconnect()
+		client.disconnect()
+		releaseNew.finish()
+		await newPreparation.value
+		#expect(disconnects == 2)
+		#expect(client.disconnectCallbacks.isEmpty)
+		#expect(!client.isConnecting)
+		#expect(client.socket == nil)
+	}
+
 	@Test("Transfer reconciliation releases removed channels even when redraw is batched")
 	func preservingChannelReconciliation() throws {
 		let fixture = ClientEnvironmentFixture()

@@ -275,6 +275,7 @@ public final class LogController: ServerHistoryPresentation {
 	}
 
 	isolated deinit {
+		associatedClient?.renderAdmission.retire(view: uniqueIdentifier)
 		historyRetryTask?.cancel()
 		pipelineTask?.cancel()
 		olderHistoryTask?.cancel()
@@ -309,6 +310,7 @@ public final class LogController: ServerHistoryPresentation {
 	}
 
 	private func stopPipeline() {
+		associatedClient?.renderAdmission.retire(view: uniqueIdentifier)
 		let retired = pipeline
 		Task { await retired.stop() }
 		pipelineTask?.cancel()
@@ -452,11 +454,26 @@ public final class LogController: ServerHistoryPresentation {
 			return false
 		}
 		let generation = renderGeneration
+		let admission = associatedClient?.renderAdmission
+		let ticket = admission?.submit(for: uniqueIdentifier)
 		pipeline.submissions.yield(LogRenderSubmission(isStandalone: isStandalone) { [weak self] in
-			guard let output = await render() else {
-				return nil
+			let output = await render()
+			return {
+				guard let self, let output, self.acceptsRenderGeneration(generation) else {
+					if let ticket {
+						admission?.finish(ticket)
+					}
+					return
+				}
+				self.applyRenderOutput(output, generation: generation) { value in
+					defer {
+						if let ticket {
+							admission?.finish(ticket)
+						}
+					}
+					apply(value)
+				}
 			}
-			return { self?.applyRenderOutput(output, generation: generation, apply) }
 		})
 		return true
 	}

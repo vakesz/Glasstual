@@ -64,30 +64,27 @@ extension FileTransferController {
 			isResume = false
 			processedFilesize = 0
 			openTransfer()
-		} else if restartsFromBeginning {
-			restartFromBeginning()
 		} else {
-			/* The resume offset is the size of the file this transfer writes
-			 into, so the destination has to be settled before it is read. */
-			claimDestinationFilename()
-			guard ownedFile != nil else { return }
-			sendTransferResumeRequestToClient()
+			let restart = restartsFromBeginning
+			restartsFromBeginning = false
+			if restart {
+				isResume = false
+				processedFilesize = 0
+			}
+			transferStatus = .initializing
+			let session = sessionID
+			filePreparationTask = Task { [weak self] in
+				guard let self else { return }
+				await claimDestinationFilename()
+				guard isCurrent(session), ownedFile != nil else { return }
+				filePreparationTask = nil
+				if restart {
+					openTransfer()
+				} else {
+					sendTransferResumeRequestToClient()
+				}
+			}
 		}
-	}
-
-	/** Starts a download over, into a file of its own, without asking to resume.
-
-	 What the partial file was cannot be resumed — the peer did not agree to,
-	 or it no longer matches the offer — so asking again would only fail again.
-	 The partial stays where it is: a fresh name is reserved beside it rather
-	 than truncating bytes the user may still want. */
-	private func restartFromBeginning() {
-		restartsFromBeginning = false
-		isResume = false
-		processedFilesize = 0
-		claimDestinationFilename()
-		guard ownedFile != nil else { return }
-		openTransfer()
 	}
 
 	/** Fails a resume in a way Try Again can get past.
@@ -102,18 +99,20 @@ extension FileTransferController {
 
 	/// Reserves once with O_EXCL. Retries keep the descriptor and partial bytes;
 	/// the local suffix never changes the filename used in DCC negotiation.
-	func claimDestinationFilename() {
+	func claimDestinationFilename() async {
 		guard ownedFile == nil, let path else { return }
+		let session = sessionID
 		do {
 			let url = URL(fileURLWithPath: path).appendingPathComponent(wireFilename)
-			let file = try DCCTransferFile(
-				url: url,
-				receiving: true,
-				accessURL: destinationAccessURL ?? url.deletingLastPathComponent()
-			)
+			let file = try await fileFactory(url, true, destinationAccessURL ?? url.deletingLastPathComponent())
+			guard isCurrent(session), ownedFile == nil else {
+				await file.close()
+				return
+			}
 			takeOwnership(of: file)
 			filename = (file.path as NSString).lastPathComponent
 		} catch {
+			guard isCurrent(session) else { return }
 			/* The folder is forgotten with the failure. Keeping it made every
 			 Try Again write into the same unwritable folder instead of asking
 			 for another one. */
@@ -220,10 +219,6 @@ extension FileTransferController {
 
 	/// The file this transfer reads from, or the one it writes into.
 	private func prepareTransferFile() -> DCCTransferFile? {
-		if !isSender {
-			claimDestinationFilename()
-		}
-
 		guard let ownedFile else {
 			close(with: .sourceFileUnreadable)
 			return nil

@@ -12,6 +12,77 @@ import Testing
 @MainActor
 @Suite("Server properties sheet")
 struct ServerPropertiesSheetTests {
+	@Test("Closing the sheet suppresses identity enumeration that finishes late", .timeLimit(.minutes(1)))
+	func closedCertificateLookupCannotPresent() async throws {
+		let sheet = ServerPropertiesSheet(client: nil)
+		let (gate, release) = AsyncStream<Void>.makeStream()
+		let loading = Task { for await _ in gate {} }
+		let (started, didStart) = AsyncStream<Void>.makeStream()
+		var presentations = 0
+		sheet.certificateSelection.chooseIdentities(using: {
+			didStart.yield(())
+			await loading.value
+			return []
+		}, present: { _ in presentations += 1 })
+		let pending = try #require(sheet.certificateSelection.task)
+		var iterator = started.makeAsyncIterator()
+		_ = await iterator.next()
+		sheet.sheetDidEnd()
+		release.finish()
+		await pending.value
+		#expect(presentations == 0)
+		#expect(sheet.certificateSelection.task == nil)
+	}
+
+	@Test("Replacing a certificate choice ignores the earlier reference when it arrives late", .timeLimit(.minutes(1)))
+	func newerCertificateSelectionWins() async throws {
+		let selection = ClientCertificateSelection()
+		let (gate, release) = AsyncStream<Void>.makeStream()
+		let loading = Task { for await _ in gate {}; return Data([1]) }
+		let (started, didStart) = AsyncStream<Void>.makeStream()
+		var applied: [Data] = []
+		selection.resolveReference(using: {
+			didStart.yield(())
+			return await loading.value
+		}, apply: { applied.append($0) })
+		let old = try #require(selection.task)
+		var iterator = started.makeAsyncIterator()
+		_ = await iterator.next()
+		selection.resolveReference(using: { Data([2]) }, apply: { applied.append($0) })
+		await selection.task?.value
+		release.finish()
+		await old.value
+		#expect(applied == [Data([2])])
+		#expect(!selection.isResolvingReference)
+	}
+
+	@Test("Save includes a chosen certificate whose keychain reference is still loading", .timeLimit(.minutes(1)))
+	func saveAwaitsSelectedCertificate() async throws {
+		let sheet = ServerPropertiesSheet(client: nil)
+		let persistence = KeychainPersistence { _ in }
+		sheet.credentialPersistence = persistence
+		sheet.model.replace(with: Self.configuration(withSecrets: false))
+		let (saved, didSave) = AsyncStream<ClientConfig>.makeStream()
+		let delegate = CertificateSaveRecorder(saved: didSave)
+		sheet.delegate = delegate
+		let (gate, release) = AsyncStream<Void>.makeStream()
+		let loading = Task { for await _ in gate {}; return Data([3]) }
+		sheet.certificateSelection.resolveReference(using: { await loading.value }, apply: { reference in
+			sheet.model.config.identityClientSideCertificate = reference
+		})
+		sheet.submit()
+		#expect(sheet.model.isSaving)
+		#expect(delegate.savedCount == 0)
+		let quit = persistence.waitForSettingsSaves()
+		release.finish()
+		var iterator = saved.makeAsyncIterator()
+		let submitted = try #require(await iterator.next())
+		#expect(submitted.identityClientSideCertificate == Data([3]))
+		#expect(delegate.savedCount == 1)
+		#expect(!sheet.model.isSaving)
+		#expect(await quit.value)
+	}
+
 	@Test("The form is native SwiftUI, not a nib-backed outlet graph")
 	func formHasNoNib() {
 		#expect(Bundle.main.path(forResource: "TDCServerPropertiesSheet", ofType: "nib") == nil)
@@ -346,5 +417,21 @@ struct ServerPropertiesSheetTests {
 		 limit however few characters it looks like. */
 		#expect(ServerPropertiesValidation.isLeavingComment(String(repeating: "€", count: 130)))
 		#expect(ServerPropertiesValidation.isLeavingComment(String(repeating: "€", count: 131)) == false)
+	}
+}
+
+@MainActor
+private final class CertificateSaveRecorder: ServerPropertiesSheetDelegate {
+	let saved: AsyncStream<ClientConfig>.Continuation
+	private(set) var savedCount = 0
+
+	init(saved: AsyncStream<ClientConfig>.Continuation) {
+		self.saved = saved
+	}
+
+	func serverPropertiesSheet(_: ServerPropertiesSheet, onOk config: ClientConfig) {
+		savedCount += 1
+		saved.yield(config)
+		saved.finish()
 	}
 }

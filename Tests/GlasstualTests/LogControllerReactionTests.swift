@@ -56,6 +56,6 @@ struct LogControllerReactionTests {
 		)
 		await controller.drainRenderJobs()
 
-		#expect(transcript.string.contains("\u{1f44d} 1"))
+		#expect(visibleTranscriptText(transcript.attributedString()).contains("\u{1f44d} 1"))
 	}
 }

@@ -15,9 +15,8 @@ import Testing
 @Suite("Main window input field values")
 @MainActor
 struct MainWindowInputFieldValueTests {
-	/// An undo manager reaches a text view through the responder chain, so the
-	/// field has to be in a window and hold the keyboard for there to be a stack
-	/// to talk about.
+	/// Exercise editing with the same window and first-responder ownership as
+	/// the input bar. Its undo stack belongs to the editor.
 	private func makeField() -> (window: NSWindow, field: TextViewWithIRCFormatter) {
 		let window = NSWindow(
 			contentRect: NSRect(x: 0, y: 0, width: 320, height: 120),
@@ -26,6 +25,7 @@ struct MainWindowInputFieldValueTests {
 			defer: false
 		)
 		let field = TextViewWithIRCFormatter(frame: NSRect(x: 0, y: 0, width: 320, height: 40))
+		window.isReleasedWhenClosed = false
 		field.prepareInitialState()
 		field.allowsUndo = true
 		window.contentView?.addSubview(field)
@@ -40,7 +40,8 @@ struct MainWindowInputFieldValueTests {
 
 	@Test("The plain setter replaces the value and drops the undo stack")
 	func stringValueClearsUndo() throws {
-		let (_, field) = makeField()
+		let (window, field) = makeField()
+		defer { window.close() }
 		try typeAnUndoableEdit(into: field)
 
 		field.stringValue = "replaced"
@@ -51,7 +52,8 @@ struct MainWindowInputFieldValueTests {
 
 	@Test("The attributed setter behaves identically")
 	func attributedStringValueClearsUndo() throws {
-		let (_, field) = makeField()
+		let (window, field) = makeField()
+		defer { window.close() }
 		try typeAnUndoableEdit(into: field)
 
 		field.attributedStringValue = NSAttributedString(string: "replaced")
@@ -60,20 +62,27 @@ struct MainWindowInputFieldValueTests {
 		#expect(try #require(field.undoManager).canUndo == false)
 	}
 
-	/// The undo manager belongs to the window. Clearing all of it on a
-	/// conversation switch also emptied every other editor's undo stack.
-	@Test("Replacing the value keeps undo actions other targets registered")
+	@Test("Replacing one editor's value keeps another editor's undo history")
 	func replacingTheValueKeepsOtherUndoActions() throws {
-		let (_, field) = makeField()
-		let undoManager = try #require(field.undoManager)
-		let otherTarget = NSObject()
-		undoManager.registerUndo(withTarget: otherTarget) { _ in }
-		try #require(undoManager.canUndo)
+		let (window, field) = makeField()
+		defer { window.close() }
+		let other = TextViewWithIRCFormatter(frame: NSRect(x: 0, y: 40, width: 320, height: 40))
+		other.allowsUndo = true
+		window.contentView?.addSubview(other)
+		window.makeFirstResponder(other)
+		let otherUndoManager = try #require(other.undoManager)
+		otherUndoManager.groupsByEvent = false
+		otherUndoManager.beginUndoGrouping()
+		try typeAnUndoableEdit(into: other)
+		otherUndoManager.endUndoGrouping()
 
 		field.stringValue = "replaced"
 
-		#expect(undoManager.canUndo)
-		undoManager.removeAllActions(withTarget: otherTarget)
+		#expect(try #require(field.undoManager).canUndo == false)
+		#expect(otherUndoManager.canUndo)
+		otherUndoManager.undo()
+		#expect(other.string.isEmpty)
+		#expect(field.stringValue == "replaced")
 	}
 
 	/** A conversation switch refills the field through the value setters, and
@@ -88,6 +97,8 @@ struct MainWindowInputFieldValueTests {
 			defer: false
 		)
 		let field = TypingRecordingField(frame: NSRect(x: 0, y: 0, width: 320, height: 40))
+		window.isReleasedWhenClosed = false
+		defer { window.close() }
 		field.prepareInitialState()
 		window.contentView?.addSubview(field)
 		window.makeFirstResponder(field)
@@ -103,7 +114,8 @@ struct MainWindowInputFieldValueTests {
 
 	@Test("Both setters replace the whole value rather than appending")
 	func settersReplaceTheWholeValue() {
-		let (_, field) = makeField()
+		let (window, field) = makeField()
+		defer { window.close() }
 
 		field.stringValue = "first"
 		field.attributedStringValue = NSAttributedString(string: "second")

@@ -16,6 +16,39 @@ import Testing
 struct DCCTransferLoopbackTests {
 	// MARK: - The transfers
 
+	@Test("An empty file completes in either connection direction", arguments: [true, false])
+	func emptyFileCompletes(senderListens: Bool) async throws {
+		let directory = try TransferFixture.makeDirectory()
+		defer { TransferFixture.remove(directory) }
+		let source = directory.appendingPathComponent("empty-source")
+		let destination = directory.appendingPathComponent("empty-destination")
+		try Data().write(to: source)
+		let sourceFile = try await DCCTransferFile.open(url: source, receiving: false)
+		let destinationFile = try await DCCTransferFile.open(url: destination, receiving: true)
+		let listener = DCCTransfer(configuration: senderListens
+			? TransferFixture.listeningSender(file: sourceFile, fileSize: 0)
+			: TransferFixture.listeningReceiver(file: destinationFile, fileSize: 0))
+		var local: [DCCTransferEvent] = []
+		var peerEvents: Task<[DCCTransferEvent], Never>?
+		await listener.start()
+		for await event in listener.events {
+			local.append(event)
+			if case let .listening(port) = event {
+				let peer = DCCTransfer(configuration: senderListens
+					? TransferFixture.diallingReceiver(port: port, file: destinationFile, fileSize: 0)
+					: TransferFixture.diallingSender(port: port, file: sourceFile, fileSize: 0))
+				peerEvents = TransferFixture.collectEvents(from: peer)
+				await peer.start()
+			}
+		}
+		let remote = try #require(await peerEvents?.value)
+		#expect(local.last.map(TransferFixture.isFinished) == true)
+		#expect(remote.last.map(TransferFixture.isFinished) == true)
+		#expect(try await destinationFile.size() == 0)
+		await sourceFile.close()
+		await destinationFile.close()
+	}
+
 	@Test("A five megabyte file arrives byte for byte", .timeLimit(.minutes(1)))
 	func fiveMegabyteFileSurvivesTheRoundTrip() async throws {
 		let directory = try TransferFixture.makeDirectory()

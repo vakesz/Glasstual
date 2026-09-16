@@ -98,6 +98,8 @@ public extension MenuActionCoordinator {
 	func prepareForApplicationTermination() {
 		selectionResetTask?.cancel()
 		selectionResetTask = nil
+		serverDuplicationTasks.values.forEach { $0.cancel() }
+		serverDuplicationTasks.removeAll()
 		notifications.cancelAll()
 		SharedApplication.sharedFileTransferCenter().prepareForApplicationTermination()
 	}

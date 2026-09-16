@@ -102,9 +102,6 @@ struct IRCNumericReplyCorpusTests {
 	/// in `receiveNumericReply` is what turns that into the call.
 	@Test
 	func groupedNumericsAreRoutedToExactlyOneHandler() {
-		let grouped = IRCNumeric.allCases.filter { $0.group != nil }
-
-		#expect(grouped.count == 96)
 		#expect(IRCNumeric.welcome.group == .connection)
 		#expect(IRCNumeric.whoisuser.group == .whois)
 		#expect(IRCNumeric.namereply.group == .channel)

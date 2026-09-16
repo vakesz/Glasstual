@@ -121,7 +121,7 @@ public extension IRCClient {
 		timeoutWarningShownToUser = false
 		lastWhoRequestChannelListIndex = 0
 		server = nil
-		retiredServerKeychainItems.forEach { $0.delete() }
+		KeychainPersistence.shared.persist(Dictionary(uniqueKeysWithValues: retiredServerKeychainItems.map { ($0, .cleared) }))
 		retiredServerKeychainItems.removeAll()
 		userHostmask = nil
 		forgetUserNickname()
@@ -231,7 +231,7 @@ public extension IRCClient {
 			setInvisibleMode: config.setInvisibleModeOnConnect
 		)
 		sendCapability("LS", data: "302")
-		if let password = server?.serverPassword {
+		if let password = sessionServerPassword {
 			sendPassword(password)
 		}
 		changeNickname(config.nickname)

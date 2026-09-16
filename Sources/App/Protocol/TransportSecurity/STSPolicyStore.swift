@@ -179,13 +179,13 @@ public final class STSPolicyStore: NSObject {
 	}
 
 	private func load() {
-		guard let stored = userDefaults?.dictionary(forKey: stsPolicyStoreDefaultsKey) else {
+		guard let stored = userDefaults?.propertyListValue(for: Preferences.Connection.stsPolicies)?.dictionary else {
 			return
 		}
 
 		for (host, value) in stored {
 			guard
-				let dictionary = [String: PropertyListValue](propertyList: value),
+				let dictionary = value.dictionary,
 				let policy = STSPolicy(dictionary: dictionary),
 				policy.isExpired == false
 			else {
@@ -201,8 +201,7 @@ public final class STSPolicyStore: NSObject {
 			return
 		}
 
-		let stored = policies.mapValues { $0.dictionaryValue.propertyListObject }
-
-		userDefaults.set(stored, forKey: stsPolicyStoreDefaultsKey)
+		let stored = policies.mapValues { PropertyListValue.dictionary($0.dictionaryValue) }
+		userDefaults.setPropertyListValue(.dictionary(stored), for: Preferences.Connection.stsPolicies)
 	}
 }

@@ -153,13 +153,8 @@ protocol ClientOutput: AnyObject {
 	/// what the sheet hangs from is the window layer's business, and no
 	/// `NSWindow` crosses back.
 	func presentAlertSheet(_ request: AlertRequest, completion: @escaping AlertCompletion)
-	/** Asks a yes/no question and blocks until the user answers, reporting
-	 `true` for the default button.
-
-	 The two call sites need the answer before they can decide whether to keep
-	 going. With no window to ask in, the answer is the default one, which is
-	 also what an already-suppressed alert reports. */
-	func confirmModally(_ request: AlertRequest) -> Bool
+	/// Suspends until the sheet answers. Cancellation dismisses the sheet.
+	func confirm(_ request: AlertRequest) async -> Bool
 	/// Closes every sheet the window is showing on this client's behalf.
 	func closeSheets(for client: IRCClient)
 

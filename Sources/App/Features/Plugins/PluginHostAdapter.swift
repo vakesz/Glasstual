@@ -83,7 +83,9 @@ enum PluginHostAdapter {
 	}
 
 	static func makeClient(_ client: IRCClient) -> PluginClient {
-		PluginClient(
+		let sessionIdentifier = client.startup.identifier
+		let connectionIdentifier = client.socket?.uniqueIdentifier
+		return PluginClient(
 			identifier: client.uniqueIdentifier,
 			userNickname: client.userNickname,
 			networkName: client.networkName,
@@ -143,6 +145,11 @@ enum PluginHostAdapter {
 			},
 			refreshSidebar: {
 				AppController.shared.mainWindow?.reloadTreeGroup(client)
+			},
+			sessionIsCurrent: { [weak client] in
+				guard let client else { return false }
+				return !client.isTerminating && client.startup.identifier == sessionIdentifier
+					&& client.socket?.uniqueIdentifier == connectionIdentifier
 			}
 		)
 	}
@@ -325,8 +332,9 @@ enum PluginHostAdapter {
 
 	/// Plugin Kit values carry the host's identifier rather than the host object
 	/// itself, so a plugin can never reach into an app model it was not handed.
+	/// A query renamed while a plugin was collecting results is another target.
 	private static func hostChannel(_ channel: PluginChannel, on client: IRCClient) -> Channel? {
-		client.channelList.first { $0.uniqueIdentifier == channel.identifier }
+		client.channelList.first { $0.uniqueIdentifier == channel.identifier && $0.name == channel.name }
 	}
 
 	private static func logLineType(for kind: PluginMessageKind) -> LogLineType {

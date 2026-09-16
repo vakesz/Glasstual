@@ -85,6 +85,7 @@ struct ServerPropertiesView: View {
 		/* The sheet takes its size from here and nowhere else. The infinite
 		 maxima are what let the user drag its edges: without them the content
 		 refuses to grow and the sheet has nothing to resize into. */
+		.disabled(model.isSaving)
 		.frame(
 			minWidth: 820,
 			idealWidth: 900,

@@ -43,7 +43,19 @@ import Testing
 @MainActor
 @Suite("Log line")
 struct LogLineTests {
-	@Test("The message identifier survives a secure-coding round trip")
+	@Test("New history uses a versioned Codable payload and refuses unknown versions")
+	func versionedHistoryPayload() throws {
+		let line = LogLine()
+		let entry = line.historicEntry(forView: "view")
+		let dictionary = try #require(PropertyListSerialization.propertyList(from: entry.data, format: nil) as? [String: Any])
+		#expect(dictionary["version"] as? Int == 1)
+		#expect(dictionary["$archiver"] == nil)
+		var unsupported = LogLineStoredPayload(line: line)
+		unsupported.version += 1
+		#expect(try LogLine(data: PropertyListEncoder().encode(unsupported)) == nil)
+	}
+
+	@Test("The message identifier survives a Codable history round trip")
 	func messageIdentifierSurvivesArchiving() throws {
 		var line = LogLine()
 		line.command = "privmsg"
@@ -52,7 +64,7 @@ struct LogLineTests {
 		line.messageBody = "hello"
 		line.messageIdentifier = "63E1033A0"
 
-		let data = try NSKeyedArchiver.archivedData(withRootObject: line.archived, requiringSecureCoding: true)
+		let data = line.historicEntry(forView: "test-view").data
 		let decoded = try #require(LogLine(data: data))
 
 		#expect(decoded.messageIdentifier == "63E1033A0")
@@ -65,7 +77,7 @@ struct LogLineTests {
 		var line = LogLine()
 		line.messageBody = "hello"
 
-		let data = try NSKeyedArchiver.archivedData(withRootObject: line.archived, requiringSecureCoding: true)
+		let data = line.historicEntry(forView: "test-view").data
 		let decoded = try #require(LogLine(data: data))
 
 		#expect(decoded.messageIdentifier == nil)
@@ -93,7 +105,7 @@ struct LogLineTests {
 		line.highlightKeywords = ["hello"]
 		line.excludeKeywords = ["ignore"]
 
-		let data = try NSKeyedArchiver.archivedData(withRootObject: line.archived, requiringSecureCoding: true)
+		let data = line.historicEntry(forView: "test-view").data
 		let decoded = try #require(LogLine(data: data))
 
 		#expect(decoded.isEncrypted)
@@ -119,7 +131,7 @@ struct LogLineTests {
 		var line = LogLine()
 		line.deliveryState = .pending
 
-		let data = try NSKeyedArchiver.archivedData(withRootObject: line.archived, requiringSecureCoding: true)
+		let data = line.historicEntry(forView: "test-view").data
 		let decoded = try #require(LogLine(data: data))
 
 		#expect(decoded.deliveryState == LogLineDeliveryState.none)

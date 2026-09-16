@@ -13,7 +13,7 @@
 import Foundation
 import Observation
 
-struct ServerChannelListEntry: Identifiable, Hashable, Sendable {
+nonisolated struct ServerChannelListEntry: Identifiable, Hashable, Sendable { // nonisolated: value
 	let id = UUID()
 	var channelName = ""
 	var memberCount = 0
@@ -46,7 +46,7 @@ struct ServerChannelListEntry: Identifiable, Hashable, Sendable {
 	}
 }
 
-struct ServerChannelListComparator: SortComparator {
+nonisolated struct ServerChannelListComparator: SortComparator { // nonisolated: value
 	enum Field: Hashable, Sendable {
 		case channelName
 		case memberCount
@@ -85,7 +85,7 @@ final class ServerChannelListModel {
 	 every one of them was kept, re-filtered and re-sorted on each keystroke.
 	 What is past the cap is counted and reported, not silently dropped. */
 	static let maximumEntryCount = 20000
-	static let maximumDisplayedTopicLength = 200
+	nonisolated static let maximumDisplayedTopicLength = 200 // nonisolated: let
 	/// How long typing has to pause before the list is filtered again.
 	static let filterDelay = Duration.milliseconds(120)
 
@@ -106,6 +106,7 @@ final class ServerChannelListModel {
 	}
 
 	var isRefreshing = true
+	private(set) var isFiltering = false
 
 	/// How many channels the server sent past the cap. Zero means the list is
 	/// complete.
@@ -185,11 +186,7 @@ final class ServerChannelListModel {
 	}
 
 	func clear() {
-		queuedWriteTask?.cancel()
-		queuedWriteTask = nil
-		filterTask?.cancel()
-		filterTask = nil
-		queuedEntries.removeAll()
+		cancelPendingWrites()
 		allEntries.removeAll()
 		rows.removeAll()
 		selection.removeAll()
@@ -204,6 +201,9 @@ final class ServerChannelListModel {
 	func cancelPendingWrites() {
 		queuedWriteTask?.cancel()
 		queuedWriteTask = nil
+		filterTask?.cancel()
+		filterTask = nil
+		isFiltering = false
 		queuedEntries.removeAll()
 	}
 
@@ -231,36 +231,18 @@ final class ServerChannelListModel {
 	func listArguments(supportedTokens: [String]) -> String? {
 		Self.listArguments(
 			minimumUserCount: UInt(minimumUserCount) ?? 0,
-			pattern: searchString,
 			supportedTokens: supportedTokens
 		)
 	}
 
 	static func listArguments(
 		minimumUserCount: UInt,
-		pattern: String?,
 		supportedTokens: [String]
 	) -> String? {
-		var conditions: [String] = []
-
-		if minimumUserCount > 0, supportedTokens.contains("U") {
-			conditions.append(">\(minimumUserCount - 1)")
-		}
-
-		let trimmedPattern = pattern?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-		if trimmedPattern.isEmpty == false,
-		   supportedTokens.contains("M"),
-		   trimmedPattern.rangeOfCharacter(from: CharacterSet(charactersIn: ", ")) == nil
-		{
-			let patternValue = if trimmedPattern.contains("*") || trimmedPattern.contains("?") {
-				trimmedPattern
-			} else {
-				"*\(trimmedPattern)*"
-			}
-			conditions.append(patternValue)
-		}
-
-		return conditions.isEmpty ? nil : conditions.joined(separator: ",")
+		// Search includes topics. An ELIST name mask would discard matching
+		// topics before the local search sees them, even after search is cleared.
+		guard minimumUserCount > 0, supportedTokens.contains("U") else { return nil }
+		return ">\(minimumUserCount - 1)"
 	}
 
 	/** Filters once typing pauses.
@@ -268,22 +250,66 @@ final class ServerChannelListModel {
 	 Every keystroke used to re-filter and re-sort the whole list, which is what
 	 made searching a large network feel like the window had stopped. */
 	private func scheduleFilter() {
-		filterTask?.cancel()
-		filterTask = Task { [weak self] in
-			try? await Task.sleep(for: Self.filterDelay)
-			guard Task.isCancelled == false else { return }
-			self?.applyFilterAndSort()
-		}
+		startFiltering(after: Self.filterDelay)
 	}
 
-	/// Filters now, for the callers that already have every row they are going
-	/// to get — a finished refresh, a new sort order, the tests.
+	/// Starts computing a new snapshot without the typing debounce.
 	func applyFilterAndSort() {
+		startFiltering(after: .zero)
+	}
+
+	private func startFiltering(after delay: Duration) {
 		filterTask?.cancel()
-		filterTask = nil
+		isFiltering = true
+		let entries = allEntries
 		let query = searchString.trimmingCharacters(in: .whitespacesAndNewlines)
-		rows = allEntries.filter { $0.matches(query) }
-		rows.sort(using: sortOrder)
-		selection.formIntersection(Set(rows.map(\.id)))
+		let order = sortOrder
+		filterTask = Task { [weak self] in
+			do {
+				if delay > .zero {
+					try await Task.sleep(for: delay)
+				}
+				let result = try await ServerChannelListSnapshot.filtered(entries, query: query, order: order)
+				try Task.checkCancellation()
+				guard let self else { return }
+				rows = result.rows
+				selection.formIntersection(result.identifiers)
+				isFiltering = false
+				filterTask = nil
+			} catch is CancellationError {
+				// A replacement request or the window's teardown owns the state now.
+			} catch {
+				assertionFailure("Channel-list computation failed: \(error)")
+			}
+		}
+	}
+}
+
+private nonisolated struct ServerChannelListSnapshot: Sendable { // nonisolated: value
+	let rows: [ServerChannelListEntry]
+	let identifiers: Set<ServerChannelListEntry.ID>
+
+	@concurrent
+	static func filtered(
+		_ entries: [ServerChannelListEntry],
+		query: String,
+		order: [ServerChannelListComparator]
+	) async throws -> Self {
+		var rows = try entries.filter {
+			try Task.checkCancellation()
+			return $0.matches(query)
+		}
+		try rows.sort { lhs, rhs in
+			try Task.checkCancellation()
+			for comparator in order {
+				let comparison = comparator.compare(lhs, rhs)
+				if comparison != .orderedSame {
+					return comparison == .orderedAscending
+				}
+			}
+			return false
+		}
+		try Task.checkCancellation()
+		return Self(rows: rows, identifiers: Set(rows.map(\.id)))
 	}
 }

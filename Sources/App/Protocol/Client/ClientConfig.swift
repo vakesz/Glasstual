@@ -261,24 +261,42 @@ public nonisolated extension ClientConfig { // nonisolated: value
 		set { pendingProxyPassword = PendingKeychainSecret(newValue) }
 	}
 
-	mutating func writeNicknamePasswordToKeychain() {
-		nicknamePasswordKeychainItem.apply(pendingNicknamePassword)
-		pendingNicknamePassword = .unchanged
+	@discardableResult
+	mutating func writeNicknamePasswordToKeychain() -> KeychainWriteResult {
+		let result = nicknamePasswordKeychainItem.apply(pendingNicknamePassword)
+		if result == .saved {
+			pendingNicknamePassword = .unchanged
+		}
+		return result
 	}
 
-	mutating func writeProxyPasswordToKeychain() {
-		proxyPasswordKeychainItem.apply(pendingProxyPassword)
-		pendingProxyPassword = .unchanged
+	@discardableResult
+	mutating func writeProxyPasswordToKeychain() -> KeychainWriteResult {
+		let result = proxyPasswordKeychainItem.apply(pendingProxyPassword)
+		if result == .saved {
+			pendingProxyPassword = .unchanged
+		}
+		return result
 	}
 
-	mutating func destroyNicknamePasswordKeychainItem() {
-		nicknamePasswordKeychainItem.delete()
-		pendingNicknamePassword = .unchanged
+	@discardableResult
+	mutating func destroyNicknamePasswordKeychainItem() -> KeychainWriteResult {
+		pendingNicknamePassword = .cleared
+		let result = nicknamePasswordKeychainItem.apply(pendingNicknamePassword)
+		if result == .saved {
+			pendingNicknamePassword = .unchanged
+		}
+		return result
 	}
 
-	mutating func destroyProxyPasswordKeychainItem() {
-		proxyPasswordKeychainItem.delete()
-		pendingProxyPassword = .unchanged
+	@discardableResult
+	mutating func destroyProxyPasswordKeychainItem() -> KeychainWriteResult {
+		pendingProxyPassword = .cleared
+		let result = proxyPasswordKeychainItem.apply(pendingProxyPassword)
+		if result == .saved {
+			pendingProxyPassword = .unchanged
+		}
+		return result
 	}
 }
 

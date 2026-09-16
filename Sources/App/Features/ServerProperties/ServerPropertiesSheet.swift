@@ -46,6 +46,10 @@ public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 	let model: ServerPropertiesModel
 
 	private let notifications = NotificationSubscriptions()
+	private var saveTask: Task<Void, Never>?
+	var credentialPersistence = KeychainPersistence.shared
+	let certificateSelection = ClientCertificateSelection()
+	private var certificatePanelRequest: UUID?
 	/* Weak: the window's presentation chain owns a sheet while it is up, so a
 	 child that has been dismissed reads as `nil` here without a callback to
 	 clear it. These four exist only to take the children down with the parent. */
@@ -140,15 +144,52 @@ public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 	}
 
 	override public func submit() {
-		guard let submitted = model.submittedConfig() else { return }
-		model.config = submitted
-		removeConfigurationDidChangeObserver()
-		closeChildSheets()
-		(delegate as? any ServerPropertiesSheetDelegate)?.serverPropertiesSheet(self, onOk: submitted)
+		guard !model.isSaving else { return }
+		let pendingCertificate = certificateSelection.isResolvingReference ? certificateSelection.task : nil
+		if pendingCertificate == nil {
+			certificateSelection.cancel()
+		}
+		model.isSaving = true
+		saveTask = credentialPersistence.submitSettingsSave { [self] in
+			await pendingCertificate?.value
+			guard let submitted = model.submittedConfig() else {
+				model.isSaving = false
+				saveTask = nil
+				return false
+			}
+			let write = credentialPersistence.enqueue(submitted.pendingKeychainEdits, retainsFailureForTermination: false)
+			do {
+				try await write.value
+				let edits = submitted.pendingKeychainEdits
+				var saved = submitted
+				saved.acknowledgeKeychainEdits(edits)
+				client?.sessionCredentials.apply(edits)
+				model.config = saved
+				removeConfigurationDidChangeObserver()
+				closeChildSheets()
+				(delegate as? any ServerPropertiesSheetDelegate)?.serverPropertiesSheet(self, onOk: saved)
+				finishSaving()
+				return true
+			} catch {
+				model.isSaving = false
+				saveTask = nil
+				KeychainAlerts.showFailure(error)
+				return false
+			}
+		}
+	}
+
+	private func finishSaving() {
+		saveTask = nil
+		model.isSaving = false
 		super.submit()
 	}
 
 	override public func cancel() {
+		guard !model.isSaving else { return }
+		saveTask?.cancel()
+		saveTask = nil
+		model.isSaving = false
 		removeConfigurationDidChangeObserver()
 		closeChildSheets()
 		super.cancel()
@@ -281,17 +322,19 @@ public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 	}
 
 	private func resetCertificate() {
+		cancelCertificateSelection()
 		model.config.identityClientSideCertificate = nil
 	}
 
 	private func chooseCertificate() {
-		let query: [CFString: Any] = [kSecClass: kSecClassIdentity, kSecMatchLimit: kSecMatchLimitAll,
-		                              kSecReturnRef: true]
-		var result: CFTypeRef?
-		guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
-		      let identities = result as? [SecIdentity], !identities.isEmpty
-		else {
-			// A sheet on the window this sheet is on, not on whatever is visible.
+		cancelCertificateSelection()
+		certificateSelection.chooseIdentities { [weak self] identities in
+			self?.presentCertificatePicker(identities)
+		}
+	}
+
+	private func presentCertificatePicker(_ identities: [SecIdentity]) {
+		guard !identities.isEmpty else {
 			Alerts.alertSheet(
 				body: ServerPropertiesStrings.Certificate.noneAvailableExplanation,
 				title: ServerPropertiesStrings.Certificate.noneAvailableTitle,
@@ -306,11 +349,13 @@ public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 		panel.setInformativeText(ServerPropertiesStrings.Certificate.chooseExplanation)
 		panel.setAlternateButtonTitle(PromptStrings.Action.cancel)
 		guard let hostWindow = AppController.shared.mainWindow?.ceDeepestWindow else { return }
+		let request = UUID()
+		certificatePanelRequest = request
 		panel.beginSheet(
 			for: hostWindow,
 			modalDelegate: self,
 			didEnd: #selector(identityPanelDidEnd(_:returnCode:contextInfo:)),
-			contextInfo: nil,
+			contextInfo: Unmanaged.passRetained(request as NSUUID).toOpaque(),
 			identities: identities,
 			message: ServerPropertiesStrings.Certificate.chooseTitle
 		)
@@ -319,20 +364,24 @@ public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 	@objc private func identityPanelDidEnd(
 		_ panel: SFChooseIdentityPanel,
 		returnCode: Int,
-		contextInfo _: UnsafeMutableRawPointer?
+		contextInfo: UnsafeMutableRawPointer?
 	) {
-		defer { clientCertificatePanel = nil }
+		guard let contextInfo else { return }
+		let request = Unmanaged<NSUUID>.fromOpaque(contextInfo).takeRetainedValue() as UUID
+		guard certificatePanelRequest == request, clientCertificatePanel === panel else { return }
+		certificatePanelRequest = nil
+		clientCertificatePanel = nil
 		guard returnCode == NSApplication.ModalResponse.OK.rawValue,
 		      let identity = panel.identity()?.takeUnretainedValue() else { return }
 		var certificate: SecCertificate?
 		guard SecIdentityCopyCertificate(identity, &certificate) == errSecSuccess, let certificate else { return }
-		let query: [CFString: Any] = [kSecClass: kSecClassCertificate, kSecValueRef: certificate,
-		                              kSecReturnPersistentRef: true]
-		var result: CFTypeRef?
-		guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
-		      let reference = result as? Data else { return }
-		model.config.identityClientSideCertificate = reference
-		model.primaryServerIsSecured = true
+		certificateSelection.resolveReference {
+			await ClientCertificateLoader.persistentReference(for: certificate)
+		} apply: { [weak self] reference in
+			guard let self else { return }
+			model.config.identityClientSideCertificate = reference
+			model.primaryServerIsSecured = true
+		}
 	}
 
 	private func addConfigurationDidChangeObserver() {
@@ -363,22 +412,31 @@ public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 			destructiveButton: .alternate
 		) { [weak self] outcome in
 			guard outcome.response == .alternate, let self else { return }
+			cancelCertificateSelection()
 			client.updateStoredConfiguration()
 			model.replace(with: client.config)
 		}
 	}
 
-	private func closeChildSheets() {
-		addressBookSheet?.cancel()
-		channelSheet?.cancel()
-		highlightSheet?.cancel()
-		serverEndpointSheet?.cancel()
+	private func cancelCertificateSelection() {
+		certificateSelection.cancel()
+		certificatePanelRequest = nil
 		if let panel = clientCertificatePanel {
+			clientCertificatePanel = nil
 			panel.sheetParent?.endSheet(panel, returnCode: .cancel)
 		}
 	}
 
+	private func closeChildSheets() {
+		cancelCertificateSelection()
+		addressBookSheet?.cancel()
+		channelSheet?.cancel()
+		highlightSheet?.cancel()
+		serverEndpointSheet?.cancel()
+	}
+
 	override public func sheetDidEnd() {
+		closeChildSheets()
 		removeConfigurationDidChangeObserver()
 	}
 }

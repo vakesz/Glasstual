@@ -53,6 +53,7 @@ public final class ChannelModifyTopicSheet: MainWindowSheetSession, ChannelScope
 	}
 
 	override public func submit() {
+		guard model.fitsMaximumLength else { return }
 		(delegate as? ChannelModifyTopicSheetDelegate)?.channelModifyTopicSheet(
 			self,
 			onOk: model.topicForSubmission

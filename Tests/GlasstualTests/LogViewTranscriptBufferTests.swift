@@ -576,7 +576,7 @@ struct LogViewTranscriptBufferTests {
 		var expected = (0 ..< 3).map(message)
 		expected[2].reactions = ["👍": ["bob", "carol"]]
 		#expect(try document(of: logView) == rebuiltDocument(of: expected))
-		#expect(try document(of: logView).contains("👍 2"))
+		#expect(try visibleTranscriptText(textView(of: logView).attributedString()).contains("👍 2"))
 	}
 
 	/// An image whose line has already been trimmed has nothing to be drawn on,
