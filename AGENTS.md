@@ -9,8 +9,8 @@ are no `.h`, `.m`, `.c` or `.mm` files left, and none should come back.
 - SwiftUI owns user-facing layout, navigation, forms and scene presentation.
   AppKit is a capability adapter only: keep it narrow, stateless and owned by
   the feature that needs it. Before removing an adapter, preserve keyboard
-  commands, focus, selection, drag-and-drop, accessibility, restoration and
-  plugin behavior. The deliberate adapters are the main-window responder and
+  commands, focus, selection, drag-and-drop, accessibility and restoration.
+  The deliberate adapters are the main-window responder and
   restoration shell, TextKit input/transcript editing, the transcript reaction
   popover, dock-tile rendering and the pre-scene blocking alert path.
 - Layout is by feature: `Sources/App/{Application,Protocol,Preferences,
@@ -28,23 +28,23 @@ are no `.h`, `.m`, `.c` or `.mm` files left, and none should come back.
   instead. See "Isolation rules" below for what the gate enforces.
 - Preferences are typed `PreferenceKey` declarations under
   `Sources/App/Preferences/Keys/`. The `PreferenceKey` type and the
-  `TextualUserDefaults` store live in `Sources/Shared/Preferences/`, and only
+  `GlasstualUserDefaults` store live in `Sources/Shared/`, and only
   the app compiles them; the XPC connection host reads no preferences. Read
   and write through the key, never through a raw defaults string. Defaults
   registration, storage routing, and import/export filtering are derived directly from those declarations;
   do not add a generated plist mirror or a build phase for them.
-- The channel transcript is native. `LogRenderer` produces semantic
-  `TranscriptLine` values and the transcript adapter draws them with TextKit;
+- The channel transcript is native. `TranscriptRenderer` produces semantic
+  `TranscriptRow` values and the transcript adapter draws them with TextKit;
   no HTML, CSS, JavaScript, WebKit, template engine or script bridge belongs in
   this path. `TranscriptTheme` is the single versioned `Codable` appearance
   model. Store and import/export it as an XML property list, and add colours as
   semantic light/dark roles instead of view-specific styling hooks. Inline
   images are decoded natively and fetched only over HTTP(S) with bounded input.
 - `@objc` marks a runtime boundary and nothing else: a class or action a nib
-  binds, a KVO-observed property, an XPC protocol member, or a plugin
-  principal class. A Swift-to-Swift call never needs one.
-- Keep external wire, template, persistence and plugin strings at typed
-  boundary adapters rather than scattering literals through logic.
+  binds, a KVO-observed property, or an XPC protocol member. A Swift-to-Swift
+  call never needs one.
+- Keep external wire, template and persistence strings at typed boundary
+  adapters rather than scattering literals through logic.
 - User-facing text lives in feature-namespaced String Catalogs, consumed
   through the generated typed symbols. Preserve translations, placeholders,
   translator comments and attribution; merge two keys only when their meaning
@@ -57,21 +57,16 @@ are no `.h`, `.m`, `.c` or `.mm` files left, and none should come back.
 | Target | Sources | Kind | Default isolation |
 | --- | --- | --- | --- |
 | `Glasstual` | `Sources/App/**`, `Sources/Shared/**` | app | `MainActor` |
-| `Caffeine`, `ChatFilter`, `SmileyConverter`, `SystemProfiler`, `UserInsights`, `ZNCAdditions` | `Sources/Plugins/<Directory>/**`, where the directory is the target name with spaces: `Chat Filter`, `Smiley Converter`, `System Profiler`, `User Insights`, `ZNC Additions` | first-party plugin bundles | `MainActor` |
-| `CocoaExtensions` | `Sources/Frameworks/Cocoa Extensions/**` | framework (Foundation/AppKit helpers) | `nonisolated` |
-| `GlasstualPluginKit` | `Sources/Frameworks/Plugin Kit/**` | framework (plugin ABI: `Sendable` event payloads, `@MainActor` callbacks) | `nonisolated` |
-| `IRCConnectionHost` | `Sources/Services/IRC Connection Host/**` | capability-limited XPC network host; its exported shim forwards to `ConnectionHost`, which owns sockets and the `Sendable` client proxy | `nonisolated` |
-| `GlasstualTests` | `Tests/GlasstualTests/**` and three `Chat Filter` plugin sources with their two String Catalogs; the `IRCSpec` and `TLS` corpora ship as bundle resources, and the `History` fixture test reads its corpus from the source tree | Swift Testing bundle hosted by the app | `MainActor` |
+| `CocoaExtensions` | `Sources/CocoaExtensions/**` | framework (Foundation/AppKit helpers) | `nonisolated` |
+| `IRCConnectionHost` | `Sources/ConnectionHost/**` | capability-limited XPC network host; its exported shim forwards to `ConnectionHost`, which owns sockets and the `Sendable` client proxy | `nonisolated` |
+| `GlasstualTests` | `Tests/GlasstualTests/**`; the `IRCSpec` and `TLS` corpora ship as bundle resources, and the `History` fixture test reads its corpus from the source tree | Swift Testing bundle hosted by the app | `MainActor` |
 | `GlasstualE2ETests` | `Tests/GlasstualE2ETests/**` | Swift Testing bundle hosted by the test runner, not the app | `MainActor` |
 | `GlasstualE2EHarness` | `Tests/E2EHarness/**` | external Accessibility driver, watchdog and loopback peers | `MainActor` |
 
 `Sources/Shared/` holds the declarations the network host shares with the app
 (XPC protocols and connection envelopes) and the app's preference store. The
 app compiles all of it. The `IRCConnectionHost` target lists the few files it
-compiles, and only those cross the process boundary. First-party plugin
-preference names live in `Sources/Plugins/Shared/FirstPartyPluginPreferences.swift`.
-The app, `Caffeine`, `ChatFilter`, `SmileyConverter` and `SystemProfiler`
-compile it.
+compiles, and only those cross the process boundary.
 
 ## Isolation rules
 
@@ -114,13 +109,12 @@ on every `make lint`.
   belongs on a `class`: a namespace of `static` members becomes an `enum`, and
   a class that only holds `let`s is `immutable`. Owning a `Mutex` as a `let` is
   still `immutable`, which is why `ConnectionInputBudget`,
-  `NativeInlineImageTransfer` and `TranscriptHighlightExpressions` carry that
-  marker. What moves a class to `guarded` is a stored `var`: `PluginManager`
-  and `SmileyConverterPlugin` each keep main-actor state beside the `Mutex` the
-  transcript renderer reads off the main actor, and `TextualUserDefaults` is a
-  handle on a suite Foundation synchronizes. Those are the three `guarded`
-  types. If a site fits none of the six, it is not a `nonisolated` site: a
-  nonisolated class with mutable state becomes an actor or a main-actor class.
+  `InlineImageTransfer` and `TranscriptHighlightExpressions` carry that
+  marker. What moves a class to `guarded` is a stored `var`, which is why
+  `GlasstualUserDefaults`, a handle on a suite Foundation synchronizes, is the
+  one `guarded` type. If a site fits none of the six, it is not a `nonisolated`
+  site: a nonisolated class with mutable state becomes an actor or a main-actor
+  class.
 
 Four SwiftLint custom rules cover these categories over `Sources/` and `Tests/`
 alike, and fail when they find any: `isolation_escape_hatch`,
@@ -150,8 +144,8 @@ and `IsolationProbe` from `Tests/GlasstualTests/Support/`.
   and `Generated/Xcode/` are never edited by hand.
 - Preserve every upstream copyright notice, license, acknowledgement and
   provenance record when moving or rewriting code. Vendored source stays under
-  `Sources/Frameworks/Cocoa Extensions/` with
-  `Sources/Frameworks/PROVENANCE.md` current.
+  `Sources/CocoaExtensions/` with
+  `Sources/CocoaExtensions/PROVENANCE.md` current.
 - SwiftFormat and SwiftLint run over all of `Sources/` and `Tests/`. Fix
   findings in the source, or tune a rule once in `.swiftlint.yml` /
   `.swiftformat` with a repository-wide reason. Path exclusions, baselines,

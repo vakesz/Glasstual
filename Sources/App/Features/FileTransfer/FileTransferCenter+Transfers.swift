@@ -49,7 +49,7 @@ extension FileTransferCenter {
 	/// the peer nickname and the filename all have to agree.
 	func fileTransfer(
 		matchingPort port: UInt16,
-		client: IRCClient,
+		client: Client,
 		peerNickname: String,
 		filename: String,
 		isSender: Bool
@@ -62,7 +62,7 @@ extension FileTransferCenter {
 
 	static func transfer(
 		_ transfer: FileTransferController,
-		belongsTo client: IRCClient,
+		belongsTo client: Client,
 		peerNickname: String,
 		filename: String
 	) -> Bool {
@@ -88,7 +88,7 @@ extension FileTransferCenter {
 
 	func fileTransferSender(
 		matchingToken transferToken: String,
-		client: IRCClient,
+		client: Client,
 		peerNickname: String,
 		filename: String
 	) -> FileTransferController? {
@@ -100,7 +100,7 @@ extension FileTransferCenter {
 
 	func fileTransfer(
 		matchingToken token: String,
-		client: IRCClient,
+		client: Client,
 		peerNickname: String,
 		filename: String,
 		isSender: Bool
@@ -161,7 +161,7 @@ extension FileTransferCenter {
 	}
 
 	func addReceiver(
-		for client: IRCClient,
+		for client: Client,
 		nickname: String,
 		address hostAddress: String,
 		port hostPort: UInt16,
@@ -229,7 +229,7 @@ extension FileTransferCenter {
 
 	/// Owns file preparation started by a synchronous menu or IRC command.
 	func offerSender(
-		for client: IRCClient, nickname: String, path: String, autoOpen: Bool,
+		for client: Client, nickname: String, path: String, autoOpen: Bool,
 		accessURL: URL? = nil, completion: @escaping (String?) -> Void = { _ in }
 	) {
 		let identifier = UUID()
@@ -244,7 +244,7 @@ extension FileTransferCenter {
 	}
 
 	func addSender(
-		for client: IRCClient,
+		for client: Client,
 		nickname: String,
 		path: String,
 		autoOpen: Bool,
@@ -276,7 +276,7 @@ extension FileTransferCenter {
 	}
 
 	func clientWillBeDestroyed(_ notification: Notification) {
-		guard let client = notification.object as? IRCClient else { return }
+		guard let client = notification.object as? Client else { return }
 		removeFileTransfers(model.transfers.filter { $0.client === client })
 	}
 

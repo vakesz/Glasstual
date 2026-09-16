@@ -243,14 +243,14 @@ struct FileLoggerIdleSweepTests {
 			.joined()
 		let lines = contents.split(separator: "\n")
 		#expect(lines.count == 14)
-		let markers = lines.filter { $0.hasSuffix(IRCLogStrings.sessionMarker(startsSession: true)) ||
-			$0.hasSuffix(IRCLogStrings.sessionMarker(startsSession: false)) || $0.hasSuffix("body")
+		let markers = lines.filter { $0.hasSuffix(LogStrings.sessionMarker(startsSession: true)) ||
+			$0.hasSuffix(LogStrings.sessionMarker(startsSession: false)) || $0.hasSuffix("body")
 		}
 		let expected = [
-			IRCLogStrings.sessionMarker(startsSession: true), "first body",
-			IRCLogStrings.sessionMarker(startsSession: false),
-			IRCLogStrings.sessionMarker(startsSession: true), "second body",
-			IRCLogStrings.sessionMarker(startsSession: false),
+			LogStrings.sessionMarker(startsSession: true), "first body",
+			LogStrings.sessionMarker(startsSession: false),
+			LogStrings.sessionMarker(startsSession: true), "second body",
+			LogStrings.sessionMarker(startsSession: false),
 		]
 		#expect(markers.count == expected.count)
 		for (line, suffix) in zip(markers, expected) {

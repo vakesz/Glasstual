@@ -35,7 +35,7 @@ struct PreferenceCatalogTests {
 	func registeredDefaultsAreRegistered() {
 		TextualPreferences.registerDefaults()
 
-		let container = TextualUserDefaults.container
+		let container = GlasstualUserDefaults.container
 			.volatileDomain(forName: UserDefaults.registrationDomain)
 		let standard = UserDefaults.standard.volatileDomain(forName: UserDefaults.registrationDomain)
 

@@ -54,7 +54,7 @@ struct AppKitBridgeIsolationTests {
 			MainWindow.self,
 			MainWindowTextView.self,
 			TextViewIRCFormattingMenu.self,
-			ApplicationController.self,
+			ApplicationDelegate.self,
 		]
 
 		for subject in classes {
@@ -104,7 +104,6 @@ struct AppKitBridgeIsolationTests {
 		#expect(window.inputTextField.textLayoutManager != nil)
 		#expect(window.loadingScreen.viewIsVisible == false)
 		#expect(window.formattingMenu.formatterMenu.submenu?.items.isEmpty == false)
-		#expect(Bundle.main.path(forResource: "TVCMainWindow", ofType: "nib") == nil)
 	}
 
 	@Test("A synchronous subscription runs on the main actor before the post returns")
@@ -145,14 +144,10 @@ struct AppKitBridgeIsolationTests {
 		let script = directory.appendingPathComponent("Example.scpt")
 		try Data().write(to: script)
 
-		let bundle = directory.appendingPathComponent("Example.bundle", isDirectory: true)
-		try FileManager.default.createDirectory(at: bundle, withIntermediateDirectories: true)
-
 		let style = directory.appendingPathComponent("Example.css")
 		try Data().write(to: style)
 
 		#expect(ResourceFileImporter.kind(of: script) == .script)
-		#expect(ResourceFileImporter.kind(of: bundle) == .extensionBundle)
 		#expect(ResourceFileImporter.kind(of: style) == nil)
 	}
 
@@ -162,26 +157,11 @@ struct AppKitBridgeIsolationTests {
 		 untitled document on reopen; the delegate had to say no. With the
 		 document class gone there is nothing to say no to. */
 		#expect(
-			ApplicationController.instancesRespond(
+			ApplicationDelegate.instancesRespond(
 				to: NSSelectorFromString("applicationShouldOpenUntitledFile:")
 			) == false
 		)
 	}
 
 	// MARK: - Resource cache
-
-	@Test("A cached property list is read from disk once")
-	func resourceContentsAreCachedOnce() {
-		ResourceManager.removeAllCachedResources()
-		defer { ResourceManager.removeAllCachedResources() }
-
-		#expect(ResourceManager.hasCachedResource(named: "StaticStore") == false)
-
-		let first = ResourceManager.dictionary(fromResources: "StaticStore")
-		#expect(first != nil)
-		#expect(ResourceManager.hasCachedResource(named: "StaticStore"))
-
-		let second = ResourceManager.dictionary(fromResources: "StaticStore")
-		#expect(first as NSDictionary? == second as NSDictionary?)
-	}
 }

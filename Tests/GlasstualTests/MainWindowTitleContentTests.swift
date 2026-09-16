@@ -158,7 +158,7 @@ struct MainWindowTitleContentTests {
 		window.updateTitle(for: client)
 		#expect(window.subtitle.hasPrefix(MainWindowStrings.ConnectionStatus.disconnected.title))
 		client.isConnecting = true
-		for mode in [IRCClientConnectMode.reconnect, .retry] {
+		for mode in [ClientConnectMode.reconnect, .retry] {
 			client.connectType = mode
 			window.updateTitle(for: client)
 			#expect(window.subtitle.hasPrefix(MainWindowStrings.ConnectionStatus.reconnecting.title))

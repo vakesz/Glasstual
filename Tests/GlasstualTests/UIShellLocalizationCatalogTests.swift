@@ -5,7 +5,6 @@
 
 import Foundation
 @testable import Glasstual
-import GlasstualPluginKit
 import Testing
 
 @MainActor
@@ -111,7 +110,7 @@ struct UIShellLocalizationCatalogTests {
 		#expect(MainWindowStrings.Conversation.memberCount(1) == "1 member")
 		#expect(
 			MainWindowStrings.Conversation.memberCount(1234)
-				== "\(formattedNumber(1234)) members"
+				== "\(1234.formatted(.number)) members"
 		)
 		#expect(MainWindowStrings.Conversation.awayNickname("alice") == "alice (away)")
 		#expect(MainWindowStrings.Menu.serverList(isVisible: false) == "Show Server List")
@@ -133,7 +132,7 @@ struct UIShellLocalizationCatalogTests {
 	func multiArgumentValuesKeepTheirPlaceholderContracts() throws {
 		let expectedValues = [
 			"Onboarding": ["window-chrome-step": "Step %1$ld of %2$ld"],
-			"TDCServerPropertiesSheet": [
+			"ServerProperties": [
 				"please-enter-a-list-of-properly":
 					"“%@” is not a valid nickname. Separate alternative nicknames with spaces, "
 					+ "for example: Guest1 Guest2 Guest3",
@@ -141,7 +140,7 @@ struct UIShellLocalizationCatalogTests {
 					"The “%@” prefers these cipher suites, most preferred first.",
 				"copy-nickserv-command-for": "Copy NickServ Command for %@",
 			],
-			"TDCChannelPropertiesSheet": [
+			"ChannelProperties": [
 				"secret-key-length": "%1$ld of %2$ld bytes",
 				"secret-key-too-long":
 					"%1$@ accepts at most %2$ld bytes. Anything past that may be cut off.",
@@ -151,7 +150,7 @@ struct UIShellLocalizationCatalogTests {
 			"MemberList": [
 				"logged-in-as": "Logged in as %@",
 			],
-			"TVCMainWindow": [
+			"MainWindow": [
 				"dock-icon-badge-shown": "%@+",
 				"input-bar-reply-banner-replying": "Replying to %@",
 				/* The count twice: as text for the digits, as a number for the

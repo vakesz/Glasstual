@@ -18,7 +18,7 @@ import Testing
 @Suite("File transfer quotas")
 struct FileTransferQuotaTests {
 	private func receiver(
-		on client: IRCClient,
+		on client: Client,
 		filename: String,
 		filesize: UInt64 = 1024
 	) throws -> FileTransferController {

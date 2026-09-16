@@ -61,7 +61,7 @@ struct IRCSpecCapabilityNegotiationTests {
 	/// Drives the authentication numeric handler the way `receiveNumericReply`
 	/// routes to it.
 	private func handleAuthentication(_ message: Message, on client: TestClient) throws {
-		let numeric = try #require(IRCNumeric(rawValue: message.commandNumeric))
+		let numeric = try #require(ServerNumeric(rawValue: message.commandNumeric))
 
 		#expect(numeric.group == .authentication)
 
@@ -78,7 +78,7 @@ struct IRCSpecCapabilityNegotiationTests {
 	func wireProjectionSeparatesFacts() {
 		let client = client(password: "secret")
 		client.isConnected = true
-		let socket = Connection(config: IRCConnectionConfig(), onClient: client)
+		let socket = Connection(config: ConnectionConfig(), onClient: client)
 		client.socket = socket
 		func receive(_ line: String) {
 			client.ircConnection(socket, didReceiveData: line)
@@ -106,7 +106,7 @@ struct IRCSpecCapabilityNegotiationTests {
 	func legacyFactsAreIndependent() {
 		let client = client()
 		client.isConnected = true
-		let socket = Connection(config: IRCConnectionConfig(), onClient: client)
+		let socket = Connection(config: ConnectionConfig(), onClient: client)
 		client.socket = socket
 		func receive(_ line: String) {
 			client.ircConnection(socket, didReceiveData: line)
@@ -131,7 +131,7 @@ struct IRCSpecCapabilityNegotiationTests {
 		let client = client()
 		client.isConnected = true
 		client.isLoggedIn = true
-		let socket = Connection(config: IRCConnectionConfig(), onClient: client)
+		let socket = Connection(config: ConnectionConfig(), onClient: client)
 		client.socket = socket
 		func receive(_ line: String) {
 			client.ircConnection(socket, didReceiveData: line)
@@ -677,15 +677,15 @@ struct IRCSpecCapabilityNegotiationTests {
 	/// specification's assignment before any of the handling can be right.
 	@Test("sasl-3.2: the authentication numerics")
 	func saslNumericsMatchTheSpecification() {
-		#expect(IRCNumeric.loggedin.rawValue == 900)
-		#expect(IRCNumeric.loggedout.rawValue == 901)
-		#expect(IRCNumeric.nicklocked.rawValue == 902)
-		#expect(IRCNumeric.saslsuccess.rawValue == 903)
-		#expect(IRCNumeric.saslfail.rawValue == 904)
-		#expect(IRCNumeric.sasltoolong.rawValue == 905)
-		#expect(IRCNumeric.saslaborted.rawValue == 906)
-		#expect(IRCNumeric.saslalready.rawValue == 907)
-		#expect(IRCNumeric.saslmechs.rawValue == 908)
+		#expect(ServerNumeric.loggedin.rawValue == 900)
+		#expect(ServerNumeric.loggedout.rawValue == 901)
+		#expect(ServerNumeric.nicklocked.rawValue == 902)
+		#expect(ServerNumeric.saslsuccess.rawValue == 903)
+		#expect(ServerNumeric.saslfail.rawValue == 904)
+		#expect(ServerNumeric.sasltoolong.rawValue == 905)
+		#expect(ServerNumeric.saslaborted.rawValue == 906)
+		#expect(ServerNumeric.saslalready.rawValue == 907)
+		#expect(ServerNumeric.saslmechs.rawValue == 908)
 	}
 
 	/// The 9xx numerics sit outside the 400-596 error band, so they must not
@@ -693,7 +693,7 @@ struct IRCSpecCapabilityNegotiationTests {
 	@Test("sasl-3.2: the 9xx numerics are not generic error replies")
 	func saslNumericsAreNotGenericErrors() {
 		for numeric in UInt(900) ... UInt(908) {
-			#expect(IRCNumeric.isErrorReply(numeric) == false)
+			#expect(ServerNumeric.isErrorReply(numeric) == false)
 		}
 	}
 

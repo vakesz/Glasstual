@@ -36,11 +36,11 @@
  *********************************************************************** */
 
 @MainActor
-public protocol ClientScoped: AnyObject {
+protocol ClientScoped: AnyObject {
 	var clientId: String? { get }
 }
 
 @MainActor
-public protocol ChannelScoped: ClientScoped {
+protocol ChannelScoped: ClientScoped {
 	var channelId: String? { get }
 }

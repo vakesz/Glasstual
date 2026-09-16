@@ -5,7 +5,7 @@
 
 import SwiftUI
 
-struct ChannelSpotlightApplicationScene: Scene {
+struct ChannelSpotlightScene: Scene {
 	let scenes: ApplicationScenes
 
 	var body: some Scene {

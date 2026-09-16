@@ -24,7 +24,7 @@ struct ChannelBanListView: View {
 				if model.isRefreshing {
 					ProgressView()
 						.controlSize(.small)
-						.accessibilityLabel(ChannelAccessListStrings.loadingList)
+						.accessibilityLabel(ChannelBanListStrings.loadingList)
 				}
 				Text(verbatim: model.entryCountDescription)
 					.foregroundStyle(.secondary)
@@ -35,7 +35,7 @@ struct ChannelBanListView: View {
 
 			Table(model.entries, selection: $model.selection, sortOrder: $model.sortOrder) {
 				TableColumn(
-					ChannelAccessListStrings.hostmask,
+					ChannelBanListStrings.hostmask,
 					sortUsing: ChannelBanListComparator(field: .mask, order: .forward)
 				) { entry in
 					Text(verbatim: entry.entryMask)
@@ -45,7 +45,7 @@ struct ChannelBanListView: View {
 				.width(min: 220, ideal: 360)
 
 				TableColumn(
-					ChannelAccessListStrings.addedBy,
+					ChannelBanListStrings.addedBy,
 					sortUsing: ChannelBanListComparator(field: .author, order: .forward)
 				) { entry in
 					Text(verbatim: entry.entryAuthor).lineLimit(1)
@@ -53,7 +53,7 @@ struct ChannelBanListView: View {
 				.width(min: 100, ideal: 140)
 
 				TableColumn(
-					ChannelAccessListStrings.created,
+					ChannelBanListStrings.created,
 					sortUsing: ChannelBanListComparator(field: .creationDate, order: .forward)
 				) { entry in
 					Text(verbatim: entry.entryCreationDateString).lineLimit(1)
@@ -63,23 +63,23 @@ struct ChannelBanListView: View {
 			.overlay {
 				if model.entries.isEmpty, model.isRefreshing == false {
 					ContentUnavailableView(
-						ChannelAccessListStrings.emptyTitle,
+						ChannelBanListStrings.emptyTitle,
 						systemImage: "checkmark.shield",
-						description: Text(verbatim: ChannelAccessListStrings.emptyDescription)
+						description: Text(verbatim: ChannelBanListStrings.emptyDescription)
 					)
 				}
 			}
 			.copyable(model.selectedMasks)
 			.onDeleteCommand(perform: removeSelected)
-			.contextMenu(forSelectionType: ChannelBanListSheetEntry.ID.self) { selection in
-				Button(ChannelAccessListStrings.removeSelected, role: .destructive) {
+			.contextMenu(forSelectionType: ChannelBanListEntry.ID.self) { selection in
+				Button(ChannelBanListStrings.removeSelected, role: .destructive) {
 					model.selection = selection
 					removeSelected()
 				}
 				.disabled(selection.isEmpty)
 			}
 			.onChange(of: model.sortOrder) { _, newOrder in model.sort(using: newOrder) }
-			.accessibilityLabel(ChannelAccessListStrings.accessList)
+			.accessibilityLabel(ChannelBanListStrings.accessList)
 
 			if let notice = model.truncationNotice {
 				Text(verbatim: notice)
@@ -92,10 +92,10 @@ struct ChannelBanListView: View {
 
 			Divider()
 			HStack {
-				Button(ChannelAccessListStrings.removeSelected, role: .destructive, action: removeSelected)
+				Button(ChannelBanListStrings.removeSelected, role: .destructive, action: removeSelected)
 					.disabled(model.selection.isEmpty)
 				Spacer()
-				Button(ChannelAccessListStrings.updateList, action: update)
+				Button(ChannelBanListStrings.updateList, action: update)
 					.keyboardShortcut("r", modifiers: .command)
 					.disabled(model.isRefreshing)
 			}

@@ -13,27 +13,27 @@
 import SwiftUI
 
 @MainActor
-public protocol ChannelPropertiesSheetDelegate: AnyObject {
+protocol ChannelPropertiesSheetDelegate: AnyObject {
 	func channelPropertiesSheet(_ sender: ChannelPropertiesSheet, onOk config: ChannelConfig)
 }
 
 @MainActor
-public final class ChannelPropertiesSheet: MainWindowSheetSession, ChannelScoped {
-	public private(set) var client: IRCClient?
-	public private(set) var channel: Channel?
-	public private(set) var clientId: String?
-	public private(set) var channelId: String?
+final class ChannelPropertiesSheet: SheetSession, ChannelScoped {
+	private(set) var client: Client?
+	private(set) var channel: Channel?
+	private(set) var clientId: String?
+	private(set) var channelId: String?
 
 	let model: ChannelPropertiesModel
 	private let notifications = NotificationSubscriptions()
 	private var saveTask: Task<Void, Never>?
 	var credentialPersistence = KeychainPersistence.shared
 
-	public convenience init(client: IRCClient) {
+	convenience init(client: Client) {
 		self.init(config: nil, onClient: client)
 	}
 
-	public init(channel: Channel) {
+	init(channel: Channel) {
 		client = channel.associatedClient
 		clientId = channel.associatedClient?.uniqueIdentifier
 		self.channel = channel
@@ -44,7 +44,7 @@ public final class ChannelPropertiesSheet: MainWindowSheetSession, ChannelScoped
 		observeConfigurationChanges()
 	}
 
-	public init(config: ChannelConfig?, onClient client: IRCClient?) {
+	init(config: ChannelConfig?, onClient client: Client?) {
 		self.client = client
 		clientId = client?.uniqueIdentifier
 		model = ChannelPropertiesModel(config: config ?? ChannelConfig(), client: client)
@@ -61,11 +61,11 @@ public final class ChannelPropertiesSheet: MainWindowSheetSession, ChannelScoped
 		setContent(rootView)
 	}
 
-	public func start() {
+	func start() {
 		startSheet()
 	}
 
-	override public func submit() {
+	override func submit() {
 		guard !model.isSaving, model.validateForSubmission() else { return }
 		let submitted = model.submittedConfig
 		// A nested channel editor is part of its parent server's pending edit.
@@ -102,7 +102,7 @@ public final class ChannelPropertiesSheet: MainWindowSheetSession, ChannelScoped
 		super.submit()
 	}
 
-	override public func cancel() {
+	override func cancel() {
 		guard !model.isSaving else { return }
 		saveTask?.cancel()
 		saveTask = nil
@@ -143,7 +143,7 @@ public final class ChannelPropertiesSheet: MainWindowSheetSession, ChannelScoped
 		}
 	}
 
-	override public func sheetDidEnd() {
+	override func sheetDidEnd() {
 		removeConfigurationObserver()
 	}
 }

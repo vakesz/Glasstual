@@ -39,27 +39,27 @@ import Foundation
 
 // MARK: - Appearance
 
-public nonisolated extension Preferences { // nonisolated: value
+nonisolated extension Preferences { // nonisolated: value
 	/// Window chrome and the two sidebars.
 	enum Appearance {
-		public static let preferredAppearance = PreferenceKey(
+		static let preferredAppearance = PreferenceKey(
 			"Appearance",
 			default: PreferredAppearance.inherited
 		)
 
-		public static let disableSidebarTranslucency = PreferenceKey("DisableSidebarTranslucency", default: false)
-		public static let memberListNoModeSymbol = PreferenceKey("DisplayUserListNoModeSymbol", default: true)
-		public static let memberListSortFavorsServerStaff = PreferenceKey(
+		static let disableSidebarTranslucency = PreferenceKey("DisableSidebarTranslucency", default: false)
+		static let memberListNoModeSymbol = PreferenceKey("DisplayUserListNoModeSymbol", default: true)
+		static let memberListSortFavorsServerStaff = PreferenceKey(
 			"MemberListSortFavorsServerStaff",
 			default: false
 		)
 
-		public static let memberListUpdatesPopoverOnScroll = PreferenceKey(
+		static let memberListUpdatesPopoverOnScroll = PreferenceKey(
 			"MemberListUpdatesUserInfoPopoverOnScroll",
 			default: true
 		)
 
-		public static let conversationTrackingIncludesModeSymbol = PreferenceKey(
+		static let conversationTrackingIncludesModeSymbol = PreferenceKey(
 			"ConversationTrackingIncludesUserModeSymbol",
 			default: false
 		)
@@ -70,31 +70,31 @@ public nonisolated extension Preferences { // nonisolated: value
 		 survives that round trip exactly: `Int(Double(UInt(Int.max)))` is one
 		 past `Int.max` and traps. `Int32.max` is exact as a `Double`, and no
 		 channel comes within seven orders of magnitude of it. */
-		public static let trackUserAwayStatusMaximumChannelSize = PreferenceKey(
+		static let trackUserAwayStatusMaximumChannelSize = PreferenceKey(
 			"TrackUserAwayStatusMaximumChannelSize",
 			default: UInt(300),
 			validation: { $0 <= UInt(Int32.max) }
 		)
 
-		public static let channelNavigationIsServerSpecific = PreferenceKey(
+		static let channelNavigationIsServerSpecific = PreferenceKey(
 			"ChannelNavigationIsServerSpecific",
 			default: true
 		)
 
-		public static let connectOnDoubleClick = PreferenceKey(
+		static let connectOnDoubleClick = PreferenceKey(
 			"ServerListDoubleClickConnectServer",
 			default: false
 		)
 
-		public static let disconnectOnDoubleClick = PreferenceKey(
+		static let disconnectOnDoubleClick = PreferenceKey(
 			"ServerListDoubleClickDisconnectServer",
 			default: false
 		)
 
-		public static let joinOnDoubleClick = PreferenceKey("ServerListDoubleClickJoinChannel", default: false)
-		public static let leaveOnDoubleClick = PreferenceKey("ServerListDoubleClickLeaveChannel", default: false)
+		static let joinOnDoubleClick = PreferenceKey("ServerListDoubleClickJoinChannel", default: false)
+		static let leaveOnDoubleClick = PreferenceKey("ServerListDoubleClickLeaveChannel", default: false)
 
-		public static let rememberQueryStates = PreferenceKey(
+		static let rememberQueryStates = PreferenceKey(
 			"ServerListRetainsQueriesBetweenRestarts",
 			default: false
 		)
@@ -111,13 +111,13 @@ public nonisolated extension Preferences { // nonisolated: value
 
 // MARK: - Theme
 
-public nonisolated extension Preferences { // nonisolated: value
+nonisolated extension Preferences { // nonisolated: value
 	/// The complete native transcript appearance.
 	enum Theme {
 		/// The complete native transcript theme, encoded as an XML property list.
 		/// Keeping it as one value makes edits atomic and lets preference export
 		/// carry exactly the same document as the dedicated theme exporter.
-		public static let transcriptTheme = PreferenceKey("Transcript Theme", default: Data(), validation: { data in
+		static let transcriptTheme = PreferenceKey("Transcript Theme", default: Data(), validation: { data in
 			guard !data.isEmpty else { return true }
 			guard let root = try? PropertyListSerialization
 				.propertyList(from: data, options: [], format: nil) as? [String: Any],
@@ -139,7 +139,7 @@ public nonisolated extension Preferences { // nonisolated: value
 
  The symbol, the preference key and the shipped colour are one declaration
  here rather than three literal lists in as many files. */
-public nonisolated enum UserListModeBadge: String, CaseIterable, Sendable { // nonisolated: value
+nonisolated enum UserListModeBadge: String, CaseIterable, Sendable { // nonisolated: value
 	case ircOperator = "+y"
 	case channelOwner = "+q"
 	case superOperator = "+a"
@@ -147,11 +147,11 @@ public nonisolated enum UserListModeBadge: String, CaseIterable, Sendable { // n
 	case halfOperator = "+h"
 	case voiced = "+v"
 
-	public var modeSymbol: String {
+	var modeSymbol: String {
 		rawValue
 	}
 
-	public static func badge(forPreferenceKeyNamed name: String) -> Self? {
+	static func badge(forPreferenceKeyNamed name: String) -> Self? {
 		allCases.first { $0.preferenceKey.name == name }
 	}
 
@@ -166,21 +166,21 @@ public nonisolated enum UserListModeBadge: String, CaseIterable, Sendable { // n
 		}
 	}
 
-	public var preferenceKey: PreferenceKey<PreferenceColor> {
+	var preferenceKey: PreferenceKey<PreferenceColor> {
 		PreferenceKey("User List Mode Badge Colors -> \(rawValue)", default: defaultColor)
 	}
 }
 
-public nonisolated extension Preferences { // nonisolated: value
+nonisolated extension Preferences { // nonisolated: value
 	/// The colour wells in the "User List" and "Server List" preference panes.
 	enum Badges {
-		public static let userListMode = UserListModeBadge.allCases.map(\.preferenceKey)
+		static let userListMode = UserListModeBadge.allCases.map(\.preferenceKey)
 
 		/** Unregistered on purpose: with nothing stored the server-list cell uses
 		 the colour its appearance defines, which changes with the window's
 		 active state and so cannot be written as a fixed default. Read it with
 		 `storedColor(for:)`, not `color(for:)`. */
-		public static let serverListUnreadHighlight = PreferenceKey(
+		static let serverListUnreadHighlight = PreferenceKey(
 			"Server List Unread Message Count Badge Colors -> Highlight",
 			default: PreferenceColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 0.0),
 			traits: .unregistered
@@ -192,30 +192,30 @@ public nonisolated extension Preferences { // nonisolated: value
 
 // MARK: - Main window state
 
-public nonisolated extension Preferences { // nonisolated: value
+nonisolated extension Preferences { // nonisolated: value
 	/// Where the main window last was and what it was showing. Restored state,
 	/// not settings, so the whole family stays out of an exported file.
 	enum MainWindow {
-		public static let serverListVisible = PreferenceKey(
+		static let serverListVisible = PreferenceKey(
 			"Window -> Main Window -> Server List is Visible",
 			default: true,
 			traits: [.unregistered, .excludedFromExport]
 		)
 
-		public static let memberListVisible = PreferenceKey(
+		static let memberListVisible = PreferenceKey(
 			"Window -> Main Window -> Member List is Visible",
 			default: true,
 			traits: [.unregistered, .excludedFromExport]
 		)
 
-		public static let serverListSelection = PreferenceKey(
+		static let serverListSelection = PreferenceKey(
 			"Window -> Main Window -> Server List Selection",
 			default: "",
 			traits: [.unregistered, .excludedFromExport]
 		)
 
 		/// Where the user last left the member list's edge, in points.
-		public static let memberListWidth = PreferenceKey(
+		static let memberListWidth = PreferenceKey(
 			"Window -> Main Window -> Member List Width",
 			default: 200.0,
 			traits: [.unregistered, .excludedFromExport],
@@ -224,7 +224,7 @@ public nonisolated extension Preferences { // nonisolated: value
 
 		/// The transcript zoom the View menu last left, so Increase and
 		/// Decrease Font Size survive a relaunch the way the column widths do.
-		public static let textSizeMultiplier = PreferenceKey(
+		static let textSizeMultiplier = PreferenceKey(
 			"Window -> Main Window -> Text Size Multiplier",
 			default: 1.0,
 			traits: [.unregistered, .excludedFromExport],

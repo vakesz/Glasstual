@@ -14,34 +14,34 @@ import Foundation
 
 nonisolated enum HighlightEntryStrings { // nonisolated: value
 	static var channelHelp: String {
-		String(localized: .TDCHighlightEntrySheet.channelHelp)
+		String(localized: .HighlightEntry.channelHelp)
 	}
 
 	static var channelLabel: String {
-		String(localized: .TDCHighlightEntrySheet.channelLabel)
+		String(localized: .HighlightEntry.channelLabel)
 	}
 
 	static var ruleDescription: String {
-		String(localized: .TDCHighlightEntrySheet.ruleDescription)
+		String(localized: .HighlightEntry.ruleDescription)
 	}
 
 	static var keywordHelp: String {
-		String(localized: .TDCHighlightEntrySheet.keywordHelp)
+		String(localized: .HighlightEntry.keywordHelp)
 	}
 
 	static var keywordLabel: String {
-		String(localized: .TDCHighlightEntrySheet.keywordLabel)
+		String(localized: .HighlightEntry.keywordLabel)
 	}
 
 	static var keywordPlaceholder: String {
-		String(localized: .TDCHighlightEntrySheet.keywordPlaceholder)
+		String(localized: .HighlightEntry.keywordPlaceholder)
 	}
 
 	static var matchTypeLabel: String {
-		String(localized: .TDCHighlightEntrySheet.matchTypeLabel)
+		String(localized: .HighlightEntry.matchTypeLabel)
 	}
 
 	static var windowTitle: String {
-		String(localized: .TDCHighlightEntrySheet.windowTitle)
+		String(localized: .HighlightEntry.windowTitle)
 	}
 }

@@ -42,10 +42,10 @@ import Foundation
 import os
 
 private struct FileTransferPeerNicknameChange: NotificationCenter.MainActorMessage {
-	typealias Subject = IRCClient
+	typealias Subject = Client
 
 	static var name: Notification.Name {
-		.IRCClientUserNicknameChanged
+		.ClientUserNicknameChanged
 	}
 
 	let oldNickname: String
@@ -72,7 +72,7 @@ let fileTransferLogger = Logger(
 	category: "FileTransfer"
 )
 
-public enum FileTransferStatus: UInt, Sendable {
+enum FileTransferStatus: UInt, Sendable {
 	case complete
 	case connecting
 	case fatalError
@@ -94,7 +94,7 @@ public enum FileTransferStatus: UInt, Sendable {
  The same handful of status groups used to be spelled out as a set literal at
  every place that asked — the receiver limit, the row list, the close path, the
  address lookup — and a new status had to be remembered in all of them. */
-public extension FileTransferStatus {
+extension FileTransferStatus {
 	/// Bytes are moving right now.
 	var isActive: Bool {
 		self == .sending || self == .receiving
@@ -143,34 +143,34 @@ public extension FileTransferStatus {
 ///
 /// The bytes themselves belong to a ``DCCTransfer`` actor. The controller
 /// starts one, follows its `AsyncStream` of events on the main actor, and
-/// turns them into the status the dialog, IRCClient and the maintenance timer
+/// turns them into the status the dialog, Client and the maintenance timer
 /// read -- all of which are main-actor too.
 @MainActor
 @Observable
-public final class FileTransferController: ClientScoped {
-	public internal(set) var client: IRCClient?
-	public internal(set) var clientId: String?
+final class FileTransferController: ClientScoped {
+	var client: Client?
+	var clientId: String?
 
 	/// Whether the bytes continue a partly transferred file, which is what
 	/// decides if a restart keeps ``processedFilesize`` or zeroes it.
-	public internal(set) var isResume = false
-	public internal(set) var isReversed = false
-	public internal(set) var isSender = false
-	public internal(set) var totalFilesize: UInt64 = 0
-	public internal(set) var processedFilesize: UInt64 = 0
-	public internal(set) var currentRecord: UInt64 = 0
-	public internal(set) var errorMessageDescription: String?
-	public internal(set) var path: String?
-	public internal(set) var filename = ""
+	var isResume = false
+	var isReversed = false
+	var isSender = false
+	var totalFilesize: UInt64 = 0
+	var processedFilesize: UInt64 = 0
+	var currentRecord: UInt64 = 0
+	var errorMessageDescription: String?
+	var path: String?
+	var filename = ""
 	var wireFilename = ""
-	public internal(set) var hostAddress = ""
-	public internal(set) var peerNickname = ""
-	public internal(set) var transferToken: String?
-	public internal(set) var uniqueIdentifier = UUID().uuidString
-	public internal(set) var hostPort: UInt16 = 0
+	var hostAddress = ""
+	var peerNickname = ""
+	var transferToken: String?
+	var uniqueIdentifier = UUID().uuidString
+	var hostPort: UInt16 = 0
 
-	public internal(set) var speedRecords: [UInt64] = []
-	public internal(set) var transferStatus: FileTransferStatus = .stopped
+	var speedRecords: [UInt64] = []
+	var transferStatus: FileTransferStatus = .stopped
 
 	/// The descriptor this transfer reads from or writes into, and the
 	/// authority for all byte I/O and resume validation.
@@ -191,7 +191,7 @@ public final class FileTransferController: ClientScoped {
 
 	var stopTask: Task<Void, Never>?
 	var sessionID = UUID()
-	public internal(set) var completion: DCCTransfer.Completion?
+	var completion: DCCTransfer.Completion?
 	var portMapping: PortMapper?
 	var transfer: DCCTransfer?
 	var transferEvents: Task<Void, Never>?
@@ -206,14 +206,14 @@ public final class FileTransferController: ClientScoped {
 	var portMapperNotifications = NotificationSubscriptions()
 	private var peerNicknameObservation: NotificationCenter.ObservationToken?
 
-	public var canStart: Bool {
+	var canStart: Bool {
 		transferStatus.canRetry
 	}
 
-	private init(client: IRCClient) {
+	private init(client: Client) {
 		self.client = client
 		clientId = client.uniqueIdentifier
-		lifecycleNotifications.observe(.IRCClientDidDisconnect, object: client) { [weak self] notification in
+		lifecycleNotifications.observe(.ClientDidDisconnect, object: client) { [weak self] notification in
 			self?.clientDisconnected(notification)
 		}
 		/* A NICK must update the destination before another main-actor operation
@@ -257,8 +257,8 @@ public final class FileTransferController: ClientScoped {
 		}
 	}
 
-	public static func receiver(
-		for client: IRCClient,
+	static func receiver(
+		for client: Client,
 		nickname: String,
 		address hostAddress: String,
 		port hostPort: UInt16,
@@ -284,8 +284,8 @@ public final class FileTransferController: ClientScoped {
 		return controller
 	}
 
-	public static func sender(
-		for client: IRCClient,
+	static func sender(
+		for client: Client,
 		nickname: String,
 		path: String,
 		accessURL: URL? = nil
@@ -296,7 +296,7 @@ public final class FileTransferController: ClientScoped {
 	}
 
 	static func sender(
-		for client: IRCClient,
+		for client: Client,
 		nickname: String,
 		path: String,
 		accessURL: URL? = nil,
@@ -348,7 +348,7 @@ extension FileTransferController {
 	}
 
 	var transferCenter: FileTransferCenter {
-		SharedApplication.sharedFileTransferCenter()
+		AppServices.fileTransfers
 	}
 }
 
@@ -381,7 +381,7 @@ extension FileTransferController {
 
 // MARK: - Progress
 
-public extension FileTransferController {
+extension FileTransferController {
 	/// Folds the last second's bytes into the rolling average the row's speed
 	/// and time-remaining are read from.
 	func onMaintenanceTimer() {

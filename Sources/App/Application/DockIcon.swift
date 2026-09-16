@@ -12,13 +12,13 @@
 import AppKit
 import SwiftUI
 
-public enum DockIcon {
+enum DockIcon {
 	private static let maximumDisplayedCount: UInt = 9999
 
 	@MainActor private static var cachedHighlightCount = -1
 	@MainActor private static var cachedMessageCount = -1
 
-	@MainActor public static func updateDockIcon() {
+	@MainActor static func updateDockIcon() {
 		/* Turning the preference off has to clear whatever is already drawn:
 		 this is the only thing the preference-change path calls. */
 		guard Preferences.Notifications.displayDockBadge.value else {
@@ -26,7 +26,7 @@ public enum DockIcon {
 			return
 		}
 
-		guard let world = AppController.shared.world else { return }
+		guard let world = AppServices.world else { return }
 
 		var highlightCount: UInt = 0
 		var messageCount: UInt = 0
@@ -46,12 +46,12 @@ public enum DockIcon {
 		}
 	}
 
-	@MainActor public static func resetCachedCount() {
+	@MainActor static func resetCachedCount() {
 		cachedMessageCount = -1
 		cachedHighlightCount = -1
 	}
 
-	@MainActor public static func drawWithoutCount() {
+	@MainActor static func drawWithoutCount() {
 		guard cachedHighlightCount != 0 || cachedMessageCount != 0 else { return }
 		cachedMessageCount = 0
 		cachedHighlightCount = 0
@@ -59,7 +59,7 @@ public enum DockIcon {
 		clearTile()
 	}
 
-	@MainActor public static func draw(withHighlightCount highlightCount: UInt, messageCount: UInt) {
+	@MainActor static func draw(withHighlightCount highlightCount: UInt, messageCount: UInt) {
 		guard cachedHighlightCount != Int(highlightCount) || cachedMessageCount != Int(messageCount) else {
 			return
 		}
@@ -97,13 +97,13 @@ public enum DockIcon {
 		dockTile.display()
 	}
 
-	public static func badgeString(forCount count: UInt) -> String {
+	static func badgeString(forCount count: UInt) -> String {
 		if count > maximumDisplayedCount {
 			return MainWindowStrings.Dock.overflowBadge(
-				maximum: formattedNumber(Int(maximumDisplayedCount))
+				maximum: maximumDisplayedCount.formatted(.number)
 			)
 		}
-		return formattedNumber(Int(count))
+		return count.formatted(.number)
 	}
 }
 

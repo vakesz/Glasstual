@@ -69,7 +69,7 @@ struct TypingTrackerTests {
 		let notificationCount = Mutex(0)
 		let notifiedChannel = Mutex<Channel?>(nil)
 		let token = NotificationCenter.default.addObserver(
-			forName: .IRCTypingTrackerDidChange,
+			forName: .TypingTrackerDidChange,
 			object: client,
 			queue: nil
 		) { notification in
@@ -77,7 +77,7 @@ struct TypingTrackerTests {
 				count += 1
 			}
 			notifiedChannel.withLock { notifiedChannel in
-				notifiedChannel = notification.userInfo?[IRCTypingTrackerChannelKey] as? Channel
+				notifiedChannel = notification.userInfo?[typingTrackerChannelKey] as? Channel
 			}
 		}
 		defer { NotificationCenter.default.removeObserver(token) }
@@ -97,7 +97,7 @@ struct TypingTrackerTests {
 		let channel = makeChannel(named: "#chat")
 		let notificationCount = Mutex(0)
 		let token = NotificationCenter.default.addObserver(
-			forName: .IRCTypingTrackerDidChange,
+			forName: .TypingTrackerDidChange,
 			object: client,
 			queue: nil
 		) { _ in

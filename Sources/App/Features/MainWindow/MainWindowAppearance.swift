@@ -17,12 +17,12 @@ struct MainWindowAppearanceSchema: Decodable, Sendable {
 	let defaultWindowSize: AppearanceSize
 }
 
-public final class MainWindowAppearance: ApplicationAppearance {
-	public private(set) var textView: MainWindowTextViewAppearance
-	public private(set) var defaultWindowSize: NSSize = .zero
+final class MainWindowAppearance: ApplicationAppearance {
+	private(set) var textView: MainWindowTextViewAppearance
+	private(set) var defaultWindowSize: NSSize = .zero
 
 	@MainActor
-	public init?() {
+	init?() {
 		guard let textView = MainWindowTextViewAppearance() else {
 			return nil
 		}

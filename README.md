@@ -19,7 +19,7 @@ runs in a sandboxed XPC host.
 - Native Lines and Bubbles transcript themes with light and dark appearances.
 - Multiple servers, channel and member management, notifications, file
   transfers, local scrollback and transcript logging.
-- Bundled Swift plugins and user command scripts.
+- Message rules and user command scripts.
 - Strict concurrency checking and typed preferences throughout the app.
 
 ## Screenshots
@@ -71,14 +71,14 @@ files in `Glasstual.xcodeproj` by hand.
 
 `make help` lists the build, archive, coverage, formatting, smoke-test and
 Thread Sanitizer entry points. A valid local signature is recommended because
-sandbox groups, XPC embedding and plugin loading depend on signing identity.
+sandbox groups and XPC embedding depend on signing identity.
 
 ## Architecture
 
 Application code is organized by feature under `Sources/App`; the current
 ownership and dependency rules are documented in
 [`Sources/App/README.md`](Sources/App/README.md). `project.yml` declares the app,
-frameworks, plugins, tests and the single IRC connection XPC host.
+framework, tests and the single IRC connection XPC host.
 
 The source tree is Swift-only. SwiftUI owns user-facing layout and scene
 presentation. Small AppKit adapters remain only where a macOS capability has no
@@ -89,13 +89,13 @@ feature state.
 
 `Cocoa Extensions` is maintained as vendored source. Its exact upstream
 revision and preservation requirements are recorded in
-[`Sources/Frameworks/PROVENANCE.md`](Sources/Frameworks/PROVENANCE.md).
+[`Sources/CocoaExtensions/PROVENANCE.md`](Sources/CocoaExtensions/PROVENANCE.md).
 
 ## Distribution
 
 The app and its XPC host are sandboxed and use the hardened runtime. Library
-validation remains enabled, so plugins must be signed with the same Team ID as
-the app. Cryptography is provided by macOS system frameworks. The release
+validation remains enabled, so nothing outside the app's own signature loads
+into it. Cryptography is provided by macOS system frameworks. The release
 workflow produces a signed and notarized direct-download archive.
 
 Glasstual has no in-app updater. Releases are published through this

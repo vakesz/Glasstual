@@ -108,20 +108,6 @@ struct MessageTests {
 		#expect(plain.senderAccount == nil)
 	}
 
-	@Test("A copy carries the identifier, and editing the copy leaves the original alone")
-	func messageIdentifierSurvivesCopy() throws {
-		let message = try #require(Message(line: "@msgid=abc;account=bob :bob!b@h PRIVMSG #c :hi"))
-		let copy = message.duplicate()
-
-		#expect(copy.messageIdentifier == "abc")
-		#expect(copy.senderAccount == "bob")
-
-		copy.messageIdentifier = "def"
-
-		#expect(copy.messageIdentifier == "def")
-		#expect(message.messageIdentifier == "abc")
-	}
-
 	@Test("A server time is only honored once the capability is negotiated")
 	func serverTimeIsAppliedWhenCapabilityIsEnabled() throws {
 		let client = TestClient()

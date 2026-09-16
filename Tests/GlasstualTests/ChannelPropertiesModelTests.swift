@@ -12,7 +12,7 @@ import Testing
 struct ChannelPropertiesModelTests {
 	/// `inlineMediaDisabled` and `inlineMediaEnabled` are the two halves of one
 	/// override migrated from a single boolean, and
-	/// `LogController.inlineMediaEnabledForView` reads exactly one of them
+	/// `TranscriptController.inlineMediaEnabledForView` reads exactly one of them
 	/// depending on the application-wide preference. The sheet used to edit both
 	/// as independent switches, so one of them was always inert and the pair
 	/// could be left contradicting each other.

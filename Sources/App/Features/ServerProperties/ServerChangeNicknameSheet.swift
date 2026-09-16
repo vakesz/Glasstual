@@ -40,18 +40,18 @@ import Foundation
 import SwiftUI
 
 @MainActor
-public protocol ServerChangeNicknameSheetDelegate: NSObjectProtocol {
+protocol ServerChangeNicknameSheetDelegate: NSObjectProtocol {
 	func serverChangeNicknameSheet(_ sender: ServerChangeNicknameSheet, didInputNickname nickname: String)
 }
 
 @MainActor
-public final class ServerChangeNicknameSheet: MainWindowSheetSession, ClientScoped {
-	public private(set) var client: IRCClient?
-	public private(set) var clientId: String?
+final class ServerChangeNicknameSheet: SheetSession, ClientScoped {
+	private(set) var client: Client?
+	private(set) var clientId: String?
 
 	private let model: ServerNicknameChangeModel
 
-	public init(client: IRCClient) {
+	init(client: Client) {
 		let currentNickname = client.userNickname
 
 		self.client = client
@@ -70,7 +70,7 @@ public final class ServerChangeNicknameSheet: MainWindowSheetSession, ClientScop
 	 The closure holds the client weakly, so the sheet's model is never what
 	 keeps a connection alive. Once the client is gone the check falls back to
 	 the syntax every server accepts. */
-	static func nicknameValidator(for client: IRCClient) -> ServerNicknameChangeModel.Validator {
+	static func nicknameValidator(for client: Client) -> ServerNicknameChangeModel.Validator {
 		{ [weak client] candidate in
 			if candidate.isEmpty {
 				return ApplicationStrings.requiredField
@@ -99,11 +99,11 @@ public final class ServerChangeNicknameSheet: MainWindowSheetSession, ClientScop
 		setContent(rootView)
 	}
 
-	public func start() {
+	func start() {
 		startSheet()
 	}
 
-	override public func submit() {
+	override func submit() {
 		guard model.validateForSubmission() else {
 			return
 		}

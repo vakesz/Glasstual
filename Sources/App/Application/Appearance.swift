@@ -21,23 +21,23 @@ private let appearanceTerminationLogger = Logger(
 	category: "Termination"
 )
 
-public extension Notification.Name {
-	static let applicationAppearanceChanged = Notification.Name("TXApplicationAppearanceChangedNotification")
-	static let systemAppearanceChanged = Notification.Name("TXSystemAppearanceChangedNotification")
+extension Notification.Name {
+	static let applicationAppearanceChanged = Notification.Name("Glasstual.applicationAppearanceChanged")
+	static let systemAppearanceChanged = Notification.Name("Glasstual.systemAppearanceChanged")
 }
 
 /// An immutable snapshot of the appearance the application is currently
 /// drawing in. It is built once per appearance change and only ever read
 /// afterwards, so it is a value.
-public struct AppearancePropertyCollection: Equatable, Sendable {
-	public var appearanceName = ""
-	public var appearanceType: AppearanceType = .light
-	public var isDarkAppearance = false
+struct AppearancePropertyCollection: Equatable, Sendable {
+	var appearanceName = ""
+	var appearanceType: AppearanceType = .light
+	var isDarkAppearance = false
 	/// Whether the appearance is the application's own choice rather than the
 	/// system's. Only then does a window carry an `NSAppearance`.
-	public var overridesAppKitAppearance = false
+	var overridesAppKitAppearance = false
 
-	public var appKitAppearance: NSAppearance? {
+	var appKitAppearance: NSAppearance? {
 		guard overridesAppKitAppearance else {
 			return nil
 		}
@@ -45,22 +45,22 @@ public struct AppearancePropertyCollection: Equatable, Sendable {
 		return isDarkAppearance ? Self.appKitDarkAppearance() : Self.appKitLightAppearance()
 	}
 
-	@MainActor public static func systemWideDarkModeEnabled() -> Bool {
+	@MainActor static func systemWideDarkModeEnabled() -> Bool {
 		NSApp.effectiveAppearance.bestMatch(from: [NSAppearance.Name.darkAqua]) != nil
 	}
 
-	public static func appKitDarkAppearance() -> NSAppearance? {
+	static func appKitDarkAppearance() -> NSAppearance? {
 		NSAppearance(named: .darkAqua)
 	}
 
-	public static func appKitLightAppearance() -> NSAppearance? {
+	static func appKitLightAppearance() -> NSAppearance? {
 		NSAppearance(named: .aqua)
 	}
 }
 
 @MainActor
-public final class Appearance: NSObject {
-	public private(set) var properties = AppearancePropertyCollection()
+final class Appearance: NSObject {
+	private(set) var properties = AppearancePropertyCollection()
 
 	/// `properties` starts at its default value, so "has the appearance ever
 	/// been resolved" needs its own flag rather than a nil check.
@@ -76,7 +76,7 @@ public final class Appearance: NSObject {
 	/// The workspace's accessibility-options notification.
 	private let notifications = NotificationSubscriptions()
 
-	override public init() {
+	override init() {
 		super.init()
 		prepareInitialState()
 	}
@@ -118,7 +118,7 @@ public final class Appearance: NSObject {
 		}
 	}
 
-	public func prepareForApplicationTermination() {
+	func prepareForApplicationTermination() {
 		appearanceTerminationLogger.debug("Removing appearance change observers")
 		removeObservers()
 	}
@@ -140,7 +140,7 @@ public final class Appearance: NSObject {
 		updateAppearanceBySystemChange(true)
 	}
 
-	public func updateAppearance() {
+	func updateAppearance() {
 		updateAppearanceBySystemChange(false)
 	}
 

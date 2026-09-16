@@ -49,8 +49,8 @@ import SwiftUI
  alternative — 170 published properties — buys precision nothing needs. */
 @MainActor
 @Observable
-public final class ObservablePreferences {
-	public static let shared = ObservablePreferences()
+final class ObservablePreferences {
+	static let shared = ObservablePreferences()
 
 	/// Touched by every read and bumped by every change. Private because it is
 	/// the mechanism, not part of the interface.
@@ -63,29 +63,29 @@ public final class ObservablePreferences {
 
 	private init() {
 		/* Two notifications, because the store posts one and the system posts
-		 the other: `TextualUserDefaults` announces its own writes, while
-		 `UserDefaults.didChangeNotification` covers a value another process — an
-		 XPC service, a plugin — wrote into the same suite.
+		 the other: `GlasstualUserDefaults` announces its own writes, while
+		 `UserDefaults.didChangeNotification` covers a value another process wrote
+		 into the same suite.
 
 		 No `object` filter: a suite can be open through more than one
 		 `UserDefaults` handle — the bindings controller has its own, and so
 		 does anything writing off the main actor — and a write through any of
 		 them is a change this has to see. */
-		for name in [UserDefaults.didChangeNotification, .textualUserDefaultsDidChange] {
+		for name in [UserDefaults.didChangeNotification, .glasstualUserDefaultsDidChange] {
 			observations.observe(name) { [weak self] _ in
 				self?.invalidate()
 			}
 		}
 	}
 
-	public subscript<Value>(key: PreferenceKey<Value>) -> Value {
+	subscript<Value>(key: PreferenceKey<Value>) -> Value {
 		get {
 			_ = revision
 			return key.value
 		}
 		set {
 			key.value = newValue
-			AppController.shared.world?.refreshEnvironmentPreferences()
+			AppServices.world?.refreshEnvironmentPreferences()
 			/* The store drops a write that matches what is already stored, so it
 			 posts nothing; a view that pushed the value still has to be told
 			 that its read is stale. */
@@ -96,19 +96,19 @@ public final class ObservablePreferences {
 	/// `nil` while nothing has been written — for the settings whose unset state
 	/// means something, such as a colour well that follows the appearance until
 	/// the user picks a colour.
-	public subscript<Value>(stored key: PreferenceKey<Value>) -> Value? {
+	subscript<Value>(stored key: PreferenceKey<Value>) -> Value? {
 		get {
 			_ = revision
 			return key.storedValue
 		}
 		set {
 			key.storedValue = newValue
-			AppController.shared.world?.refreshEnvironmentPreferences()
+			AppServices.world?.refreshEnvironmentPreferences()
 			invalidate()
 		}
 	}
 
-	public func binding<Value>(for key: PreferenceKey<Value>) -> Binding<Value> {
+	func binding<Value>(for key: PreferenceKey<Value>) -> Binding<Value> {
 		Binding(
 			get: { self[key] },
 			set: { self[key] = $0 }
@@ -117,7 +117,7 @@ public final class ObservablePreferences {
 
 	/// A binding that runs `didSet` after the write — for the controls whose
 	/// change also has to reload part of the interface.
-	public func binding<Value>(
+	func binding<Value>(
 		for key: PreferenceKey<Value>,
 		didSet: @escaping (Value) -> Void
 	) -> Binding<Value> {
@@ -131,16 +131,16 @@ public final class ObservablePreferences {
 	}
 
 	/// Restores a key to its declared default.
-	public func reset(_ key: some AnyPreferenceKey) {
+	func reset(_ key: some AnyPreferenceKey) {
 		key.reset()
-		AppController.shared.world?.refreshEnvironmentPreferences()
+		AppServices.world?.refreshEnvironmentPreferences()
 		invalidate()
 	}
 
 	/// Marks every reading view stale. Public because a few values (a folder
 	/// bookmark, the channel font) are written outside the key store, so
 	/// nothing announces them.
-	public func invalidate() {
+	func invalidate() {
 		revision &+= 1
 	}
 }

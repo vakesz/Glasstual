@@ -71,7 +71,7 @@ struct ServerCodableTests {
 			"serverAddress": "irc.example.test",
 		]))
 
-		#expect(server.serverPort == UInt16(IRCConnectionDefaults.serverPort))
+		#expect(server.serverPort == UInt16(ConnectionDefaults.serverPort))
 		#expect(server.uniqueIdentifier.isEmpty == false)
 	}
 

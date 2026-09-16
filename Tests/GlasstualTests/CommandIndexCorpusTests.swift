@@ -49,9 +49,9 @@ import Testing
 struct CommandIndexCorpusTests {
 	@Test
 	func everyLocalCommandResolvesFromItsName() {
-		for command in IRCLocalCommand.allCases {
-			#expect(IRCLocalCommand(typedName: command.rawValue) == command)
-			#expect(IRCLocalCommand(typedName: command.displayName) == command)
+		for command in LocalCommand.allCases {
+			#expect(LocalCommand(typedName: command.rawValue) == command)
+			#expect(LocalCommand(typedName: command.displayName) == command)
 			#expect(command.displayName == command.rawValue.uppercased())
 		}
 	}
@@ -61,18 +61,18 @@ struct CommandIndexCorpusTests {
 	/// ever sends.
 	@Test
 	func everyRemoteCommandResolvesFromItsWireName() {
-		for command in IRCRemoteCommand.allCases where command != .privmsgAction {
-			#expect(IRCRemoteCommand(wireName: command.rawValue) == command)
-			#expect(IRCRemoteCommand(wireName: command.wireName) == command)
+		for command in RemoteCommand.allCases where command != .privmsgAction {
+			#expect(RemoteCommand(wireName: command.rawValue) == command)
+			#expect(RemoteCommand(wireName: command.wireName) == command)
 			#expect(command.rawValue.contains(" ") == false)
 		}
 
-		#expect(IRCRemoteCommand.privmsgAction.rawValue.contains(" "))
+		#expect(RemoteCommand.privmsgAction.rawValue.contains(" "))
 	}
 
 	@Test
 	func aCommandWithoutArgumentsIsItsOwnSyntaxLine() {
-		for command in IRCLocalCommand.allCases where command.arguments == nil {
+		for command in LocalCommand.allCases where command.arguments == nil {
 			#expect(command.syntax == command.displayName)
 			#expect(command.arity == .none)
 		}
@@ -82,16 +82,16 @@ struct CommandIndexCorpusTests {
 	/// arguments declares at least one group.
 	@Test
 	func argumentSyntaxImpliesTheArity() {
-		for command in IRCLocalCommand.allCases {
+		for command in LocalCommand.allCases {
 			guard let arguments = command.arguments else { continue }
 
 			#expect(command.syntax == "\(command.displayName) \(arguments)")
 			#expect(command.arity.required + command.arity.optional > 0, "\(command.rawValue)")
 		}
 
-		#expect(IRCLocalCommand.kick.arity == CommandArity(required: 1, optional: 2))
-		#expect(IRCLocalCommand.away.arity == CommandArity(required: 0, optional: 1))
-		#expect(IRCLocalCommand.msg.arity == CommandArity(required: 2, optional: 0))
+		#expect(LocalCommand.kick.arity == CommandArity(required: 1, optional: 2))
+		#expect(LocalCommand.away.arity == CommandArity(required: 0, optional: 1))
+		#expect(LocalCommand.msg.arity == CommandArity(required: 2, optional: 0))
 	}
 
 	/// The developer-mode commands are hidden from completion, but still
@@ -99,7 +99,7 @@ struct CommandIndexCorpusTests {
 	/// forwarding them to the server.
 	@Test(arguments: ["recv", "tage", "join_random"])
 	func developerCommandsAreHiddenByDefault(name: String) throws {
-		let command = try #require(IRCLocalCommand(typedName: name))
+		let command = try #require(LocalCommand(typedName: name))
 
 		#expect(command.isDeveloperModeOnly)
 		#expect(CommandIndex.localCommandList().contains(command.displayName) == false)
@@ -109,7 +109,7 @@ struct CommandIndexCorpusTests {
 	func onlyDeveloperCommandsAreHidden() {
 		let offered = Set(CommandIndex.localCommandList())
 		let expected = Set(
-			IRCLocalCommand.allCases
+			LocalCommand.allCases
 				.filter { $0.isDeveloperModeOnly == false }
 				.map(\.displayName)
 		)
@@ -118,21 +118,21 @@ struct CommandIndexCorpusTests {
 	}
 
 	/// A name the client has a handler for names its group; the rest are
-	/// forwarded to a plugin, a script, or the server as the user typed them.
+	/// forwarded to a user script or to the server as the user typed them.
 	@Test
 	func everyHandledCommandNamesItsGroup() {
-		#expect(IRCLocalCommand.dcc.group == .directChat)
-		#expect(IRCLocalCommand.msg.group == .message)
-		#expect(IRCLocalCommand.defaults.group == .defaults)
-		#expect(IRCLocalCommand.unignore.group == .ignore)
-		#expect(IRCLocalCommand.timer.group == .timer)
-		#expect(IRCLocalCommand.kickban.group == .channel(.moderation))
-		#expect(IRCLocalCommand.modeShortcut.group == .channel(.mode))
-		#expect(IRCLocalCommand.topicShortcut.group == .channel(.conversation))
-		#expect(IRCLocalCommand.raw.group == .native(.raw))
-		#expect(IRCLocalCommand.mylag.group == .native(.lag))
+		#expect(LocalCommand.dcc.group == .directChat)
+		#expect(LocalCommand.msg.group == .message)
+		#expect(LocalCommand.defaults.group == .defaults)
+		#expect(LocalCommand.unignore.group == .ignore)
+		#expect(LocalCommand.timer.group == .timer)
+		#expect(LocalCommand.kickban.group == .channel(.moderation))
+		#expect(LocalCommand.modeShortcut.group == .channel(.mode))
+		#expect(LocalCommand.topicShortcut.group == .channel(.conversation))
+		#expect(LocalCommand.raw.group == .native(.raw))
+		#expect(LocalCommand.mylag.group == .native(.lag))
 
-		let forwarded = IRCLocalCommand.allCases.filter { $0.group == nil }.map(\.rawValue)
+		let forwarded = LocalCommand.allCases.filter { $0.group == nil }.map(\.rawValue)
 
 		#expect(forwarded.sorted() == ["adchat", "chatops", "globops", "locops", "nachat", "pass", "whowas"])
 	}
@@ -163,15 +163,15 @@ struct CommandIndexCorpusTests {
 	/// A command that never takes a trailing parameter takes each of its
 	/// parameters as its own wire token.
 	@Test(arguments: [
-		IRCRemoteCommand.join, .mode, .who, .whois, .ping, .pong, .cap, .authenticate,
+		RemoteCommand.join, .mode, .who, .whois, .ping, .pong, .cap, .authenticate,
 	])
-	func commandsWithoutATrailingParameterSaySo(command: IRCRemoteCommand) {
+	func commandsWithoutATrailingParameterSaySo(command: RemoteCommand) {
 		#expect(command.trailingParameter == .never)
 	}
 
 	@Test
 	func aDeclaredPositionIsWithinReach() {
-		for command in IRCRemoteCommand.allCases {
+		for command in RemoteCommand.allCases {
 			guard case let .startsAtArgument(position) = command.trailingParameter else { continue }
 
 			#expect((0 ... 3).contains(position), "\(command.rawValue)")

@@ -21,7 +21,7 @@ private let internetAddressLookupLogger = Logger(
 
 /// Asks a public address service what this Mac looks like from the internet,
 /// which is the address a DCC offer has to name.
-public enum InternetAddressLookup {
+enum InternetAddressLookup {
 	private static let requestTimeout: TimeInterval = 30
 	private nonisolated static let responseByteLimit = 1024 // nonisolated: let
 	private static let firstPartySourceURL = URL(string: "https://api.ipify.org")!
@@ -33,7 +33,7 @@ public enum InternetAddressLookup {
 
 	/// The address the configured source reports, or `nil` when no usable one
 	/// came back — a refusal, an unreadable body, or a cancelled request.
-	public static func address() async -> String? {
+	static func address() async -> String? {
 		await address(from: sourceURL)
 	}
 
@@ -71,7 +71,7 @@ public enum InternetAddressLookup {
 	}
 
 	/// The address a response body names, or `nil` when it names none.
-	public nonisolated static func address(from data: Data?, response: URLResponse?) -> String? { // nonisolated: pure
+	nonisolated static func address(from data: Data?, response: URLResponse?) -> String? { // nonisolated: pure
 		guard
 			let response = response as? HTTPURLResponse,
 			response.statusCode == 200,

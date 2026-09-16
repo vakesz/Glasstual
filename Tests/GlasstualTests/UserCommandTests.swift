@@ -22,7 +22,7 @@ struct UserCommandTests {
 	@Test("Typed QUIT cancels a connecting session", arguments: ["QUIT", "QUIT leaving"])
 	func quitWhileConnecting(_ command: String) {
 		let client = TestClient()
-		let connection = Connection(config: IRCConnectionConfig(), onClient: client)
+		let connection = Connection(config: ConnectionConfig(), onClient: client)
 		client.socket = connection
 		client.isConnecting = true
 		client.autoConnect(withDelay: 60, afterWakeUp: false)

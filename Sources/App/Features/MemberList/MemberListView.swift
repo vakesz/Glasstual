@@ -6,7 +6,6 @@
 import AppKit
 import CocoaExtensions
 import Foundation
-import GlasstualPluginKit
 import SwiftUI
 
 /// What the member list draws that nothing else does. The spacings and the row
@@ -49,13 +48,13 @@ struct MemberListView: View {
 			MemberListContextMenu(
 				model: model,
 				identities: identities,
-				menu: AppController.shared.menuController?.userControlMenu
+				menu: AppServices.delegate.menuController?.userControlMenu
 			)
 		} primaryAction: { identities in
 			guard let identifier = identities.first else { return }
 			model.selectedMemberIDs = identities
 			model.notePrimaryInteraction(withID: identifier)
-			AppController.shared.menuController?.actionCoordinator.memberInMemberListDoubleClicked(model)
+			AppServices.delegate.menuController?.actionCoordinator.memberInMemberListDoubleClicked(model)
 		}
 		.redirectsPrintableInput(to: redirectTyping)
 	}
@@ -184,7 +183,7 @@ private struct MemberListRowView: View {
 		.dropDestination(for: URL.self) { urls, _ in
 			let files = urls.filter(\.isFileURL).map(\.path)
 			guard files.isEmpty == false else { return false }
-			AppController.shared.menuController?.actionCoordinator.sendDroppedFiles(files, nickname: user.nickname)
+			AppServices.delegate.menuController?.actionCoordinator.sendDroppedFiles(files, nickname: user.nickname)
 			return true
 		}
 	}
@@ -212,7 +211,7 @@ private struct MemberListRowView: View {
 	 VoiceOver gets the profile from the row's action instead: a popover that
 	 opened on a timer would move its cursor mid-sentence. */
 	private var clickOffersProfile: Bool {
-		guard Accessibility.isVoiceOverEnabled == false else { return false }
+		guard NSWorkspace.shared.isVoiceOverEnabled == false else { return false }
 		let flags = (NSApp.currentEvent?.modifierFlags ?? NSEvent.modifierFlags)
 			.intersection(.deviceIndependentFlagsMask)
 		return flags.isDisjoint(with: [.command, .shift, .control, .option])
@@ -246,7 +245,7 @@ private struct MemberListContextMenu: View {
 	let menu: NSMenu?
 
 	var body: some View {
-		if let menu, let coordinator = AppController.shared.menuController?.actionCoordinator {
+		if let menu, let coordinator = AppServices.delegate.menuController?.actionCoordinator {
 			AppMenuContent(
 				menu: menu,
 				context: AppMenuContext(coordinator: coordinator, members: clickedMembers)

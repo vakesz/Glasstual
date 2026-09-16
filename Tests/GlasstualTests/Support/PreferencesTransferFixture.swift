@@ -6,7 +6,6 @@
 import CocoaExtensions
 import Foundation
 @testable import Glasstual
-import GlasstualPluginKit
 import SwiftUI
 import Testing
 
@@ -39,7 +38,7 @@ struct PreferencesTransferFixture {
 		try? FileManager.default.removeItem(at: directory)
 	}
 
-	func session(backupDirectory: URL? = nil, world: World? = nil) -> PreferencesTransferSession {
+	func session(backupDirectory: URL? = nil, world: ClientDirectory? = nil) -> PreferencesTransferSession {
 		PreferencesTransferSession(stores: stores,
 		                           recoveryDirectory: backupDirectory ?? directory
 		                           	.appendingPathComponent("Backups"),

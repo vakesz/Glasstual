@@ -332,7 +332,7 @@ nonisolated struct AsyncCertificateValidationLoopbackTests { // nonisolated: val
 		let server = try LoopbackTLSServer()
 		let port = try await server.start()
 
-		var config = IRCConnectionConfig()
+		var config = ConnectionConfig()
 		config.serverAddress = "127.0.0.1"
 		config.serverPort = port
 		config.connectionPrefersSecuredConnection = true

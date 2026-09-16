@@ -14,20 +14,20 @@ import Foundation
 
 nonisolated enum AboutStrings { // nonisolated: value
 	static var acknowledgementsButtonTitle: String {
-		String(localized: .TDCAboutDialog.acknowledgementsButton)
+		String(localized: .About.acknowledgementsButton)
 	}
 
 	static func applicationIconAccessibilityLabel(applicationName: String) -> String {
-		String(localized: .TDCAboutDialog.iconAccessibility(applicationName))
+		String(localized: .About.iconAccessibility(applicationName))
 	}
 
 	/// The application name is drawn above this, so the line under it says what
 	/// version that name is at rather than repeating the name.
 	static func versionDescription(version: String, build: String) -> String {
 		guard build.isEmpty == false, build != version else {
-			return String(localized: .TDCAboutDialog.applicationVersion(version))
+			return String(localized: .About.applicationVersion(version))
 		}
 
-		return String(localized: .TDCAboutDialog.applicationVersionWithBuild(version, build))
+		return String(localized: .About.applicationVersionWithBuild(version, build))
 	}
 }

@@ -75,7 +75,7 @@ struct IRCSpecOutboundLimitsTests {
 		on client: TestClient,
 		as lineType: LogLineType
 	) -> [String] {
-		var cursor = IRCLineCursor(NSAttributedString(string: text))
+		var cursor = LineCursor(NSAttributedString(string: text))
 		var pieces: [String] = []
 
 		while pieces.count < 200,
@@ -202,8 +202,8 @@ struct IRCSpecOutboundLimitsTests {
 	/// several JOINs rather than one truncated one.
 	@Test("A long JOIN list is split into lines that fit")
 	func longJoinListsAreSplit() {
-		let targets = (0 ..< 200).map { IRCJoinBatching.Target(name: "#channel-\($0)") }
-		let batches = IRCJoinBatching.batches(for: targets)
+		let targets = (0 ..< 200).map { JoinBatching.Target(name: "#channel-\($0)") }
+		let batches = JoinBatching.batches(for: targets)
 
 		#expect(batches.count > 1)
 		#expect(batches.flatMap(\.channels).count == targets.count)
@@ -211,7 +211,7 @@ struct IRCSpecOutboundLimitsTests {
 		for batch in batches {
 			let line = "JOIN " + batch.channels.joined(separator: ",")
 
-			#expect(line.utf8.count <= IRCProtocolLimits.maximumBodyLength)
+			#expect(line.utf8.count <= ProtocolLimits.maximumBodyLength)
 		}
 	}
 
@@ -220,11 +220,11 @@ struct IRCSpecOutboundLimitsTests {
 	@Test("Keyed and keyless channels are never batched together")
 	func keyedChannelsAreBatchedSeparately() {
 		let targets = [
-			IRCJoinBatching.Target(name: "#open"),
-			IRCJoinBatching.Target(name: "#secret", key: "hunter2"),
-			IRCJoinBatching.Target(name: "#alsoopen"),
+			JoinBatching.Target(name: "#open"),
+			JoinBatching.Target(name: "#secret", key: "hunter2"),
+			JoinBatching.Target(name: "#alsoopen"),
 		]
-		let batches = IRCJoinBatching.batches(for: targets)
+		let batches = JoinBatching.batches(for: targets)
 
 		for batch in batches {
 			#expect(batch.keys.isEmpty || batch.keys.count == batch.channels.count)
@@ -241,10 +241,10 @@ struct IRCSpecOutboundLimitsTests {
 	 PRIVMSG means "one target per line". */
 	@Test("TARGMAX caps the channels in one JOIN")
 	func targetMaximumCapsOneJoin() {
-		let targets = (0 ..< 10).map { IRCJoinBatching.Target(name: "#c\($0)") }
+		let targets = (0 ..< 10).map { JoinBatching.Target(name: "#c\($0)") }
 
-		#expect(IRCJoinBatching.batches(for: targets, maximumTargets: 4).allSatisfy { $0.channels.count <= 4 })
-		#expect(IRCJoinBatching.batches(for: targets, maximumTargets: 0).count == 1)
+		#expect(JoinBatching.batches(for: targets, maximumTargets: 4).allSatisfy { $0.channels.count <= 4 })
+		#expect(JoinBatching.batches(for: targets, maximumTargets: 0).count == 1)
 	}
 
 	// MARK: - The serialiser
@@ -279,9 +279,9 @@ struct IRCSpecOutboundLimitsTests {
 	@Test("An over-long line is cut to the protocol's body length")
 	func assembledLinesAreCutToTheBodyLength() {
 		let line = "PRIVMSG #chan :" + String(repeating: "a", count: 600)
-		let enforced = IRCProtocolLimits.enforcedWireLine(line)
+		let enforced = ProtocolLimits.enforcedWireLine(line)
 
-		#expect(enforced.utf8.count == IRCProtocolLimits.maximumBodyLength)
+		#expect(enforced.utf8.count == ProtocolLimits.maximumBodyLength)
 		#expect(line.hasPrefix(enforced))
 	}
 
@@ -292,17 +292,17 @@ struct IRCSpecOutboundLimitsTests {
 	@Test("The cut follows the length the server advertised")
 	func theCutFollowsTheAdvertisedLineLength() {
 		let line = "PRIVMSG #chan :" + String(repeating: "a", count: 2000)
-		let raised = IRCProtocolLimits.bodyLimit(forAdvertisedLineLength: 1024)
+		let raised = ProtocolLimits.bodyLimit(forAdvertisedLineLength: 1024)
 
 		#expect(raised == 1022)
-		#expect(IRCProtocolLimits.enforcedWireLine(line, bodyLimit: raised).utf8.count == raised)
+		#expect(ProtocolLimits.enforcedWireLine(line, bodyLimit: raised).utf8.count == raised)
 		// A server that advertised nothing, or nonsense, keeps the RFC's budget.
-		#expect(IRCProtocolLimits.bodyLimit(forAdvertisedLineLength: 0) == IRCProtocolLimits.maximumBodyLength)
-		#expect(IRCProtocolLimits.bodyLimit(forAdvertisedLineLength: 1) == IRCProtocolLimits.maximumBodyLength)
+		#expect(ProtocolLimits.bodyLimit(forAdvertisedLineLength: 0) == ProtocolLimits.maximumBodyLength)
+		#expect(ProtocolLimits.bodyLimit(forAdvertisedLineLength: 1) == ProtocolLimits.maximumBodyLength)
 		// And one that advertises more than is believable is clamped, not trusted.
 		#expect(
-			IRCProtocolLimits.bodyLimit(forAdvertisedLineLength: 1_000_000)
-				== IRCProtocolLimits.maximumServerLineLength - IRCProtocolLimits.lineTerminatorLength
+			ProtocolLimits.bodyLimit(forAdvertisedLineLength: 1_000_000)
+				== ProtocolLimits.maximumServerLineLength - ProtocolLimits.lineTerminatorLength
 		)
 	}
 
@@ -325,7 +325,7 @@ struct IRCSpecOutboundLimitsTests {
 	@Test("The connection's line length follows ISUPPORT and resets with it")
 	func connectionLineLengthFollowsISupport() throws {
 		let client = TestClient(configDictionary: ["nickname": "me", "username": "user"])
-		let connection = Connection(config: IRCConnectionConfig(), onClient: client)
+		let connection = Connection(config: ConnectionConfig(), onClient: client)
 		client.socket = connection
 
 		#expect(connection.maximumLineLength == 512)
@@ -345,7 +345,7 @@ struct IRCSpecOutboundLimitsTests {
 	@Test("A cut line is reported where the user can see it")
 	func aCutLineIsReportedInTheTranscript() {
 		let client = TestClient(configDictionary: ["nickname": "me", "username": "user"])
-		let connection = Connection(config: IRCConnectionConfig(), onClient: client)
+		let connection = Connection(config: ConnectionConfig(), onClient: client)
 		client.socket = connection
 
 		connection.sendLine("PRIVMSG #chan :" + String(repeating: "a", count: 600))
@@ -357,7 +357,7 @@ struct IRCSpecOutboundLimitsTests {
 		#expect(bodies.contains {
 			$0 == ConnectionSafetyStrings.Wire.lineTruncated(
 				sentByteCount: 615,
-				limit: IRCProtocolLimits.maximumBodyLength
+				limit: ProtocolLimits.maximumBodyLength
 			)
 		})
 	}
@@ -367,7 +367,7 @@ struct IRCSpecOutboundLimitsTests {
 	@Test("A line that fits is not reported")
 	func aLineThatFitsIsNotReported() {
 		let client = TestClient(configDictionary: ["nickname": "me", "username": "user"])
-		let connection = Connection(config: IRCConnectionConfig(), onClient: client)
+		let connection = Connection(config: ConnectionConfig(), onClient: client)
 		client.socket = connection
 
 		connection.sendLine("PRIVMSG #chan :hello")
@@ -379,7 +379,7 @@ struct IRCSpecOutboundLimitsTests {
 	func linesWithinTheBudgetAreUnchanged() {
 		let line = "PRIVMSG #chan :hello"
 
-		#expect(IRCProtocolLimits.enforcedWireLine(line) == line)
+		#expect(ProtocolLimits.enforcedWireLine(line) == line)
 	}
 
 	/// The cut lands on a character boundary: half a UTF-8 sequence is not text
@@ -388,10 +388,10 @@ struct IRCSpecOutboundLimitsTests {
 	@Test("The cut never splits a character")
 	func truncationLandsOnACharacterBoundary() {
 		let line = "PRIVMSG #chan :" + String(repeating: "\u{1F4AC}", count: 200)
-		let enforced = IRCProtocolLimits.enforcedWireLine(line)
+		let enforced = ProtocolLimits.enforcedWireLine(line)
 
-		#expect(enforced.utf8.count <= IRCProtocolLimits.maximumBodyLength)
-		#expect(enforced.utf8.count > IRCProtocolLimits.maximumBodyLength - 4)
+		#expect(enforced.utf8.count <= ProtocolLimits.maximumBodyLength)
+		#expect(enforced.utf8.count > ProtocolLimits.maximumBodyLength - 4)
 		#expect(enforced.hasSuffix("\u{1F4AC}"))
 	}
 
@@ -400,21 +400,21 @@ struct IRCSpecOutboundLimitsTests {
 	@Test("Tags are budgeted apart from the body")
 	func tagsAreBudgetedApartFromTheBody() {
 		let tags = "@time=2026-08-26T12:00:00.000Z "
-		let enforced = IRCProtocolLimits.enforcedWireLine(tags + String(repeating: "a", count: 600))
+		let enforced = ProtocolLimits.enforcedWireLine(tags + String(repeating: "a", count: 600))
 
 		#expect(enforced.hasPrefix(tags))
-		#expect(enforced.utf8.count == tags.utf8.count + IRCProtocolLimits.maximumBodyLength)
+		#expect(enforced.utf8.count == tags.utf8.count + ProtocolLimits.maximumBodyLength)
 	}
 
 	/// Half a tag is not a tag, so an oversized tag section loses whole ones.
 	@Test("An oversized tag section drops whole tags")
 	func oversizedTagSectionsDropWholeTags() {
 		let tags = (0 ..< 300).map { "t\($0)=" + String(repeating: "v", count: 20) }
-		let enforced = IRCProtocolLimits.enforcedWireLine("@" + tags.joined(separator: ";") + " PING token")
+		let enforced = ProtocolLimits.enforcedWireLine("@" + tags.joined(separator: ";") + " PING token")
 		let tagSection = String(enforced.prefix(while: { $0 != " " }))
 
 		#expect(enforced.hasSuffix(" PING token"))
-		#expect(tagSection.utf8.count < IRCProtocolLimits.maximumClientTagLength)
+		#expect(tagSection.utf8.count < ProtocolLimits.maximumClientTagLength)
 		#expect(tagSection.hasPrefix("@t0=vvv"))
 		#expect(tagSection.components(separatedBy: ";").allSatisfy { $0.hasSuffix("vvvvv") })
 	}

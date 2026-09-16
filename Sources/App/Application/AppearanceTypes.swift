@@ -37,7 +37,7 @@
 
 import AppKit
 
-public enum AppearanceType: UInt, Sendable {
+enum AppearanceType: UInt, Sendable {
 	case light
 	case dark
 }

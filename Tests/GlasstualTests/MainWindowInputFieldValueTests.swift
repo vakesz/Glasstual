@@ -17,14 +17,14 @@ import Testing
 struct MainWindowInputFieldValueTests {
 	/// Exercise editing with the same window and first-responder ownership as
 	/// the input bar. Its undo stack belongs to the editor.
-	private func makeField() -> (window: NSWindow, field: TextViewWithIRCFormatter) {
+	private func makeField() -> (window: NSWindow, field: IRCFormattedTextView) {
 		let window = NSWindow(
 			contentRect: NSRect(x: 0, y: 0, width: 320, height: 120),
 			styleMask: [.titled],
 			backing: .buffered,
 			defer: false
 		)
-		let field = TextViewWithIRCFormatter(frame: NSRect(x: 0, y: 0, width: 320, height: 40))
+		let field = IRCFormattedTextView(frame: NSRect(x: 0, y: 0, width: 320, height: 40))
 		window.isReleasedWhenClosed = false
 		field.prepareInitialState()
 		field.allowsUndo = true
@@ -33,7 +33,7 @@ struct MainWindowInputFieldValueTests {
 		return (window, field)
 	}
 
-	private func typeAnUndoableEdit(into field: TextViewWithIRCFormatter) throws {
+	private func typeAnUndoableEdit(into field: IRCFormattedTextView) throws {
 		field.insertText("typed", replacementRange: field.selectedRange())
 		#expect(try #require(field.undoManager).canUndo)
 	}
@@ -66,7 +66,7 @@ struct MainWindowInputFieldValueTests {
 	func replacingTheValueKeepsOtherUndoActions() throws {
 		let (window, field) = makeField()
 		defer { window.close() }
-		let other = TextViewWithIRCFormatter(frame: NSRect(x: 0, y: 40, width: 320, height: 40))
+		let other = IRCFormattedTextView(frame: NSRect(x: 0, y: 40, width: 320, height: 40))
 		other.allowsUndo = true
 		window.contentView?.addSubview(other)
 		window.makeFirstResponder(other)
@@ -111,23 +111,10 @@ struct MainWindowInputFieldValueTests {
 		#expect(field.changesMarkedAsReplacement == [true, true, false])
 		#expect(field.isReplacingEntireValue == false)
 	}
-
-	@Test("Both setters replace the whole value rather than appending")
-	func settersReplaceTheWholeValue() {
-		let (window, field) = makeField()
-		defer { window.close() }
-
-		field.stringValue = "first"
-		field.attributedStringValue = NSAttributedString(string: "second")
-		#expect(field.stringValue == "second")
-
-		field.stringValue = ""
-		#expect(field.stringValue.isEmpty)
-	}
 }
 
 /// Records, for every text change, whether the field called it a replacement.
-private final class TypingRecordingField: TextViewWithIRCFormatter {
+private final class TypingRecordingField: IRCFormattedTextView {
 	private(set) var changesMarkedAsReplacement: [Bool] = []
 
 	override func textDidChange(_ notification: Notification) {

@@ -207,8 +207,8 @@ enum Scenario {
 	}
 
 	private static func channelActions(kind: ScenarioKind, driver: AccessibilityDriver) async throws {
-		if kind == .pluginSmiley || kind == .burstResponsiveness {
-			try await PluginAndBurstScenarios.run(kind: kind, driver: driver)
+		if kind == .burstResponsiveness {
+			try await BurstResponsivenessScenario.run(driver: driver)
 		} else if kind.dcc {
 			try await DCCScenario.run(kind: kind, driver: driver)
 		} else if kind.messaging {

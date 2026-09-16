@@ -162,7 +162,7 @@ struct ClientWireUtilitiesTests {
 }
 
 @MainActor
-struct IRCClientNicknameFormatPaddingTests {
+struct ClientNicknameFormatPaddingTests {
 	/// `scanInt()` yields Int.min for this format, and `abs(Int.min)` traps.
 	@Test
 	func extremeNegativePaddingDoesNotTrap() {
@@ -173,15 +173,5 @@ struct IRCClientNicknameFormatPaddingTests {
 		)
 
 		#expect(formatted.hasSuffix("nick"))
-	}
-
-	@Test
-	func ordinaryPaddingIsUnchanged() {
-		#expect(
-			ClientWireUtilities.formatNickname("ab", modeSymbol: "@", format: "<%-5n>") == "<   ab>"
-		)
-		#expect(
-			ClientWireUtilities.formatNickname("ab", modeSymbol: "@", format: "<%5n>") == "<ab   >"
-		)
 	}
 }

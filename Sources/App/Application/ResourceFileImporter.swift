@@ -16,12 +16,11 @@ import os
 import UniformTypeIdentifiers
 
 /// What `ResourceFileImporter` can install.
-public enum ResourceFileKind: Equatable, Sendable {
+enum ResourceFileKind: Equatable, Sendable {
 	case script
-	case extensionBundle
 }
 
-/// Installs a script or an extension the user opened from the Finder.
+/// Installs a user script the user opened from the Finder.
 ///
 /// This was an `NSDocument` subclass named as the `NSDocumentClass` of two
 /// declared document types. `NSDocument.read(from:ofType:)` is nonisolated, so
@@ -31,8 +30,8 @@ public enum ResourceFileKind: Equatable, Sendable {
 /// `NSApplicationDelegate.application(_:open:)` is main-actor isolated by
 /// declaration and hands over the same URLs.
 @MainActor
-public final class ResourceFileImporter {
-	public func open(_ urls: [URL]) {
+final class ResourceFileImporter {
+	func open(_ urls: [URL]) {
 		Task { @MainActor in
 			for url in urls {
 				await open(url)
@@ -50,11 +49,9 @@ public final class ResourceFileImporter {
 		switch Self.kind(of: url) {
 		case .script:
 			await performImportOfScriptFile(url)
-		case .extensionBundle:
-			await performImportOfPluginFile(url)
 		case nil:
 			Self.logger.error(
-				"Opened file '\(url.lastPathComponent, privacy: .public)' is neither a script nor an extension"
+				"Opened file '\(url.lastPathComponent, privacy: .public)' is not a script"
 			)
 			await presentImportError(CocoaError(.fileReadUnknown))
 		}
@@ -64,7 +61,7 @@ public final class ResourceFileImporter {
 	///
 	/// Separated from the import itself because the import puts alerts and a
 	/// save panel on screen: this is the part with an answer worth testing.
-	public static func kind(of url: URL) -> ResourceFileKind? {
+	static func kind(of url: URL) -> ResourceFileKind? {
 		guard url.isFileURL else { return nil }
 		var contentType = try? url.resourceValues(forKeys: [.contentTypeKey]).contentType
 
@@ -82,12 +79,6 @@ public final class ResourceFileImporter {
 			return .script
 		}
 
-		if contentType.conforms(to: .bundle),
-		   url.pathExtension.lowercased() == ResourceDocumentType.bundleFilenameExtension
-		{
-			return .extensionBundle
-		}
-
 		return nil
 	}
 
@@ -96,58 +87,30 @@ public final class ResourceFileImporter {
 		category: "ResourceFileImporter"
 	)
 
-	// MARK: - Custom Plugin Files
-
-	private func performImportOfPluginFile(_ url: URL) async {
-		let filename = url.lastPathComponent
-
-		let performInstall = await confirmImport(of: filename)
-
-		guard performInstall else { return }
-		do {
-			guard let extensionsURL = PathInfo.customExtensionsURL else { throw CocoaError(.fileNoSuchFile) }
-			try await Self.installPlugin(url, into: extensionsURL.appendingPathComponent(filename))
-		} catch {
-			await presentImportError(error)
-			return
-		}
-
-		let filenameWithoutExtension = (filename as NSString).deletingPathExtension
-
-		_ = await Alerts.run(
-			AlertRequest(
-				title: PromptStrings.DocumentImport.extensionInstalledTitle(name: filenameWithoutExtension),
-				body: PromptStrings.DocumentImport.extensionRestartBody,
-				defaultButton: PromptStrings.Action.confirmation
-			),
-			on: .anyVisibleWindow
-		)
-	}
-
 	// MARK: - Custom Script Files
 
 	private func performImportOfScriptFile(_ url: URL) async {
 		do {
-			guard PluginScript(url: url, origin: .custom)?.kind == .appleScript,
+			guard UserScript(url: url, origin: .custom)?.kind == .appleScript,
 			      NSAppleScript(contentsOf: url, error: nil) != nil
 			else { throw ImportError.invalidScript }
 			let defaultScriptsURL = PathInfo.customScriptsURL
 
-			guard let scriptsURL = SharedApplication.sharedPluginManager().customScriptsURL ?? defaultScriptsURL
+			guard let scriptsURL = AppServices.scripts.customScriptsURL ?? defaultScriptsURL
 			else {
 				throw CocoaError(.fileNoSuchFile)
 			}
 			if url.resolvingSymlinksInPath().standardizedFileURL.deletingLastPathComponent() ==
 				scriptsURL.resolvingSymlinksInPath().standardizedFileURL
 			{
-				SharedApplication.sharedPluginManager().refreshScriptCommands()
+				AppServices.scripts.refreshCommands()
 				await performImportOfScriptFilePostflight(url.lastPathComponent)
 				return
 			}
 			_ = await Alerts.run(
 				AlertRequest(
-					title: String(localized: .Plugins.scriptInstallTitle),
-					body: String(localized: .Plugins.scriptInstallInstructions(scriptsURL.path)),
+					title: String(localized: .Scripts.scriptInstallTitle),
+					body: String(localized: .Scripts.scriptInstallInstructions(scriptsURL.path)),
 					defaultButton: PromptStrings.Action.confirmation
 				),
 				on: .anyVisibleWindow
@@ -188,39 +151,20 @@ public final class ResourceFileImporter {
 	// MARK: - General Import Controller
 
 	private nonisolated enum ImportError: LocalizedError { // nonisolated: value
-		case invalidPlugin
 		case invalidScript
 
 		var errorDescription: String? {
 			switch self {
-			case .invalidPlugin: String(localized: .Plugins.extensionNotCompatibleOrNotSigned)
-			case .invalidScript: String(localized: .Plugins.invalidScript)
+			case .invalidScript: String(localized: .Scripts.invalidScript)
 			}
 		}
 	}
 
-	@concurrent
-	static func installPlugin(_ url: URL, into destination: URL) async throws {
-		try FileManager.default.stageAndReplaceItem(at: destination, withItemAt: url) { staged in
-			let values = try staged.resourceValues(forKeys: [.isDirectoryKey, .isSymbolicLinkKey])
-			guard values.isDirectory == true, values.isSymbolicLink != true,
-			      let bundle = Bundle(url: staged),
-			      let identifier = bundle.bundleIdentifier, !identifier.isEmpty,
-			      let principal = bundle.object(forInfoDictionaryKey: "NSPrincipalClass") as? String,
-			      !principal.isEmpty,
-			      let executable = bundle.executableURL,
-			      FileManager.default.isExecutableFile(atPath: executable.path),
-			      PluginBundleValidation.supportsCurrentPluginProtocol(bundle),
-			      PluginBundleValidation.isSignedByThisApplication(bundle)
-			else { throw ImportError.invalidPlugin }
-		}
-	}
-
 	private func presentImportError(_ error: Error) async {
-		Self.logger.error("Add-on installation failed: \(error.localizedDescription, privacy: .public)")
+		Self.logger.error("Script installation failed: \(error.localizedDescription, privacy: .public)")
 		_ = await Alerts.run(
 			AlertRequest(
-				title: String(localized: .Plugins.importFailedTitle),
+				title: String(localized: .Scripts.importFailedTitle),
 				body: error.localizedDescription,
 				defaultButton: PromptStrings.Action.confirmation
 			),

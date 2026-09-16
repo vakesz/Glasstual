@@ -1,0 +1,402 @@
+/* *********************************************************************
+ *                  _____         _               _
+ *                 |_   _|____  _| |_ _   _  __ _| |
+ *                   | |/ _ \ \/ / __| | | |/ _` | |
+ *                   | |  __/>  <| |_| |_| | (_| | |
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
+ *
+ * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
+ * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+ *       Please see Acknowledgements.pdf for additional information.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *  * Neither the name of Textual, "Codeux Software, LLC", nor the
+ *    names of its contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ *
+ *********************************************************************** */
+
+import Foundation
+
+enum LinePresentationPolicy {
+	static func memberType(nickname: String?, localNickname: String) -> LogLineMemberType {
+		nickname == localNickname ? .localUser : .normal
+	}
+
+	/// The body a printed line keeps. "Remove formatting from incoming
+	/// messages" strips the control codes of everything but the local user's
+	/// own lines, and only the text: the line was parsed as it arrived.
+	static func messageBody(
+		_ body: String,
+		memberType: LogLineMemberType,
+		removesIncomingFormatting: Bool
+	) -> String {
+		guard removesIncomingFormatting, memberType != .localUser else { return body }
+		return (body as NSString).stripIRCEffects
+	}
+
+	static func normalized(_ lineType: LogLineType) -> LogLineType {
+		switch lineType {
+		case .actionNoHighlight:
+			.action
+		case .privateMessageNoHighlight:
+			.privateMessage
+		default:
+			lineType
+		}
+	}
+
+	static func allowsHighlightMatching(
+		channelExists: Bool,
+		ignoresHighlights: Bool,
+		lineType: LogLineType,
+		memberType: LogLineMemberType
+	) -> Bool {
+		channelExists && ignoresHighlights == false &&
+			(lineType == .privateMessage || lineType == .action) && memberType == .normal
+	}
+
+	static func needsScrollbackMark(
+		autoMark: Bool,
+		itemIsVisible: Bool,
+		windowIsMain: Bool,
+		channelIsUnread: Bool,
+		lineType: LogLineType
+	) -> Bool {
+		guard autoMark, itemIsVisible == false || windowIsMain == false, channelIsUnread == false else {
+			return false
+		}
+		return lineType == .privateMessage || lineType == .action || lineType == .notice
+	}
+
+	static func isFirstForDay(receivedAt: Date, previousDate: Date?) -> Bool {
+		guard let previousDate else { return true }
+		return Calendar.current.isDate(receivedAt, inSameDayAs: previousDate) == false
+	}
+}
+
+struct LinePrintRequest {
+	let messageBody: String
+	let nickname: String?
+	let channel: Channel?
+	let lineType: LogLineType
+	let command: String?
+	let receivedAt: Date
+	let isEncrypted: Bool
+	let escapeMessage: Bool
+	let referenceMessage: Message?
+	let completionBlock: PrintedLineCompletion?
+}
+
+extension Client {
+	func formatNickname(_ nickname: String, in channel: Channel?, withFormat format: String? = nil) -> String {
+		let requestedFormat = format?.isEmpty == false ? format : nil
+		let themeFormat = AppServices.theme.theme.nicknameFormat
+		let resolvedFormat = requestedFormat ?? themeFormat
+		let finalFormat = resolvedFormat.isEmpty ? TranscriptTheme.lines.nicknameFormat : resolvedFormat
+		let modeSymbol: String = if channel?.isChannel == true, let member = channel?.findMember(nickname) {
+			member.mark
+		} else {
+			""
+		}
+		return ClientWireUtilities.formatNickname(nickname, modeSymbol: modeSymbol, format: finalFormat)
+	}
+
+	func printAndLog(_ logLine: LogLine, completionBlock: PrintedLineCompletion?) {
+		presentation?.print(logLine, completionBlock: completionBlock)
+		writeToLogFile(logLine)
+	}
+
+	func print(
+		_ messageBody: String,
+		by nickname: String?,
+		in channel: Channel?,
+		as lineType: LogLineType,
+		command: String
+	) {
+		print(messageBody, by: nickname, in: channel, as: lineType, command: command, receivedAt: Date(),
+		      isEncrypted: false, escapeMessage: true, referenceMessage: nil, completionBlock: nil)
+	}
+
+	func print(
+		_ messageBody: String,
+		by nickname: String?,
+		in channel: Channel?,
+		as lineType: LogLineType,
+		command: String,
+		escapeMessage: Bool
+	) {
+		print(messageBody, by: nickname, in: channel, as: lineType, command: command, receivedAt: Date(),
+		      isEncrypted: false, escapeMessage: escapeMessage, referenceMessage: nil, completionBlock: nil)
+	}
+
+	func print(
+		_ messageBody: String,
+		by nickname: String?,
+		in channel: Channel?,
+		as lineType: LogLineType,
+		command: String,
+		receivedAt: Date
+	) {
+		print(messageBody, by: nickname, in: channel, as: lineType, command: command, receivedAt: receivedAt,
+		      isEncrypted: false, escapeMessage: true, referenceMessage: nil, completionBlock: nil)
+	}
+
+	func print(
+		_ messageBody: String,
+		by nickname: String?,
+		in channel: Channel?,
+		as lineType: LogLineType,
+		command: String?,
+		receivedAt: Date,
+		isEncrypted: Bool,
+		escapeMessage: Bool = true,
+		referenceMessage: Message? = nil,
+		completionBlock: PrintedLineCompletion? = nil
+	) {
+		let request = LinePrintRequest(
+			messageBody: messageBody,
+			nickname: nickname,
+			channel: channel,
+			lineType: lineType,
+			command: command,
+			receivedAt: receivedAt,
+			isEncrypted: isEncrypted,
+			escapeMessage: escapeMessage,
+			referenceMessage: referenceMessage,
+			completionBlock: completionBlock
+		)
+		#if DEBUG
+			if let linePrintObserver {
+				linePrintObserver(request)
+				return
+			}
+		#endif
+		printOnMainActor(request)
+	}
+}
+
+extension Client {
+	/// The last line printed to the console.
+	var lastLine: LogLine? {
+		presentation?.lastPrintedLine()
+	}
+
+	func printReply(_ message: Message, in channel: Channel? = nil, withSequence sequence: UInt = 1) {
+		print(message.sequence(sequence), by: nil, in: channel, as: .debug, command: message.command,
+		      receivedAt: message.receivedAt)
+	}
+
+	/// - Parameter sequence: The parameter the error text starts at; `nil` for
+	/// the whole parameter list.
+	func printErrorReply(_ message: Message, in channel: Channel? = nil, withSequence sequence: UInt? = nil) {
+		let sequenceMessage = sequence.map { message.sequence($0) } ?? message.sequence
+		let errorMessage = DiagnosticStrings.malformedMessage(
+			numeric: message.commandNumeric,
+			sequence: sequenceMessage
+		)
+		print(errorMessage, by: nil, in: channel, as: .debug, command: message.command)
+	}
+
+	func printError(_ errorMessage: String, asCommand command: String) {
+		print(errorMessage, by: nil, in: nil, as: .debug, command: command)
+	}
+
+	func printDebugInformation(
+		toConsole message: String,
+		asCommand command: String = LogLineFormat.defaultCommand,
+		escapeMessage: Bool = true
+	) {
+		print(message, by: nil, in: nil, as: .debug, command: command, escapeMessage: escapeMessage)
+	}
+
+	/// Prints into whichever channel of this client is selected, or the console
+	/// when none is.
+	func printDebugInformation(
+		_ message: String,
+		asCommand command: String = LogLineFormat.defaultCommand,
+		escapeMessage: Bool = true
+	) {
+		printDebugInformation(
+			message,
+			in: output?.selectedChannel(on: self),
+			asCommand: command,
+			escapeMessage: escapeMessage
+		)
+	}
+
+	func printDebugInformation(multiline message: String) {
+		message.enumerateLines { line, _ in
+			self.printDebugInformation(line)
+		}
+	}
+
+	func printDebugInformation(
+		_ message: String,
+		in channel: Channel?,
+		asCommand command: String = LogLineFormat.defaultCommand,
+		escapeMessage: Bool = true
+	) {
+		print(message, by: nil, in: channel, as: .debug, command: command, escapeMessage: escapeMessage)
+	}
+
+	func printDebugInformation(
+		inAllViews message: String,
+		asCommand command: String = LogLineFormat.defaultCommand,
+		escapeMessage: Bool = true
+	) {
+		for channel in channelList {
+			printDebugInformation(message, in: channel, asCommand: command, escapeMessage: escapeMessage)
+		}
+		printDebugInformation(toConsole: message, asCommand: command, escapeMessage: escapeMessage)
+	}
+}
+
+private extension Client {
+	@MainActor
+	func printOnMainActor(_ request: LinePrintRequest) {
+		precondition(request.command != nil || request.referenceMessage != nil)
+		guard !isTerminating else { return }
+
+		let command = request.command ?? request.referenceMessage?.command ?? LogLineFormat.defaultCommand
+		let channel = request.channel
+		let memberType = LinePresentationPolicy.memberType(nickname: request.nickname, localNickname: userNickname)
+		let keywordLists = highlightKeywordLists(
+			for: channel,
+			lineType: request.lineType,
+			memberType: memberType
+		)
+		let lineType = LinePresentationPolicy.normalized(request.lineType)
+		var logLine = LogLine()
+		logLine.command = command.lowercased()
+		logLine.messageIdentifier = request.referenceMessage?.messageIdentifier
+		logLine.deliveryState = nextLineDeliveryState
+		nextLineDeliveryState = .none
+
+		let messageReplyIdentifier = request.referenceMessage?.messageTags?["+draft/reply"]
+		let replyIdentifier = messageReplyIdentifier?.isEmpty == false
+			? messageReplyIdentifier
+			: nextLineReplyToMessageIdentifier
+		nextLineReplyToMessageIdentifier = nil
+		if let replyIdentifier, !replyIdentifier.isEmpty {
+			logLine.replyToMessageIdentifier = replyIdentifier
+		}
+
+		logLine.lineType = lineType
+		logLine.memberType = memberType
+		logLine.isEncrypted = request.isEncrypted
+		logLine.excludeKeywords = keywordLists.exclude
+		logLine.highlightKeywords = keywordLists.match
+		logLine.nickname = request.nickname
+		logLine.messageBody = LinePresentationPolicy.messageBody(
+			request.messageBody,
+			memberType: memberType,
+			removesIncomingFormatting: environment.preferences.removeAllFormatting
+		)
+		let previousLine = channel?.lastLine ?? lastLine
+		logLine.isFirstForDay = LinePresentationPolicy.isFirstForDay(
+			receivedAt: request.receivedAt,
+			previousDate: previousLine?.receivedAt
+		)
+		logLine.receivedAt = request.receivedAt
+
+		guard let channel else {
+			printAndLog(logLine, completionBlock: request.completionBlock)
+			return
+		}
+		if chatHistoryPrependChannel === channel {
+			chatHistoryPrependedLines?.append(logLine)
+			return
+		}
+
+		guard let output else {
+			channel.print(logLine, completionBlock: request.completionBlock)
+			return
+		}
+		if LinePresentationPolicy.needsScrollbackMark(
+			autoMark: environment.preferences.autoAddScrollbackMark,
+			itemIsVisible: output.isItemVisible(channel),
+			windowIsMain: output.isMainWindow,
+			channelIsUnread: channel.isUnread,
+			lineType: lineType
+		) {
+			channel.presentation?.mark()
+		}
+		let readGeneration = channel.readStateGeneration
+		let connectionIdentifier = socket?.uniqueIdentifier
+		let isPlayback = lineIsJoinBurst(request.referenceMessage, in: channel)
+		channel.print(logLine) { [weak self, weak channel] context in
+			request.completionBlock?(context)
+			guard let self, let channel, !isTerminating,
+			      socket?.uniqueIdentifier == connectionIdentifier,
+			      channel.associatedClient === self else { return }
+			guard context.isDisplayed, !context.isDuplicate, !isPlayback, channel.readStateGeneration == readGeneration,
+			      self.output?.isKeyWindow == true, self.output?.isItemVisible(channel) == true else { return }
+			scheduleReadMarker(for: channel, date: request.receivedAt)
+		}
+	}
+
+	@MainActor
+	func highlightKeywordLists(
+		for channel: Channel?,
+		lineType: LogLineType,
+		memberType: LogLineMemberType
+	) -> (exclude: [String]?, match: [String]?) {
+		guard LinePresentationPolicy.allowsHighlightMatching(
+			channelExists: channel != nil,
+			ignoresHighlights: channel?.config.ignoreHighlights ?? false,
+			lineType: lineType,
+			memberType: memberType
+		), let channel else {
+			return (nil, nil)
+		}
+
+		var excluded = environment.preferences.highlightExcludeKeywords
+		var matches = environment.preferences.highlightMatchKeywords
+		if environment.preferences.highlightMatchingMethod != .regularExpression,
+		   environment.preferences.highlightCurrentNickname
+		{
+			appendIfMissing(userNickname, to: &matches)
+		}
+		for condition in config.highlightList {
+			if let channelIdentifier = condition.matchChannelId,
+			   !channelIdentifier.isEmpty,
+			   channelIdentifier != channel.uniqueIdentifier
+			{
+				continue
+			}
+			if condition.matchIsExcluded {
+				appendIfMissing(condition.matchKeyword, to: &excluded)
+			} else {
+				appendIfMissing(condition.matchKeyword, to: &matches)
+			}
+		}
+		return (excluded, matches)
+	}
+
+	func appendIfMissing(_ value: String, to values: inout [String]) {
+		if !values.contains(value) {
+			values.append(value)
+		}
+	}
+}

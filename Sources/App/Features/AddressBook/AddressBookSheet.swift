@@ -14,21 +14,21 @@
 import SwiftUI
 
 @MainActor
-public protocol AddressBookSheetDelegate: AnyObject {
+protocol AddressBookSheetDelegate: AnyObject {
 	func addressBookSheet(_ sender: AddressBookSheet, onOk entry: AddressBookEntry)
 }
 
 @MainActor
-public final class AddressBookSheet: MainWindowSheetSession {
+final class AddressBookSheet: SheetSession {
 	let model: AddressBookEntryModel
 
-	public init(entryType: IRCAddressBookEntryType) {
+	init(entryType: AddressBookEntryType) {
 		model = AddressBookEntryModel(entryType: entryType)
 		super.init(window: nil)
 		installSheet()
 	}
 
-	public init(config: AddressBookEntry) {
+	init(config: AddressBookEntry) {
 		model = AddressBookEntryModel(entry: config)
 		super.init(window: nil)
 		installSheet()
@@ -47,11 +47,11 @@ public final class AddressBookSheet: MainWindowSheetSession {
 		setContent(rootView)
 	}
 
-	public func start() {
+	func start() {
 		startSheet()
 	}
 
-	override public func submit() {
+	override func submit() {
 		guard let entry = model.validatedEntry() else { return }
 
 		entryDelegate?.addressBookSheet(self, onOk: entry)

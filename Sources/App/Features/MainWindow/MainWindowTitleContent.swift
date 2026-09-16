@@ -13,7 +13,6 @@
 
 import CocoaExtensions
 import Foundation
-import GlasstualPluginKit
 
 /** The complete title-bar projection for one main-window selection.
 
@@ -28,7 +27,7 @@ struct MainWindowTitleContent: Equatable {
 	let title: String
 	let subtitle: String
 
-	init(client: IRCClient?, channel: Channel?) {
+	init(client: Client?, channel: Channel?) {
 		guard let client else {
 			title = ApplicationInfo.applicationName()
 			subtitle = ""
@@ -52,7 +51,7 @@ struct MainWindowTitleContent: Equatable {
 		parts.compactMap(nonempty).joined(separator: " · ")
 	}
 
-	private static func connectionStatus(for client: IRCClient) -> MainWindowStrings.ConnectionStatus? {
+	private static func connectionStatus(for client: Client) -> MainWindowStrings.ConnectionStatus? {
 		if client.isQuitting || client.isDisconnecting {
 			return .disconnecting
 		}
@@ -68,7 +67,7 @@ struct MainWindowTitleContent: Equatable {
 		return nil
 	}
 
-	private static func displayNickname(for client: IRCClient) -> String? {
+	private static func displayNickname(for client: Client) -> String? {
 		let nickname = client.userNickname
 		guard nickname.isEmpty == false else {
 			return nil
@@ -76,7 +75,7 @@ struct MainWindowTitleContent: Equatable {
 		return client.userIsAway ? MainWindowStrings.Conversation.awayNickname(nickname) : nickname
 	}
 
-	private static func conversationDetails(for channel: Channel, on client: IRCClient) -> [String] {
+	private static func conversationDetails(for channel: Channel, on client: Client) -> [String] {
 		switch channel.type {
 		case .channel:
 			return [MainWindowStrings.Conversation.memberCount(Int(channel.numberOfMembers))]

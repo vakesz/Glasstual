@@ -42,18 +42,18 @@ import AppKit
 /// drawing anything.
 @MainActor
 final class RecordingClientOutput: ClientOutput {
-	private(set) var selectedItems: [TreeItem] = []
-	private(set) var reloadedItems: [TreeItem] = []
-	private(set) var reloadedGroups: [TreeItem] = []
-	private(set) var titleUpdates: [TreeItem?] = []
-	private(set) var clearedItems: [TreeItem] = []
+	private(set) var selectedItems: [ChatItem] = []
+	private(set) var reloadedItems: [ChatItem] = []
+	private(set) var reloadedGroups: [ChatItem] = []
+	private(set) var titleUpdates: [ChatItem?] = []
+	private(set) var clearedItems: [ChatItem] = []
 	private(set) var evaluatedFunctions: [String] = []
 	/// Every sheet the protocol layer asked for, in order. No window is
 	/// involved, which is the point of the seam.
 	private(set) var presentedAlerts: [AlertRequest] = []
 	/// Every confirmation the protocol layer asked for, in order.
 	private(set) var confirmations: [AlertRequest] = []
-	private(set) var closedSheetClients: [IRCClient] = []
+	private(set) var closedSheetClients: [Client] = []
 	/// One `+b`/`+e`/`+I`/`+q` entry a window would have taken, and the list it
 	/// was routed to.
 	struct AccessListEntry: Equatable {
@@ -80,12 +80,12 @@ final class RecordingClientOutput: ClientOutput {
 	/// Every highlight offered to an open highlight list, in order.
 	private(set) var loggedHighlights: [HighlightLogEntry] = []
 
-	var selectedItem: TreeItem?
-	var selectedClient: IRCClient?
+	var selectedItem: ChatItem?
+	var selectedClient: Client?
 	var selectedChannel: Channel?
 	var isKeyWindow = false
 	var isMainWindow = false
-	var visibleItems: [TreeItem] = []
+	var visibleItems: [ChatItem] = []
 
 	func presentAlertSheet(_ request: AlertRequest, completion _: @escaping AlertCompletion) {
 		presentedAlerts.append(request)
@@ -99,12 +99,12 @@ final class RecordingClientOutput: ClientOutput {
 		return confirmationAnswer
 	}
 
-	func closeSheets(for client: IRCClient) {
+	func closeSheets(for client: Client) {
 		closedSheetClients.append(client)
 	}
 
 	func accessListEntryReceived(
-		for _: IRCClient,
+		for _: Client,
 		inChannelNamed channelName: String,
 		modeSymbol: String,
 		mask: String,
@@ -124,7 +124,7 @@ final class RecordingClientOutput: ClientOutput {
 		return true
 	}
 
-	func accessListFinished(for _: IRCClient, inChannelNamed channelName: String, modeSymbol: String) -> Bool {
+	func accessListFinished(for _: Client, inChannelNamed channelName: String, modeSymbol: String) -> Bool {
 		guard showsAccessListSheet else { return false }
 
 		accessListFinishes.append("\(channelName) +\(modeSymbol)")
@@ -140,41 +140,41 @@ final class RecordingClientOutput: ClientOutput {
 		loggedHighlights.append(entry)
 	}
 
-	func selectedChannel(on client: IRCClient) -> Channel? {
+	func selectedChannel(on client: Client) -> Channel? {
 		selectedClient === client ? selectedChannel : nil
 	}
 
-	func select(_ item: TreeItem?) {
+	func select(_ item: ChatItem?) {
 		guard let item else { return }
 		selectedItems.append(item)
 		selectedItem = item
 	}
 
-	func isItemSelected(_ item: TreeItem?) -> Bool {
+	func isItemSelected(_ item: ChatItem?) -> Bool {
 		item != nil && selectedItem === item
 	}
 
-	func isItemVisible(_ item: TreeItem) -> Bool {
+	func isItemVisible(_ item: ChatItem) -> Bool {
 		visibleItems.contains { $0 === item }
 	}
 
-	func reloadTreeItem(_ item: TreeItem) {
+	func reloadTreeItem(_ item: ChatItem) {
 		reloadedItems.append(item)
 	}
 
-	func reloadTreeGroup(_ item: TreeItem) {
+	func reloadTreeGroup(_ item: ChatItem) {
 		reloadedGroups.append(item)
 	}
 
-	func reloadServerListItems(for client: IRCClient) {
+	func reloadServerListItems(for client: Client) {
 		reloadedGroups.append(client)
 	}
 
-	func refreshMessageCount(for item: TreeItem) {
+	func refreshMessageCount(for item: ChatItem) {
 		reloadedItems.append(item)
 	}
 
-	func updateTitle(for item: TreeItem) {
+	func updateTitle(for item: ChatItem) {
 		titleUpdates.append(item)
 	}
 
@@ -188,11 +188,11 @@ final class RecordingClientOutput: ClientOutput {
 
 	func updateMemberListVisibilityForSelection() {}
 
-	func clearContents(of item: TreeItem) {
+	func clearContents(of item: ChatItem) {
 		clearedItems.append(item)
 	}
 
-	func destroyInputHistory(for _: TreeItem) {}
+	func destroyInputHistory(for _: ChatItem) {}
 
 	func evaluateFunctionOnAllViews(_ function: String, arguments _: [Any]?, onQueue _: Bool) {
 		evaluatedFunctions.append(function)
@@ -215,7 +215,7 @@ final class RecordingMenuPresenter: ClientMenuPresenting {
 		soundsMuted = muted
 	}
 
-	func showServerPropertiesSheet(for _: IRCClient, selection: ServerPropertiesDestination) {
+	func showServerPropertiesSheet(for _: Client, selection: ServerPropertiesDestination) {
 		serverPropertiesSelections.append(selection)
 	}
 
@@ -253,7 +253,7 @@ final class ClientEnvironmentFixture {
 	let applicationState = RecordingApplicationState()
 	/// A world of this fixture's own, so channel creation works without the
 	/// application's. `ClientServices` refers to it weakly; this keeps it alive.
-	let world: World
+	let world: ClientDirectory
 	private(set) var environment: ClientEnvironment
 
 	init(preferences: ClientPreferences = .current()) {
@@ -264,7 +264,7 @@ final class ClientEnvironmentFixture {
 		)
 		environment = ClientEnvironment(preferences: preferences, services: services)
 		/* The world installs itself in the services it is given. */
-		world = World(environment: environment)
+		world = ClientDirectory(environment: environment)
 	}
 
 	/// Re-reads the defaults store, for a test that writes a preference after

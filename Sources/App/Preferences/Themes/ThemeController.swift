@@ -17,21 +17,21 @@ import Observation
 import os
 import Synchronization
 
-public extension Notification.Name {
-	static let themeAppearanceChanged = Notification.Name("NativeTranscriptThemeAppearanceChanged")
-	static let themeWasModified = Notification.Name("NativeTranscriptThemeWasModified")
+extension Notification.Name {
+	static let themeAppearanceChanged = Notification.Name("Glasstual.transcriptThemeAppearanceChanged")
+	static let themeWasModified = Notification.Name("Glasstual.transcriptThemeModified")
 }
 
 /// The immutable theme values message rendering may read away from the main
 /// actor. The controller republishes the whole value after each edit.
-public nonisolated struct ThemeSnapshot: Sendable, Equatable { // nonisolated: value
-	public let transcript: TranscriptTheme
-	public let isDarkAppearance: Bool
+nonisolated struct ThemeSnapshot: Sendable, Equatable { // nonisolated: value
+	let transcript: TranscriptTheme
+	let isDarkAppearance: Bool
 	/// Whether the reader has asked the system for increased contrast, which
 	/// picks the stronger half of every colour role.
-	public let increasesContrast: Bool
+	let increasesContrast: Bool
 
-	public var timestampFormat: String {
+	var timestampFormat: String {
 		transcript.timestampFormat
 	}
 }
@@ -43,7 +43,7 @@ public nonisolated struct ThemeSnapshot: Sendable, Equatable { // nonisolated: v
  because the controller is a main-actor class with main-actor state, and a
  `nonisolated` accessor on it says nothing true about that class. An `enum`
  around a `let Mutex` of a value is a value, which is all this is. */
-public nonisolated enum ThemeSnapshotStore { // nonisolated: value
+nonisolated enum ThemeSnapshotStore { // nonisolated: value
 	private static let published = Mutex(ThemeSnapshot(
 		transcript: .lines,
 		isDarkAppearance: false,
@@ -51,7 +51,7 @@ public nonisolated enum ThemeSnapshotStore { // nonisolated: value
 	))
 
 	/// The theme and appearance a render should use right now.
-	public static var current: ThemeSnapshot {
+	static var current: ThemeSnapshot {
 		published.withLock { $0 }
 	}
 
@@ -75,30 +75,30 @@ public nonisolated enum ThemeSnapshotStore { // nonisolated: value
 /// rendering, preferences, and plist import/export.
 @MainActor
 @Observable
-public final class ThemeController: NSObject {
+final class ThemeController: NSObject {
 	private static let logger = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 		category: "TranscriptTheme"
 	)
 
-	public private(set) var theme = TranscriptTheme.lines
+	private(set) var theme = TranscriptTheme.lines
 	private let stores: PreferencesTransferStores
 	private let notifications = NotificationSubscriptions()
 
-	public var name: String {
+	var name: String {
 		theme.name
 	}
 
-	public var font: NSFont {
+	var font: NSFont {
 		NSFont(name: theme.fontName, size: theme.fontSize)
 			?? NSFont.systemFont(ofSize: theme.fontSize)
 	}
 
-	public var backgroundColor: NSColor {
+	var backgroundColor: NSColor {
 		resolved(theme.palette.background)
 	}
 
-	override public convenience init() {
+	override convenience init() {
 		self.init(stores: .live)
 	}
 
@@ -127,7 +127,7 @@ public final class ThemeController: NSObject {
 		}
 	}
 
-	public func reload() {
+	func reload() {
 		let key = Preferences.Theme.transcriptTheme
 		let stored = stores.store(for: key).data(forKey: key.name) ?? Data()
 		guard stored.isEmpty == false else {
@@ -153,7 +153,7 @@ public final class ThemeController: NSObject {
 	/// Publishes a theme, or reports that it was rejected so the caller can say
 	/// so instead of dropping the edit silently.
 	@discardableResult
-	public func apply(_ newTheme: TranscriptTheme) -> Bool {
+	func apply(_ newTheme: TranscriptTheme) -> Bool {
 		guard newTheme.isValid else {
 			Self.logger.error("Rejected a transcript theme with values outside the supported ranges")
 			return false
@@ -163,18 +163,18 @@ public final class ThemeController: NSObject {
 		return true
 	}
 
-	public func reset(layout: TranscriptThemeLayout? = nil) {
+	func reset(layout: TranscriptThemeLayout? = nil) {
 		let layout = layout ?? theme.layout
 		apply(layout == .bubbles ? .bubbles : .lines)
 	}
 
-	public func importTheme(from data: Data) throws {
+	func importTheme(from data: Data) throws {
 		/* `decoded(from:)` rejects anything `isValid` would, so `apply` cannot
 		 fail here. */
 		try apply(TranscriptTheme.decoded(from: data).theme)
 	}
 
-	public func exportTheme() throws -> Data {
+	func exportTheme() throws -> Data {
 		let encoder = PropertyListEncoder()
 		encoder.outputFormat = .xml
 		return try encoder.encode(theme)
@@ -187,7 +187,7 @@ public final class ThemeController: NSObject {
 	/// settings all arrive here, and the second of them is not news: a snapshot
 	/// that already says what this one would say leaves the transcript alone
 	/// rather than redrawing it twice.
-	public func appearanceDidChange() {
+	func appearanceDidChange() {
 		guard publishSnapshot() else {
 			return
 		}
@@ -195,9 +195,9 @@ public final class ThemeController: NSObject {
 		NotificationCenter.default.post(name: .themeAppearanceChanged, object: self)
 	}
 
-	public func resolved(_ color: AdaptiveTranscriptColor) -> NSColor {
+	func resolved(_ color: AdaptiveTranscriptColor) -> NSColor {
 		color.resolved(
-			isDark: SharedApplication.sharedAppearance().properties.isDarkAppearance,
+			isDark: AppServices.appearance.properties.isDarkAppearance,
 			increasesContrast: NSWorkspace.shared.accessibilityDisplayShouldIncreaseContrast
 		)
 	}
@@ -225,7 +225,7 @@ public final class ThemeController: NSObject {
 	private func publishSnapshot() -> Bool {
 		let snapshot = ThemeSnapshot(
 			transcript: theme,
-			isDarkAppearance: SharedApplication.sharedAppearance().properties.isDarkAppearance,
+			isDarkAppearance: AppServices.appearance.properties.isDarkAppearance,
 			increasesContrast: NSWorkspace.shared.accessibilityDisplayShouldIncreaseContrast
 		)
 

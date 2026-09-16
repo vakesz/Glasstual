@@ -105,14 +105,12 @@ struct AddressBookSheetTests {
 		#expect(model.validationMessage == CommonValidationStrings.invalidNickname)
 	}
 
-	@Test("The sheet submits through its typed delegate and bundles no nib")
+	@Test("The sheet submits through its typed delegate")
 	func nativeSheetAndDelegate() throws {
 		let delegate = Delegate()
 		let sheet = AddressBookSheet(entryType: .userTracking)
 		sheet.delegate = delegate
 		sheet.model.hostmask = "vakesz"
-
-		#expect(Bundle.main.path(forResource: "TDCAddressBookSheet", ofType: "nib") == nil)
 
 		sheet.submit()
 		let submitted = try #require(delegate.submittedEntry)

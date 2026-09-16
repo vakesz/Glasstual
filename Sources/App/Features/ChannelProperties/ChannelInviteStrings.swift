@@ -15,15 +15,15 @@ import Foundation
 
 nonisolated enum ChannelInviteStrings { // nonisolated: value
 	static var channelPickerLabel: String {
-		String(localized: .TDCChannelInviteSheet.channelPickerLabel)
+		String(localized: .ChannelProperties.channelPickerLabel)
 	}
 
 	static var inviteButtonTitle: String {
-		String(localized: .TDCChannelInviteSheet.inviteButton)
+		String(localized: .ChannelProperties.inviteButton)
 	}
 
 	static var windowTitle: String {
-		String(localized: .TDCChannelInviteSheet.windowTitle)
+		String(localized: .ChannelProperties.windowTitle)
 	}
 
 	/// Who the invitation is for: the one nickname, both of them, or how many
@@ -35,11 +35,11 @@ nonisolated enum ChannelInviteStrings { // nonisolated: value
 		case 1:
 			nicknames[0]
 		case 2:
-			String(localized: .TDCChannelInviteSheet.joinsExactlyTwoNicknames(nicknames[0], nicknames[1]))
+			String(localized: .ChannelProperties.joinsExactlyTwoNicknames(nicknames[0], nicknames[1]))
 		default:
-			String(localized: .TDCChannelInviteSheet.inviteeCount(nicknames.count))
+			String(localized: .ChannelProperties.inviteeCount(nicknames.count))
 		}
 
-		return String(localized: .TDCChannelInviteSheet.headingAboveTheChannelInvite(invitees))
+		return String(localized: .ChannelProperties.headingAboveTheChannelInvite(invitees))
 	}
 }

@@ -45,14 +45,14 @@ import AppKit
 /// menu-bar commands, so this application draws none there either. That
 /// includes the Channel and Query menus, which hang in the menu bar.
 @MainActor
-public enum MenuPresentation {
+enum MenuPresentation {
 	private static let symbolConfiguration = NSImage.SymbolConfiguration(
 		pointSize: NSFont.systemFontSize,
 		weight: .regular,
 		scale: .medium
 	)
 
-	public static func apply(to menu: NSMenu?) {
+	static func apply(to menu: NSMenu?) {
 		guard let menu else {
 			return
 		}
@@ -72,7 +72,7 @@ public enum MenuPresentation {
 		}
 	}
 
-	public static func messageReplyItems(
+	static func messageReplyItems(
 		messageIdentifier: String,
 		nickname: String?,
 		excerpt: String?,
@@ -88,7 +88,7 @@ public enum MenuPresentation {
 
 		let reply = NSMenuItem(
 			title: MessageMenuStrings.reply,
-			action: #selector(MenuActionCoordinator.replyToMessage(_:)),
+			action: #selector(MenuActionController.replyToMessage(_:)),
 			keyEquivalent: ""
 		)
 		reply.target = target
@@ -108,7 +108,7 @@ public enum MenuPresentation {
 		for emoji in ["👍", "❤️", "😂", "😮", "😢", "👎"] {
 			let item = NSMenuItem(
 				title: emoji,
-				action: #selector(MenuActionCoordinator.reactToMessage(_:)),
+				action: #selector(MenuActionController.reactToMessage(_:)),
 				keyEquivalent: ""
 			)
 			item.target = target
@@ -121,7 +121,7 @@ public enum MenuPresentation {
 
 		let other = NSMenuItem(
 			title: MessageMenuStrings.otherReaction,
-			action: #selector(MenuActionCoordinator.reactToMessageWithOtherEmoji(_:)),
+			action: #selector(MenuActionController.reactToMessageWithOtherEmoji(_:)),
 			keyEquivalent: ""
 		)
 		other.target = target
@@ -138,7 +138,7 @@ public enum MenuPresentation {
 	 AppKit gives the standard item the title "Share" and a submenu of the
 	 services; the ellipsis the application used to add promised a dialog the
 	 submenu never shows. */
-	public static func shareMenuItem(for items: [Any]) -> NSMenuItem {
+	static func shareMenuItem(for items: [Any]) -> NSMenuItem {
 		let title = MessageMenuStrings.share
 		let menuItem: NSMenuItem
 
@@ -166,13 +166,13 @@ public enum MenuPresentation {
 /// action side can cast to in one step instead of a `[String: String]` unpacked
 /// by literal key.
 @MainActor
-public final class MessageMenuContext {
-	public let messageIdentifier: String
-	public let nickname: String?
-	public let excerpt: String?
-	public let emoji: String?
+final class MessageMenuContext {
+	let messageIdentifier: String
+	let nickname: String?
+	let excerpt: String?
+	let emoji: String?
 
-	public init(
+	init(
 		messageIdentifier: String,
 		nickname: String?,
 		excerpt: String?,
@@ -185,7 +185,7 @@ public final class MessageMenuContext {
 	}
 
 	/// The same message, carrying the emoji a reaction item stands for.
-	public func reacting(with emoji: String) -> MessageMenuContext {
+	func reacting(with emoji: String) -> MessageMenuContext {
 		MessageMenuContext(
 			messageIdentifier: messageIdentifier,
 			nickname: nickname,

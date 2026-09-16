@@ -33,14 +33,14 @@ struct MemberListAvatarContrastTests {
 	@Test("The avatar's fill is one colour for both appearances")
 	func fillDoesNotFollowTheAppearance() {
 		for name in names.prefix(50) {
-			let dark = UserNicknameColorStyleGenerator.color(for: name, isDark: true)
-			let light = UserNicknameColorStyleGenerator.color(for: name, isDark: false)
-			#expect(dark.textualHexadecimalValue != light.textualHexadecimalValue)
+			let dark = NicknameColors.color(for: name, isDark: true)
+			let light = NicknameColors.color(for: name, isDark: false)
+			#expect(dark.hexadecimalString != light.hexadecimalString)
 
 			let fill = MemberAvatar.fill(for: name)
-			#expect(MemberAvatar.fill(for: name.uppercased()).textualHexadecimalValue
-				== fill.textualHexadecimalValue)
-			#expect(fill.textualHexadecimalValue != dark.textualHexadecimalValue)
+			#expect(MemberAvatar.fill(for: name.uppercased()).hexadecimalString
+				== fill.hexadecimalString)
+			#expect(fill.hexadecimalString != dark.hexadecimalString)
 			#expect(MemberAvatar.initialColor(on: fill).contrastRatio(against: fill) >= 4.5)
 		}
 	}
@@ -57,13 +57,13 @@ struct MemberListAvatarContrastTests {
 			NSColor(srgbRed: 0.1, green: 0.1, blue: 0.6, alpha: 1),
 		]
 		let nickname = "pinned-avatar-\(UUID().uuidString.lowercased())"
-		let previous = UserNicknameColorStyleGenerator.nicknameColorStyleOverride(forKey: nickname)
-		defer { UserNicknameColorStyleGenerator.setNicknameColorStyleOverride(previous, forKey: nickname) }
+		let previous = NicknameColors.nicknameColorStyleOverride(forKey: nickname)
+		defer { NicknameColors.setNicknameColorStyleOverride(previous, forKey: nickname) }
 
 		for pin in pins {
-			UserNicknameColorStyleGenerator.setNicknameColorStyleOverride(pin, forKey: nickname)
+			NicknameColors.setNicknameColorStyleOverride(pin, forKey: nickname)
 			let fill = MemberAvatar.fill(for: nickname)
-			#expect(fill.textualHexadecimalValue == pin.textualHexadecimalValue)
+			#expect(fill.hexadecimalString == pin.hexadecimalString)
 			let ratio = MemberAvatar.initialColor(on: fill).contrastRatio(against: fill)
 			#expect(ratio >= 4.5, "\(pin): \(ratio)")
 		}

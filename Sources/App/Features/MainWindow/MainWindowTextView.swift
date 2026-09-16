@@ -66,7 +66,7 @@ private let observedPreferenceKeys = [
 	Preferences.Input.textReplacement.name,
 ]
 
-public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObserving {
+final class MainWindowTextView: IRCFormattedTextView, AppearanceObserving {
 	/** NSTextView has a private accessor named placeholderAttributedString.
 	 AppKit may call it, so this property deliberately has another name. */
 	private var inputPlaceholderAttributedString: NSAttributedString?
@@ -78,10 +78,10 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 	 were outlets until the input field had to be a TextKit 2 view, which only
 	 an `init(usingTextLayoutManager:)` produces. */
 	fileprivate var textViewHeightConstraint: NSLayoutConstraint?
-	public fileprivate(set) weak var contentView: MainWindowTextViewContentView?
-	public let accessoryModel = MainWindowInputAccessoryModel()
+	fileprivate(set) weak var contentView: MainWindowTextViewContentView?
+	let accessoryModel = MainWindowInputAccessoryModel()
 	/// What the capsule around this field watches to draw its focus ring.
-	public let focusModel = MainWindowInputFocusModel()
+	let focusModel = MainWindowInputFocusModel()
 	private var observingTyping = false
 	private var typingObservations: [Task<Void, Never>] = []
 	private weak var typingChannel: Channel?
@@ -110,7 +110,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 	 `resignFirstResponder` when it stops being key, so the ring stayed lit on
 	 every window the user had switched away from. The other half is
 	 ``windowKeyStateChanged()``. */
-	override public func becomeFirstResponder() -> Bool {
+	override func becomeFirstResponder() -> Bool {
 		let accepted = super.becomeFirstResponder()
 		if accepted {
 			focusModel.isFirstResponder = true
@@ -118,7 +118,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 		return accepted
 	}
 
-	override public func resignFirstResponder() -> Bool {
+	override func resignFirstResponder() -> Bool {
 		let resigned = super.resignFirstResponder()
 		if resigned {
 			focusModel.isFirstResponder = false
@@ -133,11 +133,11 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 
 	// MARK: - Replies
 
-	public var replyMessageIdentifier: String? {
+	var replyMessageIdentifier: String? {
 		accessoryModel.replyMessageIdentifier
 	}
 
-	public func beginReply(
+	func beginReply(
 		toMessageIdentifier messageIdentifier: String,
 		nickname: String?,
 		excerpt: String?
@@ -147,11 +147,11 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 		focus()
 	}
 
-	public func cancelReply() {
+	func cancelReply() {
 		accessoryModel.hideReply()
 	}
 
-	public func consumeReply(into client: IRCClient?) {
+	func consumeReply(into client: Client?) {
 		guard let replyMessageIdentifier else {
 			return
 		}
@@ -181,7 +181,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 		typingObservations = [
 			Task { [weak self] in
 				let publisher = NotificationCenter.default
-					.publisher(for: .IRCTypingTrackerDidChange)
+					.publisher(for: .TypingTrackerDidChange)
 
 				for await notification in publisher.bufferedValues {
 					guard let self else {
@@ -208,7 +208,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 
 	private func typingStateDidChange(_ notification: Notification) {
 		guard let channel = notification.userInfo?[MainWindowTextViewNotification.typingChannelKey] as? Channel,
-		      channel === AppController.shared.mainWindow.selectedChannel
+		      channel === AppServices.delegate.mainWindow.selectedChannel
 		else {
 			return
 		}
@@ -217,7 +217,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 	}
 
 	private func selectionDidChange(_: Notification) {
-		finishTypingNotice(unlessIn: AppController.shared.mainWindow.selectedChannel)
+		finishTypingNotice(unlessIn: AppServices.delegate.mainWindow.selectedChannel)
 		cancelReply()
 		updateTypingRow()
 	}
@@ -229,14 +229,14 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 	 field. A notice that waited for the selection notification arrived after
 	 the refill had already recorded the new conversation as the one being typed
 	 in, so the old one never heard that typing stopped. */
-	public func finishTypingNotice(unlessIn channel: Channel?) {
+	func finishTypingNotice(unlessIn channel: Channel?) {
 		guard let typingChannel, typingChannel !== channel else { return }
 		typingChannel.associatedClient?.localUserClearedText(in: typingChannel)
 		self.typingChannel = nil
 	}
 
 	private func updateTypingRow() {
-		let channel = AppController.shared.mainWindow.selectedChannel
+		let channel = AppServices.delegate.mainWindow.selectedChannel
 		var nicknames: [String] = []
 
 		if let channel, channel.isUtility == false {
@@ -247,7 +247,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 	}
 
 	private func noteTextChangedForTyping() {
-		guard let channel = AppController.shared.mainWindow.selectedChannel,
+		guard let channel = AppServices.delegate.mainWindow.selectedChannel,
 		      let client = channel.associatedClient
 		else {
 			return
@@ -258,7 +258,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 		typingChannel = text.isEmpty || text.hasPrefix("/") ? nil : channel
 	}
 
-	override public func viewDidMoveToWindow() {
+	override func viewDidMoveToWindow() {
 		super.viewDidMoveToWindow()
 
 		setUserDefaultsObserved(window != nil)
@@ -296,7 +296,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 		}
 
 		observingUserDefaults = observed
-		let defaults = TextualUserDefaults.container
+		let defaults = GlasstualUserDefaults.container
 
 		guard observed else {
 			userDefaultsObservation?.cancel()
@@ -335,7 +335,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 		contentView?.needsDisplay = true
 	}
 
-	public func applicationAppearanceChanged() {
+	func applicationAppearanceChanged() {
 		guard let appearance = (window as? MainWindow)?.userInterfaceObjects.textView else {
 			return
 		}
@@ -359,7 +359,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 
 	// MARK: - Spelling
 
-	public func resetSpellingIgnores() {
+	func resetSpellingIgnores() {
 		NSSpellChecker.shared.setIgnoredWords(
 			Self.defaultSpellingIgnores,
 			inSpellDocumentWithTag: spellCheckerDocumentTag
@@ -368,7 +368,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 
 	/// Read once. The field resets its ignored words on every selection change,
 	/// and the bundled list never changes while the application runs.
-	private static let defaultSpellingIgnores: [String] = (ResourceManager.array(
+	private static let defaultSpellingIgnores: [String] = (BundleResources.array(
 		fromResources: StaticStoreResource.name,
 		key: StaticStoreResource.spellingIgnoresKey
 	) ?? []).compactMap(\.string)
@@ -383,7 +383,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 		textStorage.beginEditing()
 		textStorage.enumerateAttributes(in: range, options: []) { attributes, effectiveRange, _ in
 			let foregroundColorKey = NSAttributedString.Key(
-				IRCTextFormatterAttributeName.foregroundColorAttributeName.rawValue
+				TextFormatterAttributeName.foregroundColorAttributeName.rawValue
 			)
 
 			guard attributes[foregroundColorKey] == nil else {
@@ -395,7 +395,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 		textStorage.endEditing()
 	}
 
-	override public var attributedStringValue: NSAttributedString {
+	override var attributedStringValue: NSAttributedString {
 		get { super.attributedStringValue }
 		set {
 			super.attributedStringValue = newValue
@@ -403,11 +403,11 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 		}
 	}
 
-	public func updateTextDirection() {
+	func updateTextDirection() {
 		baseWritingDirection = Preferences.Messages.rightToLeftFormatting.value ? .rightToLeft : .leftToRight
 	}
 
-	override public func textDidChange(_ notification: Notification) {
+	override func textDidChange(_ notification: Notification) {
 		super.textDidChange(notification)
 		recalculateTextViewSize()
 		/* A value set from code, such as a conversation switch refilling the
@@ -418,12 +418,12 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 		}
 	}
 
-	override public func paste(_ sender: Any?) {
+	override func paste(_ sender: Any?) {
 		super.paste(sender)
 		recalculateTextViewSize()
 	}
 
-	public func textView(_: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
+	func textView(_: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
 		if commandSelector == #selector(NSResponder.insertNewline(_:)) {
 			/* AppKit's standard key bindings send `insertNewline:` for Return
 			 and for Shift+Return alike, so swallowing the command whole meant
@@ -537,19 +537,19 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 		updatePlaceholderVisibility()
 	}
 
-	override public func layout() {
+	override func layout() {
 		super.layout()
 
 		layoutPlaceholderLabel()
 		updatePlaceholderVisibility()
 	}
 
-	override public func didChangeText() {
+	override func didChangeText() {
 		super.didChangeText()
 		updatePlaceholderVisibility()
 	}
 
-	override public var string: String {
+	override var string: String {
 		get {
 			super.string
 		}
@@ -574,7 +574,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 		updatePlaceholderText()
 	}
 
-	public func updateTextBasedOnPreferredFontSize() {
+	func updateTextBasedOnPreferredFontSize() {
 		guard let appearance = userInterfaceObjects else {
 			return
 		}
@@ -606,7 +606,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 		return height
 	}
 
-	public func recalculateTextViewSize() {
+	func recalculateTextViewSize() {
 		recalculateTextViewSize(force: false)
 	}
 
@@ -680,28 +680,28 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 	}
 }
 
-public final class MainWindowTextViewContentView: NSView {
+final class MainWindowTextViewContentView: NSView {
 	private let inputBarContainerView = NSView()
 	private var textViewHeightConstraint: NSLayoutConstraint!
 
 	/** Told in the same pass that moves this view, so what follows the
 	 field's edge -- the transcript's bottom inset -- lands in the layout that
 	 moved it rather than a run-loop turn later. */
-	public var frameDidChange: (() -> Void)?
+	var frameDidChange: (() -> Void)?
 
-	override public func setFrameSize(_ newSize: NSSize) {
+	override func setFrameSize(_ newSize: NSSize) {
 		super.setFrameSize(newSize)
 		frameDidChange?()
 	}
 
-	override public func setFrameOrigin(_ newOrigin: NSPoint) {
+	override func setFrameOrigin(_ newOrigin: NSPoint) {
 		super.setFrameOrigin(newOrigin)
 		frameDidChange?()
 	}
 
 	private var textViewStorage: MainWindowTextView?
 
-	override public init(frame frameRect: NSRect) {
+	override init(frame frameRect: NSRect) {
 		super.init(frame: frameRect)
 		installContainer()
 	}
@@ -742,7 +742,7 @@ public final class MainWindowTextViewContentView: NSView {
 	/// ibtool and then ignored, so a decoded `NSTextView` is always TextKit 1 —
 	/// only `init(usingTextLayoutManager:)` builds the TextKit 2 network, and
 	/// only code can call it.
-	public var textView: MainWindowTextView {
+	var textView: MainWindowTextView {
 		if let textViewStorage {
 			return textViewStorage
 		}
@@ -760,7 +760,7 @@ public final class MainWindowTextViewContentView: NSView {
 	}
 
 	/// Builds the input field, if it is not built already.
-	public func configure() {
+	func configure() {
 		_ = textView
 	}
 
@@ -821,11 +821,11 @@ public final class MainWindowTextViewContentView: NSView {
 		return scrollView
 	}
 
-	override public var allowsVibrancy: Bool {
+	override var allowsVibrancy: Bool {
 		false
 	}
 
-	override public var isOpaque: Bool {
+	override var isOpaque: Bool {
 		false
 	}
 }

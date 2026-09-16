@@ -16,9 +16,9 @@ struct TranscriptInlineImageTransferTests {
 	func aCancelledDownloadFinishes() async throws {
 		let url = try #require(URL(string: "https://example.invalid/never-answers.png"))
 		let task = Task.detached {
-			try await NativeInlineImageTransfer.download(
+			try await InlineImageTransfer.download(
 				url,
-				limits: NativeInlineImageLimits(),
+				limits: InlineImageLimits(),
 				protocolClasses: []
 			)
 		}

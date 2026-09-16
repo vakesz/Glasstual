@@ -1,0 +1,702 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "client-to-client-ctcp" : {
+      "comment" : "Checkbox for ignoring Client-to-Client Protocol messages.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Client-to-client (CTCP)"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kliensközi üzenetek (CTCP)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Client-to-Client (CTCP)"
+          }
+        }
+      }
+    },
+    "display-message-when-user-becomes-available" : {
+      "comment" : "Checkbox for announcing when a tracked user becomes available.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Display message when user becomes available"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Üzenet megjelenítése, ha a felhasználó elérhetővé válik"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meldung anzeigen, wenn der Benutzer verfügbar wird"
+          }
+        }
+      }
+    },
+    "enter-a-hostmask-to-ignore" : {
+      "comment" : "Placeholder for an ignore rule's hostmask field.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter a hostmask to ignore"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add meg a mellőzendő címmaszkot"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zu ignorierende Hostmaske eingeben"
+          }
+        }
+      }
+    },
+    "enter-any-nickname-to-track" : {
+      "comment" : "Placeholder for the nickname of a user to track.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter any nickname to track"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add meg a követendő becenevet"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zu beobachtenden Nicknamen eingeben"
+          }
+        }
+      }
+    },
+    "examples" : {
+      "comment" : "Label introducing hostmask examples.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Examples"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Példák"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beispiele"
+          }
+        }
+      }
+    },
+    "file-transfer-requests" : {
+      "comment" : "Checkbox for ignoring file transfer requests.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "File transfer requests"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fájlátviteli kérések"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dateiübertragungsanfragen"
+          }
+        }
+      }
+    },
+    "format" : {
+      "comment" : "Label introducing the hostmask format.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Format"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Formátum"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Format"
+          }
+        }
+      }
+    },
+    "general-event-messages" : {
+      "comment" : "Checkbox for ignoring join, part, quit, and similar event messages.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "General event messages"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Általános eseményüzenetek"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allgemeine Ereignismeldungen"
+          }
+        }
+      }
+    },
+    "hostmask" : {
+      "comment" : "Label for an IRC hostmask field.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hostmask"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Címmaszk"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hostmaske"
+          }
+        }
+      }
+    },
+    "hostmask-format-and-examples" : {
+      "comment" : "Disclosure label for help about IRC hostmask syntax.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hostmask format and examples"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Címmaszk formátuma és példák"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hostmaskenformat und Beispiele"
+          }
+        }
+      }
+    },
+    "ignore-description" : {
+      "comment" : "Explanation at the top of the ignore-rule editor.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose which message types Glasstual should ignore from a matching user."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Válaszd ki, milyen üzenettípusokat mellőzzön a Glasstual az illeszkedő felhasználóktól."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wähle, welche Nachrichtentypen Glasstual von passenden Benutzern ignorieren soll."
+          }
+        }
+      }
+    },
+    "ignore-user" : {
+      "comment" : "Title of the ignore-rule editor.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ignore User"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Felhasználó mellőzése"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Benutzer ignorieren"
+          }
+        }
+      }
+    },
+    "ignored-messages" : {
+      "comment" : "Section title for message types an ignore rule suppresses.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Messages to Ignore"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mellőzendő üzenetek"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zu ignorierende Nachrichten"
+          }
+        }
+      }
+    },
+    "inline-media" : {
+      "comment" : "Checkbox for ignoring inline media.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inline media"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beágyazott média"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eingebettete Medien"
+          }
+        }
+      }
+    },
+    "matches-addresses-ending-in-info" : {
+      "comment" : "IRC hostmask example and explanation.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "*!*@*.info (matches any address ending in “.info”)"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "*!*@*.info (minden \".info\" végű címre illeszkedik)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "*!*@*.info (passt auf alle Adressen mit der Endung \".info\")"
+          }
+        }
+      }
+    },
+    "matches-every-possible-user" : {
+      "comment" : "IRC hostmask example and warning.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "*!*@* (matches every possible user — not recommended)"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "*!*@* (minden felhasználóra illeszkedik, nem ajánlott)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "*!*@* (passt auf alle Benutzer, nicht empfohlen)"
+          }
+        }
+      }
+    },
+    "matches-nicknames-starting-with-frank" : {
+      "comment" : "IRC hostmask example and explanation.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "frank*!*@* (matches any nickname that starts with “frank”)"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "frank*!*@* (minden \"frank\" kezdetű becenévre illeszkedik)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "frank*!*@* (passt auf alle Nicknamen, die mit \"frank\" beginnen)"
+          }
+        }
+      }
+    },
+    "matches-username-matt" : {
+      "comment" : "IRC hostmask example and explanation.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "*!matt@* (matches any username equal to “matt”)"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "*!matt@* (a \"matt\" felhasználónévre illeszkedik)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "*!matt@* (passt auf den Benutzernamen \"matt\")"
+          }
+        }
+      }
+    },
+    "nickname" : {
+      "comment" : "Label for a tracked user's nickname.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nickname"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Becenév"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nickname"
+          }
+        }
+      }
+    },
+    "nickname-username-address" : {
+      "comment" : "Canonical IRC hostmask format.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "<nickname>!<username>@<address>"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "<nickname>!<username>@<address>"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "<nickname>!<username>@<address>"
+          }
+        }
+      }
+    },
+    "notice-messages" : {
+      "comment" : "Checkbox for ignoring notice messages.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notice messages"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Értesítési üzenetek"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hinweismeldungen"
+          }
+        }
+      }
+    },
+    "please-enter-a-properly-formatted-ignore" : {
+      "comment" : "Validation error shown when an ignore mask is not properly formatted. Legacy key: csu-bv.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter a hostmask, such as nickname!username@address."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adj meg egy címmaszkot, például nickname!username@address."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gib eine Hostmaske wie nickname!username@address ein."
+          }
+        }
+      }
+    },
+    "private-highlights" : {
+      "comment" : "Checkbox for ignoring private-message highlights.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Private highlights"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privát említések"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Private Hervorhebungen"
+          }
+        }
+      }
+    },
+    "private-messages" : {
+      "comment" : "Checkbox for ignoring private messages.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Private messages"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privát üzenetek"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Private Nachrichten"
+          }
+        }
+      }
+    },
+    "public-highlights" : {
+      "comment" : "Checkbox for ignoring public-message highlights.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Public highlights"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nyilvános említések"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffentliche Hervorhebungen"
+          }
+        }
+      }
+    },
+    "public-messages" : {
+      "comment" : "Checkbox for ignoring public messages.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Public messages"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nyilvános üzenetek"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffentliche Nachrichten"
+          }
+        }
+      }
+    },
+    "track-user" : {
+      "comment" : "Title of the tracked-user editor.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Track User"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Felhasználó követése"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Benutzer beobachten"
+          }
+        }
+      }
+    },
+    "tracking-description" : {
+      "comment" : "Explanation at the top of the tracked-user editor.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Track when a nickname becomes available on this network."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kövesd, mikor válik elérhetővé egy becenév ezen a hálózaton."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beobachte, wann ein Nickname in diesem Netzwerk verfügbar wird."
+          }
+        }
+      }
+    },
+    "tracking-method-description" : {
+      "comment" : "Explanation of how Glasstual determines a tracked user's availability.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glasstual watches join, part, and quit activity in shared channels. When the server supports them, it also uses ISON, MONITOR, or WATCH to check availability outside shared channels."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A Glasstual figyeli a közös csatornákon a csatlakozásokat és kilépéseket. Ha a kiszolgáló támogatja, az ISON, MONITOR vagy WATCH parancsokkal a közös csatornákon kívül is ellenőrzi az elérhetőséget."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glasstual beobachtet Beitritte, Austritte und Verbindungsabbrüche in gemeinsamen Kanälen. Falls der Server sie unterstützt, werden auch ISON, MONITOR oder WATCH verwendet, um die Verfügbarkeit außerhalb gemeinsamer Kanäle zu prüfen."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

@@ -57,8 +57,8 @@ nonisolated struct IRCSpecParsedMode: Equatable, CustomStringConvertible { // no
 @MainActor
 struct IRCSpecModeTests {
 	/// A server advertising the common Libera/InspIRCd shape.
-	private func supportInfo() -> IRCISupportInfo {
-		let info = IRCISupportInfo()
+	private func supportInfo() -> ISupport {
+		let info = ISupport()
 
 		info.processConfigurationData("CHANMODES=beIq,k,fl,imnpstz PREFIX=(ohv)@%+")
 

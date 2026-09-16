@@ -36,28 +36,27 @@
  *********************************************************************** */
 
 import Foundation
-import GlasstualPluginKit
 import Observation
 
-public nonisolated struct MemberListSectionIdentifier: Hashable, Sendable { // nonisolated: value
-	public let rank: UserRank
-	public let ordinal: Int
+nonisolated struct MemberListSectionIdentifier: Hashable, Sendable { // nonisolated: value
+	let rank: UserRank
+	let ordinal: Int
 }
 
-public nonisolated struct MemberListSection: Hashable, Sendable { // nonisolated: value
-	public let identifier: MemberListSectionIdentifier
-	public let title: String
+nonisolated struct MemberListSection: Hashable, Sendable { // nonisolated: value
+	let identifier: MemberListSectionIdentifier
+	let title: String
 
-	public var rank: UserRank {
+	var rank: UserRank {
 		identifier.rank
 	}
 }
 
-public struct MemberListGroup: Identifiable {
-	public let section: MemberListSection
-	public let members: [ChannelUser]
+struct MemberListGroup: Identifiable {
+	let section: MemberListSection
+	let members: [ChannelUser]
 
-	public var id: MemberListSectionIdentifier {
+	var id: MemberListSectionIdentifier {
 		section.identifier
 	}
 }
@@ -69,9 +68,9 @@ public struct MemberListGroup: Identifiable {
 /// changes cannot move the selection onto a different person.
 @MainActor
 @Observable
-public final class MemberList: ChannelMemberListPresentation {
-	public var selectedMemberIDs: Set<User.ID> = []
-	public private(set) var groups: [MemberListGroup] = []
+final class MemberList: ChannelMemberListPresentation {
+	var selectedMemberIDs: Set<User.ID> = []
+	private(set) var groups: [MemberListGroup] = []
 	/** The badge colours and rank preferences every row draws from.
 
 	 Read once per invalidation and handed down. A row used to ask the defaults
@@ -82,20 +81,20 @@ public final class MemberList: ChannelMemberListPresentation {
 	/// How many times the list has told its rows to draw themselves again. The
 	/// rows do not read it; it is what says that a burst of changes published
 	/// once rather than once per change.
-	public private(set) var presentationRevision = 0
+	private(set) var presentationRevision = 0
 	/** The pinned nickname colours the rows draw their avatars from.
 
 	 One read per invalidation, handed to every avatar in the list. Each avatar
 	 used to resolve its own fill straight out of the defaults store, which
 	 builds a handle on the suite per row -- and a busy channel rebuilds its
 	 rows on every join, part and mode change. */
-	public private(set) var nicknameColorOverrides = UserNicknameColorStyleGenerator.overridesSnapshot()
+	private(set) var nicknameColorOverrides = NicknameColors.overridesSnapshot()
 	/** Whose profile popover is open, if anyone's.
 
 	 The list owns it rather than the row: a popover is modal to the pointer,
 	 so a second one would have to replace the first, and a row that kept its
 	 own flag could not know that. */
-	public private(set) var memberShowingProfile: User.ID?
+	private(set) var memberShowingProfile: User.ID?
 
 	@ObservationIgnored private weak var memberList: ChannelMemberList?
 	/// The channel's ordering as the protocol layer last published it. The rows
@@ -103,9 +102,9 @@ public final class MemberList: ChannelMemberListPresentation {
 	@ObservationIgnored private var members: [ChannelUser] = []
 	private var lastInteractedMemberID: User.ID?
 
-	public init() {}
+	init() {}
 
-	public func assign(to channel: Channel?) {
+	func assign(to channel: Channel?) {
 		memberList?.assign(nil)
 		memberList = channel?.memberInfo
 		if let memberList {
@@ -115,7 +114,7 @@ public final class MemberList: ChannelMemberListPresentation {
 		}
 	}
 
-	public func membersDidChange(_ members: [ChannelUser]) {
+	func membersDidChange(_ members: [ChannelUser]) {
 		self.members = members
 		rebuildRows()
 	}
@@ -126,7 +125,7 @@ public final class MemberList: ChannelMemberListPresentation {
 	 published ordering: a protocol message still assembling an ordering has
 	 already left, renamed or re-ranked people the list is still drawing, and
 	 the caller acts on who they are now. */
-	public var selectedMembers: [ChannelUser] {
+	var selectedMembers: [ChannelUser] {
 		members.compactMap { member in
 			guard selectedMemberIDs.contains(member.id) else {
 				return nil
@@ -184,7 +183,7 @@ public final class MemberList: ChannelMemberListPresentation {
 		dismissProfileIfMemberLeft(admitted)
 	}
 
-	public func deselectAll(_: Any?) {
+	func deselectAll(_: Any?) {
 		selectedMemberIDs.removeAll()
 		lastInteractedMemberID = nil
 	}
@@ -201,7 +200,7 @@ public final class MemberList: ChannelMemberListPresentation {
 		notePrimaryInteraction(with: member)
 	}
 
-	public var primaryInteractedMember: ChannelUser? {
+	var primaryInteractedMember: ChannelUser? {
 		guard let lastInteractedMemberID else { return nil }
 		if let memberList {
 			return memberList.findMember(withUserID: lastInteractedMemberID)
@@ -243,22 +242,22 @@ public final class MemberList: ChannelMemberListPresentation {
 	 member it holds and of the style and pinned colours the list hands it, so
 	 there is nothing to redraw a single row with. One snapshot is what every
 	 caller needs, whichever member prompted it. */
-	public func invalidatePresentation() {
-		nicknameColorOverrides = UserNicknameColorStyleGenerator.overridesSnapshot()
+	func invalidatePresentation() {
+		nicknameColorOverrides = NicknameColors.overridesSnapshot()
 		presentationStyle = .current()
 		presentationRevision &+= 1
 	}
 
-	public func refreshDrawing(forChangesToPreference preferenceKey: String) {
+	func refreshDrawing(forChangesToPreference preferenceKey: String) {
 		guard UserListModeBadge.badge(forPreferenceKeyNamed: preferenceKey) != nil else { return }
 		invalidatePresentation()
 	}
 
-	public func applicationAppearanceChanged() {
+	func applicationAppearanceChanged() {
 		invalidatePresentation()
 	}
 
-	public func systemAppearanceChanged() {
+	func systemAppearanceChanged() {
 		invalidatePresentation()
 	}
 }

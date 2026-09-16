@@ -67,8 +67,8 @@ struct ModeParserCorpusTests {
 		}
 	}
 
-	private static func supportInfo() -> IRCISupportInfo {
-		let supportInfo = IRCISupportInfo()
+	private static func supportInfo() -> ISupport {
+		let supportInfo = ISupport()
 
 		supportInfo.processConfigurationData("CHANMODES=beI,k,l,imnpst PREFIX=(ov)@+")
 
@@ -138,7 +138,7 @@ struct ModeParserCorpusTests {
 
 	@Test
 	func defaultChannelModesOnlyKnowOperatorAndVoice() {
-		let supportInfo = IRCISupportInfo()
+		let supportInfo = ISupport()
 		let parsed = supportInfo.parseModes("+ov alice bob")
 
 		#expect(parsed.count == 2)

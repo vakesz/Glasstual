@@ -79,7 +79,7 @@ struct MainWindowStateStore {
 	/// Window restoration stays in the group container so every process-local
 	/// app launch sees one state. It is deliberately excluded from settings
 	/// import and export by the typed key declarations.
-	init(defaults: UserDefaults = TextualUserDefaults.container) {
+	init(defaults: UserDefaults = GlasstualUserDefaults.container) {
 		self.defaults = defaults
 	}
 

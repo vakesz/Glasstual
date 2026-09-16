@@ -44,18 +44,14 @@ import Foundation
  existing preferences file already holds — rather than an array of strings, so
  the record is spelled out here instead of being rebuilt from
  `["string": …]` literals at every use. */
-public nonisolated struct HighlightKeyword: Hashable, Sendable { // nonisolated: value
-	public static let field = "string"
+nonisolated struct HighlightKeyword: Hashable, Sendable { // nonisolated: value
+	static let field = "string"
 
-	public var string: String
-
-	public init(string: String) {
-		self.string = string
-	}
+	var string: String
 }
 
 nonisolated extension HighlightKeyword: PreferenceValue { // nonisolated: value
-	public static func preferenceValue(from object: Any) -> HighlightKeyword? {
+	static func preferenceValue(from object: Any) -> HighlightKeyword? {
 		guard let string = PropertyListValue(propertyList: object)?.dictionary?[field]?.string else {
 			return nil
 		}
@@ -63,79 +59,79 @@ nonisolated extension HighlightKeyword: PreferenceValue { // nonisolated: value
 		return HighlightKeyword(string: string)
 	}
 
-	public var preferenceObject: Any? {
+	var preferenceObject: Any? {
 		[Self.field: string]
 	}
 }
 
 // MARK: - Input
 
-public nonisolated extension Preferences { // nonisolated: value
+nonisolated extension Preferences { // nonisolated: value
 	/// The input text field, the keyboard, and tab completion.
 	enum Input {
-		public static let automaticSpellCheck = PreferenceKey("TextFieldAutomaticSpellCheck", default: true)
-		public static let automaticGrammarCheck = PreferenceKey("TextFieldAutomaticGrammarCheck", default: true)
-		public static let automaticSpellCorrection = PreferenceKey(
+		static let automaticSpellCheck = PreferenceKey("TextFieldAutomaticSpellCheck", default: true)
+		static let automaticGrammarCheck = PreferenceKey("TextFieldAutomaticGrammarCheck", default: true)
+		static let automaticSpellCorrection = PreferenceKey(
 			"TextFieldAutomaticSpellCorrection",
 			default: false
 		)
 
-		public static let smartCopyPaste = PreferenceKey("TextFieldSmartCopyPaste", default: true)
-		public static let smartQuotes = PreferenceKey("TextFieldSmartQuotes", default: false)
-		public static let smartDashes = PreferenceKey("TextFieldSmartDashes", default: false)
-		public static let smartLinks = PreferenceKey("TextFieldSmartLinks", default: false)
-		public static let dataDetectors = PreferenceKey("TextFieldDataDetectors", default: false)
-		public static let textReplacement = PreferenceKey("TextFieldTextReplacement", default: true)
+		static let smartCopyPaste = PreferenceKey("TextFieldSmartCopyPaste", default: true)
+		static let smartQuotes = PreferenceKey("TextFieldSmartQuotes", default: false)
+		static let smartDashes = PreferenceKey("TextFieldSmartDashes", default: false)
+		static let smartLinks = PreferenceKey("TextFieldSmartLinks", default: false)
+		static let dataDetectors = PreferenceKey("TextFieldDataDetectors", default: false)
+		static let textReplacement = PreferenceKey("TextFieldTextReplacement", default: true)
 
-		public static let tabKeyAction = PreferenceKey(
+		static let tabKeyAction = PreferenceKey(
 			"Keyboard -> Tab Key Action",
 			default: TabKeyAction.nicknameComplete
 		)
 
-		public static let commandWKeyAction = PreferenceKey(
+		static let commandWKeyAction = PreferenceKey(
 			"Keyboard -> Command+W Key Action",
 			default: CommandWShortcutAction.closeWindow
 		)
 
-		public static let tabCompletionSuffix = PreferenceKey(
+		static let tabCompletionSuffix = PreferenceKey(
 			"Keyboard -> Tab Key Completion Suffix",
 			default: "",
 			traits: .unregistered
 		)
 
-		public static let tabCompletionNoWhitespace = PreferenceKey(
+		static let tabCompletionNoWhitespace = PreferenceKey(
 			"Tab Completion -> Do Not Use Whitespace for Missing Completion Suffix",
 			default: false
 		)
 
-		public static let tabCompletionCutForward = PreferenceKey(
+		static let tabCompletionCutForward = PreferenceKey(
 			"Tab Completion -> Completion Suffix Cut Forward Until Space",
 			default: false
 		)
 
-		public static let focusTextViewOnSelectionChange = PreferenceKey(
+		static let focusTextViewOnSelectionChange = PreferenceKey(
 			"Main Input Text Field -> Focus When Changing Views",
 			default: true
 		)
 
-		public static let textViewFontSize = PreferenceKey(
+		static let textViewFontSize = PreferenceKey(
 			"Main Input Text Field -> Font Size",
 			default: MainWindowTextFontSize.normal
 		)
 
-		public static let commandReturnSendsAction = PreferenceKey(
+		static let commandReturnSendsAction = PreferenceKey(
 			"CommandReturnSendsMessageAsAction",
 			default: true
 		)
 
-		public static let controlEnterSendsMessage = PreferenceKey("ControlEnterSendsMessage", default: false)
-		public static let historyIsChannelSpecific = PreferenceKey("SaveInputHistoryPerSelection", default: false)
-		public static let swipeMinimumLength = PreferenceKey(
+		static let controlEnterSendsMessage = PreferenceKey("ControlEnterSendsMessage", default: false)
+		static let historyIsChannelSpecific = PreferenceKey("SaveInputHistoryPerSelection", default: false)
+		static let swipeMinimumLength = PreferenceKey(
 			"SwipeMinimumLength", default: 30.0,
 			validation: { $0.isFinite && $0 >= 0 }
 		)
 
-		public static let userDoubleClickAction = PreferenceKey(
+		static let userDoubleClickAction = PreferenceKey(
 			"UserListDoubleClickAction",
 			default: UserDoubleClickAction.privateMessage
 		)
@@ -152,23 +148,23 @@ public nonisolated extension Preferences { // nonisolated: value
 
 // MARK: - Highlights
 
-public nonisolated extension Preferences { // nonisolated: value
+nonisolated extension Preferences { // nonisolated: value
 	/// Which incoming text counts as a highlight.
 	enum Highlights {
-		public static let matchingMethod = PreferenceKey(
+		static let matchingMethod = PreferenceKey(
 			"NicknameHighlightMatchingType",
 			default: NicknameHighlightMatchMode.exact
 		)
 
-		public static let trackLocalNickname = PreferenceKey("TrackNicknameHighlightsOfLocalUser", default: true)
+		static let trackLocalNickname = PreferenceKey("TrackNicknameHighlightsOfLocalUser", default: true)
 
-		public static let matchKeywords = PreferenceKey(
+		static let matchKeywords = PreferenceKey(
 			"Highlight List -> Primary Matches",
 			default: [HighlightKeyword](),
 			traits: .unregistered
 		)
 
-		public static let excludeKeywords = PreferenceKey(
+		static let excludeKeywords = PreferenceKey(
 			"Highlight List -> Excluded Matches",
 			default: [HighlightKeyword](),
 			traits: .unregistered
@@ -182,7 +178,7 @@ public nonisolated extension Preferences { // nonisolated: value
 		 keyword at all, and neither is one that is only spaces, which Settings
 		 already shows as blank. Surrounding whitespace is dropped for the same
 		 reason: a keyword is what the list shows. */
-		public static func keywords(in list: [HighlightKeyword]) -> [String] {
+		static func keywords(in list: [HighlightKeyword]) -> [String] {
 			list.map { $0.string.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { $0.isEmpty == false }
 		}
 

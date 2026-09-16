@@ -106,6 +106,6 @@ struct ChannelReadMarkerTests {
 		messageIdentifier: String?,
 		marks: Bool
 	) {
-		#expect(IRCChatHistoryPolicy.marksReadPosition(lineType: lineType, messageIdentifier: messageIdentifier) == marks)
+		#expect(ChatHistoryPolicy.marksReadPosition(lineType: lineType, messageIdentifier: messageIdentifier) == marks)
 	}
 }

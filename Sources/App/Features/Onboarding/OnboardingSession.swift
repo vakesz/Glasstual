@@ -21,7 +21,7 @@ private let onboardingLogger = Logger(
 
 @MainActor
 @Observable
-public final class OnboardingSession {
+final class OnboardingSession {
 	let model: OnboardingModel
 
 	/// Shown on the summary step while the choices are being applied and the
@@ -49,20 +49,20 @@ public final class OnboardingSession {
 	private let applySettings: (OnboardingModel) -> Void
 	private let markCompleted: () -> Void
 
-	public static func shouldPresentOnLaunch() -> Bool {
+	static func shouldPresentOnLaunch() -> Bool {
 		if Preferences.Identity.onboardingCompleted.value {
 			return false
 		}
 
-		return (AppController.shared.world?.clientCount ?? 0) == 0
+		return (AppServices.world?.clientCount ?? 0) == 0
 	}
 
-	public convenience init() {
+	convenience init() {
 		let settings = OnboardingSettings()
 		settings.nickname = Preferences.Identity.nickname.detachedValue
 		settings.realName = Preferences.Identity.realName.detachedValue
 		settings.textSize = OnboardingSettings.textSize(
-			forFontSize: SharedApplication.sharedThemeController().theme.fontSize
+			forFontSize: AppServices.theme.theme.fontSize
 		)
 		settings.appearance = Preferences.Appearance.preferredAppearance.value
 
@@ -150,7 +150,7 @@ public final class OnboardingSession {
 			Preferences.Identity.realName.value = identity.realName
 		}
 		if let appearance = model.acceptedAppearance {
-			SharedApplication.sharedThemeController().apply(appearance.theme)
+			AppServices.theme.apply(appearance.theme)
 			if Preferences.Appearance.preferredAppearance.value != appearance.preferredAppearance {
 				Preferences.Appearance.preferredAppearance.value = appearance.preferredAppearance
 				TextualPreferences.performReloadAction(.appearance)
@@ -166,8 +166,8 @@ public final class OnboardingSession {
 
 	private static func createClient(_ config: ClientConfig, connectWhenFinished: Bool) -> Bool {
 		guard
-			let world = AppController.shared.world,
-			let mainWindow = AppController.shared.mainWindow
+			let world = AppServices.world,
+			let mainWindow = AppServices.delegate.mainWindow
 		else {
 			onboardingLogger.error("Cannot create a connection before the world is ready")
 			return false

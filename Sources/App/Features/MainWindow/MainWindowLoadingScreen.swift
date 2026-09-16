@@ -9,7 +9,7 @@ import SwiftUI
 
 @MainActor
 @Observable
-public final class MainWindowLoadingScreen {
+final class MainWindowLoadingScreen {
 	enum Content: Equatable {
 		case hidden
 		case noServers
@@ -18,16 +18,16 @@ public final class MainWindowLoadingScreen {
 
 	private(set) var content = Content.hidden
 
-	public var viewIsVisible: Bool {
+	var viewIsVisible: Bool {
 		content != .hidden
 	}
 
 	/// The empty state: the application has no connection configured yet.
-	public func showNoServersView() {
+	func showNoServersView() {
 		content = .noServers
 	}
 
-	public func showProgressView(withReason reason: String) {
+	func showProgressView(withReason reason: String) {
 		content = .progress(reason)
 	}
 
@@ -36,7 +36,7 @@ public final class MainWindowLoadingScreen {
 	 A full-window cross-fade is the largest piece of motion in the window, so
 	 it is the first thing Reduce Motion asks an interface to drop; the overlay
 	 simply goes. */
-	public func hide() {
+	func hide() {
 		guard viewIsVisible else { return }
 		withAnimation(ReduceMotion.animation(.easeOut(duration: 0.25))) {
 			content = .hidden
@@ -71,7 +71,7 @@ struct MainWindowLoadingContent: View {
 			Text(verbatim: MainWindowStrings.Loading.welcomeDescription)
 		} actions: {
 			Button(MenuStrings.Server.addServer) {
-				AppController.shared.menuController?.actionCoordinator.addServer(nil)
+				AppServices.delegate.menuController?.actionCoordinator.addServer(nil)
 			}
 			.keyboardShortcut(.defaultAction)
 		}

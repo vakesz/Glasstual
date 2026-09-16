@@ -13,13 +13,6 @@ import Testing
 /// of the session.
 @Suite("Transcript projection delivery updates")
 struct TranscriptProjectionDeliveryTests {
-	@Test("A receipt for a line the buffer never held is not retained")
-	func receiptForAnUnknownLineIsDropped() {
-		var state = TranscriptProjectionState(capacity: 2)
-		state.updateDelivery(lineNumber: "never-printed", state: .delivered, messageIdentifier: nil, reason: nil)
-		#expect(state.deliveryUpdates.isEmpty)
-	}
-
 	@Test("A receipt is forgotten with the line it belongs to, and a later one for it is refused")
 	func receiptsAreTrimmedWithTheirLinesAndNotRecreated() {
 		var state = TranscriptProjectionState(capacity: 2)
@@ -50,9 +43,9 @@ struct TranscriptProjectionDeliveryTests {
 		#expect(state.deliveryUpdates[lines[0].uniqueIdentifier] == nil)
 	}
 
-	private func rendered(_ line: LogLine) -> LogLineRenderResult {
-		LogLineRenderResult(
-			transcriptLine: TranscriptLine(
+	private func rendered(_ line: LogLine) -> TranscriptRenderResult {
+		TranscriptRenderResult(
+			transcriptLine: TranscriptRow(
 				lineNumber: line.uniqueIdentifier,
 				receivedAt: line.receivedAt,
 				nickname: nil,

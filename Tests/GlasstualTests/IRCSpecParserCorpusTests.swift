@@ -37,7 +37,6 @@
 
 import Foundation
 @testable import Glasstual
-import GlasstualPluginKit
 import Testing
 
 /// The vendored `ircdocs/parser-tests` corpus, read out of the test bundle.
@@ -392,7 +391,7 @@ struct IRCSpecParserCorpusTests {
 			return
 		}
 
-		#expect(IRCHostmask.isValidAddress(testCase.host))
+		#expect(Hostmask.isValidAddress(testCase.host))
 	}
 
 	/// The half of the corpus a client does enforce: an address that is empty
@@ -405,6 +404,6 @@ struct IRCSpecParserCorpusTests {
 
 		let unusable = testCase.host.isEmpty || testCase.host.contains(" ")
 
-		#expect(IRCHostmask.isValidAddress(testCase.host) == (unusable == false))
+		#expect(Hostmask.isValidAddress(testCase.host) == (unusable == false))
 	}
 }

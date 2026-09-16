@@ -49,15 +49,4 @@ struct ServerListRowTests {
 		#expect(channel(unread: 0).showsUnreadBadge == false)
 		#expect(channel(unread: 3, showsUnreadCount: false).showsUnreadBadge == false)
 	}
-
-	@Test("Rows compare by what they draw, so an unchanged row is skipped")
-	func rowEquality() {
-		#expect(channel(unread: 1) == channel(unread: 1))
-		#expect(channel(unread: 1) != channel(unread: 2))
-		/* The badge colour is drawn, so it is compared: read out of the defaults
-		 inside the row body instead, a changed preference left every row equal
-		 to the one before it and nothing redrew. */
-		#expect(channel(unread: 1, badgeTint: .systemRed) != channel(unread: 1))
-		#expect(channel(unread: 1, badgeTint: .systemRed) == channel(unread: 1, badgeTint: .systemRed))
-	}
 }

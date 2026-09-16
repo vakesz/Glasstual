@@ -39,26 +39,26 @@ import Foundation
 
 /// `PREFIX`: the membership mode symbols the server ranks, highest first, and
 /// the prefix character each one is written with.
-public nonisolated struct ISupportPrefixConfiguration: Sendable, Equatable { // nonisolated: value
-	public let modeSymbols: [String]
-	public let characters: [String]
+nonisolated struct ISupportPrefixConfiguration: Sendable, Equatable { // nonisolated: value
+	let modeSymbols: [String]
+	let characters: [String]
 }
 
 /// `EXTBAN`: the character an extended ban mask starts with, if any, and the
 /// types the server accepts after it.
-public nonisolated struct ISupportExtendedBanConfiguration: Sendable, Equatable { // nonisolated: value
-	public let prefix: String?
-	public let types: [String]
+nonisolated struct ISupportExtendedBanConfiguration: Sendable, Equatable { // nonisolated: value
+	let prefix: String?
+	let types: [String]
 }
 
-public nonisolated enum ISupportTokenParser { // nonisolated: value
+nonisolated enum ISupportTokenParser { // nonisolated: value
 	/** A token value with its `\xHH` escapes decoded.
 
 	 ISUPPORT values cannot carry a space, a backslash or an `=` as written, so
 	 the server sends each as `\x` and two hexadecimal digits naming a byte:
 	 `NETWORK=Example\x20Network`. The bytes are UTF-8. An escape that is not
 	 followed by two hexadecimal digits is not an escape and is kept as written. */
-	public static func unescapedValue(_ value: Substring) -> String {
+	static func unescapedValue(_ value: Substring) -> String {
 		guard value.contains("\\") else {
 			return String(value)
 		}
@@ -96,7 +96,7 @@ public nonisolated enum ISupportTokenParser { // nonisolated: value
 	}
 
 	/// `CHANLIMIT`, keyed by the channel prefix each limit applies to.
-	public static func channelLimits(from token: String) -> [Character: UInt] {
+	static func channelLimits(from token: String) -> [Character: UInt] {
 		var limits: [Character: UInt] = [:]
 
 		for (keys, value) in colonSeparatedEntries(in: token) {
@@ -111,7 +111,7 @@ public nonisolated enum ISupportTokenParser { // nonisolated: value
 	}
 
 	/// `TARGMAX`, keyed by the uppercased command name.
-	public static func maximumTargets(from token: String) -> [String: UInt] {
+	static func maximumTargets(from token: String) -> [String: UInt] {
 		var limits: [String: UInt] = [:]
 
 		for (command, value) in colonSeparatedEntries(in: token) {
@@ -123,7 +123,7 @@ public nonisolated enum ISupportTokenParser { // nonisolated: value
 
 	/// `MAXLIST`, keyed by the list mode each limit applies to. An entry with no
 	/// positive limit says nothing and is left out.
-	public static func maximumListEntries(from token: String) -> [Character: UInt] {
+	static func maximumListEntries(from token: String) -> [Character: UInt] {
 		var limits: [Character: UInt] = [:]
 
 		for (modeSymbols, value) in colonSeparatedEntries(in: token) {
@@ -147,7 +147,7 @@ public nonisolated enum ISupportTokenParser { // nonisolated: value
 		UInt(value) ?? 0
 	}
 
-	public static func extendedBanConfiguration(from token: String) -> ISupportExtendedBanConfiguration {
+	static func extendedBanConfiguration(from token: String) -> ISupportExtendedBanConfiguration {
 		guard let comma = token.firstIndex(of: ",") else {
 			return ISupportExtendedBanConfiguration(prefix: nil, types: characters(in: token))
 		}
@@ -161,7 +161,7 @@ public nonisolated enum ISupportTokenParser { // nonisolated: value
 		)
 	}
 
-	public static func userPrefixConfiguration(from token: String) -> ISupportPrefixConfiguration? {
+	static func userPrefixConfiguration(from token: String) -> ISupportPrefixConfiguration? {
 		let token = token as NSString
 		let openingParenthesis = token.range(of: "(").location
 		let closingParenthesis = token.range(of: ")").location
@@ -194,7 +194,7 @@ public nonisolated enum ISupportTokenParser { // nonisolated: value
 	/// The `CHANMODES` groups, merged over what the server has already
 	/// advertised. Groups past D have no defined meaning, so their modes are
 	/// left out and read back as "takes no parameter".
-	public static func channelModeKinds(
+	static func channelModeKinds(
 		from token: String,
 		merging existingModes: [Character: ChannelModeKind]
 	) -> [Character: ChannelModeKind] {
@@ -213,7 +213,7 @@ public nonisolated enum ISupportTokenParser { // nonisolated: value
 		return channelModes
 	}
 
-	public static func casefold(_ string: String, caseMapping: IRCISupportInfoCaseMapping) -> String {
+	static func casefold(_ string: String, caseMapping: ISupportCaseMapping) -> String {
 		guard string.isEmpty == false else {
 			return string
 		}
@@ -249,7 +249,7 @@ public nonisolated enum ISupportTokenParser { // nonisolated: value
 		return String(String.UnicodeScalarView(scalars))
 	}
 
-	public static func isClientTag(_ tagName: String, deniedBy entries: [String]) -> Bool {
+	static func isClientTag(_ tagName: String, deniedBy entries: [String]) -> Bool {
 		var denied = false
 
 		for entry in entries {
@@ -271,7 +271,7 @@ public nonisolated enum ISupportTokenParser { // nonisolated: value
 	///
 	/// Zero is a server that advertised no limit, and it chunks the same way as
 	/// one: a target list the server never said it accepts is not sent.
-	public static func chunkTargets(_ targets: [String], limit: UInt) -> [[String]] {
+	static func chunkTargets(_ targets: [String], limit: UInt) -> [[String]] {
 		WireBatching.pack(targets, maximumCount: max(Int(min(limit, UInt(targets.count))), 1))
 	}
 

@@ -38,12 +38,12 @@
 import Foundation
 
 /// When a channel mode carries a parameter on the wire.
-public nonisolated enum ModeParameterPolicy: Sendable, Equatable { // nonisolated: value
+nonisolated enum ModeParameterPolicy: Sendable, Equatable { // nonisolated: value
 	case always
 	case onlyWhenSet
 	case never
 
-	public func requiresParameter(whenModeIsSet modeIsSet: Bool) -> Bool {
+	func requiresParameter(whenModeIsSet modeIsSet: Bool) -> Bool {
 		switch self {
 		case .always:
 			true
@@ -63,7 +63,7 @@ public nonisolated enum ModeParameterPolicy: Sendable, Equatable { // nonisolate
 /// with 100 standing in for a prefix mode, and every reader had to know that
 /// 1, 2 and 100 mean "parameterised", 3 means "only when set" and 4 means
 /// "never".
-public nonisolated enum ChannelModeKind: Sendable, Equatable, CaseIterable { // nonisolated: value
+nonisolated enum ChannelModeKind: Sendable, Equatable, CaseIterable { // nonisolated: value
 	/// CHANMODES group A: a list mode such as `b`, always parameterised.
 	case list
 	/// Group B: a setting that is parameterised in both directions, like `k`.
@@ -77,7 +77,7 @@ public nonisolated enum ChannelModeKind: Sendable, Equatable, CaseIterable { // 
 	case userPrefix
 
 	/// The group at `index` in a `CHANMODES` token, or `nil` past group D.
-	public init?(chanModesGroupIndex index: Int) {
+	init?(chanModesGroupIndex index: Int) {
 		switch index {
 		case 0: self = .list
 		case 1: self = .setting
@@ -87,7 +87,7 @@ public nonisolated enum ChannelModeKind: Sendable, Equatable, CaseIterable { // 
 		}
 	}
 
-	public var parameterPolicy: ModeParameterPolicy {
+	var parameterPolicy: ModeParameterPolicy {
 		switch self {
 		case .list, .setting, .userPrefix:
 			.always

@@ -14,7 +14,7 @@ import Testing
  by `PreferencesTransferTests`. This is the gate in front of it: every value
  that arrives is answered for by the declaration that owns the name, by the
  family that owns the pattern when the name is made at runtime, or by nothing
- at all when the name belongs to somebody else's plugin. */
+ at all when the name is one nothing declares. */
 @Suite("Preference import validation")
 @MainActor
 struct PreferencesImportTests {
@@ -73,7 +73,7 @@ struct PreferencesImportTests {
 	 coercion has to be total for every caller that reaches it. */
 	@Test("A key the catalogue does not know is left as it stands")
 	func unknownKeysAreLeftUnchanged() throws {
-		let name = "Tests -> Import -> Unknown Plugin Key"
+		let name = "Tests -> Import -> Undeclared Key"
 		let payload: PropertyListValue = ["anything": 1]
 
 		#expect(Preferences.coerce(payload, forKey: name)?.dictionary?["anything"]?.integer == 1)

@@ -43,34 +43,30 @@ private let preferencesReloadLogger = Logger(
 	category: "PreferencesReload"
 )
 
-public struct PreferencesReloadAction: OptionSet, Sendable {
-	public let rawValue: UInt
+struct PreferencesReloadAction: OptionSet, Sendable {
+	let rawValue: UInt
 
-	public init(rawValue: UInt) {
-		self.rawValue = rawValue
-	}
-
-	public static let appearance = Self(rawValue: 1 << 0)
-	public static let dockIconBadges = Self(rawValue: 1 << 2)
-	public static let highlightKeywords = Self(rawValue: 1 << 3)
-	public static let highlightLogging = Self(rawValue: 1 << 4)
-	public static let inputHistoryScope = Self(rawValue: 1 << 6)
-	public static let logTranscripts = Self(rawValue: 1 << 7)
-	public static let memberList = Self(rawValue: 1 << 9)
-	public static let memberListSortOrder = Self(rawValue: 1 << 10)
-	public static let memberListUserBadges = Self(rawValue: 1 << 11)
-	public static let preferencesChanged = Self(rawValue: 1 << 12)
-	public static let scrollbackSaveLimit = Self(rawValue: 1 << 13)
-	public static let scrollbackVisibleLimit = Self(rawValue: 1 << 14)
-	public static let serverList = Self(rawValue: 1 << 15)
-	public static let serverListUnreadBadges = Self(rawValue: 1 << 16)
-	public static let style = Self(rawValue: 1 << 17)
-	public static let textDirection = Self(rawValue: 1 << 19)
-	public static let textFieldFontSize = Self(rawValue: 1 << 20)
+	static let appearance = Self(rawValue: 1 << 0)
+	static let dockIconBadges = Self(rawValue: 1 << 2)
+	static let highlightKeywords = Self(rawValue: 1 << 3)
+	static let highlightLogging = Self(rawValue: 1 << 4)
+	static let inputHistoryScope = Self(rawValue: 1 << 6)
+	static let logTranscripts = Self(rawValue: 1 << 7)
+	static let memberList = Self(rawValue: 1 << 9)
+	static let memberListSortOrder = Self(rawValue: 1 << 10)
+	static let memberListUserBadges = Self(rawValue: 1 << 11)
+	static let preferencesChanged = Self(rawValue: 1 << 12)
+	static let scrollbackSaveLimit = Self(rawValue: 1 << 13)
+	static let scrollbackVisibleLimit = Self(rawValue: 1 << 14)
+	static let serverList = Self(rawValue: 1 << 15)
+	static let serverListUnreadBadges = Self(rawValue: 1 << 16)
+	static let style = Self(rawValue: 1 << 17)
+	static let textDirection = Self(rawValue: 1 << 19)
+	static let textFieldFontSize = Self(rawValue: 1 << 20)
 }
 
 @MainActor
-public extension TextualPreferences {
+extension TextualPreferences {
 	static func performReloadAction(forKeys keys: [String]) {
 		performReloadAction(reloadAction(forKeys: keys))
 	}
@@ -164,7 +160,7 @@ public extension TextualPreferences {
 		for reloadAction: PreferencesReloadAction,
 		changedKey key: String?
 	) -> Bool {
-		let appController: ApplicationController = AppController.shared
+		let appController: ApplicationDelegate = AppServices.delegate
 		// Reachable during preference import and during theme validation at
 		// launch, both of which can run before the main window exists.
 		guard let mainWindow = appController.mainWindow else {
@@ -190,16 +186,16 @@ public extension TextualPreferences {
 		}
 
 		if reloadAction.contains(.appearance) {
-			SharedApplication.sharedAppearance().updateAppearance()
+			AppServices.appearance.updateAppearance()
 			/* Ahead of the redraws below: they resolve theme colours against the
 			 snapshot the controller publishes, and the notification
 			 `updateAppearance` posts would only reach it a turn later. */
-			SharedApplication.sharedThemeController().appearanceDidChange()
+			AppServices.theme.appearanceDidChange()
 			didReloadUserInterface = true
 		}
 
 		if reloadAction.contains(.style) {
-			SharedApplication.sharedThemeController().reload()
+			AppServices.theme.reload()
 			mainWindow.reloadTheme()
 			didReloadActiveStyle = true
 		}
@@ -224,7 +220,7 @@ public extension TextualPreferences {
 	}
 
 	private static func reloadMemberOrderingAndHighlights(for reloadAction: PreferencesReloadAction) {
-		let appController: ApplicationController = AppController.shared
+		let appController: ApplicationDelegate = AppServices.delegate
 		let memberList = appController.mainWindow?.memberList
 
 		var didReloadMemberListSortOrder = false
@@ -262,7 +258,7 @@ public extension TextualPreferences {
 		for reloadAction: PreferencesReloadAction,
 		didReloadActiveStyle: Bool
 	) {
-		let appController: ApplicationController = AppController.shared
+		let appController: ApplicationDelegate = AppServices.delegate
 		guard let mainWindow = appController.mainWindow else {
 			preferencesReloadLogger.debug("No main window to reload input and storage for")
 			return
@@ -296,7 +292,7 @@ public extension TextualPreferences {
 		}
 
 		if reloadAction.contains(.scrollbackSaveLimit) {
-			LogControllerHistoricLogFile.shared.resetMaximumLineCount()
+			Scrollback.shared.resetMaximumLineCount()
 		}
 
 		if reloadAction.contains(.scrollbackVisibleLimit) {
@@ -312,7 +308,7 @@ public extension TextualPreferences {
 
 	private static func notifyPreferenceObservers(for reloadAction: PreferencesReloadAction) {
 		if reloadAction.contains(.preferencesChanged) {
-			let appController: ApplicationController = AppController.shared
+			let appController: ApplicationDelegate = AppServices.delegate
 			guard let mainWindow = appController.mainWindow else { return }
 
 			appController.world.preferencesChanged()

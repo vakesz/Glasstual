@@ -4,7 +4,6 @@
  *********************************************************************** */
 
 import Foundation
-import GlasstualPluginKit
 
 /// Everything the member list knows about one rank.
 ///

@@ -6,7 +6,6 @@
 import CocoaExtensions
 import Foundation
 @testable import Glasstual
-import GlasstualPluginKit
 import Testing
 
 /** The client list lives in `UserDefaults` as property-list dictionaries, so a
@@ -183,7 +182,7 @@ struct ClientConfigCodableTests {
 
 		#expect(config.serverList.count == 1)
 		#expect(server.serverAddress == "irc.example.net")
-		#expect(server.serverPort == (storedPort ?? IRCConnectionDefaults.serverPort))
+		#expect(server.serverPort == (storedPort ?? ConnectionDefaults.serverPort))
 		#expect(server.prefersSecuredConnection)
 	}
 

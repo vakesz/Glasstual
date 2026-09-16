@@ -5,7 +5,6 @@
 
 import CocoaExtensions
 import Foundation
-import GlasstualPluginKit
 import Observation
 
 @MainActor
@@ -163,7 +162,7 @@ final class ServerPropertiesModel {
 				primary?.serverAddress ?? "",
 				in: networkList
 			)
-			serverPort = String(primary?.serverPort ?? UInt16(IRCConnectionDefaults.serverPort))
+			serverPort = String(primary?.serverPort ?? UInt16(ConnectionDefaults.serverPort))
 			proxyAddress = config.proxyAddress ?? ""
 			proxyPort = String(config.proxyPort)
 			proxyUsername = config.proxyUsername ?? ""
@@ -327,7 +326,7 @@ final class ServerPropertiesModel {
 		config.serverList = servers
 		let primary = servers.first
 		serverAddress = Self.displayedServerAddress(primary?.serverAddress ?? "", in: networkList)
-		serverPort = String(primary?.serverPort ?? UInt16(IRCConnectionDefaults.serverPort))
+		serverPort = String(primary?.serverPort ?? UInt16(ConnectionDefaults.serverPort))
 		forgetNetworkResolution()
 		/* The endpoint sheet answers with the edits it collected, so the primary
 		 endpoint's secret is whatever came back from it, resolved against the
@@ -507,7 +506,7 @@ final class ServerPropertiesModel {
 		var result = config
 		var server = primaryServer ?? Server()
 		server.serverAddress = resolvedPrimaryServerAddress
-		server.serverPort = UInt16(serverPort) ?? UInt16(IRCConnectionDefaults.serverPort)
+		server.serverPort = UInt16(serverPort) ?? UInt16(ConnectionDefaults.serverPort)
 		server.pendingServerPassword = submittedSecret(
 			.serverPassword,
 			text: serverPassword,
@@ -529,7 +528,7 @@ final class ServerPropertiesModel {
 		)
 		result.alternateNicknames = uniqueNonempty(alternateNicknames.components(separatedBy: .whitespaces))
 		result.proxyAddress = Self.nilIfEmpty(proxyAddress.firstToken.lowercased())
-		result.proxyPort = UInt16(proxyPort) ?? UInt16(IRCConnectionDefaults.proxyPort)
+		result.proxyPort = UInt16(proxyPort) ?? UInt16(ConnectionDefaults.proxyPort)
 		result.proxyUsername = Self.nilIfEmpty(proxyUsername.firstToken)
 		result.pendingProxyPassword = submittedSecret(
 			.proxyPassword,
@@ -607,7 +606,7 @@ final class ServerPropertiesModel {
 		value.isEmpty ? nil : value
 	}
 
-	static func proxyTypeUsesAddress(_ type: IRCConnectionProxyType) -> Bool {
+	static func proxyTypeUsesAddress(_ type: ConnectionProxyType) -> Bool {
 		[.socks5, .HTTP].contains(type)
 	}
 

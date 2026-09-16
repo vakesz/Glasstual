@@ -15,14 +15,14 @@ import Foundation
 
 nonisolated enum ServerPropertiesStrings { // nonisolated: value
 	enum AddressBook {
-		static func entryType(_ entryType: IRCAddressBookEntryType) -> String {
+		static func entryType(_ entryType: AddressBookEntryType) -> String {
 			switch entryType {
 			case .ignore, .mixed:
-				String(localized: .TDCServerPropertiesSheet.userIgnore)
+				String(localized: .ServerProperties.userIgnore)
 			case .userTracking:
-				String(localized: .TDCServerPropertiesSheet.userTracking)
+				String(localized: .ServerProperties.userTracking)
 			@unknown default:
-				String(localized: .TDCServerPropertiesSheet.userIgnore)
+				String(localized: .ServerProperties.userIgnore)
 			}
 		}
 	}
@@ -31,522 +31,522 @@ nonisolated enum ServerPropertiesStrings { // nonisolated: value
 	/// An image of a plus sign says nothing on its own.
 	enum ListButton {
 		static var addChannel: String {
-			String(localized: .TDCServerPropertiesSheet.addChannelButton)
+			String(localized: .ServerProperties.addChannelButton)
 		}
 
 		static var editChannel: String {
-			String(localized: .TDCServerPropertiesSheet.editChannelButton)
+			String(localized: .ServerProperties.editChannelButton)
 		}
 
 		static var removeChannel: String {
-			String(localized: .TDCServerPropertiesSheet.removeChannelButton)
+			String(localized: .ServerProperties.removeChannelButton)
 		}
 
 		static var addHighlight: String {
-			String(localized: .TDCServerPropertiesSheet.addHighlightButton)
+			String(localized: .ServerProperties.addHighlightButton)
 		}
 
 		static var editHighlight: String {
-			String(localized: .TDCServerPropertiesSheet.editHighlightButton)
+			String(localized: .ServerProperties.editHighlightButton)
 		}
 
 		static var removeHighlight: String {
-			String(localized: .TDCServerPropertiesSheet.removeHighlightButton)
+			String(localized: .ServerProperties.removeHighlightButton)
 		}
 
 		static var addAddressBookEntry: String {
-			String(localized: .TDCServerPropertiesSheet.addAddressBookEntryButton)
+			String(localized: .ServerProperties.addAddressBookEntryButton)
 		}
 
 		static var editAddressBookEntry: String {
-			String(localized: .TDCServerPropertiesSheet.editAddressBookEntryButton)
+			String(localized: .ServerProperties.editAddressBookEntryButton)
 		}
 
 		static var removeAddressBookEntry: String {
-			String(localized: .TDCServerPropertiesSheet.removeAddressBookEntryButton)
+			String(localized: .ServerProperties.removeAddressBookEntryButton)
 		}
 	}
 
 	enum Highlight {
 		static var allChannels: String {
-			String(localized: .TDCServerPropertiesSheet.allChannels)
+			String(localized: .ServerProperties.allChannels)
 		}
 
 		static func matchType(isExcluded: Bool) -> String {
 			isExcluded
-				? String(localized: .TDCServerPropertiesSheet.serverSpecificHighlightEntryExclude)
-				: String(localized: .TDCServerPropertiesSheet.serverSpecificHighlightEntryMatch)
+				? String(localized: .ServerProperties.serverSpecificHighlightEntryExclude)
+				: String(localized: .ServerProperties.serverSpecificHighlightEntryMatch)
 		}
 	}
 
 	enum Navigation {
 		static var connection: String {
-			String(localized: .TDCServerPropertiesSheet.navigationSectionConnection)
+			String(localized: .ServerProperties.navigationSectionConnection)
 		}
 
 		static var vendorSpecific: String {
-			String(localized: .TDCServerPropertiesSheet.vendorSpecific)
+			String(localized: .ServerProperties.vendorSpecific)
 		}
 
 		static var advanced: String {
-			String(localized: .TDCServerPropertiesSheet.serverPropertiesNavigationMenuAdvanced)
+			String(localized: .ServerProperties.serverPropertiesNavigationMenuAdvanced)
 		}
 
 		static var addressBook: String {
-			String(localized: .TDCServerPropertiesSheet.addressBook)
+			String(localized: .ServerProperties.addressBook)
 		}
 
 		static var channelList: String {
-			String(localized: .TDCServerPropertiesSheet.channelList)
+			String(localized: .ServerProperties.channelList)
 		}
 
 		static var connectCommands: String {
-			String(localized: .TDCServerPropertiesSheet.connectCommands)
+			String(localized: .ServerProperties.connectCommands)
 		}
 
 		static var encoding: String {
-			String(localized: .TDCServerPropertiesSheet.serverPropertiesNavigationMenuEncoding)
+			String(localized: .ServerProperties.serverPropertiesNavigationMenuEncoding)
 		}
 
 		static var general: String {
-			String(localized: .TDCServerPropertiesSheet.serverPropertiesNavigationMenuGeneral)
+			String(localized: .ServerProperties.serverPropertiesNavigationMenuGeneral)
 		}
 
 		static var identity: String {
-			String(localized: .TDCServerPropertiesSheet.serverPropertiesNavigationMenuIdentity)
+			String(localized: .ServerProperties.serverPropertiesNavigationMenuIdentity)
 		}
 
 		static var highlights: String {
-			String(localized: .TDCServerPropertiesSheet.serverPropertiesNavigationMenuHighlights)
+			String(localized: .ServerProperties.serverPropertiesNavigationMenuHighlights)
 		}
 
 		static var messages: String {
-			String(localized: .TDCServerPropertiesSheet.serverPropertiesNavigationMenuMessages)
+			String(localized: .ServerProperties.serverPropertiesNavigationMenuMessages)
 		}
 
 		static var zncBouncer: String {
-			String(localized: .TDCServerPropertiesSheet.zncBouncer)
+			String(localized: .ServerProperties.zncBouncer)
 		}
 
 		static var clientCertificate: String {
-			String(localized: .TDCServerPropertiesSheet.clientCertificate)
+			String(localized: .ServerProperties.clientCertificate)
 		}
 
 		static var floodControl: String {
-			String(localized: .TDCServerPropertiesSheet.floodControl)
+			String(localized: .ServerProperties.floodControl)
 		}
 
 		static var networkSocket: String {
-			String(localized: .TDCServerPropertiesSheet.networkSocket)
+			String(localized: .ServerProperties.networkSocket)
 		}
 
 		static var proxyServer: String {
-			String(localized: .TDCServerPropertiesSheet.proxyServer)
+			String(localized: .ServerProperties.proxyServer)
 		}
 	}
 
 	/// The network list a new connection sheet opens on.
 	enum Template {
 		static var title: String {
-			String(localized: .TDCServerPropertiesSheet.chooseNetworkTitle)
+			String(localized: .ServerProperties.chooseNetworkTitle)
 		}
 
 		static var help: String {
-			String(localized: .TDCServerPropertiesSheet.templatePickerHelp)
+			String(localized: .ServerProperties.templatePickerHelp)
 		}
 
 		static var customServerHelp: String {
-			String(localized: .TDCServerPropertiesSheet.templateCustomServerHelp)
+			String(localized: .ServerProperties.templateCustomServerHelp)
 		}
 
 		static var suggestedChannels: String {
-			String(localized: .TDCServerPropertiesSheet.templateSuggestedChannels)
+			String(localized: .ServerProperties.templateSuggestedChannels)
 		}
 
 		static var suggestedChannelsHelp: String {
-			String(localized: .TDCServerPropertiesSheet.templateSuggestedChannelsHelp)
+			String(localized: .ServerProperties.templateSuggestedChannelsHelp)
 		}
 
 		static var noSuggestedChannels: String {
-			String(localized: .TDCServerPropertiesSheet.templateNoSuggestedChannels)
+			String(localized: .ServerProperties.templateNoSuggestedChannels)
 		}
 
 		static var registrationRequired: String {
-			String(localized: .TDCServerPropertiesSheet.templateRegistrationRequired)
+			String(localized: .ServerProperties.templateRegistrationRequired)
 		}
 
 		static var website: String {
-			String(localized: .TDCServerPropertiesSheet.templateWebsite)
+			String(localized: .ServerProperties.templateWebsite)
 		}
 	}
 
 	enum General {
 		static var connectionName: String {
-			String(localized: .TDCServerPropertiesSheet.connectionName)
+			String(localized: .ServerProperties.connectionName)
 		}
 
 		static var serverAddress: String {
-			String(localized: .TDCServerPropertiesSheet.serverAddress)
+			String(localized: .ServerProperties.serverAddress)
 		}
 
 		static var serverPort: String {
-			String(localized: .TDCServerPropertiesSheet.serverPort)
+			String(localized: .ServerProperties.serverPort)
 		}
 
 		/// Spoken for the Server Address field, whose completions are the bundled
 		/// networks. Nothing else says the list is there.
 		static var serverAddressNetworkHint: String {
-			String(localized: .TDCServerPropertiesSheet.serverAddressNetworkHint)
+			String(localized: .ServerProperties.serverAddressNetworkHint)
 		}
 
 		static var serverPassword: String {
-			String(localized: .TDCServerPropertiesSheet.serverPassword)
+			String(localized: .ServerProperties.serverPassword)
 		}
 
 		static var connectSecurely: String {
-			String(localized: .TDCServerPropertiesSheet.connectSecurely)
+			String(localized: .ServerProperties.connectSecurely)
 		}
 
 		static var modifyAlternateServers: String {
-			String(localized: .TDCServerPropertiesSheet.modifyAlternateServers)
+			String(localized: .ServerProperties.modifyAlternateServers)
 		}
 
 		static var connectOnLaunch: String {
-			String(localized: .TDCServerPropertiesSheet.connectWhenGlasstualOpens)
+			String(localized: .ServerProperties.connectWhenGlasstualOpens)
 		}
 
 		static var reconnectAfterDisconnect: String {
-			String(localized: .TDCServerPropertiesSheet.reconnectAfterDisconnect)
+			String(localized: .ServerProperties.reconnectAfterDisconnect)
 		}
 
 		static var disconnectWhenComputerSleeps: String {
-			String(localized: .TDCServerPropertiesSheet.disconnectWhenComputerSleeps)
+			String(localized: .ServerProperties.disconnectWhenComputerSleeps)
 		}
 
 		static var serverPasswordHelp: String {
-			String(localized: .TDCServerPropertiesSheet.serverPasswordHelp)
+			String(localized: .ServerProperties.serverPasswordHelp)
 		}
 	}
 
 	enum Identity {
 		static var nickname: String {
-			String(localized: .TDCServerPropertiesSheet.nickname)
+			String(localized: .ServerProperties.nickname)
 		}
 
 		static var awayNickname: String {
-			String(localized: .TDCServerPropertiesSheet.awayNickname)
+			String(localized: .ServerProperties.awayNickname)
 		}
 
 		static var alternativeNicknames: String {
-			String(localized: .TDCServerPropertiesSheet.alternativeNicknames)
+			String(localized: .ServerProperties.alternativeNicknames)
 		}
 
 		static var username: String {
-			String(localized: .TDCServerPropertiesSheet.username)
+			String(localized: .ServerProperties.username)
 		}
 
 		static var realName: String {
-			String(localized: .TDCServerPropertiesSheet.realName)
+			String(localized: .ServerProperties.realName)
 		}
 
 		static var ctcpVersionReply: String {
-			String(localized: .TDCServerPropertiesSheet.ctcpVersionReply)
+			String(localized: .ServerProperties.ctcpVersionReply)
 		}
 
 		static var nicknamePassword: String {
-			String(localized: .TDCServerPropertiesSheet.nickservOrSaslPassword)
+			String(localized: .ServerProperties.nickservOrSaslPassword)
 		}
 
 		static var signInWithSASL: String {
-			String(localized: .TDCServerPropertiesSheet.signInWithSasl)
+			String(localized: .ServerProperties.signInWithSasl)
 		}
 
 		static var autojoinWaitsForNickServ: String {
-			String(localized: .TDCServerPropertiesSheet.autojoinWaitsForNickserv)
+			String(localized: .ServerProperties.autojoinWaitsForNickserv)
 		}
 
 		static var warnWhenChannelsCannotBeJoined: String {
-			String(localized: .TDCServerPropertiesSheet.warnWhenChannelsCannotBeJoined)
+			String(localized: .ServerProperties.warnWhenChannelsCannotBeJoined)
 		}
 
 		static var disconnectOnSASLFailure: String {
-			String(localized: .TDCServerPropertiesSheet.disconnectOnSaslFailure)
+			String(localized: .ServerProperties.disconnectOnSaslFailure)
 		}
 
 		static var nicknamePasswordHelp: String {
-			String(localized: .TDCServerPropertiesSheet.nicknamePasswordHelp)
+			String(localized: .ServerProperties.nicknamePasswordHelp)
 		}
 	}
 
 	enum AddressBookActions {
 		static var addIgnoreEntry: String {
-			String(localized: .TDCServerPropertiesSheet.addUserIgnoreEntry)
+			String(localized: .ServerProperties.addUserIgnoreEntry)
 		}
 
 		static var addTrackingEntry: String {
-			String(localized: .TDCServerPropertiesSheet.addUserTrackingEntry)
+			String(localized: .ServerProperties.addUserTrackingEntry)
 		}
 	}
 
 	enum ConnectCommands {
 		static var heading: String {
-			String(localized: .TDCServerPropertiesSheet.performCommandsOnConnect)
+			String(localized: .ServerProperties.performCommandsOnConnect)
 		}
 
 		static var setInvisibleMode: String {
-			String(localized: .TDCServerPropertiesSheet.setInvisibleModeOnConnect)
+			String(localized: .ServerProperties.setInvisibleModeOnConnect)
 		}
 
 		static var runSilently: String {
-			String(localized: .TDCServerPropertiesSheet.runCommandsSilently)
+			String(localized: .ServerProperties.runCommandsSilently)
 		}
 
 		static var autojoinWaitsForConnectCommands: String {
-			String(localized: .TDCServerPropertiesSheet.autojoinWaitsForConnectCommands)
+			String(localized: .ServerProperties.autojoinWaitsForConnectCommands)
 		}
 
 		static var identificationExplanation: String {
-			String(localized: .TDCServerPropertiesSheet.nickServConfirmationExplanation)
+			String(localized: .ServerProperties.nickServConfirmationExplanation)
 		}
 
 		/// The stepper's label, which carries the value it is stepping.
 		static func autojoinDelay(seconds: Int) -> String {
-			String(localized: .TDCServerPropertiesSheet.autojoinDelayAfterConnectCommands(seconds))
+			String(localized: .ServerProperties.autojoinDelayAfterConnectCommands(seconds))
 		}
 	}
 
 	enum LeavingMessages {
 		static var normal: String {
-			String(localized: .TDCServerPropertiesSheet.partAndQuitMessage)
+			String(localized: .ServerProperties.partAndQuitMessage)
 		}
 
 		static var sleepMode: String {
-			String(localized: .TDCServerPropertiesSheet.computerSleepQuitMessage)
+			String(localized: .ServerProperties.computerSleepQuitMessage)
 		}
 	}
 
 	enum Encoding {
 		static var primary: String {
-			String(localized: .TDCServerPropertiesSheet.encodingPrimary)
+			String(localized: .ServerProperties.encodingPrimary)
 		}
 
 		static var fallback: String {
-			String(localized: .TDCServerPropertiesSheet.encodingFallback)
+			String(localized: .ServerProperties.encodingFallback)
 		}
 	}
 
 	enum ZNC {
 		static var ignoreConfiguredAutojoin: String {
-			String(localized: .TDCServerPropertiesSheet.zncIgnoreConfiguredAutojoin)
+			String(localized: .ServerProperties.zncIgnoreConfiguredAutojoin)
 		}
 
 		static var ignorePlaybackNotifications: String {
-			String(localized: .TDCServerPropertiesSheet.zncIgnorePlaybackNotifications)
+			String(localized: .ServerProperties.zncIgnorePlaybackNotifications)
 		}
 
 		static var onlyPlaybackLatest: String {
-			String(localized: .TDCServerPropertiesSheet.zncOnlyPlaybackLatest)
+			String(localized: .ServerProperties.zncOnlyPlaybackLatest)
 		}
 
 		static var versionNote: String {
-			String(localized: .TDCServerPropertiesSheet.zncVersionNote)
+			String(localized: .ServerProperties.zncVersionNote)
 		}
 	}
 
 	enum Socket {
 		static var connectUsing: String {
-			String(localized: .TDCServerPropertiesSheet.connectUsing)
+			String(localized: .ServerProperties.connectUsing)
 		}
 
-		static func addressType(_ addressType: IRCConnectionAddressType) -> String {
+		static func addressType(_ addressType: ConnectionAddressType) -> String {
 			switch addressType {
-			case .default: String(localized: .TDCServerPropertiesSheet.addressTypeAutomatic)
-			case .v4: String(localized: .TDCServerPropertiesSheet.addressTypeIpv4)
-			case .v6: String(localized: .TDCServerPropertiesSheet.addressTypeIpv6)
+			case .default: String(localized: .ServerProperties.addressTypeAutomatic)
+			case .v4: String(localized: .ServerProperties.addressTypeIpv4)
+			case .v6: String(localized: .ServerProperties.addressTypeIpv6)
 			}
 		}
 
 		static var validateCertificateChain: String {
-			String(localized: .TDCServerPropertiesSheet.validateServerCertificateChain)
+			String(localized: .ServerProperties.validateServerCertificateChain)
 		}
 
 		static var performPongTimer: String {
-			String(localized: .TDCServerPropertiesSheet.periodicallyPingTheServer)
+			String(localized: .ServerProperties.periodicallyPingTheServer)
 		}
 
 		static var disconnectOnPongTimer: String {
-			String(localized: .TDCServerPropertiesSheet.disconnectOnPongTimer)
+			String(localized: .ServerProperties.disconnectOnPongTimer)
 		}
 
 		static var disconnectOnReachabilityChange: String {
-			String(localized: .TDCServerPropertiesSheet.disconnectOnReachabilityChange)
+			String(localized: .ServerProperties.disconnectOnReachabilityChange)
 		}
 	}
 
 	enum Proxy {
 		static var type: String {
-			String(localized: .TDCServerPropertiesSheet.proxyType)
+			String(localized: .ServerProperties.proxyType)
 		}
 
-		static func typeName(_ type: IRCConnectionProxyType) -> String {
+		static func typeName(_ type: ConnectionProxyType) -> String {
 			switch type {
-			case .none: String(localized: .TDCServerPropertiesSheet.proxyTypeNone)
-			case .automatic: String(localized: .TDCServerPropertiesSheet.proxyTypeAutomatic)
-			case .socks5: String(localized: .TDCServerPropertiesSheet.proxyTypeSocks5)
-			case .HTTP: String(localized: .TDCServerPropertiesSheet.proxyTypeHttp)
-			case .tor: String(localized: .TDCServerPropertiesSheet.proxyTypeTor)
+			case .none: String(localized: .ServerProperties.proxyTypeNone)
+			case .automatic: String(localized: .ServerProperties.proxyTypeAutomatic)
+			case .socks5: String(localized: .ServerProperties.proxyTypeSocks5)
+			case .HTTP: String(localized: .ServerProperties.proxyTypeHttp)
+			case .tor: String(localized: .ServerProperties.proxyTypeTor)
 			}
 		}
 
 		static var address: String {
-			String(localized: .TDCServerPropertiesSheet.proxyAddress)
+			String(localized: .ServerProperties.proxyAddress)
 		}
 
 		static var port: String {
-			String(localized: .TDCServerPropertiesSheet.proxyPort)
+			String(localized: .ServerProperties.proxyPort)
 		}
 
 		static var username: String {
-			String(localized: .TDCServerPropertiesSheet.proxyUsername)
+			String(localized: .ServerProperties.proxyUsername)
 		}
 
 		static var password: String {
-			String(localized: .TDCServerPropertiesSheet.proxyPassword)
+			String(localized: .ServerProperties.proxyPassword)
 		}
 
 		static var openSystemSettings: String {
-			String(localized: .TDCServerPropertiesSheet.openSystemSettings)
+			String(localized: .ServerProperties.openSystemSettings)
 		}
 
 		static var torBrowserNote: String {
-			String(localized: .TDCServerPropertiesSheet.torBrowserNote)
+			String(localized: .ServerProperties.torBrowserNote)
 		}
 
 		static var passwordHelp: String {
-			String(localized: .TDCServerPropertiesSheet.proxyPasswordHelp)
+			String(localized: .ServerProperties.proxyPasswordHelp)
 		}
 	}
 
 	enum FloodControl {
 		static var messageCount: String {
-			String(localized: .TDCServerPropertiesSheet.floodControlMessageCount)
+			String(localized: .ServerProperties.floodControlMessageCount)
 		}
 
 		static var interval: String {
-			String(localized: .TDCServerPropertiesSheet.floodControlInterval)
+			String(localized: .ServerProperties.floodControlInterval)
 		}
 	}
 
 	enum Validation {
 		static var invalidUsername: String {
-			String(localized: .TDCServerPropertiesSheet.pleaseEnterAProperlyFormattedUsername)
+			String(localized: .ServerProperties.pleaseEnterAProperlyFormattedUsername)
 		}
 
 		static var invalidProxyAddress: String {
-			String(localized: .TDCServerPropertiesSheet.pleaseEnterAProperlyFormattedProxy)
+			String(localized: .ServerProperties.pleaseEnterAProperlyFormattedProxy)
 		}
 
 		static func invalidAlternateNickname(_ nickname: String) -> String {
-			String(localized: .TDCServerPropertiesSheet.pleaseEnterAListOfProperly(nickname))
+			String(localized: .ServerProperties.pleaseEnterAListOfProperly(nickname))
 		}
 	}
 
 	enum Certificate {
 		static var noneSelected: String {
-			String(localized: .TDCServerPropertiesSheet.noCertificateSelected)
+			String(localized: .ServerProperties.noCertificateSelected)
 		}
 
 		static var name: String {
-			String(localized: .TDCServerPropertiesSheet.certificateName)
+			String(localized: .ServerProperties.certificateName)
 		}
 
 		static var fingerprintSHA512: String {
-			String(localized: .TDCServerPropertiesSheet.sha512Fingerprint)
+			String(localized: .ServerProperties.sha512Fingerprint)
 		}
 
 		static var fingerprintSHA256: String {
-			String(localized: .TDCServerPropertiesSheet.sha256Fingerprint)
+			String(localized: .ServerProperties.sha256Fingerprint)
 		}
 
 		static var fingerprintSHA1: String {
-			String(localized: .TDCServerPropertiesSheet.sha1Fingerprint)
+			String(localized: .ServerProperties.sha1Fingerprint)
 		}
 
 		static var select: String {
-			String(localized: .TDCServerPropertiesSheet.selectCertificate)
+			String(localized: .ServerProperties.selectCertificate)
 		}
 
 		static var reset: String {
-			String(localized: .TDCServerPropertiesSheet.resetCertificate)
+			String(localized: .ServerProperties.resetCertificate)
 		}
 
 		static var copyNickServCommand: String {
-			String(localized: .TDCServerPropertiesSheet.copyNickservCommand)
+			String(localized: .ServerProperties.copyNickservCommand)
 		}
 
 		/// Every fingerprint has a button of its own, so each says which digest
 		/// it is about rather than all three reading "Copy".
 		static func copyNickServCommand(forDigest digest: String) -> String {
-			String(localized: .TDCServerPropertiesSheet.copyNickservCommandFor(digest))
+			String(localized: .ServerProperties.copyNickservCommandFor(digest))
 		}
 
 		static var fingerprintHelp: String {
-			String(localized: .TDCServerPropertiesSheet.certificateFingerprintHelp)
+			String(localized: .ServerProperties.certificateFingerprintHelp)
 		}
 
 		static var chooseTitle: String {
-			String(localized: .TDCServerPropertiesSheet.chooseAnIdentity)
+			String(localized: .ServerProperties.chooseAnIdentity)
 		}
 
 		static var chooseExplanation: String {
-			String(localized: .TDCServerPropertiesSheet.selectACertificateToSendWhen)
+			String(localized: .ServerProperties.selectACertificateToSendWhen)
 		}
 
 		static var noneAvailableTitle: String {
-			String(localized: .TDCServerPropertiesSheet.noCertificatesAvailable)
+			String(localized: .ServerProperties.noCertificatesAvailable)
 		}
 
 		static var noneAvailableExplanation: String {
-			String(localized: .TDCServerPropertiesSheet.thereAreNoCertificates)
+			String(localized: .ServerProperties.thereAreNoCertificates)
 		}
 	}
 
 	enum CipherSuites {
 		static var label: String {
-			String(localized: .TDCServerPropertiesSheet.cipherSuitesLabel)
+			String(localized: .ServerProperties.cipherSuitesLabel)
 		}
 
 		static var suiteList: String {
-			String(localized: .TDCServerPropertiesSheet.viewCipherSuites)
+			String(localized: .ServerProperties.viewCipherSuites)
 		}
 
 		/// The picker's name for a collection, which is also the name the
 		/// explanation under the suite list quotes.
 		static func collectionName(_ collection: CipherSuiteCollection) -> String {
 			switch collection {
-			case .default: String(localized: .TDCServerPropertiesSheet.cipherSuitesDefault)
-			case .mozilla2017: String(localized: .TDCServerPropertiesSheet.cipherSuitesMozilla2017)
-			case .mozilla2015: String(localized: .TDCServerPropertiesSheet.cipherSuitesMozilla2015)
-			case .none: String(localized: .TDCServerPropertiesSheet.cipherSuitesNone)
+			case .default: String(localized: .ServerProperties.cipherSuitesDefault)
+			case .mozilla2017: String(localized: .ServerProperties.cipherSuitesMozilla2017)
+			case .mozilla2015: String(localized: .ServerProperties.cipherSuitesMozilla2015)
+			case .none: String(localized: .ServerProperties.cipherSuitesNone)
 			}
 		}
 
 		static func listExplanation(collectionName: String) -> String {
-			String(localized: .TDCServerPropertiesSheet.includesTheFollowingCipherSuites(collectionName))
+			String(localized: .ServerProperties.includesTheFollowingCipherSuites(collectionName))
 		}
 	}
 
 	enum ExternalChange {
 		static var reloadButton: String {
-			String(localized: .TDCServerPropertiesSheet.reloadButton)
+			String(localized: .ServerProperties.reloadButton)
 		}
 
 		static var reloadTitle: String {
-			String(localized: .TDCServerPropertiesSheet.thisConnectionsConfigurationHasChangedDo)
+			String(localized: .ServerProperties.thisConnectionsConfigurationHasChangedDo)
 		}
 
 		static var unsavedChangesWarning: String {
-			String(localized: .TDCServerPropertiesSheet.youWillLooseUnsavedChangesIf)
+			String(localized: .ServerProperties.youWillLooseUnsavedChangesIf)
 		}
 	}
 }

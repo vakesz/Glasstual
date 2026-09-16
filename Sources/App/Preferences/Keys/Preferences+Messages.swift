@@ -39,42 +39,42 @@ import Foundation
 
 // MARK: - Messages
 
-public nonisolated extension Preferences { // nonisolated: value
+nonisolated extension Preferences { // nonisolated: value
 	/// What is shown in a channel view, and how incoming text is treated.
 	enum Messages {
-		public static let showDateChanges = PreferenceKey(
+		static let showDateChanges = PreferenceKey(
 			"DisplayEventInLogView -> Date Changes",
 			default: true
 		)
 
-		public static let showInlineMedia = PreferenceKey(
+		static let showInlineMedia = PreferenceKey(
 			"DisplayEventInLogView -> Inline Media",
 			default: false
 		)
 
-		public static let showJoinLeave = PreferenceKey(
+		static let showJoinLeave = PreferenceKey(
 			"DisplayEventInLogView -> Join, Part, Quit",
 			default: true
 		)
 
-		public static let autoAddScrollbackMark = PreferenceKey("AutomaticallyAddScrollbackMarker", default: true)
-		public static let copyOnSelect = PreferenceKey("CopyTextSelectionOnMouseUp", default: false)
-		public static let removeAllFormatting = PreferenceKey("RemoveIRCTextFormatting", default: false)
-		public static let rightToLeftFormatting = PreferenceKey("RightToLeftTextFormatting", default: false)
-		public static let replyToCTCPRequests = PreferenceKey("ReplyUnignoredExternalCTCPRequests", default: true)
-		public static let detectHighlightSpam = PreferenceKey("AutomaticallyDetectHighlightSpam", default: true)
-		public static let filterUnicodeTextSpam = PreferenceKey("AutomaticallyFilterUnicodeTextSpam", default: false)
-		public static let openBrowserInBackground = PreferenceKey(
+		static let autoAddScrollbackMark = PreferenceKey("AutomaticallyAddScrollbackMarker", default: true)
+		static let copyOnSelect = PreferenceKey("CopyTextSelectionOnMouseUp", default: false)
+		static let removeAllFormatting = PreferenceKey("RemoveIRCTextFormatting", default: false)
+		static let rightToLeftFormatting = PreferenceKey("RightToLeftTextFormatting", default: false)
+		static let replyToCTCPRequests = PreferenceKey("ReplyUnignoredExternalCTCPRequests", default: true)
+		static let detectHighlightSpam = PreferenceKey("AutomaticallyDetectHighlightSpam", default: true)
+		static let filterUnicodeTextSpam = PreferenceKey("AutomaticallyFilterUnicodeTextSpam", default: false)
+		static let openBrowserInBackground = PreferenceKey(
 			"OpenClickedLinksInBackgroundBrowser",
 			default: false
 		)
 
-		public static let disableNicknameColorHashing = PreferenceKey(
+		static let disableNicknameColorHashing = PreferenceKey(
 			"DisableRemoteNicknameColorHashing",
 			default: false
 		)
 
-		public static let nicknameColorStyleOverrides = UntypedPreferenceKey(
+		static let nicknameColorStyleOverrides = UntypedPreferenceKey(
 			"Nickname Color Style Overrides (v2)", validation: PreferencesPayloadValidation.nicknameColors
 		)
 
@@ -89,28 +89,28 @@ public nonisolated extension Preferences { // nonisolated: value
 
 // MARK: - Logging
 
-public nonisolated extension Preferences { // nonisolated: value
+nonisolated extension Preferences { // nonisolated: value
 	/// Transcript logging and the scrollback the log view keeps.
 	enum Logging {
-		public static let logToDisk = PreferenceKey("LogTranscript", default: false)
-		public static let logHighlights = PreferenceKey("LogHighlights", default: true)
-		public static let reloadScrollbackOnLaunch = PreferenceKey("ReloadScrollbackOnLaunch", default: true)
-		public static let loadHistoryLazily = PreferenceKey("Optimizations -> Load History Lazily", default: true)
+		static let logToDisk = PreferenceKey("LogTranscript", default: false)
+		static let logHighlights = PreferenceKey("LogHighlights", default: true)
+		static let reloadScrollbackOnLaunch = PreferenceKey("ReloadScrollbackOnLaunch", default: true)
+		static let loadHistoryLazily = PreferenceKey("Optimizations -> Load History Lazily", default: true)
 
 		/// How many lines a channel keeps on disk. The bounds are the ones the
 		/// field has always enforced, declared here so an import obeys them too.
-		public static let scrollbackSaveRange: ClosedRange<UInt> = 100 ... 50000
+		static let scrollbackSaveRange: ClosedRange<UInt> = 100 ... 50000
 
 		/// How many lines the transcript draws, where zero means "no limit".
-		public static let scrollbackVisibleRange: ClosedRange<UInt> = 100 ... 15000
+		static let scrollbackVisibleRange: ClosedRange<UInt> = 100 ... 15000
 
-		public static let scrollbackSaveLimit = PreferenceKey(
+		static let scrollbackSaveLimit = PreferenceKey(
 			"ScrollbackMaximumSavedLineCount",
 			default: UInt(15000),
 			validation: { Self.scrollbackSaveRange.contains($0) }
 		)
 
-		public static let scrollbackVisibleLimit = PreferenceKey(
+		static let scrollbackVisibleLimit = PreferenceKey(
 			"ScrollbackMaximumVisibleLineCount",
 			default: UInt(0),
 			validation: { $0 == 0 || Self.scrollbackVisibleRange.contains($0) }
@@ -118,13 +118,13 @@ public nonisolated extension Preferences { // nonisolated: value
 
 		/// A security-scoped bookmark for the folder the user picked; useless in
 		/// another user account, so it never leaves this one.
-		public static let transcriptFolderBookmark = PreferenceKey(
+		static let transcriptFolderBookmark = PreferenceKey(
 			"LogTranscriptDestinationSecurityBookmark_5",
 			default: Data(),
 			traits: [.unregistered, .excludedFromExport]
 		)
 
-		public static let historicLogFileName = PreferenceKey(
+		static let historicLogFileName = PreferenceKey(
 			"TVCLogControllerHistoricLogFileSavePath_v3",
 			default: "",
 			traits: [.unregistered, .excludedFromExport]

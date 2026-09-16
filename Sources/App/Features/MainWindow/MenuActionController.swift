@@ -1,0 +1,760 @@
+/* *********************************************************************
+ *                  _____         _               _
+ *                 |_   _|____  _| |_ _   _  __ _| |
+ *                   | |/ _ \ \/ / __| | | |/ _` | |
+ *                   | |  __/>  <| |_| |_| | (_| | |
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
+ *
+ * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
+ * Copyright (c) 2010 - 2020 Codeux Software, LLC & respective contributors.
+ *       Please see Acknowledgements.pdf for additional information.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *  * Neither the name of Textual, "Codeux Software, LLC", nor the
+ *    names of its contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ *
+ *********************************************************************** */
+
+import AppKit
+import CocoaExtensions
+
+enum MenuMemberCommand {
+	static func ignore(_ nickname: String) -> String {
+		"ignore \(nickname)"
+	}
+
+	static func unignore(_ nickname: String) -> String {
+		"unignore \(nickname)"
+	}
+
+	static func mode(_ command: String, nicknames: [String]) -> String {
+		"\(command) \(nicknames.joined(separator: " "))"
+	}
+
+	static func kickban(_ nickname: String, reason: String) -> String {
+		"KICKBAN \(nickname) \(reason)"
+	}
+
+	static func operatorCommand(_ command: String, nickname: String, reason: String) -> String {
+		"\(command) \(nickname) \(reason)"
+	}
+
+	static func setVhost(_ vhost: String, nickname: String) -> String {
+		"hs setall \(nickname) \(vhost)"
+	}
+}
+
+/// Where an insertion landed once it has replaced a selection. The replaced
+/// range describes storage that no longer exists, so nothing may be measured
+/// against it afterwards.
+nonisolated enum MenuInsertionRangePolicy { // nonisolated: value
+	static func insertedRange(replacing replaced: NSRange, with insertion: String) -> NSRange {
+		NSRange(location: replaced.location, length: insertion.utf16.count)
+	}
+}
+
+/// One of the main window's navigation commands.
+enum MenuNavigationAction: Sendable, CaseIterable {
+	case nextServer
+	case previousServer
+	case nextActiveServer
+	case previousActiveServer
+	case nextChannel
+	case previousChannel
+	case nextActiveChannel
+	case previousActiveChannel
+	case nextUnreadChannel
+	case previousUnreadChannel
+	case moveBackward
+	case moveForward
+	case previousSelection
+}
+
+/** Every command the application's menus issue.
+
+ The menu items target this object, so a command is the `@objc` method the item
+ sends and nothing else: there is no forwarder on the menu controller, no enum
+ case naming the command a second time, and no switch taking the two apart
+ again. */
+@MainActor
+final class MenuActionController: NSObject, NSMenuItemValidation {
+	weak var menuController: MenuController?
+	var menuIsOpen = false
+	var menuPerformedActionLastOpen = false
+	weak var pointedClient: Client?
+	weak var pointedChannel: Channel?
+	/// The nickname the transcript recorded for the row a menu was opened on.
+	var pointedNickname: String?
+	/** What an explicitly clicked row means while a contextual menu validates
+	 and runs its commands.
+
+	 Without one, the main window's own selection answers — which is what a
+	 menu bar command wants, and what a context menu opened on an unselected
+	 row does not: it would validate against the row the person did not
+	 click. */
+	enum MenuContext {
+		/// A server-list row. A nil item is the list's background: the server,
+		/// or empty space, rather than the window's selected channel.
+		case treeItem(ChatItem?)
+		/// Member-list rows, in the order the list shows them.
+		case members([ChannelUser])
+	}
+
+	private var menuContext: MenuContext?
+	var hasExplicitMenuContext: Bool {
+		menuContext != nil
+	}
+
+	var reactionPopover: ReactionPopover?
+	/// Menu-action and selection notifications, cancelled at termination.
+	let notifications = NotificationSubscriptions()
+	/// The deferred selection reset a closing menu schedules, held so that
+	/// termination can cancel one that has not run yet.
+	var selectionResetTask: Task<Void, Never>?
+	var serverDuplicationTasks: [UUID: Task<Void, Never>] = [:]
+
+	var mainWindow: MainWindow {
+		AppServices.delegate.mainWindow
+	}
+
+	var selectedClient: Client? {
+		if case let .treeItem(item) = menuContext {
+			/* A member-list menu names members, not a connection, so it keeps
+			 the window's selection: the members belong to it. */
+			return (item as? Client) ?? item?.associatedClient
+		}
+		return pointedClient ?? mainWindow.selectedClient
+	}
+
+	var selectedChannel: Channel? {
+		if case let .treeItem(item) = menuContext {
+			return item as? Channel
+		}
+		return pointedChannel ?? mainWindow.selectedChannel
+	}
+
+	/// Runs `perform` against the row a contextual menu was opened on, so that
+	/// validation and execution both answer for what was clicked. Never
+	/// publishes window selection while validating.
+	func withContext<Result>(_ context: MenuContext, perform: () throws -> Result) rethrows -> Result {
+		let previous = menuContext
+		menuContext = context
+		defer { menuContext = previous }
+		return try perform()
+	}
+
+	/// The transcript the selection is showing, and the view drawing it.
+	var selectedViewController: TranscriptController? {
+		selectedChannel?.logController ?? selectedClient?.logController
+	}
+
+	var selectedBackingView: TranscriptView? {
+		selectedViewController?.backingView
+	}
+
+	var fileTransferCenter: FileTransferCenter {
+		AppServices.fileTransfers
+	}
+
+	/// The members a member-list command applies to: the one the menu was
+	/// opened on, or the current selection.
+	///
+	/// This used to be one `-> [Any]` switched on a `returnNicknames` flag,
+	/// with every caller casting the result back.
+	func selectedMembers(for sender: Any) -> [ChannelUser] {
+		guard let nickname = targetedNickname(for: sender) else {
+			return selectedMemberListMembers()
+		}
+
+		guard let channel = selectedChannel else {
+			return []
+		}
+
+		return channel.findMember(nickname).map { [$0] } ?? []
+	}
+
+	func selectedNicknames(for sender: Any) -> [String] {
+		guard let nickname = targetedNickname(for: sender) else {
+			return selectedMemberListMembers().map(\.user.nickname)
+		}
+
+		return [nickname]
+	}
+
+	/// The nickname the command was aimed at, if it was aimed at one: either
+	/// the menu item's own, or the one the log view recorded. `nil` means "use
+	/// the member list's selection".
+	private func targetedNickname(for sender: Any) -> String? {
+		guard let client = selectedClient,
+		      let channel = selectedChannel,
+		      client.isLoggedIn,
+		      channel.isActive
+		else {
+			return nil
+		}
+
+		if let menuItem = sender as? NSMenuItem {
+			return menuItem.userInfoString
+		}
+
+		return pointedNickname
+	}
+
+	/// Attaches a dialog to this coordinator and the main window before
+	/// starting its state-driven SwiftUI presentation.
+	func present<Dialog: AnyObject>(_ dialog: Dialog, start: (Dialog) -> Void) {
+		(dialog as? SheetSession)?.delegate = self
+		(dialog as? SheetSession)?.window = mainWindow
+		start(dialog)
+	}
+
+	/// The world the menu acts on. It is set once the application has finished
+	/// launching, which is before any menu command can run.
+	var world: ClientDirectory? {
+		AppServices.world
+	}
+
+	private func selectedMemberListMembers() -> [ChannelUser] {
+		guard let client = selectedClient,
+		      let channel = selectedChannel,
+		      client.isLoggedIn,
+		      channel.isActive
+		else {
+			return []
+		}
+
+		/* The rows the menu was opened on, which are not the list's selection
+		 until the command that follows replaces it. */
+		if case let .members(members) = menuContext {
+			return members
+		}
+
+		return mainWindow.memberList.selectedMembers
+	}
+
+	func deselectMembers(for sender: Any) {
+		if let menuItem = sender as? NSMenuItem,
+		   menuItem.userInfoString?.isEmpty == false
+		{
+			return
+		}
+		if pointedNickname != nil {
+			pointedNickname = nil
+			return
+		}
+		mainWindow.memberList.deselectAll(sender)
+	}
+}
+
+// MARK: - Member commands
+
+extension MenuActionController {
+	@objc func memberAddIgnore(_ sender: Any?) {
+		performIgnore(sender: sender ?? NSNull(), remove: false)
+	}
+
+	@objc func memberRemoveIgnore(_ sender: Any?) {
+		performIgnore(sender: sender ?? NSNull(), remove: true)
+	}
+
+	@objc func memberModifyIgnore(_ sender: Any?) {
+		modifyIgnore(sender: sender ?? NSNull())
+	}
+
+	@objc func memberSendWhois(_ sender: Any?) {
+		performForNicknames(sender: sender ?? NSNull()) { $0.sendWhois($1) }
+	}
+
+	@objc func memberStartPrivateMessage(_ sender: Any?) {
+		startPrivateMessages(sender: sender ?? NSNull())
+	}
+
+	@objc func memberChangeColor(_ sender: Any?) {
+		guard selectedClient != nil, selectedChannel != nil,
+		      let nickname = selectedNicknames(for: sender ?? NSNull()).first
+		else { return }
+
+		showNicknameColorSheet(for: nickname)
+	}
+
+	@objc func memberSendCTCPPing(_ sender: Any?) {
+		performForNicknames(sender: sender ?? NSNull()) { $0.sendCTCPPing($1) }
+	}
+
+	@objc func memberSendCTCPFinger(_ sender: Any?) {
+		performCTCP("FINGER", sender: sender ?? NSNull())
+	}
+
+	@objc func memberSendCTCPTime(_ sender: Any?) {
+		performCTCP("TIME", sender: sender ?? NSNull())
+	}
+
+	@objc func memberSendCTCPVersion(_ sender: Any?) {
+		performCTCP("VERSION", sender: sender ?? NSNull())
+	}
+
+	@objc func memberSendCTCPUserinfo(_ sender: Any?) {
+		performCTCP("USERINFO", sender: sender ?? NSNull())
+	}
+
+	@objc func memberSendCTCPClientInfo(_ sender: Any?) {
+		performCTCP("CLIENTINFO", sender: sender ?? NSNull())
+	}
+
+	@objc func memberModeGiveOp(_ sender: Any?) {
+		performMode("OP", sender: sender ?? NSNull())
+	}
+
+	@objc func memberModeTakeOp(_ sender: Any?) {
+		performMode("DEOP", sender: sender ?? NSNull())
+	}
+
+	@objc func memberModeGiveHalfop(_ sender: Any?) {
+		performMode("HALFOP", sender: sender ?? NSNull())
+	}
+
+	@objc func memberModeTakeHalfop(_ sender: Any?) {
+		performMode("DEHALFOP", sender: sender ?? NSNull())
+	}
+
+	@objc func memberModeGiveVoice(_ sender: Any?) {
+		performMode("VOICE", sender: sender ?? NSNull())
+	}
+
+	@objc func memberModeTakeVoice(_ sender: Any?) {
+		performMode("DEVOICE", sender: sender ?? NSNull())
+	}
+
+	@objc func memberKickFromChannel(_ sender: Any?) {
+		performChannelModeration(sender: sender ?? NSNull()) { client, channel, nickname in
+			client.kick(nickname, in: channel)
+		}
+	}
+
+	@objc func memberBanFromChannel(_ sender: Any?) {
+		performChannelModeration(sender: sender ?? NSNull()) { client, channel, nickname in
+			client.sendCommand("BAN \(nickname)", completeTarget: true, target: channel.name)
+		}
+	}
+
+	@objc func memberKickbanFromChannel(_ sender: Any?) {
+		performChannelModeration(sender: sender ?? NSNull()) { client, channel, nickname in
+			client.sendCommand(
+				MenuMemberCommand.kickban(nickname, reason: Preferences.Commands.kickMessage.value),
+				completeTarget: true,
+				target: channel.name
+			)
+		}
+	}
+
+	@objc func memberKillFromServer(_ sender: Any?) {
+		performOperatorCommand(
+			"KILL",
+			reason: Preferences.Commands.irCopKillMessage.value,
+			sender: sender ?? NSNull()
+		)
+	}
+
+	@objc func memberShunOnServer(_ sender: Any?) {
+		performOperatorCommand(
+			"SHUN",
+			reason: Preferences.Commands.irCopShunMessage.value,
+			sender: sender ?? NSNull()
+		)
+	}
+
+	@objc func memberBanFromServer(_ sender: Any?) {
+		performGline(sender: sender ?? NSNull())
+	}
+
+	@objc func memberSetVirtualHost(_ sender: Any?) {
+		showSetVirtualHostPrompt(sender: sender ?? NSNull())
+	}
+
+	@objc func memberSendFileRequest(_ sender: Any?) {
+		showFilePicker(sender: sender ?? NSNull())
+	}
+
+	func memberInMemberListDoubleClicked(_ sender: Any) {
+		guard mainWindow.memberList.primaryInteractedMember != nil else { return }
+		performDoubleClick(sender: sender)
+	}
+
+	func memberInChannelViewDoubleClicked(_ sender: Any?) {
+		performDoubleClick(sender: sender ?? NSNull())
+	}
+}
+
+private extension MenuActionController {
+	func performIgnore(sender: Any, remove: Bool) {
+		guard let client = selectedClient, let channel = selectedChannel,
+		      let nickname = selectedNicknames(for: sender).first
+		else { return }
+		deselectMembers(for: sender)
+		let command = remove ? MenuMemberCommand.unignore(nickname) : MenuMemberCommand.ignore(nickname)
+		client.sendCommand(command, completeTarget: true, target: channel.name)
+	}
+
+	func modifyIgnore(sender: Any) {
+		guard let client = selectedClient else { return }
+		let selectedMembers = selectedMembers(for: sender)
+		deselectMembers(for: sender)
+		guard selectedMembers.count == 1,
+		      let hostmask = selectedMembers.first?.user.hostmask
+		else { return }
+		let ignores = client.findIgnores(forHostmask: hostmask)
+		if ignores.count == 1 {
+			showServerProperties(for: client, selection: .editIgnoreEntry(ignores[0]))
+		} else {
+			showServerProperties(for: client, selection: .addressBook)
+		}
+	}
+
+	func performDoubleClick(sender: Any) {
+		switch Preferences.Input.userDoubleClickAction.value {
+		case .whois:
+			memberSendWhois(sender)
+		case .privateMessage:
+			memberStartPrivateMessage(sender)
+		case .insertTextField:
+			insertNicknames(sender: sender)
+		@unknown default:
+			break
+		}
+	}
+
+	func insertNicknames(sender: Any) {
+		guard selectedClient != nil, selectedChannel != nil else { return }
+		let nicknames = selectedNicknames(for: sender)
+		guard nicknames.isEmpty == false else { return }
+		deselectMembers(for: sender)
+
+		guard let textView = mainWindow.inputTextField else { return }
+		let selectedRange = textView.selectedRange
+		var insertion = ""
+		if selectedRange.location > 0 {
+			/* selectedRange is measured in UTF-16 code units, so it must be
+			 read back through NSString. Feeding it to String.index(_:offsetBy:)
+			 counts Characters and lands on the wrong one — or traps — as soon
+			 as the field holds an emoji. */
+			let text = textView.stringValue as NSString
+			let previous = text.character(at: selectedRange.location - 1)
+			/* A surrogate half is never whitespace, so nil reads as false. */
+			let isWhitespace = Unicode.Scalar(previous).map { scalar in
+				CharacterSet.whitespacesAndNewlines.contains(scalar)
+			} ?? false
+			if isWhitespace == false {
+				insertion.append(" ")
+			}
+		}
+		insertion += nicknames.joined(separator: ", ")
+		insertion += Preferences.Input.tabCompletionSuffix.storedValue ?? ""
+		/* Through the editing pair, so the bar resizes, the placeholder hides,
+		 the typing state is sent and the insertion is undoable. */
+		guard textView.shouldChangeText(in: selectedRange, replacementString: insertion) else { return }
+		textView.replaceCharacters(in: selectedRange, with: insertion)
+		/* The text that was there is gone: what has to be recoloured is what
+		 replaced it. Reusing the pre-edit range walks off the end of a storage
+		 the replacement shrank -- select eleven characters, insert a nickname
+		 shorter than that, and the range check throws. */
+		textView.resetFontColor(
+			in: MenuInsertionRangePolicy.insertedRange(replacing: selectedRange, with: insertion)
+		)
+		textView.didChangeText()
+		textView.focus()
+	}
+
+	func performForNicknames(sender: Any, action: (Client, String) -> Void) {
+		guard let client = selectedClient, selectedChannel != nil else { return }
+		for nickname in selectedNicknames(for: sender) {
+			action(client, nickname)
+		}
+		deselectMembers(for: sender)
+	}
+
+	func startPrivateMessages(sender: Any) {
+		guard let client = selectedClient, selectedChannel != nil else { return }
+		for nickname in selectedNicknames(for: sender) {
+			guard let query = client.findChannelOrCreate(nickname, isPrivateMessage: true) else { continue }
+			mainWindow.select(query)
+		}
+		deselectMembers(for: sender)
+	}
+
+	func performCTCP(_ command: String, sender: Any) {
+		performForNicknames(sender: sender) { $0.sendCTCPQuery($1, command: command, text: nil) }
+	}
+
+	func performMode(_ command: String, sender: Any) {
+		guard let client = selectedClient, let channel = selectedChannel,
+		      client.isLoggedIn, channel.isChannel
+		else { return }
+		let nicknames = selectedNicknames(for: sender)
+		deselectMembers(for: sender)
+		client.sendCommand(
+			MenuMemberCommand.mode(command, nicknames: nicknames),
+			completeTarget: true,
+			target: channel.name
+		)
+	}
+
+	func performChannelModeration(
+		sender: Any,
+		action: (Client, Channel, String) -> Void
+	) {
+		guard let client = selectedClient, let channel = selectedChannel,
+		      client.isLoggedIn, channel.isChannel
+		else { return }
+		for nickname in selectedNicknames(for: sender) {
+			action(client, channel, nickname)
+		}
+		deselectMembers(for: sender)
+	}
+
+	func performOperatorCommand(_ command: String, reason: String, sender: Any) {
+		guard let client = selectedClient, selectedChannel != nil, client.isLoggedIn else { return }
+		for nickname in selectedNicknames(for: sender) {
+			client.sendCommand(MenuMemberCommand.operatorCommand(command, nickname: nickname, reason: reason))
+		}
+		deselectMembers(for: sender)
+	}
+
+	func performGline(sender: Any) {
+		guard let client = selectedClient, let channel = selectedChannel, client.isLoggedIn else { return }
+		for nickname in selectedNicknames(for: sender) {
+			if client.nicknameIsMyself(nickname) {
+				client.printDebugInformation(
+					CommandStrings.preventedSelfBan(serverAddress: client.serverAddress ?? ""),
+					in: channel
+				)
+				continue
+			}
+			client.sendCommand(MenuMemberCommand.operatorCommand(
+				"GLINE",
+				nickname: nickname,
+				reason: Preferences.Commands.irCopGlineMessage.value
+			))
+		}
+		deselectMembers(for: sender)
+	}
+
+	func showSetVirtualHostPrompt(sender: Any) {
+		guard let client = selectedClient, selectedChannel != nil, client.isLoggedIn else { return }
+		let nicknames = selectedNicknames(for: sender)
+		guard nicknames.isEmpty == false else { return }
+		deselectMembers(for: sender)
+		InputPrompt.present(InputPromptRequest(
+			title: PromptStrings.VirtualHost.title,
+			message: PromptStrings.VirtualHost.body,
+			placeholder: PromptStrings.VirtualHost.placeholder,
+			submitButtonTitle: PromptStrings.Action.confirmation,
+			cancelButtonTitle: PromptStrings.Action.cancel
+		)) { outcome in
+			guard case let .submitted(input) = outcome else { return }
+			let vhost = input.firstToken
+			guard vhost.isEmpty == false else { return }
+			for nickname in nicknames {
+				client.sendCommand(
+					MenuMemberCommand.setVhost(vhost, nickname: nickname),
+					completeTarget: false,
+					target: nil
+				)
+			}
+		}
+	}
+
+	func showFilePicker(sender: Any) {
+		guard let client = selectedClient, selectedChannel != nil, client.isLoggedIn else { return }
+		let nicknames = selectedNicknames(for: sender)
+		guard nicknames.isEmpty == false else { return }
+		deselectMembers(for: sender)
+		mainWindow.presentationModel.chooseTransferFiles { [weak self] urls in
+			guard let self, client.isLoggedIn else { return }
+			for nickname in nicknames {
+				for url in urls {
+					fileTransferCenter.offerSender(
+						for: client,
+						nickname: nickname,
+						path: url.path,
+						autoOpen: true,
+						accessURL: url
+					)
+				}
+			}
+		}
+	}
+}
+
+// MARK: - Dropped files
+
+extension MenuActionController {
+	func sendDroppedFilesToSelectedChannel(_ files: [String]) {
+		guard let client = selectedClient, let channel = selectedChannel,
+		      client.isLoggedIn, channel.isPrivateMessage
+		else { return }
+		sendDroppedFiles(files, nickname: channel.name)
+	}
+
+	func sendDroppedFiles(_ files: [String], nickname: String) {
+		guard let client = selectedClient, client.isLoggedIn else { return }
+		for file in files {
+			var isDirectory: ObjCBool = false
+			guard FileManager.default.fileExists(atPath: file, isDirectory: &isDirectory),
+			      isDirectory.boolValue == false
+			else { continue }
+			fileTransferCenter.offerSender(for: client, nickname: nickname, path: file, autoOpen: true)
+		}
+	}
+}
+
+// MARK: - Navigation
+
+extension MenuActionController {
+	func navigateToTreeItem(at url: URL) {
+		let identifier = url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+		guard identifier.isEmpty == false else { return }
+		navigateToTreeItem(withIdentifier: identifier)
+	}
+
+	func navigateToTreeItem(withIdentifier identifier: String) {
+		guard identifier.count == 36,
+		      let item = world?.findItem(withId: identifier)
+		else { return }
+		navigateToTreeItem(item)
+	}
+
+	func navigateToTreeItem(_ item: ChatItem) {
+		mainWindow.select(item)
+	}
+
+	/** The Navigation menu's list of every channel.
+
+	 No key equivalents: the list is ordered by where a channel happens to sit
+	 in the sidebar, so ⌘1 meant a different conversation as soon as a server
+	 connected or a channel was joined — and it took the digits the Window menu
+	 names windows with. */
+	func populateNavigationChannelList() {
+		guard let menu = menuController?.mainMenuNavigationChannelListMenu, let world else { return }
+		menu.removeAllItems()
+		for client in world.clientList {
+			let submenu = NSMenu()
+			let clientItem = NSMenuItem()
+			clientItem.title = client.name
+			clientItem.submenu = submenu
+			for channel in client.channelList {
+				let item = NSMenuItem(
+					title: channel.name,
+					action: #selector(navigateToChannelInNavigationList(_:)),
+					keyEquivalent: ""
+				)
+				item.target = self
+				item.userInfoString = world.pasteboardString(for: channel)
+				submenu.addItem(item)
+			}
+			menu.addItem(clientItem)
+		}
+	}
+
+	@objc func navigateToChannelInNavigationList(_ sender: NSMenuItem) {
+		guard let pasteboardString = sender.userInfoString,
+		      let item = world?.findItem(withPasteboardString: pasteboardString)
+		else { return }
+		mainWindow.select(item)
+	}
+
+	@objc func performNavigationAction(_ sender: Any?) {
+		guard selectedClient != nil,
+		      let menuItem = sender as? NSMenuItem,
+		      let action = Self.navigationAction(for: menuItem.command)
+		else { return }
+		perform(action)
+	}
+
+	@objc func onNextHighlight(_: Any?) {
+		moveHighlightOrScrollback(for: .nextHighlight)
+	}
+
+	@objc func onPreviousHighlight(_: Any?) {
+		moveHighlightOrScrollback(for: .previousHighlight)
+	}
+
+	@objc func jumpToCurrentSession(_: Any?) {
+		moveHighlightOrScrollback(for: .jumpToCurrentSession)
+	}
+
+	@objc func jumpToPresent(_: Any?) {
+		moveHighlightOrScrollback(for: .jumpToPresent)
+	}
+
+	/// The menu items used to be dispatched by selector string onto the main
+	/// window, whose handlers are declared `(NSEvent)` and were handed an
+	/// `NSMenuItem`. They are called directly now, with no event.
+	static func navigationAction(for command: MenuCommand?) -> MenuNavigationAction? {
+		switch command {
+		case .nextServer: .nextServer
+		case .previousServer: .previousServer
+		case .nextActiveServer: .nextActiveServer
+		case .previousActiveServer: .previousActiveServer
+		case .nextChannel: .nextChannel
+		case .previousChannel: .previousChannel
+		case .nextActiveChannel: .nextActiveChannel
+		case .previousActiveChannel: .previousActiveChannel
+		case .nextUnreadChannel: .nextUnreadChannel
+		case .previousUnreadChannel: .previousUnreadChannel
+		case .moveBackward: .moveBackward
+		case .moveForward: .moveForward
+		case .previousSelection: .previousSelection
+		default: nil
+		}
+	}
+
+	func moveHighlightOrScrollback(for command: MenuCommand?) {
+		guard let controller = selectedViewController else { return }
+		switch command {
+		case .nextHighlight: controller.nextHighlight()
+		case .previousHighlight: controller.previousHighlight()
+		case .jumpToCurrentSession: controller.jumpToCurrentSession()
+		case .jumpToPresent: controller.jumpToPresent()
+		default: break
+		}
+	}
+
+	private func perform(_ action: MenuNavigationAction) {
+		switch action {
+		case .nextServer: mainWindow.selectNextServer(nil)
+		case .previousServer: mainWindow.selectPreviousServer(nil)
+		case .nextActiveServer: mainWindow.selectNextActiveServer(nil)
+		case .previousActiveServer: mainWindow.selectPreviousActiveServer(nil)
+		case .nextChannel: mainWindow.selectNextChannel(nil)
+		case .previousChannel: mainWindow.selectPreviousChannel(nil)
+		case .nextActiveChannel: mainWindow.selectNextActiveChannel(nil)
+		case .previousActiveChannel: mainWindow.selectPreviousActiveChannel(nil)
+		case .nextUnreadChannel: mainWindow.selectNextUnreadChannel(nil)
+		case .previousUnreadChannel: mainWindow.selectPreviousUnreadChannel(nil)
+		case .moveBackward: mainWindow.selectPreviousWindow(nil)
+		case .moveForward: mainWindow.selectNextWindow(nil)
+		case .previousSelection: mainWindow.selectPreviousSelection(nil)
+		}
+	}
+}

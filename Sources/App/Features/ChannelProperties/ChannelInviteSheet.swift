@@ -40,24 +40,24 @@ import Foundation
 import SwiftUI
 
 @MainActor
-public protocol ChannelInviteSheetDelegate: NSObjectProtocol {
+protocol ChannelInviteSheetDelegate: NSObjectProtocol {
 	func channelInviteSheet(_ sender: ChannelInviteSheet, onSelectChannel channelName: String)
 }
 
 @MainActor
-public final class ChannelInviteSheet: MainWindowSheetSession, ClientScoped {
-	public private(set) var client: IRCClient?
-	public private(set) var clientId: String?
-	public private(set) var nicknames: [String] = []
+final class ChannelInviteSheet: SheetSession, ClientScoped {
+	private(set) var client: Client?
+	private(set) var clientId: String?
+	private(set) var nicknames: [String] = []
 
-	public init(nicknames: [String], on client: IRCClient) {
+	init(nicknames: [String], on client: Client) {
 		super.init(window: nil)
 		self.nicknames = nicknames
 		self.client = client
 		clientId = client.uniqueIdentifier
 	}
 
-	public func start(withChannels channels: [String]) {
+	func start(withChannels channels: [String]) {
 		guard channels.isEmpty == false else {
 			return
 		}

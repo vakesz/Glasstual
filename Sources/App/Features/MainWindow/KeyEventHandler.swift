@@ -17,18 +17,18 @@ import AppKit
 /// selector to send to an `NSObject` target through the runtime; nothing but
 /// its own tests used that, and the closure form is checked by the compiler.
 @MainActor
-public final class KeyEventHandler {
-	public typealias Action = @MainActor (NSEvent) -> Void
+final class KeyEventHandler {
+	typealias Action = @MainActor (NSEvent) -> Void
 	/// An action that can decline the event, leaving it to the responder chain.
-	public typealias ConditionalAction = @MainActor (NSEvent) -> Bool
+	typealias ConditionalAction = @MainActor (NSEvent) -> Bool
 	private typealias DispatchAction = @MainActor (NSEvent) -> Bool
 
 	private var codeHandlerMap: [UInt: [UInt16: DispatchAction]] = [:]
 	private var characterHandlerMap: [UInt: [UInt16: DispatchAction]] = [:]
 
-	public init() {}
+	init() {}
 
-	public func register(
+	func register(
 		key: KeyCode,
 		modifiers: NSEvent.ModifierFlags = [],
 		perform action: @escaping Action
@@ -39,7 +39,7 @@ public final class KeyEventHandler {
 		}
 	}
 
-	public func register(
+	func register(
 		character: Character,
 		modifiers: NSEvent.ModifierFlags = [],
 		perform action: @escaping Action
@@ -60,7 +60,7 @@ public final class KeyEventHandler {
 	 keyboard still receives it. The name differs from `register` on purpose: a
 	 trailing closure carries no argument label, so an overload would be
 	 ambiguous with the unconditional form at every call site. */
-	public func registerConditional(
+	func registerConditional(
 		key: KeyCode,
 		modifiers: NSEvent.ModifierFlags = [],
 		perform action: @escaping ConditionalAction
@@ -69,7 +69,7 @@ public final class KeyEventHandler {
 	}
 
 	/// The character form of the conditional registration above.
-	public func registerConditional(
+	func registerConditional(
 		character: Character,
 		modifiers: NSEvent.ModifierFlags = [],
 		perform action: @escaping ConditionalAction
@@ -81,7 +81,7 @@ public final class KeyEventHandler {
 		register(characterCode: characterCode, modifiers: modifiers.rawValue, perform: action)
 	}
 
-	public func processKeyEvent(_ event: NSEvent) -> Bool {
+	func processKeyEvent(_ event: NSEvent) -> Bool {
 		if let inputClient = NSTextInputContext.current?.client,
 		   inputClient.markedRange().length > 0
 		{

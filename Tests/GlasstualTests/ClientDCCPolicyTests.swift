@@ -1,0 +1,129 @@
+/* *********************************************************************
+ *                  _____         _               _
+ *                 |_   _|____  _| |_ _   _  __ _| |
+ *                   | |/ _ \ \/ / __| | | |/ _` | |
+ *                   | |  __/>  <| |_| |_| | (_| | |
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
+ *
+ * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
+ * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+ *       Please see Acknowledgements.pdf for additional information.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *  * Neither the name of Textual, "Codeux Software, LLC", nor the
+ *    names of its contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ *
+ *********************************************************************** */
+
+@testable import Glasstual
+import Testing
+
+@MainActor
+@Suite("DCC request policy")
+struct ClientDCCPolicyTests {
+	@Test("A quoted SEND keeps its spaces and the token loses its T prefix")
+	func parsesQuotedSendAndNormalizesToken() {
+		let request = DCCFileTransferRequestParser.parse("SEND \"hello world.txt\" 3232235777 0 42 T123")
+
+		#expect(
+			request
+				== .send(filename: "hello world.txt", address: "192.168.1.1", port: 0, filesize: 42, token: "123")
+		)
+	}
+
+	@Test("A transfer outside the legal port or size range is refused")
+	func rejectsInvalidFileTransferRanges() {
+		#expect(DCCFileTransferRequestParser.parse("SEND file 3232235777 0 42") == nil)
+		#expect(DCCFileTransferRequestParser.parse("SEND file 3232235777 65536 42") == nil)
+		#expect(
+			DCCFileTransferRequestParser.parse("SEND file 3232235777 5000 0")
+				== .send(filename: "file", address: "192.168.1.1", port: 5000, filesize: 0, token: nil)
+		)
+		#expect(DCCFileTransferRequestParser.parse("RESUME file 5000 12 token") == nil)
+	}
+
+	@Test("Outgoing RESUME and SEND arguments quote only the filenames that need it")
+	func formatsResumeAndSendArguments() {
+		#expect(
+			DCCFileTransferRequestParser.transferArguments(
+				filename: "hello world.txt", port: 5000, position: 12, token: "7"
+			) == "\"hello world.txt\" 5000 12 7"
+		)
+		#expect(
+			DCCFileTransferRequestParser.sendArguments(
+				filename: "file.txt", address: "42", port: 5000, filesize: 99, token: nil
+			) == "file.txt 42 5000 99"
+		)
+	}
+
+	@Test("Both an active and a passive chat offer are understood")
+	func parsesActiveAndPassiveChatOffers() {
+		#expect(
+			DCCChatPolicy.parseOffer("CHAT chat 1568397154 5000")
+				== DCCChatOffer(address: "93.123.215.98", port: 5000, token: nil)
+		)
+		#expect(
+			DCCChatPolicy.parseOffer("CHAT chat 0 0 T99")
+				== DCCChatOffer(address: "0.0.0.0", port: 0, token: "99")
+		)
+		#expect(DCCChatPolicy.parseOffer("CHAT chat invalid 5000") == nil)
+		#expect(DCCChatPolicy.parseOffer("CHAT chat 3232235777 0") == nil)
+	}
+
+	/** An active chat offer decides which host the client dials, exactly as a
+	 DCC SEND offer does. The parser understands a private address — it is a
+	 well-formed offer — but the client refuses to act on it. */
+	@Test("A chat offer naming an address the client will not dial is refused")
+	func refusesChatOffersForNonRoutableAddresses() throws {
+		let privateOffer = try #require(DCCChatPolicy.parseOffer("CHAT chat 3232235777 5000"))
+
+		#expect(privateOffer.address == "192.168.1.1")
+		#expect(DCCChatPolicy.isDialable(privateOffer) == false)
+
+		let loopbackOffer = try #require(DCCChatPolicy.parseOffer("CHAT chat 2130706433 5000"))
+
+		#expect(loopbackOffer.address == "127.0.0.1")
+		#expect(DCCChatPolicy.isDialable(loopbackOffer) == false)
+
+		let routableOffer = try #require(DCCChatPolicy.parseOffer("CHAT chat 1568397154 5000"))
+
+		#expect(DCCChatPolicy.isDialable(routableOffer))
+	}
+
+	/// A passive offer names no address at all: the peer connects to us, so
+	/// there is nothing to dial and nothing to refuse.
+	@Test("A passive chat offer is not refused for the placeholder address it carries")
+	func passiveChatOffersAreNotRefusedForTheirPlaceholderAddress() throws {
+		let offer = try #require(DCCChatPolicy.parseOffer("CHAT chat 0 0 T99"))
+
+		#expect(offer.isPassive)
+		#expect(DCCChatPolicy.isDialable(offer))
+	}
+
+	@Test("A direct chat is named and offered in the legacy wire format")
+	func directChatWireNames() {
+		#expect(DCCChatPolicy.channelName(for: "alice") == "=alice")
+		#expect(DCCChatPolicy.listeningArguments(address: "42", port: 5000, token: "9") == "chat 42 5000 9")
+	}
+}

@@ -28,7 +28,7 @@ struct MainWindowStateStoreSuiteTests {
 	/// the window state has to be written there rather than to `.standard`.
 	@Test("The store writes to the shared container suite by default")
 	func defaultSuiteIsTheSharedContainer() {
-		let container = TextualUserDefaults.container
+		let container = GlasstualUserDefaults.container
 
 		/* `.standard` is the developer's own domain — the test scheme redirects
 		 the container and nothing else — so it is read to prove the write did
@@ -67,7 +67,7 @@ struct MainWindowStateStoreSuiteTests {
 	 command could walk back. */
 	@Test("The transcript zoom survives a relaunch, and a stored zoom out of range does not")
 	func textSizeMultiplierRoundTripsAndIsValidated() {
-		let container = TextualUserDefaults.container
+		let container = GlasstualUserDefaults.container
 		let key = Preferences.MainWindow.textSizeMultiplier.name
 		container.removeObject(forKey: key)
 		defer { container.removeObject(forKey: key) }

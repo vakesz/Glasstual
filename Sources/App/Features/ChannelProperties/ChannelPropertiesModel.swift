@@ -56,7 +56,7 @@ final class ChannelPropertiesModel {
 	 Weak because the sheet outlives nothing and the client outlives the sheet;
 	 a client that goes away mid-edit simply leaves the syntactic check behind,
 	 which is what a sheet opened without one uses anyway. */
-	private weak var client: IRCClient?
+	private weak var client: Client?
 
 	/** The key field's text.
 
@@ -96,7 +96,7 @@ final class ChannelPropertiesModel {
 		.highlight, nil, .channelMessage, .channelNotice, nil, .userJoined, .userParted,
 	]
 
-	init(config: ChannelConfig, client: IRCClient? = nil) {
+	init(config: ChannelConfig, client: Client? = nil) {
 		self.config = config
 		self.client = client
 		channelNameIsEditable = config.channelName.isEmpty
@@ -137,7 +137,7 @@ final class ChannelPropertiesModel {
 
 	 `inlineMediaDisabled` and `inlineMediaEnabled` are the two halves of a
 	 single override migrated from one boolean, and
-	 `LogController.inlineMediaEnabledForView` consults exactly one of them
+	 `TranscriptController.inlineMediaEnabledForView` consults exactly one of them
 	 depending on the application-wide preference. Editing both leaves whichever
 	 does not match the preference inert, and lets the channel end up asking for
 	 media to be hidden and shown at the same time. */

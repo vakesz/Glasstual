@@ -1,0 +1,206 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "script-no-input": {
+      "comment": "Placeholder in a script failure diagnostic when the command had no arguments.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "(no input)"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "(nincs bemenet)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "(keine Eingabe)"
+          }
+        }
+      }
+    },
+    "script-output-too-large": {
+      "comment": "A script returned more than the allowed one MiB. None of its output is executed.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The script returned more than 1 MiB of output. No commands were executed."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A szkript kimenete meghaladta az 1 MiB méretet. Egyetlen parancs sem lett végrehajtva."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Skriptausgabe überschreitet 1 MiB. Es wurden keine Befehle ausgeführt."
+          }
+        }
+      }
+    },
+    "script-output-invalid-encoding": {
+      "comment": "Script stdout could not be decoded as UTF-8. None of its output is executed.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The script output is not valid UTF-8. No commands were executed."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A szkript kimenete nem érvényes UTF-8 szöveg. Egyetlen parancs sem lett végrehajtva."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Skriptausgabe ist kein gültiges UTF-8. Es wurden keine Befehle ausgeführt."
+          }
+        }
+      }
+    },
+    "script-unavailable": {
+      "comment": "The requested script is no longer in the current script command catalog.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This script is no longer available. Refresh the script list and try again."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ez a szkript már nem érhető el. Frissítsd a szkriptlistát, majd próbáld újra."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieses Skript ist nicht mehr verfügbar. Aktualisiere die Skriptliste und versuche es erneut."
+          }
+        }
+      }
+    },
+    "import-failed-title": {
+      "comment": "Title of an add-on installation failure alert.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Add-on Could Not Be Installed"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nem sikerült telepíteni a kiegészítőt"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Add-on konnte nicht installiert werden"
+          }
+        }
+      }
+    },
+    "invalid-script": {
+      "comment": "A script failed staged validation before installation.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This file is not a readable AppleScript. The installed copy has not been changed."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ez a fájl nem olvasható AppleScript-szkript. A telepített példány nem változott."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Datei ist kein lesbares AppleScript. Die installierte Kopie wurde nicht geändert."
+          }
+        }
+      }
+    },
+    "script-install-instructions": {
+      "comment": "Explains that the user must install scripts using Finder because the sandbox cannot write Application Scripts. Argument is the destination folder path.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use Finder to copy the script into %@. If the folder does not exist, create it in Finder. Glasstual cannot write to this folder. Return to Glasstual after copying to refresh the script list."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A Finderrel másold a szkriptet ide: %@. Ha a mappa nem létezik, hozd létre a Finderben. A Glasstual nem írhat ebbe a mappába. Másolás után térj vissza a Glasstualhoz a szkriptlista frissítéséhez."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopiere das Skript mit dem Finder nach %@. Erstelle den Ordner im Finder, falls er noch nicht vorhanden ist. Glasstual kann nicht in diesen Ordner schreiben. Kehre nach dem Kopieren zu Glasstual zurück, um die Skriptliste zu aktualisieren."
+          }
+        }
+      }
+    },
+    "script-install-title": {
+      "comment": "Title of the user-mediated script installation instructions.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Install the Script in Finder"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Szkript telepítése a Finderben"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skript im Finder installieren"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

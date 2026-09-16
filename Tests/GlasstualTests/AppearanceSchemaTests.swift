@@ -156,17 +156,18 @@ struct AppearanceSchemaTests {
 		return try PropertyListDecoder().decode(AppearanceColor.self, from: data)
 	}
 
-	/// Every `type = 3` value across the three shipped appearance files.
+	/// Every `type = 3` value across the shipped appearance files, which share
+	/// the directory with the application's other property lists.
 	private static func systemColorNames() throws -> [String] {
 		let directory = URL(fileURLWithPath: #filePath)
 			.deletingLastPathComponent()
 			.deletingLastPathComponent()
 			.deletingLastPathComponent()
-			.appending(path: "Sources/App/Resources/User Interface/Appearance")
+			.appending(path: "Sources/App/Resources")
 		let files = try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
 
 		var names: [String] = []
-		for file in files where file.pathExtension == "plist" {
+		for file in files where file.lastPathComponent.hasSuffix("Appearance.plist") {
 			let plist = try PropertyListSerialization.propertyList(
 				from: Data(contentsOf: file),
 				format: nil

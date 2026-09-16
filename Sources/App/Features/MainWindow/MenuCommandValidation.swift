@@ -38,7 +38,6 @@
 
 import AppKit
 import CocoaExtensions
-import GlasstualPluginKit
 
 private enum MenuValidationConstants {
 	static let maximumDictionaryLookupLength = 40
@@ -51,13 +50,13 @@ private enum MenuValidationConstants {
 /// validation refreshes it, so the item never says "Google" to someone whose
 /// system is set to DuckDuckGo.
 @MainActor
-public enum MenuSearchProvider {
+enum MenuSearchProvider {
 	private static let preferredWebServicesKey = "NSPreferredWebServices"
 	private static let webSearchProviderKey = "NSWebServicesProviderWebSearch"
 	private static let defaultDisplayNameKey = "NSDefaultDisplayName"
 	private static let fallbackName = "Google"
 
-	public static var name: String {
+	static var name: String {
 		let services = UserDefaults.standard.dictionary(forKey: preferredWebServicesKey)
 		let provider = services?[webSearchProviderKey]
 			.flatMap(PropertyListValue.init(propertyList:))
@@ -65,13 +64,13 @@ public enum MenuSearchProvider {
 		return provider?.dictionary?[defaultDisplayNameKey]?.string ?? fallbackName
 	}
 
-	public static var menuTitle: String {
+	static var menuTitle: String {
 		ApplicationStrings.search(with: name)
 	}
 }
 
 /// Where a Paste command puts what it is carrying.
-public nonisolated enum MenuPasteTarget: Sendable { // nonisolated: value
+nonisolated enum MenuPasteTarget: Sendable { // nonisolated: value
 	/// Whatever holds the keyboard.
 	case firstResponder
 	/// The chat input, which is where the main window sends a paste that has no
@@ -90,7 +89,7 @@ public nonisolated enum MenuPasteTarget: Sendable { // nonisolated: value
  the presented sheet on the way -- so choosing it dismissed an unrelated sheet
  and then did nothing. */
 @MainActor
-public enum MenuResponderCommandPolicy {
+enum MenuResponderCommandPolicy {
 	/** Paste is a property of the responder that will receive it.
 
 	 The menu item and the action ask the same question of the same three
@@ -98,7 +97,7 @@ public enum MenuResponderCommandPolicy {
 	 action fell back to the message field, so ⌘V read as unavailable while the
 	 reader was in the transcript -- and the shortcut, which AppKit validates
 	 through the item, did nothing at all. */
-	public static func canPaste(
+	static func canPaste(
 		pasteboardHasText: Bool,
 		responderIsEditableText: Bool,
 		responderIsInInputBar: Bool,
@@ -121,7 +120,7 @@ public enum MenuResponderCommandPolicy {
 	 field or a sheet's field and dropped the text into the conversation
 	 instead, so the field is chosen only when the responder belongs to the
 	 input bar already, or when nothing editable has the keyboard at all. */
-	public static func pasteTarget(
+	static func pasteTarget(
 		responderIsEditableText: Bool,
 		responderIsInInputBar: Bool,
 		hasInputField: Bool
@@ -136,7 +135,7 @@ public enum MenuResponderCommandPolicy {
 	}
 
 	/// Change Nickname needs a registered connection, not merely a socket.
-	public static func canChangeNickname(clientIsLoggedIn: Bool) -> Bool {
+	static func canChangeNickname(clientIsLoggedIn: Bool) -> Bool {
 		clientIsLoggedIn
 	}
 }
@@ -149,12 +148,12 @@ public enum MenuResponderCommandPolicy {
  the same thing — Connect and Disconnect, Join and Leave — where showing both
  would offer a choice that does not exist. */
 @MainActor
-extension MenuActionCoordinator {
+extension MenuActionController {
 	/// AppKit asks the item's target, which is this object: the menu controller
 	/// is the menus' delegate, and a delegate is not consulted about
 	/// enablement.
-	public func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
-		let appController: ApplicationController = AppController.shared
+	func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
+		let appController: ApplicationDelegate = AppServices.delegate
 		guard appController.applicationIsTerminating == false else { return false }
 
 		return MenuValidationPolicy.validate(
@@ -206,7 +205,7 @@ extension MenuActionCoordinator {
 			/* A mode is ticked while it is in force. The item used to be
 			 renamed instead, so the menu read as a command and its two homes
 			 disagreed about what to call it. */
-			item.state = SharedApplication.sharedNotificationController().areNotificationsDisabled ? .on : .off
+			item.state = AppServices.notifications.areNotificationsDisabled ? .on : .off
 			return true
 		case .muteNotificationSounds, .dockMuteNotificationSounds:
 			item.state = Preferences.Notifications.soundIsMuted.value ? .on : .off
@@ -252,7 +251,7 @@ extension MenuActionCoordinator {
 	private func validateChannelCommand(_ item: NSMenuItem) -> Bool {
 		let client = selectedClient
 		let channel = selectedChannel
-		/* The mirror of `IRCClient.canJoin`, for a channel that is already
+		/* The mirror of `Client.canJoin`, for a channel that is already
 		 joined: the same connection, the same channel list, and a channel the
 		 client has not finished with. */
 		let isJoined = channel.map { channel in
@@ -406,7 +405,7 @@ extension MenuActionCoordinator {
 
 	/// A rank command applies when the member does not already stand where it
 	/// would put them, and the server knows the rank at all.
-	private func validateMemberMode(_ item: NSMenuItem, client: IRCClient?, channel: Channel?) -> Bool {
+	private func validateMemberMode(_ item: NSMenuItem, client: Client?, channel: Channel?) -> Bool {
 		guard client?.isLoggedIn == true, channel?.isChannel == true, channel?.isActive == true else {
 			return false
 		}
@@ -442,7 +441,7 @@ extension MenuActionCoordinator {
 	 key, so Paste read as enabled while the caret sat in the toolbar's search
 	 field or a sheet's field -- and then pasted into the wrong one. The
 	 responder is the answer in both branches, and the branches are the same
-	 ones ``MenuActionCoordinator/paste(_:)`` takes: the item has to be enabled
+	 ones ``MenuActionController/paste(_:)`` takes: the item has to be enabled
 	 wherever the action has somewhere to put the text. */
 	private func validatePaste() -> Bool {
 		let responder = NSApp.keyWindow?.firstResponder

@@ -7,7 +7,7 @@ import Foundation
 @testable import Glasstual
 import Testing
 
-/// Drives two `DCCChatConnection` actors against each other over the loopback
+/// Drives two `DirectChatSocket` actors against each other over the loopback
 /// interface. DCC CHAT has no acknowledgement and no length to count down, so
 /// what has to be proven is the framing: whole lines, in order, both ways, and
 /// a clean end when a peer hangs up.
@@ -64,7 +64,7 @@ struct DCCChatLoopbackTests {
 	@Test("Lines cross in both directions, in order", .timeLimit(.minutes(1)))
 	func linesCrossInBothDirections() async throws {
 		let listening = ChatFixture.listeningConnection()
-		var dialled: DCCChatConnection?
+		var dialled: DirectChatSocket?
 		var peer: Task<[String], Never>?
 		var replies: [String] = []
 
@@ -106,7 +106,7 @@ struct DCCChatLoopbackTests {
 	@Test("Fragmented and coalesced writes still arrive as lines", .timeLimit(.minutes(1)))
 	func fragmentedAndCoalescedWritesArriveAsLines() async throws {
 		let listening = ChatFixture.listeningConnection()
-		var dialled: DCCChatConnection?
+		var dialled: DirectChatSocket?
 		var peer: Task<[String], Never>?
 
 		await listening.start()
@@ -132,7 +132,7 @@ struct DCCChatLoopbackTests {
 	@Test("A peer that hangs up ends the session without an error", .timeLimit(.minutes(1)))
 	func aPeerThatHangsUpEndsTheSessionWithoutAnError() async throws {
 		let listening = ChatFixture.listeningConnection()
-		var dialled: DCCChatConnection?
+		var dialled: DirectChatSocket?
 		var verdict: Task<DCCTransferError??, Never>?
 
 		await listening.start()
@@ -153,7 +153,7 @@ struct DCCChatLoopbackTests {
 	@Test("Cancelling a session ends its events without a verdict", .timeLimit(.minutes(1)))
 	func cancellingASessionEndsItsEventsWithoutAVerdict() async throws {
 		let listening = ChatFixture.listeningConnection()
-		var dialled: DCCChatConnection?
+		var dialled: DirectChatSocket?
 		var collected: Task<[DCCChatEvent], Never>?
 
 		await listening.start()
@@ -192,7 +192,7 @@ struct DCCChatLoopbackTests {
 	@Test("A peer that never sends a newline is cut off at the cap", .timeLimit(.minutes(1)))
 	func aPeerThatNeverSendsANewlineIsCutOff() async throws {
 		let listening = ChatFixture.listeningConnection(maximumLineLength: 4096)
-		var dialled: DCCChatConnection?
+		var dialled: DirectChatSocket?
 		var verdict: Task<DCCTransferError??, Never>?
 
 		await listening.start()
@@ -219,8 +219,8 @@ enum ChatFixture {
 	/// and clear of the one the transfer tests use.
 	static let portRange: ClosedRange<UInt16> = 49460 ... 49660
 
-	static func listeningConnection(maximumLineLength: Int = 16 * 1024) -> DCCChatConnection {
-		DCCChatConnection(configuration: DCCChatConnection.Configuration(
+	static func listeningConnection(maximumLineLength: Int = 16 * 1024) -> DirectChatSocket {
+		DirectChatSocket(configuration: DirectChatSocket.Configuration(
 			endpoint: .listen(portRange: portRange),
 			maximumLineLength: maximumLineLength,
 			sendTimeout: .seconds(20)
@@ -230,15 +230,15 @@ enum ChatFixture {
 	static func diallingConnection(
 		port: UInt16,
 		maximumLineLength: Int = 16 * 1024
-	) -> DCCChatConnection {
-		DCCChatConnection(configuration: DCCChatConnection.Configuration(
+	) -> DirectChatSocket {
+		DirectChatSocket(configuration: DirectChatSocket.Configuration(
 			endpoint: .connect(host: loopbackHost, port: port, interfaceName: nil, timeout: .seconds(20)),
 			maximumLineLength: maximumLineLength,
 			sendTimeout: .seconds(20)
 		))
 	}
 
-	static func listeningPort(of connection: DCCChatConnection) async -> UInt16? {
+	static func listeningPort(of connection: DirectChatSocket) async -> UInt16? {
 		for await event in connection.events {
 			if case let .listening(port) = event {
 				return port
@@ -255,9 +255,9 @@ enum ChatFixture {
 	/// attaches its consumer: an `AsyncStream` takes one, and what is yielded
 	/// before it attaches is buffered rather than dropped.
 	static func connect(
-		_ listening: DCCChatConnection,
+		_ listening: DirectChatSocket,
 		maximumLineLength: Int = 16 * 1024,
-		prepare: (DCCChatConnection) -> Void
+		prepare: (DirectChatSocket) -> Void
 	) async throws {
 		for await event in listening.events {
 			switch event {
@@ -284,7 +284,7 @@ enum ChatFixture {
 	/// Reads `connection` until it has `expected` lines, sends `replies`, and
 	/// returns what it read.
 	static func drive(
-		_ connection: DCCChatConnection,
+		_ connection: DirectChatSocket,
 		replying replies: [String],
 		afterLines expected: Int
 	) -> Task<[String], Never> {
@@ -318,7 +318,7 @@ enum ChatFixture {
 
 	/// The session's terminal event: the outer optional is `nil` when the
 	/// stream ended without one, the inner when it ended cleanly.
-	static func verdict(of connection: DCCChatConnection) -> Task<DCCTransferError??, Never> {
+	static func verdict(of connection: DirectChatSocket) -> Task<DCCTransferError??, Never> {
 		let events = connection.events
 
 		return Task {
@@ -335,7 +335,7 @@ enum ChatFixture {
 		}
 	}
 
-	static func allEvents(of connection: DCCChatConnection) -> Task<[DCCChatEvent], Never> {
+	static func allEvents(of connection: DirectChatSocket) -> Task<[DCCChatEvent], Never> {
 		let events = connection.events
 
 		return Task {

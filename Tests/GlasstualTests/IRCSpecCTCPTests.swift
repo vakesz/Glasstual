@@ -104,10 +104,10 @@ struct IRCSpecCTCPTests {
 	/// SHOULD accept incoming messages which lack it."
 	@Test("A missing closing delimiter is still a CTCP message")
 	func aMissingClosingDelimiterIsTolerated() {
-		let closed = IRCInboundTextPolicy.classify(
+		let closed = InboundTextPolicy.classify(
 			command: "PRIVMSG", payload: "\(Self.delimiter)VERSION\(Self.delimiter)"
 		)
-		let unclosed = IRCInboundTextPolicy.classify(
+		let unclosed = InboundTextPolicy.classify(
 			command: "PRIVMSG", payload: "\(Self.delimiter)VERSION"
 		)
 
@@ -121,10 +121,10 @@ struct IRCSpecCTCPTests {
 	/// reply, and a reply must never be answered.
 	@Test("PRIVMSG carries queries and NOTICE carries replies")
 	func queriesAndRepliesAreDistinguished() {
-		let query = IRCInboundTextPolicy.classify(
+		let query = InboundTextPolicy.classify(
 			command: "PRIVMSG", payload: "\(Self.delimiter)VERSION\(Self.delimiter)"
 		)
-		let reply = IRCInboundTextPolicy.classify(
+		let reply = InboundTextPolicy.classify(
 			command: "NOTICE", payload: "\(Self.delimiter)VERSION Some Client\(Self.delimiter)"
 		)
 
@@ -135,7 +135,7 @@ struct IRCSpecCTCPTests {
 	/// A body with no leading delimiter is ordinary text, whatever it contains.
 	@Test("An unframed body is ordinary text")
 	func unframedBodiesAreOrdinaryText() {
-		let plain = IRCInboundTextPolicy.classify(command: "PRIVMSG", payload: "VERSION")
+		let plain = InboundTextPolicy.classify(command: "PRIVMSG", payload: "VERSION")
 
 		#expect(plain.lineType == .privateMessage)
 		#expect(plain.text == "VERSION")
@@ -154,7 +154,7 @@ struct IRCSpecCTCPTests {
 		]
 	)
 	func commandAndArgumentsSplitAtTheFirstSpace(_ testCase: IRCSpecCTCPSplitCase) throws {
-		let parsed = try #require(IRCCTCPPolicy.commandAndArguments(from: testCase.text))
+		let parsed = try #require(CTCPPolicy.commandAndArguments(from: testCase.text))
 
 		#expect(parsed.command == testCase.command)
 		#expect(parsed.arguments == testCase.arguments)
@@ -163,8 +163,8 @@ struct IRCSpecCTCPTests {
 	/// A frame with no command inside it is not a CTCP message.
 	@Test("An empty frame carries no command")
 	func emptyFramesCarryNoCommand() {
-		#expect(IRCCTCPPolicy.commandAndArguments(from: "") == nil)
-		#expect(IRCCTCPPolicy.commandAndArguments(from: " arguments only") == nil)
+		#expect(CTCPPolicy.commandAndArguments(from: "") == nil)
+		#expect(CTCPPolicy.commandAndArguments(from: " arguments only") == nil)
 	}
 
 	// MARK: - ACTION
@@ -177,7 +177,7 @@ struct IRCSpecCTCPTests {
 
 		#expect(framed == "\(Self.delimiter)ACTION waves\(Self.delimiter)")
 
-		let classified = IRCInboundTextPolicy.classify(command: "PRIVMSG", payload: framed)
+		let classified = InboundTextPolicy.classify(command: "PRIVMSG", payload: framed)
 
 		#expect(classified.lineType == .action)
 		#expect(classified.text == "waves")
@@ -188,7 +188,7 @@ struct IRCSpecCTCPTests {
 	/// query the client would answer.
 	@Test("ACTION is recognised whatever its case")
 	func actionIsCaseInsensitive() {
-		let classified = IRCInboundTextPolicy.classify(
+		let classified = InboundTextPolicy.classify(
 			command: "PRIVMSG", payload: "\(Self.delimiter)action waves\(Self.delimiter)"
 		)
 
@@ -319,7 +319,7 @@ struct IRCSpecCTCPTests {
 
 		#expect(framed == "\(Self.delimiter)ACTION wavesVERSION\(Self.delimiter)")
 
-		let classified = IRCInboundTextPolicy.classify(command: "PRIVMSG", payload: framed)
+		let classified = InboundTextPolicy.classify(command: "PRIVMSG", payload: framed)
 
 		#expect(classified.lineType == .action)
 		#expect(classified.text == "wavesVERSION")

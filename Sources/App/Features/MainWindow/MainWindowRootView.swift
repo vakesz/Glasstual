@@ -167,7 +167,7 @@ struct MainWindowRootView: View {
 
 	/// Dismissing has to reach the session that raised the sheet, so the
 	/// binding's write goes through the model rather than clearing the item.
-	private var presentedSheet: Binding<MainWindowSheetPresentation?> {
+	private var presentedSheet: Binding<PresentedSheet?> {
 		Binding(
 			get: { model.presentedSheet },
 			set: { presentation in
@@ -301,7 +301,7 @@ struct MainWindowRootView: View {
 				 measures both. Insetting this column by hand to close the
 				 remaining difference is what the comment above rules out: it
 				 makes the column's insets depend on the column's own layout. */
-				MainWindowTranscriptRepresentable(
+				TranscriptViewRepresentable(
 					logView: model.transcript,
 					inputField: inputContentView,
 					accessoryHeight: MainWindowInputBarLayout.accessoryHeight(
@@ -372,7 +372,7 @@ struct MainWindowRootView: View {
 
 	private var conversationBackground: Color {
 		_ = model.appearanceRevision
-		return Color(nsColor: SharedApplication.sharedThemeController().backgroundColor)
+		return Color(nsColor: AppServices.theme.backgroundColor)
 	}
 
 	/** A pane sweeping across the window is exactly the motion Reduce Motion
@@ -393,7 +393,7 @@ struct MainWindowRootView: View {
 
 private struct MainWindowSheetHost: View {
 	let model: MainWindowPresentationModel
-	@Bindable var presentation: MainWindowSheetPresentation
+	@Bindable var presentation: PresentedSheet
 
 	var body: some View {
 		presentation.content
@@ -406,7 +406,7 @@ private struct MainWindowSheetHost: View {
 			}
 	}
 
-	private var child: Binding<MainWindowSheetPresentation?> {
+	private var child: Binding<PresentedSheet?> {
 		Binding(
 			get: { presentation.child },
 			set: { nested in

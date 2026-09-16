@@ -1,0 +1,414 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "close-query": {
+      "comment": "Close-query menu title. Legacy key: hri-l0.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close Query"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beszélgetés bezárása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gespräch schließen"
+          }
+        }
+      }
+    },
+    "close-window": {
+      "comment": "Close-window menu title. Legacy key: 1f6-bg.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close Window"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ablak bezárása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fenster schließen"
+          }
+        }
+      }
+    },
+    "disconnect-menu-title": {
+      "comment": "Disconnect menu title. The argument is the network name. Legacy key: w3a-je.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnect from %@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapcsolat bontása: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbindung zu %@ trennen"
+          }
+        }
+      }
+    },
+    "fill-out-this-field": {
+      "comment": "Required-field validation message. Legacy key: fo8-1h.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This field is required."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ez a mező kötelező."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieses Feld ist erforderlich."
+          }
+        }
+      }
+    },
+    "duplicated-connection-name": {
+      "comment": "Name given to a duplicated connection. The argument is the original connection name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ copy"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ másolata"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ Kopie"
+          }
+        }
+      }
+    },
+    "glasstual-irc-client": {
+      "comment": "Default quit message advertising the application. Legacy key: 1dd-0f.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstual IRC Client: https://github.com/vakesz/Glasstual"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstual IRC-kliens: https://github.com/vakesz/Glasstual"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstual IRC-Client: https://github.com/vakesz/Glasstual"
+          }
+        }
+      }
+    },
+    "invalid-regular-expression": {
+      "comment": "Validation message shown beside a highlight keyword that is not a usable regular expression, while highlights are set to match by regular expression.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is not a valid regular expression."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ez nem érvényes reguláris kifejezés."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dies ist kein gültiger regulärer Ausdruck."
+          }
+        }
+      }
+    },
+    "irc-color-list-entry": {
+      "comment": "IRC color-list entry. The argument is the color index. Legacy key: ham-vk.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Color %ld"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%ld. szín"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Farbe %ld"
+          }
+        }
+      }
+    },
+    "irc-colors": {
+      "comment": "IRC color-list title. Legacy key: iwp-cg.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IRC Colors"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IRC-színek"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IRC-Farben"
+          }
+        }
+      }
+    },
+    "leave-channel": {
+      "comment": "Leave-channel menu title. Legacy key: 5td-3f.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave Channel"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csatorna elhagyása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kanal verlassen"
+          }
+        }
+      }
+    },
+    "look-up": {
+      "comment": "Dictionary lookup title. The argument is the selected text. Legacy key: zxs-yy.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Look Up “%@”"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\"%@\" keresése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\"%@\" nachschlagen"
+          }
+        }
+      }
+    },
+    "look-up-in-dictionary": {
+      "comment": "Dictionary lookup menu title. Legacy key: o5l-4s.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Look Up in Dictionary"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keresés a Szótárban"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Im Wörterbuch nachschlagen"
+          }
+        }
+      }
+    },
+    "my-mac-has-gone-to-sleep": {
+      "comment": "Default quit message used when the Mac sleeps. Legacy key: qi7-5y.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My Mac has gone to sleep. ZZZzzz…"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A Macem alvó állapotba került. ZZZzzz…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mein Mac ist im Ruhezustand. ZZZzzz…"
+          }
+        }
+      }
+    },
+    "quit-glasstual": {
+      "comment": "Quit-application menu title. Legacy key: x97-ro.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quit Glasstual"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilépés a Glasstualból"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstual beenden"
+          }
+        }
+      }
+    },
+    "search-provider-menu-title": {
+      "comment": "Search-provider menu title. The argument is the provider name. Legacy key: 1ll-h9.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search With %@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keresés ezzel: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mit %@ suchen"
+          }
+        }
+      }
+    },
+    "unknown-value-placeholder": {
+      "comment": "Unknown-value placeholder. Legacy key: vbl-xi.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ismeretlen"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unbekannt"
+          }
+        }
+      }
+    },
+    "untitled-connection": {
+      "comment": "Default name for a new connection. Legacy key: vfu-c0.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Untitled Connection"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Névtelen kapcsolat"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unbenannte Verbindung"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

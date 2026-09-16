@@ -17,7 +17,7 @@ import Observation
 
 @Observable
 final class AddressBookEntryModel {
-	let entryType: IRCAddressBookEntryType
+	let entryType: AddressBookEntryType
 
 	var hostmask: String
 
@@ -45,7 +45,7 @@ final class AddressBookEntryModel {
 	private var submissionWasAttempted = false
 	private let source: AddressBookEntry
 
-	convenience init(entryType: IRCAddressBookEntryType) {
+	convenience init(entryType: AddressBookEntryType) {
 		self.init(entry: entryType == .userTracking
 			? .newUserTrackingEntry()
 			: .newIgnoreEntry())

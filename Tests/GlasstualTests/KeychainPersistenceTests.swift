@@ -218,7 +218,7 @@ struct KeychainPersistenceTests {
 		let origin = Server(serverAddress: "origin.invalid")
 		var config = ClientConfig()
 		config.serverList = [origin, Server(serverAddress: "fallback.invalid")]
-		let client = IRCClient(config: config, environment: fixture.environment)
+		let client = Client(config: config, environment: fixture.environment)
 		client.config.pendingNicknamePassword = .set("pending")
 		let explicit: PendingIRCEndpoint? = switch request {
 		case .configured: nil
@@ -255,7 +255,7 @@ struct KeychainPersistenceTests {
 		}
 		releaseFirst.finish()
 		#expect(await iterator.next() == 2)
-		let expected = IRCConnectionStrings.connecting(
+		let expected = ConnectionStrings.connecting(
 			host: explicit?.host ?? origin.serverAddress,
 			port: explicit?.port ?? origin.serverPort
 		)
@@ -278,7 +278,7 @@ struct KeychainPersistenceTests {
 		let fallback = Server(serverAddress: "fallback.invalid")
 		var config = ClientConfig()
 		config.serverList = [original, fallback]
-		let client = IRCClient(config: config, environment: fixture.environment)
+		let client = Client(config: config, environment: fixture.environment)
 		#expect(try #require(client.takeConnectionEndpoint()).serverAddress == original.serverAddress)
 		original.serverAddress = "edited.invalid"
 		original.serverPort = 7001
@@ -299,7 +299,7 @@ struct KeychainPersistenceTests {
 		var server = Server()
 		server.serverAddress = "old.example"
 		config.serverList = [server]
-		let client = IRCClient(config: config, environment: fixture.environment)
+		let client = Client(config: config, environment: fixture.environment)
 		let (firstGate, releaseFirst) = AsyncStream<Void>.makeStream()
 		let (secondGate, releaseSecond) = AsyncStream<Void>.makeStream()
 		let (started, didStart) = AsyncStream<Int>.makeStream()
@@ -330,7 +330,7 @@ struct KeychainPersistenceTests {
 		var server = Server()
 		server.serverAddress = "127.0.0.1"
 		config.serverList = [server]
-		let client = IRCClient(config: config, environment: fixture.environment)
+		let client = Client(config: config, environment: fixture.environment)
 		let (gate, release) = AsyncStream<Void>.makeStream()
 		let (started, didStart) = AsyncStream<Void>.makeStream()
 		client.credentialLoader = { items in

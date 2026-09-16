@@ -21,13 +21,13 @@ import Observation
  arrive. */
 @MainActor
 @Observable
-public final class ServerHighlightListSession: ClientScoped {
-	public let client: IRCClient
-	public let clientId: String?
+final class ServerHighlightListSession: ClientScoped {
+	let client: Client
+	let clientId: String?
 
 	let model = ServerHighlightListModel()
 
-	public init(client: IRCClient) {
+	init(client: Client) {
 		self.client = client
 		clientId = client.uniqueIdentifier
 		model.replace(with: client.cachedHighlights)
@@ -37,7 +37,7 @@ public final class ServerHighlightListSession: ClientScoped {
 		client.networkNameAlt
 	}
 
-	public func addEntry(_ newEntry: HighlightLogEntry) {
+	func addEntry(_ newEntry: HighlightLogEntry) {
 		model.addEntries([newEntry])
 	}
 
@@ -68,7 +68,7 @@ public final class ServerHighlightListSession: ClientScoped {
 				onClientWithId: clientId
 			) else { return }
 
-			AppController.shared.mainWindow.select(channel)
+			AppServices.delegate.mainWindow.select(channel)
 		}
 	}
 }

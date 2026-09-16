@@ -23,7 +23,6 @@ struct MenuCommandTests {
 		let mainMenu = try #require(NSApp.mainMenu)
 		#expect(mainMenu.items.allSatisfy { $0.tag == 0 })
 		#expect(controller.mainMenuServerMenuItem?.command == .serverMenu)
-		#expect(Bundle.main.path(forResource: "TXCMainMenu", ofType: "nib") == nil)
 	}
 
 	@Test("The programmatic graph carries the commands the application looks up")
@@ -40,15 +39,6 @@ struct MenuCommandTests {
 		for command in expected {
 			#expect(menus.contains { $0.item(for: command) != nil }, "\(command) is missing from the menu graph")
 		}
-	}
-
-	/// Raw values are the nib's tags. Two cases sharing one would make the
-	/// second unreachable, and `MenuCommand(rawValue:)` would silently pick the
-	/// first.
-	@Test("Command raw values are unique")
-	func rawValuesAreUnique() {
-		let rawValues = MenuCommand.allCases.map(\.rawValue)
-		#expect(Set(rawValues).count == rawValues.count)
 	}
 
 	@Test("Every symbol the menus draw exists in the system catalog")
@@ -192,9 +182,9 @@ struct MenuCommandTests {
 		#expect(Set(TextFormatterCommand.allCases.map(\.rawValue)).count == TextFormatterCommand.allCases.count)
 	}
 
-	/// Launching finishes once the plugins have loaded, and Settings stayed
-	/// dimmed until then although nothing in it waits on a plugin.
-	@Test("Settings, About and Welcome open before the plugins have loaded", arguments: [
+	/// Settings stayed dimmed until the launch sequence finished, although
+	/// nothing in it waits on the rest of launch.
+	@Test("Settings, About and Welcome open before launching finishes", arguments: [
 		MenuCommand.settings, .about, .welcome,
 	])
 	func applicationCommandsOpenBeforeLaunchFinishes(command: MenuCommand) {

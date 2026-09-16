@@ -38,19 +38,19 @@
 import CocoaExtensions
 import Foundation
 
-public let stsPolicyStoreDefaultsKey = Preferences.Connection.stsPolicies.name
+let stsPolicyStoreDefaultsKey = Preferences.Connection.stsPolicies.name
 
 /// The STS policies this client has been told to honour, keyed by host.
 ///
 /// Main-actor, like the connection setup and the capability negotiation that
 /// are its only callers, so the policies need no lock of their own.
-public final class STSPolicyStore: NSObject {
+final class STSPolicyStore: NSObject {
 	private let userDefaults: UserDefaults?
 	private var policies: [String: STSPolicy] = [:]
 
-	public static let shared = STSPolicyStore(userDefaults: TextualUserDefaults.container)
+	static let shared = STSPolicyStore(userDefaults: GlasstualUserDefaults.container)
 
-	public init(userDefaults: UserDefaults?) {
+	init(userDefaults: UserDefaults?) {
 		self.userDefaults = userDefaults
 
 		super.init()
@@ -58,7 +58,7 @@ public final class STSPolicyStore: NSObject {
 		load()
 	}
 
-	public func policy(forHost host: String) -> STSPolicy? {
+	func policy(forHost host: String) -> STSPolicy? {
 		let key = key(forHost: host)
 
 		guard let policy = policies[key] else {
@@ -75,12 +75,12 @@ public final class STSPolicyStore: NSObject {
 		return policy
 	}
 
-	public func setPolicy(_ policy: STSPolicy, forHost host: String) {
+	func setPolicy(_ policy: STSPolicy, forHost host: String) {
 		policies[key(forHost: host)] = policy
 		save()
 	}
 
-	public func removePolicy(forHost host: String) {
+	func removePolicy(forHost host: String) {
 		guard policies.removeValue(forKey: key(forHost: host)) != nil else {
 			return
 		}
@@ -91,7 +91,7 @@ public final class STSPolicyStore: NSObject {
 	/// The endpoint a stored policy pins `host` to, or `nil` when there is no
 	/// policy. A stored policy always requires a secured connection, so the
 	/// port is the whole answer.
-	public func enforcedEndpoint(forHost host: String) -> STSPolicyEndpoint? {
+	func enforcedEndpoint(forHost host: String) -> STSPolicyEndpoint? {
 		guard let policy = policy(forHost: host) else {
 			return nil
 		}
@@ -103,9 +103,9 @@ public final class STSPolicyStore: NSObject {
 	///
 	/// `duration` is otherwise unbounded, so a server that once spoke for a
 	/// host could pin it effectively forever.
-	public static let maximumPolicyDuration: TimeInterval = 365 * 24 * 60 * 60
+	static let maximumPolicyDuration: TimeInterval = 365 * 24 * 60 * 60
 
-	public func applyCapabilityValues(
+	func applyCapabilityValues(
 		_ values: STSCapabilityValues,
 		forHost host: String,
 		connectedPort: UInt16,

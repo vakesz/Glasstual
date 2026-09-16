@@ -14,114 +14,114 @@ import Foundation
 
 nonisolated enum ChannelPropertiesStrings { // nonisolated: value
 	static var heading: String {
-		String(localized: .TDCChannelPropertiesSheet.channelPropertiesWindowTitle)
+		String(localized: .ChannelProperties.channelPropertiesWindowTitle)
 	}
 
 	static var sectionPickerLabel: String {
-		String(localized: .TDCChannelPropertiesSheet.sectionPickerLabel)
+		String(localized: .ChannelProperties.sectionPickerLabel)
 	}
 
 	static var general: String {
-		String(localized: .TDCChannelPropertiesSheet.general)
+		String(localized: .ChannelProperties.general)
 	}
 
 	static var defaults: String {
-		String(localized: .TDCChannelPropertiesSheet.defaults)
+		String(localized: .ChannelProperties.defaults)
 	}
 
 	static var notifications: String {
-		String(localized: .TDCChannelPropertiesSheet.notifications)
+		String(localized: .ChannelProperties.notifications)
 	}
 
 	static var joinOnConnect: String {
-		String(localized: .TDCChannelPropertiesSheet.joinOnConnect)
+		String(localized: .ChannelProperties.joinOnConnect)
 	}
 
 	static var showNotifications: String {
-		String(localized: .TDCChannelPropertiesSheet.showNotificationsForChannel)
+		String(localized: .ChannelProperties.showNotificationsForChannel)
 	}
 
 	static var disableInlineMedia: String {
-		String(localized: .TDCChannelPropertiesSheet.disableInlineMedia)
+		String(localized: .ChannelProperties.disableInlineMedia)
 	}
 
 	static var showInlineMedia: String {
-		String(localized: .TDCChannelPropertiesSheet.showInlineMedia)
+		String(localized: .ChannelProperties.showInlineMedia)
 	}
 
 	static var disableGeneralEvents: String {
-		String(localized: .TDCChannelPropertiesSheet.disableGeneralEventMessages)
+		String(localized: .ChannelProperties.disableGeneralEventMessages)
 	}
 
 	static var showUnreadCount: String {
-		String(localized: .TDCChannelPropertiesSheet.showUnreadCountInChannelList)
+		String(localized: .ChannelProperties.showUnreadCountInChannelList)
 	}
 
 	static var disableHighlights: String {
-		String(localized: .TDCChannelPropertiesSheet.disableHighlights)
+		String(localized: .ChannelProperties.disableHighlights)
 	}
 
 	static var nameLabel: String {
-		String(localized: .TDCChannelPropertiesSheet.nameLabel)
+		String(localized: .ChannelProperties.nameLabel)
 	}
 
 	static var passwordLabel: String {
-		String(localized: .TDCChannelPropertiesSheet.passwordLabel)
+		String(localized: .ChannelProperties.passwordLabel)
 	}
 
 	static var labelLabel: String {
-		String(localized: .TDCChannelPropertiesSheet.labelLabel)
+		String(localized: .ChannelProperties.labelLabel)
 	}
 
 	static var channelNamePlaceholder: String {
-		String(localized: .TDCChannelPropertiesSheet.channelNamePlaceholder)
+		String(localized: .ChannelProperties.channelNamePlaceholder)
 	}
 
 	static var passwordHelp: String {
-		String(localized: .TDCChannelPropertiesSheet.passwordHelp)
+		String(localized: .ChannelProperties.passwordHelp)
 	}
 
 	static func secretKeyLength(_ length: Int, maximum: Int) -> String {
-		String(localized: .TDCChannelPropertiesSheet.secretKeyLength(length, maximum))
+		String(localized: .ChannelProperties.secretKeyLength(length, maximum))
 	}
 
 	static func secretKeyTooLong(networkName: String, maximumLength: Int) -> String {
-		String(localized: .TDCChannelPropertiesSheet.secretKeyTooLong(networkName, maximumLength))
+		String(localized: .ChannelProperties.secretKeyTooLong(networkName, maximumLength))
 	}
 
 	static var optional: String {
-		String(localized: .TDCChannelPropertiesSheet.optional)
+		String(localized: .ChannelProperties.optional)
 	}
 
 	static var labelHelp: String {
-		String(localized: .TDCChannelPropertiesSheet.labelHelp)
+		String(localized: .ChannelProperties.labelHelp)
 	}
 
 	static var defaultsHelp: String {
-		String(localized: .TDCChannelPropertiesSheet.defaultsHelp)
+		String(localized: .ChannelProperties.defaultsHelp)
 	}
 
 	static var topicLabel: String {
-		String(localized: .TDCChannelPropertiesSheet.topicLabel)
+		String(localized: .ChannelProperties.topicLabel)
 	}
 
 	static var modesLabel: String {
-		String(localized: .TDCChannelPropertiesSheet.modesLabel)
+		String(localized: .ChannelProperties.modesLabel)
 	}
 
 	static var invalidChannelName: String {
-		String(localized: .TDCChannelPropertiesSheet.pleaseEnterAProperlyFormattedChannel)
+		String(localized: .ChannelProperties.pleaseEnterAProperlyFormattedChannel)
 	}
 
 	static var reloadButton: String {
-		String(localized: .TDCChannelPropertiesSheet.reloadButton)
+		String(localized: .ChannelProperties.reloadButton)
 	}
 
 	static var configurationChangedTitle: String {
-		String(localized: .TDCChannelPropertiesSheet.thisChannelsConfigurationHasChangedDo)
+		String(localized: .ChannelProperties.thisChannelsConfigurationHasChangedDo)
 	}
 
 	static var unsavedChangesWarning: String {
-		String(localized: .TDCChannelPropertiesSheet.youWillLooseUnsavedChangesIf)
+		String(localized: .ChannelProperties.youWillLooseUnsavedChangesIf)
 	}
 }

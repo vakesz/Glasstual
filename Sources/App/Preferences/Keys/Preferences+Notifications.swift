@@ -38,7 +38,7 @@
 import Foundation
 
 /// The per-event settings each notification type carries.
-public nonisolated enum NotificationSetting: String, CaseIterable, Sendable { // nonisolated: value
+nonisolated enum NotificationSetting: String, CaseIterable, Sendable { // nonisolated: value
 	case enabled = "Enabled"
 	case sound = "Sound"
 	case disabledWhileAway = "Disable While Away"
@@ -49,7 +49,7 @@ public nonisolated enum NotificationSetting: String, CaseIterable, Sendable { //
 	case speakNickname = "Speak Nickname"
 }
 
-public nonisolated extension NotificationEvent { // nonisolated: value
+nonisolated extension NotificationEvent { // nonisolated: value
 	/// The preference-key prefix this event's settings live under.
 	var preferenceKeyPrefix: String {
 		let name = switch self {
@@ -82,7 +82,7 @@ public nonisolated extension NotificationEvent { // nonisolated: value
 	}
 }
 
-public nonisolated extension Preferences { // nonisolated: value
+nonisolated extension Preferences { // nonisolated: value
 	/// Per-event notification settings, plus the switches that apply to all of
 	/// them.
 	enum Notifications {
@@ -95,7 +95,7 @@ public nonisolated extension Preferences { // nonisolated: value
 		 The family carries the shape those names hold — a sound is a string and
 		 every other setting is a flag — so an imported file cannot write a
 		 dictionary or a blob under a name no declaration covers one by one. */
-		public static let family = PreferenceKeyFamily(keyPrefix, coerce: { name, value in
+		static let family = PreferenceKeyFamily(keyPrefix, coerce: { name, value in
 			guard let setting = NotificationSetting.allCases.first(where: {
 				name.hasSuffix(" -> \($0.rawValue)")
 			}) else {
@@ -106,21 +106,21 @@ public nonisolated extension Preferences { // nonisolated: value
 				: PreferenceKey(name, default: false).coerce(value)
 		})
 
-		public static let soundIsMuted = PreferenceKey(
+		static let soundIsMuted = PreferenceKey(
 			"Notification Sound Is Muted",
 			default: false,
 			traits: .unregistered
 		)
 
-		public static let onlySpeakForSelection = PreferenceKey(
+		static let onlySpeakForSelection = PreferenceKey(
 			"OnlySpeakNotificationsForSelection",
 			default: true
 		)
 
-		public static let postWhileInFocus = PreferenceKey("PostNotificationsWhileInFocus", default: true)
-		public static let displayDockBadge = PreferenceKey("DisplayDockBadges", default: true)
+		static let postWhileInFocus = PreferenceKey("PostNotificationsWhileInFocus", default: true)
+		static let displayDockBadge = PreferenceKey("DisplayDockBadges", default: true)
 
-		public static let publicMessageCountOnDockBadge = PreferenceKey(
+		static let publicMessageCountOnDockBadge = PreferenceKey(
 			"DisplayPublicMessageCountInDockBadge",
 			default: false
 		)

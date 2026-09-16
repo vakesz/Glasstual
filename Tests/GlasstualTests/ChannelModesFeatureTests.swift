@@ -10,10 +10,10 @@ import SwiftUI
 import Testing
 
 @MainActor
-private final class ChannelModesDelegateSpy: NSObject, ChannelModifyModesSheetDelegate {
+private final class ChannelModesDelegateSpy: NSObject, ChannelModesSheetDelegate {
 	private(set) var acceptedModes: ChannelModeContainer?
 
-	func channelModifyModesSheet(_: ChannelModifyModesSheet, onOk modes: ChannelModeContainer) {
+	func channelModifyModesSheet(_: ChannelModesSheet, onOk modes: ChannelModeContainer) {
 		acceptedModes = modes
 	}
 }
@@ -192,7 +192,7 @@ struct ChannelModesFeatureTests {
 		channel.activate()
 		_ = channel.modeInfo?.updateModes("+ntk original +l 12")
 
-		let adapter = ChannelModifyModesSheet(channel: channel)
+		let adapter = ChannelModesSheet(channel: channel)
 		let channelPrototype: ChannelScoped = adapter
 		let delegate = ChannelModesDelegateSpy()
 		adapter.delegate = delegate
@@ -225,7 +225,7 @@ struct ChannelModesFeatureTests {
 		client.supportInfo.processConfigurationData("CHANMODES=beI,k,l,imnpst PREFIX=(ov)@+ KEYLEN=3")
 		let channel = try #require(client.findChannelOrCreate("#swift"))
 		channel.activate()
-		let adapter = ChannelModifyModesSheet(channel: channel)
+		let adapter = ChannelModesSheet(channel: channel)
 		let delegate = ChannelModesDelegateSpy()
 		adapter.delegate = delegate
 		adapter.model.setMode(.key, enabled: true)

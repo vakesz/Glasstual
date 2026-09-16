@@ -10,6 +10,18 @@
             "state" : "translated",
             "value" : "• %1$@ %2$@"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "• %1$@ %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "• %1$@ %2$@"
+          }
         }
       }
     },
@@ -18,6 +30,18 @@
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@"
+          }
+        },
+        "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@"
@@ -34,6 +58,18 @@
             "state" : "translated",
             "value" : "%1$@ (%2$@)"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ (%2$@)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ (%2$@)"
+          }
         }
       }
     },
@@ -42,6 +78,18 @@
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ (%2$@)"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ (%2$@)"
+          }
+        },
+        "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ (%2$@)"
@@ -58,6 +106,18 @@
             "state" : "translated",
             "value" : "%@"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@"
+          }
         }
       }
     },
@@ -66,6 +126,18 @@
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ (%2$@)"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ (%2$@)"
+          }
+        },
+        "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ (%2$@)"
@@ -82,6 +154,18 @@
             "state" : "translated",
             "value" : "%1$@ invited you to join %2$@"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ meghívott erre a csatornára: %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ hat dich nach %2$@ eingeladen"
+          }
         }
       }
     },
@@ -94,6 +178,42 @@
             "state" : "translated",
             "value" : "%1$@ kicked you with reason: %2$@"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ kirúgott. Indok: %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ hat dich hinausgeworfen. Grund: %2$@"
+          }
+        }
+      }
+    },
+    "body-kicked-without-reason" : {
+      "comment" : "Notification body for a channel kick with no reason given. The argument is the kicker nickname.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ kicked you"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ kirúgott"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ hat dich hinausgeworfen"
+          }
         }
       }
     },
@@ -102,6 +222,18 @@
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ %2$@"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ %2$@"
+          }
+        },
+        "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ %2$@"
@@ -118,6 +250,18 @@
             "state" : "translated",
             "value" : "User with nickname “%1$@” is available"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A(z) \"%1$@\" becenevű felhasználó elérhető"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Benutzer mit dem Nicknamen \"%1$@\" ist verfügbar"
+          }
         }
       }
     },
@@ -129,6 +273,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ disconnected"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ bontotta a kapcsolatot"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ hat die Verbindung getrennt"
           }
         }
       }
@@ -142,6 +298,18 @@
             "state" : "translated",
             "value" : "%1$@ disconnected with reason: %2$@"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ bontotta a kapcsolatot. Indok: %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ hat die Verbindung getrennt. Grund: %2$@"
+          }
         }
       }
     },
@@ -153,6 +321,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ joined"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ csatlakozott"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ ist beigetreten"
           }
         }
       }
@@ -166,6 +346,18 @@
             "state" : "translated",
             "value" : "User with nickname “%1$@” is no longer available"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A(z) \"%1$@\" becenevű felhasználó már nem elérhető"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Benutzer mit dem Nicknamen \"%1$@\" ist nicht mehr verfügbar"
+          }
         }
       }
     },
@@ -177,6 +369,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "User with nickname “%1$@” is now available"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A(z) \"%1$@\" becenevű felhasználó mostantól elérhető"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Benutzer mit dem Nicknamen \"%1$@\" ist jetzt verfügbar"
           }
         }
       }
@@ -190,6 +394,18 @@
             "state" : "translated",
             "value" : "%1$@ parted"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ elhagyta a csatornát"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ hat den Kanal verlassen"
+          }
         }
       }
     },
@@ -202,581 +418,137 @@
             "state" : "translated",
             "value" : "%1$@ parted with reason: %2$@"
           }
-        }
-      }
-    },
-    "reply-action-title" : {
-      "comment" : "Notification bubble reply action title. Migrated from legacy key 3t4-kl. Legacy translator context: ‘Notification bubble reply button placeholders’.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
+        },
+        "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Reply"
+            "value" : "%1$@ elhagyta a csatornát. Indok: %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ hat den Kanal verlassen. Grund: %2$@"
           }
         }
       }
     },
-    "reply-placeholder" : {
-      "comment" : "Placeholder for the notification bubble private-message reply field. Migrated from legacy key do4-2e. Legacy translator context: ‘Notification bubble reply button placeholders’.",
+    "bounce-dock-icon" : {
+      "comment" : "Heading of the column that requests attention in the Dock for an event.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Reply"
+            "value" : "Bounce Dock Icon"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock-ikon ugráltatása"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock-Symbol hüpfen lassen"
           }
         }
       }
     },
-    "reply-send-button" : {
-      "comment" : "Title of the button that sends a notification bubble reply. Migrated from legacy key bhn-uo. Legacy translator context: ‘Notification bubble reply button placeholders’.",
+    "bounce-repeatedly" : {
+      "comment" : "Heading of the column that keeps requesting attention in the Dock until the person responds.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Send"
+            "value" : "Bounce Repeatedly"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ismételt ugráltatás"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wiederholt hüpfen"
           }
         }
       }
     },
-    "spoken-connected" : {
-      "comment" : "Spoken connection notification. The argument is the network name. Migrated from legacy key z4p-yr. Legacy translator context: ‘Notification spoken text’; ‘Other spoken text’.",
+    "default-sound" : {
+      "comment" : "Title of the default notification sound option. Migrated from legacy key 0rs-8l.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Connected to %@"
+            "value" : "Default Sound"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alapértelmezett hang"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standardton"
           }
         }
       }
     },
-    "spoken-disconnected" : {
-      "comment" : "Spoken disconnection notification. The argument is the network name. Migrated from legacy key fd0-f8. Legacy translator context: ‘Notification spoken text’; ‘Other spoken text’.",
+    "disable-while-away" : {
+      "comment" : "Heading of the column that suppresses an event's alert while the person is marked away.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Disconnected from %@"
+            "value" : "Disable While Away"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Letiltás távollét alatt"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bei Abwesenheit deaktivieren"
           }
         }
       }
     },
-    "spoken-file-transfer-receive-completed" : {
-      "comment" : "Spoken notification for a completed incoming file transfer. The argument identifies the other user. Migrated from legacy key 4cd-p3. Legacy translator context: ‘Notification spoken text’; ‘Other spoken text’.",
+    "event" : {
+      "comment" : "Heading of the column naming which notification event a row configures.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "File transfer from %@ completed"
+            "value" : "Event"
           }
-        }
-      }
-    },
-    "spoken-file-transfer-receive-failed" : {
-      "comment" : "Spoken notification for a failed incoming file transfer. The argument identifies the other user. Migrated from legacy key mak-bj. Legacy translator context: ‘Notification spoken text’; ‘Other spoken text’.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
+        },
+        "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "File transfer from %@ failed"
+            "value" : "Esemény"
           }
-        }
-      }
-    },
-    "spoken-file-transfer-request" : {
-      "comment" : "Spoken notification for an incoming file-transfer request. The argument identifies the other user. Migrated from legacy key at0-vi. Legacy translator context: ‘Notification spoken text’; ‘Other spoken text’.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
+        },
+        "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Received file transfer request from %@"
-          }
-        }
-      }
-    },
-    "spoken-file-transfer-send-completed" : {
-      "comment" : "Spoken notification for a completed outgoing file transfer. The argument identifies the other user. Migrated from legacy key 5e4-vg. Legacy translator context: ‘Notification spoken text’; ‘Other spoken text’.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "File transfer to %@ completed"
-          }
-        }
-      }
-    },
-    "spoken-file-transfer-send-failed" : {
-      "comment" : "Spoken notification for a failed outgoing file transfer. The argument identifies the other user. Migrated from legacy key f0u-32. Legacy translator context: ‘Notification spoken text’; ‘Other spoken text’.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "File transfer to %@ failed"
-          }
-        }
-      }
-    },
-    "spoken-invited" : {
-      "comment" : "Spoken channel-invitation notification. Arguments are the channel name and inviter nickname. Migrated from legacy key l5i-at. Legacy translator context: ‘Notification spoken text’; ‘Other spoken text’.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Invited to %1$@ by %2$@"
-          }
-        }
-      }
-    },
-    "spoken-kicked" : {
-      "comment" : "Spoken channel-kick notification. Arguments are the channel name and kicker nickname. Migrated from legacy key 5yu-bf. Legacy translator context: ‘Notification spoken text’; ‘Other spoken text’.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kicked from %1$@ by %2$@"
-          }
-        }
-      }
-    },
-    "spoken-new-private-message" : {
-      "comment" : "Spoken new-private-message notification. Arguments are the sender nickname and message text. Migrated from legacy key rvb-9l. Legacy translator context: ‘Notification spoken text’; ‘Other spoken text’.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "New Private Message from %1$@, %2$@"
-          }
-        }
-      }
-    },
-    "spoken-private-message" : {
-      "comment" : "Spoken private-message notification. Arguments are the sender nickname and message text. Migrated from legacy key 2bu-ep. Legacy translator context: ‘Notification spoken text’; ‘Other spoken text’.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Private Message from %1$@, %2$@"
-          }
-        }
-      }
-    },
-    "spoken-private-notice" : {
-      "comment" : "Spoken private-notice notification. Arguments are the sender nickname and message text. Migrated from legacy key 6jl-vh. Legacy translator context: ‘Notification spoken text’; ‘Other spoken text’.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Private Notice from %1$@, %2$@"
-          }
-        }
-      }
-    },
-    "spoken-user-disconnected" : {
-      "comment" : "Spoken notification for a disconnected user. The argument is the nickname. This is the disconnect case. Migrated from legacy key sqf-4y. Legacy translator context: ‘Notification spoken text’; ‘Other spoken text’. Legacy inline translator comment: ‘disconnect’.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ disconnected"
-          }
-        }
-      }
-    },
-    "spoken-user-joined" : {
-      "comment" : "Spoken notification for a user joining a channel. Arguments are the nickname and channel name. Migrated from legacy key bwu-ps. Legacy translator context: ‘Notification spoken text’; ‘Other spoken text’.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ joined %2$@"
-          }
-        }
-      }
-    },
-    "spoken-user-parted" : {
-      "comment" : "Spoken notification for a user parting a channel. Arguments are the nickname and channel name. Migrated from legacy key 4aq-hz. Legacy translator context: ‘Notification spoken text’; ‘Other spoken text’.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ parted %2$@"
-          }
-        }
-      }
-    },
-    "type-address-book" : {
-      "comment" : "Notification type title for an Address Book match. Migrated from legacy key kx3-xk. Legacy translator context: ‘Notification type titles’.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Address Book"
-          }
-        }
-      }
-    },
-    "type-channel-invitation" : {
-      "comment" : "Notification type title for a channel invitation. Migrated from legacy key eiu-8q. Legacy translator context: ‘Notification type titles’.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Invitation"
-          }
-        }
-      }
-    },
-    "type-channel-message" : {
-      "comment" : "Notification type title for a channel message. Migrated from legacy key qnz-k4. Legacy translator context: ‘Notification type titles’.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Channel Message"
-          }
-        }
-      }
-    },
-    "type-channel-notice" : {
-      "comment" : "Notification type title for a channel notice. Migrated from legacy key vuq-jp. Legacy translator context: ‘Notification type titles’.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Channel Notice"
-          }
-        }
-      }
-    },
-    "type-connected" : {
-      "comment" : "Notification type title for connecting. Migrated from legacy key 4lr-ej. Legacy translator context: ‘Notification type titles’.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Connected"
-          }
-        }
-      }
-    },
-    "type-disconnected" : {
-      "comment" : "Notification type title for disconnecting. Migrated from legacy key wjv-yb. Legacy translator context: ‘Notification type titles’.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Disconnected"
-          }
-        }
-      }
-    },
-    "type-file-transfer-receive-failed" : {
-      "comment" : "Notification type title for a failed incoming file transfer. Migrated from legacy key we9-1b. Legacy translator context: ‘Notification type titles’.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Download Failed"
-          }
-        }
-      }
-    },
-    "type-file-transfer-receive-successful" : {
-      "comment" : "Notification type title for a successful incoming file transfer. Migrated from legacy key qle-7v. Legacy translator context: ‘Notification type titles’.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Download Complete"
-          }
-        }
-      }
-    },
-    "type-file-transfer-request" : {
-      "comment" : "Notification type title for an incoming file-transfer request. Migrated from legacy key st5-0n. Legacy translator context: ‘Notification type titles’.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Incoming File"
-          }
-        }
-      }
-    },
-    "type-file-transfer-send-failed" : {
-      "comment" : "Notification type title for a failed outgoing file transfer. Migrated from legacy key sc0-1n. Legacy translator context: ‘Notification type titles’.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Upload Failed"
-          }
-        }
-      }
-    },
-    "type-file-transfer-send-successful" : {
-      "comment" : "Notification type title for a successful outgoing file transfer. Migrated from legacy key 0x2-3h. Legacy translator context: ‘Notification type titles’.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Upload Complete"
-          }
-        }
-      }
-    },
-    "type-highlight" : {
-      "comment" : "Notification type title for a highlight or mention. Migrated from legacy key cs4-x9. Legacy translator context: ‘Notification type titles’.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Highlight"
-          }
-        }
-      }
-    },
-    "type-kicked" : {
-      "comment" : "Notification type title for being kicked from a channel. Migrated from legacy key 2nk-lg. Legacy translator context: ‘Notification type titles’.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kicked"
-          }
-        }
-      }
-    },
-    "type-new-private-message" : {
-      "comment" : "Notification type title for a new private message. Migrated from legacy key 5yi-gu. Legacy translator context: ‘Notification type titles’.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "New Private Message"
-          }
-        }
-      }
-    },
-    "type-private-message" : {
-      "comment" : "Notification type title for a private message. Migrated from legacy key 00b-nx. Legacy translator context: ‘Notification type titles’.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Private Message"
-          }
-        }
-      }
-    },
-    "type-private-notice" : {
-      "comment" : "Notification type title for a private notice. Migrated from legacy key nhz-io. Legacy translator context: ‘Notification type titles’.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Private Notice"
-          }
-        }
-      }
-    },
-    "type-user-disconnected" : {
-      "comment" : "Notification type title for a disconnected user. Migrated from legacy key 0fo-bt. Legacy translator context: ‘Notification type titles’.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "User Disconnected"
-          }
-        }
-      }
-    },
-    "type-user-joined" : {
-      "comment" : "Notification type title for a user joining a channel. Migrated from legacy key 25q-af. Legacy translator context: ‘Notification type titles’.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "User Joined"
-          }
-        }
-      }
-    },
-    "type-user-parted" : {
-      "comment" : "Notification type title for a user parting a channel. Migrated from legacy key k3s-by. Legacy translator context: ‘Notification type titles’.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "User Parted"
-          }
-        }
-      }
-    },
-    "body-kicked-without-reason" : {
-      "comment" : "Notification body for a channel kick with no reason given. The argument is the kicker nickname.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ kicked you"
-          }
-        }
-      }
-    },
-    "spoken-highlight-in-channel-by-user" : {
-      "comment" : "Spoken notification for a highlight, naming the channel and the author. Arguments are the channel name, the nickname and the message text. It is one sentence so that it can be translated as one; it used to be glued together from a label, a channel, a nickname and a separator.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Highlight in %1$@ by %2$@, %3$@"
-          }
-        }
-      }
-    },
-    "spoken-highlight-in-channel" : {
-      "comment" : "Spoken notification for a highlight, naming the channel. Arguments are the channel name and the message text. It is one sentence so that it can be translated as one; it used to be glued together from a label, a channel, a nickname and a separator.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Highlight in %1$@, %2$@"
-          }
-        }
-      }
-    },
-    "spoken-highlight-by-user" : {
-      "comment" : "Spoken notification for a highlight, naming the author. Arguments are the nickname and the message text. It is one sentence so that it can be translated as one; it used to be glued together from a label, a channel, a nickname and a separator.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Highlight by %1$@, %2$@"
-          }
-        }
-      }
-    },
-    "spoken-highlight-in-private-message-from-user" : {
-      "comment" : "Spoken notification for a highlight in a private message. Arguments are the nickname and the message text. It is one sentence so that it can be translated as one; it used to be glued together from a label, a channel, a nickname and a separator.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Highlight in Private Message from %1$@, %2$@"
-          }
-        }
-      }
-    },
-    "spoken-channel-message-in-channel-by-user" : {
-      "comment" : "Spoken notification for a channel message, naming the channel and the author. Arguments are the channel name, the nickname and the message text. It is one sentence so that it can be translated as one; it used to be glued together from a label, a channel, a nickname and a separator.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Channel Message in %1$@ by %2$@, %3$@"
-          }
-        }
-      }
-    },
-    "spoken-channel-message-in-channel" : {
-      "comment" : "Spoken notification for a channel message, naming the channel. Arguments are the channel name and the message text. It is one sentence so that it can be translated as one; it used to be glued together from a label, a channel, a nickname and a separator.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Channel Message in %1$@, %2$@"
-          }
-        }
-      }
-    },
-    "spoken-channel-message-by-user" : {
-      "comment" : "Spoken notification for a channel message, naming the author. Arguments are the nickname and the message text. It is one sentence so that it can be translated as one; it used to be glued together from a label, a channel, a nickname and a separator.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Channel Message by %1$@, %2$@"
-          }
-        }
-      }
-    },
-    "spoken-channel-notice-in-channel-by-user" : {
-      "comment" : "Spoken notification for a channel notice, naming the channel and the author. Arguments are the channel name, the nickname and the message text. It is one sentence so that it can be translated as one; it used to be glued together from a label, a channel, a nickname and a separator.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Channel Notice in %1$@ by %2$@, %3$@"
-          }
-        }
-      }
-    },
-    "spoken-channel-notice-in-channel" : {
-      "comment" : "Spoken notification for a channel notice, naming the channel. Arguments are the channel name and the message text. It is one sentence so that it can be translated as one; it used to be glued together from a label, a channel, a nickname and a separator.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Channel Notice in %1$@, %2$@"
-          }
-        }
-      }
-    },
-    "spoken-channel-notice-by-user" : {
-      "comment" : "Spoken notification for a channel notice, naming the author. Arguments are the nickname and the message text. It is one sentence so that it can be translated as one; it used to be glued together from a label, a channel, a nickname and a separator.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Channel Notice by %1$@, %2$@"
+            "value" : "Ereignis"
           }
         }
       }
@@ -790,6 +562,18 @@
             "state" : "translated",
             "value" : "Decline"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elutasítás"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ablehnen"
+          }
         }
       }
     },
@@ -801,6 +585,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "New activity"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Új tevékenység"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neue Aktivität"
           }
         }
       }
@@ -814,6 +610,18 @@
             "state" : "translated",
             "value" : "File transfer"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fájlátvitel"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dateiübertragung"
+          }
         }
       }
     },
@@ -825,6 +633,882 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Private message"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privát üzenet"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Private Nachricht"
+          }
+        }
+      }
+    },
+    "inherit" : {
+      "comment" : "A channel notification setting inherits the application-wide value.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inherit"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öröklés"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Übernehmen"
+          }
+        }
+      }
+    },
+    "no-notification-events" : {
+      "comment" : "Shown when there are no notification events to configure. Legacy key: no-alerts.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Notification Events"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nincsenek értesítési események"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Benachrichtigungsereignisse"
+          }
+        }
+      }
+    },
+    "no-sound" : {
+      "comment" : "Title of the option that disables notification sounds. Migrated from legacy key vje-9n.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Sound"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nincs hang"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Ton"
+          }
+        }
+      }
+    },
+    "off" : {
+      "comment" : "A channel notification override is disabled.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Off"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ki"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aus"
+          }
+        }
+      }
+    },
+    "on" : {
+      "comment" : "A channel notification override is enabled.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Be"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein"
+          }
+        }
+      }
+    },
+    "reply-action-title" : {
+      "comment" : "Notification bubble reply action title. Migrated from legacy key 3t4-kl. Legacy translator context: ‘Notification bubble reply button placeholders’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reply"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Válasz"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Antworten"
+          }
+        }
+      }
+    },
+    "reply-placeholder" : {
+      "comment" : "Placeholder for the notification bubble private-message reply field. Migrated from legacy key do4-2e. Legacy translator context: ‘Notification bubble reply button placeholders’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reply"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Válasz"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Antworten"
+          }
+        }
+      }
+    },
+    "reply-send-button" : {
+      "comment" : "Title of the button that sends a notification bubble reply. Migrated from legacy key bhn-uo. Legacy translator context: ‘Notification bubble reply button placeholders’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Küldés"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Senden"
+          }
+        }
+      }
+    },
+    "show-notification" : {
+      "comment" : "Heading of the column that posts a system notification for an event.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notify"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Értesítés"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Benachrichtigen"
+          }
+        }
+      }
+    },
+    "sound" : {
+      "comment" : "Heading of the column that chooses an event's alert sound.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sound"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hang"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ton"
+          }
+        }
+      }
+    },
+    "speak" : {
+      "comment" : "Heading of the column that speaks an event aloud.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speak"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Felolvasás"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorlesen"
+          }
+        }
+      }
+    },
+    "spoken-channel-message-by-user" : {
+      "comment" : "Spoken notification for a channel message, naming the author. Arguments are the nickname and the message text. It is one sentence so that it can be translated as one; it used to be glued together from a label, a channel, a nickname and a separator.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Channel Message by %1$@, %2$@"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Csatornaüzenet. Szerző: %1$@. %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kanalnachricht von %1$@, %2$@"
+          }
+        }
+      }
+    },
+    "spoken-channel-message-in-channel" : {
+      "comment" : "Spoken notification for a channel message, naming the channel. Arguments are the channel name and the message text. It is one sentence so that it can be translated as one; it used to be glued together from a label, a channel, a nickname and a separator.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Channel Message in %1$@, %2$@"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Üzenet a(z) %1$@ csatornán. %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kanalnachricht in %1$@, %2$@"
+          }
+        }
+      }
+    },
+    "spoken-channel-message-in-channel-by-user" : {
+      "comment" : "Spoken notification for a channel message, naming the channel and the author. Arguments are the channel name, the nickname and the message text. It is one sentence so that it can be translated as one; it used to be glued together from a label, a channel, a nickname and a separator.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Channel Message in %1$@ by %2$@, %3$@"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Üzenet a(z) %1$@ csatornán. Szerző: %2$@. %3$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kanalnachricht in %1$@ von %2$@, %3$@"
+          }
+        }
+      }
+    },
+    "spoken-channel-notice-by-user" : {
+      "comment" : "Spoken notification for a channel notice, naming the author. Arguments are the nickname and the message text. It is one sentence so that it can be translated as one; it used to be glued together from a label, a channel, a nickname and a separator.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Channel Notice by %1$@, %2$@"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Csatornaértesítés. Küldő: %1$@. %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kanalhinweis von %1$@, %2$@"
+          }
+        }
+      }
+    },
+    "spoken-channel-notice-in-channel" : {
+      "comment" : "Spoken notification for a channel notice, naming the channel. Arguments are the channel name and the message text. It is one sentence so that it can be translated as one; it used to be glued together from a label, a channel, a nickname and a separator.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Channel Notice in %1$@, %2$@"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Értesítés a(z) %1$@ csatornán. %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kanalhinweis in %1$@, %2$@"
+          }
+        }
+      }
+    },
+    "spoken-channel-notice-in-channel-by-user" : {
+      "comment" : "Spoken notification for a channel notice, naming the channel and the author. Arguments are the channel name, the nickname and the message text. It is one sentence so that it can be translated as one; it used to be glued together from a label, a channel, a nickname and a separator.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Channel Notice in %1$@ by %2$@, %3$@"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Értesítés a(z) %1$@ csatornán. Küldő: %2$@. %3$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kanalhinweis in %1$@ von %2$@, %3$@"
+          }
+        }
+      }
+    },
+    "spoken-connected" : {
+      "comment" : "Spoken connection notification. The argument is the network name. Migrated from legacy key z4p-yr. Legacy translator context: ‘Notification spoken text’; ‘Other spoken text’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connected to %@"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kapcsolódva ehhez: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbunden mit %@"
+          }
+        }
+      }
+    },
+    "spoken-disconnected" : {
+      "comment" : "Spoken disconnection notification. The argument is the network name. Migrated from legacy key fd0-f8. Legacy translator context: ‘Notification spoken text’; ‘Other spoken text’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disconnected from %@"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kapcsolat bontva ezzel: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindung zu %@ getrennt"
+          }
+        }
+      }
+    },
+    "spoken-file-transfer-receive-completed" : {
+      "comment" : "Spoken notification for a completed incoming file transfer. The argument identifies the other user. Migrated from legacy key 4cd-p3. Legacy translator context: ‘Notification spoken text’; ‘Other spoken text’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "File transfer from %@ completed"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A fájl fogadása befejeződött. Küldő: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dateiübertragung von %@ abgeschlossen"
+          }
+        }
+      }
+    },
+    "spoken-file-transfer-receive-failed" : {
+      "comment" : "Spoken notification for a failed incoming file transfer. The argument identifies the other user. Migrated from legacy key mak-bj. Legacy translator context: ‘Notification spoken text’; ‘Other spoken text’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "File transfer from %@ failed"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A fájl fogadása sikertelen. Küldő: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dateiübertragung von %@ fehlgeschlagen"
+          }
+        }
+      }
+    },
+    "spoken-file-transfer-request" : {
+      "comment" : "Spoken notification for an incoming file-transfer request. The argument identifies the other user. Migrated from legacy key at0-vi. Legacy translator context: ‘Notification spoken text’; ‘Other spoken text’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Received file transfer request from %@"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fájlátviteli kérés érkezett. Küldő: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dateiübertragungsanfrage von %@ erhalten"
+          }
+        }
+      }
+    },
+    "spoken-file-transfer-send-completed" : {
+      "comment" : "Spoken notification for a completed outgoing file transfer. The argument identifies the other user. Migrated from legacy key 5e4-vg. Legacy translator context: ‘Notification spoken text’; ‘Other spoken text’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "File transfer to %@ completed"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A fájl küldése befejeződött. Címzett: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dateiübertragung an %@ abgeschlossen"
+          }
+        }
+      }
+    },
+    "spoken-file-transfer-send-failed" : {
+      "comment" : "Spoken notification for a failed outgoing file transfer. The argument identifies the other user. Migrated from legacy key f0u-32. Legacy translator context: ‘Notification spoken text’; ‘Other spoken text’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "File transfer to %@ failed"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A fájl küldése sikertelen. Címzett: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dateiübertragung an %@ fehlgeschlagen"
+          }
+        }
+      }
+    },
+    "spoken-highlight-by-user" : {
+      "comment" : "Spoken notification for a highlight, naming the author. Arguments are the nickname and the message text. It is one sentence so that it can be translated as one; it used to be glued together from a label, a channel, a nickname and a separator.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Highlight by %1$@, %2$@"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Említés. Szerző: %1$@. %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hervorhebung von %1$@, %2$@"
+          }
+        }
+      }
+    },
+    "spoken-highlight-in-channel" : {
+      "comment" : "Spoken notification for a highlight, naming the channel. Arguments are the channel name and the message text. It is one sentence so that it can be translated as one; it used to be glued together from a label, a channel, a nickname and a separator.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Highlight in %1$@, %2$@"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Említés a(z) %1$@ csatornán. %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hervorhebung in %1$@, %2$@"
+          }
+        }
+      }
+    },
+    "spoken-highlight-in-channel-by-user" : {
+      "comment" : "Spoken notification for a highlight, naming the channel and the author. Arguments are the channel name, the nickname and the message text. It is one sentence so that it can be translated as one; it used to be glued together from a label, a channel, a nickname and a separator.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Highlight in %1$@ by %2$@, %3$@"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Említés a(z) %1$@ csatornán. Szerző: %2$@. %3$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hervorhebung in %1$@ von %2$@, %3$@"
+          }
+        }
+      }
+    },
+    "spoken-highlight-in-private-message-from-user" : {
+      "comment" : "Spoken notification for a highlight in a private message. Arguments are the nickname and the message text. It is one sentence so that it can be translated as one; it used to be glued together from a label, a channel, a nickname and a separator.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Highlight in Private Message from %1$@, %2$@"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Említés egy privát üzenetben. Küldő: %1$@. %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hervorhebung in privater Nachricht von %1$@, %2$@"
+          }
+        }
+      }
+    },
+    "spoken-invited" : {
+      "comment" : "Spoken channel-invitation notification. Arguments are the channel name and inviter nickname. Migrated from legacy key l5i-at. Legacy translator context: ‘Notification spoken text’; ‘Other spoken text’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invited to %1$@ by %2$@"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meghívás a(z) %1$@ csatornára. Meghívó: %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Von %2$@ nach %1$@ eingeladen"
+          }
+        }
+      }
+    },
+    "spoken-kicked" : {
+      "comment" : "Spoken channel-kick notification. Arguments are the channel name and kicker nickname. Migrated from legacy key 5yu-bf. Legacy translator context: ‘Notification spoken text’; ‘Other spoken text’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kicked from %1$@ by %2$@"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kirúgtak a(z) %1$@ csatornáról. Kezdeményező: %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Von %2$@ aus %1$@ geworfen"
+          }
+        }
+      }
+    },
+    "spoken-new-private-message" : {
+      "comment" : "Spoken new-private-message notification. Arguments are the sender nickname and message text. Migrated from legacy key rvb-9l. Legacy translator context: ‘Notification spoken text’; ‘Other spoken text’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Private Message from %1$@, %2$@"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Új privát üzenet. Küldő: %1$@. %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neue private Nachricht von %1$@, %2$@"
+          }
+        }
+      }
+    },
+    "spoken-private-message" : {
+      "comment" : "Spoken private-message notification. Arguments are the sender nickname and message text. Migrated from legacy key 2bu-ep. Legacy translator context: ‘Notification spoken text’; ‘Other spoken text’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Private Message from %1$@, %2$@"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privát üzenet. Küldő: %1$@. %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Private Nachricht von %1$@, %2$@"
+          }
+        }
+      }
+    },
+    "spoken-private-notice" : {
+      "comment" : "Spoken private-notice notification. Arguments are the sender nickname and message text. Migrated from legacy key 6jl-vh. Legacy translator context: ‘Notification spoken text’; ‘Other spoken text’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Private Notice from %1$@, %2$@"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privát értesítés. Küldő: %1$@. %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privater Hinweis von %1$@, %2$@"
+          }
+        }
+      }
+    },
+    "spoken-user-disconnected" : {
+      "comment" : "Spoken notification for a disconnected user. The argument is the nickname. This is the disconnect case. Migrated from legacy key sqf-4y. Legacy translator context: ‘Notification spoken text’; ‘Other spoken text’. Legacy inline translator comment: ‘disconnect’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ disconnected"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ bontotta a kapcsolatot"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ hat die Verbindung getrennt"
+          }
+        }
+      }
+    },
+    "spoken-user-joined" : {
+      "comment" : "Spoken notification for a user joining a channel. Arguments are the nickname and channel name. Migrated from legacy key bwu-ps. Legacy translator context: ‘Notification spoken text’; ‘Other spoken text’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ joined %2$@"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ csatlakozott a(z) %2$@ csatornához"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ ist %2$@ beigetreten"
+          }
+        }
+      }
+    },
+    "spoken-user-parted" : {
+      "comment" : "Spoken notification for a user parting a channel. Arguments are the nickname and channel name. Migrated from legacy key 4aq-hz. Legacy translator context: ‘Notification spoken text’; ‘Other spoken text’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ parted %2$@"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ elhagyta a(z) %2$@ csatornát"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ hat %2$@ verlassen"
           }
         }
       }
@@ -838,6 +1522,18 @@
             "state" : "translated",
             "value" : "%@ notifications"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ értesítés"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ Benachrichtigungen"
+          }
         }
       }
     },
@@ -850,6 +1546,18 @@
             "state" : "translated",
             "value" : "%@ file transfers"
           }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ fájlátvitel"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ Dateiübertragungen"
+          }
         }
       }
     },
@@ -861,6 +1569,474 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ private messages"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ privát üzenet"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ private Nachrichten"
+          }
+        }
+      }
+    },
+    "type-address-book" : {
+      "comment" : "Notification type title for an Address Book match. Migrated from legacy key kx3-xk. Legacy translator context: ‘Notification type titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Address Book"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Címjegyzék"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adressbuch"
+          }
+        }
+      }
+    },
+    "type-channel-invitation" : {
+      "comment" : "Notification type title for a channel invitation. Migrated from legacy key eiu-8q. Legacy translator context: ‘Notification type titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invitation"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meghívás"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einladung"
+          }
+        }
+      }
+    },
+    "type-channel-message" : {
+      "comment" : "Notification type title for a channel message. Migrated from legacy key qnz-k4. Legacy translator context: ‘Notification type titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Channel Message"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Csatornaüzenet"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kanalnachricht"
+          }
+        }
+      }
+    },
+    "type-channel-notice" : {
+      "comment" : "Notification type title for a channel notice. Migrated from legacy key vuq-jp. Legacy translator context: ‘Notification type titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Channel Notice"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Csatornaértesítés"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kanalhinweis"
+          }
+        }
+      }
+    },
+    "type-connected" : {
+      "comment" : "Notification type title for connecting. Migrated from legacy key 4lr-ej. Legacy translator context: ‘Notification type titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connected"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kapcsolódva"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbunden"
+          }
+        }
+      }
+    },
+    "type-disconnected" : {
+      "comment" : "Notification type title for disconnecting. Migrated from legacy key wjv-yb. Legacy translator context: ‘Notification type titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disconnected"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kapcsolat bontva"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Getrennt"
+          }
+        }
+      }
+    },
+    "type-file-transfer-receive-failed" : {
+      "comment" : "Notification type title for a failed incoming file transfer. Migrated from legacy key we9-1b. Legacy translator context: ‘Notification type titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Download Failed"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sikertelen letöltés"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Download fehlgeschlagen"
+          }
+        }
+      }
+    },
+    "type-file-transfer-receive-successful" : {
+      "comment" : "Notification type title for a successful incoming file transfer. Migrated from legacy key qle-7v. Legacy translator context: ‘Notification type titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Download Complete"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Letöltés befejezve"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Download abgeschlossen"
+          }
+        }
+      }
+    },
+    "type-file-transfer-request" : {
+      "comment" : "Notification type title for an incoming file-transfer request. Migrated from legacy key st5-0n. Legacy translator context: ‘Notification type titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Incoming File"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bejövő fájl"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eingehende Datei"
+          }
+        }
+      }
+    },
+    "type-file-transfer-send-failed" : {
+      "comment" : "Notification type title for a failed outgoing file transfer. Migrated from legacy key sc0-1n. Legacy translator context: ‘Notification type titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upload Failed"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sikertelen feltöltés"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upload fehlgeschlagen"
+          }
+        }
+      }
+    },
+    "type-file-transfer-send-successful" : {
+      "comment" : "Notification type title for a successful outgoing file transfer. Migrated from legacy key 0x2-3h. Legacy translator context: ‘Notification type titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upload Complete"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Feltöltés befejezve"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upload abgeschlossen"
+          }
+        }
+      }
+    },
+    "type-highlight" : {
+      "comment" : "Notification type title for a highlight or mention. Migrated from legacy key cs4-x9. Legacy translator context: ‘Notification type titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Highlight"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Említés"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hervorhebung"
+          }
+        }
+      }
+    },
+    "type-kicked" : {
+      "comment" : "Notification type title for being kicked from a channel. Migrated from legacy key 2nk-lg. Legacy translator context: ‘Notification type titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kicked"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kirúgva"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hinausgeworfen"
+          }
+        }
+      }
+    },
+    "type-new-private-message" : {
+      "comment" : "Notification type title for a new private message. Migrated from legacy key 5yi-gu. Legacy translator context: ‘Notification type titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Private Message"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Új privát üzenet"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neue private Nachricht"
+          }
+        }
+      }
+    },
+    "type-private-message" : {
+      "comment" : "Notification type title for a private message. Migrated from legacy key 00b-nx. Legacy translator context: ‘Notification type titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Private Message"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privát üzenet"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Private Nachricht"
+          }
+        }
+      }
+    },
+    "type-private-notice" : {
+      "comment" : "Notification type title for a private notice. Migrated from legacy key nhz-io. Legacy translator context: ‘Notification type titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Private Notice"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privát értesítés"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privater Hinweis"
+          }
+        }
+      }
+    },
+    "type-user-disconnected" : {
+      "comment" : "Notification type title for a disconnected user. Migrated from legacy key 0fo-bt. Legacy translator context: ‘Notification type titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User Disconnected"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Felhasználó kapcsolata bontva"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Benutzer getrennt"
+          }
+        }
+      }
+    },
+    "type-user-joined" : {
+      "comment" : "Notification type title for a user joining a channel. Migrated from legacy key 25q-af. Legacy translator context: ‘Notification type titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User Joined"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Felhasználó csatlakozott"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Benutzer beigetreten"
+          }
+        }
+      }
+    },
+    "type-user-parted" : {
+      "comment" : "Notification type title for a user parting a channel. Migrated from legacy key k3s-by. Legacy translator context: ‘Notification type titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User Parted"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Felhasználó elhagyta a csatornát"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Benutzer hat Kanal verlassen"
           }
         }
       }

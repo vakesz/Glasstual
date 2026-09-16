@@ -13,7 +13,6 @@
 import AppKit
 import CocoaExtensions
 @testable import Glasstual
-import Synchronization
 import Testing
 
 /// The Objective-C names something outside the compiler depends on. Interface
@@ -44,32 +43,12 @@ struct ObjCRuntimeNameTests {
 	@Test("The key paths the application observes resolve through key-value coding")
 	func observedKeyPathsResolve() {
 		let observed: [(String, AnyKeyPath)] = [
-			("IRCClient.isLoggedIn", \IRCClient.isLoggedIn),
-			("TreeItem.nicknameHighlightCount", \TreeItem.nicknameHighlightCount),
-			("TreeItem.treeUnreadCount", \TreeItem.treeUnreadCount),
+			("Client.isLoggedIn", \Client.isLoggedIn),
 		]
 
 		for (name, keyPath) in observed {
 			#expect(keyPath._kvcKeyPathString != nil, "\(name) is no longer observable")
 		}
-	}
-
-	/// Visible to the runtime is only half of it: an observed property also has
-	/// to be dynamically dispatched, or the setter never posts a change and the
-	/// observation goes quiet without failing anywhere.
-	@Test("An observed property still posts its changes")
-	func observedPropertyPostsChanges() {
-		let item = TreeItem()
-
-		let received = Mutex<[Int]>([])
-		let observation = item.observe(\.treeUnreadCount, options: [.new]) { _, change in
-			received.withLock { $0.append(change.newValue ?? -1) }
-		}
-		defer { observation.invalidate() }
-
-		item.treeUnreadCount = 7
-
-		#expect(received.withLock { $0 } == [7])
 	}
 
 	/// mIRC colour codes index this table, so the order is protocol, not

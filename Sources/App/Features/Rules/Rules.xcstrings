@@ -1,0 +1,606 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "action-log-user": {
+      "comment": "Log message for a filter action without a channel. Arguments are the filter title and user nickname. Migrated from legacy key yla-he.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Performing action defined by the filter “%1$@“ against the user “%2$@“"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A(z) \"%1$@\" szűrő műveletének végrehajtása a(z) \"%2$@\" felhasználón"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktion des Filters \"%1$@\" für Benutzer \"%2$@\" wird ausgeführt"
+          }
+        }
+      }
+    },
+    "action-log-user-in-channel": {
+      "comment": "Log message for a filter action in a channel. Arguments are the filter title, user nickname, and channel name. Migrated from legacy key jcm-xj.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Performing action defined by the filter “%1$@“ against the user “%2$@“ in the channel “%3$@“"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A(z) \"%1$@\" szűrő műveletének végrehajtása a(z) \"%2$@\" felhasználón a(z) \"%3$@\" csatornán"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktion des Filters \"%1$@\" für Benutzer \"%2$@\" im Kanal \"%3$@\" wird ausgeführt"
+          }
+        }
+      }
+    },
+    "add-filter-button": {
+      "comment": "Button that begins creating a chat filter.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Filter"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Szűrő hozzáadása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter hinzufügen"
+          }
+        }
+      }
+    },
+    "cancel-button": {
+      "comment": "Button that cancels deleting a chat filter.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mégse"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abbrechen"
+          }
+        }
+      }
+    },
+    "delete-filter-button": {
+      "comment": "Destructive button that confirms deleting a chat filter.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete Filter"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Szűrő törlése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter löschen"
+          }
+        }
+      }
+    },
+    "delete-filter-message": {
+      "comment": "Message explaining that deleting a chat filter cannot be undone. Migrated from legacy key dj6-fn.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There is no undo and all data related to this filter will be erased."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ez nem vonható vissza. A szűrőhöz tartozó összes adat törlődik."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dies kann nicht rückgängig gemacht werden. Alle Daten dieses Filters werden gelöscht."
+          }
+        }
+      }
+    },
+    "delete-filter-title": {
+      "comment": "Title of the confirmation alert shown before deleting a chat filter. Migrated from legacy key c0k-xj.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete this filter?"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Törlöd ezt a szűrőt?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diesen Filter löschen?"
+          }
+        }
+      }
+    },
+    "duplicate-filter-button": {
+      "comment": "Menu item that duplicates the selected chat filter.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duplicate Filter"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Szűrő megkettőzése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter duplizieren"
+          }
+        }
+      }
+    },
+    "duplicate-filter-title": {
+      "comment": "Title assigned to a duplicated chat filter. The argument is the original title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (Duplicate)"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (másolat)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (Kopie)"
+          }
+        }
+      }
+    },
+    "edit-filter-button": {
+      "comment": "Button that edits the selected chat filter.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit Filter"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Szűrő szerkesztése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter bearbeiten"
+          }
+        }
+      }
+    },
+    "edited-filter-removed": {
+      "comment": "The edited filter was removed by an import or another settings change before the editor saved.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This filter no longer exists. Your changes were not saved."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ez a szűrő már nem létezik. A módosításaid nem lettek elmentve."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Filter ist nicht mehr vorhanden. Deine Änderungen wurden nicht gesichert."
+          }
+        }
+      }
+    },
+    "forwarded-message": {
+      "comment": "Message forwarded by a chat filter. Arguments are the IRC command and original message. Migrated from legacy key dct-7h.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Message(%1$@): %2$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Üzenet (%1$@): %2$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nachricht (%1$@): %2$@"
+          }
+        }
+      }
+    },
+    "save-failed-title": {
+      "comment": "Alert title shown when an edited filter can no longer be stored.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The filter could not be saved"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nem sikerült menteni a szűrőt"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Filter konnte nicht gesichert werden"
+          }
+        }
+      }
+    },
+    "export-filter-button": {
+      "comment": "Menu item that exports the selected chat filter.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export Filter…"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Szűrő exportálása…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter exportieren…"
+          }
+        }
+      }
+    },
+    "export-failed-title": {
+      "comment": "Alert title shown when a filter cannot be written to a file.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The filter could not be exported"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nem sikerült exportálni a szűrőt"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Filter konnte nicht exportiert werden"
+          }
+        }
+      }
+    },
+    "export-failed-recovery": {
+      "comment": "Recovery sentence under the filter export failure.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a folder you can write to and try again."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Válassz olyan mappát, amelybe írhatsz, majd próbáld újra."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wähle einen beschreibbaren Ordner und versuche es erneut."
+          }
+        }
+      }
+    },
+    "filter-description": {
+      "comment": "Description of a chat filter. The argument is the filter title. Migrated from legacy key dka-bx.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter “%@“"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\"%@\" szűrő"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter \"%@\""
+          }
+        }
+      }
+    },
+    "import-filter-button": {
+      "comment": "Menu item that imports a chat filter.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import Filter…"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Szűrő importálása…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter importieren…"
+          }
+        }
+      }
+    },
+    "import-failed-title": {
+      "comment": "Alert title shown when a chosen filter file cannot be read.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The filter could not be imported"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nem sikerült importálni a szűrőt"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Filter konnte nicht importiert werden"
+          }
+        }
+      }
+    },
+    "import-failed-recovery": {
+      "comment": "Recovery sentence under the filter import failure.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a filter file that Chat Filter exported."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Válassz a Csevegésszűrő által exportált szűrőfájlt."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wähle eine vom Chatfilter exportierte Filterdatei."
+          }
+        }
+      }
+    },
+    "more-actions-button": {
+      "comment": "Menu containing additional chat-filter actions.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More Actions"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "További műveletek"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weitere Aktionen"
+          }
+        }
+      }
+    },
+    "no-filters-description": {
+      "comment": "Explanation shown when no chat filters exist.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a filter to hide, forward, or act on matching messages."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adj hozzá szűrőt az illeszkedő üzenetek elrejtéséhez, továbbításához vagy műveletek végrehajtásához."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Füge einen Filter hinzu, um passende Nachrichten auszublenden, weiterzuleiten oder Aktionen auszuführen."
+          }
+        }
+      }
+    },
+    "no-filters-title": {
+      "comment": "Title shown when no chat filters exist.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Filters"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincsenek szűrők"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Filter"
+          }
+        }
+      }
+    },
+    "ok-button": {
+      "comment": "Title of the button dismissing the unreadable configuration alert. Migrated from legacy key ybz-7i.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        }
+      }
+    },
+    "preferences-pane-title": {
+      "comment": "Name of the Chat Filter preferences pane. Migrated from legacy key jq1-6r.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chat Filter"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csevegésszűrő"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chatfilter"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

@@ -263,7 +263,7 @@ struct LineParserCorpusTests {
 
 /// Tag handling that depends on the capabilities a client negotiated.
 @MainActor
-struct IRCMessageTagCorpusTests {
+struct MessageTagCorpusTests {
 	@Test
 	func messageWithoutClientKeepsTagsButNoBatchOrTime() throws {
 		let line = "@time=2021-01-01T00:00:00.000Z;msgid=m1;batch=b1;label=l1"

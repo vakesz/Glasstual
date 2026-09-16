@@ -276,7 +276,7 @@ struct InboundPresenceTrackingTests {
 		client.config.alternateNicknames = ["mara-alt"]
 		client.isConnected = true
 
-		for _ in 0 ... Int(IRCNicknameRetryPolicy.maximumAttempts) + 3 {
+		for _ in 0 ... Int(NicknameRetryPolicy.maximumAttempts) + 3 {
 			let collision = try #require(
 				Message(line: ":irc.example.net 433 * mara :Nickname is already in use", on: client)
 			)
@@ -284,13 +284,13 @@ struct InboundPresenceTrackingTests {
 			client.receiveNumericReply(collision)
 		}
 
-		#expect(client.sentLines.count == Int(IRCNicknameRetryPolicy.maximumAttempts))
+		#expect(client.sentLines.count == Int(NicknameRetryPolicy.maximumAttempts))
 
 		let bodies = (client.printedLines as NSArray).compactMap {
 			($0 as? [String: Any])?["messageBody"] as? String
 		}
 
-		#expect(bodies.filter { $0 == IRCInboundStrings.Numeric.nicknameRetriesExhausted }.count == 1)
+		#expect(bodies.filter { $0 == InboundStrings.Numeric.nicknameRetriesExhausted }.count == 1)
 	}
 
 	/// The count is the retry sequence, and a nickname the client now holds
@@ -299,7 +299,7 @@ struct InboundPresenceTrackingTests {
 	func aNicknameThatLandsResetsTheRetryCount() throws {
 		let client = client(nickname: "mara")
 		client.isConnected = true
-		client.tryingNicknameNumber = IRCNicknameRetryPolicy.maximumAttempts
+		client.tryingNicknameNumber = NicknameRetryPolicy.maximumAttempts
 
 		try receive(":mara!m@example.org NICK mara2", on: client)
 

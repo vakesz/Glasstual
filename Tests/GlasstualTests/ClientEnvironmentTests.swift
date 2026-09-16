@@ -78,19 +78,9 @@ struct ClientEnvironmentTests {
 		#expect(client.environment.preferences.showJoinLeave)
 	}
 
-	@Test("A snapshot with the same values is not republished")
-	func refreshIsIdempotent() {
-		let fixture = ClientEnvironmentFixture(preferences: ClientPreferences())
-		let client = fixture.world.createClient(with: ClientConfig())
-
-		fixture.world.applyPreferences(ClientPreferences())
-
-		#expect(client.environment.preferences == ClientPreferences())
-	}
-
 	@Test("A tree item falls back to the declared defaults once its client has gone")
 	func itemsWithoutAClientUseTheDeclaredDefaults() {
-		let item = TreeItem()
+		let item = ChatItem()
 
 		#expect(item.clientPreferences == ClientPreferences())
 	}

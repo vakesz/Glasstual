@@ -62,6 +62,6 @@ struct NotificationBurstCoalescerTests {
 	func membershipChangesArePassive(event: NotificationEvent) {
 		let passive: Set<NotificationEvent> = [.userJoined, .userParted, .userDisconnected]
 
-		#expect(IRCNotificationPolicy.interruptionLevel(for: event) == (passive.contains(event) ? .passive : .active))
+		#expect(NotificationPolicy.interruptionLevel(for: event) == (passive.contains(event) ? .passive : .active))
 	}
 }

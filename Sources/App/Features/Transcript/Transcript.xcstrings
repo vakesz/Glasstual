@@ -1,0 +1,472 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "copy-image" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "comment" : "Context menu command on an image drawn inline in a conversation. Copies the picture itself to the clipboard, not its address.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy Image"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kép másolása"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bild kopieren"
+          }
+        }
+      }
+    },
+    "copy-topic" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "comment" : "Context menu command on the topic bar above a conversation. Copies the topic as it reads, without the IRC formatting codes it arrived in.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy Topic"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Téma másolása"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thema kopieren"
+          }
+        }
+      }
+    },
+    "deletion-not-repeated" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "comment" : "Shown when clearing a conversation's history failed. Retry History repairs loading and saving only; it never repeats a deletion, because newer messages may have arrived since.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "History could not be cleared. Clear the conversation again to try once more."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nem sikerült törölni az előzményeket. Az újrapróbálkozáshoz töröld ismét a beszélgetést."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Verlauf konnte nicht gelöscht werden. Leere das Gespräch erneut, um es noch einmal zu versuchen."
+          }
+        }
+      }
+    },
+    "image-accessibility" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "comment" : "Spoken description of an image drawn inline in a conversation. Nothing is known about the picture beyond where it came from, so its address stands in. %@ is the web address it was fetched from.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Image from %@"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kép innen: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bild von %@"
+          }
+        }
+      }
+    },
+    "local-history-needs-attention" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "comment" : "Status above a conversation when local history cannot be opened, saved or read. Existing history is retained.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Local history needs attention"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A helyi előzmények kezelése beavatkozást igényel"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der lokale Verlauf erfordert Aufmerksamkeit"
+          }
+        }
+      }
+    },
+    "open-image-link" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "comment" : "Context menu command on an image drawn inline in a conversation. Opens the address the picture was fetched from in the browser.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Link"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hivatkozás megnyitása"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Link öffnen"
+          }
+        }
+      }
+    },
+    "open-link-in-application" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "comment" : "Title of the alert shown before a link the browser cannot open is handed to another application. %@ is the name of the application macOS would open it with.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open this link in “%@”?"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Megnyitod ezt a hivatkozást a(z) \"%@\" alkalmazásban?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diesen Link in \"%@\" öffnen?"
+          }
+        }
+      }
+    },
+    "open-link-in-unknown-application" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "comment" : "Title of the alert shown before a link the browser cannot open is handed to another application, where macOS names no application for it.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open this link in another app?"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Megnyitod ezt a hivatkozást egy másik alkalmazásban?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diesen Link in einer anderen App öffnen?"
+          }
+        }
+      }
+    },
+    "reaction-accessibility" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "comment" : "Spoken description of one reaction chip beneath a message. %1$@ is the emoji people reacted with and the second argument is how many of them did.",
+      "localizations" : {
+        "en" : {
+          "substitutions" : {
+            "arg2" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg reaction"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg reactions"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %#@arg2@"
+          }
+        },
+        "hu" : {
+          "substitutions" : {
+            "arg2" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg reakció"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg reakció"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %#@arg2@"
+          }
+        },
+        "de" : {
+          "substitutions" : {
+            "arg2" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg Reaktion"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg Reaktionen"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %#@arg2@"
+          }
+        }
+      }
+    },
+    "retry" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "comment" : "Retry opening or reading the existing local history database. This does not delete history.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retry History"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Előzmények újrapróbálása"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verlauf erneut laden"
+          }
+        }
+      }
+    },
+    "retry-server" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "comment" : "Request the failed older-history page from the IRC server again.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retry Server History"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kiszolgálóelőzmények újrapróbálása"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serververlauf erneut laden"
+          }
+        }
+      }
+    },
+    "save-image" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "comment" : "Context menu command on an image drawn inline in a conversation. Opens a save panel so the picture can be kept as a file. The ellipsis marks that a panel follows.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save Image…"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kép mentése…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bild sichern…"
+          }
+        }
+      }
+    },
+    "server-history-could-not-be-loaded" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "comment" : "Status above a conversation when its server-history request failed.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server history could not be loaded"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nem sikerült betölteni a kiszolgálón tárolt előzményeket"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serververlauf konnte nicht geladen werden"
+          }
+        }
+      }
+    },
+    "transcript-accessibility" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "comment" : "Spoken name of the transcript itself, so one conversation's messages can be told from another's. %@ is the channel or network the transcript belongs to.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Messages in %@"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Üzenetek itt: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nachrichten in %@"
+          }
+        }
+      }
+    },
+    "transcript-role" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "comment" : "Spoken description of what kind of thing the transcript is, said after its name. Lower case: VoiceOver reads it as part of a sentence.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "transcript"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "beszélgetés"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gesprächsverlauf"
+          }
+        }
+      }
+    },
+    "warning-accessibility" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "comment" : "Spoken name of the warning glyph beside the history banner. The glyph is the only thing that marks the banner as a warning.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warning"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Figyelmeztetés"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warnung"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

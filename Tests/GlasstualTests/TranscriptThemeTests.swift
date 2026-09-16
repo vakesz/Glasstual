@@ -272,7 +272,7 @@ struct TranscriptThemeControllerTests {
 		let fixture = try PreferencesTransferFixture()
 		defer { fixture.cleanUp() }
 		let controller = makeController(fixture)
-		let appearance = SharedApplication.sharedAppearance()
+		let appearance = AppServices.appearance
 		/* The stored value, not the effective one: restoring the effective value
 		 writes the declared default into a preference the person never set, and
 		 this is the live store the running application reads. */
@@ -280,7 +280,7 @@ struct TranscriptThemeControllerTests {
 		defer {
 			Preferences.Appearance.preferredAppearance.storedValue = previous
 			appearance.updateAppearance()
-			SharedApplication.sharedThemeController().appearanceDidChange()
+			AppServices.theme.appearanceDidChange()
 		}
 
 		for preferred in [PreferredAppearance.dark, .light] {

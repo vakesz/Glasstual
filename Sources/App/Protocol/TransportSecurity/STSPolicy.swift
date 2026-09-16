@@ -43,7 +43,7 @@ import Foundation
 /// The port used to leave through an out-parameter the caller had to know to
 /// read, and only for one of the four outcomes; it rides on the case that
 /// carries it instead.
-public nonisolated enum STSPolicyAction: Sendable, Equatable { // nonisolated: value
+nonisolated enum STSPolicyAction: Sendable, Equatable { // nonisolated: value
 	/// Nothing to do: no offer, or one that has to be ignored.
 	case none
 
@@ -58,20 +58,16 @@ public nonisolated enum STSPolicyAction: Sendable, Equatable { // nonisolated: v
 }
 
 /// The endpoint a stored STS policy pins a host to.
-public nonisolated struct STSPolicyEndpoint: Sendable, Equatable { // nonisolated: value
-	public let port: UInt16
-
-	public init(port: UInt16) {
-		self.port = port
-	}
+nonisolated struct STSPolicyEndpoint: Sendable, Equatable { // nonisolated: value
+	let port: UInt16
 }
 
-public nonisolated struct STSPolicy: Sendable, Equatable { // nonisolated: value
-	public let port: UInt16
-	public let expiresAt: Date
-	public let preload: Bool
+nonisolated struct STSPolicy: Sendable, Equatable { // nonisolated: value
+	let port: UInt16
+	let expiresAt: Date
+	let preload: Bool
 
-	public init(port: UInt16, expiresAt: Date, preload: Bool) {
+	init(port: UInt16, expiresAt: Date, preload: Bool) {
 		precondition(port > 0)
 
 		self.port = port
@@ -79,7 +75,7 @@ public nonisolated struct STSPolicy: Sendable, Equatable { // nonisolated: value
 		self.preload = preload
 	}
 
-	public var isExpired: Bool {
+	var isExpired: Bool {
 		expiresAt.timeIntervalSinceNow <= 0
 	}
 

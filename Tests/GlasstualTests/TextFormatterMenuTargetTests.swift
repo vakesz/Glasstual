@@ -18,14 +18,14 @@ import Testing
 @Suite("Formatting menu target")
 @MainActor
 struct TextFormatterMenuTargetTests {
-	private func makeWindow() -> (window: NSWindow, field: TextViewWithIRCFormatter) {
+	private func makeWindow() -> (window: NSWindow, field: IRCFormattedTextView) {
 		let window = NSWindow(
 			contentRect: NSRect(x: 0, y: 0, width: 320, height: 120),
 			styleMask: [.titled],
 			backing: .buffered,
 			defer: false
 		)
-		let field = TextViewWithIRCFormatter(frame: NSRect(x: 0, y: 0, width: 320, height: 40))
+		let field = IRCFormattedTextView(frame: NSRect(x: 0, y: 0, width: 320, height: 40))
 		field.isEditable = true
 		window.contentView?.addSubview(field)
 		window.makeFirstResponder(field)

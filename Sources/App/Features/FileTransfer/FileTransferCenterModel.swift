@@ -13,20 +13,19 @@
 
 import CocoaExtensions
 import Foundation
-import GlasstualPluginKit
 import Observation
 
 /// Which transfer directions the window is showing.
-public enum FileTransferSelection: String, CaseIterable, Identifiable, Sendable {
+enum FileTransferSelection: String, CaseIterable, Identifiable, Sendable {
 	case all
 	case sending
 	case receiving
 
-	public var id: String {
+	var id: String {
 		rawValue
 	}
 
-	public func shownTransfers<Transfer>(
+	func shownTransfers<Transfer>(
 		in transfers: [Transfer],
 		isSender: (Transfer) -> Bool
 	) -> [Transfer] {
@@ -317,10 +316,10 @@ struct FileTransferRowPresentation {
 	private static func timeRemainingDescription(for interval: TimeInterval) -> String? {
 		guard interval > 0 else { return nil }
 
-		return PluginHost.humanReadableTimeInterval(
+		return humanReadableTimeInterval(
 			interval,
 			shortValue: true,
-			units: [.day, .hour, .minute, .second]
+			fields: [.day, .hour, .minute, .second]
 		)
 	}
 }

@@ -7,50 +7,50 @@ import Foundation
 
 enum ServerHighlightListStrings {
 	static func windowTitle(networkName: String) -> String {
-		String(localized: .TDCServerHighlightListSheet.windowTitle(networkName))
+		String(localized: .ServerProperties.windowTitle(networkName))
 	}
 
 	static var channel: String {
-		String(localized: .TDCServerHighlightListSheet.channel)
+		String(localized: .ServerProperties.channel)
 	}
 
 	static var message: String {
-		String(localized: .TDCServerHighlightListSheet.message)
+		String(localized: .ServerProperties.message)
 	}
 
 	static var time: String {
-		String(localized: .TDCServerHighlightListSheet.time)
+		String(localized: .ServerProperties.time)
 	}
 
 	static var highlightList: String {
-		String(localized: .TDCServerHighlightListSheet.highlightList)
+		String(localized: .ServerProperties.highlightList)
 	}
 
 	static var clearList: String {
-		String(localized: .TDCServerHighlightListSheet.clearList)
+		String(localized: .ServerProperties.clearList)
 	}
 
 	static var clearListConfirmationTitle: String {
-		String(localized: .TDCServerHighlightListSheet.clearListConfirmationTitle)
+		String(localized: .ServerProperties.clearListConfirmationTitle)
 	}
 
 	static var clearListConfirmationMessage: String {
-		String(localized: .TDCServerHighlightListSheet.clearListConfirmationMessage)
+		String(localized: .ServerProperties.clearListConfirmationMessage)
 	}
 
 	static var goToMessage: String {
-		String(localized: .TDCServerHighlightListSheet.goToMessage)
+		String(localized: .ServerProperties.goToMessage)
 	}
 
 	static var actionNote: String {
-		String(localized: .TDCServerHighlightListSheet.actionNote)
+		String(localized: .ServerProperties.actionNote)
 	}
 
 	static var emptyTitle: String {
-		String(localized: .TDCServerHighlightListSheet.emptyTitle)
+		String(localized: .ServerProperties.emptyTitle)
 	}
 
 	static var emptyDescription: String {
-		String(localized: .TDCServerHighlightListSheet.emptyDescription)
+		String(localized: .ServerProperties.emptyDescription)
 	}
 }

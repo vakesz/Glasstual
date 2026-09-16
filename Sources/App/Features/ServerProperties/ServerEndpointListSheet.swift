@@ -15,15 +15,15 @@ import Observation
 import SwiftUI
 
 @MainActor
-public protocol ServerEndpointListSheetDelegate: AnyObject {
+protocol ServerEndpointListSheetDelegate: AnyObject {
 	func serverEndpointListSheet(_ sender: ServerEndpointListSheet, onOk serverList: [Server])
 }
 
 @MainActor
-public final class ServerEndpointListSheet: MainWindowSheetSession {
+final class ServerEndpointListSheet: SheetSession {
 	let model = ServerEndpointListModel()
 
-	override public init(window: MainWindow?) {
+	override init(window: MainWindow?) {
 		super.init(window: window)
 		installSheet()
 	}
@@ -37,12 +37,12 @@ public final class ServerEndpointListSheet: MainWindowSheetSession {
 		setContent(rootView)
 	}
 
-	public func start(with serverList: [Server]) {
+	func start(with serverList: [Server]) {
 		model.replace(with: serverList)
 		startSheet()
 	}
 
-	override public func submit() {
+	override func submit() {
 		guard let servers = model.validatedServers() else {
 			return
 		}

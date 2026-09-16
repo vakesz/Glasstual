@@ -14,18 +14,18 @@ import Foundation
 
 nonisolated enum MessageMenuStrings { // nonisolated: value
 	static var otherReaction: String {
-		String(localized: .TXMenuController.messageContextMenuRepliesOther)
+		String(localized: .MainWindow.messageContextMenuRepliesOther)
 	}
 
 	static var react: String {
-		String(localized: .TXMenuController.messageContextMenuRepliesReact)
+		String(localized: .MainWindow.messageContextMenuRepliesReact)
 	}
 
 	static var reply: String {
-		String(localized: .TXMenuController.messageContextMenuRepliesReply)
+		String(localized: .MainWindow.messageContextMenuRepliesReply)
 	}
 
 	static var share: String {
-		String(localized: .TXMenuController.titleOfTheStandardShare)
+		String(localized: .MainWindow.titleOfTheStandardShare)
 	}
 }

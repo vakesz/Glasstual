@@ -33,7 +33,7 @@ struct MainWindowTextViewAppearanceTests {
 		let textView = MainWindowTextView(frame: .zero)
 		textView.preferredFontColor = .systemRed
 		let formatterKey = NSAttributedString.Key(
-			IRCTextFormatterAttributeName.foregroundColorAttributeName.rawValue
+			TextFormatterAttributeName.foregroundColorAttributeName.rawValue
 		)
 
 		textView.attributedStringValue = NSAttributedString(

@@ -20,14 +20,14 @@ import AppKit
 /// every view in the application advertised and subclasses overrode through
 /// the runtime.
 @MainActor
-public protocol AppearanceObserving: NSView {
+protocol AppearanceObserving: NSView {
 	/// The application's own light/dark setting changed.
 	func applicationAppearanceChanged()
 	/// The system's appearance changed while the application follows it.
 	func systemAppearanceChanged()
 }
 
-public extension AppearanceObserving {
+extension AppearanceObserving {
 	func applicationAppearanceChanged() {
 		needsDisplay = true
 	}
@@ -37,7 +37,7 @@ public extension AppearanceObserving {
 	}
 }
 
-public extension NSView {
+extension NSView {
 	/// Tells this view and every view beneath it that the application's
 	/// appearance changed.
 	func notifyApplicationAppearanceChanged() {
@@ -59,7 +59,7 @@ public extension NSView {
 	}
 }
 
-public extension NSWindow {
+extension NSWindow {
 	func notifyApplicationAppearanceChanged() {
 		contentView?.superview?.notifyApplicationAppearanceChanged()
 

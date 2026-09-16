@@ -59,7 +59,7 @@ struct MemberAvatar: View {
 	/// A pinned colour is the user's to choose and stays what they chose;
 	/// everything else takes the nickname's hue at the avatar's own lightness.
 	static func fill(for nickname: String, overrides: NicknameColorOverrides? = nil) -> NSColor {
-		if let pinned = UserNicknameColorStyleGenerator.nicknameColorStyleOverride(
+		if let pinned = NicknameColors.nicknameColorStyleOverride(
 			forKey: nickname.lowercased(),
 			in: overrides
 		) {
@@ -68,8 +68,8 @@ struct MemberAvatar: View {
 
 		return OKLCHColor(
 			lightness: fillLightness,
-			chroma: UserNicknameColorStyleGenerator.chroma,
-			hue: UserNicknameColorStyleGenerator.hue(for: nickname)
+			chroma: NicknameColors.chroma,
+			hue: NicknameColors.hue(for: nickname)
 		).nsColor
 	}
 

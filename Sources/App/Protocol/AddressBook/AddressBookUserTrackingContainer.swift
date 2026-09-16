@@ -1,0 +1,206 @@
+/* *********************************************************************
+ *                  _____         _               _
+ *                 |_   _|____  _| |_ _   _  __ _| |
+ *                   | |/ _ \ \/ / __| | | |/ _` | |
+ *                   | |  __/>  <| |_| |_| | (_| | |
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
+ *
+ * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+ *       Please see Acknowledgements.pdf for additional information.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *  * Neither the name of Textual, "Codeux Software, LLC", nor the
+ *    names of its contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ *
+ *********************************************************************** */
+
+import Foundation
+
+extension Notification.Name {
+	static let addressBookTrackingStatusChanged = Self(
+		"IRCAddressBookUserTrackingStatusChangedNotification"
+	)
+	static let addressBookTrackingAddedUser = Self(
+		"IRCAddressBookUserTrackingAddedTrackedUserNotification"
+	)
+	static let addressBookTrackingRemovedUser = Self(
+		"IRCAddressBookUserTrackingRemovedTrackedUserNotification"
+	)
+	static let addressBookTrackingRemovedAllUsers = Self(
+		"IRCAddressBookUserTrackingRemovedAllTrackedUsersNotification"
+	)
+}
+
+/// The nickname a tracking notification is about.
+nonisolated let addressBookTrackingNicknameKey = "nickname" // nonisolated: let
+
+/// The `AddressBookUserTrackingStatus` raw value a status-change
+/// notification carries.
+nonisolated let addressBookTrackingStatusKey = "status" // nonisolated: let
+
+final class AddressBookUserTrackingContainer: NSObject {
+	private(set) weak var client: Client?
+
+	private var availabilityByNickname: [String: Bool] = [:]
+
+	/// Every tracked nickname, as added, against whether that person is known
+	/// to be online.
+	var trackedUsers: [String: Bool] {
+		availabilityByNickname
+	}
+
+	@available(*, unavailable)
+	override init() {
+		fatalError("Use init(client:)")
+	}
+
+	init(client: Client) {
+		self.client = client
+		super.init()
+	}
+
+	func status(ofUser nickname: String) -> AddressBookUserTrackingStatus {
+		guard let canonicalNickname = canonicalNickname(matching: nickname) else {
+			return .unknown
+		}
+
+		return availabilityByNickname[canonicalNickname] == true ? .available : .notAvailable
+	}
+
+	func status(of addressBookEntry: AddressBookEntry) -> AddressBookUserTrackingStatus {
+		guard let nickname = addressBookEntry.trackingNickname else {
+			return .unknown
+		}
+
+		return status(ofUser: nickname)
+	}
+
+	func addTrackedUser(_ nickname: String) {
+		guard canonicalNickname(matching: nickname) == nil else {
+			return
+		}
+
+		availabilityByNickname[nickname] = false
+		postNotification(named: .addressBookTrackingAddedUser, nickname: nickname)
+	}
+
+	func addTrackedUserWithoutDuplicateCheck(_ nickname: String) {
+		availabilityByNickname[nickname] = false
+		postNotification(named: .addressBookTrackingAddedUser, nickname: nickname)
+	}
+
+	func removeTrackedUser(_ nickname: String) {
+		guard let canonicalNickname = canonicalNickname(matching: nickname) else {
+			return
+		}
+
+		availabilityByNickname.removeValue(forKey: canonicalNickname)
+		postNotification(named: .addressBookTrackingRemovedUser, nickname: canonicalNickname)
+	}
+
+	func removeTrackedUserWithoutLookup(_ nickname: String) {
+		availabilityByNickname.removeValue(forKey: nickname)
+		postNotification(named: .addressBookTrackingRemovedUser, nickname: nickname)
+	}
+
+	func clearTrackedUsers() {
+		availabilityByNickname.removeAll()
+
+		NotificationCenter.default.post(
+			name: .addressBookTrackingRemovedAllUsers,
+			object: self
+		)
+	}
+
+	func status(ofTrackedNickname nickname: String, changedTo newStatus: AddressBookUserTrackingStatus) {
+		guard newStatus != .unknown else {
+			return
+		}
+
+		guard record(newStatus, for: nickname) else {
+			return
+		}
+
+		NotificationCenter.default.post(
+			name: .addressBookTrackingStatusChanged,
+			object: self,
+			userInfo: [
+				addressBookTrackingNicknameKey: nickname,
+				addressBookTrackingStatusKey: newStatus.rawValue,
+			]
+		)
+	}
+
+	/// Applies the new status and reports whether it is worth telling anyone.
+	private func record(
+		_ newStatus: AddressBookUserTrackingStatus,
+		for nickname: String
+	) -> Bool {
+		let canonicalNickname = canonicalNickname(matching: nickname)
+
+		switch newStatus {
+		case .available, .signedOn:
+			availabilityByNickname[canonicalNickname ?? nickname] = true
+			return true
+		case .notAvailable, .signedOff:
+			guard let canonicalNickname else {
+				return false
+			}
+
+			availabilityByNickname[canonicalNickname] = false
+			return true
+		case .away, .notAway:
+			return canonicalNickname != nil
+		case .unknown:
+			return false
+		@unknown default:
+			return false
+		}
+	}
+
+	/** The stored spelling of `nickname`, or `nil` when nobody by that name is
+	 tracked.
+
+	 Folded the way the server folds nicknames rather than by
+	 `caseInsensitiveCompare`, which is Unicode folding: under RFC 1459 casing
+	 `nick[home]` and `nick{home}` are one person, and the tracker used to hold
+	 two entries for them and report each other's presence changes. */
+	private func canonicalNickname(matching nickname: String) -> String? {
+		let folded = casefolded(nickname)
+
+		return availabilityByNickname.keys.first { casefolded($0) == folded }
+	}
+
+	private func casefolded(_ nickname: String) -> String {
+		client?.casefoldNickname(nickname) ?? nickname.lowercased()
+	}
+
+	private func postNotification(named name: Notification.Name, nickname: String) {
+		NotificationCenter.default.post(
+			name: name,
+			object: self,
+			userInfo: [addressBookTrackingNicknameKey: nickname]
+		)
+	}
+}

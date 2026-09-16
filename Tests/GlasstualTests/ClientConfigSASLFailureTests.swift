@@ -56,14 +56,14 @@ struct ClientConfigSASLFailureTests {
 
 	@Test("The numerics that mean SASL was refused are the ones the option acts on")
 	func failureNumerics() {
-		#expect(IRCNumeric.saslfail.rawValue == 904)
-		#expect(IRCNumeric.sasltoolong.rawValue == 905)
-		#expect(IRCNumeric.saslaborted.rawValue == 906)
+		#expect(ServerNumeric.saslfail.rawValue == 904)
+		#expect(ServerNumeric.sasltoolong.rawValue == 905)
+		#expect(ServerNumeric.saslaborted.rawValue == 906)
 	}
 
 	@Test("The disconnect reason resolves against the string catalog")
 	func disconnectReasonIsLocalized() {
-		let reason = IRCInboundStrings.Numeric.saslAuthenticationFailedDisconnecting
+		let reason = InboundStrings.Numeric.saslAuthenticationFailedDisconnecting
 		#expect(reason.isEmpty == false)
 		#expect(reason != "sasl-authentication-failed-disconnecting")
 	}

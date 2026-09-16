@@ -92,7 +92,7 @@ extension AccessibilityDriver {
 	}
 
 	/** The Settings sidebar is one level deep, so every page — the application's
-	 own and each add-on's — is a row in the list this identifier names. */
+	 own — is a row in the list this identifier names. */
 	func selectPreferencePage(_ title: String, in window: AXUIElement) async throws {
 		var sidebar: AXUIElement?
 		try await wait("Settings sidebar list") { deadline in

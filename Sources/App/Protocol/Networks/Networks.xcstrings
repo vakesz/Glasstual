@@ -1,0 +1,1134 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "A German-language chat network with nickname registration and custom hostnames." : {
+      "comment" : "Description for German-Elite in the network picker. Preserve network names, IRC commands, placeholders and URLs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A German-language chat network with nickname registration and custom hostnames."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Német nyelvű csevegőhálózat becenév-regisztrációval és egyéni gépnevekkel."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein deutschsprachiges Chatnetzwerk mit Nickname-Registrierung und eigenen Hostnamen."
+          }
+        }
+      }
+    },
+    "A Hungarian-language chat community, online since 2010." : {
+      "comment" : "Description for DumaNet in the network picker. Preserve network names, IRC commands, placeholders and URLs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A Hungarian-language chat community, online since 2010."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Magyar nyelvű csevegőközösség, amely 2010 óta működik."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine ungarischsprachige Chatgemeinschaft, die seit 2010 besteht."
+          }
+        }
+      }
+    },
+    "A community for eMule and other free software projects, open to general conversation too." : {
+      "comment" : "Description for MindForge in the network picker. Preserve network names, IRC commands, placeholders and URLs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A community for eMule and other free software projects, open to general conversation too."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Az eMule és más szabad szoftverek közössége, ahol kötetlenül is lehet beszélgetni."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine Gemeinschaft für eMule und andere freie Softwareprojekte, die auch für allgemeine Gespräche offen ist."
+          }
+        }
+      }
+    },
+    "A community for gaming, programming and casual conversation, with a dedicated help channel." : {
+      "comment" : "Description for LizardIRC in the network picker. Preserve network names, IRC commands, placeholders and URLs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A community for gaming, programming and casual conversation, with a dedicated help channel."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Közösség játékhoz, programozáshoz és kötetlen beszélgetéshez, külön segítségnyújtó csatornával."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine Gemeinschaft für Spiele, Programmierung und lockere Gespräche mit einem eigenen Hilfekanal."
+          }
+        }
+      }
+    },
+    "A community for science and technology discussions. Encrypted connections only." : {
+      "comment" : "Description for darkscience in the network picker. Preserve network names, IRC commands, placeholders and URLs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A community for science and technology discussions. Encrypted connections only."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Közösség tudományos és technológiai beszélgetésekhez. Csak titkosított kapcsolatot fogad."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine Gemeinschaft für Gespräche über Wissenschaft und Technik. Nur verschlüsselte Verbindungen."
+          }
+        }
+      }
+    },
+    "A community network for conversation and making friends. Accounts use the N service." : {
+      "comment" : "Description for DareNET in the network picker. Preserve network names, IRC commands, placeholders and URLs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A community network for conversation and making friends. Accounts use the N service."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Közösségi hálózat beszélgetéshez és ismerkedéshez. A fiókokat az N szolgáltatás kezeli."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Gemeinschaftsnetzwerk für Gespräche und neue Bekanntschaften. Konten werden über den Dienst N verwaltet."
+          }
+        }
+      }
+    },
+    "A community network for everyday conversation and personal channels." : {
+      "comment" : "Description for AccessIRC in the network picker. Preserve network names, IRC commands, placeholders and URLs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A community network for everyday conversation and personal channels."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Közösségi hálózat hétköznapi beszélgetésekhez és saját csatornákhoz."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Gemeinschaftsnetzwerk für alltägliche Gespräche und persönliche Kanäle."
+          }
+        }
+      }
+    },
+    "A community network for group chats, with nickname registration and SASL sign-in." : {
+      "comment" : "Description for AlphaChat in the network picker. Preserve network names, IRC commands, placeholders and URLs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A community network for group chats, with nickname registration and SASL sign-in."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Közösségi csevegőhálózat becenév-regisztrációval és SASL-bejelentkezéssel."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Gemeinschaftsnetzwerk für Gruppenchats mit Nickname-Registrierung und SASL-Anmeldung."
+          }
+        }
+      }
+    },
+    "A community network for technology discussions and open-source projects." : {
+      "comment" : "Description for Interlinked in the network picker. Preserve network names, IRC commands, placeholders and URLs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A community network for technology discussions and open-source projects."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Közösségi hálózat technológiai beszélgetésekhez és nyílt forráskódú projektekhez."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Gemeinschaftsnetzwerk für Technikgespräche und Open-Source-Projekte."
+          }
+        }
+      }
+    },
+    "A family-friendly network for community chat rooms, with staff help for newcomers." : {
+      "comment" : "Description for GeekShed in the network picker. Preserve network names, IRC commands, placeholders and URLs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A family-friendly network for community chat rooms, with staff help for newcomers."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Családbarát hálózat közösségi csevegőszobákkal, ahol az üzemeltetők az új felhasználóknak is segítenek."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein familienfreundliches Netzwerk für Gemeinschaftschaträume, in dem Mitarbeiter Neulingen helfen."
+          }
+        }
+      }
+    },
+    "A gaming and social community with a network lounge and an IdleRPG game." : {
+      "comment" : "Description for SwiftIRC in the network picker. Preserve network names, IRC commands, placeholders and URLs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A gaming and social community with a network lounge and an IdleRPG game."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Játékos és társasági közösség közös társalgóval és IdleRPG játékkal."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine Spiele- und Chatgemeinschaft mit einem gemeinsamen Treffpunkt und einem IdleRPG-Spiel."
+          }
+        }
+      }
+    },
+    "A gaming and social network with Q accounts. Connections are not encrypted." : {
+      "comment" : "Description for QuakeNet in the network picker. Preserve network names, IRC commands, placeholders and URLs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A gaming and social network with Q accounts. Connections are not encrypted."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Játékos és társasági hálózat Q-fiókokkal. A kapcsolatok nem titkosítottak."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Spiele- und Chatnetzwerk mit Q-Konten. Verbindungen sind nicht verschlüsselt."
+          }
+        }
+      }
+    },
+    "A general chat network for independent communities and website chat rooms." : {
+      "comment" : "Description for HybridIRC in the network picker. Preserve network names, IRC commands, placeholders and URLs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A general chat network for independent communities and website chat rooms."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Általános csevegőhálózat önálló közösségeknek és weboldalak csevegőszobáinak."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein allgemeines Chatnetzwerk für unabhängige Gemeinschaften und Website-Chaträume."
+          }
+        }
+      }
+    },
+    "A general chat network for independent communities, with encrypted connections and SASL sign-in." : {
+      "comment" : "Description for synIRC in the network picker. Preserve network names, IRC commands, placeholders and URLs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A general chat network for independent communities, with encrypted connections and SASL sign-in."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Általános csevegőhálózat önálló közösségeknek, titkosított kapcsolattal és SASL-bejelentkezéssel."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein allgemeines Chatnetzwerk für unabhängige Gemeinschaften mit verschlüsselten Verbindungen und SASL-Anmeldung."
+          }
+        }
+      }
+    },
+    "A long-running international chat network with nickname and channel registration." : {
+      "comment" : "Description for DALnet in the network picker. Preserve network names, IRC commands, placeholders and URLs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A long-running international chat network with nickname and channel registration."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Régóta működő nemzetközi csevegőhálózat becenév- és csatornaregisztrációval."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein langjähriges internationales Chatnetzwerk mit Nickname- und Kanalregistrierung."
+          }
+        }
+      }
+    },
+    "A long-running international chat network with strong European roots. Nicknames cannot be registered." : {
+      "comment" : "Description for IRCnet in the network picker. Preserve network names, IRC commands, placeholders and URLs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A long-running international chat network with strong European roots. Nicknames cannot be registered."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Régóta működő nemzetközi csevegőhálózat erős európai gyökerekkel. A becenevek nem regisztrálhatók."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein langjähriges internationales Chatnetzwerk mit starken europäischen Wurzeln. Nicknamen können nicht registriert werden."
+          }
+        }
+      }
+    },
+    "A long-running international chat network. Registered accounts use the X service." : {
+      "comment" : "Description for Undernet in the network picker. Preserve network names, IRC commands, placeholders and URLs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A long-running international chat network. Registered accounts use the X service."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Régóta működő nemzetközi csevegőhálózat. A regisztrált fiókokat az X szolgáltatás kezeli."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein langjähriges internationales Chatnetzwerk. Registrierte Konten verwenden den Dienst X."
+          }
+        }
+      }
+    },
+    "A meeting place for anime fans and general chat communities." : {
+      "comment" : "Description for IRCHighWay in the network picker. Preserve network names, IRC commands, placeholders and URLs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A meeting place for anime fans and general chat communities."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Találkozóhely animerajongóknak és általános csevegőközösségeknek."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Treffpunkt für Anime-Fans und allgemeine Chatgemeinschaften."
+          }
+        }
+      }
+    },
+    "A meeting place for free software and open-source projects, with programming and Linux support communities." : {
+      "comment" : "Description for Libera.Chat in the network picker. Preserve network names, IRC commands, placeholders and URLs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A meeting place for free software and open-source projects, with programming and Linux support communities."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Szabad és nyílt forráskódú szoftverek találkozóhelye, programozói és Linux-segítő közösségekkel."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Treffpunkt für freie Software und Open-Source-Projekte mit Gemeinschaften für Programmierung und Linux-Hilfe."
+          }
+        }
+      }
+    },
+    "A meeting place for gamers and their communities." : {
+      "comment" : "Description for Global Gamers in the network picker. Preserve network names, IRC commands, placeholders and URLs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A meeting place for gamers and their communities."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Találkozóhely játékosoknak és közösségeiknek."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Treffpunkt für Spieler und ihre Gemeinschaften."
+          }
+        }
+      }
+    },
+    "A network for Linux and open-source communities, including Linux Mint support and chat." : {
+      "comment" : "Description for SpotChat in the network picker. Preserve network names, IRC commands, placeholders and URLs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A network for Linux and open-source communities, including Linux Mint support and chat."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Linuxos és nyílt forráskódú közösségek hálózata, Linux Mint-segítséggel és társalgóval."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Netzwerk für Linux- und Open-Source-Gemeinschaften, darunter Hilfe und Chat zu Linux Mint."
+          }
+        }
+      }
+    },
+    "A network for Reddit and other online communities, with channels for shared interests." : {
+      "comment" : "Description for Snoonet in the network picker. Preserve network names, IRC commands, placeholders and URLs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A network for Reddit and other online communities, with channels for shared interests."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A Reddit és más online közösségek hálózata, közös érdeklődés köré szerveződő csatornákkal."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Netzwerk für Reddit und andere Onlinegemeinschaften mit Kanälen für gemeinsame Interessen."
+          }
+        }
+      }
+    },
+    "A network for gamers and gaming communities. Accounts use AuthServ." : {
+      "comment" : "Description for GameSurge in the network picker. Preserve network names, IRC commands, placeholders and URLs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A network for gamers and gaming communities. Accounts use AuthServ."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hálózat játékosoknak és játékközösségeknek. A fiókokat az AuthServ kezeli."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Netzwerk für Spieler und Spielegemeinschaften. Konten verwenden AuthServ."
+          }
+        }
+      }
+    },
+    "A network for hackerspaces and the Chaos community. Use SASL to sign in to your account." : {
+      "comment" : "Description for hackint in the network picker. Preserve network names, IRC commands, placeholders and URLs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A network for hackerspaces and the Chaos community. Use SASL to sign in to your account."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hackerspace-ek és a Chaos közösség hálózata. A fiókodba SASL-lel jelentkezhetsz be."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Netzwerk für Hackerspaces und die Chaos-Gemeinschaft. Verwende SASL zur Anmeldung bei deinem Konto."
+          }
+        }
+      }
+    },
+    "A place for casual conversation and technology communities." : {
+      "comment" : "Description for ChatLounge in the network picker. Preserve network names, IRC commands, placeholders and URLs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A place for casual conversation and technology communities."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Találkozóhely kötetlen beszélgetésekhez és technológiai közösségekhez."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Ort für lockere Gespräche und Technikgemeinschaften."
+          }
+        }
+      }
+    },
+    "A public test server for new Ergo IRC features. All traffic is logged; use the Ergo network for everyday chat." : {
+      "comment" : "Description for Ergo testnet in the network picker. Preserve network names, IRC commands, placeholders and URLs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A public test server for new Ergo IRC features. All traffic is logged; use the Ergo network for everyday chat."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nyilvános tesztkiszolgáló az Ergo új IRC-funkcióihoz. Minden forgalmat naplóz; hétköznapi csevegéshez az Ergo hálózatát használd."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein öffentlicher Testserver für neue IRC-Funktionen von Ergo. Sämtlicher Datenverkehr wird protokolliert; verwende für alltägliche Chats das Ergo-Netzwerk."
+          }
+        }
+      }
+    },
+    "A social network with anime, gaming and general conversation channels." : {
+      "comment" : "Description for Rizon in the network picker. Preserve network names, IRC commands, placeholders and URLs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A social network with anime, gaming and general conversation channels."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Társasági hálózat animés, játékos és kötetlen beszélgetésre szolgáló csatornákkal."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Chatnetzwerk mit Kanälen für Anime, Spiele und allgemeine Gespräche."
+          }
+        }
+      }
+    },
+    "An Italian-language community for conversation and meeting new people." : {
+      "comment" : "Description for Azzurra in the network picker. Preserve network names, IRC commands, placeholders and URLs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An Italian-language community for conversation and meeting new people."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Olasz nyelvű közösség beszélgetéshez és ismerkedéshez."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine italienischsprachige Gemeinschaft für Gespräche und neue Bekanntschaften."
+          }
+        }
+      }
+    },
+    "An independent network for community channels and everyday conversation." : {
+      "comment" : "Description for Slashnet in the network picker. Preserve network names, IRC commands, placeholders and URLs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An independent network for community channels and everyday conversation."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Független hálózat közösségi csatornákhoz és hétköznapi beszélgetésekhez."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein unabhängiges Netzwerk für Gemeinschaftskanäle und alltägliche Gespräche."
+          }
+        }
+      }
+    },
+    "An international community for activists and technology discussions. Encrypted connections only." : {
+      "comment" : "Description for AnonOps in the network picker. Preserve network names, IRC commands, placeholders and URLs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An international community for activists and technology discussions. Encrypted connections only."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nemzetközi közösség aktivistáknak és technológiai beszélgetésekhez. Csak titkosított kapcsolatot fogad."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine internationale Gemeinschaft für Aktivisten und Technikgespräche. Nur verschlüsselte Verbindungen."
+          }
+        }
+      }
+    },
+    "An international community for conversation and shared interests, online since 1996." : {
+      "comment" : "Description for EsperNet in the network picker. Preserve network names, IRC commands, placeholders and URLs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An international community for conversation and shared interests, online since 1996."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nemzetközi közösség beszélgetéshez és közös érdeklődési körökhöz, 1996 óta."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine internationale Gemeinschaft für Gespräche und gemeinsame Interessen, die seit 1996 besteht."
+          }
+        }
+      }
+    },
+    "Chat for the 2600 hacker community and local meeting groups." : {
+      "comment" : "Description for 2600net in the network picker. Preserve network names, IRC commands, placeholders and URLs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chat for the 2600 hacker community and local meeting groups."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Csevegés a 2600 hackerközösség és a helyi találkozók résztvevői számára."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chat für die 2600-Hackergemeinschaft und örtliche Treffgruppen."
+          }
+        }
+      }
+    },
+    "Create an account at https://gamesurge.net/createaccount/ then sign in with /msg AuthServ AUTH <account> <password>" : {
+      "comment" : "How to register a nickname on GameSurge, shown in the network picker. The IRC commands, service names and addresses are literal and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create an account at https://gamesurge.net/createaccount/ then sign in with /msg AuthServ AUTH <account> <password>"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hozz létre fiókot a https://gamesurge.net/createaccount/ oldalon, majd jelentkezz be ezzel: /msg AuthServ AUTH <account> <password>"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erstelle ein Konto unter https://gamesurge.net/createaccount/ und melde dich dann mit /msg AuthServ AUTH <account> <password> an."
+          }
+        }
+      }
+    },
+    "Create an account at https://www.darenet.org/signup then sign in with /msg N AUTH <account> <password>" : {
+      "comment" : "Account registration instructions for DareNET in the network picker. Preserve network names, IRC commands, placeholders and URLs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create an account at https://www.darenet.org/signup then sign in with /msg N AUTH <account> <password>"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hozz létre fiókot a https://www.darenet.org/signup oldalon, majd jelentkezz be ezzel: /msg N AUTH <account> <password>"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erstelle ein Konto unter https://www.darenet.org/signup und melde dich dann mit /msg N AUTH <account> <password> an."
+          }
+        }
+      }
+    },
+    "Create an account at https://www.quakenet.org/help/q/how-to-register-an-account-with-q then sign in with /msg Q@CServe.quakenet.org AUTH <account> <password>" : {
+      "comment" : "How to register a nickname on QuakeNet, shown in the network picker. The IRC commands, service names and addresses are literal and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create an account at https://www.quakenet.org/help/q/how-to-register-an-account-with-q then sign in with /msg Q@CServe.quakenet.org AUTH <account> <password>"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hozz létre fiókot a https://www.quakenet.org/help/q/how-to-register-an-account-with-q oldalon, majd jelentkezz be ezzel: /msg Q@CServe.quakenet.org AUTH <account> <password>"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erstelle ein Konto unter https://www.quakenet.org/help/q/how-to-register-an-account-with-q und melde dich dann mit /msg Q@CServe.quakenet.org AUTH <account> <password> an."
+          }
+        }
+      }
+    },
+    "Create an account at https://www.undernet.org/cservice then sign in with /msg X@channels.undernet.org LOGIN <account> <password>" : {
+      "comment" : "How to register a nickname on Undernet, shown in the network picker. The IRC commands, service names and addresses are literal and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create an account at https://www.undernet.org/cservice then sign in with /msg X@channels.undernet.org LOGIN <account> <password>"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hozz létre fiókot a https://www.undernet.org/cservice oldalon, majd jelentkezz be ezzel: /msg X@channels.undernet.org LOGIN <account> <password>"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erstelle ein Konto unter https://www.undernet.org/cservice und melde dich dann mit /msg X@channels.undernet.org LOGIN <account> <password> an."
+          }
+        }
+      }
+    },
+    "One of the original IRC networks, with social and computing channels. Nicknames cannot be registered." : {
+      "comment" : "Description for EFnet in the network picker. Preserve network names, IRC commands, placeholders and URLs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One of the original IRC networks, with social and computing channels. Nicknames cannot be registered."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Az eredeti IRC-hálózatok egyike, társalgó- és számítástechnikai csatornákkal. A becenevek nem regisztrálhatók."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eines der ursprünglichen IRC-Netzwerke mit Kanälen für Gespräche und Computer. Nicknamen können nicht registriert werden."
+          }
+        }
+      }
+    },
+    "Open-source project communities, including Debian, with channels for user support and development." : {
+      "comment" : "Description for OFTC in the network picker. Preserve network names, IRC commands, placeholders and URLs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open-source project communities, including Debian, with channels for user support and development."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nyílt forráskódú projektek, köztük a Debian közösségei, felhasználói segítséget nyújtó és fejlesztői csatornákkal."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gemeinschaften von Open-Source-Projekten, darunter Debian, mit Kanälen für Hilfe und Entwicklung."
+          }
+        }
+      }
+    },
+    "Register at https://www.dumanet.hu/register, then identify with NickServ after connecting." : {
+      "comment" : "How to register a nickname on DumaNet, shown in the network picker. The IRC commands, service names and addresses are literal and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Register at https://www.dumanet.hu/register, then identify with NickServ after connecting."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Regisztrálj a https://www.dumanet.hu/register oldalon, majd kapcsolódás után azonosítsd magad a NickServ segítségével."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registriere dich unter https://www.dumanet.hu/register und identifiziere dich nach dem Verbinden bei NickServ."
+          }
+        }
+      }
+    },
+    "Register with NickServ: /msg NickServ REGISTER <password> <email>" : {
+      "comment" : "How to register a nickname on 2600net, AccessIRC, AlphaChat and 24 other networks, shown in the network picker. The IRC commands, service names and addresses are literal and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Register with NickServ: /msg NickServ REGISTER <password> <email>"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Regisztráció a NickServ segítségével: /msg NickServ REGISTER <password> <email>"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registrierung bei NickServ: /msg NickServ REGISTER <password> <email>"
+          }
+        }
+      }
+    },
+    "Register with NickServ: /msg NickServ REGISTER <password> <email>. Enable SASL to sign in; NickServ IDENTIFY is no longer supported." : {
+      "comment" : "Account registration instructions for hackint in the network picker. Preserve network names, IRC commands, placeholders and URLs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Register with NickServ: /msg NickServ REGISTER <password> <email>. Enable SASL to sign in; NickServ IDENTIFY is no longer supported."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Regisztráció a NickServ segítségével: /msg NickServ REGISTER <password> <email>. A bejelentkezéshez kapcsold be a SASL-t; a NickServ IDENTIFY már nem támogatott."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registrierung bei NickServ: /msg NickServ REGISTER <password> <email>. Aktiviere SASL zur Anmeldung; NickServ IDENTIFY wird nicht mehr unterstützt."
+          }
+        }
+      }
+    },
+    "Register with NickServ: /msg NickServ REGISTER <password> <email>. See https://libera.chat/guides/registration" : {
+      "comment" : "How to register a nickname on Libera.Chat, shown in the network picker. The IRC commands, service names and addresses are literal and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Register with NickServ: /msg NickServ REGISTER <password> <email>. See https://libera.chat/guides/registration"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Regisztráció a NickServ segítségével: /msg NickServ REGISTER <password> <email>. Részletek: https://libera.chat/guides/registration"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registrierung bei NickServ: /msg NickServ REGISTER <password> <email>. Siehe https://libera.chat/guides/registration"
+          }
+        }
+      }
+    },
+    "Register with NickServ: /msg NickServ REGISTER <password> <email>. See https://www.oftc.net/Services/" : {
+      "comment" : "How to register a nickname on OFTC, shown in the network picker. The IRC commands, service names and addresses are literal and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Register with NickServ: /msg NickServ REGISTER <password> <email>. See https://www.oftc.net/Services/"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Regisztráció a NickServ segítségével: /msg NickServ REGISTER <password> <email>. Részletek: https://www.oftc.net/Services/"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registrierung bei NickServ: /msg NickServ REGISTER <password> <email>. Siehe https://www.oftc.net/Services/"
+          }
+        }
+      }
+    },
+    "Social and gaming communities, including the InspIRCd server project." : {
+      "comment" : "Description for Chatspike in the network picker. Preserve network names, IRC commands, placeholders and URLs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Social and gaming communities, including the InspIRCd server project."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Társasági és játékos közösségek, köztük az InspIRCd kiszolgálóprojekt."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chat- und Spielegemeinschaften, darunter das Serverprojekt InspIRCd."
+          }
+        }
+      }
+    },
+    "The Elite Dangerous fuel-rescue community. Visit when you need fuel or want to help other pilots." : {
+      "comment" : "Description for Fuel Rats in the network picker. Preserve network names, IRC commands, placeholders and URLs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Elite Dangerous fuel-rescue community. Visit when you need fuel or want to help other pilots."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Az Elite Dangerous üzemanyag-mentő közössége. Látogass el ide, ha üzemanyagra van szükséged, vagy más pilótáknak segítenél."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Treibstoffrettungsgemeinschaft von Elite Dangerous. Komm vorbei, wenn du Treibstoff brauchst oder anderen Piloten helfen möchtest."
+          }
+        }
+      }
+    },
+    "The Ergo community network for everyday chat and IRC development, with built-in message history." : {
+      "comment" : "Description for Ergo in the network picker. Preserve network names, IRC commands, placeholders and URLs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Ergo community network for everyday chat and IRC development, with built-in message history."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Az Ergo közösségi hálózata hétköznapi csevegéshez és IRC-fejlesztéshez, beépített üzenetelőzményekkel."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Ergo-Gemeinschaftsnetzwerk für alltägliche Chats und IRC-Entwicklung mit integriertem Nachrichtenverlauf."
+          }
+        }
+      }
+    },
+    "The tildeverse community for shared Unix systems, programming and small personal websites." : {
+      "comment" : "Description for Tilde.Chat in the network picker. Preserve network names, IRC commands, placeholders and URLs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The tildeverse community for shared Unix systems, programming and small personal websites."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A tildeverse közössége közösen használt Unix-rendszerekhez, programozáshoz és kis személyes weboldalakhoz."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die tildeverse-Gemeinschaft für gemeinsam genutzte Unix-Systeme, Programmierung und kleine persönliche Websites."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

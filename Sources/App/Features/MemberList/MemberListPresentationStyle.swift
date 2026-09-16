@@ -4,7 +4,6 @@
  *********************************************************************** */
 
 import AppKit
-import GlasstualPluginKit
 import SwiftUI
 
 /** What a member row draws that its member does not carry.
@@ -30,7 +29,7 @@ nonisolated struct MemberListPresentationStyle: Equatable, Sendable { // nonisol
 		var badgeColors: [UserRank: Color] = [:]
 		for (rank, style) in MemberListRanks.ranked {
 			guard let badge = style.badge else { continue }
-			let color = TextualUserDefaults.container.color(for: badge.preferenceKey)
+			let color = GlasstualUserDefaults.container.color(for: badge.preferenceKey)
 			guard color.alphaComponent > 0 else { continue }
 			badgeColors[rank] = Color(nsColor: color)
 		}

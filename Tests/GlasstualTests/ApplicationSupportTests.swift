@@ -6,7 +6,6 @@
 import CocoaExtensions
 import Foundation
 @testable import Glasstual
-import GlasstualPluginKit
 import Testing
 
 @MainActor
@@ -47,7 +46,6 @@ struct ApplicationSupportTests {
 		#expect(PathInfo.applicationBundleURL == bundle.bundleURL)
 		#expect(PathInfo.applicationResources == bundle.resourcePath)
 		#expect(PathInfo.applicationResourcesURL == bundle.resourceURL)
-		#expect(PathInfo.bundledExtensions.hasSuffix("Bundled Extensions"))
 		#expect(PathInfo.bundledScripts.hasSuffix("Bundled Scripts"))
 		#expect(PathInfo.systemDiagnosticReports == "/Library/Logs/DiagnosticReports")
 		#expect(PathInfo.userHome.isEmpty == false)
@@ -101,9 +99,9 @@ struct ApplicationSupportTests {
 
 	@Test("The bundled property lists load through the resource manager")
 	func resourceManagerLoadsKnownPropertyLists() {
-		let networks = ResourceManager.dictionary(fromResources: "IRCNetworks", cacheValue: false)
-		let networkList = ResourceManager.array(fromResources: "IRCNetworks", cacheValue: false)
-		let staticStore = ResourceManager.dictionary(fromResources: "StaticStore")
+		let networks = BundleResources.dictionary(fromResources: "IRCNetworks", cacheValue: false)
+		let networkList = BundleResources.array(fromResources: "IRCNetworks", cacheValue: false)
+		let staticStore = BundleResources.dictionary(fromResources: "StaticStore")
 
 		#expect(networks != nil || networkList != nil)
 		#expect(staticStore != nil)
@@ -114,18 +112,18 @@ struct ApplicationSupportTests {
 	func resourceManagerCachesAndRejectsWrongTypes() {
 		/* The cache is process-wide; empty it on the way out as well so the
 		 entry this test plants does not answer another one's lookup. */
-		ResourceManager.removeAllCachedResources()
-		defer { ResourceManager.removeAllCachedResources() }
+		BundleResources.removeAllCachedResources()
+		defer { BundleResources.removeAllCachedResources() }
 
-		let first = ResourceManager.dictionary(fromResources: "StaticStore", cacheValue: true)
-		let second = ResourceManager.dictionary(fromResources: "StaticStore", cacheValue: true)
+		let first = BundleResources.dictionary(fromResources: "StaticStore", cacheValue: true)
+		let second = BundleResources.dictionary(fromResources: "StaticStore", cacheValue: true)
 
 		#expect(first != nil)
 		#expect(first as NSDictionary? == second as NSDictionary?)
-		#expect(ResourceManager.hasCachedResource(named: "StaticStore"))
-		#expect(ResourceManager.array(fromResources: "StaticStore", cacheValue: false) == nil)
-		#expect(ResourceManager.dictionary(fromResources: "DoesNotExistAnywhere", cacheValue: false) == nil)
-		#expect(ResourceManager.hasCachedResource(named: "DoesNotExistAnywhere") == false)
+		#expect(BundleResources.hasCachedResource(named: "StaticStore"))
+		#expect(BundleResources.array(fromResources: "StaticStore", cacheValue: false) == nil)
+		#expect(BundleResources.dictionary(fromResources: "DoesNotExistAnywhere", cacheValue: false) == nil)
+		#expect(BundleResources.hasCachedResource(named: "DoesNotExistAnywhere") == false)
 	}
 
 	@Test("A transcript path is built from the client folder and the item's kind")
@@ -146,7 +144,7 @@ struct ApplicationSupportTests {
 			"/\(clientFolder)/\(TranscriptDirectory.channel)/\("#chat".safeFilename)/"
 		)
 
-		let channelTreeItem: TreeItem = channel
+		let channelTreeItem: ChatItem = channel
 		#expect(FileLogger.writePath(for: channelTreeItem, relativeTo: root) == expectedChannel)
 
 		let query = makeChannel(named: "alice", type: .privateMessage, client: client)
@@ -154,7 +152,7 @@ struct ApplicationSupportTests {
 			"/\(clientFolder)/\(TranscriptDirectory.privateMessage)/\("alice".safeFilename)/"
 		)
 
-		let queryTreeItem: TreeItem = query
+		let queryTreeItem: ChatItem = query
 		#expect(FileLogger.writePath(for: queryTreeItem, relativeTo: root) == expectedQuery)
 	}
 
@@ -163,7 +161,7 @@ struct ApplicationSupportTests {
 		let client = TestClient()
 		let utility = makeChannel(named: "Utility", type: .utility, client: client)
 
-		let utilityTreeItem: TreeItem = utility
+		let utilityTreeItem: ChatItem = utility
 		#expect(FileLogger.writePath(for: utilityTreeItem, relativeTo: "/tmp/glasstual-logs") == nil)
 		#expect(FileLogger.writePath(for: client) == nil)
 	}
@@ -222,7 +220,7 @@ struct ApplicationSupportTests {
 	/** The launch count is read back out of the defaults suite before it is
 	 raised, so a value a hand-edited entry can carry has to survive the
 	 increment. The declaration's bound is what keeps one out of the suite in the
-	 first place, and the System Profiler plugin reports the count as an `Int`. */
+	 first place, and the count is read back as an `Int`. */
 	@Test("The launch count survives a stored value no count could reach")
 	func launchCountSaturatesAndIsBounded() {
 		let stored = Preferences.Internals.runCount.value
@@ -270,7 +268,7 @@ struct ApplicationSupportTests {
 		#expect(formatted.hasSuffix("]"))
 	}
 
-	private func makeChannel(named name: String, type: ChannelType, client: IRCClient) -> Channel {
+	private func makeChannel(named name: String, type: ChannelType, client: Client) -> Channel {
 		let channel = Channel(config: ChannelConfig(channelName: name, type: type))
 
 		channel.associatedClient = client

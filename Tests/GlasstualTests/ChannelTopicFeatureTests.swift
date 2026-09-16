@@ -9,9 +9,9 @@ import SwiftUI
 import Testing
 
 @MainActor
-private final class ChannelTopicDelegateSpy: NSObject, ChannelModifyTopicSheetDelegate {
+private final class ChannelTopicDelegateSpy: NSObject, ChannelTopicSheetDelegate {
 	private(set) var acceptedTopic: String?
-	func channelModifyTopicSheet(_: ChannelModifyTopicSheet, onOk topic: String) {
+	func channelModifyTopicSheet(_: ChannelTopicSheet, onOk topic: String) {
 		acceptedTopic = topic
 	}
 }
@@ -71,7 +71,7 @@ struct ChannelTopicFeatureTests {
 	func editorCoordinatorSubmitsOnReturnAndConsumesAlternateNewlineCommand() {
 		var formattedText = "topic"
 		var submissionCount = 0
-		let editor = IRCFormattingTopicEditor(
+		let editor = ChannelTopicEditor(
 			formattedText: Binding(
 				get: { formattedText },
 				set: { formattedText = $0 }
@@ -101,7 +101,7 @@ struct ChannelTopicFeatureTests {
 		channel.associatedClient = client
 		channel.topic = "first\n\u{02}bold"
 
-		let adapter = ChannelModifyTopicSheet(channel: channel)
+		let adapter = ChannelTopicSheet(channel: channel)
 		let channelPrototype: ChannelScoped = adapter
 		let delegate = ChannelTopicDelegateSpy()
 		adapter.delegate = delegate
@@ -121,11 +121,11 @@ struct ChannelTopicFeatureTests {
 		client.supportInfo.processConfigurationData("TOPICLEN=3")
 		let channel = Channel(config: ChannelConfig(channelName: "#swift"))
 		channel.associatedClient = client
-		let adapter = ChannelModifyTopicSheet(channel: channel)
+		let adapter = ChannelTopicSheet(channel: channel)
 		let delegate = ChannelTopicDelegateSpy()
 		adapter.delegate = delegate
 		adapter.model.formattedTopic = "💬"
-		let coordinator = IRCFormattingTopicEditor(
+		let coordinator = ChannelTopicEditor(
 			formattedText: Binding(get: { adapter.model.formattedTopic }, set: { adapter.model.formattedTopic = $0 }),
 			accessibilityLabel: ChannelTopicStrings.headerTitle(channelName: channel.name),
 			submit: adapter.submit

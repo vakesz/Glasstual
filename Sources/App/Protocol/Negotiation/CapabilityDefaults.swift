@@ -20,10 +20,10 @@ extension CapabilityRegistry {
 	}
 
 	private static var defaultCapabilities: [Capability] {
-		let saslGeneric = ClientIRCv3SupportedCapability.saslGeneric
-		let zncPlaybackModule = ClientIRCv3SupportedCapability.zncPlaybackModule
-		let zncServerTime = ClientIRCv3SupportedCapability.zncServerTime
-		let zncServerTimeISO = ClientIRCv3SupportedCapability.zncServerTimeISO
+		let saslGeneric = CapabilitySet.saslGeneric
+		let zncPlaybackModule = CapabilitySet.zncPlaybackModule
+		let zncServerTime = CapabilitySet.zncServerTime
+		let zncServerTimeISO = CapabilitySet.zncServerTimeISO
 		/* ZNC documents its own capabilities on one page rather than one page
 		 each, so the three that have no page of their own share it. */
 		let zncCapabilities = zncSpecification("Developer:Cap")
@@ -165,8 +165,8 @@ extension CapabilityRegistry {
 			),
 			Capability(
 				name: "znc.in/playback",
-				identifier: ClientIRCv3SupportedCapability(
-					rawValue: ClientIRCv3SupportedCapability.playback.rawValue | zncPlaybackModule.rawValue
+				identifier: CapabilitySet(
+					rawValue: CapabilitySet.playback.rawValue | zncPlaybackModule.rawValue
 				),
 				requestedByDefault: true,
 				preference: .always,
@@ -179,8 +179,8 @@ extension CapabilityRegistry {
 			),
 			Capability(
 				name: "znc.in/server-time",
-				identifier: ClientIRCv3SupportedCapability(
-					rawValue: ClientIRCv3SupportedCapability.serverTime.rawValue | zncServerTime.rawValue
+				identifier: CapabilitySet(
+					rawValue: CapabilitySet.serverTime.rawValue | zncServerTime.rawValue
 				),
 				requestedByDefault: true,
 				preference: .always,
@@ -188,8 +188,8 @@ extension CapabilityRegistry {
 			),
 			Capability(
 				name: "znc.in/server-time-iso",
-				identifier: ClientIRCv3SupportedCapability(
-					rawValue: ClientIRCv3SupportedCapability.serverTime.rawValue | zncServerTimeISO.rawValue
+				identifier: CapabilitySet(
+					rawValue: CapabilitySet.serverTime.rawValue | zncServerTimeISO.rawValue
 				),
 				requestedByDefault: true,
 				preference: .always,

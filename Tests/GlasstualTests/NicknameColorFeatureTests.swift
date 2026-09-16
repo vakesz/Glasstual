@@ -41,7 +41,7 @@ struct NicknameColorFeatureTests {
 		model.setUsesDefaultColor(true)
 		expectColorsEqual(
 			model.previewColor,
-			UserNicknameColorStyleGenerator.generatedColor(for: nickname)
+			NicknameColors.generatedColor(for: nickname)
 		)
 	}
 
@@ -70,12 +70,6 @@ struct NicknameColorFeatureTests {
 		expectColorsEqual(customModel.colorForPersistence, replacementColor)
 	}
 
-	@Test("The sheet session owns the nickname-specific model")
-	func sheetSessionOwnsItsModel() {
-		let adapter = NicknameColorSheet(nickname: "alice")
-		#expect(adapter.model.nickname == "alice")
-	}
-
 	@Test("Accepting writes the chosen color, and the default color clears it again")
 	func adapterPersistsSelectionAndReportsTheChange() throws {
 		let nickname = "nickname-color-feature-\(UUID().uuidString)"
@@ -85,9 +79,9 @@ struct NicknameColorFeatureTests {
 		let customColor = NSColor(calibratedRed: 0.15, green: 0.35, blue: 0.75, alpha: 0.9)
 		var changeCount = 0
 
-		UserNicknameColorStyleGenerator.setNicknameColorStyleOverride(nil, forKey: overrideKey)
+		NicknameColors.setNicknameColorStyleOverride(nil, forKey: overrideKey)
 		defer {
-			UserNicknameColorStyleGenerator.setNicknameColorStyleOverride(nil, forKey: overrideKey)
+			NicknameColors.setNicknameColorStyleOverride(nil, forKey: overrideKey)
 		}
 
 		let adapter = NicknameColorSheet(nickname: nickname)
@@ -96,14 +90,14 @@ struct NicknameColorFeatureTests {
 		adapter.submit()
 
 		let persistedColor = try #require(
-			UserNicknameColorStyleGenerator.nicknameColorStyleOverride(forKey: overrideKey)
+			NicknameColors.nicknameColorStyleOverride(forKey: overrideKey)
 		)
 		expectColorsEqual(persistedColor, customColor)
 		#expect(changeCount == 1)
 
 		adapter.model.setUsesDefaultColor(true)
 		adapter.submit()
-		#expect(UserNicknameColorStyleGenerator.nicknameColorStyleOverride(forKey: overrideKey) == nil)
+		#expect(NicknameColors.nicknameColorStyleOverride(forKey: overrideKey) == nil)
 		#expect(changeCount == 2)
 	}
 

@@ -83,11 +83,6 @@ struct ServerPropertiesSheetTests {
 		#expect(await quit.value)
 	}
 
-	@Test("The form is native SwiftUI, not a nib-backed outlet graph")
-	func formHasNoNib() {
-		#expect(Bundle.main.path(forResource: "TDCServerPropertiesSheet", ofType: "nib") == nil)
-	}
-
 	@Test("The draft validates all persisted fields before submission")
 	func draftValidation() throws {
 		var config = ClientConfig(connectionName: "Libera")

@@ -16,7 +16,7 @@ import AppKit
 @MainActor
 protocol NicknameCompletionWindow: AnyObject {
 	var inputTextField: MainWindowTextView! { get }
-	var selectedClient: IRCClient? { get }
+	var selectedClient: Client? { get }
 	var selectedChannel: Channel? { get }
 }
 
@@ -213,7 +213,7 @@ private struct CompletionSession {
 }
 
 @MainActor
-public final class NicknameCompletionStatus: NSObject {
+final class NicknameCompletionStatus: NSObject {
 	private struct Candidate {
 		let displayValue: String
 		let comparisonValue: String
@@ -223,7 +223,7 @@ public final class NicknameCompletionStatus: NSObject {
 	private var session: CompletionSession?
 
 	@available(*, unavailable)
-	override public convenience init() {
+	override convenience init() {
 		fatalError("Use init(window:)")
 	}
 
@@ -235,7 +235,7 @@ public final class NicknameCompletionStatus: NSObject {
 		clear()
 	}
 
-	public func completeNickname(_ movingForward: Bool) {
+	func completeNickname(_ movingForward: Bool) {
 		guard let textView = window?.inputTextField else {
 			return
 		}
@@ -265,7 +265,7 @@ public final class NicknameCompletionStatus: NSObject {
 		self.session = session
 	}
 
-	public func clear() {
+	func clear() {
 		session = nil
 	}
 
@@ -300,10 +300,8 @@ public final class NicknameCompletionStatus: NSObject {
 	private func completionCandidates(for request: CompletionRequest) -> [Candidate] {
 		if request.kind == .command {
 			var commands = CommandIndex.localCommandList().map { $0.lowercased() }
-			let pluginManager = SharedApplication.sharedPluginManager()
 
-			commands.append(contentsOf: pluginManager.supportedUserInputCommands)
-			commands.append(contentsOf: pluginManager.supportedAppleScriptCommands)
+			commands.append(contentsOf: AppServices.scripts.commandNames)
 			commands.sort { $0.localizedCompare($1) == .orderedAscending }
 
 			return commands.map { Candidate(displayValue: $0, comparisonValue: $0) }
@@ -372,7 +370,7 @@ public final class NicknameCompletionStatus: NSObject {
 
 	private func nicknameCandidates(
 		from members: [ChannelUser],
-		client: IRCClient,
+		client: Client,
 		searchPatternIsEmpty: Bool
 	) -> [Candidate] {
 		let sortedMembers: [ChannelUser]
@@ -503,7 +501,7 @@ public final class NicknameCompletionStatus: NSObject {
 
 	private func apply(
 		_ completedValue: String,
-		in textView: TextViewWithIRCFormatter,
+		in textView: IRCFormattedTextView,
 		session: inout CompletionSession
 	) {
 		let request = session.request

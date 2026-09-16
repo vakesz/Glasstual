@@ -39,7 +39,7 @@
 import Foundation
 
 extension FileTransferController {
-	public func prepareForPermanentDestruction() {
+	func prepareForPermanentDestruction() {
 		closeAndPostNotification(false)
 		lifecycleNotifications.cancelAll()
 		stopObservingPeerNicknameChanges()
@@ -47,11 +47,11 @@ extension FileTransferController {
 		releaseOwnedFile()
 	}
 
-	public func close() {
+	func close() {
 		closeAndPostNotification(true)
 	}
 
-	public func closeAndPostNotification(_ postNotification: Bool) {
+	func closeAndPostNotification(_ postNotification: Bool) {
 		filePreparationTask?.cancel()
 		filePreparationTask = nil
 		negotiationTask?.cancel()

@@ -37,7 +37,6 @@
 
 import Foundation
 @testable import Glasstual
-import GlasstualPluginKit
 import Testing
 
 /// One RFC 1459 §2.2 case pair: a mask, and the two spellings it has to match.

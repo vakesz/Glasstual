@@ -12,15 +12,15 @@ import Testing
 struct ServerListReorderPolicyTests {
 	/** The drag as the sidebar performs it, end to end.
 
-	 The indices the policy hands back go to `World`, which takes the dragged
+	 The indices the policy hands back go to `ClientDirectory`, which takes the dragged
 	 item out of the list before putting it back and clamps what it was given to
 	 what is left. Checking the arithmetic on its own said nothing about where a
 	 row landed, which is how "drop A below itself" stayed a no-op — and a copy
 	 of the move written out here would have said just as little, because it
-	 could agree with the policy while `World` disagreed with both. The world
+	 could agree with the policy while `ClientDirectory` disagreed with both. The world
 	 does the moving; only the order it ends up in is asserted. */
 	private func moving(_ from: Int, before destination: Int, in order: [String]) -> [String] {
-		let world = World()
+		let world = ClientDirectory()
 		world.clientList = order.map { name in
 			let client = TestClient()
 			client.config.connectionName = name
@@ -80,7 +80,7 @@ struct ServerListReorderPolicyTests {
 	/// the rows on screen means nothing to it.
 	@Test("A filtered sidebar cannot be reordered")
 	func filteredSidebarRefusesMoves() {
-		let world = World()
+		let world = ClientDirectory()
 		world.clientList = ["alpha", "beta"].map { name in
 			let client = TestClient()
 			client.config.connectionName = name

@@ -38,30 +38,30 @@
 import AppKit
 import CocoaExtensions
 
-public nonisolated enum ApplicationInfo { // nonisolated: value
-	public static func applicationName() -> String {
+nonisolated enum ApplicationInfo { // nonisolated: value
+	static func applicationName() -> String {
 		bundleValue(for: "CFBundleName")
 	}
 
-	public static func applicationVersion() -> String {
+	static func applicationVersion() -> String {
 		bundleValue(for: "CFBundleVersion")
 	}
 
 	/// The copyright line the bundle declares, which is what the standard About
 	/// panel would show.
-	public static func applicationCopyright() -> String {
+	static func applicationCopyright() -> String {
 		bundleValue(for: "NSHumanReadableCopyright")
 	}
 
-	public static func applicationVersionShort() -> String {
+	static func applicationVersionShort() -> String {
 		bundleValue(for: "CFBundleShortVersionString")
 	}
 
-	public static func applicationProcessID() -> Int32 {
+	static func applicationProcessID() -> Int32 {
 		ProcessInfo.processInfo.processIdentifier
 	}
 
-	public static func applicationBundleIdentifier() -> String {
+	static func applicationBundleIdentifier() -> String {
 		guard let identifier = Bundle.main.bundleIdentifier, !identifier.isEmpty else {
 			preconditionFailure("The generated Info.plist is missing CFBundleIdentifier")
 		}
@@ -69,15 +69,15 @@ public nonisolated enum ApplicationInfo { // nonisolated: value
 		return identifier
 	}
 
-	public static func applicationInfoPlist() -> [String: PropertyListValue] {
+	static func applicationInfoPlist() -> [String: PropertyListValue] {
 		Bundle.main.infoDictionary.flatMap { [String: PropertyListValue](propertyList: $0) } ?? [:]
 	}
 
-	public static func applicationLaunchDate() -> Date? {
+	static func applicationLaunchDate() -> Date? {
 		NSRunningApplication.current.launchDate
 	}
 
-	public static func timeIntervalSinceApplicationLaunch() -> TimeInterval {
+	static func timeIntervalSinceApplicationLaunch() -> TimeInterval {
 		guard let launchDate = applicationLaunchDate() else {
 			return 0
 		}
@@ -85,15 +85,15 @@ public nonisolated enum ApplicationInfo { // nonisolated: value
 		return -launchDate.timeIntervalSinceNow
 	}
 
-	@MainActor public static func timeIntervalSinceApplicationInstall() -> TimeInterval {
+	@MainActor static func timeIntervalSinceApplicationInstall() -> TimeInterval {
 		Preferences.Internals.runTime.value + timeIntervalSinceApplicationLaunch()
 	}
 
-	@MainActor public static func saveTimeIntervalSinceApplicationInstall() {
+	@MainActor static func saveTimeIntervalSinceApplicationInstall() {
 		Preferences.Internals.runTime.value = timeIntervalSinceApplicationInstall()
 	}
 
-	@MainActor public static func applicationRunCount() -> UInt {
+	@MainActor static func applicationRunCount() -> UInt {
 		Preferences.Internals.runCount.value
 	}
 
@@ -101,12 +101,12 @@ public nonisolated enum ApplicationInfo { // nonisolated: value
 	/// hand-edited defaults entry can carry is not a count: the bound on the
 	/// declaration is what keeps one out, and the saturation here is what keeps
 	/// a launch from ending on the increment if one ever gets past it.
-	@MainActor public static func incrementApplicationRunCount() {
+	@MainActor static func incrementApplicationRunCount() {
 		let count = applicationRunCount()
 		Preferences.Internals.runCount.value = count < .max ? count + 1 : count
 	}
 
-	public static func applicationBirthday() -> TimeInterval {
+	static func applicationBirthday() -> TimeInterval {
 		1_279_871_580
 	}
 

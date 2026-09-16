@@ -15,6 +15,6 @@
 - [ ] New or migrated Swift is organized by domain or feature under `Sources/`
 - [ ] No Objective-C or C source or headers were added
 - [ ] AppKit is limited to a documented macOS capability adapter with no feature state
-- [ ] UI changes preserve native commands, focus, keyboard behavior, accessibility, restoration, and plugin contracts
+- [ ] UI changes preserve native commands, focus, keyboard behavior, accessibility and restoration
 - [ ] Source moves and rewrites preserve upstream licenses, acknowledgements, and provenance
 - [ ] New user-facing strings are in a feature- or table-namespaced String Catalog and use generated typed resources

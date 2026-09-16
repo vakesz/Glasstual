@@ -50,13 +50,13 @@ private nonisolated let preferenceColorLogger = Logger( // nonisolated: let
  Holding the components rather than the archived bytes keeps the declared
  default comparable after decoding: two legacy archives of the same colour
  need not contain identical bytes. */
-public nonisolated struct PreferenceColor: PreferenceValue, Codable { // nonisolated: value
-	public let red: Double
-	public let green: Double
-	public let blue: Double
-	public let alpha: Double
+nonisolated struct PreferenceColor: PreferenceValue, Codable { // nonisolated: value
+	let red: Double
+	let green: Double
+	let blue: Double
+	let alpha: Double
 
-	public init(red: Double, green: Double, blue: Double, alpha: Double = 1.0) {
+	init(red: Double, green: Double, blue: Double, alpha: Double = 1.0) {
 		self.red = red
 		self.green = green
 		self.blue = blue
@@ -64,7 +64,7 @@ public nonisolated struct PreferenceColor: PreferenceValue, Codable { // nonisol
 	}
 
 	/// `nil` for a colour with no RGB representation, such as a pattern colour.
-	public init?(_ color: NSColor) {
+	init?(_ color: NSColor) {
 		guard let converted = color.usingColorSpace(.genericRGB) else {
 			return nil
 		}
@@ -77,11 +77,11 @@ public nonisolated struct PreferenceColor: PreferenceValue, Codable { // nonisol
 		)
 	}
 
-	public var color: NSColor {
+	var color: NSColor {
 		NSColor(calibratedRed: red, green: green, blue: blue, alpha: alpha)
 	}
 
-	public static func preferenceValue(from object: Any) -> PreferenceColor? {
+	static func preferenceValue(from object: Any) -> PreferenceColor? {
 		guard let data = object as? Data else { return nil }
 		if let payload = try? PropertyListDecoder().decode(StoredColor.self, from: data) {
 			guard payload.version == StoredColor.currentVersion,
@@ -99,7 +99,7 @@ public nonisolated struct PreferenceColor: PreferenceValue, Codable { // nonisol
 		return PreferenceColor(color)
 	}
 
-	public var preferenceObject: Any? {
+	var preferenceObject: Any? {
 		do {
 			guard [red, green, blue, alpha].allSatisfy(\.isFinite) else { return nil }
 			return try PropertyListEncoder().encode(StoredColor(color: self))
@@ -122,7 +122,7 @@ public nonisolated struct PreferenceColor: PreferenceValue, Codable { // nonisol
 	}
 }
 
-public nonisolated extension TextualUserDefaults { // nonisolated: guarded
+nonisolated extension GlasstualUserDefaults { // nonisolated: guarded
 	/// The stored colour, or the key's declared default when nothing is stored.
 	func color(for key: PreferenceKey<PreferenceColor>) -> NSColor {
 		self[key].color

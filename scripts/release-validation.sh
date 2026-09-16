@@ -111,11 +111,7 @@ verify_archive() {
 		"Contents/Info.plist"
 		"Contents/XPCServices/IRC Connection Host.xpc/Contents/Info.plist"
 		"Contents/Frameworks/CocoaExtensions.framework/Resources/Info.plist"
-		"Contents/Frameworks/GlasstualPluginKit.framework/Resources/Info.plist"
 	)
-	for product in Caffeine "Chat Filters" "Smiley Converter" "System Info" "User Insights" "ZNC Additions"; do
-		required+=("Contents/Resources/Bundled Extensions/${product}.bundle/Contents/Info.plist")
-	done
 	for plist in "${required[@]}"; do
 		# Framework Resources/Info.plist resolves through its version symlink.
 		plist="${app}/${plist}"

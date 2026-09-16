@@ -43,22 +43,22 @@ import Foundation
 /// A value rather than the channel itself: a channel can close while the
 /// spotlight is open, so the row keeps the identity the world can be asked for
 /// again and the counts as they stood when the list was built.
-public nonisolated struct ChannelSpotlightSearchResult: Identifiable, Hashable, Sendable { // nonisolated: value
-	public let id: String
+nonisolated struct ChannelSpotlightSearchResult: Identifiable, Hashable, Sendable { // nonisolated: value
+	let id: String
 	/// The server the channel belongs to, which channel navigation can be
 	/// restricted to.
-	public let clientID: String
-	public let channelName: String
+	let clientID: String
+	let channelName: String
 	/// Empty when the channel has no server, which is what the title falls back
 	/// to the bare channel name for.
-	public let networkName: String
-	public let highlightCount: Int
-	public let unreadCount: Int
+	let networkName: String
+	let highlightCount: Int
+	let unreadCount: Int
 	/// How well the channel name matches what was typed. Zero until it is
 	/// scored, which is also what an empty search leaves it at.
-	public var distance = 0.0
+	var distance = 0.0
 
-	public init(
+	init(
 		id: String,
 		clientID: String,
 		channelName: String,
@@ -78,7 +78,7 @@ public nonisolated struct ChannelSpotlightSearchResult: Identifiable, Hashable, 
 
 	/// The channel and the server it is on, or the bare name when it has no
 	/// server to name.
-	public var title: String {
+	var title: String {
 		guard networkName.isEmpty == false else { return channelName }
 		return ChannelSpotlightStrings.channelOnNetwork(channelName, networkName)
 	}
@@ -88,7 +88,7 @@ public nonisolated struct ChannelSpotlightSearchResult: Identifiable, Hashable, 
 	 Every row used to read "0 highlights, 0 unread messages", which is the
 	 state a channel is in for most of the time it is open. A count is worth a
 	 line when there is something to count. */
-	public var activity: String? {
+	var activity: String? {
 		switch (highlightCount, unreadCount) {
 		case (0, 0):
 			nil
@@ -104,7 +104,7 @@ public nonisolated struct ChannelSpotlightSearchResult: Identifiable, Hashable, 
 		}
 	}
 
-	public func scored(against searchString: String) -> Self {
+	func scored(against searchString: String) -> Self {
 		var scored = self
 		scored.distance = searchString.isEmpty
 			? 0
@@ -113,7 +113,7 @@ public nonisolated struct ChannelSpotlightSearchResult: Identifiable, Hashable, 
 	}
 }
 
-public extension ChannelSpotlightSearchResult {
+extension ChannelSpotlightSearchResult {
 	@MainActor
 	init(channel: Channel) {
 		self.init(
@@ -133,16 +133,16 @@ public extension ChannelSpotlightSearchResult {
 /// `clientId LIKE[c]` when channel navigation is per-server) and a sort
 /// descriptor on `distance`. It is written out here so it can be read and
 /// tested; the table only ever sees the answer.
-public nonisolated enum ChannelSpotlightSearchResults { // nonisolated: value
+nonisolated enum ChannelSpotlightSearchResults { // nonisolated: value
 	/// The lowest match score worth showing.
-	public static let minimumDistance = 0.5
+	static let minimumDistance = 0.5
 
 	/// The rows to draw, best match first.
 	///
 	/// - Parameter clientID: the only server to show channels from, or `nil`
 	///   for every server. An empty string matches only results with no server,
 	///   which is what the predicate did when no client was selected.
-	public static func displayed(
+	static func displayed(
 		_ results: [ChannelSpotlightSearchResult],
 		restrictedToClient clientID: String?
 	) -> [ChannelSpotlightSearchResult] {

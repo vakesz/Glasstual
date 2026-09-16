@@ -17,7 +17,7 @@ import AppKit
 /// `MenuCommand`'s. A colour item's tag is its index in
 /// `NSColor.formatterColors`, 0 to 98, and every other item's tag is one of the
 /// commands below.
-public enum TextFormatterCommand: Int, CaseIterable, Sendable {
+enum TextFormatterCommand: Int, CaseIterable, Sendable {
 	case bold = 100
 	case italics = 101
 	case monospace = 102
@@ -34,7 +34,7 @@ public enum TextFormatterCommand: Int, CaseIterable, Sendable {
 	/// The character effect a command turns on and off, where it is a plain
 	/// one. Spoiler is not: it carries two colours with it, and the colour
 	/// commands take a value rather than a state.
-	var effect: IRCTextFormatterEffectType? {
+	var effect: TextFormatterEffectType? {
 		switch self {
 		case .bold: .bold
 		case .italics: .italic
@@ -78,10 +78,10 @@ public enum TextFormatterCommand: Int, CaseIterable, Sendable {
 }
 
 @MainActor
-public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
-	public private(set) var formatterMenu: NSMenuItem!
-	public private(set) var foregroundColorMenu: NSMenu!
-	public private(set) var backgroundColorMenu: NSMenu!
+final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
+	private(set) var formatterMenu: NSMenuItem!
+	private(set) var foregroundColorMenu: NSMenu!
+	private(set) var backgroundColorMenu: NSMenu!
 
 	/// Which presentation of the shared colour panel is current. The close
 	/// notification arrives a turn late, so a teardown has to be able to tell
@@ -100,7 +100,7 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 		.bold, .italics, .underline, .strikethrough, .monospace, .spoiler,
 	]
 
-	override public init() {
+	override init() {
 		super.init()
 		installMenus()
 	}
@@ -215,7 +215,7 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 	 instance the input field's context menu already holds. The copy carries the
 	 items' targets, tags, key equivalents and the swatches and styled titles the
 	 window decorates them with. */
-	public func makeMenu() -> NSMenu? {
+	func makeMenu() -> NSMenu? {
 		formatterMenu.submenu?.copy() as? NSMenu
 	}
 
@@ -274,13 +274,13 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 	 reported went nowhere and the custom-colour items did nothing at all. A
 	 window keeps its own first responder whether or not it is key, so the
 	 window that owns the menu is the one to ask. */
-	public func attach(to window: NSWindow) {
+	func attach(to window: NSWindow) {
 		hostWindow = window
 	}
 
-	private var textField: TextViewWithIRCFormatter? {
+	private var textField: IRCFormattedTextView? {
 		let window = hostWindow ?? NSApp.mainWindow
-		return window?.firstResponder as? TextViewWithIRCFormatter
+		return window?.firstResponder as? IRCFormattedTextView
 	}
 
 	/** One rule per command instead of six near-identical branches.
@@ -288,7 +288,7 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 	 Each character effect is ticked while it is in force and untouched
 	 otherwise; the two colour commands are a set/unset pair, so only the half
 	 that applies is shown. */
-	public func validateMenuItem(_ item: NSMenuItem) -> Bool {
+	func validateMenuItem(_ item: NSMenuItem) -> Bool {
 		guard textField != nil else {
 			return false
 		}
@@ -323,7 +323,7 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 	}
 
 	@objc(emptyAction:)
-	public func emptyAction(_: Any?) {
+	func emptyAction(_: Any?) {
 		/* Empty action used to validate submenus */
 	}
 
@@ -358,7 +358,7 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 	// MARK: - Formatting state
 
 	/// Whether the effect a command stands for is set across the selection.
-	public func isSet(_ command: TextFormatterCommand?) -> Bool {
+	func isSet(_ command: TextFormatterCommand?) -> Bool {
 		guard let effect = command?.effect, let textField else {
 			return false
 		}
@@ -371,7 +371,7 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 
 	/// Turns a character effect on or off across the selection. A spoiler
 	/// carries the two colours that hide the text with it.
-	public func setEffect(_ command: TextFormatterCommand, enabled: Bool) {
+	func setEffect(_ command: TextFormatterCommand, enabled: Bool) {
 		guard let effect = command.effect, let textField else {
 			return
 		}
@@ -396,7 +396,7 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 	}
 
 	/// Reverses the effect the clicked item names.
-	@objc public func toggleFormatting(_ sender: Any?) {
+	@objc func toggleFormatting(_ sender: Any?) {
 		guard let tag = (sender as? NSMenuItem)?.tag,
 		      let command = TextFormatterCommand(rawValue: tag)
 		else { return }
@@ -412,7 +412,7 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 	// MARK: - Formatting Storage Helpers
 
 	private func applyEffectToTextBox(
-		_ formatterEffect: IRCTextFormatterEffectType,
+		_ formatterEffect: TextFormatterEffectType,
 		withValue value: Any?,
 		inRange limitRange: NSRange
 	) {
@@ -442,7 +442,7 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 	}
 
 	private func applyEffect(
-		_ formatterEffect: IRCTextFormatterEffectType,
+		_ formatterEffect: TextFormatterEffectType,
 		withValue value: Any?,
 		to mutableString: NSMutableAttributedString
 	) {
@@ -451,7 +451,7 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 	}
 
 	private func applyEffect(
-		_ formatterEffect: IRCTextFormatterEffectType,
+		_ formatterEffect: TextFormatterEffectType,
 		withValue value: Any?,
 		inRange limitRange: NSRange,
 		to mutableString: NSMutableAttributedString
@@ -483,12 +483,12 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 	// MARK: - Colours
 
 	@objc(insertForegroundColorCharIntoTextBox:)
-	public func insertForegroundColorCharIntoTextBox(_ sender: Any?) {
+	func insertForegroundColorCharIntoTextBox(_ sender: Any?) {
 		insertColor(from: sender, asForegroundColor: true)
 	}
 
 	@objc(insertBackgroundColorCharIntoTextBox:)
-	public func insertBackgroundColorCharIntoTextBox(_ sender: Any?) {
+	func insertBackgroundColorCharIntoTextBox(_ sender: Any?) {
 		insertColor(from: sender, asForegroundColor: false)
 	}
 
@@ -623,7 +623,7 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 			return
 		}
 
-		let effect: IRCTextFormatterEffectType = asForegroundColor ? .foregroundColor : .backgroundColor
+		let effect: TextFormatterEffectType = asForegroundColor ? .foregroundColor : .backgroundColor
 		let selectedTextRange = textField.selectedRange()
 
 		if let colorDigit = NSColor.formatterColors.firstIndex(of: color) {
@@ -634,7 +634,7 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 	}
 
 	@objc(removeForegroundColorCharFromTextBox:)
-	public func removeForegroundColorCharFromTextBox(_: Any?) {
+	func removeForegroundColorCharFromTextBox(_: Any?) {
 		guard let textField else {
 			return
 		}
@@ -643,7 +643,7 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 	}
 
 	@objc(removeBackgroundColorCharFromTextBox:)
-	public func removeBackgroundColorCharFromTextBox(_: Any?) {
+	func removeBackgroundColorCharFromTextBox(_: Any?) {
 		guard let textField else {
 			return
 		}

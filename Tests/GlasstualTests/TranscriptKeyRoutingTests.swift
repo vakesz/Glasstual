@@ -17,7 +17,7 @@ struct TranscriptKeyRoutingTests {
 	@Test("Typed text is sent to the input field")
 	func typedTextGoesToTheInputField() {
 		for characters in ["a", "Z", "7", "/", "\u{00E9}", "\u{1F600}"] {
-			#expect(LogView.isTextInput(characters))
+			#expect(TranscriptView.isTextInput(characters))
 		}
 	}
 
@@ -28,7 +28,7 @@ struct TranscriptKeyRoutingTests {
 			NSPageUpFunctionKey, NSPageDownFunctionKey, NSHomeFunctionKey, NSEndFunctionKey,
 		].compactMap { UnicodeScalar(UInt32($0)).map { String($0) } }
 		for characters in navigation + [" ", "", nil] {
-			#expect(LogView.isTextInput(characters) == false)
+			#expect(TranscriptView.isTextInput(characters) == false)
 		}
 	}
 }

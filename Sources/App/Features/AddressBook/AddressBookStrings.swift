@@ -14,111 +14,111 @@ import Foundation
 
 enum AddressBookStrings {
 	static var ignoreUser: String {
-		String(localized: .TDCAddressBookSheet.ignoreUser)
+		String(localized: .AddressBook.ignoreUser)
 	}
 
 	static var trackUser: String {
-		String(localized: .TDCAddressBookSheet.trackUser)
+		String(localized: .AddressBook.trackUser)
 	}
 
 	static var ignoreDescription: String {
-		String(localized: .TDCAddressBookSheet.ignoreDescription)
+		String(localized: .AddressBook.ignoreDescription)
 	}
 
 	static var trackingDescription: String {
-		String(localized: .TDCAddressBookSheet.trackingDescription)
+		String(localized: .AddressBook.trackingDescription)
 	}
 
 	static var trackingMethodDescription: String {
-		String(localized: .TDCAddressBookSheet.trackingMethodDescription)
+		String(localized: .AddressBook.trackingMethodDescription)
 	}
 
 	static var hostmask: String {
-		String(localized: .TDCAddressBookSheet.hostmask)
+		String(localized: .AddressBook.hostmask)
 	}
 
 	static var hostmaskPlaceholder: String {
-		String(localized: .TDCAddressBookSheet.enterAHostmaskToIgnore)
+		String(localized: .AddressBook.enterAHostmaskToIgnore)
 	}
 
 	static var nickname: String {
-		String(localized: .TDCAddressBookSheet.nickname)
+		String(localized: .AddressBook.nickname)
 	}
 
 	static var nicknamePlaceholder: String {
-		String(localized: .TDCAddressBookSheet.enterAnyNicknameToTrack)
+		String(localized: .AddressBook.enterAnyNicknameToTrack)
 	}
 
 	static var ignoredMessages: String {
-		String(localized: .TDCAddressBookSheet.ignoredMessages)
+		String(localized: .AddressBook.ignoredMessages)
 	}
 
 	static var displayAvailabilityMessage: String {
-		String(localized: .TDCAddressBookSheet.displayMessageWhenUserBecomesAvailable)
+		String(localized: .AddressBook.displayMessageWhenUserBecomesAvailable)
 	}
 
 	static var publicMessages: String {
-		String(localized: .TDCAddressBookSheet.publicMessages)
+		String(localized: .AddressBook.publicMessages)
 	}
 
 	static var privateMessages: String {
-		String(localized: .TDCAddressBookSheet.privateMessages)
+		String(localized: .AddressBook.privateMessages)
 	}
 
 	static var noticeMessages: String {
-		String(localized: .TDCAddressBookSheet.noticeMessages)
+		String(localized: .AddressBook.noticeMessages)
 	}
 
 	static var clientToClientProtocol: String {
-		String(localized: .TDCAddressBookSheet.clientToClientCtcp)
+		String(localized: .AddressBook.clientToClientCtcp)
 	}
 
 	static var publicHighlights: String {
-		String(localized: .TDCAddressBookSheet.publicHighlights)
+		String(localized: .AddressBook.publicHighlights)
 	}
 
 	static var privateHighlights: String {
-		String(localized: .TDCAddressBookSheet.privateHighlights)
+		String(localized: .AddressBook.privateHighlights)
 	}
 
 	static var generalEventMessages: String {
-		String(localized: .TDCAddressBookSheet.generalEventMessages)
+		String(localized: .AddressBook.generalEventMessages)
 	}
 
 	static var fileTransferRequests: String {
-		String(localized: .TDCAddressBookSheet.fileTransferRequests)
+		String(localized: .AddressBook.fileTransferRequests)
 	}
 
 	static var inlineMedia: String {
-		String(localized: .TDCAddressBookSheet.inlineMedia)
+		String(localized: .AddressBook.inlineMedia)
 	}
 
 	static var hostmaskHelp: String {
-		String(localized: .TDCAddressBookSheet.hostmaskFormatAndExamples)
+		String(localized: .AddressBook.hostmaskFormatAndExamples)
 	}
 
 	static var format: String {
-		String(localized: .TDCAddressBookSheet.format)
+		String(localized: .AddressBook.format)
 	}
 
 	static var examples: String {
-		String(localized: .TDCAddressBookSheet.examples)
+		String(localized: .AddressBook.examples)
 	}
 
 	static var hostmaskFormat: String {
-		String(localized: .TDCAddressBookSheet.nicknameUsernameAddress)
+		String(localized: .AddressBook.nicknameUsernameAddress)
 	}
 
 	static var hostmaskExamples: [String] {
 		[
-			String(localized: .TDCAddressBookSheet.matchesEveryPossibleUser),
-			String(localized: .TDCAddressBookSheet.matchesNicknamesStartingWithFrank),
-			String(localized: .TDCAddressBookSheet.matchesUsernameMatt),
-			String(localized: .TDCAddressBookSheet.matchesAddressesEndingInInfo),
+			String(localized: .AddressBook.matchesEveryPossibleUser),
+			String(localized: .AddressBook.matchesNicknamesStartingWithFrank),
+			String(localized: .AddressBook.matchesUsernameMatt),
+			String(localized: .AddressBook.matchesAddressesEndingInInfo),
 		]
 	}
 
 	static var invalidIgnoreMask: String {
-		String(localized: .TDCAddressBookSheet.pleaseEnterAProperlyFormattedIgnore)
+		String(localized: .AddressBook.pleaseEnterAProperlyFormattedIgnore)
 	}
 }

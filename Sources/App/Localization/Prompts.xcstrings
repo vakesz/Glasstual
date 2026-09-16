@@ -1,0 +1,1662 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "action-title-for-accepting-accept": {
+      "comment": "Action title for accepting an incoming file transfer or direct chat (DCC CHAT) request. Consolidates the identical legacy dcc-c4 entry. Legacy key: qpv-go.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accept"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elfogadás"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annehmen"
+          }
+        }
+      }
+    },
+    "are-you-sure-you-want-to-open-the-file-named": {
+      "comment": "Legacy key: xfl-8e.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Are you sure you want to open the file named “%@” with Glasstual?"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Biztosan megnyitod a(z) \"%@\" fájlt a Glasstuallal?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Möchtest du die Datei \"%@\" wirklich mit Glasstual öffnen?"
+          }
+        }
+      }
+    },
+    "are-you-sure-you-want-to-quit-glasstual": {
+      "comment": "Legacy key: 6vj-2p.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Are you sure you want to quit Glasstual?"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Biztosan kilépsz a Glasstualból?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Möchtest du Glasstual wirklich beenden?"
+          }
+        }
+      }
+    },
+    "cancel": {
+      "comment": "Legacy key: qso-2g.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mégse"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abbrechen"
+          }
+        }
+      }
+    },
+    "certificate-for-this-server-is-invalid": {
+      "comment": "Legacy key: 85z-qw.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The certificate for this server is invalid. You might be connecting to a server that is pretending to be “%@”, which could put your confidential information at risk. Would you like to connect to the server anyway?"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A kiszolgáló tanúsítványa érvénytelen. Lehet, hogy egy olyan kiszolgálóhoz kapcsolódsz, amely \"%@\" néven másnak adja ki magát, és veszélyeztetheti a bizalmas adataidat. Ennek ellenére kapcsolódsz?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Zertifikat dieses Servers ist ungültig. Möglicherweise verbindest du dich mit einem Server, der sich als \"%@\" ausgibt und deine vertraulichen Daten gefährdet. Möchtest du dich trotzdem verbinden?"
+          }
+        }
+      }
+    },
+    "certificate-was-not-trusted": {
+      "comment": "Legacy key: k3t-vq.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\n\nThe certificate was not trusted by the system: %@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\n\nA rendszer nem bízik meg a tanúsítványban: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\n\nDas System vertraut dem Zertifikat nicht: %@"
+          }
+        }
+      }
+    },
+    "choose-file": {
+      "comment": "Legacy key: 502-6h.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose File"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fájl kiválasztása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Datei auswählen"
+          }
+        }
+      }
+    },
+    "close": {
+      "comment": "Legacy key: aqw-q1.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bezárás"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schließen"
+          }
+        }
+      }
+    },
+    "connection-named-is-already-configured": {
+      "comment": "Legacy key: a9z-9f.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The connection named “%1$@” is already configured to connect to this server address.\n\nDo you want to add these channels to that connection or would you rather create a new connection?"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A(z) \"%1$@\" kapcsolat már ehhez a kiszolgálócímhez van beállítva.\n\nEhhez a kapcsolathoz adod hozzá ezeket a csatornákat, vagy új kapcsolatot hozol létre?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Verbindung \"%1$@\" ist bereits für diese Serveradresse eingerichtet.\n\nMöchtest du diese Kanäle zu dieser Verbindung hinzufügen oder eine neue Verbindung erstellen?"
+          }
+        }
+      }
+    },
+    "connection-named-is-already-configured-to-connect-to": {
+      "comment": "Legacy key: mx1-qz.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The connection named “%1$@” is already configured to connect to this server address.\n\nDo you want to add this channel to that connection or would you rather create a new connection?"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A(z) \"%1$@\" kapcsolat már ehhez a kiszolgálócímhez van beállítva.\n\nEhhez a kapcsolathoz adod hozzá ezt a csatornát, vagy új kapcsolatot hozol létre?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Verbindung \"%1$@\" ist bereits für diese Serveradresse eingerichtet.\n\nMöchtest du diesen Kanal zu dieser Verbindung hinzufügen oder eine neue Verbindung erstellen?"
+          }
+        }
+      }
+    },
+    "continue": {
+      "comment": "Legacy key: zjw-bd.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folytatás"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fortfahren"
+          }
+        }
+      }
+    },
+    "could-not-open-saved-conversation-history": {
+      "comment": "Title of the alert shown when the saved conversation history could not be opened. Legacy key: h99-3q.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstual could not open your saved conversation history. Please report this problem at https://github.com/vakesz/Glasstual/issues"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A Glasstual nem tudta megnyitni a mentett beszélgetési előzményeket. Jelentsd a hibát itt: https://github.com/vakesz/Glasstual/issues"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstual konnte deinen gespeicherten Gesprächsverlauf nicht öffnen. Bitte melde das Problem unter https://github.com/vakesz/Glasstual/issues"
+          }
+        }
+      }
+    },
+    "create-new-connection": {
+      "comment": "Action title for creating a new connection. Consolidates the identical legacy sv9-8s entry. Legacy key: xca-5h.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create New Connection"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Új kapcsolat létrehozása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neue Verbindung erstellen"
+          }
+        }
+      }
+    },
+    "delete": {
+      "comment": "Verb on the button that confirms deleting the item an alert names (a channel, a server, an entry). Destructive.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Törlés"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Löschen"
+          }
+        }
+      }
+    },
+    "direct-chat-dcc-chat-decline": {
+      "comment": "Direct chat (DCC CHAT) request. Legacy key: dcc-c5.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Decline"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elutasítás"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ablehnen"
+          }
+        }
+      }
+    },
+    "direct-chat-request": {
+      "comment": "Direct chat (DCC CHAT) request. Legacy key: dcc-c3.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Direct chat request from %@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Közvetlen csevegési kérés ettől: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Direkte Chatanfrage von %@"
+          }
+        }
+      }
+    },
+    "do-not-ask-me-again": {
+      "comment": "Label of the suppression checkbox on an alert that has no wording of its own; matches the standard macOS phrasing.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do not ask me again"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ne kérdezze újra"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nicht erneut fragen"
+          }
+        }
+      }
+    },
+    "do-not-show-this-message-again": {
+      "comment": "Legacy key: 68u-z9.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do not show this message again"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ne jelenjen meg újra ez az üzenet"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Meldung nicht mehr anzeigen"
+          }
+        }
+      }
+    },
+    "do-you-want-to-delete-named": {
+      "comment": "Confirmation title for deleting the selected connection or channel; %@ is its name. Consolidates the identical legacy i8o-7z entry. Legacy key: 0kz-wd.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do you want to delete “%@”?"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Törlöd ezt: \"%@\"?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Möchtest du \"%@\" löschen?"
+          }
+        }
+      }
+    },
+    "encryption-with-a-digital-certificate-keeps": {
+      "comment": "Legacy key: ihy-mz.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encryption with a digital certificate keeps information private as it’s sent to or from the server “%1$@”"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A digitális tanúsítvánnyal végzett titkosítás megvédi a(z) \"%1$@\" kiszolgálóval váltott adatokat"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Verschlüsselung mit einem digitalen Zertifikat schützt die Daten beim Austausch mit dem Server \"%1$@\""
+          }
+        }
+      }
+    },
+    "encryption-with-a-digital-certificate-keeps-information": {
+      "comment": "Legacy key: iun-45.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encryption with a digital certificate keeps information private as it’s sent to or from the server “%1$@”\n\nInformation encrypted using: %2$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A digitális tanúsítvánnyal végzett titkosítás megvédi a(z) \"%1$@\" kiszolgálóval váltott adatokat\n\nAz adatok titkosítása: %2$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Verschlüsselung mit einem digitalen Zertifikat schützt die Daten beim Austausch mit dem Server \"%1$@\"\n\nVerwendete Verschlüsselung: %2$@"
+          }
+        }
+      }
+    },
+    "generic-acknowledgement-button-title-ok": {
+      "comment": "Generic acknowledgement button title. Consolidates the identical legacy u5k-9n entry. Legacy key: c7s-dq.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        }
+      }
+    },
+    "glasstual-cant-verify-the-identity": {
+      "comment": "Legacy key: m8b-58.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstual can’t verify the identity of the server “%@”"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A Glasstual nem tudja ellenőrizni a(z) \"%@\" kiszolgáló személyazonosságát"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstual kann die Identität des Servers \"%@\" nicht überprüfen"
+          }
+        }
+      }
+    },
+    "glasstual-is-unable-to-access": {
+      "comment": "Alert title shown when the saved security-scoped bookmark for the log folder no longer resolves. Legacy key: 6ep-0d.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstual can no longer reach the folder set as its log location."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A Glasstual már nem éri el a naplózás célmappáját."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstual kann den als Protokollspeicherort festgelegten Ordner nicht mehr erreichen."
+          }
+        }
+      }
+    },
+    "glasstual-is-using-an-encrypted-connection": {
+      "comment": "Legacy key: sfx-xx.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstual is using an encrypted connection to “%@”"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A Glasstual titkosított kapcsolatot használ ehhez: \"%@\""
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstual verwendet eine verschlüsselte Verbindung zu \"%@\""
+          }
+        }
+      }
+    },
+    "intentionally-empty-informative-text": {
+      "comment": "Intentionally empty informative text for the document-open confirmation. Legacy key: 6tj-yp.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": ""
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": ""
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": ""
+          }
+        }
+      }
+    },
+    "intentionally-empty-informative-text-for-the-no-logs": {
+      "comment": "Intentionally empty informative text for the no-logs-found alert. Legacy key: f05-hu.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": ""
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": ""
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": ""
+          }
+        }
+      }
+    },
+    "last-known-error-message": {
+      "comment": "Legacy key: nlz-um.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last known error message: %@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Legutóbbi ismert hibaüzenet: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Letzte bekannte Fehlermeldung: %@"
+          }
+        }
+      }
+    },
+    "logging-has-been-disabled-because-there": {
+      "comment": "Legacy key: bi7-ah.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Logging has been disabled because there is not enough space on your Mac"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A naplózás letiltva, mert nincs elég szabad hely a Macen"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Protokollierung wurde deaktiviert, da auf deinem Mac nicht genügend Speicherplatz vorhanden ist"
+          }
+        }
+      }
+    },
+    "logging-will-resume-when-there": {
+      "comment": "Legacy key: v9e-jy.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Logging will resume when there is free space available."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A naplózás folytatódik, amint lesz szabad hely."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Protokollierung wird fortgesetzt, sobald Speicherplatz verfügbar ist."
+          }
+        }
+      }
+    },
+    "navigate-to-preferences-advanced-log-location": {
+      "comment": "Legacy key: atn-1c.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the folder again in Settings › Advanced › Log Location."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Válaszd ki újra a mappát itt: Beállítások › Haladó › Naplók helye."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wähle den Ordner unter Einstellungen › Erweitert › Protokollspeicherort erneut aus."
+          }
+        }
+      }
+    },
+    "no": {
+      "comment": "Legacy key: 99q-gg.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nem"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nein"
+          }
+        }
+      }
+    },
+    "no-logs-were-found": {
+      "comment": "Legacy key: k55-19.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No logs were found"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nem találhatók naplók"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Protokolle gefunden"
+          }
+        }
+      }
+    },
+    "open": {
+      "comment": "Verb on the button that confirms opening the file, link or application an alert names.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Megnyitás"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffnen"
+          }
+        }
+      }
+    },
+    "please-enter-desired-vhost-e-g": {
+      "comment": "Legacy key: 2mx-jf.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please enter desired vHost (e.g. “apple.vhost”)"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add meg a kívánt virtuális gépnevet (például \"apple.vhost\")"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gib den gewünschten vHost ein (z. B. \"apple.vhost\")"
+          }
+        }
+      }
+    },
+    "please-note-that-the-following-items": {
+      "comment": "Legacy key: jsh-1a.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please note that the following items cannot be imported: custom addons, file transfer download location, log location, and passwords."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A következő elemek nem importálhatók: egyéni kiegészítők, fájlátviteli letöltések helye, naplók helye és jelszavak."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folgende Elemente können nicht importiert werden: eigene Add-ons, Downloadordner für Dateiübertragungen, Protokollspeicherort und Passwörter."
+          }
+        }
+      }
+    },
+    "please-note-that-the-following-items-cannot-be-exported": {
+      "comment": "Legacy key: syp-al.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please note that the following items cannot be exported: custom addons, file transfer download location, log location, and passwords."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A következő elemek nem exportálhatók: egyéni kiegészítők, fájlátviteli letöltések helye, naplók helye és jelszavak."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folgende Elemente können nicht exportiert werden: eigene Add-ons, Downloadordner für Dateiübertragungen, Protokollspeicherort und Passwörter."
+          }
+        }
+      }
+    },
+    "query-named-already-exists-do": {
+      "comment": "Legacy key: d22-76.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A query named “%@” already exists. Do you want to delete this query?"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Már létezik \"%@\" nevű privát beszélgetés. Törlöd ezt a beszélgetést?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Gespräch namens \"%@\" ist bereits vorhanden. Möchtest du dieses Gespräch löschen?"
+          }
+        }
+      }
+    },
+    "quit": {
+      "comment": "Legacy key: 1bf-k0.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quit"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilépés"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beenden"
+          }
+        }
+      }
+    },
+    "quitting-will-disconnect-you-from-any": {
+      "comment": "Legacy key: 77u-vp.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitting will disconnect you from any server that you are connected to until you restart Glasstual."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilépéskor minden kiszolgálóval megszakad a kapcsolat a Glasstual következő indításáig."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beim Beenden werden alle Serververbindungen getrennt, bis du Glasstual erneut startest."
+          }
+        }
+      }
+    },
+    "remove": {
+      "comment": "Verb on the button that confirms removing the item an alert names from a list, without deleting anything else.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eltávolítás"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entfernen"
+          }
+        }
+      }
+    },
+    "save": {
+      "comment": "Legacy key: 6hx-ni.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mentés"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sichern"
+          }
+        }
+      }
+    },
+    "save-file": {
+      "comment": "Legacy key: vun-f0.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save File"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fájl mentése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Datei sichern"
+          }
+        }
+      }
+    },
+    "script-named-has-been-successfully-installed": {
+      "comment": "Legacy key: 4ua-v5.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The script named “%@” has been successfully installed"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A(z) \"%@\" szkript telepítése sikerült"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Skript \"%@\" wurde erfolgreich installiert"
+          }
+        }
+      }
+    },
+    "scrollback-database-could-not-be-opened": {
+      "comment": "Body of the alert shown when the scrollback database cannot be opened and the failure came with no description of its own.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The scrollback database could not be opened."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nem sikerült megnyitni az előzményadatbázist."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Verlaufsdatenbank konnte nicht geöffnet werden."
+          }
+        }
+      }
+    },
+    "select": {
+      "comment": "Legacy key: xne-79.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kiválasztás"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auswählen"
+          }
+        }
+      }
+    },
+    "send": {
+      "comment": "Verb on the button that confirms sending the message an alert is warning about, such as a paste large enough to flood the channel.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Küldés"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Senden"
+          }
+        }
+      }
+    },
+    "set-user-vhost": {
+      "comment": "Legacy key: 7gr-e4.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set User vHost"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Felhasználó virtuális gépnevének beállítása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Benutzer-vHost festlegen"
+          }
+        }
+      }
+    },
+    "the-preferences-could-not-be-imported": {
+      "comment": "Title of the alert shown when importing a preferences file fails.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The settings could not be imported."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nem sikerült importálni a beállításokat."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Einstellungen konnten nicht importiert werden."
+          }
+        }
+      }
+    },
+    "the-selected-file-is-not-a-preferences-file": {
+      "comment": "Reason shown when an imported file is not a preferences property list.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The selected file is not a Glasstual settings file."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A kiválasztott fájl nem Glasstual-beállításfájl."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die ausgewählte Datei ist keine Glasstual-Einstellungsdatei."
+          }
+        }
+      }
+    },
+    "there-is-no-undo-and-all": {
+      "comment": "Legacy key: 516-ms.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There is no undo and all data related to this channel, except for logs, will be erased."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ez nem vonható vissza. A naplók kivételével a csatornához tartozó összes adat törlődik."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dies kann nicht rückgängig gemacht werden. Alle Daten dieses Kanals außer den Protokollen werden gelöscht."
+          }
+        }
+      }
+    },
+    "there-is-no-undo-and-all-2": {
+      "comment": "Legacy key: etl-ss.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There is no undo and all data related to this server, except for logs, will be erased."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ez nem vonható vissza. A naplók kivételével a kiszolgálóhoz tartozó összes adat törlődik."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dies kann nicht rückgängig gemacht werden. Alle Daten dieses Servers außer den Protokollen werden gelöscht."
+          }
+        }
+      }
+    },
+    "there-is-no-undo-and-all-data-related": {
+      "comment": "Legacy key: 61s-jc.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There is no undo and all data related to this query, except for logs, will be erased."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ez nem vonható vissza. A naplók kivételével a privát beszélgetéshez tartozó összes adat törlődik."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dies kann nicht rückgängig gemacht werden. Alle Daten dieses Gesprächs außer den Protokollen werden gelöscht."
+          }
+        }
+      }
+    },
+    "this-action-will-overwrite-your-configuration": {
+      "comment": "Legacy key: itb-3x.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This action will overwrite your configuration with the contents of a file you choose"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ez a művelet felülírja a beállításaidat a kiválasztott fájl tartalmával"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Vorgang überschreibt deine Konfiguration mit dem Inhalt einer ausgewählten Datei"
+          }
+        }
+      }
+    },
+    "this-action-will-save-a-copy": {
+      "comment": "Legacy key: 1fm-up.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This action will save a copy of your configuration to a location of your choice"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ez a művelet másolatot ment a beállításaidról a választott helyre"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Vorgang sichert eine Kopie deiner Konfiguration an einem Ort deiner Wahl"
+          }
+        }
+      }
+    },
+    "type-into-the-main-input-text": {
+      "comment": "Legacy key: 3ze-xh.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Type “/%@” into the main input text field to perform this script."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A szkript futtatásához írd be a fő szövegbeviteli mezőbe: /%@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gib /%@ in das Haupteingabefeld ein, um dieses Skript auszuführen."
+          }
+        }
+      }
+    },
+    "use-existing-connection": {
+      "comment": "Action title for using an existing connection. Consolidates the identical legacy 0hh-sl entry. Legacy key: sl5-rf.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use Existing Connection"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meglévő kapcsolat használata"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vorhandene Verbindung verwenden"
+          }
+        }
+      }
+    },
+    "vhost-placeholder": {
+      "comment": "Placeholder text for the vHost input prompt: an example host name, not a translated phrase.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "apple.vhost"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "apple.vhost"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "apple.vhost"
+          }
+        }
+      }
+    },
+    "wants-to-start-a-direct-chat": {
+      "comment": "Direct chat (DCC CHAT) request. Legacy key: dcc-c2.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ wants to start a direct chat with you. A direct chat is a connection between the two of you that does not go through the IRC server, so the other person will learn your IP address."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ közvetlen csevegést szeretne indítani veled. Ez közvetlen kapcsolat kettőtök között, amely nem az IRC-kiszolgálón keresztül zajlik, így a másik fél megismeri az IP-címedet."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ möchte einen direkten Chat mit dir starten. Dabei entsteht eine direkte Verbindung zwischen euch, die nicht über den IRC-Server läuft. Die andere Person erfährt dadurch deine IP-Adresse."
+          }
+        }
+      }
+    },
+    "with-the-cipher-suite": {
+      "comment": "Legacy key: 2jq-t5.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ with the cipher suite: %2$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, titkosítási csomag: %2$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ mit der Cipher-Suite: %2$@"
+          }
+        }
+      }
+    },
+    "with-the-cipher-suite-deprecated": {
+      "comment": "Legacy key: 8ou-pu.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ with the cipher suite: %2$@ (deprecated)"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, titkosítási csomag: %2$@ (elavult)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ mit der Cipher-Suite: %2$@ (veraltet)"
+          }
+        }
+      }
+    },
+    "yes": {
+      "comment": "Legacy key: mvh-ms.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yes"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Igen"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ja"
+          }
+        }
+      }
+    },
+    "you-have-clicked-a-link": {
+      "comment": "Legacy key: 3l6-3z.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You have clicked a link that will connect you to “%1$@” and join the channel %2$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Olyan hivatkozásra kattintottál, amely ehhez kapcsolódik: \"%1$@\", és csatlakozik a(z) %2$@ csatornához"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Du hast auf einen Link geklickt, der dich mit \"%1$@\" verbindet und dem Kanal %2$@ beitritt"
+          }
+        }
+      }
+    },
+    "you-have-clicked-a-link-that-will-connect": {
+      "comment": "Legacy key: pnc-ew.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You have clicked a link that will connect you to “%1$@” and join the channels: %2$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Olyan hivatkozásra kattintottál, amely ehhez kapcsolódik: \"%1$@\", és csatlakozik ezekhez a csatornákhoz: %2$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Du hast auf einen Link geklickt, der dich mit \"%1$@\" verbindet und folgenden Kanälen beitritt: %2$@"
+          }
+        }
+      }
+    },
+    "your-current-preferences-could-not-be-backed-up": {
+      "comment": "Reason shown when the backup taken before an import could not be written.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your current settings could not be backed up, so nothing was changed."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nem sikerült biztonsági mentést készíteni a jelenlegi beállításokról, ezért semmi sem változott."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deine aktuellen Einstellungen konnten nicht gesichert werden. Daher wurde nichts geändert."
+          }
+        }
+      }
+    },
+    "keychain-quit-save-failed-body": {
+      "comment": "Explanation during app termination after a password save or deletion failed. The user can retry or explicitly quit with these changes unsaved.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some password changes have not been saved. Try again before quitting, or quit without saving these changes."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Néhány jelszómódosítás nem lett elmentve. Próbáld újra kilépés előtt, vagy lépj ki ezek mentése nélkül."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einige Passwortänderungen wurden nicht gesichert. Versuche es vor dem Beenden erneut oder beende die App ohne diese Änderungen zu sichern."
+          }
+        }
+      }
+    },
+    "keychain-quit-without-saving": {
+      "comment": "Explicit action to finish quitting even though password changes could not be saved.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quit Without Saving"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilépés mentés nélkül"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ohne Sichern beenden"
+          }
+        }
+      }
+    },
+    "keychain-save-failed-title": {
+      "comment": "Title shown when saving or deleting a password in the keychain failed. Pending settings edits remain available for retry.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passwords could not be saved"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nem sikerült menteni a jelszavakat"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passwörter konnten nicht gesichert werden"
+          }
+        }
+      }
+    },
+    "keychain-retry-save": {
+      "comment": "Retry saving or deleting the pending passwords after a keychain error. Newer edits always supersede an old retry.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try Again"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Újrapróbálkozás"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erneut versuchen"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

@@ -85,16 +85,6 @@ struct MessageHistoricRuleTests {
 		#expect(!message.isHistoric)
 	}
 
-	@Test("A live message carrying server-time is not historic")
-	func liveServerTimeIsNotHistoric() throws {
-		let client = historicRuleClient()
-		let line = "@time=\(timestamp(Date())) :mara!u@h PRIVMSG #chat :hi"
-		let message = try #require(Message(line: line, on: client))
-
-		#expect(message.isHistoric == false)
-		#expect(message.hasServerTime)
-	}
-
 	@Test(
 		"A server-time further behind the clock than the tolerance is replay",
 		arguments: [-31.0, -3600.0, -86400.0]

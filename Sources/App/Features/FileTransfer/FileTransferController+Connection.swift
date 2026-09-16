@@ -43,11 +43,11 @@ import os
 // MARK: - Starting
 
 extension FileTransferController {
-	public func open() {
+	func open() {
 		open(withPath: nil)
 	}
 
-	public func open(withPath path: String?) {
+	func open(withPath path: String?) {
 		guard canStart else { return }
 		if self.path == nil {
 			self.path = path
@@ -273,7 +273,7 @@ extension FileTransferController {
 		portMapping.close()
 	}
 
-	public func noteIPAddressLookupSucceeded() {
+	func noteIPAddressLookupSucceeded() {
 		guard transferStatus.isAwaitingAddress else { return }
 		if isSender {
 			transferStatus = isReversed ? .waitingForReceiverToAccept : .isListeningAsSender
@@ -296,7 +296,7 @@ extension FileTransferController {
 		}
 	}
 
-	public func noteIPAddressLookupFailed() {
+	func noteIPAddressLookupFailed() {
 		guard transferStatus.isAwaitingAddress else { return }
 		close(with: .sourceIPAddressUnknown)
 	}
@@ -352,7 +352,7 @@ extension FileTransferController {
 // MARK: - The DCC negotiation this transfer answers
 
 extension FileTransferController {
-	public func didReceiveResumeRequest(_ proposedPosition: UInt64) {
+	func didReceiveResumeRequest(_ proposedPosition: UInt64) {
 		guard isSender, proposedPosition > 0, totalFilesize >= proposedPosition,
 		      [.waitingForReceiverToAccept, .isListeningAsSender].contains(transferStatus) else { return }
 		let session = sessionID
@@ -369,7 +369,7 @@ extension FileTransferController {
 		}
 	}
 
-	public func didReceiveResumeAccept(_ proposedPosition: UInt64) {
+	func didReceiveResumeAccept(_ proposedPosition: UInt64) {
 		/* An accept is only ever an answer to a resume this transfer asked for.
 		 One that arrives at any other moment would move the offset into a file
 		 nothing has claimed. */
@@ -387,7 +387,7 @@ extension FileTransferController {
 		openTransfer()
 	}
 
-	public func didReceiveSendRequest(_ hostAddress: String, hostPort: UInt16) {
+	func didReceiveSendRequest(_ hostAddress: String, hostPort: UInt16) {
 		guard isSender, isReversed, transferStatus == .waitingForReceiverToAccept else { return }
 		self.hostAddress = hostAddress
 		self.hostPort = hostPort
@@ -401,7 +401,7 @@ extension FileTransferController {
 		}
 	}
 
-	public func sendTransferRequestToClient() {
+	func sendTransferRequestToClient() {
 		guard let client else { return }
 
 		if isSender {

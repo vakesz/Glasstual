@@ -17,7 +17,7 @@ import Synchronization
 
 /// Where the application keeps its files. Every accessor here creates the
 /// directory it names, so callers can write into it straight away.
-public nonisolated enum PathInfo { // nonisolated: value
+nonisolated enum PathInfo { // nonisolated: value
 	private static let logger = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 		category: "PathInfo"
@@ -47,11 +47,11 @@ public nonisolated enum PathInfo { // nonisolated: value
 
 	// MARK: - Directory creation
 
-	public static func createDirectory(atPath directoryPath: String) {
+	static func createDirectory(atPath directoryPath: String) {
 		createDirectory(at: URL(fileURLWithPath: directoryPath, isDirectory: true))
 	}
 
-	public static func createDirectory(at directoryURL: URL) {
+	static func createDirectory(at directoryURL: URL) {
 		let alreadyEnsured = ensuredDirectories.withLock { ensured in
 			ensured.contains(directoryURL)
 		}
@@ -82,19 +82,19 @@ public nonisolated enum PathInfo { // nonisolated: value
 
 	// MARK: - Application Specific
 
-	public static var applicationBundle: String {
+	static var applicationBundle: String {
 		Bundle.main.bundlePath
 	}
 
-	public static var applicationBundleURL: URL {
+	static var applicationBundleURL: URL {
 		Bundle.main.bundleURL
 	}
 
-	public static var applicationResources: String {
+	static var applicationResources: String {
 		Bundle.main.resourcePath ?? ""
 	}
 
-	public static var applicationResourcesURL: URL {
+	static var applicationResourcesURL: URL {
 		Bundle.main.resourceURL ?? Bundle.main.bundleURL
 	}
 
@@ -120,7 +120,7 @@ public nonisolated enum PathInfo { // nonisolated: value
 		return baseURL
 	}
 
-	public static var groupContainerApplicationCaches: String? {
+	static var groupContainerApplicationCaches: String? {
 		groupContainerApplicationCachesURL?.path
 	}
 
@@ -151,15 +151,15 @@ public nonisolated enum PathInfo { // nonisolated: value
 		return basePath
 	}
 
-	public static var applicationSupportURL: URL? {
+	static var applicationSupportURL: URL? {
 		fileURL(forPath: applicationSupport)
 	}
 
-	public static var groupContainerApplicationSupport: String? {
+	static var groupContainerApplicationSupport: String? {
 		groupContainerApplicationSupportURL?.path
 	}
 
-	public static var groupContainerApplicationSupportURL: URL? {
+	static var groupContainerApplicationSupportURL: URL? {
 		guard let sourceURL = groupContainerURL else {
 			return nil
 		}
@@ -170,7 +170,7 @@ public nonisolated enum PathInfo { // nonisolated: value
 		return baseURL
 	}
 
-	public static var applicationTemporary: String {
+	static var applicationTemporary: String {
 		let basePath = (NSTemporaryDirectory() as NSString)
 			.appendingPathComponent("/\(productIdentifier)/")
 
@@ -179,15 +179,7 @@ public nonisolated enum PathInfo { // nonisolated: value
 		return basePath
 	}
 
-	public static var bundledExtensions: String {
-		bundledExtensionsURL.path
-	}
-
-	public static var bundledExtensionsURL: URL {
-		applicationResourcesURL.appendingPathComponent("/Bundled Extensions/")
-	}
-
-	public static var bundledScripts: String {
+	static var bundledScripts: String {
 		bundledScriptsURL.path
 	}
 
@@ -195,22 +187,7 @@ public nonisolated enum PathInfo { // nonisolated: value
 		applicationResourcesURL.appendingPathComponent("/Bundled Scripts/")
 	}
 
-	public static var customExtensions: String? {
-		customExtensionsURL?.path
-	}
-
-	public static var customExtensionsURL: URL? {
-		guard let sourceURL = groupContainerApplicationSupportURL else {
-			return nil
-		}
-
-		let baseURL = sourceURL.appendingPathComponent("/Extensions/")
-		createDirectory(at: baseURL)
-
-		return baseURL
-	}
-
-	public static var customScripts: String? {
+	static var customScripts: String? {
 		#if DEBUG
 			if ProcessInfo.processInfo.environment["GLASSTUAL_UI_REVIEW_DIRECTORY"] != nil,
 			   let supportURL = groupContainerApplicationSupportURL
@@ -225,31 +202,31 @@ public nonisolated enum PathInfo { // nonisolated: value
 		return firstSearchPath(for: .applicationScriptsDirectory)
 	}
 
-	public static var customScriptsURL: URL? {
+	static var customScriptsURL: URL? {
 		fileURL(forPath: customScripts)
 	}
 
 	// MARK: - System Specific
 
-	public static var systemDiagnosticReports: String {
+	static var systemDiagnosticReports: String {
 		"/Library/Logs/DiagnosticReports"
 	}
 
-	public static var systemDiagnosticReportsURL: URL {
+	static var systemDiagnosticReportsURL: URL {
 		URL(fileURLWithPath: systemDiagnosticReports, isDirectory: true)
 	}
 
 	// MARK: - User Specific
 
-	public static var userDiagnosticReportsURL: URL {
+	static var userDiagnosticReportsURL: URL {
 		userHomeURL.appendingPathComponent("/Library/Logs/DiagnosticReports")
 	}
 
-	public static var userDownloads: String? {
+	static var userDownloads: String? {
 		firstSearchPath(for: .downloadsDirectory)
 	}
 
-	public static var userHome: String {
+	static var userHome: String {
 		FileManager.pathOfHomeDirectoryOutsideSandbox
 	}
 
@@ -260,17 +237,17 @@ public nonisolated enum PathInfo { // nonisolated: value
 	// MARK: - Transcript folder
 
 	@MainActor
-	public static var transcriptFolder: String? {
+	static var transcriptFolder: String? {
 		transcriptFolderURL?.path
 	}
 
 	@MainActor
-	public static var transcriptFolderURL: URL? {
+	static var transcriptFolderURL: URL? {
 		transcriptFolderURLStorage
 	}
 
 	@MainActor
-	public static func setTranscriptFolderURL(_ transcriptFolderURL: Data?) {
+	static func setTranscriptFolderURL(_ transcriptFolderURL: Data?) {
 		stopUsingTranscriptFolderURL()
 
 		if let transcriptFolderURL {
@@ -282,12 +259,12 @@ public nonisolated enum PathInfo { // nonisolated: value
 	}
 
 	@MainActor
-	public static func startUsingTranscriptFolderURL() {
+	static func startUsingTranscriptFolderURL() {
 		startUsingTranscriptFolderURL(refreshingStaleBookmark: true)
 	}
 
 	@MainActor
-	public static func stopUsingTranscriptFolderURL() {
+	static func stopUsingTranscriptFolderURL() {
 		let existingURL = transcriptFolderURLStorage
 		transcriptFolderURLStorage = nil
 

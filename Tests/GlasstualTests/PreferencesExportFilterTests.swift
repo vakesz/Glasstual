@@ -74,8 +74,8 @@ struct PreferencesExportFilterTests {
 	@Test("The theme key-value store is excluded from export")
 	func themeKeyValueStoreIsExcluded() {
 		let name = "Internal Theme Settings Key-value Store -> Some Theme"
-		TextualUserDefaults.container.set(["setting": true], forKey: name)
-		defer { TextualUserDefaults.container.removeObject(forKey: name) }
+		GlasstualUserDefaults.container.set(["setting": true], forKey: name)
+		defer { GlasstualUserDefaults.container.removeObject(forKey: name) }
 
 		#expect(Preferences.isExcludedFromExport(name))
 		#expect(snapshot.values[name] == nil)

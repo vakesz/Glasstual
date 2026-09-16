@@ -5,7 +5,7 @@
 
 import SwiftUI
 
-struct ServerChannelListApplicationScene: Scene {
+struct ServerChannelListScene: Scene {
 	let scenes: ApplicationScenes
 
 	var body: some Scene {

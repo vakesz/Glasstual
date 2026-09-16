@@ -62,7 +62,7 @@ struct TypedPreferenceStoreTests {
 		}
 	}
 
-	/// `TextualUserDefaults.set` compared against `object(forKey:)`, which falls
+	/// `GlasstualUserDefaults.set` compared against `object(forKey:)`, which falls
 	/// through to the registration domain, so writing a value that happened to
 	/// equal the shipped default persisted nothing at all.
 	@Test("A value equal to the registered default is still persisted")
@@ -74,7 +74,7 @@ struct TypedPreferenceStoreTests {
 		key.reset()
 		key.value = key.defaultValue
 
-		let defaults = TextualUserDefaults.container
+		let defaults = GlasstualUserDefaults.container
 		#expect(defaults.persistedObject(forKey: key.name) != nil)
 	}
 
@@ -83,7 +83,7 @@ struct TypedPreferenceStoreTests {
 		withScratchKeys {
 			// The classic mistake this replaces is integer(forKey:) on a key
 			// that holds a boolean, which silently reads zero.
-			TextualUserDefaults.container.set(["not": "a number"], forKey: Self.intKey.name)
+			GlasstualUserDefaults.container.set(["not": "a number"], forKey: Self.intKey.name)
 			#expect(Self.intKey.value == 7)
 		}
 	}
@@ -94,7 +94,7 @@ struct TypedPreferenceStoreTests {
 		let original = key.storedValue
 		defer { key.storedValue = original }
 
-		TextualUserDefaults.container.set(9999, forKey: key.name)
+		GlasstualUserDefaults.container.set(9999, forKey: key.name)
 		#expect(key.value == key.defaultValue)
 	}
 
@@ -168,10 +168,10 @@ struct TypedPreferenceStoreTests {
 			#expect(Double.preferenceValue(from: object) == nil)
 		}
 		withScratchKeys {
-			TextualUserDefaults.container.set("7.5", forKey: Self.intKey.name)
+			GlasstualUserDefaults.container.set("7.5", forKey: Self.intKey.name)
 			#expect(Self.intKey.value == 7)
 			#expect(Self.intKey.storedValue == nil)
-			TextualUserDefaults.container.set("4.2e1", forKey: Self.intKey.name)
+			GlasstualUserDefaults.container.set("4.2e1", forKey: Self.intKey.name)
 			#expect(Self.intKey.value == 42)
 		}
 	}
@@ -191,7 +191,7 @@ struct TypedPreferenceStoreTests {
 	@Test("A key the catalogue does not know keeps whatever shape it was written with")
 	func importPassesThroughUnknownKeys() {
 		let payload: PropertyListValue = ["anything": 1]
-		let validated = Preferences.coerce(payload, forKey: "Some Plugin -> Its Own Key")
+		let validated = Preferences.coerce(payload, forKey: "Some Undeclared -> Key")
 
 		#expect(validated?.dictionary?["anything"]?.integer == 1)
 	}
@@ -205,7 +205,7 @@ struct TypedPreferenceStoreTests {
 		key.value = [HighlightKeyword(string: "alpha"), HighlightKeyword(string: "beta")]
 
 		let stored = PropertyListValue(
-			propertyList: TextualUserDefaults.container.object(forKey: key.name) ?? []
+			propertyList: GlasstualUserDefaults.container.object(forKey: key.name) ?? []
 		)?.array
 		#expect(
 			stored?.compactMap { $0.dictionary?[HighlightKeyword.field]?.string } == ["alpha", "beta"]
@@ -254,11 +254,11 @@ struct PreferenceExportContentsTests {
 		defer { excluded.storedValue = original }
 
 		excluded.value = 12345
-		TextualUserDefaults.container.set(true, forKey: suppression)
-		TextualUserDefaults.container.set(["setting": true], forKey: themeStore)
+		GlasstualUserDefaults.container.set(true, forKey: suppression)
+		GlasstualUserDefaults.container.set(["setting": true], forKey: themeStore)
 		defer {
-			TextualUserDefaults.container.removeObject(forKey: suppression)
-			TextualUserDefaults.container.removeObject(forKey: themeStore)
+			GlasstualUserDefaults.container.removeObject(forKey: suppression)
+			GlasstualUserDefaults.container.removeObject(forKey: themeStore)
 		}
 
 		let exported = snapshot
@@ -271,8 +271,8 @@ struct PreferenceExportContentsTests {
 	@Test("A key outside the catalogue is not exported")
 	func uncataloguedKeysAreNotExported() {
 		let name = "Tests -> Not In The Catalogue"
-		TextualUserDefaults.container.set("value", forKey: name)
-		defer { TextualUserDefaults.container.removeObject(forKey: name) }
+		GlasstualUserDefaults.container.set("value", forKey: name)
+		defer { GlasstualUserDefaults.container.removeObject(forKey: name) }
 
 		#expect(snapshot.values[name] == nil)
 		#expect(snapshot.unset.contains(name) == false)

@@ -39,18 +39,18 @@
 import AppKit
 import CocoaExtensions
 
-/// Computed, not stored: `TextualUserDefaults.container` is already the handle
+/// Computed, not stored: `GlasstualUserDefaults.container` is already the handle
 /// the main actor keeps, and a second global reference to it would only be a
 /// second name for the same object.
 @MainActor
-private var preferences: TextualUserDefaults {
-	TextualUserDefaults.container
+private var preferences: GlasstualUserDefaults {
+	GlasstualUserDefaults.container
 }
 
 // MARK: - Identity
 
 @MainActor
-public extension TextualPreferences {
+extension TextualPreferences {
 	static func populateDefaultNickname() {
 		let nickname = "\(Preferences.Identity.nickname.defaultValue)\(randomNumber(100))"
 		preferences.registerDefault(nickname, for: Preferences.Identity.nickname)
@@ -60,7 +60,7 @@ public extension TextualPreferences {
 // MARK: - Connection
 
 @MainActor
-public extension TextualPreferences {
+extension TextualPreferences {
 	static func clientList() -> [[String: PropertyListValue]]? {
 		Preferences.Connection.clientList.propertyListValue?.array?.compactMap(\.dictionary)
 	}
@@ -75,7 +75,7 @@ public extension TextualPreferences {
 // MARK: - Logging
 
 @MainActor
-public extension TextualPreferences {
+extension TextualPreferences {
 	static func logToDiskIsEnabled() -> Bool {
 		Preferences.Logging.logToDisk.value && PathInfo.transcriptFolderURL != nil
 	}
@@ -84,7 +84,7 @@ public extension TextualPreferences {
 // MARK: - Highlights
 
 @MainActor
-public extension TextualPreferences {
+extension TextualPreferences {
 	/// Drops the entries that match nothing and sorts what is left, so the
 	/// Settings list and the stored value stay in one order.
 	private static func cleanKeywords(for key: PreferenceKey<[HighlightKeyword]>) {
@@ -102,7 +102,7 @@ public extension TextualPreferences {
 // MARK: - Application
 
 @MainActor
-public extension TextualPreferences {
+extension TextualPreferences {
 	static func registerPreferencesDictionaryVersion() {
 		guard Preferences.Internals.dictionaryVersion.value < preferencesDictionaryVersion else {
 			return
