@@ -60,18 +60,12 @@ validate_run() {
 }
 
 # Every Quality job has to pass, and each job below has to have run each named
-# step to success. The names match .github/workflows/quality.yml.
+# step to success. The names match .github/workflows/quality.yml. Quality runs
+# lint only; the release job builds the archive itself.
 validate_jobs() {
 	jq -e '
     {
-      "lint": ["Lint and check formatting"],
-      "build-and-test": [
-        "Generate Xcode project",
-        "Check generated project is committed",
-        "Build",
-        "Run unit tests",
-        "Check loopback fixtures"
-      ]
+      "lint": ["Lint and check formatting"]
     } as $required |
     [.[].jobs[]] as $jobs |
     ($jobs | length > 0) and
@@ -106,7 +100,7 @@ ${releases}"
 	validate_run "${GITHUB_REPOSITORY}" "${DEFAULT_BRANCH}" "${GITHUB_SHA}" <<< "${run}" ||
 		fail "Quality is not a successful trusted push run for the exact release SHA."
 	jobs="$(gh api --paginate --slurp "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}/jobs?filter=latest&per_page=100")"
-	validate_jobs <<< "${jobs}" || fail "Quality did not pass every job, or skipped a required generation, lint, build, unit test or fixture step."
+	validate_jobs <<< "${jobs}" || fail "Quality did not pass every job, or skipped the required lint step."
 	echo "version=${version}"
 	echo "build_version=${version}"
 }

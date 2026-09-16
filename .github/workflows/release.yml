@@ -96,8 +96,11 @@ jobs:
         run: |
           set -euo pipefail
           sudo xcode-select -s /Applications/Xcode.app
-          xcodebuild -version
-          XCODE_MAJOR="$(xcodebuild -version | head -n 1 | sed -E 's/^Xcode ([0-9]+).*/\1/')"
+          # Capture first: piping xcodebuild into head closes the pipe early,
+          # and xcodebuild 27 aborts on the broken pipe instead of exiting quietly.
+          XCODE_VERSION="$(xcodebuild -version)"
+          printf '%s\n' "${XCODE_VERSION}"
+          XCODE_MAJOR="$(printf '%s\n' "${XCODE_VERSION}" | sed -nE '1s/^Xcode ([0-9]+).*/\1/p')"
           [ "${XCODE_MAJOR}" -eq 27 ]
 
       - name: Generate Xcode project and metadata

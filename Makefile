@@ -13,7 +13,7 @@ E2E_OUTPUT ?= build/e2e
 GENERATED_XCODE_DIR := Generated/Xcode
 E2E_HELPER   := $(abspath $(DERIVED_DATA))/Build/Products/Debug/GlasstualE2EHarness
 # Extra build settings for every xcodebuild call, such as the signing overrides
-# the Quality workflow passes. The shell parses the value, so quote any setting
+# the Signed Release workflow passes. The shell parses the value, so quote any setting
 # that contains a space.
 XCODEBUILD_FLAGS ?=
 XCODEBUILD   := xcodebuild -project $(PROJECT) -scheme $(SCHEME) -destination '$(DESTINATION)' -derivedDataPath $(DERIVED_DATA) $(XCODEBUILD_FLAGS)
