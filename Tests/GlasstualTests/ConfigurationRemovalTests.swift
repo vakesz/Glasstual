@@ -50,7 +50,7 @@ struct ConfigurationRemovalTests {
 		var config = ClientConfig(connectionName: "Removal fixture")
 		config.channelList = [ChannelConfig(channelName: "#removed"),
 		                      ChannelConfig(channelName: "Query", type: .privateMessage)]
-		let client = fixture.world.createClient(with: config)
+		let client = fixture.clientDirectory.createClient(with: config)
 		// Install intent after construction so no password is written to the keychain.
 		client.config.pendingNicknamePassword = .set("fixture-nickname")
 		client.config.pendingProxyPassword = .set("fixture-proxy")
@@ -69,9 +69,9 @@ struct ConfigurationRemovalTests {
 		client.pendingConnectionTask = Task { try? await Task.sleep(for: .seconds(60)) }
 		let scheduledConnection = try #require(client.pendingConnectionTask)
 
-		fixture.world.destroyClient(client, preservingLocalData: true)
+		fixture.clientDirectory.destroyClient(client, preservingLocalData: true)
 
-		#expect(fixture.world.clientList.isEmpty)
+		#expect(fixture.clientDirectory.clientList.isEmpty)
 		#expect(client.isTerminating)
 		#expect(!client.pongTimer.isActive)
 		#expect(client.pendingConnectionTask == nil)
@@ -97,21 +97,21 @@ struct ConfigurationRemovalTests {
 	@Test("The disconnect callback retains the preserving removal option")
 	func preservingClientRemovalAfterDisconnect() {
 		let fixture = ClientEnvironmentFixture()
-		let client = fixture.world.createClient(with: ClientConfig(connectionName: "Deferred removal"))
+		let client = fixture.clientDirectory.createClient(with: ClientConfig(connectionName: "Deferred removal"))
 		let presentation = RemovalPresentation()
 		client.presentation = presentation
 		client.config.pendingNicknamePassword = .set("fixture-nickname")
 		client.isConnected = true
 		client.isQuitting = true
 
-		fixture.world.destroyClient(client, preservingLocalData: true)
-		#expect(fixture.world.clientList == [client])
+		fixture.clientDirectory.destroyClient(client, preservingLocalData: true)
+		#expect(fixture.clientDirectory.clientList == [client])
 		#expect(client.disconnectCallbacks.count == 1)
 		#expect(presentation.preservedRemovals == 0)
 		client.isConnected = false
 		client.invokeDisconnectCallbacks()
 
-		#expect(fixture.world.clientList.isEmpty)
+		#expect(fixture.clientDirectory.clientList.isEmpty)
 		#expect(client.config.pendingNicknamePassword == .set("fixture-nickname"))
 		#expect(presentation.preservedRemovals == 1)
 		#expect(presentation.permanentRemovals == 0)
@@ -122,7 +122,7 @@ struct ConfigurationRemovalTests {
 		let fixture = ClientEnvironmentFixture()
 		var config = ClientConfig(connectionName: "Preparing removal")
 		config.serverList = [Server(serverAddress: "irc.example.test")]
-		let client = fixture.world.createClient(with: config)
+		let client = fixture.clientDirectory.createClient(with: config)
 		let presentation = RemovalPresentation()
 		client.presentation = presentation
 		let (gate, release) = AsyncStream<Void>.makeStream()
@@ -149,9 +149,9 @@ struct ConfigurationRemovalTests {
 			#expect(!client.isDisconnecting)
 		}
 
-		fixture.world.destroyClient(client, preservingLocalData: true)
+		fixture.clientDirectory.destroyClient(client, preservingLocalData: true)
 
-		#expect(fixture.world.clientList.isEmpty)
+		#expect(fixture.clientDirectory.clientList.isEmpty)
 		#expect(client.isTerminating)
 		#expect(client.pendingCredentialTask == nil)
 		#expect(preparation.isCancelled)
@@ -170,7 +170,7 @@ struct ConfigurationRemovalTests {
 		let fixture = ClientEnvironmentFixture()
 		var config = ClientConfig(connectionName: "Preparing reconnect")
 		config.serverList = [Server(serverAddress: "old.example.test")]
-		let client = fixture.world.createClient(with: config)
+		let client = fixture.clientDirectory.createClient(with: config)
 		let (oldGate, releaseOld) = AsyncStream<Void>.makeStream()
 		let (newGate, releaseNew) = AsyncStream<Void>.makeStream()
 		let (started, didStart) = AsyncStream<Int>.makeStream()
@@ -233,10 +233,10 @@ struct ConfigurationRemovalTests {
 	func preservingChannelReconciliation() throws {
 		let fixture = ClientEnvironmentFixture()
 		let observer = RecordingDirectoryObserver()
-		fixture.world.addObserver(observer)
+		fixture.clientDirectory.addObserver(observer)
 		var config = ClientConfig(connectionName: "Reconcile fixture")
 		config.channelList = [ChannelConfig(channelName: "#removed"), ChannelConfig(channelName: "#kept")]
-		let client = fixture.world.createClient(with: config)
+		let client = fixture.clientDirectory.createClient(with: config)
 		let removed = try #require(client.channelList.first)
 		let kept = try #require(client.channelList.last)
 		let presentation = RemovalPresentation()
@@ -265,15 +265,15 @@ struct ConfigurationRemovalTests {
 	      arguments: [false, true], [false, true])
 	func replacingChannelIdentity(isQuery: Bool, rememberQueries: Bool) throws {
 		let fixture = ClientEnvironmentFixture()
-		var preferences = fixture.world.environment.preferences
+		var preferences = fixture.clientDirectory.environment.preferences
 		preferences.rememberServerListQueryStates = rememberQueries
-		fixture.world.applyPreferences(preferences)
+		fixture.clientDirectory.applyPreferences(preferences)
 		var config = ClientConfig(connectionName: "Replacement fixture")
 		config.channelList = [ChannelConfig(
 			channelName: isQuery ? "Peer" : "#same-name",
 			type: isQuery ? .privateMessage : .channel
 		)]
-		let client = fixture.world.createClient(with: config)
+		let client = fixture.clientDirectory.createClient(with: config)
 		let oldChannel = try #require(client.channelList.first)
 		let presentation = RemovalPresentation()
 		oldChannel.presentation = presentation
@@ -292,7 +292,7 @@ struct ConfigurationRemovalTests {
 	@Test("Only legacy reconciliation retires a removed active endpoint's keychain item", arguments: [false, true])
 	func serverPasswordRetirement(preservingLocalData: Bool) {
 		let fixture = ClientEnvironmentFixture()
-		let client = fixture.world.createClient(with: ClientConfig(connectionName: "Endpoint fixture"))
+		let client = fixture.clientDirectory.createClient(with: ClientConfig(connectionName: "Endpoint fixture"))
 		let endpoint = Server(serverAddress: "irc.example.test", pendingServerPassword: .set("fixture-server"))
 		client.config.serverList = [endpoint]
 		client.server = endpoint
@@ -316,8 +316,8 @@ struct ConfigurationRemovalTests {
 	@Test("Ordinary server edits retain unmatched live queries")
 	func serverEditorRetainsQueries() {
 		let fixture = ClientEnvironmentFixture()
-		let client = fixture.world.createClient(with: ClientConfig(connectionName: "Before edit"))
-		let query = fixture.world.createPrivateMessage("KeptPeer", on: client)
+		let client = fixture.clientDirectory.createClient(with: ClientConfig(connectionName: "Before edit"))
+		let query = fixture.clientDirectory.createPrivateMessage("KeptPeer", on: client)
 		let presentation = RemovalPresentation()
 		query.presentation = presentation
 		var edited = client.config
@@ -336,8 +336,8 @@ struct ConfigurationRemovalTests {
 	@Test("Ordinary channel deactivation does not tear down its presentation")
 	func deactivationKeepsPresentation() {
 		let fixture = ClientEnvironmentFixture()
-		let client = fixture.world.createClient(with: ClientConfig(connectionName: "Deactivation fixture"))
-		let channel = fixture.world.createChannel(with: ChannelConfig(channelName: "#parted"), on: client)
+		let client = fixture.clientDirectory.createClient(with: ClientConfig(connectionName: "Deactivation fixture"))
+		let channel = fixture.clientDirectory.createChannel(with: ChannelConfig(channelName: "#parted"), on: client)
 		let presentation = RemovalPresentation()
 		channel.presentation = presentation
 		channel.activate()

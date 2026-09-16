@@ -113,7 +113,7 @@ extension TranscriptView {
 		                    range: NSRange(location: bodyStart, length: result.length - bodyStart))
 		let detailsStart = result.length
 		appendDeliveryAndReactions(for: line, to: result, paragraph: paragraph)
-		for image in inlineImages[line.lineNumber] ?? [] {
+		for image in document.inlineImages[line.lineNumber] ?? [] {
 			append(image, to: result, paragraph: paragraph)
 		}
 		result.append(NSAttributedString(string: "\n", attributes: metadata))
@@ -310,13 +310,13 @@ extension TranscriptView {
 		let clock = themeColor(palette.timestampText)
 		return switch line.deliveryState {
 		case .pending:
-			DeliveryPresentation(symbol: "clock", label: TranscriptThemeStrings.pending, color: clock)
+			DeliveryPresentation(symbol: "clock", label: String(localized: .TranscriptTheme.pending), color: clock)
 		case .delivered:
-			DeliveryPresentation(symbol: "checkmark", label: TranscriptThemeStrings.delivered, color: clock)
+			DeliveryPresentation(symbol: "checkmark", label: String(localized: .TranscriptTheme.delivered), color: clock)
 		case .failed:
 			DeliveryPresentation(
 				symbol: "exclamationmark.triangle.fill",
-				label: TranscriptThemeStrings.failed,
+				label: String(localized: .TranscriptTheme.failed),
 				color: themeColor(palette.failure)
 			)
 		case .none:
@@ -390,7 +390,7 @@ extension TranscriptView {
 			attributes[.foregroundColor] = themeColor(palette.primaryText)
 			attributes[.backgroundColor] = themeColor(palette.secondaryText).withAlphaComponent(0.14)
 			attributes[.accessibilityCustomText] = [
-				TranscriptViewStrings.reactionAccessibility(emoji: emoji, count: count),
+				String(localized: .Transcript.reactionAccessibility(emoji, arg2: count)),
 			]
 			if identifier.isEmpty == false {
 				attributes[.transcriptReaction] = TranscriptReactionTarget(
@@ -432,7 +432,7 @@ extension TranscriptView {
 		image.size = NSSize(width: size.width * scale, height: size.height * scale)
 		/* An image with no description is a blank to anyone who cannot see it;
 		 the address it came from is the one thing always known about it. */
-		let description = TranscriptViewStrings.imageAccessibility(source: inlineImage.sourceURL.absoluteString)
+		let description = String(localized: .Transcript.imageAccessibility(inlineImage.sourceURL.absoluteString))
 		image.accessibilityDescription = description
 		let attachmentString = NSMutableAttributedString(string: "\n")
 		attachmentString.append(NSAttributedString(attachment: inlineImage.attachment))
@@ -473,7 +473,7 @@ extension TranscriptView {
 		 counts the control codes too, and every range after the first one is
 		 then a few characters out. */
 		for link in LinkParser.locateLinks(in: result.string)
-			where TranscriptRenderer.isSafeLink(link.stringValue)
+			where LinkParser.isPermittedLink(link.stringValue)
 		{
 			guard let url = URL(string: link.stringValue), NSMaxRange(link.range) <= result.length else {
 				continue
@@ -650,4 +650,55 @@ struct CachedTranscriptImage {
 	let image: NSImage
 	let originalSize: NSSize
 	let attachment: NSTextAttachment
+}
+
+/** The layout fragment for a paragraph that carries a separator: the unread
+ hairline, or the rule above the current-session caption. It draws the
+ paragraph as TextKit 2 would and adds the rule, `ruleInset` points below the
+ paragraph's top, across the container's width.
+
+ This is where TextKit 2 puts a paragraph's decoration. The alternative, an
+ `NSTextBlock` border in the paragraph style, is a TextKit 1 feature, and a
+ text view whose storage holds one is silently moved back to TextKit 1. */
+final nonisolated class TranscriptRuleLayoutFragment: NSTextLayoutFragment { // nonisolated: immutable
+	let ruleColor: NSColor
+	let ruleInset: CGFloat
+
+	init(textElement: NSTextElement, range: NSTextRange?, ruleColor: NSColor, ruleInset: CGFloat) {
+		self.ruleColor = ruleColor
+		self.ruleInset = ruleInset
+		super.init(textElement: textElement, range: range)
+	}
+
+	@available(*, unavailable)
+	required init?(coder _: NSCoder) {
+		fatalError("TranscriptRuleLayoutFragment is not archived")
+	}
+
+	/** Where the rule goes, relative to the fragment's origin. The fragment's
+	 own frame is only what its centred text used -- nothing at all for the
+	 unread marker's zero-width glyph -- so the rule is measured from the
+	 container's edges instead, the way the old text block's border was. */
+	private var ruleBounds: CGRect {
+		let container = textLayoutManager?.textContainer
+		let padding = container?.lineFragmentPadding ?? 0
+		let width = (container?.size.width ?? layoutFragmentFrame.width) - padding * 2
+		return CGRect(x: padding - layoutFragmentFrame.minX, y: ruleInset, width: max(0, width), height: 1)
+	}
+
+	/// The surface has to cover the rule, which lies outside the text's own
+	/// bounds on both sides and, for the marker paragraph, below its glyph.
+	override var renderingSurfaceBounds: CGRect {
+		super.renderingSurfaceBounds.union(ruleBounds)
+	}
+
+	override func draw(at point: CGPoint, in context: CGContext) {
+		super.draw(at: point, in: context)
+		let rule = ruleBounds
+		guard rule.width > 0 else { return }
+		context.saveGState()
+		context.setFillColor(ruleColor.cgColor)
+		context.fill(rule.offsetBy(dx: point.x, dy: point.y))
+		context.restoreGState()
+	}
 }

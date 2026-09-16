@@ -26,19 +26,19 @@ struct ChannelTopicView: View {
 				Section {
 					ChannelTopicEditor(
 						formattedText: $model.formattedTopic,
-						accessibilityLabel: ChannelTopicStrings.headerTitle(channelName: channelName),
+						accessibilityLabel: String(localized: .ChannelTopic.topicLabel(channelName)),
 						submit: submit
 					)
 					.frame(minHeight: 94)
-					.accessibilityHint(Text(verbatim: ChannelTopicStrings.editorAccessibilityHint))
+					.accessibilityHint(.ChannelTopic.editorAccessibilityHint)
 				} header: {
-					Text(verbatim: ChannelTopicStrings.headerTitle(channelName: channelName))
+					Text(.ChannelTopic.topicLabel(channelName))
 				} footer: {
 					/* The count replaces the alert this sheet used to raise on
 					 the keystroke that crossed the limit: the answer belongs
 					 beside the text being typed, not in a dialog over it. */
 					if let remaining = model.remainingLength {
-						Text(verbatim: ChannelTopicStrings.lengthFooter(remaining: remaining))
+						Text(verbatim: ChannelTopicModel.lengthFooter(remaining: remaining))
 							.foregroundStyle(model.fitsMaximumLength ? AnyShapeStyle(.secondary) : AnyShapeStyle(.red))
 					}
 				}
@@ -48,16 +48,12 @@ struct ChannelTopicView: View {
 			HStack(spacing: 8) {
 				Spacer()
 
-				Button(action: cancel) {
-					Text(verbatim: ChannelTopicStrings.cancelButtonTitle)
-				}
-				.keyboardShortcut(.cancelAction)
+				Button(.ChannelTopic.cancelButton, action: cancel)
+					.keyboardShortcut(.cancelAction)
 
-				Button(action: submit) {
-					Text(verbatim: ChannelTopicStrings.changeButtonTitle)
-				}
-				.keyboardShortcut(.defaultAction)
-				.disabled(model.fitsMaximumLength == false)
+				Button(.ChannelTopic.changeTopicButton, action: submit)
+					.keyboardShortcut(.defaultAction)
+					.disabled(model.fitsMaximumLength == false)
 			}
 		}
 		.padding(20)

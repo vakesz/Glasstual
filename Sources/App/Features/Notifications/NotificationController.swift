@@ -21,21 +21,24 @@ nonisolated let notificationControllerLogger = Logger( // nonisolated: let
 	category: "NotificationController"
 )
 
+/** Posts notifications, and answers what the person does with them.
+
+ What is worth a notification is the connection's decision (`NotificationPolicy`);
+ this owns the delivery: the permission prompt, the categories, the burst
+ coalescing and taking a notification back when the person mutes them. */
 @MainActor
-final class NotificationController: NSObject {
+final class NotificationController: NSObject, ClientNotificationPresenting {
 	var areNotificationsDisabled = false {
 		didSet {
-			guard oldValue != areNotificationsDisabled else { return }
-			AppServices.speech.setNotificationsMuted(
-				areNotificationsDisabled || Preferences.Notifications.soundIsMuted.value
-			)
-			guard areNotificationsDisabled else { return }
+			guard oldValue != areNotificationsDisabled, areNotificationsDisabled else { return }
+
 			/* Cancellation is the whole retraction mechanism: a delivery that
 			 has not reached the system stops, and one that has takes itself
 			 back below. */
 			deliveryTasks.values.forEach { $0.cancel() }
 			deliveryTasks.removeAll()
-			bursts.reset()
+			lastAlerts.removeAll()
+
 			let center = UNUserNotificationCenter.current()
 			center.removeAllPendingNotificationRequests()
 			center.removeAllDeliveredNotifications()
@@ -44,8 +47,14 @@ final class NotificationController: NSObject {
 
 	private var deliveryTasks: [String: Task<Void, Never>] = [:]
 
-	/// Which notifications in a burst may alert. See `claimsAlert(inThread:)`.
-	private var bursts = NotificationBurstCoalescer()
+	/** When each conversation last alerted.
+
+	 A busy query or a channel full of mentions used to raise one banner and one
+	 sound per line. The first notification in a thread alerts; every later one
+	 stays quiet until `burstWindow` has passed. The quiet ones are still
+	 posted, so nothing is lost from Notification Center. */
+	private var lastAlerts: [String: ContinuousClock.Instant] = [:]
+	private let burstWindow = Duration.seconds(5)
 
 	/// The one permission request of this launch, so that a burst of events
 	/// raises one prompt rather than one each.
@@ -64,69 +73,14 @@ final class NotificationController: NSObject {
 		deliveryTasks.values.forEach { $0.cancel() }
 	}
 
-	/** What the system does with the sound a notification carries, or `nil`
-	 while the question is still open.
-
-	 A notification is where a sound belongs: the system honours Do Not Disturb,
-	 the notification's own settings and the alert volume, none of which an
-	 `AudioServicesPlayAlertSound` behind its back does. The application only
-	 plays one itself where the notification is delivered but its sound is not.
-
-	 The answer is a question for the system, so it is not here yet when the
-	 first events of a launch arrive, and it is not here at all until the person
-	 has answered the permission prompt. `nil` says so rather than claiming the
-	 system plays nothing, which would have the application and the notification
-	 each play the same sound. `NotificationPolicy.soundPlayback` is what
-	 reads it. */
-	private(set) var systemSoundDelivery: NotificationSoundDelivery?
-
-	/** Asks the system what it will do with a notification's sound.
-
-	 Read at launch, again once permission has been answered — in the onboarding
-	 flow as well as here — and every time the application comes forward,
-	 because the person can switch its sounds off in System Settings while it is
-	 running and nothing announces that. */
-	func refreshSoundDelivery() async {
-		let settings = await UNUserNotificationCenter.current().notificationSettings()
-
-		systemSoundDelivery = switch settings.authorizationStatus {
-		case .authorized, .provisional, .ephemeral:
-			settings.soundSetting == .enabled ? .system : .silenced
-		case .denied:
-			.refused
-		// `.notDetermined`, and whatever a later release adds: nobody has said.
-		default:
-			nil
-		}
-	}
-
 	private func prepareInitialState() {
 		UNUserNotificationCenter.current().delegate = self
-
-		Task { await refreshSoundDelivery() }
 
 		notifications.observe(.mainWindowSelectionChanged) { [weak self] notification in
 			self?.mainWindowSelectionChanged(notification)
 		}
 
-		// Cheapest moment to notice a change made in System Settings.
-		notifications.observe(NSApplication.didBecomeActiveNotification) { [weak self] _ in
-			Task { await self?.refreshSoundDelivery() }
-		}
-
 		registerCategories()
-	}
-
-	/** The sound a notification carries.
-
-	 A name the system cannot resolve falls back to the default notification
-	 sound: still the system playing something at the right moment, which is
-	 the point, rather than silence or a sound played behind its back. */
-	static func notificationSound(named name: String) -> UNNotificationSound? {
-		guard name != NotificationAlertSound.noSoundPreferenceValue else { return nil }
-		guard name != SoundPlayer.beepSoundName else { return .default }
-
-		return UNNotificationSound(named: UNNotificationSoundName(name))
 	}
 
 	/** Asks for permission once, the first time there is something to show.
@@ -157,8 +111,6 @@ final class NotificationController: NSObject {
 						"Notifications failed to authorize: \(error.localizedDescription, privacy: .public)"
 					)
 				}
-
-				await refreshSoundDelivery()
 			}
 		}
 
@@ -182,53 +134,52 @@ final class NotificationController: NSObject {
 	}
 
 	/** Whether a notification in `thread` may alert now, as the first of a
-	 burst. The ones after it in the same burst are posted quietly, and any sound
-	 the application would play for them is skipped as well. */
+	 burst. Asking claims the alert, so it is asked once per notification.
+
+	 A notification with no thread has nothing to be part of a burst with, so it
+	 always alerts. */
 	func claimsAlert(inThread thread: String?) -> Bool {
-		bursts.claimsAlert(inThread: thread, at: .now)
+		guard let thread else { return true }
+
+		let now = ContinuousClock.now
+
+		if let last = lastAlerts[thread], now < last + burstWindow {
+			return false
+		}
+
+		/* Threads whose window has closed no longer decide anything. Dropping
+		 them here keeps the table as small as the number of threads alerting
+		 now. */
+		lastAlerts = lastAlerts.filter { now < $0.value + burstWindow }
+		lastAlerts[thread] = now
+
+		return true
 	}
 
 	/** Posts one notification.
 
-	 Who or what it is about is the title, where it happened the subtitle and
-	 the detail the body, the shape Messages and Mail use. Every event takes the
-	 same shape. Titles used to be a second family of "<Category>: <subject>"
-	 strings that said in the title what the subtitle already said.
-
-	 `sound` is the alert the event asks for, or `nil` where the person has
-	 muted them. The notification carries it so the system plays it with Do Not
-	 Disturb, the alert volume and the notification's own settings applied. */
-	func post(
-		title: String,
-		subtitle: String?,
-		body: String?,
-		sound: String?,
-		userInfo: NotificationPayload?,
-		category: NotificationCategory,
-		interruptionLevel: UNNotificationInterruptionLevel
-	) {
-		// A notification is plain text whatever the transcript shows.
-		let body = ((body ?? "") as NSString).stripIRCEffects
-
+	 The sound is the system's default alert, carried by the notification so
+	 that Do Not Disturb, the alert volume and the notification's own settings
+	 apply to it. */
+	func post(_ notification: PendingNotification) {
 		let content = UNMutableNotificationContent()
-		content.title = title
-		content.body = body
-		content.categoryIdentifier = category.rawValue
-		content.interruptionLevel = interruptionLevel
+		content.title = notification.title
+		// A notification is plain text whatever the transcript shows.
+		content.body = ((notification.body ?? "") as NSString).stripIRCEffects
+		content.categoryIdentifier = NotificationCategory(event: notification.event).rawValue
+		content.interruptionLevel = NotificationPolicy.interruptionLevel(alerts: notification.alerts)
 
-		if let subtitle, subtitle.isEmpty == false {
+		if let subtitle = notification.subtitle, subtitle.isEmpty == false {
 			content.subtitle = subtitle
 		}
 
-		if let sound {
-			content.sound = Self.notificationSound(named: sound)
+		if notification.playsSound {
+			content.sound = .default
 		}
 
-		if let userInfo {
-			content.userInfo = userInfo.userInfo.propertyListObject
-		}
+		content.userInfo = notification.payload.userInfo.propertyListObject
 
-		if let threadIdentifier = userInfo?.threadIdentifier {
+		if let threadIdentifier = notification.payload.threadIdentifier {
 			content.threadIdentifier = threadIdentifier
 		}
 
@@ -243,18 +194,17 @@ final class NotificationController: NSObject {
 		for channel: Channel?,
 		on client: Client
 	) {
-		post(
+		post(PendingNotification(
+			event: .addressBookMatch,
 			title: title,
 			subtitle: nil,
 			body: message,
-			sound: nil,
-			userInfo: NotificationPayload(
+			payload: NotificationPayload(
 				clientIdentifier: client.uniqueIdentifier,
 				channelIdentifier: channel?.uniqueIdentifier
 			),
-			category: .activity,
-			interruptionLevel: .active
-		)
+			playsSound: false
+		))
 	}
 
 	private func schedule(_ content: UNNotificationContent) {
@@ -338,5 +288,162 @@ final class NotificationController: NSObject {
 
 		/* Equality of nil is valid so both channel IDs can be absent. */
 		return clientIdentifier == payload.clientIdentifier && channelIdentifier == payload.channelIdentifier
+	}
+}
+
+/// What the notification center asks the controller, and what the person does
+/// with a delivered notification.
+extension NotificationController: UNUserNotificationCenterDelegate {
+	func userNotificationCenter(
+		_: UNUserNotificationCenter,
+		openSettingsFor _: UNNotification?
+	) {
+		AppServices.delegate.menuController?.showNotificationPreferences(nil)
+	}
+
+	func userNotificationCenter(
+		_: UNUserNotificationCenter,
+		willPresent _: UNNotification
+	) async -> UNNotificationPresentationOptions {
+		Self.presentationOptions(notificationsAreDisabled: areNotificationsDisabled)
+	}
+
+	/** How a notification that arrives while Glasstual is frontmost is shown.
+
+	 `.sound` is part of the answer. Without it the system shows the banner and
+	 drops the sound the notification carries, which is every sound for an event
+	 raised while the application is in front. */
+	static func presentationOptions(notificationsAreDisabled: Bool) -> UNNotificationPresentationOptions {
+		notificationsAreDisabled ? [] : [.list, .banner, .sound]
+	}
+
+	func userNotificationCenter(
+		_: UNUserNotificationCenter,
+		didReceive response: UNNotificationResponse
+	) async {
+		notificationResponseReceived(
+			actionIdentifier: response.actionIdentifier,
+			payload: NotificationPayload(userInfo: response.notification.request.content.userInfo),
+			replyMessage: (response as? UNTextInputNotificationResponse)?.userText
+		)
+	}
+
+	func notificationResponseReceived(
+		actionIdentifier: String,
+		payload: NotificationPayload,
+		replyMessage: String?
+	) {
+		if actionIdentifier == UNNotificationDismissActionIdentifier {
+			return
+		}
+
+		if let identifier = payload.fileTransferIdentifier {
+			fileTransferResponseReceived(
+				actionIdentifier: actionIdentifier,
+				identifier: identifier,
+				payload: payload
+			)
+
+			return
+		}
+
+		guard let world = AppServices.clientDirectory else {
+			return
+		}
+
+		/* A reply is answered where it was typed. Raising the main window over it,
+		 or moving its selection to the query, is what the person did not ask for. */
+		if actionIdentifier == NotificationCategory.Action.replyToPrivateMessage.rawValue {
+			sendReply(replyMessage, for: payload, in: world)
+			return
+		}
+
+		NSApp.activate()
+		AppServices.delegate.mainWindow.makeKeyAndOrderFront(nil)
+
+		guard let clientId = payload.clientIdentifier else {
+			return
+		}
+
+		guard let channelId = payload.channelIdentifier else {
+			if let client = world.findClient(withId: clientId) {
+				AppServices.delegate.mainWindow.select(client)
+			}
+
+			return
+		}
+
+		guard let channel = world.findChannel(withId: channelId, onClientWithId: clientId) else {
+			return
+		}
+
+		AppServices.delegate.mainWindow.select(channel)
+	}
+
+	private func sendReply(_ replyMessage: String?, for payload: NotificationPayload, in world: ClientDirectory) {
+		guard let replyMessage, replyMessage.isEmpty == false else {
+			return
+		}
+
+		guard let destination = Self.replyDestination(for: payload, in: world),
+		      let client = destination.associatedClient
+		else {
+			notificationControllerLogger.error("Dropped a notification reply whose conversation no longer exists")
+			return
+		}
+
+		client.inputText(replyMessage, destination: destination)
+	}
+
+	/** The conversation a reply typed into a notification goes to.
+
+	 The one the notification came from, when it is still open. A private
+	 message closed since the notification arrived opens again under the
+	 nickname the notification carries: the reply used to go nowhere, without a
+	 word, once the query was gone. `nil` when the connection is gone as well. */
+	static func replyDestination(for payload: NotificationPayload, in world: ClientDirectory) -> Channel? {
+		guard let clientId = payload.clientIdentifier else {
+			return nil
+		}
+
+		if let channelId = payload.channelIdentifier,
+		   let channel = world.findChannel(withId: channelId, onClientWithId: clientId)
+		{
+			return channel
+		}
+
+		guard let queryName = payload.queryName, let client = world.findClient(withId: clientId) else {
+			return nil
+		}
+
+		return client.findChannelOrCreate(queryName, isPrivateMessage: true)
+	}
+
+	private func fileTransferResponseReceived(
+		actionIdentifier: String,
+		identifier: String,
+		payload: NotificationPayload
+	) {
+		let center = AppServices.fileTransfers
+		let clientIdentifier = payload.clientIdentifier
+
+		if actionIdentifier == NotificationCategory.Action.declineFileTransfer.rawValue {
+			center.declineNotification(for: identifier, clientIdentifier: clientIdentifier)
+			return
+		}
+
+		let accepts = actionIdentifier == NotificationCategory.Action.acceptFileTransfer.rawValue
+
+		guard actionIdentifier == UNNotificationDefaultActionIdentifier || accepts else {
+			return
+		}
+
+		let accept = accepts
+			&& payload.fileTransferEventRawValue == Int(NotificationEvent.fileTransferReceiveRequested.rawValue)
+		/* The transfer may have been cleared before the click arrived. The click
+		 still asked for the transfer list, so the list still opens. */
+		_ = center.respondToNotification(for: identifier, clientIdentifier: clientIdentifier, accept: accept)
+		NSApp.activate()
+		center.present()
 	}
 }

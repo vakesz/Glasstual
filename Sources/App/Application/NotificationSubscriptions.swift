@@ -57,10 +57,15 @@ final class NotificationSubscriptions {
 		/* The sequence registers when the task below first asks it for a value,
 		 not here: a notification posted between this call and that first turn is
 		 not delivered. Every caller sets its observations up before the state
-		 they watch can change. */
-		let notifications = center.notifications(named: name)
+		 they watch can change.
+
+		 It is the buffered publisher rather than `center.notifications(named:)`
+		 because that sequence asks for one value at a time and keeps nothing it
+		 cannot deliver: a burst posted inside one main-actor turn arrived as a
+		 single notification. Callers that needed the whole burst had to write
+		 this loop out themselves. */
 		let task = Task { @MainActor in
-			for await notification in notifications {
+			for await notification in center.publisher(for: name).bufferedValues {
 				guard Task.isCancelled == false else { return }
 				if let object, notification.object as AnyObject? !== object {
 					continue

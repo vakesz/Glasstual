@@ -120,9 +120,9 @@ struct TranscriptControllerHistoryLatchTests {
 		)
 		try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
 		defer { try? FileManager.default.removeItem(at: directory) }
-		let store = ScrollbackStore(filenameStore: ScrollbackFilenameFixture())
+		let store = ScrollbackStore(filenameStore: ScrollbackFilenameFixture().store)
 		let historyClient = ScrollbackClient(
-			store: store,
+			store: .store(store),
 			databaseDirectory: { directory.path },
 			reportFailure: { Issue.record("\($0)") }
 		)
@@ -130,7 +130,7 @@ struct TranscriptControllerHistoryLatchTests {
 		let window = window()
 		let controller = TranscriptController(
 			client: client, in: window, inlineImageLoader: InlineImageLoader(),
-			historicLog: Scrollback(client: historyClient)
+			scrollback: Scrollback(client: historyClient)
 		)
 		controller.historyPageFetcher = { _ in .page([]) }
 		controller.historyLoadFailure = .unavailable

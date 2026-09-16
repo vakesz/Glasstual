@@ -80,19 +80,16 @@ struct ChannelConfigCodableTests {
 		#expect(config.defaultTopic == nil)
 	}
 
-	@Test("Notification overrides survive the round trip as sounds and flags")
-	func notificationOverridesRoundTrip() throws {
+	@Test("Muting a conversation survives the round trip")
+	func muteSurvivesTheRoundTrip() throws {
 		var config = ChannelConfig(channelName: "#swift")
-		config.setSound("Glass", forEvent: .highlight)
-		config.setNotificationEnabled(.off, forEvent: .highlight)
+		config.pushNotifications = false
 
 		let restored = try #require(
 			PropertyListModel.decode(ChannelConfig.self, from: PropertyListModel.encode(config))
 		)
 
-		#expect(restored.sound(forEvent: .highlight) == "Glass")
-		#expect(restored.notificationEnabled(forEvent: .highlight) == .off)
-		#expect(restored.notificationEnabled(forEvent: .channelMessage) == .inherited)
+		#expect(restored.pushNotifications == false)
 	}
 
 	@Test("The channel key is not part of the encoded value")

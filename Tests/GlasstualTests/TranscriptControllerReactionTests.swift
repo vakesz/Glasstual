@@ -31,11 +31,11 @@ struct TranscriptControllerReactionTests {
 			backing: .buffered,
 			defer: false
 		)
-		let controller = window.logControllers.controller(for: client)
+		let controller = window.transcriptControllers.controller(for: client)
 		controller.loadsHistoryLazily = { false }
-		let logView = controller.ensureBackingView()
-		logView.frame = NSRect(x: 0, y: 0, width: 800, height: 600)
-		window.contentView = logView
+		let transcriptView = controller.ensureBackingView()
+		transcriptView.frame = NSRect(x: 0, y: 0, width: 800, height: 600)
+		window.contentView = transcriptView
 		await controller.drainRenderJobs()
 
 		var line = LogLine()
@@ -45,7 +45,7 @@ struct TranscriptControllerReactionTests {
 		line.messageIdentifier = "msg-\(UUID().uuidString)"
 		controller.print(line)
 
-		let transcript = try #require(textView(in: logView))
+		let transcript = try #require(textView(in: transcriptView))
 		await controller.drainRenderJobs()
 		try #require(transcript.string.contains("shipping it"))
 

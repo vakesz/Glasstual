@@ -19,20 +19,12 @@ struct TypedLocalizationCatalogTests {
 		#expect(CommonValidationStrings.invalidNickname.hasPrefix("A nickname can contain "))
 		#expect(CommonValidationStrings.maximumLength(390) == "Maximum length is 390 bytes.")
 		#expect(CommonValidationStrings.maximumLength(1) == "Maximum length is 1 byte.")
-		#expect(NotificationStrings.eventTypeTitle(for: .invite) == "Invitation")
+		#expect(String(localized: NotificationEvent.invite.title) == "Invitation")
 		#expect(
-			NotificationStrings.Membership.parted(nickname: "Alice", reason: "Leaving")
-				== "Alice parted with reason: Leaving"
-		)
-		#expect(NotificationStrings.Membership.parted(nickname: "Alice", reason: nil) == "Alice parted")
-		#expect(
-			NotificationStrings.FileTransfer.description(
-				for: .fileTransferReceiveSuccessful,
+			NotificationEvent.fileTransferReceiveSuccessful.fileTransferBody(
 				filename: "archive.zip",
 				byteCount: 1024
 			) == "archive.zip (1 kB)"
 		)
-		#expect(NotificationSoundStrings.defaultSound == "Default Sound")
-		#expect(NotificationSoundStrings.noSound == "No Sound")
 	}
 }

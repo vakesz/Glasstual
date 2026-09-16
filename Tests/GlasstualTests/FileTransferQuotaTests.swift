@@ -21,8 +21,8 @@ struct FileTransferQuotaTests {
 		on client: Client,
 		filename: String,
 		filesize: UInt64 = 1024
-	) throws -> FileTransferController {
-		try #require(FileTransferController.receiver(
+	) throws -> FileTransfer {
+		try #require(FileTransfer.receiver(
 			for: client,
 			nickname: "alice",
 			address: "203.0.113.5",
@@ -39,7 +39,7 @@ struct FileTransferQuotaTests {
 	])
 	func finishedRowsDoNotSpendTheLimit(_ status: FileTransferStatus) throws {
 		let client = TestClient()
-		let model = FileTransferCenterModel()
+		let model = FileTransferList()
 		let transfer = try receiver(on: client, filename: "photo.jpg")
 		model.add(transfer)
 
@@ -54,7 +54,7 @@ struct FileTransferQuotaTests {
 	])
 	func runningAndWaitingRowsSpendTheLimit(_ status: FileTransferStatus) throws {
 		let client = TestClient()
-		let model = FileTransferCenterModel()
+		let model = FileTransferList()
 		let transfer = try receiver(on: client, filename: "photo.jpg")
 		model.add(transfer)
 
@@ -68,7 +68,7 @@ struct FileTransferQuotaTests {
 	@Test("Outgoing transfers are not receivers")
 	func sendersDoNotSpendTheLimit() throws {
 		let client = TestClient()
-		let model = FileTransferCenterModel()
+		let model = FileTransferList()
 		let transfer = try receiver(on: client, filename: "photo.jpg")
 		transfer.isSender = true
 		transfer.transferStatus = .sending
@@ -84,7 +84,7 @@ struct FileTransferQuotaTests {
 	@Test("Outstanding bytes count towards the next offer's room")
 	func outstandingBytesAreCounted() throws {
 		let client = TestClient()
-		let model = FileTransferCenterModel()
+		let model = FileTransferList()
 		let running = try receiver(on: client, filename: "big.iso", filesize: 1000)
 		running.transferStatus = .receiving
 		running.processedFilesize = 400
@@ -103,7 +103,7 @@ struct FileTransferQuotaTests {
 	@Test("An over-long transfer reports no outstanding bytes")
 	func overLongTransfersDoNotUnderflow() throws {
 		let client = TestClient()
-		let model = FileTransferCenterModel()
+		let model = FileTransferList()
 		let running = try receiver(on: client, filename: "big.iso", filesize: 1000)
 		running.transferStatus = .receiving
 		running.processedFilesize = 4000

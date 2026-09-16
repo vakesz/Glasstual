@@ -399,24 +399,24 @@ struct TranscriptControllerApplicationTests {
 	)
 	func emptyServerPageCompletes(labeled: Bool, nested: Bool) async throws {
 		try await withServerHistoryController(labeled: labeled) { client, channel, controller in
-			let socket = try #require(client.socket)
+			_ = try #require(client.socket)
 			let request = try #require(controller.serverHistoryRequest)
 			let label = try outgoingHistoryLabel(on: client)
 			let tags = label.map { "@label=\($0) " } ?? ""
 			if nested {
-				client.ircConnection(socket, didReceiveData: "\(tags)BATCH +wrapper labeled-response")
-				client.ircConnection(socket, didReceiveData: "@batch=wrapper BATCH +page chathistory \(channel.name)")
-				client.ircConnection(socket, didReceiveData: "BATCH -page")
+				client.connectionDidReceive("\(tags)BATCH +wrapper labeled-response")
+				client.connectionDidReceive("@batch=wrapper BATCH +page chathistory \(channel.name)")
+				client.connectionDidReceive("BATCH -page")
 				#expect(controller.serverHistoryRequest == request)
-				client.ircConnection(socket, didReceiveData: "BATCH -wrapper")
+				client.connectionDidReceive("BATCH -wrapper")
 			} else {
-				client.ircConnection(socket, didReceiveData: "\(tags)BATCH +page chathistory \(channel.name)")
-				client.ircConnection(socket, didReceiveData: "BATCH -page")
+				client.connectionDidReceive("\(tags)BATCH +page chathistory \(channel.name)")
+				client.connectionDidReceive("BATCH -page")
 			}
 			#expect(controller.serverHistoryRequest == nil)
 			#expect(controller.serverHistoryExhaustedBefore == (labeled ? request.before : nil))
 			#expect(!controller.serverHistoryFailed)
-			#expect(client.serverHistoryRequests.isEmpty)
+			#expect(client.chatHistory.serverRequests.isEmpty)
 			let count = client.sentLines.count
 			controller.loadOlderHistory()
 			await controller.drainRenderJobs()
@@ -433,12 +433,12 @@ struct TranscriptControllerApplicationTests {
 	@Test("Wire history failures are retryable and cannot exhaust the transcript", arguments: [false, true])
 	func failedServerPageCanRetry(labeled: Bool) async throws {
 		try await withServerHistoryController(labeled: labeled) { client, channel, controller in
-			let socket = try #require(client.socket)
+			_ = try #require(client.socket)
 			let first = try #require(controller.serverHistoryRequest)
 			let label = try outgoingHistoryLabel(on: client)
 			let tags = label.map { "@label=\($0) " } ?? ""
 			let failure = "\(tags)FAIL CHATHISTORY TEMPORARILY_UNAVAILABLE BEFORE \(channel.name) :Retry later"
-			client.ircConnection(socket, didReceiveData: failure)
+			client.connectionDidReceive(failure)
 			#expect(controller.serverHistoryFailed)
 			#expect(controller.serverHistoryExhaustedBefore == nil)
 			#expect(controller.serverHistoryRequest == nil)
@@ -449,7 +449,7 @@ struct TranscriptControllerApplicationTests {
 			#expect(retry.id != first.id)
 			#expect(!controller.serverHistoryFailed)
 			if labeled {
-				client.ircConnection(socket, didReceiveData: failure)
+				client.connectionDidReceive(failure)
 				#expect(controller.serverHistoryRequest == retry)
 				#expect(!controller.serverHistoryFailed)
 			}
@@ -459,12 +459,14 @@ struct TranscriptControllerApplicationTests {
 	@Test("A labeled batch admitted before clear cannot complete or prepend into the next generation")
 	func retiredServerPageCannotMutateController() async throws {
 		try await withServerHistoryController(labeled: true) { client, channel, controller in
-			let socket = try #require(client.socket)
+			_ = try #require(client.socket)
 			let label = try #require(try outgoingHistoryLabel(on: client))
 			let identifier = UUID().uuidString
-			client.ircConnection(socket, didReceiveData: "@label=\(label) BATCH +old chathistory \(channel.name)")
-			client.ircConnection(socket, didReceiveData:
-				"@batch=old;msgid=\(identifier);time=1970-01-01T00:00:50.000Z :alice!u@h PRIVMSG \(channel.name) :retired page")
+			client.connectionDidReceive("@label=\(label) BATCH +old chathistory \(channel.name)")
+			client
+				.connectionDidReceive(
+					"@batch=old;msgid=\(identifier);time=1970-01-01T00:00:50.000Z :alice!u@h PRIVMSG \(channel.name) :retired page"
+				)
 			controller.clear()
 			await controller.drainRenderJobs()
 			controller.print(line("new generation", date: 200))
@@ -472,7 +474,7 @@ struct TranscriptControllerApplicationTests {
 			controller.loadOlderHistory()
 			await controller.drainRenderJobs()
 			let current = try #require(controller.serverHistoryRequest)
-			client.ircConnection(socket, didReceiveData: "BATCH -old")
+			client.connectionDidReceive("BATCH -old")
 			await controller.drainRenderJobs()
 			#expect(controller.serverHistoryRequest == current)
 			#expect(!controller.serverHistoryFailed)
@@ -488,10 +490,10 @@ struct TranscriptControllerApplicationTests {
 	@Test("An uncorrelated empty batch cannot complete a labeled request")
 	func unrelatedEmptyBatchDoesNotExhaust() async throws {
 		try await withServerHistoryController(labeled: true) { client, channel, controller in
-			let socket = try #require(client.socket)
+			_ = try #require(client.socket)
 			let request = try #require(controller.serverHistoryRequest)
-			client.ircConnection(socket, didReceiveData: "BATCH +unsolicited chathistory \(channel.name)")
-			client.ircConnection(socket, didReceiveData: "BATCH -unsolicited")
+			client.connectionDidReceive("BATCH +unsolicited chathistory \(channel.name)")
+			client.connectionDidReceive("BATCH -unsolicited")
 			#expect(controller.serverHistoryRequest == request)
 			#expect(controller.serverHistoryExhaustedBefore == nil)
 		}
@@ -500,7 +502,7 @@ struct TranscriptControllerApplicationTests {
 	@Test("A duplicate-only wire page is not mistaken for an empty server page")
 	func duplicateOnlyServerPageDoesNotExhaust() async throws {
 		try await withServerHistoryController(labeled: true) { client, channel, controller in
-			let socket = try #require(client.socket)
+			_ = try #require(client.socket)
 			let label = try #require(try outgoingHistoryLabel(on: client))
 			let duplicate = line("already stored", date: 50)
 			let identifier = try #require(duplicate.messageIdentifier)
@@ -510,7 +512,7 @@ struct TranscriptControllerApplicationTests {
 				"@batch=page;msgid=\(identifier);time=1970-01-01T00:00:50.000Z :alice!u@h PRIVMSG \(channel.name) :already stored",
 				"BATCH -page",
 			] {
-				client.ircConnection(socket, didReceiveData: wire)
+				client.connectionDidReceive(wire)
 			}
 			#expect(controller.serverHistoryRequest == nil)
 			#expect(controller.serverHistoryExhaustedBefore == nil)
@@ -521,7 +523,7 @@ struct TranscriptControllerApplicationTests {
 	@Test("Nested labeled wire history reaches the controller prepend path")
 	func nestedServerPagePrepends() async throws {
 		try await withServerHistoryController(labeled: true) { client, channel, controller in
-			let socket = try #require(client.socket)
+			_ = try #require(client.socket)
 			let label = try #require(try outgoingHistoryLabel(on: client))
 			let identifier = UUID().uuidString
 			for wire in [
@@ -530,7 +532,7 @@ struct TranscriptControllerApplicationTests {
 				"@batch=page;msgid=\(identifier);time=1970-01-01T00:00:50.000Z :alice!u@h PRIVMSG \(channel.name) :older",
 				"BATCH -page", "BATCH -wrapper",
 			] {
-				client.ircConnection(socket, didReceiveData: wire)
+				client.connectionDidReceive(wire)
 			}
 			await controller.drainRenderJobs()
 			#expect(controller.serverHistoryRequest == nil)

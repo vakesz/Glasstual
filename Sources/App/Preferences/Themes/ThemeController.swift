@@ -75,7 +75,7 @@ nonisolated enum ThemeSnapshotStore { // nonisolated: value
 /// rendering, preferences, and plist import/export.
 @MainActor
 @Observable
-final class ThemeController: NSObject {
+final class ThemeController {
 	private static let logger = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 		category: "TranscriptTheme"
@@ -98,13 +98,12 @@ final class ThemeController: NSObject {
 		resolved(theme.palette.background)
 	}
 
-	override convenience init() {
+	convenience init() {
 		self.init(stores: .live)
 	}
 
 	init(stores: PreferencesTransferStores) {
 		self.stores = stores
-		super.init()
 
 		/* The snapshot carries the appearance the colours off the main actor are
 		 resolved against, and the system's own light/dark switch never passes

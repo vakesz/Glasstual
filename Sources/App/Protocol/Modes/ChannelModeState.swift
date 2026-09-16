@@ -38,16 +38,11 @@
 
 import Foundation
 
-final class ChannelModeState: NSObject {
+final class ChannelModeState {
 	private weak var client: Client?
 	private weak var channel: Channel?
 
 	private(set) var modes: ChannelModeContainer
-
-	@available(*, unavailable)
-	override init() {
-		fatalError("Use ChannelModeState.init(channel:)")
-	}
 
 	init(channel: Channel) {
 		guard let associatedClient = channel.associatedClient else {
@@ -57,8 +52,6 @@ final class ChannelModeState: NSObject {
 		client = associatedClient
 		self.channel = channel
 		modes = ChannelModeContainer(client: associatedClient)
-
-		super.init()
 	}
 
 	func updateModes(_ modeString: String) -> [ModeInfo] {

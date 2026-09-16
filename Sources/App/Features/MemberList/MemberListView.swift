@@ -54,7 +54,7 @@ struct MemberListView: View {
 			guard let identifier = identities.first else { return }
 			model.selectedMemberIDs = identities
 			model.notePrimaryInteraction(withID: identifier)
-			AppServices.delegate.menuController?.actionCoordinator.memberInMemberListDoubleClicked(model)
+			AppServices.delegate.menuController?.memberInMemberListDoubleClicked(model)
 		}
 		.redirectsPrintableInput(to: redirectTyping)
 	}
@@ -128,7 +128,7 @@ private struct MemberListRowView: View {
 					.foregroundStyle(user.isAway ? .secondary : .primary)
 
 				if user.isBot {
-					Text(MemberListStrings.botCaption)
+					Text(.MemberList.botCaption)
 						.font(.caption2.weight(.medium))
 						.padding(.horizontal, UISpacing.tight)
 						.background(.quaternary, in: Capsule())
@@ -145,13 +145,13 @@ private struct MemberListRowView: View {
 					/* The glyph stays hidden from assistive technology because the
 					 row's own label already names the rank; the tooltip is for the
 					 pointer, which has nothing else to read it with. */
-					.help(MemberListStrings.privilegeDescription(for: displayRank))
+					.help(MemberListRanks.style(for: displayRank).privilegeDescription)
 					.accessibilityHidden(true)
 			}
 		}
 		.contentShape(Rectangle())
 		.accessibilityLabel(accessibilityDescription)
-		.accessibilityAction(named: MemberListStrings.showProfileAction) {
+		.accessibilityAction(named: Text(.MemberList.showProfileAction)) {
 			model.showProfile(for: member.id)
 		}
 		/* A plain click opens the profile at once; the double click is the
@@ -176,14 +176,14 @@ private struct MemberListRowView: View {
 			MemberListUserInfoView(
 				content: MemberListUserInfoContent(
 					member: member,
-					privileges: MemberListStrings.privilegeDescription(for: displayRank)
+					privileges: MemberListRanks.privilegeDescription(for: displayRank)
 				)
 			)
 		}
 		.dropDestination(for: URL.self) { urls, _ in
 			let files = urls.filter(\.isFileURL).map(\.path)
 			guard files.isEmpty == false else { return false }
-			AppServices.delegate.menuController?.actionCoordinator.sendDroppedFiles(files, nickname: user.nickname)
+			AppServices.delegate.menuController?.sendDroppedFiles(files, nickname: user.nickname)
 			return true
 		}
 	}
@@ -224,16 +224,16 @@ private struct MemberListRowView: View {
 	private var accessibilityDescription: String {
 		var phrases = [
 			AccessibilityStrings.userListEntry(for: user.nickname),
-			MemberListStrings.privilegeDescription(for: displayRank),
+			MemberListRanks.privilegeDescription(for: displayRank),
 		]
 		if user.isAway {
-			phrases.append(MemberListStrings.userIsAway)
+			phrases.append(String(localized: .MemberList.userIsAway))
 		}
 		if user.isBot {
-			phrases.append(MemberListStrings.userIsBot)
+			phrases.append(String(localized: .MemberList.userIsABot))
 		}
 		if let account = user.account, account.isEmpty == false {
-			phrases.append(MemberListStrings.loggedIn(account: account))
+			phrases.append(String(localized: .MemberList.loggedInAs(account)))
 		}
 		return phrases.formatted(.list(type: .and))
 	}
@@ -245,7 +245,7 @@ private struct MemberListContextMenu: View {
 	let menu: NSMenu?
 
 	var body: some View {
-		if let menu, let coordinator = AppServices.delegate.menuController?.actionCoordinator {
+		if let menu, let coordinator = AppServices.delegate.menuController {
 			AppMenuContent(
 				menu: menu,
 				context: AppMenuContext(coordinator: coordinator, members: clickedMembers)
@@ -272,6 +272,6 @@ enum MemberListPresentation {
 	}
 
 	static func privilegesDescription(for member: ChannelUser) -> String {
-		MemberListStrings.privilegeDescription(for: displayRank(for: member))
+		MemberListRanks.privilegeDescription(for: displayRank(for: member))
 	}
 }

@@ -61,7 +61,7 @@ struct ClientNegotiationTests {
 			on: client
 		))
 		#expect(capabilityCommands(of: client) == ["END"])
-		#expect(client.saslMechanism == nil)
+		#expect(client.sasl.mechanism == nil)
 		#expect(client.config.nicknamePassword == "secret")
 	}
 
@@ -180,7 +180,7 @@ struct ClientNegotiationTests {
 		let client = makeClient(configuration: ["nickname": "me"], nicknamePassword: "secret")
 
 		#expect(client.selectSASLMechanism(fromOffered: ["PLAIN", "SCRAM-SHA-256"]))
-		#expect(client.saslMechanism == "SCRAM-SHA-256")
+		#expect(client.sasl.mechanism == "SCRAM-SHA-256")
 	}
 
 	@Test("PLAIN is chosen when SCRAM is not offered")
@@ -188,7 +188,7 @@ struct ClientNegotiationTests {
 		let client = makeClient(configuration: ["nickname": "me"], nicknamePassword: "secret")
 
 		#expect(client.selectSASLMechanism(fromOffered: ["PLAIN"]))
-		#expect(client.saslMechanism == "PLAIN")
+		#expect(client.sasl.mechanism == "PLAIN")
 	}
 
 	@Test("A retry moves to the next mechanism and never repeats one")
@@ -196,10 +196,10 @@ struct ClientNegotiationTests {
 		let client = makeClient(configuration: ["nickname": "me"], nicknamePassword: "secret")
 		_ = client.selectSASLMechanism(fromOffered: ["PLAIN", "SCRAM-SHA-256"])
 
-		#expect(client.saslMechanism == "SCRAM-SHA-256")
+		#expect(client.sasl.mechanism == "SCRAM-SHA-256")
 		#expect(client.retrySASLNegotiation(withMechanisms: ["PLAIN"]))
-		#expect(client.saslMechanism == "PLAIN")
-		#expect(client.saslTriedMechanisms.contains("SCRAM-SHA-256"))
+		#expect(client.sasl.mechanism == "PLAIN")
+		#expect(client.sasl.triedMechanisms.contains("SCRAM-SHA-256"))
 		#expect(client.retrySASLNegotiation(withMechanisms: ["PLAIN"]) == false)
 	}
 
@@ -400,11 +400,11 @@ struct ClientNegotiationTests {
 		))
 
 		#expect(client.isCapabilityEnabled(.isInSASLNegotiation))
-		#expect(client.saslTimeoutTimer.isActive)
+		#expect(client.sasl.timeoutTimer.isActive)
 
 		client.finishSASLNegotiation(failed: false)
 
-		#expect(client.saslTimeoutTimer.isActive == false)
+		#expect(client.sasl.timeoutTimer.isActive == false)
 	}
 
 	/** The deadline bounds the wait for the server's next word, not the exchange
@@ -426,13 +426,13 @@ struct ClientNegotiationTests {
 			on: client
 		))
 
-		#expect(client.saslTimeoutTimer.isActive)
+		#expect(client.sasl.timeoutTimer.isActive)
 
 		/* Stopped so that the next round having its own deadline is what the
 		 assertion sees, rather than the one the request already armed. */
 		client.stopSASLTimeoutTimer()
 
-		#expect(client.saslTimeoutTimer.isActive == false)
+		#expect(client.sasl.timeoutTimer.isActive == false)
 
 		try client.handleCapabilityOrAuthenticationRequest(message(
 			":irc.example.net AUTHENTICATE +",
@@ -440,7 +440,7 @@ struct ClientNegotiationTests {
 		))
 
 		#expect(client.isCapabilityEnabled(.isInSASLNegotiation))
-		#expect(client.saslTimeoutTimer.isActive)
+		#expect(client.sasl.timeoutTimer.isActive)
 	}
 
 	/// Giving up has to leave registration able to finish: the deadline aborts
@@ -463,7 +463,7 @@ struct ClientNegotiationTests {
 
 		#expect(client.isCapabilityEnabled(.isInSASLNegotiation) == false)
 		#expect(client.isCapabilityEnabled(.isIdentifiedWithSASL) == false)
-		#expect(client.saslTimeoutTimer.isActive == false)
+		#expect(client.sasl.timeoutTimer.isActive == false)
 		#expect(sentLines(of: client).contains { $0.hasPrefix("AUTHENTICATE") && $0.hasSuffix("*") })
 		#expect(capabilityCommands(of: client).contains("END"))
 		expectPrintedLineContaining(ConnectionSafetyStrings.SASL.timedOut, on: client)
@@ -481,7 +481,7 @@ struct ClientNegotiationTests {
 			on: client
 		))
 
-		#expect(client.saslTimeoutTimer.isActive == false)
+		#expect(client.sasl.timeoutTimer.isActive == false)
 	}
 
 	/** PLAIN is three fields separated by U+0000. A field containing one splits
@@ -533,7 +533,7 @@ struct ClientNegotiationTests {
 			on: client
 		))
 
-		let chosen = client.saslMechanism
+		let chosen = client.sasl.mechanism
 
 		#expect(chosen == SCRAMClient.mechanismName)
 
@@ -542,7 +542,7 @@ struct ClientNegotiationTests {
 			on: client
 		))
 
-		#expect(client.saslMechanism == chosen)
+		#expect(client.sasl.mechanism == chosen)
 	}
 
 	/** A 904 refuses one attempt, not the login. A certificate the account does
@@ -562,11 +562,11 @@ struct ClientNegotiationTests {
 			on: client
 		))
 		try client.handleCapabilityOrAuthenticationRequest(message(":irc.example.net CAP * ACK :sasl", on: client))
-		try #require(client.saslMechanism == "PLAIN")
+		try #require(client.sasl.mechanism == "PLAIN")
 
 		try receiveAuthenticationNumeric(":irc.example.net 904 me :SASL authentication failed", on: client)
 
-		#expect(client.saslMechanism == SCRAMClient.mechanismName)
+		#expect(client.sasl.mechanism == SCRAMClient.mechanismName)
 		#expect(sentLines(of: client).last == "AUTHENTICATE \(SCRAMClient.mechanismName)")
 		#expect(client.isCapabilityEnabled(.isInSASLNegotiation))
 		#expect(capabilityCommands(of: client).contains("END") == false)
@@ -596,7 +596,7 @@ struct ClientNegotiationTests {
 		try receiveAuthenticationNumeric(":irc.example.net 904 me :SASL authentication failed", on: client)
 		try #require(client.isCapabilityEnabled(.isInSASLNegotiation) == false)
 
-		#expect(client.saslMechanism == nil)
+		#expect(client.sasl.mechanism == nil)
 
 		try receiveAuthenticationNumeric(
 			":irc.example.net 900 me me!u@host account :You are now logged in as account",
@@ -647,7 +647,7 @@ struct ClientNegotiationTests {
 
 		#expect(capabilityCommands(of: client) == (serverPrefersTLS ? ["END"] : ["REQ sasl"]))
 		#expect(client.selectSASLMechanism(fromOffered: ["PLAIN", "SCRAM-SHA-256"]))
-		#expect(client.saslMechanism == SCRAMClient.mechanismName)
+		#expect(client.sasl.mechanism == SCRAMClient.mechanismName)
 		#expect(client.retrySASLNegotiation(withMechanisms: ["PLAIN"]) == (serverPrefersTLS == false))
 		let bodies = client.printedLines.compactMap { ($0 as? [String: Any])?["messageBody"] as? String }
 		#expect(bodies.contains(ConnectionSafetyStrings.Credentials.withheldOverPlaintext) == serverPrefersTLS)

@@ -12,53 +12,51 @@ import Testing
 struct UIShellLocalizationCatalogTests {
 	@Test("Onboarding copy is resolved by role, and its counted step is formatted")
 	func onboardingBoundaryResolvesSemanticCopyAndFormatting() {
-		#expect(OnboardingStrings.Window.title == "Welcome to Glasstual")
-		#expect(OnboardingStrings.Window.progress(currentStep: 2, totalSteps: 4) == "Step 2 of 4")
-		#expect(OnboardingStrings.Identity.nicknameLabel == "Nickname")
+		#expect(String(localized: .Onboarding.windowChromeWelcomeToGlasstual) == "Welcome to Glasstual")
+		#expect(String(localized: .Onboarding.windowChromeStep(2, 4)) == "Step 2 of 4")
+		#expect(String(localized: .Onboarding.stepWelcomeAndIdentityNickname) == "Nickname")
 		#expect(
-			OnboardingStrings.Identity.alternateNicknameHelp ==
+			String(localized: .Onboarding.usedWhenYourNicknameIsAlready) ==
 				"Used when your nickname is already taken. Optional."
 		)
-		#expect(OnboardingTextSize.allCases.map(\.title) == ["Small", "Medium", "Large"])
+		#expect(OnboardingTextSize.allCases.map { String(localized: $0.title) } == ["Small", "Medium", "Large"])
 		#expect(
-			PreferredAppearance.allCases.map(OnboardingStrings.Appearance.interfaceStyleTitle)
+			PreferredAppearance.allCases.map { String(localized: $0.onboardingTitle) }
 				== ["System", "Light", "Dark"]
 		)
-		#expect(OnboardingStrings.Appearance.previewMessages == [
-			.init(nickname: "alice", message: "Good morning everyone"),
-			.init(nickname: "bob", message: "Morning! Anyone tried the new build?"),
-			.init(nickname: "you", message: "Yes, it works well so far."),
-		])
-		#expect(OnboardingStrings.Notifications.permissionGranted == "Notifications are allowed for Glasstual.")
-		#expect(OnboardingStrings.FirstNetwork.suggestedChannelsLabel == "Suggested channels")
-		#expect(OnboardingStrings.NetworkPicker.customServerTitle == "Custom Server")
-		#expect(OnboardingStrings.NetworkPicker.invalidPort == "Enter a port between 1 and 65535.")
+		#expect(
+			String(localized: .Onboarding.notificationsAreAllowedForGlasstual)
+				== "Notifications are allowed for Glasstual."
+		)
+		#expect(String(localized: .Onboarding.suggestedChannels) == "Suggested channels")
+		#expect(String(localized: .Onboarding.customServer) == "Custom Server")
+		#expect(String(localized: .Onboarding.enterAPortBetween1) == "Enter a port between 1 and 65535.")
 	}
 
 	@Test("Server properties copy is keyed by domain types and keeps its multiline shape")
 	func serverPropertiesBoundaryUsesDomainTypesAndPreservesMultilineCopy() {
-		#expect(ServerPropertiesStrings.AddressBook.entryType(.ignore) == "User Ignore")
-		#expect(ServerPropertiesStrings.AddressBook.entryType(.userTracking) == "User Tracking")
-		#expect(ServerPropertiesStrings.Highlight.matchType(isExcluded: true) == "Exclude")
-		#expect(ServerPropertiesStrings.Highlight.matchType(isExcluded: false) == "Match")
+		#expect(String(localized: AddressBookEntryType.ignore.listTitle) == "User Ignore")
+		#expect(String(localized: AddressBookEntryType.userTracking.listTitle) == "User Tracking")
+		#expect(String(localized: HighlightMatchBehavior.exclude.title) == "Exclude")
+		#expect(String(localized: HighlightMatchBehavior.include.title) == "Match")
 		#expect(
 			[
-				ServerPropertiesStrings.Navigation.connection,
-				ServerPropertiesStrings.Navigation.vendorSpecific,
-				ServerPropertiesStrings.Navigation.advanced,
-				ServerPropertiesStrings.Navigation.addressBook,
-				ServerPropertiesStrings.Navigation.channelList,
-				ServerPropertiesStrings.Navigation.connectCommands,
-				ServerPropertiesStrings.Navigation.encoding,
-				ServerPropertiesStrings.Navigation.general,
-				ServerPropertiesStrings.Navigation.identity,
-				ServerPropertiesStrings.Navigation.highlights,
-				ServerPropertiesStrings.Navigation.messages,
-				ServerPropertiesStrings.Navigation.zncBouncer,
-				ServerPropertiesStrings.Navigation.clientCertificate,
-				ServerPropertiesStrings.Navigation.floodControl,
-				ServerPropertiesStrings.Navigation.networkSocket,
-				ServerPropertiesStrings.Navigation.proxyServer,
+				String(localized: .ServerProperties.navigationSectionConnection),
+				String(localized: .ServerProperties.vendorSpecific),
+				String(localized: .ServerProperties.serverPropertiesNavigationMenuAdvanced),
+				String(localized: .ServerProperties.addressBook),
+				String(localized: .ServerProperties.channelList),
+				String(localized: .ServerProperties.connectCommands),
+				String(localized: .ServerProperties.serverPropertiesNavigationMenuEncoding),
+				String(localized: .ServerProperties.serverPropertiesNavigationMenuGeneral),
+				String(localized: .ServerProperties.serverPropertiesNavigationMenuIdentity),
+				String(localized: .ServerProperties.serverPropertiesNavigationMenuHighlights),
+				String(localized: .ServerProperties.serverPropertiesNavigationMenuMessages),
+				String(localized: .ServerProperties.zncBouncer),
+				String(localized: .ServerProperties.clientCertificate),
+				String(localized: .ServerProperties.floodControl),
+				String(localized: .ServerProperties.networkSocket),
+				String(localized: .ServerProperties.proxyServer),
 			] == [
 				"Connection", "Vendor Specific", "Advanced", "Address Book", "Channel List",
 				"Connect Commands", "Encoding", "General", "Identity", "Highlights", "Messages",
@@ -66,63 +64,64 @@ struct UIShellLocalizationCatalogTests {
 			]
 		)
 		#expect(
-			ServerPropertiesStrings.Validation.invalidAlternateNickname("bad nick") ==
+			String(localized: .ServerProperties.pleaseEnterAListOfProperly("bad nick")) ==
 				"“bad nick” is not a valid nickname. Separate alternative nicknames with spaces, "
 				+ "for example: Guest1 Guest2 Guest3"
 		)
 		#expect(
-			ServerPropertiesStrings.CipherSuites.listExplanation(collectionName: "Default list") ==
+			String(localized: .ServerProperties.includesTheFollowingCipherSuites("Default list")) ==
 				"The “Default list” prefers these cipher suites, most preferred first."
 		)
 		/* The alert asks whether to reload, and its buttons are Cancel and
 		 Reload -- so the body cannot name a "Yes" button that is not there. */
-		#expect(ServerPropertiesStrings.ExternalChange.reloadTitle == "Reload the connection’s settings?")
+		#expect(String(localized: .ServerProperties.thisConnectionsConfigurationHasChangedDo)
+			== "Reload the connection’s settings?")
 		#expect(
-			ServerPropertiesStrings.ExternalChange.unsavedChangesWarning ==
+			String(localized: .ServerProperties.youWillLooseUnsavedChangesIf) ==
 				"Your unsaved changes will be discarded."
 		)
 	}
 
 	@Test("Main window copy is keyed by the typed status and the typed member rank")
 	func mainWindowBoundaryUsesTypedStatusAndRankMappings() {
-		#expect(MemberListStrings.privilegeDescription(for: .normalOperator) == "Operator")
+		#expect(MemberListRanks.privilegeDescription(for: .normalOperator) == "Operator")
 		/* A rank column reads down; "No Privileges" was a sentence where every
 		 other row held a word. */
-		#expect(MemberListStrings.privilegeDescription(for: .none) == "None")
+		#expect(MemberListRanks.privilegeDescription(for: .none) == "None")
 		/* One name per concept: the privilege and the section a server operator
 		 is grouped under used to disagree with each other. */
-		#expect(MemberListStrings.privilegeDescription(for: .irCopByMode) == "Server Staff")
-		#expect(MemberListStrings.privilegeDescription(for: .superOperator) == "Admin")
-		#expect(MemberListStrings.sectionTitle(for: .superOperator) == "Admins")
-		#expect(MemberListStrings.privilegeDescription(for: .halfOperator) == "Half-Operator")
-		#expect(MemberListStrings.sectionTitle(for: .halfOperator) == "Half-Operators")
-		#expect(MemberListStrings.sectionTitle(for: .irCopByMode) == "Server Staff")
-		#expect(MemberListStrings.sectionTitle(for: .none) == "Members")
-		#expect(MemberListStrings.loggedIn(account: "alice") == "Logged in as alice")
-		#expect(MainWindowStrings.ConnectionStatus.disconnected.title == "Disconnected")
-		#expect(MainWindowStrings.ConnectionStatus.waitingToReconnect.title == "Waiting to reconnect")
-		#expect(MainWindowStrings.ConnectionStatus.connecting.title == "Connecting")
-		#expect(MainWindowStrings.ConnectionStatus.reconnecting.title == "Reconnecting")
-		#expect(MainWindowStrings.ConnectionStatus.loggingOn.title == "Logging on")
-		#expect(MainWindowStrings.ConnectionStatus.disconnecting.title == "Disconnecting")
+		#expect(MemberListRanks.privilegeDescription(for: .irCopByMode) == "Server Staff")
+		#expect(MemberListRanks.privilegeDescription(for: .superOperator) == "Admin")
+		#expect(MemberListRanks.sectionTitle(for: .superOperator) == "Admins")
+		#expect(MemberListRanks.privilegeDescription(for: .halfOperator) == "Half-Operator")
+		#expect(MemberListRanks.sectionTitle(for: .halfOperator) == "Half-Operators")
+		#expect(MemberListRanks.sectionTitle(for: .irCopByMode) == "Server Staff")
+		#expect(MemberListRanks.sectionTitle(for: .none) == "Members")
+		#expect(String(localized: .MemberList.loggedInAs("alice")) == "Logged in as alice")
+		#expect(MainWindowConnectionStatus.disconnected.title == "Disconnected")
+		#expect(MainWindowConnectionStatus.waitingToReconnect.title == "Waiting to reconnect")
+		#expect(MainWindowConnectionStatus.connecting.title == "Connecting")
+		#expect(MainWindowConnectionStatus.reconnecting.title == "Reconnecting")
+		#expect(MainWindowConnectionStatus.loggingOn.title == "Logging on")
+		#expect(MainWindowConnectionStatus.disconnecting.title == "Disconnecting")
 		/* "1 users" was the subtitle of every one-member channel; the digits
 		 are still grouped the way the reader's locale groups them. */
-		#expect(MainWindowStrings.Conversation.memberCount(1) == "1 member")
+		#expect(MainWindowTitleContent.memberCount(1) == "1 member")
 		#expect(
-			MainWindowStrings.Conversation.memberCount(1234)
+			MainWindowTitleContent.memberCount(1234)
 				== "\(1234.formatted(.number)) members"
 		)
-		#expect(MainWindowStrings.Conversation.awayNickname("alice") == "alice (away)")
-		#expect(MainWindowStrings.Menu.serverList(isVisible: false) == "Show Server List")
-		#expect(MainWindowStrings.Menu.serverList(isVisible: true) == "Hide Server List")
-		#expect(MainWindowStrings.Menu.memberList(isVisible: false) == "Show Member List")
-		#expect(MainWindowStrings.Menu.memberList(isVisible: true) == "Hide Member List")
-		#expect(MainWindowStrings.Dock.overflowBadge(maximum: "9,999") == "9,999+")
-		#expect(MainWindowStrings.Reply.target(nil) == "Replying to a message")
-		#expect(MainWindowStrings.Reply.target("alice") == "Replying to alice")
-		#expect(MainWindowStrings.Typing.caption(for: ["alice"]) == "alice is typing…")
-		#expect(MainWindowStrings.Typing.caption(for: ["alice", "bob"]) == "alice and bob are typing…")
-		#expect(MainWindowStrings.Typing.caption(for: ["alice", "bob", "carol"]) == "3 people are typing…")
+		#expect(String(localized: .MainWindow.awayNickname("alice")) == "alice (away)")
+		#expect(MenuCommand.serverListTitle(isVisible: false) == "Show Server List")
+		#expect(MenuCommand.serverListTitle(isVisible: true) == "Hide Server List")
+		#expect(MenuCommand.memberListTitle(isVisible: false) == "Show Member List")
+		#expect(MenuCommand.memberListTitle(isVisible: true) == "Hide Member List")
+		#expect(String(localized: .MainWindow.dockIconBadgeShown("9,999")) == "9,999+")
+		#expect(InputAccessoryView.replyTarget(nil) == "Replying to a message")
+		#expect(InputAccessoryView.replyTarget("alice") == "Replying to alice")
+		#expect(InputAccessoryView.typingCaption(for: ["alice"]) == "alice is typing…")
+		#expect(InputAccessoryView.typingCaption(for: ["alice", "bob"]) == "alice and bob are typing…")
+		#expect(InputAccessoryView.typingCaption(for: ["alice", "bob", "carol"]) == "3 people are typing…")
 	}
 
 	/// The placeholder contract of the multi-argument entries, which is what a

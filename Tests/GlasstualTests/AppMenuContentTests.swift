@@ -35,7 +35,7 @@ struct AppMenuContentTests {
 	)
 	func contextJoinAfterIdentification(otherClientSelected: Bool) async throws {
 		try await withChannelMenu { controller, window, client, other in
-			let coordinator = controller.actionCoordinator
+			let coordinator = controller
 			client.userNickname = "mynick"
 			client.markAsLoggedIn()
 			client.isConnected = true
@@ -99,7 +99,7 @@ struct AppMenuContentTests {
 			other.markAsLoggedIn()
 			let channel = try #require(client.findChannelOrCreate("#selected"))
 			window.select(channel)
-			let coordinator = controller.actionCoordinator
+			let coordinator = controller
 			coordinator.pointedClient = client
 			coordinator.pointedChannel = nil
 			for item in [other as ChatItem?, nil] {
@@ -150,7 +150,7 @@ struct AppMenuContentTests {
 			membership.addMember(clicked)
 			window.memberList.assign(to: channel)
 			window.memberList.selectedMemberIDs = [selected.id]
-			let coordinator = controller.actionCoordinator
+			let coordinator = controller
 			let sender = NSObject()
 
 			#expect(coordinator.selectedNicknames(for: sender) == ["selected"])
@@ -175,7 +175,7 @@ struct AppMenuContentTests {
 			let channel = try #require(client.findChannelOrCreate("#retry"))
 			let entries = AppMenuEntry.validating(
 				controller.mainMenuChannelMenu,
-				context: AppMenuContext(coordinator: controller.actionCoordinator, item: channel)
+				context: AppMenuContext(coordinator: controller, item: channel)
 			)
 			let join = try #require(entries.first { $0.item.command == .joinChannel })
 			#expect(join.isEnabled)
@@ -201,7 +201,7 @@ struct AppMenuContentTests {
 				controller.mainMenuChannelMenu,
 				controller.mainMenuQueryMenu,
 				controller.userControlMenu,
-				controller.channelViewGeneralMenu,
+				controller.transcriptGeneralMenu,
 			]
 			let allowedToHide: Set<MenuCommand> = [
 				.connect, .connectWithoutProxy, .disconnect, .joinChannel, .leaveChannel,
@@ -213,7 +213,7 @@ struct AppMenuContentTests {
 				 visibility of the ones it answers itself, and it hides Enter
 				 Full Screen for a window that cannot go full screen. */
 				for item in Self.items(of: menu) where item.target != nil {
-					_ = controller.actionCoordinator.validateMenuItem(item)
+					_ = controller.validateMenuItem(item)
 					guard let command = item.command, item.isHidden else { continue }
 					if allowedToHide.contains(command) == false {
 						hidden.append("\(command) (\(item.title))")
@@ -231,10 +231,10 @@ struct AppMenuContentTests {
 	@Test("A sheet command that cannot act leaves the sheet on screen alone")
 	func sheetCommandThatCannotActKeepsTheSheet() async throws {
 		try await withChannelMenu { controller, window, _, _ in
-			let coordinator = controller.actionCoordinator
+			let coordinator = controller
 			let owner = NSObject()
 			var dismissed = false
-			window.presentationModel.presentSheet(PresentedSheet(owner: owner, content: EmptyView()) {
+			window.presentationModel.presentSheet(MainWindowSheet(owner: owner, content: EmptyView()) {
 				dismissed = true
 			})
 			defer { window.presentationModel.dismissSheet(ownedBy: owner) }
@@ -263,13 +263,13 @@ struct AppMenuContentTests {
 			window.select(channel)
 
 			let moderated = try #require(controller.mainMenuChannelMenu.item(for: .channelModeModerated))
-			_ = controller.actionCoordinator.validateMenuItem(moderated)
+			_ = controller.validateMenuItem(moderated)
 			#expect(moderated.state == .off)
 
 			_ = channel.modeInfo?.updateModes("+m")
-			_ = controller.actionCoordinator.validateMenuItem(moderated)
+			_ = controller.validateMenuItem(moderated)
 			#expect(moderated.state == .on)
-			#expect(controller.actionCoordinator.channelModeIsSet("m"))
+			#expect(controller.channelModeIsSet("m"))
 		}
 	}
 
@@ -298,7 +298,7 @@ struct AppMenuContentTests {
 	}
 
 	private func withChannelMenu(
-		_ body: (MenuController, MainWindow, TestClient, TestClient) throws -> Void
+		_ body: (MenuActionController, MainWindow, TestClient, TestClient) throws -> Void
 	) async throws {
 		let app = try #require(AppServices.delegate)
 		try #require(app.applicationIsLaunched)
@@ -314,7 +314,7 @@ struct AppMenuContentTests {
 
 		// A clicked context remains valid without owning global window focus.
 		let originalWindow = app.mainWindow
-		let originalWorld = app.world
+		let originalWorld = app.clientDirectory
 		let originalMenu = app.menuController
 		let originalMainMenu = NSApp.mainMenu
 		let originalServicesMenu = NSApp.servicesMenu
@@ -323,22 +323,22 @@ struct AppMenuContentTests {
 		let fixture = ClientEnvironmentFixture()
 		let client = TestClient(configDictionary: [:], nicknamePassword: nil, fixture: fixture)
 		let other = TestClient(configDictionary: [:], nicknamePassword: nil, fixture: fixture)
-		fixture.world.clientList = [client, other]
+		fixture.clientDirectory.clientList = [client, other]
 		window.inputContentView.configure()
-		let controller = MenuController()
+		let controller = MenuActionController()
 		app.mainWindow = window
-		app.world = fixture.world
+		app.clientDirectory = fixture.clientDirectory
 		app.menuController = controller
 		defer {
 			app.mainWindow = originalWindow
-			app.world = originalWorld
+			app.clientDirectory = originalWorld
 			app.menuController = originalMenu
 			NSApp.mainMenu = originalMainMenu
 			NSApp.servicesMenu = originalServicesMenu
 			NSApp.windowsMenu = originalWindowsMenu
 			NSApp.helpMenu = originalHelpMenu
 		}
-		try #require(controller.actionCoordinator.mainWindow === window)
+		try #require(controller.mainWindow === window)
 		try #require(window.attachedSheet == nil)
 		try body(controller, window, client, other)
 	}

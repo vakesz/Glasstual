@@ -58,7 +58,7 @@ protocol ChannelMemberListPresentation: AnyObject {
 	func membersDidChange(_ members: [ChannelUser])
 }
 
-final class ChannelMemberList: NSObject {
+final class ChannelMemberList {
 	/** Both are weak: a member list can outlive its owners during teardown, so
 	 neither may be force-unwrapped. */
 	private weak var client: Client?
@@ -81,15 +81,9 @@ final class ChannelMemberList: NSObject {
 		client?.environment.preferences ?? ClientPreferences()
 	}
 
-	@available(*, unavailable)
-	override init() {
-		fatalError("init() is unavailable; use init(channel:)")
-	}
-
 	init(channel: Channel) {
 		client = channel.associatedClient
 		self.channel = channel
-		super.init()
 	}
 
 	isolated deinit {

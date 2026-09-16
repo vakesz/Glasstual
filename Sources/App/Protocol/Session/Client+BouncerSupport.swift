@@ -46,12 +46,12 @@ private let bouncerSupportLogger = Logger(
 
 extension Client {
 	func clearZNCPlayback(for channel: Channel) {
-		guard isConnectedToZNC else { return }
+		guard znc.isConnected else { return }
 		clearPlayback(for: channel)
 	}
 
 	func nicknameIsZNCUser(_ nickname: String) -> Bool {
-		isConnectedToZNC && nickname.hasPrefix(ServerQuirks.ZNC.modulePrefix)
+		znc.isConnected && nickname.hasPrefix(ServerQuirks.ZNC.modulePrefix)
 	}
 
 	/// Folded the way the server folds nicknames, so `*Status` and `*status`
@@ -62,7 +62,7 @@ extension Client {
 	}
 
 	func nicknameAsZNCUser(_ nickname: String) -> String? {
-		guard isConnectedToZNC else { return nil }
+		guard znc.isConnected else { return nil }
 		return ServerQuirks.ZNC.nickname(forModuleNamed: nickname)
 	}
 
@@ -77,7 +77,7 @@ extension Client {
 			return false
 		}
 
-		guard isConnectedToZNC else { return true }
+		guard znc.isConnected else { return true }
 
 		if config.zncIgnoreUserNotifications, channel.map({ nicknameIsZNCUser($0.name) }) == true {
 			return false
@@ -93,10 +93,10 @@ extension Client {
 	}
 
 	func detectZNC(from message: Message) {
-		guard isConnectedToZNC == false, message.senderIsServer else { return }
+		guard znc.isConnected == false, message.senderIsServer else { return }
 		guard message.senderNickname == ServerQuirks.ZNC.serverName else { return }
 
-		isConnectedToZNC = true
+		znc.isConnected = true
 		bouncerSupportLogger.info("ZNC detected")
 	}
 

@@ -122,7 +122,7 @@ private struct ServerRowView: View {
 					/* The row's own label already says the connection is
 					 encrypted; the padlock is for the pointer, which has
 					 nothing else to read it with. */
-					.help(MainWindowStrings.Toolbar.connectionSecurity)
+					.help(String(localized: .MainWindow.connectionSecurity))
 					.accessibilityHidden(true)
 			}
 
@@ -144,7 +144,7 @@ private struct ServerRowView: View {
 		/* The padlock is hidden from assistive technology, so whether the
 		 connection is encrypted has to be said here or not at all. */
 		if server.isSecured {
-			phrases.append(MainWindowStrings.Toolbar.connectionSecurity)
+			phrases.append(String(localized: .MainWindow.connectionSecurity))
 		}
 		return phrases.formatted(.list(type: .and))
 	}
@@ -186,7 +186,7 @@ private struct ChannelRowView: View {
 					/* The row's label already counts what is unread for VoiceOver;
 					 the tooltip says it to a pointer, which the digits alone do
 					 not tell what they are counting. */
-					.help(ChannelSpotlightStrings.unreadMessages(channel.unreadCount))
+					.help(.ChannelSpotlight.unreadMessageCount(channel.unreadCount))
 					.accessibilityHidden(true)
 			}
 		}
@@ -258,10 +258,10 @@ private struct ChannelRowView: View {
 
 		var phrases = [identity]
 		if channel.unreadCount > 0 {
-			phrases.append(ChannelSpotlightStrings.unreadMessages(channel.unreadCount))
+			phrases.append(String(localized: .ChannelSpotlight.unreadMessageCount(channel.unreadCount)))
 		}
 		if channel.highlightCount > 0 {
-			phrases.append(ChannelSpotlightStrings.highlights(channel.highlightCount))
+			phrases.append(String(localized: .ChannelSpotlight.highlightCount(channel.highlightCount)))
 		}
 		return phrases.formatted(.list(type: .and))
 	}

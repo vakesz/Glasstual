@@ -14,6 +14,63 @@ import AppKit
 import CocoaExtensions
 import SwiftUI
 
+struct ServerChannelListScene: Scene {
+	let scenes: ApplicationScenes
+
+	var body: some Scene {
+		WindowGroup(
+			String(localized: .ServerChannelList.windowGroupTitle),
+			id: ApplicationSceneID.serverChannelList,
+			for: String.self
+		) { clientIdentifier in
+			ServerChannelListSceneRoot(
+				clientIdentifier: clientIdentifier.wrappedValue,
+				scenes: scenes
+			)
+		}
+		.defaultSize(width: 720, height: 420)
+		/* A table of a whole network's channels: the window has a floor, not a
+		 ceiling, and the reader is the one who decides how much of it to see. */
+		.windowResizability(.contentMinSize)
+	}
+}
+
+private struct ServerChannelListSceneRoot: View {
+	let clientIdentifier: String?
+	let scenes: ApplicationScenes
+
+	var body: some View {
+		if let clientIdentifier,
+		   let list = scenes.serverChannelList(for: clientIdentifier)
+		{
+			ServerChannelListView(
+				model: list.model,
+				supportsMinimumUserCount: list.supportsMinimumUserCount,
+				joinSelected: list.joinSelectedChannels,
+				update: list.beginRefresh
+			)
+			.frame(minWidth: 600, idealWidth: 720, minHeight: 320, idealHeight: 420)
+			/* The network names the window; how much of it arrived is a subtitle,
+			 and it counts what the window kept rather than what the search field
+			 has narrowed the table to. */
+			.navigationTitle(list.networkName)
+			.navigationSubtitle(
+				String(localized: .ServerChannelList.publicChannelCount(list.model.keptEntryCount))
+			)
+			.onDisappear {
+				scenes.serverChannelListDidClose(for: clientIdentifier)
+			}
+		} else {
+			ContentUnavailableView(
+				String(localized: .ServerChannelList.noChannelList),
+				systemImage: "number",
+				description: Text(.ServerChannelList.noChannelListDescription)
+			)
+			.frame(minWidth: 600, minHeight: 320)
+		}
+	}
+}
+
 struct ServerChannelListView: View {
 	@Bindable var model: ServerChannelListModel
 	let supportsMinimumUserCount: Bool
@@ -29,14 +86,14 @@ struct ServerChannelListView: View {
 		.searchable(
 			text: $model.searchString,
 			placement: .toolbar,
-			prompt: Text(verbatim: ServerChannelListStrings.searchPlaceholder)
+			prompt: Text(.ServerChannelList.searchChannels)
 		)
 	}
 
 	private var channelTable: some View {
 		Table(model.rows, selection: $model.selection, sortOrder: $model.sortOrder) {
 			TableColumn(
-				ServerChannelListStrings.channelName,
+				.ServerChannelList.channelName,
 				sortUsing: ServerChannelListComparator(field: .channelName, order: .forward)
 			) { entry in
 				Text(verbatim: entry.channelName)
@@ -45,7 +102,7 @@ struct ServerChannelListView: View {
 			.width(min: 100, ideal: 150)
 
 			TableColumn(
-				ServerChannelListStrings.memberCount,
+				.ServerChannelList.memberCount,
 				sortUsing: ServerChannelListComparator(field: .memberCount, order: .forward)
 			) { entry in
 				Text(entry.memberCount, format: .number)
@@ -54,7 +111,7 @@ struct ServerChannelListView: View {
 			.width(min: 70, ideal: 90, max: 120)
 
 			TableColumn(
-				ServerChannelListStrings.topic,
+				.ServerChannelList.topic,
 				sortUsing: ServerChannelListComparator(field: .topic, order: .forward)
 			) { entry in
 				Text(formattedTopic(entry.displayedTopic))
@@ -66,7 +123,7 @@ struct ServerChannelListView: View {
 		/* The table's own selection menu, which is what carries the clicked rows
 		 into the command and makes the double click the same command again. */
 		.contextMenu(forSelectionType: ServerChannelListEntry.ID.self) { identifiers in
-			Button(ServerChannelListStrings.joinSelectedChannels) {
+			Button(.ServerChannelList.joinSelectedChannels) {
 				join(identifiers)
 			}
 			.disabled(identifiers.isEmpty)
@@ -76,18 +133,18 @@ struct ServerChannelListView: View {
 		.overlay {
 			if model.rows.isEmpty {
 				if model.isRefreshing || model.isFiltering {
-					ProgressView(ServerChannelListStrings.requestingChannelList)
+					ProgressView(.ServerChannelList.requestingChannelList)
 				} else {
 					ContentUnavailableView(
-						ServerChannelListStrings.emptyTitle,
+						String(localized: .ServerChannelList.noPublicChannels),
 						systemImage: "number",
-						description: Text(verbatim: ServerChannelListStrings.emptyDescription)
+						description: Text(.ServerChannelList.changeTheSearchOrUpdate)
 					)
 				}
 			}
 		}
 		.copyable(model.selectedCopyItems)
-		.accessibilityLabel(ServerChannelListStrings.channelListAccessibilityLabel)
+		.accessibilityLabel(.ServerChannelList.publicChannelList)
 	}
 
 	private var footer: some View {
@@ -101,7 +158,7 @@ struct ServerChannelListView: View {
 
 			HStack(alignment: .firstTextBaseline, spacing: UISpacing.regular) {
 				if supportsMinimumUserCount {
-					LabeledContent(ServerChannelListStrings.minimumUserCountLabel) {
+					LabeledContent(.ServerChannelList.minimumUsers) {
 						TextField(
 							"0",
 							text: Binding(
@@ -120,21 +177,21 @@ struct ServerChannelListView: View {
 				if model.isRefreshing || model.isFiltering {
 					ProgressView()
 						.controlSize(.small)
-						.accessibilityLabel(ServerChannelListStrings.requestingChannelList)
+						.accessibilityLabel(.ServerChannelList.requestingChannelList)
 				}
 
-				Button(ServerChannelListStrings.refresh, action: update)
+				Button(.ServerChannelList.updateList, action: update)
 					.keyboardShortcut("r", modifiers: .command)
 					.disabled(model.isRefreshing)
 
-				Button(ServerChannelListStrings.joinSelectedChannels, action: joinSelected)
+				Button(.ServerChannelList.joinSelectedChannels, action: joinSelected)
 					.buttonStyle(.borderedProminent)
 					.keyboardShortcut(.defaultAction)
 					.disabled(model.selection.isEmpty)
 			}
 
 			if supportsMinimumUserCount {
-				Text(verbatim: ServerChannelListStrings.minimumUserCountFooter)
+				Text(.ServerChannelList.onlyListChannelsWithAtLeast)
 					.font(.footnote)
 					.foregroundStyle(.secondary)
 			}

@@ -14,6 +14,7 @@
 import CocoaExtensions
 import Foundation
 import Observation
+import SwiftUI
 
 @Observable
 final class AddressBookEntryModel {
@@ -79,13 +80,6 @@ final class AddressBookEntryModel {
 		entryType != .ignore
 	}
 
-	var title: String {
-		switch entryType {
-		case .ignore, .mixed: AddressBookStrings.ignoreUser
-		case .userTracking: AddressBookStrings.trackUser
-		}
-	}
-
 	func validatedEntry() -> AddressBookEntry? {
 		submissionWasAttempted = true
 
@@ -122,11 +116,42 @@ final class AddressBookEntryModel {
 			let valueWithoutWildcard = value.replacingOccurrences(of: "*", with: "-")
 			return (valueWithoutWildcard as NSString).isHostmask
 				? nil
-				: AddressBookStrings.invalidIgnoreMask
+				: String(localized: .AddressBook.pleaseEnterAProperlyFormattedIgnore)
 		case .userTracking:
 			return (value as NSString).isHostmaskNickname
 				? nil
 				: CommonValidationStrings.invalidNickname
+		}
+	}
+}
+
+/// The copy that changes with the kind of entry the sheet edits.
+extension AddressBookEntryType {
+	var sheetTitle: LocalizedStringResource {
+		switch self {
+		case .ignore, .mixed: .AddressBook.ignoreUser
+		case .userTracking: .AddressBook.trackUser
+		}
+	}
+
+	var sheetDescription: LocalizedStringResource {
+		switch self {
+		case .ignore, .mixed: .AddressBook.ignoreDescription
+		case .userTracking: .AddressBook.trackingDescription
+		}
+	}
+
+	var identityLabel: LocalizedStringResource {
+		switch self {
+		case .ignore, .mixed: .AddressBook.hostmask
+		case .userTracking: .AddressBook.nickname
+		}
+	}
+
+	var identityPlaceholder: LocalizedStringResource {
+		switch self {
+		case .ignore, .mixed: .AddressBook.enterAHostmaskToIgnore
+		case .userTracking: .AddressBook.enterAnyNicknameToTrack
 		}
 	}
 }

@@ -264,13 +264,11 @@ struct TextFormatterEffect {
 	}
 }
 
-final class TextFormatterEffects: NSObject {
+final class TextFormatterEffects {
 	private(set) var effects: [TextFormatterEffect] = []
 	private(set) var maximumLength: UInt = 0
 
 	init(attributes: [NSAttributedString.Key: Any]) {
-		super.init()
-
 		setup(with: attributes)
 	}
 

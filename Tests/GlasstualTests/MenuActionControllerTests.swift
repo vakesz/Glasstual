@@ -86,8 +86,8 @@ struct MenuActionControllerTests {
 	func cancelReconnectRequiresWaitingClient() {
 		let client = TestClient()
 		#expect(MenuServerActionPolicy(client: client).canCancelReconnect == false)
-		client.reconnectTimer.start(3600, repeats: false)
-		defer { client.reconnectTimer.stop() }
+		client.reconnect.timer.start(3600, repeats: false)
+		defer { client.reconnect.timer.stop() }
 		#expect(MenuServerActionPolicy(client: client).canCancelReconnect)
 		client.isDisconnecting = true
 		#expect(MenuServerActionPolicy(client: client).canCancelReconnect == false)
@@ -101,8 +101,8 @@ struct MenuActionControllerTests {
 
 	@Test("Connection menu validation shares action eligibility without changing visibility", arguments: 0 ..< 32)
 	func connectionMenuPreservesVisibility(flags: Int) {
-		let controller = MenuController()
-		let coordinator = controller.actionCoordinator
+		let controller = MenuActionController()
+		let coordinator = controller
 		let client = TestClient()
 		coordinator.pointedClient = client
 		client.isConnecting = flags & 1 != 0
@@ -124,8 +124,8 @@ struct MenuActionControllerTests {
 
 	@Test("Disconnect becomes disabled after its first invocation and cannot quit twice")
 	func disconnectActionAndValidationAgree() throws {
-		let controller = MenuController()
-		let coordinator = controller.actionCoordinator
+		let controller = MenuActionController()
+		let coordinator = controller
 		let client = TestClient()
 		coordinator.pointedClient = client
 		let connection = Connection(config: ConnectionConfig(), onClient: client)

@@ -15,34 +15,38 @@ struct StringCatalogTests {
 		let topicTooLong = "You have exceeded the maximum topic length for Libera.Chat which is 390 characters. "
 			+ "The end of your topic may have been cut off."
 
-		#expect(CommandStrings.topicTooLong(networkName: "Libera.Chat", maximumLength: 390) == topicTooLong)
+		#expect(String(localized: .IRC.youHaveExceededTheMaximumTopic("Libera.Chat", arg2: 390)) == topicTooLong)
 		#expect(
-			ConnectionStrings.connecting(host: "irc.example", port: 6697)
+			String(localized: .IRC.connectingToOnPort("irc.example", String(6697)))
 				== "Connecting to [irc.example] on port 6697"
 		)
 		#expect(
-			DCCFileTransferStrings.request(nickname: "Alice", filename: "archive.zip", byteCount: 1024)
-				== "Received file transfer request from Alice, archive.zip (1 kB)"
+			String(
+				localized: .IRC.receivedFileTransferRequest(
+					"Alice",
+					"archive.zip",
+					LocalizedByteCount.formatted(1024)
+				)
+			) == "Received file transfer request from Alice, archive.zip (1 kB)"
 		)
 	}
 
 	@Test("Typed selections pick the same entry the untyped lookups used to")
 	func typedDynamicSelectionsPreserveBehavior() {
-		#expect(TimerStrings.status(active: true) == "Active")
-		#expect(TimerStrings.help(topic: .restart).contains("/timer restart <identifier>"))
-		#expect(CTCPStrings.lagRating(.excellent) == "Yeah, okay…")
-		#expect(CTCPStrings.lagRating(.verySlow) == "Very slow")
+		#expect(String(localized: .IRC.timerCommandActive) == "Active")
+		#expect(TimerHelpTopic.helpText(for: .restart).contains("/timer restart <identifier>"))
+		#expect(CTCPLagRating.excellent.ratingText == "Yeah, okay…")
+		#expect(CTCPLagRating.verySlow.ratingText == "Very slow")
 		#expect(
-			ISupportStrings.extendedBanDescription(type: "a", argument: "staff")
+			ExtendedBanKind.describing(type: "a", argument: "staff")
 				== "Users logged in to account “staff”"
 		)
 		#expect(
-			ISupportStrings.extendedBanDescription(type: "?", argument: "mask")
+			ExtendedBanKind.describing(type: "?", argument: "mask")
 				== "Extended ban of type “?”: mask"
 		)
 		#expect(
-			ChannelAccessListStrings.entry(
-				kind: .ban,
+			ChannelBanListKind.ban.entryText(
 				channelName: "#swift",
 				mask: "*!*@example",
 				setBy: "Alice",
@@ -54,7 +58,7 @@ struct StringCatalogTests {
 	@Test("The retained setname entry still reads back")
 	func setNameUsesRetainedCatalogEntry() {
 		#expect(
-			CommandStrings.setNameUnsupported
+			String(localized: .IRC.thisServerDoesNotSupportChanging)
 				== "This server does not support changing the real name (setname)"
 		)
 	}
@@ -65,61 +69,54 @@ struct StringCatalogTests {
 	@Test("Every counted console line reads its singular and its plural")
 	func countedConsoleLinesPluralizeTheirCounts() {
 		#expect(
-			ConnectionStrings.delayedAutoConnect(seconds: 1) == "Delaying auto connect for 1 second"
+			String(localized: .IRC.delayingAutoConnectForSeconds(arg1: UInt(1))) == "Delaying auto connect for 1 second"
 		)
 		#expect(
-			ConnectionStrings.delayedAutoConnect(seconds: 30) == "Delaying auto connect for 30 seconds"
+			String(localized: .IRC.delayingAutoConnectForSeconds(arg1: UInt(30))) == "Delaying auto connect for 30 seconds"
 		)
 
 		#expect(
-			CommandStrings.topicTooLong(networkName: "Libera.Chat", maximumLength: 1)
+			String(localized: .IRC.youHaveExceededTheMaximumTopic("Libera.Chat", arg2: 1))
 				.contains("which is 1 character.")
 		)
 		#expect(
-			CommandStrings.kickMessageTooLong(networkName: "Libera.Chat", maximumLength: 1)
+			String(localized: .IRC.youHaveExceededTheMaximumKick("Libera.Chat", arg2: 1))
 				.contains("which is 1 character.")
 		)
 		#expect(
-			CommandStrings.awayMessageTooLong(networkName: "Libera.Chat", maximumLength: 300)
+			String(localized: .IRC.youHaveExceededTheMaximumAway("Libera.Chat", arg2: 300))
 				.contains("which is 300 characters.")
 		)
 
 		#expect(
-			ISupportStrings.channelNameTooLong(channelName: "#swift", maximumLength: 1)
+			String(localized: .IRC.joinRefusedNameTooLong("#swift", arg2: 1))
 				.hasSuffix("channel names of at most 1 character.")
 		)
 		#expect(
-			ISupportStrings.channelLimitExceeded(channelName: "#swift", limit: 1, prefix: "#")
+			String(localized: .IRC.joiningWouldExceedTheLimit("#swift", arg2: UInt(1), "#"))
 				.contains("the limit of 1 channel with")
 		)
 		#expect(
-			ISupportStrings.presenceListIsFull(droppedCount: 2, ceiling: 1)
+			String(localized: .IRC.presenceListIsFull(2, arg2: 1))
 				.hasSuffix("keeps at most 1 presence entry.")
 		)
 
 		#expect(
-			InboundStrings.History.netsplit(
-				firstServer: "irc.hub",
-				secondServer: "irc.leaf",
-				userCount: 1,
-				nicknames: "alice"
-			).contains(": 1 user left (")
+			String(localized: .IRC.netsplitBetweenAndUsersLeft("irc.hub", "irc.leaf", arg3: UInt(1), "alice"))
+				.contains(": 1 user left (")
 		)
 		#expect(
-			InboundStrings.History.netjoin(
-				firstServer: "irc.hub",
-				secondServer: "irc.leaf",
-				userCount: 1,
-				nicknames: "alice"
-			).contains(": 1 user rejoined (")
+			String(localized: .IRC.netjoinBetweenAndUsersRejoined("irc.hub", "irc.leaf", arg3: UInt(1), "alice"))
+				.contains(": 1 user rejoined (")
 		)
-		#expect(InboundStrings.History.abbreviatedNicknames("alice", remaining: 1) == "alice, … and 1 more")
+		#expect(String(localized: .IRC.netsplitAndNetjoinSummariesMore("alice", arg2: UInt(1))) == "alice, … and 1 more")
 	}
 
 	/// `Int32(numeric)` trapped on the error path for an oversized numeric.
 	@Test("A malformed-message diagnostic survives an oversized numeric")
 	func malformedMessageStringSurvivesAnOversizedNumeric() {
-		#expect(DiagnosticStrings.malformedMessage(numeric: 99_999_999_999, sequence: "x").isEmpty == false)
-		#expect(DiagnosticStrings.malformedMessage(numeric: UInt.max, sequence: "x").isEmpty == false)
+		#expect(String(localized: .IRC.miscellaneousMessagesRelatedMessage(Int32(exactly: UInt(99_999_999_999)) ?? 0, "x"))
+			.isEmpty == false)
+		#expect(String(localized: .IRC.miscellaneousMessagesRelatedMessage(Int32(exactly: UInt.max) ?? 0, "x")).isEmpty == false)
 	}
 }

@@ -35,7 +35,9 @@
  *
  *********************************************************************** */
 
+import AppKit
 import Foundation
+import os
 
 /// A hyperlink located inside a string by `LinkParser`.
 ///
@@ -55,16 +57,10 @@ nonisolated struct LinkParserResult: Sendable, Hashable { // nonisolated: value
 	/// The range of the match in the string that was scanned.
 	let range: NSRange
 
-	/// `true` when the match carried an explicit scheme.
-	///
-	/// `false` for matches that were inferred from a bare domain name.
-	let strictMatch: Bool
-
-	init(stringValue: String, range: NSRange, strictMatch: Bool) {
+	init(stringValue: String, range: NSRange) {
 		uniqueIdentifier = UUID().uuidString
 		self.stringValue = stringValue
 		self.range = range
-		self.strictMatch = strictMatch
 	}
 }
 
@@ -205,7 +201,7 @@ nonisolated enum LinkParser { // nonisolated: value
 
 			stringValue = stringValue.replacingOccurrences(of: "\"", with: "%22")
 
-			results.append(LinkParserResult(stringValue: stringValue, range: range, strictMatch: candidate.hasScheme))
+			results.append(LinkParserResult(stringValue: stringValue, range: range))
 		}
 
 		return results
@@ -217,19 +213,6 @@ nonisolated enum LinkParser { // nonisolated: value
 	@MainActor
 	static func locateLinks(in string: String) -> [LinkParserResult] {
 		locateLinks(in: string, allowing: .current())
-	}
-
-	/// Returns `string` with a scheme prepended when it is a URL in its entirety,
-	/// or `nil` when the string is not a URL.
-	@MainActor
-	static func urlWithProperScheme(_ string: String) -> String? {
-		let fullRange = NSRange(location: 0, length: (string as NSString).length)
-
-		guard let result = locateLinks(in: string).first, NSEqualRanges(result.range, fullRange) else {
-			return nil
-		}
-
-		return result.stringValue
 	}
 
 	static let bannedLineTypes =
@@ -249,23 +232,42 @@ nonisolated enum LinkParser { // nonisolated: value
 	private static let redditPrefix = "/r/"
 	private static let redditBase = "https://www.reddit.com"
 
+	/// The two schemes a link the app opens itself is written in.
+	static let webSchemes: Set<String> = ["http", "https"]
+
+	/// The app's own schemes, which a link may carry back into the app.
+	static let appSchemes: Set<String> = ["glasstual", "textual"]
+
 	/// Schemes that are always linked, regardless of user preferences.
-	private static let builtInSchemes: Set<String> = [
-		"http", "https",
+	private static let builtInSchemes: Set<String> = webSchemes.union([
 		"xmpp",
 		"rdar", "radr", "radar", "x-radar",
 		"spotify", "dict", "magnet", "message",
-	]
+	])
 
 	/** Schemes that hand a remote peer's string to the file system, a network
-	 mount or a system settings pane. They are refused ahead of the user
-	 customization keys below so that a permissive `permittedSchemesAny`
+	 mount, a system settings pane or an interpreter. They are refused ahead of
+	 the user customization keys below so that a permissive `permitsAnyScheme`
 	 cannot re-enable them. */
 	private static let deniedSchemes: Set<String> = [
 		"file",
 		"smb", "afp", "nfs", "cifs",
 		"x-apple.systempreferences",
+		"javascript", "data", "vbscript", "blob", "filesystem", "about",
 	]
+
+	/// Whether `url` addresses a host over HTTP(S), which is the only shape an
+	/// inline image may be fetched from.
+	static func isWebURL(_ url: URL) -> Bool {
+		webSchemes.contains(url.scheme?.lowercased() ?? "") && url.host?.isEmpty == false
+	}
+
+	/// Whether the app hands `url` straight to the system rather than offering
+	/// it to a channel- or nickname-specific action first.
+	static func opensDirectly(_ url: URL) -> Bool {
+		let scheme = url.scheme?.lowercased() ?? ""
+		return webSchemes.contains(scheme) || appSchemes.contains(scheme)
+	}
 
 	/// Whether a scheme may be linked, and may be handed to `NSWorkspace`.
 	///
@@ -291,6 +293,18 @@ nonisolated enum LinkParser { // nonisolated: value
 	@MainActor
 	static func isPermittedScheme(_ scheme: String) -> Bool {
 		isPermittedScheme(scheme, allowing: .current())
+	}
+
+	/// The same answer for a whole address, which is what a rendered run and a
+	/// drawn topic carry.
+	static func isPermittedLink(_ location: String, allowing policy: LinkSchemePolicy) -> Bool {
+		guard let url = URL(string: location), let scheme = url.scheme else { return false }
+		return isPermittedScheme(scheme, allowing: policy)
+	}
+
+	@MainActor
+	static func isPermittedLink(_ location: String) -> Bool {
+		isPermittedLink(location, allowing: .current())
 	}
 
 	// MARK: - Trimming
@@ -342,5 +356,64 @@ nonisolated enum LinkParser { // nonisolated: value
 		}
 
 		return depth >= 0
+	}
+}
+
+private let openLinkLogger = Logger(
+	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
+	category: "OpenLink"
+)
+
+enum OpenLink {
+	/** Hands a URL the allowlist has already cleared to the system.
+
+	 `NSWorkspace` launches whatever app has registered the scheme, so this is
+	 the last step of a launch a remote peer asked for. It is a stored value
+	 rather than a call so that ``opener`` can stand somewhere else in a test. */
+	static let workspaceOpener: @MainActor (URL, Bool) -> Void = { url, inBackground in
+		guard inBackground else {
+			NSWorkspace.shared.open(url)
+
+			return
+		}
+
+		/* User should not be clicking links frequently enough that
+		 we need to worry about making the configuration static. */
+		let configuration = NSWorkspace.OpenConfiguration()
+		configuration.activates = false
+
+		NSWorkspace.shared.open(url, configuration: configuration)
+	}
+
+	/** Where a URL goes once ``open(url:inBackground:)`` has cleared it.
+
+	 The guard in front of this is the only thing between a string a stranger
+	 typed in a channel and an app launch on this machine, so a test has to be
+	 able to prove that the guard refuses what it should and passes what it
+	 should -- without asking the real workspace to open `file:///etc/passwd` to
+	 find out. Tests substitute their own opener and restore
+	 ``workspaceOpener``; nothing in the app replaces it. */
+	static var opener = workspaceOpener
+
+	static func open(url: URL, inBackground: Bool = Preferences.Messages.openBrowserInBackground.value) {
+		/* Links come from other people. `NSWorkspace` launches whatever app has
+		 registered the scheme, so the same allowlist that decides what becomes
+		 clickable also decides what may be opened: no caller is trusted to have
+		 filtered already. */
+		guard let scheme = url.scheme, LinkParser.isPermittedScheme(scheme) else {
+			openLinkLogger.info("Refused to open URL with scheme '\(url.scheme ?? "(none)", privacy: .public)'")
+
+			return
+		}
+
+		opener(url, inBackground)
+	}
+
+	static func open(string: String, inBackground: Bool = Preferences.Messages.openBrowserInBackground.value) {
+		guard let urlToOpen = URL(string: string) else {
+			return
+		}
+
+		open(url: urlToOpen, inBackground: inBackground)
 	}
 }

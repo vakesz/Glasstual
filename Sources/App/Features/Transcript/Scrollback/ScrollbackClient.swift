@@ -14,9 +14,9 @@ import CocoaExtensions
 import Foundation
 import os
 
-private nonisolated let historicLogClientLogger = Logger( // nonisolated: let
+private nonisolated let scrollbackClientLogger = Logger( // nonisolated: let
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
-	category: "HistoricLogClient"
+	category: "Scrollback"
 )
 
 /// Serializes fetches per view while allowing different views to read concurrently.
@@ -138,33 +138,36 @@ actor ScrollbackRequestQueue {
 	}
 }
 
-/// The typed preference that remembers the existing on-disk database name.
-private nonisolated struct ScrollbackDefaultsFilenameStore: ScrollbackFilenameStoring { // nonisolated: value
-	var databaseFilename: String? {
-		get {
-			let value = Preferences.Logging.historicLogFileName.detachedStoredValue
-			return value?.isEmpty == false ? value : nil
-		}
-		nonmutating set {
-			Preferences.Logging.historicLogFileName.detachedStoredValue = newValue
-		}
+/** The storage operations the client drives.
+
+ Closures rather than a protocol: `ScrollbackStore` is the only thing that
+ implements them, and a test that wants an open to fail supplies its own
+ closures instead of a second conformer, so opening failures never touch the
+ reader's database. */
+nonisolated struct ScrollbackStorage: Sendable { // nonisolated: value
+	var openDatabase: @Sendable (String) async -> ScrollbackOpenOutcome
+	var close: @Sendable () async -> ScrollbackSaveOutcome
+	var setMaximumLineCount: @Sendable (UInt) async -> Void
+	var writeLogLine: @Sendable (ScrollbackEntry) async -> ScrollbackWriteOutcome
+	var forgetView: @Sendable (String) async -> ScrollbackDeletionOutcome
+	var resetData: @Sendable (String) async -> ScrollbackDeletionOutcome
+	var saveData: @Sendable () async -> ScrollbackSaveOutcome
+	var fetchOutcome: @Sendable (ScrollbackFetchRequest) async -> ScrollbackFetchOutcome
+
+	/// The real database.
+	static func store(_ store: ScrollbackStore) -> Self {
+		Self(
+			openDatabase: { await store.openDatabase(inDirectory: $0) },
+			close: { await store.close() },
+			setMaximumLineCount: { await store.setMaximumLineCount($0) },
+			writeLogLine: { await store.writeLogLine($0) },
+			forgetView: { await store.forgetView($0) },
+			resetData: { await store.resetData(forView: $0) },
+			saveData: { await store.saveData() },
+			fetchOutcome: { await store.fetchOutcome($0) }
+		)
 	}
 }
-
-/// The actor-owned storage operations used by the client. Tests supply an
-/// in-memory service so opening failures never touch the user's database.
-protocol ScrollbackServicing: Actor {
-	func openDatabase(inDirectory databaseDirectory: String) async -> ScrollbackOpenOutcome
-	func close() async -> ScrollbackSaveOutcome
-	func setMaximumLineCount(_ maximumLineCount: UInt) async
-	func writeLogLine(_ logLine: ScrollbackEntry) async -> ScrollbackWriteOutcome
-	func forgetView(_ viewIdentifier: String) async -> ScrollbackDeletionOutcome
-	func resetData(forView viewIdentifier: String) async -> ScrollbackDeletionOutcome
-	func saveData() async -> ScrollbackSaveOutcome
-	func fetchOutcome(_ request: ScrollbackFetchRequest) async -> ScrollbackFetchOutcome
-}
-
-extension ScrollbackStore: ScrollbackServicing {}
 
 /// Coordinates the in-process history store and preserves FIFO fetch ordering
 /// per view. Core Data and save scheduling remain isolated by `ScrollbackStore`.
@@ -184,7 +187,7 @@ actor ScrollbackClient {
 	}
 
 	private let databaseDirectory: @Sendable () async -> String?
-	private let store: any ScrollbackServicing
+	private let store: ScrollbackStorage
 	private let reportFailure: @MainActor @Sendable (String) -> Void
 	private var loadState = LoadState.unloaded
 	private var isTerminating = false
@@ -210,18 +213,18 @@ actor ScrollbackClient {
 	}
 
 	init(
-		databaseDirectory: String? = PathInfo.groupContainerApplicationCaches,
-		filenameStore: any ScrollbackFilenameStoring = ScrollbackDefaultsFilenameStore()
+		databaseDirectory: String? = ApplicationPaths.groupContainerApplicationCaches,
+		filenameStore: ScrollbackFilenameStore = .preferences
 	) {
 		self.databaseDirectory = { databaseDirectory }
 		reportFailure = { Scrollback.reportConnectionFailure($0) }
-		store = ScrollbackStore(filenameStore: filenameStore, deletionHandler: { identifiers, viewIdentifier in
+		store = .store(ScrollbackStore(filenameStore: filenameStore, deletionHandler: { identifiers, viewIdentifier in
 			await Scrollback.noteWillDeleteLines(identifiers, inView: viewIdentifier)
-		})
+		}))
 	}
 
 	init(
-		store: any ScrollbackServicing,
+		store: ScrollbackStorage,
 		databaseDirectory: @escaping @Sendable () async -> String?,
 		reportFailure: @escaping @MainActor @Sendable (String) -> Void
 	) {
@@ -235,7 +238,7 @@ actor ScrollbackClient {
 	nonisolated static func logLines(from historicEntries: [ScrollbackEntry]) -> [LogLine] { // nonisolated: pure
 		historicEntries.compactMap { historicEntry in
 			guard let logLine = LogLine.logLine(from: historicEntry) else {
-				historicLogClientLogger.error(
+				scrollbackClientLogger.error(
 					"Failed to decode historic line \(historicEntry.uniqueIdentifier, privacy: .public)"
 				)
 				return nil
@@ -272,18 +275,18 @@ actor ScrollbackClient {
 			return false
 		}
 		guard isTerminating == false else { return false }
-		let outcome = await store.openDatabase(inDirectory: databaseDirectory)
+		let outcome = await store.openDatabase(databaseDirectory)
 		guard isTerminating == false else { return false }
 
 		switch outcome {
 		case .opened:
 			loadState = .loaded
-			historicLogClientLogger.debug("Successfully opened historic log database")
+			scrollbackClientLogger.debug("Successfully opened historic log database")
 			await applyMaximumLineCount()
 		case let .failed(reason):
 			// Latch before presenting the alert, which can suspend this actor.
 			loadState = .unavailable
-			historicLogClientLogger
+			scrollbackClientLogger
 				.error("Failed to open historic log database: \(reason ?? "no reason given", privacy: .public)")
 			/* The alert is the only place the failure reaches the reader, so it
 			 carries what the store knows rather than an empty body. */
@@ -335,7 +338,7 @@ actor ScrollbackClient {
 		guard await ensureLoaded(), !isTerminating else { return .unavailable }
 		return forget
 			? await store.forgetView(viewIdentifier)
-			: await store.resetData(forView: viewIdentifier)
+			: await store.resetData(viewIdentifier)
 	}
 
 	func saveData() async -> ScrollbackSaveOutcome {

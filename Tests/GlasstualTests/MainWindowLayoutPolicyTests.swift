@@ -38,41 +38,14 @@ struct MemberListWidthPolicyTests {
 	}
 }
 
-/** Every submenu shares the coordinator as its delegate, so AppKit sends
- `menuWillOpen` and `menuDidClose` for each of them as the pointer moves in and
- out. Treating those as session boundaries re-read the window's selection half
- way through a menu, and a command chosen from a submenu of a right-clicked row
- then acted on the selected row instead of the clicked one. */
-@Suite("Menu session boundaries")
-@MainActor
-struct MenuLifecyclePolicyRootMenuTests {
-	@Test("Only a menu with no supermenu opens and closes a session")
-	func onlyRootMenusBoundASession() {
-		let root = NSMenu(title: "Root")
-		let submenu = NSMenu(title: "Submenu")
-		let item = NSMenuItem(title: "More", action: nil, keyEquivalent: "")
-		item.submenu = submenu
-		root.addItem(item)
-
-		#expect(MenuLifecyclePolicy.isRootMenu(supermenu: root.supermenu))
-		#expect(MenuLifecyclePolicy.isRootMenu(supermenu: submenu.supermenu) == false)
-	}
-
-	@Test("The selection is reset only when the menu performed nothing")
-	func selectionResetsOnlyWithoutAnAction() {
-		#expect(MenuLifecyclePolicy.shouldResetSelectionAfterMenuCloses(performedAction: false))
-		#expect(MenuLifecyclePolicy.shouldResetSelectionAfterMenuCloses(performedAction: true) == false)
-	}
-}
-
 /// A switch names what the next press does, not the state it is in.
 @Suite("Main window toggle titles")
 @MainActor
 struct MainWindowToggleTitleTests {
 	@Test("The member list title follows the pane's state")
 	func memberListTitleFollowsState() {
-		let shown = MainWindowStrings.Menu.memberList(isVisible: true)
-		let hidden = MainWindowStrings.Menu.memberList(isVisible: false)
+		let shown = MenuCommand.memberListTitle(isVisible: true)
+		let hidden = MenuCommand.memberListTitle(isVisible: false)
 
 		#expect(shown != hidden)
 		#expect(shown.isEmpty == false)

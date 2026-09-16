@@ -13,7 +13,7 @@
 import Foundation
 
 /// One element of a compiled hostmask glob.
-nonisolated enum IRCHostmaskGlobToken: Equatable, Sendable { // nonisolated: value
+nonisolated enum HostmaskGlobToken: Equatable, Sendable { // nonisolated: value
 	case literal(Unicode.Scalar)
 	/// `?`
 	case anyCharacter
@@ -27,11 +27,11 @@ nonisolated enum IRCHostmaskGlobToken: Equatable, Sendable { // nonisolated: val
 /// exponentially backtrackable: six wildcards against a 70 character
 /// hostmask took seconds, nine took minutes, on the main thread, against a
 /// server-controlled subject. This matcher is linear in the worst case.
-nonisolated enum IRCHostmaskGlob { // nonisolated: value
+nonisolated enum HostmaskGlob { // nonisolated: value
 	/// `\` escapes the character that follows it, so a mask can contain a
 	/// literal `*` or `?`; anywhere else it is an ordinary character.
-	static func compile(_ hostmask: String) -> [IRCHostmaskGlobToken] {
-		var tokens: [IRCHostmaskGlobToken] = []
+	static func compile(_ hostmask: String) -> [HostmaskGlobToken] {
+		var tokens: [HostmaskGlobToken] = []
 		var scalars = Substring(hostmask).unicodeScalars[...]
 
 		while let scalar = scalars.first {
@@ -77,7 +77,7 @@ nonisolated enum IRCHostmaskGlob { // nonisolated: value
 	/// Folding the mask *before* compiling would eat its syntax: `\` is both
 	/// the escape character and the upper-case form of `|`, so `a\*b` would
 	/// fold to `a|*b` and stop meaning "a literal asterisk".
-	static func compile(_ hostmask: String, caseMapping: ISupportCaseMapping) -> [IRCHostmaskGlobToken] {
+	static func compile(_ hostmask: String, caseMapping: ISupportCaseMapping) -> [HostmaskGlobToken] {
 		compile(hostmask).map { token in
 			guard case let .literal(scalar) = token else {
 				return token
@@ -92,7 +92,7 @@ nonisolated enum IRCHostmaskGlob { // nonisolated: value
 	/// `tokens` must already be folded by `casefold(_:caseMapping:)` under the
 	/// same mapping; the subject is folded here.
 	static func matches(
-		tokens: [IRCHostmaskGlobToken],
+		tokens: [HostmaskGlobToken],
 		subject: String,
 		caseMapping: ISupportCaseMapping
 	) -> Bool {
@@ -169,7 +169,7 @@ nonisolated struct AddressBookEntryMatcher: Sendable { // nonisolated: value
 	let regularExpressionPattern: String
 	let trackingNickname: String?
 
-	private let globTokens: [IRCHostmaskGlobToken]?
+	private let globTokens: [HostmaskGlobToken]?
 	private let caseMapping: ISupportCaseMapping
 
 	/// An address book entry belongs to no one connection — the same ignore
@@ -184,8 +184,8 @@ nonisolated struct AddressBookEntryMatcher: Sendable { // nonisolated: value
 
 		switch entryType {
 		case .ignore:
-			regularExpressionPattern = IRCHostmaskGlob.regularExpressionPattern(for: hostmask)
-			globTokens = IRCHostmaskGlob.compile(hostmask, caseMapping: caseMapping)
+			regularExpressionPattern = HostmaskGlob.regularExpressionPattern(for: hostmask)
+			globTokens = HostmaskGlob.compile(hostmask, caseMapping: caseMapping)
 			trackingNickname = nil
 		case .userTracking:
 			/* A tracking entry names a person, so it matches that nickname at
@@ -196,8 +196,8 @@ nonisolated struct AddressBookEntryMatcher: Sendable { // nonisolated: value
 			 `nick{home}` while an ignore for the same mask matched it. */
 			let mask = Self.escapedGlobLiteral(Self.nickname(from: hostmask)) + "!*@*"
 
-			regularExpressionPattern = IRCHostmaskGlob.regularExpressionPattern(for: mask)
-			globTokens = IRCHostmaskGlob.compile(mask, caseMapping: caseMapping)
+			regularExpressionPattern = HostmaskGlob.regularExpressionPattern(for: mask)
+			globTokens = HostmaskGlob.compile(mask, caseMapping: caseMapping)
 			trackingNickname = Self.nickname(from: hostmask)
 		case .mixed:
 			regularExpressionPattern = ""
@@ -215,7 +215,7 @@ nonisolated struct AddressBookEntryMatcher: Sendable { // nonisolated: value
 			return false
 		}
 
-		return IRCHostmaskGlob.matches(
+		return HostmaskGlob.matches(
 			tokens: globTokens,
 			subject: hostmask,
 			caseMapping: caseMapping

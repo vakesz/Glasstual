@@ -11,30 +11,25 @@ import Testing
 /// The Settings window is SwiftUI over the typed key store; these check that
 /// the two halves still line up.
 @MainActor
+@Suite("Settings pane inventory")
 struct PreferencesPaneInventoryTests {
 	@Test("Settings search finds localized control labels inside grouped destinations")
 	func settingsSearchFindsControls() throws {
-		let identity = try #require(PreferencesDestination.builtIn.first { $0.selection == .identity })
+		let identity = try #require(SettingsDestination.builtIn.first { $0.selection == .identity })
 		#expect(identity.matches(searchText: "  NICKNAME  "))
 		#expect(identity.matches(searchText: "identity nickname"))
 		#expect(identity.matches(searchText: "nickname unfindable-setting") == false)
-		let controls = try #require(PreferencesDestination.builtIn.first { $0.selection == .controls })
+		let controls = try #require(SettingsDestination.builtIn.first { $0.selection == .controls })
 		#expect(controls.matches(searchText: "spell check"))
-		#expect(PreferencesDestination.builtIn.allSatisfy { $0.matches(searchText: " \n ") })
-	}
-
-	@Test("Every catalogued pane declares the keys it binds")
-	func everyPaneDeclaresItsKeys() {
-		let declared = Set(PreferencesPaneKeys.keysByPane.keys)
-		#expect(declared == Set(PreferencesPane.allCases))
+		#expect(SettingsDestination.builtIn.allSatisfy { $0.matches(searchText: " \n ") })
 	}
 
 	/** A pane may only bind to a key the code declares: a name spelled straight
 	 into a view would miss the registration domain, export and import. */
 	@Test("Every key a pane binds to is one the key store declares")
 	func boundKeysAreDeclared() {
-		for (pane, entries) in PreferencesPaneKeys.keysByPane {
-			for entry in entries {
+		for pane in SettingsPane.allCases {
+			for entry in SettingsPaneKeys.keys(for: pane) {
 				#expect(
 					Preferences.key(named: entry.key.name) != nil,
 					"\(pane.rawValue) binds to the undeclared key \(entry.key.name)"
@@ -48,9 +43,9 @@ struct PreferencesPaneInventoryTests {
 	 words that pane puts beside its control. */
 	@Test("Every key a pane binds to has a name the window can show")
 	func boundKeysHaveDisplayNames() {
-		for (pane, entries) in PreferencesPaneKeys.keysByPane {
-			for entry in entries {
-				let displayName = PreferencesPaneKeys.displayName(forKeyNamed: entry.key.name)
+		for pane in SettingsPane.allCases {
+			for entry in SettingsPaneKeys.keys(for: pane) {
+				let displayName = SettingsPaneKeys.displayName(forKeyNamed: entry.key.name)
 				#expect(
 					displayName?.isEmpty == false,
 					"\(pane.rawValue) shows \(entry.key.name) with no name of its own"
@@ -69,9 +64,9 @@ struct PreferencesPaneInventoryTests {
 	/// says so rather than handing back the defaults spelling.
 	@Test("A key no pane binds has no display name")
 	func unboundKeysHaveNoDisplayName() {
-		#expect(PreferencesPaneKeys.displayName(forKeyNamed: "Not A Preference") == nil)
+		#expect(SettingsPaneKeys.displayName(forKeyNamed: "Not A Preference") == nil)
 		#expect(
-			PreferencesPaneKeys.displayName(
+			SettingsPaneKeys.displayName(
 				forKeyNamed: Preferences.Internals.selectedPreferencePane.name
 			) == nil
 		)
@@ -81,20 +76,20 @@ struct PreferencesPaneInventoryTests {
 	/// draw is a setting shown in two places.
 	@Test("Every catalogued pane is drawn by exactly one sidebar row")
 	func everyPaneBelongsToOneRow() {
-		var seen: [PreferencesPane: Int] = [:]
-		for destination in PreferencesDestination.builtIn {
+		var seen: [SettingsPane: Int] = [:]
+		for destination in SettingsDestination.builtIn {
 			for pane in destination.panes {
 				seen[pane, default: 0] += 1
 			}
 		}
-		for pane in PreferencesPane.allCases {
+		for pane in SettingsPane.allCases {
 			#expect(seen[pane] == 1, "\(pane.rawValue) is drawn by \(seen[pane] ?? 0) rows")
 		}
 	}
 
 	@Test("Every sidebar row has a title, a symbol and something to draw")
 	func rowsAreComplete() {
-		for destination in PreferencesDestination.builtIn {
+		for destination in SettingsDestination.builtIn {
 			#expect(destination.title.isEmpty == false)
 			#expect(destination.symbolName.isEmpty == false)
 			#expect(
@@ -108,7 +103,7 @@ struct PreferencesPaneInventoryTests {
 	/// user two rows that read the same.
 	@Test("No two sidebar rows share a title or a selection")
 	func rowsAreDistinct() {
-		let destinations = PreferencesDestination.builtIn
+		let destinations = SettingsDestination.builtIn
 		#expect(Set(destinations.map(\.title)).count == destinations.count)
 		#expect(Set(destinations.map(\.selection)).count == destinations.count)
 		#expect(Set(destinations.map(\.selection.storedIdentifier)).count == destinations.count)
@@ -118,17 +113,17 @@ struct PreferencesPaneInventoryTests {
 	/// that draws two of them says which settings are which.
 	@Test("Every pane has a heading of its own")
 	func panesHaveTitles() {
-		for pane in PreferencesPane.allCases {
-			#expect(pane.title.isEmpty == false, "\(pane.rawValue) has no heading")
+		for pane in SettingsPane.allCases {
+			#expect(String(localized: pane.title).isEmpty == false, "\(pane.rawValue) has no heading")
 		}
 	}
 
 	/// What the window stores has to name the same row when it is read back.
 	@Test("A stored row identifier round-trips")
 	func storedIdentifiersRoundTrip() {
-		for destination in PreferencesDestination.builtIn {
+		for destination in SettingsDestination.builtIn {
 			let stored = destination.selection.storedIdentifier
-			#expect(PreferencesSelection(storedIdentifier: stored) == destination.selection)
+			#expect(SettingsSelection(storedIdentifier: stored) == destination.selection)
 		}
 	}
 
@@ -136,28 +131,28 @@ struct PreferencesPaneInventoryTests {
 	 than at a row, and still has to land on the row that draws it. */
 	@Test("A pane identifier stored before the flattening finds its row")
 	func storedPaneIdentifiersResolve() {
-		#expect(PreferencesSelection(storedIdentifier: PreferencesPane.hidden.rawValue) == .advanced)
-		#expect(PreferencesSelection(storedIdentifier: PreferencesPane.floodControl.rawValue) == .connection)
+		#expect(SettingsSelection(storedIdentifier: SettingsPane.hidden.rawValue) == .advanced)
+		#expect(SettingsSelection(storedIdentifier: SettingsPane.floodControl.rawValue) == .connection)
 		#expect(
-			PreferencesSelection(storedIdentifier: PreferencesPane.defaultIRCopMessages.rawValue) == .identity
+			SettingsSelection(storedIdentifier: SettingsPane.defaultIRCopMessages.rawValue) == .identity
 		)
 	}
 
 	@Test("An identifier nothing answers to names no row")
 	func unknownIdentifiersAreRejected() {
-		#expect(PreferencesSelection(storedIdentifier: "not-a-pane") == nil)
+		#expect(SettingsSelection(storedIdentifier: "not-a-pane") == nil)
 		// The Add-ons row and the rows its bundles supplied are gone.
-		#expect(PreferencesSelection(storedIdentifier: "addons") == nil)
-		#expect(PreferencesSelection(storedIdentifier: "plugin:com.example.addon") == nil)
+		#expect(SettingsSelection(storedIdentifier: "addons") == nil)
+		#expect(SettingsSelection(storedIdentifier: "plugin:com.example.addon") == nil)
 		// The Behavior pane was folded into General and Controls.
-		#expect(PreferencesSelection(storedIdentifier: "behavior") == nil)
+		#expect(SettingsSelection(storedIdentifier: "behavior") == nil)
 	}
 
 	@Test("Every sidebar row is a destination the model accepts")
 	func everyRowIsSelectable() {
-		let model = PreferencesPaneModel()
-		model.destinations = PreferencesDestination.builtIn
-		var changes: [PreferencesSelection] = []
+		let model = SettingsModel()
+		model.destinations = SettingsDestination.builtIn
+		var changes: [SettingsSelection] = []
 		model.onSelectionChange = { changes.append($0) }
 
 		let expected = model.destinations.map(\.selection).filter { $0 != model.selection }
@@ -170,8 +165,8 @@ struct PreferencesPaneInventoryTests {
 
 	@Test("A row the sidebar is not listing is rejected without publishing")
 	func invalidSelectionIsRejected() {
-		let model = PreferencesPaneModel()
-		model.destinations = PreferencesDestination.builtIn.filter { $0.selection != .fileTransfers }
+		let model = SettingsModel()
+		model.destinations = SettingsDestination.builtIn.filter { $0.selection != .fileTransfers }
 		let original = model.selection
 		var changeCount = 0
 		model.onSelectionChange = { _ in changeCount += 1 }
@@ -184,6 +179,7 @@ struct PreferencesPaneInventoryTests {
 
 /// The bindings the panes hand to their controls read and write the key store.
 @MainActor
+@Suite("Settings pane bindings")
 struct PreferencesFacadeBindingTests {
 	private let preferences = ObservablePreferences.shared
 
@@ -285,7 +281,7 @@ struct PreferencesFacadeBindingTests {
 		defer { key.storedValue = original }
 
 		let field = preferences.numberField(for: key)
-		var draft = PreferencesFieldDraft()
+		var draft = SettingsFieldDraft()
 		draft.edit(input)
 		draft.commit(to: field)
 		#expect(draft.wasRejected == false)

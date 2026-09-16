@@ -38,7 +38,7 @@
 
 import Foundation
 
-final class TimedCommand: NSObject {
+final class TimedCommand {
 	private static var lastIdentifier = 0
 
 	let identifier: String
@@ -50,18 +50,11 @@ final class TimedCommand: NSObject {
 	/// activity off it directly.
 	private(set) var timer: ClientTimer!
 
-	@available(*, unavailable)
-	override init() {
-		fatalError("Use init(command:onClient:inChannel:)")
-	}
-
 	init(command: String, onClient client: Client, inChannel channel: Channel? = nil) {
 		identifier = Self.nextIdentifier()
 		clientId = client.uniqueIdentifier
 		channelId = channel?.uniqueIdentifier
 		self.command = command
-
-		super.init()
 
 		timer = ClientTimer { [weak self, weak client] _ in
 			guard let self, let client else {

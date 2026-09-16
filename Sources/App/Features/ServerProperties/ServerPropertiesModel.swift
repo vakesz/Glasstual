@@ -6,6 +6,37 @@
 import CocoaExtensions
 import Foundation
 import Observation
+import SwiftUI
+
+enum ServerPropertiesValidation {
+	static func isSingleLine(_ value: String) -> Bool {
+		value.rangeOfCharacter(from: .newlines) == nil
+	}
+
+	/** A real name the server will accept on the USER line: something other
+	 than whitespace, on one line. Onboarding and the server properties sheet
+	 both ask this, so a name one of them accepts the other does not refuse. */
+	static func isRealName(_ value: String) -> Bool {
+		value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false && isSingleLine(value)
+	}
+
+	/// The protocol limits a line in bytes, so a disconnect message is measured
+	/// in UTF-8 bytes rather than in characters, which undercount anything
+	/// outside ASCII.
+	static let maximumCommentLength = 390
+
+	static func isLeavingComment(_ value: String) -> Bool {
+		isSingleLine(value) && value.utf8.count <= maximumCommentLength
+	}
+
+	/// The first alternative nickname the server would refuse, or `nil` when
+	/// every one of them is usable. The message names it, so the check reports
+	/// which one rather than only that one of them failed.
+	static func invalidAlternateNickname(in value: String) -> String? {
+		value.components(separatedBy: .whitespaces)
+			.first { $0.isEmpty == false && ($0 as NSString).isHostmaskNickname == false }
+	}
+}
 
 @MainActor
 @Observable
@@ -293,9 +324,9 @@ final class ServerPropertiesModel {
 
 	func serverListForEditing() -> [Server]? {
 		let fault: (ServerPropertiesSelection, String)? =
-			if !ServerPropertiesValidation.isInternetAddress(resolvedPrimaryServerAddress) {
+			if !(resolvedPrimaryServerAddress as NSString).isValidInternetAddress {
 				(.general, CommonValidationStrings.invalidServerAddress)
-			} else if !ServerPropertiesValidation.isInternetPort(serverPort) {
+			} else if !(serverPort as NSString).isValidInternetPort {
 				(.general, CommonValidationStrings.invalidInternetPort)
 			} else {
 				nil
@@ -404,11 +435,7 @@ final class ServerPropertiesModel {
 		let query = serverAddress.trimmed
 
 		guard query.isEmpty == false else {
-			let popularNames = Set(networkList.popularNetworks.map { $0.networkName.lowercased() })
-
-			return networkList.popularNetworks + networkList.listOfNetworks.filter {
-				popularNames.contains($0.networkName.lowercased()) == false
-			}
+			return networkList.popularNetworks + networkList.networksBelowThePopularOnes
 		}
 
 		return networkList.listOfNetworks.filter {
@@ -550,20 +577,20 @@ final class ServerPropertiesModel {
 			.isEmpty || !ServerPropertiesValidation.isSingleLine(config.connectionName)
 		{
 			(.general, CommonValidationStrings.singleLineRequired)
-		} else if !ServerPropertiesValidation.isInternetAddress(resolvedPrimaryServerAddress) {
+		} else if !(resolvedPrimaryServerAddress as NSString).isValidInternetAddress {
 			(.general, CommonValidationStrings.invalidServerAddress)
-		} else if !ServerPropertiesValidation.isInternetPort(serverPort) {
+		} else if !(serverPort as NSString).isValidInternetPort {
 			(.general, CommonValidationStrings.invalidInternetPort)
-		} else if !ServerPropertiesValidation.isNickname(config.nickname.firstToken) {
+		} else if !(config.nickname.firstToken as NSString).isHostmaskNickname {
 			(.identity, CommonValidationStrings.invalidNickname)
 		} else if let away = config.awayNickname, !away.isEmpty,
-		          !ServerPropertiesValidation.isNickname(away.firstToken)
+		          !(away.firstToken as NSString).isHostmaskNickname
 		{
 			(.identity, CommonValidationStrings.invalidNickname)
 		} else if let nickname = ServerPropertiesValidation.invalidAlternateNickname(in: alternateNicknames) {
-			(.identity, ServerPropertiesStrings.Validation.invalidAlternateNickname(nickname))
-		} else if !ServerPropertiesValidation.isUsername(config.username.firstToken) {
-			(.identity, ServerPropertiesStrings.Validation.invalidUsername)
+			(.identity, String(localized: .ServerProperties.pleaseEnterAListOfProperly(nickname)))
+		} else if !(config.username.firstToken as NSString).isHostmaskUsername {
+			(.identity, String(localized: .ServerProperties.pleaseEnterAProperlyFormattedUsername))
 		} else if !ServerPropertiesValidation.isRealName(config.realName) {
 			(.identity, CommonValidationStrings.invalidRealName)
 		} else if !ServerPropertiesValidation.isLeavingComment(config.normalLeavingComment) ||
@@ -573,10 +600,10 @@ final class ServerPropertiesModel {
 				ServerPropertiesValidation.maximumCommentLength
 			))
 		} else if Self.proxyTypeUsesAddress(config.proxyType),
-		          !ServerPropertiesValidation.isInternetAddress(proxyAddress.firstToken)
+		          !(proxyAddress.firstToken as NSString).isValidInternetAddress
 		{
-			(.proxyServer, ServerPropertiesStrings.Validation.invalidProxyAddress)
-		} else if Self.proxyTypeUsesAddress(config.proxyType), !ServerPropertiesValidation.isInternetPort(proxyPort) {
+			(.proxyServer, String(localized: .ServerProperties.pleaseEnterAProperlyFormattedProxy))
+		} else if Self.proxyTypeUsesAddress(config.proxyType), !(proxyPort as NSString).isValidInternetPort {
 			(.proxyServer, CommonValidationStrings.invalidInternetPort)
 		} else {
 			nil
@@ -631,5 +658,51 @@ final class ServerPropertiesModel {
 private extension String {
 	var trimmed: String {
 		trimmingCharacters(in: .whitespacesAndNewlines)
+	}
+}
+
+/// The copy the connection sheet names these choices with. Each one is a
+/// closed set the sheet draws a picker or a row from, so the name belongs to
+/// the case rather than to the view that happens to show it.
+extension AddressBookEntryType {
+	var listTitle: LocalizedStringResource {
+		switch self {
+		case .ignore, .mixed: .ServerProperties.userIgnore
+		case .userTracking: .ServerProperties.userTracking
+		@unknown default: .ServerProperties.userIgnore
+		}
+	}
+}
+
+extension ConnectionAddressType {
+	var title: LocalizedStringResource {
+		switch self {
+		case .default: .ServerProperties.addressTypeAutomatic
+		case .v4: .ServerProperties.addressTypeIpv4
+		case .v6: .ServerProperties.addressTypeIpv6
+		}
+	}
+}
+
+extension ConnectionProxyType {
+	var title: LocalizedStringResource {
+		switch self {
+		case .none: .ServerProperties.proxyTypeNone
+		case .automatic: .ServerProperties.proxyTypeAutomatic
+		case .socks5: .ServerProperties.proxyTypeSocks5
+		case .HTTP: .ServerProperties.proxyTypeHttp
+		case .tor: .ServerProperties.proxyTypeTor
+		}
+	}
+}
+
+extension CipherSuiteCollection {
+	var title: LocalizedStringResource {
+		switch self {
+		case .default: .ServerProperties.cipherSuitesDefault
+		case .mozilla2017: .ServerProperties.cipherSuitesMozilla2017
+		case .mozilla2015: .ServerProperties.cipherSuitesMozilla2015
+		case .none: .ServerProperties.cipherSuitesNone
+		}
 	}
 }

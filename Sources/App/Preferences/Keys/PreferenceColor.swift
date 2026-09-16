@@ -133,13 +133,4 @@ nonisolated extension GlasstualUserDefaults { // nonisolated: guarded
 	func storedColor(for key: PreferenceKey<PreferenceColor>) -> NSColor? {
 		self[stored: key]?.color
 	}
-
-	func setColor(_ color: NSColor?, for key: PreferenceKey<PreferenceColor>) {
-		guard let color, let value = PreferenceColor(color) else {
-			removeValue(for: key)
-			return
-		}
-
-		self[key] = value
-	}
 }

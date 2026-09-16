@@ -15,7 +15,7 @@ import Testing
 /// answer from a `let` instead of a box it would have to share with the test.
 /// Every history test wants a rename reported rather than followed, so the
 /// setter records an issue instead of storing.
-nonisolated struct ScrollbackFilenameFixture: ScrollbackFilenameStoring { // nonisolated: value
+nonisolated struct ScrollbackFilenameFixture: Sendable { // nonisolated: value
 	let filename: String
 
 	init(_ filename: String = "history.sqlite") {
@@ -24,14 +24,17 @@ nonisolated struct ScrollbackFilenameFixture: ScrollbackFilenameStoring { // non
 
 	/// A name no other store in the process shares, for suites that keep
 	/// several databases side by side in one temporary directory.
-	static func unique(_ prefix: String = "historic-log") -> Self {
+	static func unique(_ prefix: String = "scrollback") -> Self {
 		Self("\(prefix)_\(UUID().uuidString).sqlite")
 	}
 
-	var databaseFilename: String? {
-		get { filename }
-		nonmutating set {
-			Issue.record("The store renamed its database from \(filename) to \(newValue ?? "nothing").")
-		}
+	/// What the store is handed. The setter records an issue instead of
+	/// storing, so a rename is reported rather than followed.
+	var store: ScrollbackFilenameStore {
+		let filename = filename
+		return ScrollbackFilenameStore(
+			load: { filename },
+			save: { Issue.record("The store renamed its database from \(filename) to \($0 ?? "nothing").") }
+		)
 	}
 }

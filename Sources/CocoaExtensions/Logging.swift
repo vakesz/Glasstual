@@ -32,41 +32,10 @@
 
 import Foundation
 @_exported import os
-import Synchronization
 
-public enum Logging {
-	/// The logger the app or service installs during start-up.
-	///
-	/// It lives in a `Mutex` rather than an unchecked mutable global: it is
-	/// written once from the launch path and read from every thread
-	/// afterwards, and the lock is what makes that safe rather than a promise.
-	private static let defaultSubsystemStorage = Mutex<Logger?>(nil)
-
-	/// The installed subsystem, or the process default when start-up has not
-	/// installed one yet.
-	public static var defaultSubsystem: Logger {
-		defaultSubsystemStorage.withLock { $0 ?? Logger() }
-	}
-
+enum Logging {
 	/// The subsystem every logger inside Cocoa Extensions names, so that one
 	/// predicate reaches the framework's output. Categories tell the framework's
 	/// own areas apart.
 	static let frameworkSubsystem = "com.vakesz.glasstual.frameworks.CocoaExtensions"
-
-	/// Directs subsequent logging at the main bundle's identifier under
-	/// `category`. Call once, during start-up.
-	public static func setDefaultSubsystem(toMainBundleCategory category: String) {
-		let logger = Logger(
-			subsystem: Bundle.main.bundleIdentifier ?? "com.vakesz.glasstual",
-			category: category
-		)
-
-		defaultSubsystemStorage.withLock { $0 = logger }
-	}
-
-	/// Logs the current call stack at `type`.
-	public static func logStackTrace(ofType type: OSLogType = .default) {
-		let stackTrace = Thread.callStackSymbols.joined(separator: "\n")
-		defaultSubsystem.log(level: type, "Stack trace:\n\(stackTrace, privacy: .private)")
-	}
 }

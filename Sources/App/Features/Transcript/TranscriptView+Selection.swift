@@ -65,7 +65,7 @@ extension TranscriptView {
 	func selectionAnchor() -> SelectionAnchor? {
 		guard editDepth == 0 else { return nil }
 		let selection = textView.selectedRange()
-		guard selection.length > 0, lineStarts.count == lines.count + 1 else { return nil }
+		guard selection.length > 0 else { return nil }
 		guard let start = selectionEndpoint(at: selection.location),
 		      let end = selectionEndpoint(at: NSMaxRange(selection), isEnd: true) else { return nil }
 		return SelectionAnchor(start: start, end: end)
@@ -73,8 +73,8 @@ extension TranscriptView {
 
 	private func selectionEndpoint(at position: Int, isEnd: Bool = false) -> SelectionAnchor.Endpoint? {
 		guard let index = lineIndex(containing: position, isEnd: isEnd) else { return nil }
-		let location = lineStarts[index]
-		let next = lineStarts[index + 1]
+		let location = document.location(ofLineAt: index)
+		let next = location + document.length(ofLineAt: index)
 		var segmentRange = NSRange()
 		let segment = textView.textStorage?.attribute(
 			.transcriptSelectionSegment, at: max(location, position - (isEnd ? 1 : 0)),
@@ -82,7 +82,7 @@ extension TranscriptView {
 			in: NSRange(location: location, length: next - location)
 		) as? String
 		return SelectionAnchor.Endpoint(
-			lineNumber: lines[index].lineNumber,
+			lineNumber: document[index].lineNumber,
 			segment: segment,
 			offset: position - (segment == nil ? location : segmentRange.location)
 		)
@@ -96,17 +96,17 @@ extension TranscriptView {
 	 line break names that line rather than the next. */
 	func lineIndex(containing position: Int, isEnd: Bool = false) -> Int? {
 		var lower = 0
-		var upper = lines.count
+		var upper = document.count
 		while lower < upper {
 			let middle = lower + (upper - lower) / 2
-			let end = lineStarts[middle + 1]
+			let end = document.location(ofLineAt: middle + 1)
 			if position < end || isEnd && position == end {
 				upper = middle
 			} else {
 				lower = middle + 1
 			}
 		}
-		return lower < lines.count ? lower : nil
+		return lower < document.count ? lower : nil
 	}
 
 	func restoreSelection(_ anchor: SelectionAnchor?) {
@@ -139,8 +139,7 @@ extension TranscriptView {
 	}
 
 	func viewportAnchor() -> (endpoint: SelectionAnchor.Endpoint, offset: CGFloat)? {
-		guard !followsBottom, editDepth == 0, window != nil, !isHiddenOrHasHiddenAncestor,
-		      lineStarts.count == lines.count + 1 else { return nil }
+		guard !followsBottom, editDepth == 0, window != nil, !isHiddenOrHasHiddenAncestor else { return nil }
 		let top = scrollView.contentView.bounds.minY
 		let index = textView.characterIndexForInsertion(at: NSPoint(x: textView.textContainerOrigin.x, y: top))
 		guard let endpoint = selectionEndpoint(at: index),

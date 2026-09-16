@@ -50,7 +50,7 @@ struct ChannelModesView: View {
 						modeToggle(mode)
 					}
 				} header: {
-					Text(verbatim: ChannelModesStrings.headingTitle(channelName: channelName))
+					Text(.ChannelProperties.heading(channelName))
 				}
 
 				Section {
@@ -59,9 +59,9 @@ struct ChannelModesView: View {
 					 while the mode is on. */
 					HStack(alignment: .firstTextBaseline, spacing: UISpacing.wide) {
 						modeToggle(.key)
-						TextField(ChannelModesStrings.channelKeyPlaceholder, text: secretKey)
+						TextField(.ChannelProperties.channelKeyPlaceholder, text: secretKey)
 							.disabled(model.isEnabled(.key) == false)
-							.accessibilityLabel(Text(verbatim: ChannelMode.key.title))
+							.accessibilityLabel(ChannelMode.key.title)
 							.onSubmit(submit)
 					}
 				} footer: {
@@ -69,28 +69,28 @@ struct ChannelModesView: View {
 					 on the keystroke that crossed the limit: the answer belongs
 					 beside the field being typed in, not in a dialog over it. */
 					if let remaining = model.remainingKeyLength,
-					   let warning = ChannelModesStrings.keyLengthWarning(remaining: remaining)
+					   let warning = ChannelModesModel.keyLengthWarning(remaining: remaining)
 					{
 						Text(verbatim: warning).foregroundStyle(.red)
 					} else {
-						Text(verbatim: ChannelModesStrings.channelKeyFieldHint)
+						Text(.ChannelProperties.channelKeyFieldHint)
 					}
 				}
 
 				Section {
 					HStack(alignment: .firstTextBaseline, spacing: UISpacing.wide) {
 						modeToggle(.userLimit)
-						TextField(ChannelModesStrings.userLimitPlaceholder, text: userLimit)
+						TextField(.ChannelProperties.userLimitPlaceholder, text: userLimit)
 							.multilineTextAlignment(.trailing)
 							.monospacedDigit()
 							.frame(width: 90)
 							.disabled(model.isEnabled(.userLimit) == false)
-							.accessibilityLabel(Text(verbatim: ChannelMode.userLimit.title))
+							.accessibilityLabel(ChannelMode.userLimit.title)
 							.onSubmit(submit)
 						Spacer()
 					}
 				} footer: {
-					Text(verbatim: ChannelModesStrings.userLimitFieldHint)
+					Text(.ChannelProperties.userLimitFieldHint)
 				}
 			}
 			.formStyle(.grouped)
@@ -98,16 +98,12 @@ struct ChannelModesView: View {
 			HStack(spacing: 8) {
 				Spacer()
 
-				Button(action: cancel) {
-					Text(verbatim: ChannelModesStrings.cancelButtonTitle)
-				}
-				.keyboardShortcut(.cancelAction)
+				Button(PromptStrings.Action.cancel, action: cancel)
+					.keyboardShortcut(.cancelAction)
 
-				Button(action: submit) {
-					Text(verbatim: ChannelModesStrings.changeModesButtonTitle)
-				}
-				.keyboardShortcut(.defaultAction)
-				.disabled(model.fitsMaximumKeyLength == false)
+				Button(.ChannelProperties.changeModesButton, action: submit)
+					.keyboardShortcut(.defaultAction)
+					.disabled(model.fitsMaximumKeyLength == false)
 			}
 		}
 		.padding(20)
@@ -115,9 +111,7 @@ struct ChannelModesView: View {
 	}
 
 	private func modeToggle(_ mode: ChannelMode) -> some View {
-		Toggle(isOn: modeBinding(mode)) {
-			Text(verbatim: mode.title)
-		}
-		.toggleStyle(.checkbox)
+		Toggle(mode.title, isOn: modeBinding(mode))
+			.toggleStyle(.checkbox)
 	}
 }

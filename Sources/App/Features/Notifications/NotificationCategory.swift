@@ -3,6 +3,7 @@
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
 
+import Foundation
 import UserNotifications
 
 /** The notification categories Glasstual registers, one per kind of
@@ -63,7 +64,7 @@ enum NotificationCategory: String, CaseIterable {
 					transfer list and stop the transfer there. */
 				UNNotificationAction(
 					identifier: Action.declineFileTransfer.rawValue,
-					title: NotificationStrings.declineFileTransferActionTitle,
+					title: String(localized: .Notifications.fileTransferDeclineAction),
 					options: [.destructive]
 				),
 			]
@@ -71,10 +72,10 @@ enum NotificationCategory: String, CaseIterable {
 			[
 				UNTextInputNotificationAction(
 					identifier: Action.replyToPrivateMessage.rawValue,
-					title: NotificationStrings.replyActionTitle,
+					title: String(localized: .Notifications.replyActionTitle),
 					options: [],
-					textInputButtonTitle: NotificationStrings.replySendButtonTitle,
-					textInputPlaceholder: NotificationStrings.replyPlaceholder
+					textInputButtonTitle: String(localized: .Notifications.replySendButton),
+					textInputPlaceholder: String(localized: .Notifications.replyPlaceholder)
 				),
 			]
 		}
@@ -84,19 +85,24 @@ enum NotificationCategory: String, CaseIterable {
 	/// hides notification previews.
 	private var hiddenPreviewsBodyPlaceholder: String {
 		switch self {
-		case .activity: NotificationStrings.HiddenPreview.activity
-		case .fileTransfer: NotificationStrings.HiddenPreview.fileTransfer
-		case .privateMessage: NotificationStrings.HiddenPreview.privateMessage
+		case .activity: String(localized: .Notifications.hiddenPreviewActivity)
+		case .fileTransfer: String(localized: .Notifications.hiddenPreviewFileTransfer)
+		case .privateMessage: String(localized: .Notifications.hiddenPreviewPrivateMessage)
 		}
 	}
 
 	/// The summary under a collapsed stack. The system replaces `%u` with how
 	/// many notifications the stack holds.
 	private var summaryFormat: String {
-		switch self {
-		case .activity: NotificationStrings.Summary.activity
-		case .fileTransfer: NotificationStrings.Summary.fileTransfers
-		case .privateMessage: NotificationStrings.Summary.privateMessages
+		/* The system counts the stack and puts the number where `%u` is, so the
+		 format has to reach it with `%u` still in it. The catalog entries take
+		 the placeholder as their argument for that reason. */
+		let count = "%u"
+
+		return switch self {
+		case .activity: String(localized: .Notifications.summaryActivity(count))
+		case .fileTransfer: String(localized: .Notifications.summaryFileTransfers(count))
+		case .privateMessage: String(localized: .Notifications.summaryPrivateMessages(count))
 		}
 	}
 }

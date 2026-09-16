@@ -31,15 +31,7 @@ enum ServerPropertiesSelection: CaseIterable, Hashable {
 }
 
 @MainActor
-protocol ServerPropertiesSheetDelegate: AnyObject {
-	func serverPropertiesSheet(_ sender: ServerPropertiesSheet, onOk config: ClientConfig)
-}
-
-@MainActor
-final class ServerPropertiesSheet: SheetSession, ClientScoped,
-	AddressBookSheetDelegate, ChannelPropertiesSheetDelegate, HighlightEntrySheetDelegate,
-	ServerEndpointListSheetDelegate
-{
+final class ServerPropertiesSheet: SheetSession, ClientScoped {
 	private(set) var client: Client?
 	private(set) var clientId: String?
 	let model: ServerPropertiesModel
@@ -52,13 +44,17 @@ final class ServerPropertiesSheet: SheetSession, ClientScoped,
 	/* Weak: the window's presentation chain owns a sheet while it is up, so a
 	 child that has been dismissed reads as `nil` here without a callback to
 	 clear it. These four exist only to take the children down with the parent. */
-	private weak var addressBookSheet: AddressBookSheet?
+	private weak var addressBookSheet: AddressBookEntrySheet?
 	private weak var channelSheet: ChannelPropertiesSheet?
 	private weak var highlightSheet: HighlightEntrySheet?
 	private weak var serverEndpointSheet: ServerEndpointListSheet?
 	private weak var clientCertificatePanel: SFChooseIdentityPanel?
 
-	init(client: Client?) {
+	/// The configuration the person accepted.
+	private let onSave: (ClientConfig) -> Void
+
+	init(client: Client?, onSave: @escaping (ClientConfig) -> Void) {
+		self.onSave = onSave
 		self.client = client
 		clientId = client?.uniqueIdentifier
 		if let client {
@@ -80,33 +76,33 @@ final class ServerPropertiesSheet: SheetSession, ClientScoped,
 			applyTemplate: { [weak self] in self?.model.applySelectedTemplate() },
 			editEndpoints: { [weak self] in self?.editServerEndpoints() },
 			channels: ServerPropertiesListActions(
-				addLabel: ServerPropertiesStrings.ListButton.addChannel,
+				addLabel: .ServerProperties.addChannelButton,
 				add: { [weak self] in self?.addChannel() },
 				selected: ServerPropertiesSelectedEntryActions(
-					editLabel: ServerPropertiesStrings.ListButton.editChannel,
+					editLabel: .ServerProperties.editChannelButton,
 					edit: { [weak self] in self?.editChannel() },
-					removeLabel: ServerPropertiesStrings.ListButton.removeChannel,
+					removeLabel: .ServerProperties.removeChannelButton,
 					remove: { [weak self] in self?.deleteChannel() }
 				)
 			),
 			highlights: ServerPropertiesListActions(
-				addLabel: ServerPropertiesStrings.ListButton.addHighlight,
+				addLabel: .ServerProperties.addHighlightButton,
 				add: { [weak self] in self?.addHighlight() },
 				selected: ServerPropertiesSelectedEntryActions(
-					editLabel: ServerPropertiesStrings.ListButton.editHighlight,
+					editLabel: .ServerProperties.editHighlightButton,
 					edit: { [weak self] in self?.editHighlight() },
-					removeLabel: ServerPropertiesStrings.ListButton.removeHighlight,
+					removeLabel: .ServerProperties.removeHighlightButton,
 					remove: { [weak self] in self?.deleteHighlight() }
 				)
 			),
 			addressBook: ServerPropertiesAddressBookActions(
-				addLabel: ServerPropertiesStrings.ListButton.addAddressBookEntry,
+				addLabel: .ServerProperties.addAddressBookEntryButton,
 				addIgnore: { [weak self] in self?.addIgnoreAddressBookEntry(hostmask: nil) },
 				addTracking: { [weak self] in self?.addTrackingAddressBookEntry() },
 				selected: ServerPropertiesSelectedEntryActions(
-					editLabel: ServerPropertiesStrings.ListButton.editAddressBookEntry,
+					editLabel: .ServerProperties.editAddressBookEntryButton,
 					edit: { [weak self] in self?.editAddressBookEntry() },
-					removeLabel: ServerPropertiesStrings.ListButton.removeAddressBookEntry,
+					removeLabel: .ServerProperties.removeAddressBookEntryButton,
 					remove: { [weak self] in self?.deleteAddressBookEntry() }
 				)
 			),
@@ -166,7 +162,7 @@ final class ServerPropertiesSheet: SheetSession, ClientScoped,
 				model.config = saved
 				removeConfigurationDidChangeObserver()
 				closeChildSheets()
-				(delegate as? any ServerPropertiesSheetDelegate)?.serverPropertiesSheet(self, onOk: saved)
+				onSave(saved)
 				finishSaving()
 				return true
 			} catch {
@@ -196,14 +192,11 @@ final class ServerPropertiesSheet: SheetSession, ClientScoped,
 
 	private func editServerEndpoints() {
 		guard let servers = model.serverListForEditing() else { return }
-		let controller = ServerEndpointListSheet(window: window)
-		controller.delegate = self
-		controller.start(with: servers)
-		serverEndpointSheet = controller
-	}
-
-	func serverEndpointListSheet(_: ServerEndpointListSheet, onOk serverList: [Server]) {
-		model.applyServerList(serverList)
+		let sheet = ServerEndpointListSheet(window: window) { [weak self] serverList in
+			self?.model.applyServerList(serverList)
+		}
+		sheet.start(with: servers)
+		serverEndpointSheet = sheet
 	}
 
 	private func addChannel() {
@@ -216,12 +209,20 @@ final class ServerPropertiesSheet: SheetSession, ClientScoped,
 		presentChannelSheet(config: channel)
 	}
 
+	/// A channel raised from here is part of this sheet's pending edit, so its
+	/// keychain items are written when this sheet is accepted rather than when
+	/// the channel editor is.
 	private func presentChannelSheet(config: ChannelConfig?) {
-		let controller = ChannelPropertiesSheet(config: config, onClient: client)
-		controller.delegate = self
-		controller.window = window
-		controller.start()
-		channelSheet = controller
+		let sheet = ChannelPropertiesSheet(
+			config: config,
+			onClient: client,
+			savesCredentials: false
+		) { [weak self] channelConfig in
+			self?.applyChannel(channelConfig)
+		}
+		sheet.window = window
+		sheet.start()
+		channelSheet = sheet
 	}
 
 	private func deleteChannel() {
@@ -230,7 +231,7 @@ final class ServerPropertiesSheet: SheetSession, ClientScoped,
 		model.selectedChannelID = nil
 	}
 
-	func channelPropertiesSheet(_: ChannelPropertiesSheet, onOk config: ChannelConfig) {
+	private func applyChannel(_ config: ChannelConfig) {
 		if let index = model.config.channelList.firstIndex(where: { $0.uniqueIdentifier == config.uniqueIdentifier }) {
 			model.config.channelList[index] = config
 		} else {
@@ -250,11 +251,12 @@ final class ServerPropertiesSheet: SheetSession, ClientScoped,
 	}
 
 	private func presentHighlightSheet(config: HighlightMatchCondition?) {
-		let controller = HighlightEntrySheet(config: config, channels: model.config.channelList)
-		controller.delegate = self
-		controller.window = window
-		controller.start()
-		highlightSheet = controller
+		let sheet = HighlightEntrySheet(config: config, channels: model.config.channelList) { [weak self] entry in
+			self?.applyHighlight(entry)
+		}
+		sheet.window = window
+		sheet.start()
+		highlightSheet = sheet
 	}
 
 	private func deleteHighlight() {
@@ -263,7 +265,7 @@ final class ServerPropertiesSheet: SheetSession, ClientScoped,
 		model.selectedHighlightID = nil
 	}
 
-	func highlightEntrySheet(_: HighlightEntrySheet, didSave config: HighlightMatchCondition) {
+	private func applyHighlight(_ config: HighlightMatchCondition) {
 		if let index = model.config.highlightList
 			.firstIndex(where: { $0.uniqueIdentifier == config.uniqueIdentifier })
 		{
@@ -275,26 +277,33 @@ final class ServerPropertiesSheet: SheetSession, ClientScoped,
 	}
 
 	private func addIgnoreAddressBookEntry(hostmask: String? = nil) {
-		let controller = hostmask.map { AddressBookSheet(config: .newIgnoreEntry(forHostmask: $0)) }
-			?? AddressBookSheet(entryType: .ignore)
-		presentAddressBookSheet(controller)
+		guard let hostmask else {
+			presentAddressBookSheet(AddressBookEntrySheet(entryType: .ignore, onSave: applyAddressBookEntry))
+			return
+		}
+		presentAddressBookSheet(AddressBookEntrySheet(
+			entry: .newIgnoreEntry(forHostmask: hostmask),
+			onSave: applyAddressBookEntry
+		))
 	}
 
 	private func addTrackingAddressBookEntry() {
-		presentAddressBookSheet(AddressBookSheet(entryType: .userTracking))
+		presentAddressBookSheet(AddressBookEntrySheet(
+			entryType: .userTracking,
+			onSave: applyAddressBookEntry
+		))
 	}
 
 	private func editAddressBookEntry() {
 		guard let id = model.selectedAddressBookEntryID,
 		      let entry = model.config.ignoreList.first(where: { $0.uniqueIdentifier == id }) else { return }
-		presentAddressBookSheet(AddressBookSheet(config: entry))
+		presentAddressBookSheet(AddressBookEntrySheet(entry: entry, onSave: applyAddressBookEntry))
 	}
 
-	private func presentAddressBookSheet(_ controller: AddressBookSheet) {
-		controller.delegate = self
-		controller.window = window
-		controller.start()
-		addressBookSheet = controller
+	private func presentAddressBookSheet(_ sheet: AddressBookEntrySheet) {
+		sheet.window = window
+		sheet.start()
+		addressBookSheet = sheet
 	}
 
 	private func deleteAddressBookEntry() {
@@ -303,7 +312,7 @@ final class ServerPropertiesSheet: SheetSession, ClientScoped,
 		model.selectedAddressBookEntryID = nil
 	}
 
-	func addressBookSheet(_: AddressBookSheet, onOk entry: AddressBookEntry) {
+	private func applyAddressBookEntry(_ entry: AddressBookEntry) {
 		if let index = model.config.ignoreList.firstIndex(where: { $0.uniqueIdentifier == entry.uniqueIdentifier }) {
 			model.config.ignoreList[index] = entry
 		} else {
@@ -335,8 +344,8 @@ final class ServerPropertiesSheet: SheetSession, ClientScoped,
 	private func presentCertificatePicker(_ identities: [SecIdentity]) {
 		guard !identities.isEmpty else {
 			Alerts.alertSheet(
-				body: ServerPropertiesStrings.Certificate.noneAvailableExplanation,
-				title: ServerPropertiesStrings.Certificate.noneAvailableTitle,
+				body: String(localized: .ServerProperties.thereAreNoCertificates),
+				title: String(localized: .ServerProperties.noCertificatesAvailable),
 				defaultButton: PromptStrings.Action.confirmation,
 				alternateButton: nil,
 				otherButton: nil
@@ -345,7 +354,7 @@ final class ServerPropertiesSheet: SheetSession, ClientScoped,
 		}
 		guard let panel = SFChooseIdentityPanel.shared() else { return }
 		clientCertificatePanel = panel
-		panel.setInformativeText(ServerPropertiesStrings.Certificate.chooseExplanation)
+		panel.setInformativeText(String(localized: .ServerProperties.selectACertificateToSendWhen))
 		panel.setAlternateButtonTitle(PromptStrings.Action.cancel)
 		guard let hostWindow = AppServices.delegate.mainWindow?.frontmostAttachedSheet else { return }
 		let request = UUID()
@@ -356,7 +365,7 @@ final class ServerPropertiesSheet: SheetSession, ClientScoped,
 			didEnd: #selector(identityPanelDidEnd(_:returnCode:contextInfo:)),
 			contextInfo: Unmanaged.passRetained(request as NSUUID).toOpaque(),
 			identities: identities,
-			message: ServerPropertiesStrings.Certificate.chooseTitle
+			message: String(localized: .ServerProperties.chooseAnIdentity)
 		)
 	}
 
@@ -403,10 +412,10 @@ final class ServerPropertiesSheet: SheetSession, ClientScoped,
 	private func underlyingConfigurationChanged(_ notification: Notification) {
 		guard let client = notification.object as? Client else { return }
 		Alerts.alertSheet(
-			body: ServerPropertiesStrings.ExternalChange.unsavedChangesWarning,
-			title: ServerPropertiesStrings.ExternalChange.reloadTitle,
+			body: String(localized: .ServerProperties.youWillLooseUnsavedChangesIf),
+			title: String(localized: .ServerProperties.thisConnectionsConfigurationHasChangedDo),
 			defaultButton: PromptStrings.Action.cancel,
-			alternateButton: ServerPropertiesStrings.ExternalChange.reloadButton,
+			alternateButton: String(localized: .ServerProperties.reloadButton),
 			otherButton: nil,
 			destructiveButton: .alternate
 		) { [weak self] outcome in

@@ -311,7 +311,7 @@ struct ClientHistoryTests {
 			client.socket = socket
 			let before = Date(timeIntervalSince1970: 100)
 			client.requestChatHistory(before: before, in: channel)
-			let pending = try #require(client.serverHistoryRequests[channel.uniqueIdentifier])
+			let pending = try #require(client.chatHistory.serverRequests[channel.uniqueIdentifier])
 			client.cancelServerHistoryRequest(pending.request)
 			client.requestChatHistory(before: before, in: channel)
 			#expect(client.sentLines.count == 1)
@@ -320,10 +320,10 @@ struct ClientHistoryTests {
 				"@batch=retired;time=1970-01-01T00:00:50.000Z :alice!u@h PRIVMSG #chat :retired",
 				"BATCH -retired",
 			] {
-				client.ircConnection(socket, didReceiveData: wire)
+				client.connectionDidReceive(wire)
 			}
 			#expect(client.processedMessages.count == 0)
-			#expect(client.serverHistoryRequests.isEmpty)
+			#expect(client.chatHistory.serverRequests.isEmpty)
 			client.requestChatHistory(before: before, in: channel)
 			#expect(client.sentLines.count == 2)
 			client.resetChatHistoryState()
@@ -347,10 +347,10 @@ struct ClientHistoryTests {
 			// A request in flight is not a retry opportunity either.
 			#expect(client.canRetryServerHistory(for: channel) == false)
 
-			let pending = try #require(client.serverHistoryRequests[channel.uniqueIdentifier])
+			let pending = try #require(client.chatHistory.serverRequests[channel.uniqueIdentifier])
 			client.cancelServerHistoryRequest(pending.request)
 
-			#expect(client.serverHistoryRequests[channel.uniqueIdentifier] != nil)
+			#expect(client.chatHistory.serverRequests[channel.uniqueIdentifier] != nil)
 			#expect(client.canRetryServerHistory(for: channel) == false)
 
 			client.resetChatHistoryState()

@@ -6,8 +6,8 @@
  *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
- * Copyright (c) 2010 - 2020 Codeux Software, LLC & respective contributors.
- *      Please see Acknowledgements.pdf for additional information.
+ * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+ *       Please see Acknowledgements.pdf for additional information.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -35,6 +35,8 @@
  * SUCH DAMAGE.
  *
  *********************************************************************** */
+
+import Foundation
 
 /* Portions of the SASL implementation originated in Colloquy's Chat Core.
  Copyright © 2000 - 2012 the Colloquy IRC Client. Redistribution is permitted
@@ -66,12 +68,12 @@ class Client: ChatItem {
 	/// Writes one already-framed line to the server.
 	func sendLine(_ line: String) {
 		guard isConnected else {
-			printDebugInformation(toConsole: TransportStrings.notConnected)
+			printDebugInformation(toConsole: String(localized: .IRC.failedToSendDataToServer))
 			return
 		}
 
 		socket?.sendLine(line)
-		world?.noteMessageSent(length: UInt(line.count))
+		clientDirectory?.noteMessageSent(length: UInt(line.count))
 	}
 
 	/// Sends one `CAP` subcommand, with its argument when the subcommand takes
@@ -129,7 +131,7 @@ class Client: ChatItem {
 	var isConnecting = false
 	var isConnected = false
 
-	/// KVO: `ServerChannelListSession` watches this through `publisher(for:)`
+	/// KVO: `ServerChannelList` watches this through `publisher(for:)`
 	/// to end a listing when the connection drops.
 	@objc dynamic var isLoggedIn = false {
 		didSet {
@@ -138,10 +140,10 @@ class Client: ChatItem {
 			 successful socket connection would let a server that drops the
 			 connection during registration be retried every twenty seconds. */
 			if isLoggedIn {
-				reconnectAttemptCount = 0
+				reconnect.attemptCount = 0
 			}
 			output?.updateMemberListVisibilityForSelection()
-			world?.noteLoginStateChanged()
+			clientDirectory?.noteLoginStateChanged()
 		}
 	}
 
@@ -211,19 +213,9 @@ class Client: ChatItem {
 	var socket: Connection?
 	var lastAwayMessage: String?
 	var automaticallyAwayForScreenSleep = false
-	var saslOfferedMechanisms: [String]?
-	var saslScramTask: Task<Void, Never>?
-	var saslScramClient: SCRAMClient? {
-		didSet {
-			// Every reset or replacement invalidates work from the old exchange.
-			saslScramTask?.cancel()
-			saslScramTask = nil
-		}
-	}
-
-	var saslIncomingPayload: String?
-	var saslMechanism: String?
-	var saslTriedMechanisms: [String] = []
+	/// The SASL exchange, from the mechanisms the server offered to the reply
+	/// it is waiting on.
+	var sasl = SASLSession()
 	var pendingEndpoint: PendingIRCEndpoint?
 	var performedSTSUpgrade = false
 	var sidebarItemIsExpanded = false {
@@ -240,8 +232,8 @@ class Client: ChatItem {
 			guard isTerminating else { return }
 			cancelPendingSessionTasks()
 			cancelDelayedDisconnect()
-			reconnectEnabled = false
-			reconnectEnabledBecauseOfSleepMode = false
+			reconnect.isEnabled = false
+			reconnect.isEnabledForSleepMode = false
 			stopAllTimers()
 			removeTimedCommands()
 			removeRequestedCommands()
@@ -284,46 +276,33 @@ class Client: ChatItem {
 		}
 	}
 
-	var reconnectEnabledBecauseOfSleepMode = false
-	var timeoutWarningShownToUser = false
+	/// When and whether the client comes back after the connection ends.
+	var reconnect = ReconnectSchedule()
 	var invokingISONCommandForFirstTime = false
 	var inWhoisResponse = false
 	var inWhowasResponse = false
-	var reconnectEnabled = false
-	var connectDelay: UInt = 0
 	var lastServerSelected = UInt(NSNotFound)
-	var tryingNicknameNumber: UInt = 0
-	var tryingNicknameSentNickname: String?
+	/// Which alternate nickname registration is on, and the one it sent.
+	var nicknameRetry = NicknameRetry()
 	var channelListPrivate: [Channel] = []
 	/** `findChannel(_:)` sits on the path of nearly every inbound line, so the
 	 channel list is mirrored by casefolded name. The mirror is rebuilt whenever
 	 the list or a channel's configuration changes; a lookup still verifies its
 	 hit and falls back to a scan, because a rename or a new CASEMAPPING can
 	 arrive without either. */
-	var channelsByFoldedName: [String: Channel] = [:]
+	var channelIndex = CasefoldedIndex<Channel>()
 	weak var lastSelectedChannel: Channel?
 	var addressBookMatchCache: AddressBookMatchCache!
 	var collapsedNetsplitBatch: Any?
-	var isConnectedToZNC = false
+	/// The bouncer session, when the server on the other end is a ZNC.
+	var znc = ZNCSession()
 	var successfulConnects: UInt = 0
 	var isonTimer: ClientTimer!
 	var whoTimer: ClientTimer!
-	var autojoinTimer: ClientTimer!
-	var autojoinDelayedWarningTimer: ClientTimer!
+	/// The channels waiting to be joined, and the pacing they are joined at.
+	var autojoin = AutojoinSchedule()
 	var pongTimer: ClientTimer!
-	var reconnectTimer: ClientTimer!
-	/// How many reconnection attempts have been scheduled since the last
-	/// successful registration, which is what the backoff is computed from.
-	var reconnectAttemptCount: UInt = 0
-	/** Bounds the SASL exchange.
-
-	 A server that acknowledges `sasl` and then never answers `AUTHENTICATE`
-	 leaves registration paused, and the only thing that ever noticed was the
-	 four-minute retry timer taking the whole connection down. */
-	var saslTimeoutTimer: ClientTimer!
 	var retryTimer: ClientTimer!
-	var autojoinDelayedWarningCount: UInt = 0
-	var channelsToAutojoin: [Channel]?
 	var requestedCommands: ClientRequestedCommands!
 	var rawDataLogQuery: Channel?
 	var hiddenCommandResponsesQuery: Channel?
@@ -336,29 +315,17 @@ class Client: ChatItem {
 	/** Whether a logging session banner has been written and not yet closed. A line
 	 counter cannot express this: writing the banner is itself a write. */
 	var logFileSessionIsOpen = false
-	var chatHistoryPrependChannel: Channel?
-	var chatHistoryPrependedLines: [LogLine]?
+	/// The chat history this session has asked for and is still waiting on.
+	var chatHistory = ChatHistorySession()
 	var batchMessages: MessageBatchContainer!
-	/// Casefolded targets whose history request the server refused.
-	var chatHistoryFailedTargets: Set<String> = []
-	/// BEFORE requests keyed by channel identity, independent of CASEMAPPING.
-	var serverHistoryRequests: [String: PendingServerHistoryRequest] = [:]
-	/// The newest read marker sent per channel, keyed by channel identifier.
-	var readMarkerSentDates: [String: Date] = [:]
-	var readMarkerPendingChannels: [String: Date] = [:]
-	var readMarkerTimer: ClientTimer!
+	/// Where each channel's read marker has got to.
+	var readMarkers = ReadMarkerTracker()
 	private let notifications = NotificationSubscriptions()
 	/// Nicknames seen in the netsplit batch being collapsed, per channel
 	/// identifier, in the order they arrived.
 	var collapsedNetsplitNicknames: [String: [String]]?
-	var pendingDeliveries: [String: LabeledDelivery] = [:]
-	/// Waits for the earliest deadline in `pendingDeliveries`; `nil` while
-	/// nothing is pending.
-	var labeledDeliveryDeadlineTask: Task<Void, Never>?
-	var labelCounter: UInt = 0
-	var zncBouncerIsSendingCertificateInfo = false
-	var zncBouncerIsPlayingBackHistory = false
-	var zncBouncerCertificateChainDataMutable: String?
+	/// The messages whose labelled answer has not arrived yet.
+	var labeledResponses = LabeledResponseRegistry()
 	/// The typing state last sent to the server, keyed by channel identifier.
 	var typingStateSent: [String: TypingState] = [:]
 	/// When `.active` was last sent, keyed by channel identifier.
@@ -367,7 +334,7 @@ class Client: ChatItem {
 	var typingPauseTasks: [String: Task<Void, Never>] = [:]
 	var trackedUsers: AddressBookUserTrackingContainer!
 	/// Users the client has seen, keyed by their casefolded nickname.
-	var usersByNickname: [String: User] = [:]
+	var userIndex = CasefoldedIndex<User>()
 	/** The state that belongs to a person rather than to one `User` value: the
 	 channels they are in, the away-message clock, the removal timer. Keyed by
 	 identity so an edit or a rename keeps it. */
@@ -381,7 +348,7 @@ class Client: ChatItem {
 	var dccOfferThrottle = DCCOfferThrottle()
 
 	/** Preferences and services this client reads instead of reaching for the
-	 application's singletons. The world it belongs to keeps the preference half
+	 application's singletons. The clientDirectory it belongs to keeps the preference half
 	 current; a client made without one gets the live values and no window. */
 	var environment: ClientEnvironment
 
@@ -403,22 +370,22 @@ class Client: ChatItem {
 	}
 
 	isolated deinit {
-		saslScramTask?.cancel()
+		sasl.scramTask?.cancel()
 		pendingDisconnectTask?.cancel()
 		pendingConnectionTask?.cancel()
 		pendingCredentialTask?.cancel()
 		outboundTextProducer?.cancel()
 		notifications.cancelAll()
 		[
-			autojoinTimer, autojoinDelayedWarningTimer,
-			isonTimer, pongTimer, reconnectTimer, retryTimer, whoTimer, readMarkerTimer,
-			saslTimeoutTimer,
+			autojoin.timer, autojoin.delayedWarningTimer,
+			isonTimer, pongTimer, reconnect.timer, retryTimer, whoTimer, readMarkers.timer,
+			sasl.timeoutTimer,
 		].forEach { $0?.stop() }
 		startup.cancel()
 		trackedUserPopulationTask?.cancel()
 		rejoinTasks.values.forEach { $0.cancel() }
 		pendingConfirmationTasks.values.forEach { $0.cancel() }
-		labeledDeliveryDeadlineTask?.cancel()
+		labeledResponses.deadlineTask?.cancel()
 	}
 
 	override var uniqueIdentifier: String {
@@ -463,20 +430,20 @@ class Client: ChatItem {
 	@MainActor func prepareInitialState() {
 		batchMessages = MessageBatchContainer()
 		typingTracker = TypingTracker(client: self)
-		addressBookMatchCache = AddressBookMatchCache(client: self)
-		trackedUsers = AddressBookUserTrackingContainer(client: self)
+		addressBookMatchCache = AddressBookMatchCache()
+		trackedUsers = AddressBookUserTrackingContainer()
 		requestedCommands = ClientRequestedCommands()
 		lastMessageServerTime = config.lastMessageServerTime
 
-		autojoinTimer = makeTimer { $0.onAutojoinTimer() }
-		autojoinDelayedWarningTimer = makeTimer { $0.onAutojoinDelayedWarningTimer() }
+		autojoin.timer = makeTimer { $0.onAutojoinTimer() }
+		autojoin.delayedWarningTimer = makeTimer { $0.onAutojoinDelayedWarningTimer() }
 		isonTimer = makeTimer { $0.onISONTimer() }
-		reconnectTimer = makeTimer { $0.onReconnectTimer() }
+		reconnect.timer = makeTimer { $0.onReconnectTimer() }
 		retryTimer = makeTimer { $0.onRetryTimer() }
 		pongTimer = makeTimer { $0.onPongTimer() }
-		saslTimeoutTimer = makeTimer { $0.onSASLTimeoutTimer() }
+		sasl.timeoutTimer = makeTimer { $0.onSASLTimeoutTimer() }
 		whoTimer = makeTimer { $0.onWhoTimer() }
-		readMarkerTimer = makeTimer { $0.onReadMarkerTimer() }
+		readMarkers.timer = makeTimer { $0.onReadMarkerTimer() }
 	}
 
 	private func makeTimer(_ action: @MainActor @escaping (Client) -> Void) -> ClientTimer {
@@ -501,7 +468,7 @@ class Client: ChatItem {
 		}
 	}
 
-	/** Notes a change worth writing back and asks the world to write it.
+	/** Notes a change worth writing back and asks the clientDirectory to write it.
 
 	 `lastMessageServerTime` changes on every inbound line a modern network
 	 sends, so this used to allocate a `Task` and take a main-actor hop per
@@ -510,6 +477,95 @@ class Client: ChatItem {
 	private func markConfigurationStaleIfChanged<T: Equatable>(from oldValue: T, to newValue: T) {
 		guard oldValue != newValue else { return }
 		configurationIsStale = true
-		environment.world?.savePeriodically()
+		environment.clientDirectory?.savePeriodically()
+	}
+}
+
+enum ClientConnectMode: UInt, Sendable {
+	case normal
+	case retry
+	case reconnect
+}
+
+enum ClientDisconnectMode: UInt, Sendable {
+	case normal
+	case computerSleep
+	case badCertificate
+	case reachabilityChange
+	case serverRedirect
+
+	/// What the console says the connection ended for.
+	var reasonText: String {
+		switch self {
+		case .normal: String(localized: .IRC.miscellaneousMessagesRelatedDisconnected)
+		case .computerSleep: String(localized: .IRC.disconnectedForSleepMode)
+		case .badCertificate: String(localized: .IRC.disconnectedFromServerBecause)
+		case .serverRedirect: String(localized: .IRC.disconnectedForServerRedirect)
+		case .reachabilityChange: String(localized: .IRC.disconnectedFromServerBecauseTheInternet)
+		@unknown default: String(localized: .IRC.miscellaneousMessagesRelatedDisconnected)
+		}
+	}
+}
+
+extension Client {
+	var networkName: String? {
+		supportInfo.networkNameFormatted
+	}
+
+	var networkNameAlt: String {
+		networkName ?? config.connectionName
+	}
+
+	var serverAddress: String? {
+		supportInfo.serverAddress ?? socket?.config.serverAddress ?? server?.serverAddress
+	}
+
+	var fileTransferCenter: FileTransferCenter {
+		AppServices.fileTransfers
+	}
+
+	var isReconnecting: Bool {
+		reconnect.timer.isActive
+	}
+
+	var isSecured: Bool {
+		socket?.isSecured ?? false
+	}
+
+	var zncBouncerCertificateChainData: Data? {
+		guard znc.isConnected,
+		      znc.isSendingCertificateInfo == false,
+		      let certificateData = znc.certificateChainText
+		else { return nil }
+		return certificateData.data(using: .ascii)
+	}
+}
+
+/// The name questions a connection answers with its own ISUPPORT: whether a
+/// name is the local user's, how the server folds it, and what kind of name
+/// it is.
+extension Client {
+	func messageIsFromMyself(_ message: Message) -> Bool {
+		nicknameIsMyself(message.senderNickname ?? "")
+	}
+
+	func nicknameIsMyself(_ nickname: String) -> Bool {
+		casefoldNickname(userNickname) == casefoldNickname(nickname)
+	}
+
+	func casefoldNickname(_ nickname: String) -> String {
+		supportInfo.casefoldString(nickname)
+	}
+
+	func stringIsNickname(_ string: String) -> Bool {
+		string.isHostmaskNickname(on: self) && string.isChannelName(on: self) == false
+	}
+
+	func stringIsChannelName(_ string: String) -> Bool {
+		string.isChannelName(on: self)
+	}
+
+	func stringIsChannelNameOrZero(_ string: String) -> Bool {
+		stringIsChannelName(string) || string == "0"
 	}
 }

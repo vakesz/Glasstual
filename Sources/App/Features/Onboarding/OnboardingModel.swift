@@ -10,6 +10,7 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 import Observation
 import os
@@ -23,17 +24,6 @@ private let onboardingLogger = Logger(
 struct OnboardingNotificationAuthorization {
 	let currentStatus: () async -> UNAuthorizationStatus
 	let request: () async throws -> Bool
-
-	/** Told after the person has answered the permission prompt.
-
-	 Whether the system will play a notification's sound follows from that
-	 answer, and the notification controller reads it once at launch. On a first
-	 launch the answer arrives here instead, so the controller is asked to read
-	 it again — otherwise it spends the rest of the session believing sounds are
-	 the application's job and plays them itself. */
-	var soundDeliveryDidChange: @MainActor () async -> Void = {
-		await AppServices.notifications.refreshSoundDelivery()
-	}
 
 	static let live = OnboardingNotificationAuthorization(
 		currentStatus: {
@@ -55,6 +45,14 @@ enum OnboardingTextSize: UInt, CaseIterable, Identifiable {
 	var id: Self {
 		self
 	}
+
+	var title: LocalizedStringResource {
+		switch self {
+		case .small: .Onboarding.stepLookAndFeelSmall
+		case .medium: .Onboarding.stepLookAndFeelMedium
+		case .large: .Onboarding.stepLookAndFeelLarge
+		}
+	}
 }
 
 /// The two transcript appearances the appearance step offers.
@@ -73,17 +71,29 @@ enum OnboardingTranscriptStyle: CaseIterable, Identifiable {
 		}
 	}
 
-	var title: String {
+	var title: LocalizedStringResource {
 		switch self {
-		case .bubbles: OnboardingStrings.Appearance.bubblesTitle
-		case .lines: OnboardingStrings.Appearance.linesTitle
+		case .bubbles: .Onboarding.stepLookAndFeelBubbles
+		case .lines: .Onboarding.stepLookAndFeelLines
 		}
 	}
 
-	var summary: String {
+	var summary: LocalizedStringResource {
 		switch self {
-		case .bubbles: OnboardingStrings.Appearance.bubblesDescription
-		case .lines: OnboardingStrings.Appearance.linesDescription
+		case .bubbles: .Onboarding.messagesInRoundedBubbles
+		case .lines: .Onboarding.classicLineByLineView
+		}
+	}
+}
+
+extension PreferredAppearance {
+	/// One title per case, so the appearance step's picker cannot drift out of
+	/// step with the tags it sets.
+	var onboardingTitle: LocalizedStringResource {
+		switch self {
+		case .inherited: .Onboarding.stepLookAndFeelSystem
+		case .light: .Onboarding.stepLookAndFeelLight
+		case .dark: .Onboarding.stepLookAndFeelDark
 		}
 	}
 }
@@ -99,23 +109,23 @@ enum OnboardingStep: Int, CaseIterable, Identifiable {
 		self
 	}
 
-	var title: String {
+	var title: LocalizedStringResource {
 		switch self {
-		case .identity: OnboardingStrings.Identity.title
-		case .appearance: OnboardingStrings.Appearance.title
-		case .notifications: OnboardingStrings.Notifications.title
-		case .network: OnboardingStrings.FirstNetwork.title
-		case .summary: OnboardingStrings.Summary.title
+		case .identity: .Onboarding.welcomeToGlasstual
+		case .appearance: .Onboarding.lookAndFeel
+		case .notifications: .Onboarding.stepNotifications
+		case .network: .Onboarding.yourFirstNetwork
+		case .summary: .Onboarding.summary
 		}
 	}
 
-	var subtitle: String {
+	var subtitle: LocalizedStringResource {
 		switch self {
-		case .identity: OnboardingStrings.Identity.subtitle
-		case .appearance: OnboardingStrings.Appearance.subtitle
-		case .notifications: OnboardingStrings.Notifications.subtitle
-		case .network: OnboardingStrings.FirstNetwork.subtitle
-		case .summary: OnboardingStrings.Summary.subtitle
+		case .identity: .Onboarding.glasstualIsAnIrcClientBuilt
+		case .appearance: .Onboarding.chooseHowConversationsAreDisplayed
+		case .notifications: .Onboarding.chooseWhatGlasstualShouldTell
+		case .network: .Onboarding.pickANetworkToJoin
+		case .summary: .Onboarding.summaryReviewYourChoices
 		}
 	}
 
@@ -163,6 +173,7 @@ final class OnboardingSettings {
 	}
 }
 
+@MainActor
 @Observable
 final class OnboardingModel {
 	struct Identity: Equatable {
@@ -204,17 +215,72 @@ final class OnboardingModel {
 	private(set) var acceptedNotifications: Notifications?
 
 	var currentStep: OnboardingStep = .identity
-	var notificationPermissionMessage = OnboardingStrings.Notifications.permissionExplanation
+	var notificationPermissionMessage: LocalizedStringResource = .Onboarding.glasstualWillAskMacosForPermission
 	var notificationPermissionSymbol = "bell.badge"
 
+	/// Shown on the summary step while the choices are being applied and the
+	/// first connection created, so Finish is not a window that just vanishes.
+	private(set) var isCompleting = false
+
+	/// The one failure onboarding cannot show beside a field: the application
+	/// was not ready to create the connection. Presented as an alert, and
+	/// cleared when the person dismisses it so Finish can be tried again.
+	var completionFailure: String?
+
+	/// Drives the alert the failure is shown in; dismissing it clears the
+	/// failure so Finish can be pressed again.
+	var isCompletionFailurePresented: Bool {
+		get { completionFailure != nil }
+		set {
+			if newValue == false {
+				completionFailure = nil
+			}
+		}
+	}
+
+	private var finished = false
+	private let createConnection: @MainActor (ClientConfig, Bool) -> Bool
+	private let applySettings: @MainActor (OnboardingModel) -> Void
+	private let markCompleted: @MainActor () -> Void
+
+	static func shouldPresentOnLaunch() -> Bool {
+		if Preferences.Identity.onboardingCompleted.value {
+			return false
+		}
+
+		return (AppServices.clientDirectory?.clientCount ?? 0) == 0
+	}
+
+	/// Seeded from the preferences the flow writes back to, so the first step
+	/// already shows whatever the person has set elsewhere.
+	convenience init() {
+		let settings = OnboardingSettings()
+		settings.nickname = Preferences.Identity.nickname.detachedValue
+		settings.realName = Preferences.Identity.realName.detachedValue
+		settings.textSize = OnboardingSettings.textSize(
+			forFontSize: AppServices.theme.theme.fontSize
+		)
+		settings.appearance = Preferences.Appearance.preferredAppearance.value
+
+		self.init(settings: settings)
+	}
+
+	/// Everything the flow reaches outside itself is passed in, so a test can
+	/// drive the whole thing without a world, preferences or a window.
 	init(
 		settings: OnboardingSettings,
 		networkPicker: NetworkPickerModel = NetworkPickerModel(),
-		notificationAuthorization: OnboardingNotificationAuthorization = .live
+		notificationAuthorization: OnboardingNotificationAuthorization = .live,
+		createConnection: (@MainActor (ClientConfig, Bool) -> Bool)? = nil,
+		applySettings: (@MainActor (OnboardingModel) -> Void)? = nil,
+		markCompleted: (@MainActor () -> Void)? = nil
 	) {
 		self.settings = settings
 		self.networkPicker = networkPicker
 		self.notificationAuthorization = notificationAuthorization
+		self.createConnection = createConnection ?? Self.createClient
+		self.applySettings = applySettings ?? Self.applyAcceptedSettings
+		self.markCompleted = markCompleted ?? { Preferences.Identity.onboardingCompleted.value = true }
 	}
 
 	var isFirstStep: Bool {
@@ -225,15 +291,12 @@ final class OnboardingModel {
 		currentStep == .summary
 	}
 
-	var primaryButtonTitle: String {
-		isLastStep ? OnboardingStrings.Window.finishButton : OnboardingStrings.Window.continueButton
+	var primaryButtonTitle: LocalizedStringResource {
+		isLastStep ? .Onboarding.windowChromeFinish : .Onboarding.windowChromeContinue
 	}
 
-	var progressDescription: String {
-		OnboardingStrings.Window.progress(
-			currentStep: currentStep.rawValue + 1,
-			totalSteps: OnboardingStep.allCases.count
-		)
+	var progressDescription: LocalizedStringResource {
+		.Onboarding.windowChromeStep(currentStep.rawValue + 1, OnboardingStep.allCases.count)
 	}
 
 	// MARK: - Validation
@@ -243,15 +306,15 @@ final class OnboardingModel {
 	var nicknameProblem: String? {
 		let nickname = settings.nickname.trimmingCharacters(in: .whitespacesAndNewlines)
 		if nickname.isEmpty {
-			return OnboardingStrings.Identity.nicknameRequired
+			return String(localized: .Onboarding.stepWelcomeAndIdentityNicknameRequired)
 		}
-		return ServerPropertiesValidation.isNickname(nickname) ? nil : CommonValidationStrings.invalidNickname
+		return (nickname as NSString).isHostmaskNickname ? nil : CommonValidationStrings.invalidNickname
 	}
 
 	var alternateNicknameProblem: String? {
 		let alternate = settings.alternateNickname.trimmingCharacters(in: .whitespacesAndNewlines)
 		guard alternate.isEmpty == false else { return nil }
-		return ServerPropertiesValidation.isNickname(alternate) ? nil : CommonValidationStrings.invalidNickname
+		return (alternate as NSString).isHostmaskNickname ? nil : CommonValidationStrings.invalidNickname
 	}
 
 	/// The same rule the server properties sheet applies, so a real name
@@ -340,13 +403,13 @@ final class OnboardingModel {
 
 		switch authorizationStatus {
 		case .authorized, .provisional:
-			notificationPermissionMessage = OnboardingStrings.Notifications.permissionGranted
+			notificationPermissionMessage = .Onboarding.notificationsAreAllowedForGlasstual
 			notificationPermissionSymbol = "bell.badge.fill"
 		case .denied:
-			notificationPermissionMessage = OnboardingStrings.Notifications.permissionDenied
+			notificationPermissionMessage = .Onboarding.notificationsAreTurnedOffForGlasstual
 			notificationPermissionSymbol = "bell.slash"
 		default:
-			notificationPermissionMessage = OnboardingStrings.Notifications.permissionExplanation
+			notificationPermissionMessage = .Onboarding.glasstualWillAskMacosForPermission
 			notificationPermissionSymbol = "bell.badge"
 		}
 	}
@@ -407,12 +470,111 @@ final class OnboardingModel {
 			do {
 				_ = try await notificationAuthorization.request()
 				await refreshNotificationPermission()
-				await notificationAuthorization.soundDeliveryDidChange()
 			} catch {
 				onboardingLogger.error(
 					"Notifications failed to authorize: \(error.localizedDescription, privacy: .public)"
 				)
 			}
 		}
+	}
+
+	// MARK: - Leaving onboarding
+
+	/** Applies what the accepted steps chose and creates the first connection.
+
+	 Returns `true` when the window should close. A connection that could not be
+	 created leaves onboarding open and unmarked, so Finish can be pressed
+	 again once the application has finished starting up. */
+	func finish() async -> Bool {
+		guard finished == false else { return true }
+
+		isCompleting = true
+		defer { isCompleting = false }
+
+		/* The notifications step raises the system permission prompt in a task
+		 of its own; closing the window while it is still up would leave the
+		 answer landing on a dismissed scene. */
+		await completePendingWork()
+
+		/* The title-bar close button still works while this runs, and closing
+		 the window is a dismissal that answers onboarding on its own. */
+		guard finished == false else { return true }
+
+		if let config = configuredClient() {
+			guard createConnection(config, settings.connectWhenFinished) else {
+				completionFailure = String(localized: .Onboarding.connectionUnavailable)
+				return false
+			}
+		}
+
+		applySettings(self)
+		markCompleted()
+		finished = true
+		return true
+	}
+
+	/** "Set Up Later", Escape, and the title-bar close button.
+
+	 Nothing the person typed is applied, but the fact that they answered is
+	 recorded: leaving onboarding unmarked is what made the window re-present
+	 itself at every launch with no way to stop it. */
+	func setUpLater() {
+		guard finished == false else { return }
+
+		markCompleted()
+		finished = true
+	}
+
+	private func configuredClient() -> ClientConfig? {
+		guard let identity = acceptedIdentity, var config = settings.clientConfig else {
+			return nil
+		}
+
+		config.nickname = identity.nickname
+		config.realName = identity.realName
+		config.alternateNicknames = identity.alternateNickname.isEmpty ? [] : [identity.alternateNickname]
+		config.autoConnect = settings.connectWhenFinished
+		config.channelList = settings.channelsToJoin.map(ChannelConfig.seed(withName:))
+		return config
+	}
+
+	private static func applyAcceptedSettings(_ model: OnboardingModel) {
+		if let identity = model.acceptedIdentity {
+			Preferences.Identity.nickname.value = identity.nickname
+			Preferences.Identity.realName.value = identity.realName
+		}
+		if let appearance = model.acceptedAppearance {
+			AppServices.theme.apply(appearance.theme)
+			if Preferences.Appearance.preferredAppearance.value != appearance.preferredAppearance {
+				Preferences.Appearance.preferredAppearance.value = appearance.preferredAppearance
+				PreferenceReload.perform(.appearance)
+			}
+		}
+		if let notifications = model.acceptedNotifications {
+			Preferences.Notifications.notifyAboutMentions.value = notifications.highlight || notifications.privateMessage
+			Preferences.Notifications.soundIsMuted.value = notifications.sounds == false
+		}
+	}
+
+	private static func createClient(_ config: ClientConfig, connectWhenFinished: Bool) -> Bool {
+		guard
+			let world = AppServices.clientDirectory,
+			let mainWindow = AppServices.delegate.mainWindow
+		else {
+			onboardingLogger.error("Cannot create a connection before the world is ready")
+			return false
+		}
+
+		let client = world.createClient(with: config)
+		mainWindow.expandClient(client)
+		world.save()
+		_ = mainWindow.reloadLoadingScreen()
+
+		if connectWhenFinished {
+			client.connect()
+		}
+
+		client.selectFirstChannelInChannelList()
+		return true
 	}
 }

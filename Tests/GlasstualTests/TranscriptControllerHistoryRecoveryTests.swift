@@ -26,9 +26,9 @@ struct TranscriptControllerHistoryRecoveryTests {
 		try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
 		defer { try? FileManager.default.removeItem(at: directory) }
 		let context = try ScrollbackDatabase.makeStack(at: directory.appendingPathComponent("history.sqlite"))
-		let store = ScrollbackStore(filenameStore: ScrollbackFilenameFixture(), makeStack: { _ in context })
+		let store = ScrollbackStore(filenameStore: ScrollbackFilenameFixture().store, makeStack: { _ in context })
 		let historyClient = ScrollbackClient(
-			store: store,
+			store: .store(store),
 			databaseDirectory: { directory.path },
 			reportFailure: { Issue.record("\($0)") }
 		)
@@ -46,7 +46,7 @@ struct TranscriptControllerHistoryRecoveryTests {
 		#expect(await store.saveData() == .saved)
 		let window = MainWindow(contentRect: .zero, styleMask: .borderless, backing: .buffered, defer: false)
 		let controller = TranscriptController(client: client, in: window, inlineImageLoader: InlineImageLoader(),
-		                                      historicLog: Scrollback(client: historyClient))
+		                                      scrollback: Scrollback(client: historyClient))
 		controller.loadsHistoryLazily = { false }
 		if !olderPage {
 			try await setSession(nil, context: context, view: identifier)
@@ -70,7 +70,7 @@ struct TranscriptControllerHistoryRecoveryTests {
 		#expect(view.displayedLines.contains { $0.body.plainText == "row0" })
 		#expect(await store.fetchOutcome(.newestEntries(forView: identifier, fetchLimit: 1000)).entries
 			.count == count)
-		#expect(controller.historicLogMutationTask == nil)
+		#expect(controller.scrollbackMutationTask == nil)
 		controller.tearDown(.preservingRemoval)
 		await historyClient.prepareForTermination()
 		try await ScrollbackFixture.close(context)
@@ -85,8 +85,8 @@ struct TranscriptControllerHistoryRecoveryTests {
 		try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
 		defer { try? FileManager.default.removeItem(at: directory) }
 		let context = try ScrollbackDatabase.makeStack(at: directory.appendingPathComponent("history.sqlite"))
-		let store = ScrollbackStore(filenameStore: ScrollbackFilenameFixture(), makeStack: { _ in context })
-		let client = ScrollbackClient(store: store, databaseDirectory: { directory.path },
+		let store = ScrollbackStore(filenameStore: ScrollbackFilenameFixture().store, makeStack: { _ in context })
+		let client = ScrollbackClient(store: .store(store), databaseDirectory: { directory.path },
 		                              reportFailure: { Issue.record("\($0)") })
 		let history = Scrollback(client: client)
 		var old = LogLine()

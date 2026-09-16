@@ -60,7 +60,7 @@ actor PreferencesRecoveryStore {
 	/// Where this Mac keeps its configuration backups.
 	@MainActor
 	static var defaultDirectory: URL {
-		(PathInfo.applicationSupportURL ?? URL.applicationSupportDirectory)
+		(ApplicationPaths.applicationSupportURL ?? URL.applicationSupportDirectory)
 			.appendingPathComponent("Configuration Backups", isDirectory: true)
 	}
 

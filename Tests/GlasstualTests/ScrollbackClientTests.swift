@@ -41,7 +41,21 @@ private actor FetchGate {
 	}
 }
 
-private actor ScrollbackTestService: ScrollbackServicing {
+private actor ScrollbackTestService {
+	/// The storage value the client drives, forwarding to this service.
+	nonisolated var storage: ScrollbackStorage { // nonisolated: pure
+		ScrollbackStorage(
+			openDatabase: { await self.openDatabase(inDirectory: $0) },
+			close: { await self.close() },
+			setMaximumLineCount: { await self.setMaximumLineCount($0) },
+			writeLogLine: { await self.writeLogLine($0) },
+			forgetView: { await self.forgetView($0) },
+			resetData: { await self.resetData(forView: $0) },
+			saveData: { await self.saveData() },
+			fetchOutcome: { await self.fetchOutcome($0) }
+		)
+	}
+
 	let probe: IsolationProbe
 	let openGate = FetchGate()
 	private(set) var openCount = 0
@@ -123,7 +137,7 @@ struct ScrollbackClientTests {
 		let service = ScrollbackTestService(probe: IsolationProbe())
 		await service.setOutcome(.opened)
 		await service.openGate.open()
-		let client = ScrollbackClient(store: service, databaseDirectory: { await service.databaseDirectory() },
+		let client = ScrollbackClient(store: service.storage, databaseDirectory: { await service.databaseDirectory() },
 		                              reportFailure: { _ in Issue.record("The database opened successfully") })
 		let request = Self.request(view: "a", label: "a1")
 		await service.setFetchFailure(.read("Injected read failure"))
@@ -303,7 +317,7 @@ struct ScrollbackClientTests {
 		await service.setOutcome(.failed(reason: reason))
 		var reports: [String] = []
 		let client = ScrollbackClient(
-			store: service,
+			store: service.storage,
 			databaseDirectory: { await service.databaseDirectory() },
 			reportFailure: {
 				#expect(isMainActor(#isolation))
@@ -379,7 +393,7 @@ struct ScrollbackClientTests {
 		await service.setOutcome(.opened)
 		await service.openGate.open()
 		let client = ScrollbackClient(
-			store: service,
+			store: service.storage,
 			databaseDirectory: { await service.databaseDirectory() },
 			reportFailure: { _ in Issue.record("No database open failed") }
 		)

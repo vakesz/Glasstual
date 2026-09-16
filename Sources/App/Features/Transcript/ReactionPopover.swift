@@ -81,8 +81,8 @@ private struct ReactionPopoverView: View {
 						.frame(width: buttonSize, height: buttonSize)
 				}
 				.buttonStyle(.accessoryBar)
-				.help(MainWindowStrings.Reaction.reactWith(emoji))
-				.accessibilityLabel(MainWindowStrings.Reaction.reactWith(emoji))
+				.help(String(localized: .MainWindow.reactWithEmoji(emoji)))
+				.accessibilityLabel(String(localized: .MainWindow.reactWithEmoji(emoji)))
 			}
 
 			Divider()
@@ -92,7 +92,7 @@ private struct ReactionPopoverView: View {
 			 stays: it is where the palette's choice lands, and
 			 `ReactionInput.emoji(from:)` still decides what counts. It also takes
 			 a pasted emoji, which is what the old field was for. */
-			TextField(MainWindowStrings.Reaction.custom, text: $input)
+			TextField(String(localized: .MainWindow.customReaction), text: $input)
 				.labelsHidden()
 				.textFieldStyle(.roundedBorder)
 				.multilineTextAlignment(.center)
@@ -110,14 +110,14 @@ private struct ReactionPopoverView: View {
 					input = ""
 					submit(newValue)
 				}
-				.help(MainWindowStrings.Reaction.custom)
+				.help(String(localized: .MainWindow.customReaction))
 
-			Button(MainWindowStrings.Reaction.moreEmoji, systemImage: "face.smiling") {
+			Button(String(localized: .MainWindow.moreEmoji), systemImage: "face.smiling") {
 				presentCharacterPalette()
 			}
 			.labelStyle(.iconOnly)
 			.buttonStyle(.accessoryBar)
-			.help(MainWindowStrings.Reaction.moreEmoji)
+			.help(String(localized: .MainWindow.moreEmoji))
 		}
 		.padding(UISpacing.regular)
 	}

@@ -81,10 +81,10 @@ struct NicknameColorsTests {
 		#expect(dark.hexadecimalString != light.hexadecimalString)
 		#expect(dark.relativeLuminance > light.relativeLuminance)
 
-		let previous = NicknameColors.nicknameColorStyleOverride(forKey: nickname)
+		let previous = NicknameColors.pinnedColor(for: nickname)
 		let pinned = NSColor(srgbRed: 0.2, green: 0.4, blue: 0.6, alpha: 1)
-		NicknameColors.setNicknameColorStyleOverride(pinned, forKey: nickname)
-		defer { NicknameColors.setNicknameColorStyleOverride(previous, forKey: nickname) }
+		NicknameColors.setOverride(pinned, for: nickname)
+		defer { NicknameColors.setOverride(previous, for: nickname) }
 		for isDark in [false, true] {
 			let color = NicknameColors.color(for: nickname.uppercased(), isDark: isDark)
 			#expect(color.hexadecimalString == pinned.hexadecimalString)

@@ -17,12 +17,12 @@ struct NicknameColorFeatureTests {
 	 document. */
 	@Test("Every string the sheet shows comes from the catalog, and names what it does")
 	func sheetCopyNamesTheNicknameAndTheVerb() {
-		#expect(NicknameColorStrings.windowTitle(nickname: "alice") == "Color for “alice”")
-		#expect(NicknameColorStrings.colorPickerLabel == "Color")
-		#expect(NicknameColorStrings.useDefaultColorTitle == "Use default color")
-		#expect(NicknameColorStrings.changeColor == "Change Color")
+		#expect(String(localized: .MemberList.windowTitle("alice")) == "Color for “alice”")
+		#expect(String(localized: .MemberList.colorPickerLabel) == "Color")
+		#expect(String(localized: .MemberList.useDefaultColor) == "Use default color")
+		#expect(String(localized: .MemberList.changeColor) == "Change Color")
 		#expect(
-			NicknameColorStrings.previewAccessibilityLabel(nickname: "alice")
+			String(localized: .MemberList.previewAccessibilityLabel("alice"))
 				== "Preview of alice in the chosen color"
 		)
 	}
@@ -71,33 +71,31 @@ struct NicknameColorFeatureTests {
 	}
 
 	@Test("Accepting writes the chosen color, and the default color clears it again")
-	func adapterPersistsSelectionAndReportsTheChange() throws {
-		let nickname = "nickname-color-feature-\(UUID().uuidString)"
-		// The generator looks overrides up by lowercased nickname, so that is
-		// the key the sheet has to have written under.
-		let overrideKey = nickname.lowercased()
+	func sheetPersistsSelectionAndReportsTheChange() throws {
+		let nickname = "Nickname-Color-Feature-\(UUID().uuidString)"
 		let customColor = NSColor(calibratedRed: 0.15, green: 0.35, blue: 0.75, alpha: 0.9)
 		var changeCount = 0
 
-		NicknameColors.setNicknameColorStyleOverride(nil, forKey: overrideKey)
+		NicknameColors.setOverride(nil, for: nickname)
 		defer {
-			NicknameColors.setNicknameColorStyleOverride(nil, forKey: overrideKey)
+			NicknameColors.setOverride(nil, for: nickname)
 		}
 
-		let adapter = NicknameColorSheet(nickname: nickname)
-		adapter.colorDidChange = { changeCount += 1 }
-		adapter.model.selectColor(customColor)
-		adapter.submit()
+		let sheet = NicknameColorSheet(nickname: nickname) { changeCount += 1 }
+		sheet.model.selectColor(customColor)
+		sheet.submit()
 
+		/* The store folds case, so the colour a sheet opened on one spelling
+		 pins is the colour every other spelling of the name is drawn in. */
 		let persistedColor = try #require(
-			NicknameColors.nicknameColorStyleOverride(forKey: overrideKey)
+			NicknameColors.pinnedColor(for: nickname.lowercased())
 		)
 		expectColorsEqual(persistedColor, customColor)
 		#expect(changeCount == 1)
 
-		adapter.model.setUsesDefaultColor(true)
-		adapter.submit()
-		#expect(NicknameColors.nicknameColorStyleOverride(forKey: overrideKey) == nil)
+		sheet.model.setUsesDefaultColor(true)
+		sheet.submit()
+		#expect(NicknameColors.pinnedColor(for: nickname) == nil)
 		#expect(changeCount == 2)
 	}
 

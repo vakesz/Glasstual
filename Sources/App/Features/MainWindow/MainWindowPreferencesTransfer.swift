@@ -83,7 +83,7 @@ private struct MainWindowPreferencesTransferPresentation: ViewModifier {
 				isPresented: $model.isExportingArchive,
 				document: model.archiveDocument,
 				contentType: .propertyList,
-				defaultFilename: PreferencesImportExport.defaultArchiveFilename,
+				defaultFilename: PreferencesArchive.defaultArchiveFilename,
 				onCompletion: model.completeExport
 			)
 			.modifier(PreferencesTransferPresentation(session: model.session, host: .mainWindow))

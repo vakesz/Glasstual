@@ -58,28 +58,21 @@ struct PreferencesTransferPreviewView: View {
 
 	var body: some View {
 		let plan = preview.plan
-		return VStack(alignment: .leading, spacing: PreferencesMetrics.spacingLarge) {
+		return VStack(alignment: .leading, spacing: SettingsMetrics.spacingLarge) {
 			Text(.PreferencesTransfer.previewTitle).font(.title2)
 			Text(verbatim: preview.filename).foregroundStyle(.secondary)
-			/* A legacy file has no restore plan at all, so that segment is
-			 absent rather than shown as something the user could pick. */
 			Picker(selection: $session.previewMode) {
 				Text(.PreferencesTransfer.merge).tag(PreferencesTransferMode.merge)
-				if preview.supportsRestore {
-					Text(.PreferencesTransfer.restore).tag(PreferencesTransferMode.restore)
-				}
+				Text(.PreferencesTransfer.restore).tag(PreferencesTransferMode.restore)
 			} label: { Text(.PreferencesTransfer.mode) }
 				.pickerStyle(.segmented)
-			if preview.supportsRestore == false {
-				Text(.PreferencesTransfer.legacyNotice).foregroundStyle(.secondary)
-			}
 			Text(preview.mode == .restore ? .PreferencesTransfer.restoreNotice : .PreferencesTransfer
 				.applySettingsAndAddOrUpdateServers)
 			Text(preview.archive.source == .localRecovery ? .PreferencesTransfer.localRecoveryNotice
 				: .PreferencesTransfer.passwordsAndCertificatesStayOnThisMac)
 				.font(.callout).foregroundStyle(.secondary)
 			ScrollView {
-				VStack(alignment: .leading, spacing: PreferencesMetrics.spacingMedium) {
+				VStack(alignment: .leading, spacing: SettingsMetrics.spacingMedium) {
 					if let plan {
 						riskyChanges(in: plan)
 						changedSettings(in: plan)
@@ -117,7 +110,7 @@ struct PreferencesTransferPreviewView: View {
 				.disabled(plan == nil)
 			}
 		}
-		.padding(PreferencesMetrics.sheetInset)
+		.padding(SettingsMetrics.sheetInset)
 		.frame(width: 580, height: 560)
 		.disabled(session.isBusy)
 		.interactiveDismissDisabled(session.isBusy)
@@ -138,7 +131,7 @@ struct PreferencesTransferPreviewView: View {
 			.map { name in
 				PreferencesChangedSetting(
 					id: name,
-					displayName: PreferencesPaneKeys.displayName(forKeyNamed: name),
+					displayName: SettingsPaneKeys.displayName(forKeyNamed: name),
 					isRemoved: plan.removedKeys.contains(name)
 				)
 			}
@@ -170,7 +163,7 @@ struct PreferencesTransferPreviewView: View {
 	@ViewBuilder
 	private func riskyChanges(in plan: PreferencesTransferPlan) -> some View {
 		if plan.riskyChanges.isEmpty == false {
-			VStack(alignment: .leading, spacing: PreferencesMetrics.spacingSmall) {
+			VStack(alignment: .leading, spacing: SettingsMetrics.spacingSmall) {
 				Label(.PreferencesTransfer.reviewBeforeImporting, systemImage: "exclamationmark.triangle.fill")
 					.font(.headline)
 					.foregroundStyle(.orange)
@@ -182,9 +175,9 @@ struct PreferencesTransferPreviewView: View {
 						.textSelection(.enabled)
 				}
 			}
-			.padding(PreferencesMetrics.spacingMedium)
+			.padding(SettingsMetrics.spacingMedium)
 			.frame(maxWidth: .infinity, alignment: .leading)
-			.background(.orange.opacity(0.12), in: .rect(cornerRadius: PreferencesMetrics.spacingMedium))
+			.background(.orange.opacity(0.12), in: .rect(cornerRadius: SettingsMetrics.spacingMedium))
 		}
 	}
 
@@ -296,7 +289,7 @@ struct PreferencesRecoverySection: View {
 			}
 		}
 		.fileExporter(isPresented: exporting, document: document, contentType: .propertyList,
-		              defaultFilename: PreferencesImportExport.defaultArchiveFilename)
+		              defaultFilename: PreferencesArchive.defaultArchiveFilename)
 		{ result in
 			document = nil
 			session.completeExport(result)
@@ -311,7 +304,7 @@ struct PreferencesExportOptionsView: View {
 	@State private var includeConnectCommands = false
 
 	var body: some View {
-		VStack(alignment: .leading, spacing: PreferencesMetrics.spacingLarge) {
+		VStack(alignment: .leading, spacing: SettingsMetrics.spacingLarge) {
 			Text(.PreferencesTransfer.exportOptions).font(.title2)
 			Toggle(.PreferencesTransfer.includeConnectCommands, isOn: $includeConnectCommands)
 			Text(.PreferencesTransfer.connectCommandsWarning).font(.callout).foregroundStyle(.secondary)
@@ -322,7 +315,7 @@ struct PreferencesExportOptionsView: View {
 					.keyboardShortcut(.defaultAction)
 			}
 		}
-		.padding(PreferencesMetrics.sheetInset)
+		.padding(SettingsMetrics.sheetInset)
 		.frame(width: 460)
 		.onAppear { includeConnectCommands = false }
 	}
@@ -381,5 +374,28 @@ struct PreferencesTransferPresentation: ViewModifier {
 				message: ownsPresentation ? session.pendingMessage : nil,
 				acknowledge: session.acknowledge
 			))
+	}
+}
+
+/// A property-list payload presented through SwiftUI's native file exporter.
+/// The owning feature remains responsible for encoding and interpreting it.
+struct PreferencesPropertyListDocument: FileDocument {
+	static let readableContentTypes: [UTType] = [.propertyList]
+
+	let data: Data
+
+	init(data: Data) {
+		self.data = data
+	}
+
+	init(configuration: ReadConfiguration) throws {
+		guard let data = configuration.file.regularFileContents else {
+			throw CocoaError(.fileReadCorruptFile)
+		}
+		self.data = data
+	}
+
+	func fileWrapper(configuration _: WriteConfiguration) throws -> FileWrapper {
+		FileWrapper(regularFileWithContents: data)
 	}
 }

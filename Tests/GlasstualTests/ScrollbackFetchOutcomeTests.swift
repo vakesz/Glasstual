@@ -35,7 +35,7 @@ struct ScrollbackFetchOutcomeTests {
 		                                                forStoreType: RefusingHistoricReadStore.storeType)
 		let context = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
 		try await context.perform {
-			let url = try #require(Bundle(for: LogLineArchive.self).url(
+			let url = try #require(Bundle(for: Connection.self).url(
 				forResource: ScrollbackDatabase.modelName, withExtension: "momd"
 			))
 			let model = try #require(NSManagedObjectModel(contentsOf: url))

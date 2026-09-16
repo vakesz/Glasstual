@@ -171,7 +171,7 @@ private extension TranscriptController {
 	) {
 		historyLoadFailure = failure
 		var results = inputResults
-		historicLog.indexLogLines(historicEntries, forView: viewIdentifier)
+		scrollback.indexLogLines(historicEntries, forView: viewIdentifier)
 		/* Only where nothing has been printed this session: every line this
 		 process prints sets it, so anything newer than the stored page is
 		 already there. */
@@ -189,7 +189,7 @@ private extension TranscriptController {
 			   let markerIndex = results.firstIndex(where: { $0.lineNumber == markerLineNumber })
 			{
 				results[markerIndex].transcriptLine.markers.insert(
-					.currentSession(MainWindowStrings.Conversation.currentSession),
+					.currentSession(String(localized: .MainWindow.currentSession)),
 					at: 0
 				)
 			}
@@ -226,7 +226,7 @@ private extension TranscriptController {
 		var pending = transcriptProjection.takePendingResults(displaying: displayed)
 		if let pendingIndex = pending.firstIndex(where: { transcriptSessionBoundary.consumePendingMarker(for: $0) }) {
 			pending[pendingIndex].transcriptLine.markers.insert(
-				.currentSession(MainWindowStrings.Conversation.currentSession),
+				.currentSession(String(localized: .MainWindow.currentSession)),
 				at: 0
 			)
 		}
@@ -277,7 +277,7 @@ extension TranscriptController {
 		}
 		guard !reloadingHistory else { return }
 		let generation = renderGeneration
-		let storage = historicLog
+		let storage = scrollback
 		/* The banner outlives the controller, so the recovery state is held
 		 strongly and cleared on every exit: a retry whose controller died
 		 mid-flight otherwise left the spinner turning for good. */
@@ -314,7 +314,7 @@ extension TranscriptController {
 		/* The banner outlives the controller, so the state is held strongly:
 		 whoever is still watching it has to see the spinner stop. */
 		let state = historyRecovery
-		let storage = historicLog
+		let storage = scrollback
 		historyRetryTask = Task { @MainActor [weak self] in
 			let available = await storage.retryLoading()
 			if available, let self {
@@ -441,7 +441,7 @@ extension TranscriptController {
 				guard !accepted.isEmpty else { return }
 				let acceptedIdentifiers = Set(accepted)
 				for (line, entry) in zip(lines, entries) where acceptedIdentifiers.contains(line.uniqueIdentifier) {
-					historicLog.writeNewEntry(entry, for: line)
+					scrollback.writeNewEntry(entry, for: line)
 				}
 				// The local store was already exhausted before this older server page.
 				locallyExhaustedBefore = oldestLineNumber
@@ -565,7 +565,7 @@ extension TranscriptController {
 		}
 		guard expectedOldest == nil || oldestLineNumber == expectedOldest else { return [] }
 		let accepted = Set(backingView?.prependLines(results.map { applyingCurrentState(to: $0.transcriptLine) }) ?? [])
-		historicLog.indexLogLines(
+		scrollback.indexLogLines(
 			zip(logLines, results).filter { accepted.contains($0.1.lineNumber) }.map(\.0), forView: viewIdentifier
 		)
 		for result in results where accepted.contains(result.lineNumber) && result.processesInlineMedia {

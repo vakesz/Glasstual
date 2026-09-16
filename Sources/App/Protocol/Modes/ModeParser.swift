@@ -130,4 +130,54 @@ nonisolated enum ModeParser { // nonisolated: value
 
 		return modes
 	}
+
+	/// The `MODE` commands that set or clear one mode over a list of parameters,
+	/// or none when there is no single mode letter to change. The symbol can be
+	/// one a server advertised and then withdrew, which is not a mode to send.
+	///
+	/// Structured rather than space-joined text: a mask or a key is a parameter
+	/// of its own on the wire, and the caller that sends these has no business
+	/// re-splitting a string this function had just assembled.
+	static func compileModeChanges(
+		symbol: String,
+		isSet: Bool,
+		parameters: [String],
+		maximumModes: UInt
+	) -> [ModeChangeGroup] {
+		guard (symbol as NSString).length == 1 else {
+			return []
+		}
+
+		var results: [ModeChangeGroup] = []
+		var modeSymbols = ""
+		var modeParameters: [String] = []
+
+		func flush() {
+			guard modeSymbols.isEmpty == false, modeParameters.isEmpty == false else {
+				return
+			}
+
+			results.append(ModeChangeGroup(symbols: modeSymbols, parameters: modeParameters))
+			modeSymbols = ""
+			modeParameters.removeAll(keepingCapacity: true)
+		}
+
+		for parameter in parameters where parameter.isEmpty == false {
+			if modeSymbols.isEmpty {
+				modeSymbols = isSet ? "+\(symbol)" : "-\(symbol)"
+			} else {
+				modeSymbols += symbol
+			}
+
+			modeParameters.append(parameter)
+
+			if maximumModes > 0, UInt(modeParameters.count) == maximumModes {
+				flush()
+			}
+		}
+
+		flush()
+
+		return results
+	}
 }

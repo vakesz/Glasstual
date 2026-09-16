@@ -55,14 +55,14 @@ struct MenuFactoryTests {
 	@Test("Every title the menu graph draws comes from the String Catalog")
 	func everyMenuTitleIsLocalized() throws {
 		let values = try Self.catalogValues()
-		let controller = MenuController()
+		let controller = MenuActionController()
 		let mainMenu = MenuFactory.builtMainMenu(for: controller)
 
 		let menus = [
 			mainMenu,
-			controller.channelViewChannelNameMenu,
-			controller.channelViewGeneralMenu,
-			controller.channelViewURLMenu,
+			controller.transcriptChannelNameMenu,
+			controller.transcriptGeneralMenu,
+			controller.transcriptURLMenu,
 			controller.dockMenu,
 			controller.mainMenuChannelMenu,
 			controller.mainMenuQueryMenu,
@@ -94,16 +94,16 @@ struct MenuFactoryTests {
 	 being left with no way in. */
 	@Test("Search focuses the toolbar field while Channel Spotlight keeps its own item")
 	func searchAndChannelSpotlightAreSeparateCommands() throws {
-		let controller = MenuController()
+		let controller = MenuActionController()
 		let mainMenu = try #require(NSApp.mainMenu)
 
 		let search = try #require(mainMenu.item(for: .searchChannels))
 		#expect(search.action == #selector(MenuActionController.focusSearchField(_:)))
-		#expect(search.target === controller.actionCoordinator)
+		#expect(search.target === controller)
 
 		let spotlight = try #require(mainMenu.item(for: .channelSpotlight))
 		#expect(spotlight.action == #selector(MenuActionController.showChannelSpotlightWindow(_:)))
-		#expect(spotlight.title == MenuStrings.Navigation.channelSpotlight)
+		#expect(spotlight.title == String(localized: .MainWindow.menuNavigationChannelSpotlight))
 	}
 
 	/** Showing and hiding the sidebars is a View command on macOS.
@@ -112,7 +112,7 @@ struct MenuFactoryTests {
 	 about windows, not about what is inside one. */
 	@Test("The sidebar toggles hang under View, with their own shortcuts")
 	func sidebarTogglesLiveInTheViewMenu() throws {
-		_ = MenuController()
+		_ = MenuActionController()
 		let mainMenu = try #require(NSApp.mainMenu)
 		let view = try #require(mainMenu.item(for: .viewMenu)?.submenu)
 		let window = try #require(mainMenu.item(for: .windowMenu)?.submenu)
@@ -138,7 +138,7 @@ struct MenuFactoryTests {
 	/// spotlight window already owns a variant of it; searching is a find.
 	@Test("Search Channels is bound to Option-Command-F")
 	func searchChannelsUsesTheFindShortcut() throws {
-		_ = MenuController()
+		_ = MenuActionController()
 		let mainMenu = try #require(NSApp.mainMenu)
 
 		let search = try #require(mainMenu.item(for: .searchChannels))
@@ -152,17 +152,17 @@ struct MenuFactoryTests {
 	 whatever text view is first responder both validates and performs it. */
 	@Test("The Edit menu offers the standard system commands, down the responder chain")
 	func editMenuCarriesTheStandardCommands() throws {
-		_ = MenuController()
+		_ = MenuActionController()
 		let mainMenu = try #require(NSApp.mainMenu)
 		let edit = try #require(mainMenu.item(for: .editMenu)?.submenu)
 
 		let expected: [String: Selector] = [
-			MenuStrings.Edit.pasteAndMatchStyle: #selector(NSTextView.pasteAsPlainText(_:)),
-			MenuStrings.Edit.showSpellingAndGrammar: #selector(NSText.showGuessPanel(_:)),
-			MenuStrings.Edit.checkSpellingWhileTyping: #selector(NSTextView.toggleContinuousSpellChecking(_:)),
-			MenuStrings.Edit.smartQuotes: #selector(NSTextView.toggleAutomaticQuoteSubstitution(_:)),
-			MenuStrings.Edit.makeUpperCase: #selector(NSResponder.uppercaseWord(_:)),
-			MenuStrings.Edit.startSpeaking: #selector(NSTextView.startSpeaking(_:)),
+			String(localized: .MainWindow.menuEditPasteAndMatchStyle): #selector(NSTextView.pasteAsPlainText(_:)),
+			String(localized: .MainWindow.menuEditShowSpellingAndGrammar): #selector(NSText.showGuessPanel(_:)),
+			String(localized: .MainWindow.menuEditCheckSpellingWhileTyping): #selector(NSTextView.toggleContinuousSpellChecking(_:)),
+			String(localized: .MainWindow.menuEditSmartQuotes): #selector(NSTextView.toggleAutomaticQuoteSubstitution(_:)),
+			String(localized: .MainWindow.menuEditMakeUpperCase): #selector(NSResponder.uppercaseWord(_:)),
+			String(localized: .MainWindow.menuEditStartSpeaking): #selector(NSTextView.startSpeaking(_:)),
 		]
 
 		let items = allItems(of: edit)
@@ -174,7 +174,7 @@ struct MenuFactoryTests {
 
 		/* Shift is in the modifier mask and never in the character: spelling it
 		 three different ways across the graph is what made it unreadable. */
-		let paste = try #require(items.first { $0.title == MenuStrings.Edit.pasteAndMatchStyle })
+		let paste = try #require(items.first { $0.title == String(localized: .MainWindow.menuEditPasteAndMatchStyle) })
 		#expect(paste.keyEquivalent == "v")
 		#expect(paste.keyEquivalentModifierMask == [.command, .option, .shift])
 	}
@@ -188,7 +188,7 @@ struct MenuFactoryTests {
 	 selector spelled as a string. */
 	@Test("The system's own Edit items are left to AppKit to inject")
 	func editMenuLeavesTheSystemItemsToAppKit() throws {
-		let controller = MenuController()
+		let controller = MenuActionController()
 		let built = try #require(MenuFactory.builtMainMenu(for: controller).item(for: .editMenu)?.submenu)
 		let titles = allItems(of: built).map(\.title)
 
@@ -199,7 +199,7 @@ struct MenuFactoryTests {
 		#expect(titles.contains { $0.hasPrefix("Emoji") } == false)
 		/* What the installed menu holds is not asserted: AppKit injects into
 		 `NSApp.mainMenu` every time it is set, and every suite that builds a
-		 `MenuController` sets it again, so the installed graph accumulates the
+		 `MenuActionController` sets it again, so the installed graph accumulates the
 		 system's items across the run. What this factory declares is the only
 		 half of it this repository decides. */
 	}
@@ -208,11 +208,11 @@ struct MenuFactoryTests {
 	/// standard command that seeds it from the selection.
 	@Test("Find offers Use Selection for Find on Command-E")
 	func findOffersUseSelectionForFind() throws {
-		_ = MenuController()
+		_ = MenuActionController()
 		let mainMenu = try #require(NSApp.mainMenu)
 
 		let item = try #require(mainMenu.item(for: .useSelectionForFind))
-		#expect(item.title == MenuStrings.Edit.useSelectionForFind)
+		#expect(item.title == String(localized: .MainWindow.menuEditUseSelectionForFind))
 		#expect(item.keyEquivalent == "e")
 		#expect(item.keyEquivalentModifierMask == .command)
 		#expect(mainMenu.item(for: .find)?.submenu?.item(for: .useSelectionForFind) != nil)
@@ -223,21 +223,21 @@ struct MenuFactoryTests {
 	@Test("Menu titles say whether more is being asked for")
 	func menuTitlesUseEllipsesForSheets() {
 		for title in [
-			MenuStrings.File.print,
-			MenuStrings.Channel.modifyTopic,
-			MenuStrings.Channel.bans,
-			MenuStrings.Server.changeNickname,
-			MenuStrings.Navigation.channelSpotlight,
-			MenuStrings.Member.addIgnore,
-			MenuStrings.Member.setVirtualHost,
+			String(localized: .MainWindow.menuFilePrint),
+			String(localized: .MainWindow.menuChannelModifyTopic),
+			String(localized: .MainWindow.menuChannelBans),
+			String(localized: .MainWindow.menuServerChangeNickname),
+			String(localized: .MainWindow.menuNavigationChannelSpotlight),
+			String(localized: .MainWindow.menuMemberAddIgnore),
+			String(localized: .MainWindow.menuMemberSetVirtualHost),
 		] {
 			#expect(title.hasSuffix("…"), "\(title) opens a sheet, so it needs an ellipsis")
 		}
 
 		/* A confirmation alert is not more input being asked for, and the
 		 sidebar filter is a field that is already on screen. */
-		#expect(MenuStrings.Server.deleteServer.hasSuffix("…") == false)
-		#expect(MenuStrings.Navigation.searchChannels.hasSuffix("…") == false)
+		#expect(String(localized: .MainWindow.menuServerDeleteServer).hasSuffix("…") == false)
+		#expect(String(localized: .MainWindow.menuNavigationSearchChannels).hasSuffix("…") == false)
 	}
 
 	/** Formatting is a menu of its own, with the shortcuts every macOS text
@@ -245,14 +245,14 @@ struct MenuFactoryTests {
 	 menu, with no key equivalent and no menu-bar home. */
 	@Test("The Format menu carries the three standard text shortcuts")
 	func formatMenuCarriesTheStandardShortcuts() throws {
-		let controller = MenuController()
+		let controller = MenuActionController()
 		let mainMenu = try #require(NSApp.mainMenu)
 		let format = try #require(mainMenu.item(for: .formatMenu))
-		#expect(format.title == MenuStrings.MenuBar.format)
+		#expect(format.title == String(localized: .MainWindow.menuBarFormat))
 
 		/* The window's formatter fills the submenu in; before that it is the
 		 placeholder the factory leaves behind. */
-		let formatter = TextViewIRCFormattingMenu()
+		let formatter = IRCFormattingMenu()
 		let menu = try #require(formatter.makeMenu())
 		controller.mainMenuFormatMenuItem?.submenu = menu
 
@@ -273,7 +273,7 @@ struct MenuFactoryTests {
 	 whatever order the sidebar happens to be in" does not. */
 	@Test("The Window menu owns the Command-digit shortcuts")
 	func windowMenuOwnsTheDigitShortcuts() throws {
-		_ = MenuController()
+		_ = MenuActionController()
 		let mainMenu = try #require(NSApp.mainMenu)
 
 		let expected: [(MenuCommand, String)] = [
@@ -298,7 +298,7 @@ struct MenuFactoryTests {
 	/// Importing and exporting are file commands, not help topics.
 	@Test("Settings import and export live in the File menu")
 	func settingsTransferLivesInTheFileMenu() throws {
-		_ = MenuController()
+		_ = MenuActionController()
 		let mainMenu = try #require(NSApp.mainMenu)
 		let file = try #require(mainMenu.item(for: .fileMenu)?.submenu)
 		let help = try #require(mainMenu.item(for: .helpMenu)?.submenu)
@@ -307,15 +307,15 @@ struct MenuFactoryTests {
 		#expect(file.item(for: .exportSettings) != nil)
 		#expect(help.item(for: .importSettings) == nil)
 		#expect(help.item(for: .exportSettings) == nil)
-		#expect(MenuStrings.File.importSettings == "Import Settings…")
-		#expect(MenuStrings.File.exportSettings == "Export Settings…")
+		#expect(String(localized: .MainWindow.menuFileImportSettings) == "Import Settings…")
+		#expect(String(localized: .MainWindow.menuFileExportSettings) == "Export Settings…")
 	}
 
 	/** Muting is an application-wide mode, and a mode is ticked rather than
 	 renamed. It used to sit in the File menu under two different names. */
 	@Test("The mute toggles sit in the application menu")
 	func muteTogglesLiveInTheApplicationMenu() throws {
-		_ = MenuController()
+		_ = MenuActionController()
 		let mainMenu = try #require(NSApp.mainMenu)
 		let application = try #require(mainMenu.item(for: .applicationMenu)?.submenu)
 		let file = try #require(mainMenu.item(for: .fileMenu)?.submenu)
@@ -323,14 +323,14 @@ struct MenuFactoryTests {
 		#expect(application.item(for: .muteNotifications) != nil)
 		#expect(application.item(for: .muteNotificationSounds) != nil)
 		#expect(file.item(for: .muteNotifications) == nil)
-		#expect(MenuStrings.Notifications.muteNotifications == "Mute Notifications")
+		#expect(String(localized: .MainWindow.menuMuteNotifications) == "Mute Notifications")
 	}
 
 	/// A menu whose shape follows the selection cannot be learned, so the
 	/// Channel and Query menus are installed once and stay installed.
 	@Test("The Channel and Query menus are always in the menu bar")
 	func channelAndQueryMenusStayInstalled() throws {
-		let controller = MenuController()
+		let controller = MenuActionController()
 		let mainMenu = try #require(NSApp.mainMenu)
 
 		#expect(mainMenu.item(for: .channelMenu)?.submenu === controller.mainMenuChannelMenu)
@@ -343,7 +343,7 @@ struct MenuFactoryTests {
 	/// names every window this application opens.
 	@Test("The Window menu is not handed to AppKit to fill in")
 	func windowMenuIsNotDelegatedToAppKit() {
-		_ = MenuController()
+		_ = MenuActionController()
 		#expect(NSApp.windowsMenu == nil)
 	}
 
@@ -357,16 +357,16 @@ struct MenuFactoryTests {
 	/// same way, or the item flips wording the first time it is validated.
 	@Test("The visibility toggles start on the title their validator writes")
 	func visibilityTogglesStartFromTheCatalog() throws {
-		_ = MenuController()
+		_ = MenuActionController()
 		let mainMenu = try #require(NSApp.mainMenu)
 
 		#expect(
 			mainMenu.item(for: .toggleMemberList)?.title
-				== MainWindowStrings.Menu.memberList(isVisible: true)
+				== MenuCommand.memberListTitle(isVisible: true)
 		)
 		#expect(
 			mainMenu.item(for: .toggleServerList)?.title
-				== MainWindowStrings.Menu.serverList(isVisible: true)
+				== MenuCommand.serverListTitle(isVisible: true)
 		)
 	}
 
@@ -375,14 +375,14 @@ struct MenuFactoryTests {
 	/// the object the factory targeted.
 	@Test("Every menu action resolves on the object the item targets")
 	func everyMenuActionResolves() {
-		let controller = MenuController()
+		let controller = MenuActionController()
 		let mainMenu = MenuFactory.builtMainMenu(for: controller)
 
 		let menus = [
 			mainMenu,
-			controller.channelViewChannelNameMenu,
-			controller.channelViewGeneralMenu,
-			controller.channelViewURLMenu,
+			controller.transcriptChannelNameMenu,
+			controller.transcriptGeneralMenu,
+			controller.transcriptURLMenu,
 			controller.dockMenu,
 			controller.mainMenuChannelMenu,
 			controller.mainMenuQueryMenu,
@@ -419,7 +419,7 @@ struct MenuFactoryTests {
 	/// item bound to it never received the key.
 	@Test("Channel Spotlight answers Shift-Command-O, the key of Xcode's Open Quickly")
 	func channelSpotlightUsesOpenQuicklyShortcut() throws {
-		_ = MenuController()
+		_ = MenuActionController()
 		let spotlight = try #require(NSApp.mainMenu?.item(for: .channelSpotlight))
 
 		#expect(spotlight.keyEquivalent == "o")
@@ -430,7 +430,7 @@ struct MenuFactoryTests {
 	/// habit. It opened a network connection to a public channel instead.
 	@Test("Connect to Help Channel leaves Command-? to the Help menu")
 	func helpChannelHasNoShortcut() throws {
-		_ = MenuController()
+		_ = MenuActionController()
 		let help = try #require(NSApp.mainMenu?.item(for: .connectToHelpChannel))
 
 		#expect(help.keyEquivalent.isEmpty)
@@ -440,7 +440,7 @@ struct MenuFactoryTests {
 	/// Connect has none, so an alternate on Option-Command waited for Command.
 	@Test("Option alone reveals Connect Without Proxy in place of Connect")
 	func connectWithoutProxyIsTheOptionAlternate() throws {
-		_ = MenuController()
+		_ = MenuActionController()
 		let mainMenu = try #require(NSApp.mainMenu)
 		let connect = try #require(mainMenu.item(for: .connect))
 		let withoutProxy = try #require(mainMenu.item(for: .connectWithoutProxy))
@@ -455,8 +455,8 @@ struct MenuFactoryTests {
 	/// which left AppKit to pick one of them.
 	@Test("No two menu-bar commands share a shortcut")
 	func menuBarShortcutsAreUnique() throws {
-		let controller = MenuController()
-		let formatMenu = try #require(TextViewIRCFormattingMenu().makeMenu())
+		let controller = MenuActionController()
+		let formatMenu = try #require(IRCFormattingMenu().makeMenu())
 		let menus = [
 			MenuFactory.builtMainMenu(for: controller),
 			controller.mainMenuChannelMenu,

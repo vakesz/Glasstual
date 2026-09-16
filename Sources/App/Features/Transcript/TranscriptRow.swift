@@ -99,9 +99,12 @@ nonisolated struct TranscriptRow: Equatable, Sendable { // nonisolated: value
 		}
 	}
 
+	/// The timestamp and sender the row is drawn with. Main-actor because the
+	/// nickname format is applied by the same presentation code a printed line
+	/// uses, which reads the theme on this actor.
+	@MainActor
 	func header(using theme: TranscriptTheme) -> (timestamp: String, nickname: String) {
-		let timestamp = Glasstual
-			.formattedTimestamp(receivedAt as NSDate, theme.timestampFormat as NSString) ?? ""
+		let timestamp = DateFormatting.timestamp(receivedAt, format: theme.timestampFormat) ?? ""
 		guard let wireNickname = nickname else { return (timestamp, "") }
 		/* A name is wire text like a message body, and is held to one line the
 		 same way. */
@@ -110,7 +113,7 @@ nonisolated struct TranscriptRow: Equatable, Sendable { // nonisolated: value
 		case .action: String(format: LogLineFormat.actionNickname, nickname)
 		case .notice: String(format: LogLineFormat.noticeNickname, nickname)
 		default:
-			ClientWireUtilities.formatNickname(
+			formattedNickname(
 				nickname, modeSymbol: modeSymbol,
 				format: theme.nicknameFormat.isEmpty ? TranscriptTheme.lines.nicknameFormat : theme.nicknameFormat
 			)

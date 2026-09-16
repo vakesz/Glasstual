@@ -21,7 +21,7 @@ struct FileManagerReplacementTests {
 		try Data("new".utf8).write(to: source)
 		try Data("old".utf8).write(to: destination)
 		#expect(throws: (any Error).self) {
-			try manager.stageAndReplaceItem(at: destination, withItemAt: source, options: .removeIfExists) { staged in
+			try manager.stageAndReplaceItem(at: destination, withItemAt: source) { staged in
 				#expect(staged != source)
 				#expect(try Data(contentsOf: staged) == Data("new".utf8))
 				#expect(try Data(contentsOf: destination) == Data("old".utf8))
@@ -35,9 +35,9 @@ struct FileManagerReplacementTests {
 			try manager.stageAndReplaceItem(at: destination, withItemAt: root.appendingPathComponent("missing"))
 		}
 		#expect(try Data(contentsOf: destination) == Data("old".utf8))
-		try manager.stageAndReplaceItem(at: source, withItemAt: source, options: .removeIfExists)
+		try manager.stageAndReplaceItem(at: source, withItemAt: source)
 		#expect(try Data(contentsOf: source) == Data("new".utf8))
-		try manager.stageAndReplaceItem(at: destination, withItemAt: source, options: .removeIfExists)
+		try manager.stageAndReplaceItem(at: destination, withItemAt: source)
 		#expect(try Data(contentsOf: destination) == Data("new".utf8))
 		#expect(try Data(contentsOf: source) == Data("new".utf8))
 	}
@@ -53,7 +53,7 @@ struct FileManagerReplacementTests {
 		defer { try? manager.removeItem(at: root) }
 		try Data("new".utf8).write(to: source.appendingPathComponent("new"))
 		try Data("old".utf8).write(to: destination.appendingPathComponent("old"))
-		try manager.stageAndReplaceItem(at: destination, withItemAt: source, options: .removeIfExists)
+		try manager.stageAndReplaceItem(at: destination, withItemAt: source)
 		#expect(try manager.contentsOfDirectory(atPath: destination.path) == ["new"])
 		#expect(try manager.contentsOfDirectory(atPath: source.path) == ["new"])
 		#expect(try manager.contentsOfDirectory(atPath: root.path).sorted() == ["installed.bundle", "source.bundle"])
@@ -76,7 +76,7 @@ struct FileManagerReplacementTests {
 		let destination = root.appendingPathComponent("destination")
 		try Data("new".utf8).write(to: source)
 
-		try manager.stageAndReplaceItem(at: destination, withItemAt: source, options: .removeIfExists)
+		try manager.stageAndReplaceItem(at: destination, withItemAt: source)
 
 		#expect(manager.fileExists(at: orphan) == false)
 		#expect(try Data(contentsOf: destination) == Data("new".utf8))

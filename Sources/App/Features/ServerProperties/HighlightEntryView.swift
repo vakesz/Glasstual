@@ -25,9 +25,9 @@ struct HighlightEntryView: View {
 	var body: some View {
 		VStack(spacing: 0) {
 			VStack(alignment: .leading, spacing: 6) {
-				Text(verbatim: HighlightEntryStrings.windowTitle)
+				Text(.HighlightEntry.windowTitle)
 					.font(.title2.weight(.semibold))
-				Text(verbatim: HighlightEntryStrings.ruleDescription)
+				Text(.HighlightEntry.ruleDescription)
 					.foregroundStyle(.secondary)
 					.fixedSize(horizontal: false, vertical: true)
 			}
@@ -37,20 +37,17 @@ struct HighlightEntryView: View {
 
 			Form {
 				Section {
-					Picker(HighlightEntryStrings.matchTypeLabel, selection: $model.behavior) {
+					Picker(.HighlightEntry.matchTypeLabel, selection: $model.behavior) {
 						ForEach(HighlightMatchBehavior.allCases) { behavior in
-							Text(verbatim: ServerPropertiesStrings.Highlight.matchType(
-								isExcluded: behavior.excludesMatches
-							))
-							.tag(behavior)
+							Text(behavior.title).tag(behavior)
 						}
 					}
 
-					LabeledContent(HighlightEntryStrings.keywordLabel) {
-						TextField(HighlightEntryStrings.keywordPlaceholder, text: $model.keyword)
+					LabeledContent(.HighlightEntry.keywordLabel) {
+						TextField(.HighlightEntry.keywordPlaceholder, text: $model.keyword)
 							.labelsHidden()
 							.focused($keywordFieldIsFocused)
-							.accessibilityLabel(HighlightEntryStrings.keywordLabel)
+							.accessibilityLabel(.HighlightEntry.keywordLabel)
 							.onSubmit(submit)
 					}
 
@@ -58,12 +55,12 @@ struct HighlightEntryView: View {
 						ValidationMessageLabel(message)
 					}
 				} footer: {
-					Text(verbatim: HighlightEntryStrings.keywordHelp)
+					Text(.HighlightEntry.keywordHelp)
 				}
 
 				Section {
-					Picker(HighlightEntryStrings.channelLabel, selection: $model.channelSelection) {
-						Text(verbatim: ServerPropertiesStrings.Highlight.allChannels)
+					Picker(.HighlightEntry.channelLabel, selection: $model.channelSelection) {
+						Text(.ServerProperties.allChannels)
 							.tag(HighlightChannelSelection.all)
 
 						if model.channels.isEmpty == false {
@@ -76,7 +73,7 @@ struct HighlightEntryView: View {
 						}
 					}
 				} footer: {
-					Text(verbatim: HighlightEntryStrings.channelHelp)
+					Text(.HighlightEntry.channelHelp)
 				}
 			}
 			.formStyle(.grouped)

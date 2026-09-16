@@ -51,7 +51,7 @@ struct ISupportTests {
 	)
 	func lengthBudgetsReachCommandConsumers(_ limit: UInt) {
 		let fixture = ClientEnvironmentFixture(preferences: ClientPreferences())
-		let awayClient = fixture.world.createClient(with: ClientConfig())
+		let awayClient = fixture.clientDirectory.createClient(with: ClientConfig())
 		awayClient.isLoggedIn = true
 		awayClient.supportInfo.processConfigurationData("AWAYLEN=\(limit)")
 		awayClient.sendCommand("AWAY \u{e9}\u{e9}ab", completeTarget: false, target: nil)

@@ -45,7 +45,7 @@ struct AddressBookUserTrackingTests {
 	private let tracker: AddressBookUserTrackingContainer
 
 	init() {
-		tracker = AddressBookUserTrackingContainer(client: TestClient())
+		tracker = AddressBookUserTrackingContainer()
 	}
 
 	@Test("Tracking matches without regard to case but keeps the nickname as added")

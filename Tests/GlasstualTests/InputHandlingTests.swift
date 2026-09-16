@@ -9,7 +9,7 @@ import Testing
 
 @MainActor
 private final class CompletionWindow: NicknameCompletionWindow {
-	var inputTextField: MainWindowTextView!
+	var inputTextField: InputField!
 	var selectedClient: Client?
 	var selectedChannel: Channel?
 }
@@ -48,8 +48,8 @@ struct InputHandlingTests {
 		)
 	}
 
-	private func makeTextField(in host: NSWindow) -> MainWindowTextView {
-		let textField = MainWindowTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 100))
+	private func makeTextField(in host: NSWindow) -> InputField {
+		let textField = InputField(frame: NSRect(x: 0, y: 0, width: 400, height: 100))
 		host.contentView?.addSubview(textField)
 
 		return textField
@@ -96,7 +96,7 @@ struct InputHandlingTests {
 		textField.stringValue = "/jo"
 		textField.setSelectedRange(NSRange(location: 3, length: 0))
 
-		let completion = NicknameCompletionStatus(window: window)
+		let completion = NicknameCompletion(window: window)
 
 		completion.completeNickname(true)
 		#expect(textField.string == "/join ")
@@ -118,7 +118,7 @@ struct InputHandlingTests {
 			textField.stringValue = "Al"
 			textField.setSelectedRange(NSRange(location: 2, length: 0))
 
-			let completion = NicknameCompletionStatus(window: window)
+			let completion = NicknameCompletion(window: window)
 
 			completion.completeNickname(true)
 			#expect(textField.string == "Alice: ")
@@ -139,7 +139,7 @@ struct InputHandlingTests {
 			window.inputTextField = textField
 			textField.setSelectedRange(NSRange(location: 0, length: 0))
 
-			let completion = NicknameCompletionStatus(window: window)
+			let completion = NicknameCompletion(window: window)
 
 			completion.completeNickname(true)
 			#expect(textField.string == "Alice: ")
@@ -171,7 +171,7 @@ struct InputHandlingTests {
 		let publicationCount = memberList.presentationRevision
 		channel.recordConversation(with: "member2047", direction: .incoming)
 		channel.recordConversation(with: "member2046", direction: .outgoing)
-		let cache = MemberListRenderCache()
+		let cache = TranscriptMemberDirectoryCache()
 		let snapshot = cache.members(in: channel)
 
 		let host = hostWindow()
@@ -180,7 +180,7 @@ struct InputHandlingTests {
 		window.inputTextField = textField
 		window.selectedClient = client
 		window.selectedChannel = channel
-		let completion = NicknameCompletionStatus(window: window)
+		let completion = NicknameCompletion(window: window)
 		textField.stringValue = "say @member"
 		textField.setSelectedRange(NSRange(location: textField.string.utf16.count, length: 0))
 		completion.completeNickname(true)
@@ -225,7 +225,7 @@ struct InputHandlingTests {
 			textField.setSelectedRange(NSRange(location: 2, length: 0))
 			textField.isEditable = false
 
-			let completion = NicknameCompletionStatus(window: window)
+			let completion = NicknameCompletion(window: window)
 
 			completion.completeNickname(true)
 			#expect(textField.string == "Al")

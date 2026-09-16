@@ -2107,30 +2107,6 @@
         }
       }
     },
-    "menu-edit-skip-spoken-notification" : {
-      "comment" : "Edit menu item title. Stops the notification being spoken and moves on to the next one.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Skip Spoken Notification"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Felolvasott értesítés kihagyása"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gesprochene Benachrichtigung überspringen"
-          }
-        }
-      }
-    },
     "menu-edit-smart-copy-paste" : {
       "comment" : "Edit menu item title. Toggles smart copy and paste spacing.",
       "extractionState" : "manual",

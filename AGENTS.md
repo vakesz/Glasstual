@@ -140,8 +140,8 @@ and `IsolationProbe` from `Tests/GlasstualTests/Support/`.
 - `project.yml` is the source of truth for targets, schemes, build settings,
   generated Info.plists, signing, capabilities and entitlements. Sources are
   globbed from directories, so run `make generate` after adding or removing a
-  file and commit the regenerated `Glasstual.xcodeproj`. `Glasstual.xcodeproj`
-  and `Generated/Xcode/` are never edited by hand.
+  file. `Glasstual.xcodeproj` and `Generated/Xcode/` are generated, ignored by
+  git and never edited by hand.
 - Preserve every upstream copyright notice, license, acknowledgement and
   provenance record when moving or rewriting code. Vendored source stays under
   `Sources/CocoaExtensions/` with

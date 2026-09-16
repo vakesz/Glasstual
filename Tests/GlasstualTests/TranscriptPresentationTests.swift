@@ -18,12 +18,12 @@ struct TranscriptPresentationTests {
 	 in the tooltip and on the pasteboard. */
 	@Test("The topic bar draws IRC formatting rather than the codes that carry it")
 	func topicBarRendersIRCFormatting() throws {
-		let logView = makeLogView()
-		logView.setTopic("\u{02}bold\u{02} and \u{03}04red\u{03} plain")
+		let transcriptView = makeTranscriptView()
+		transcriptView.setTopic("\u{02}bold\u{02} and \u{03}04red\u{03} plain")
 
-		let topic = logView.topicField.attributedStringValue
+		let topic = transcriptView.topicField.attributedStringValue
 		#expect(visibleTranscriptText(topic) == "bold and red plain")
-		#expect(logView.topicField.toolTip == "bold and red plain")
+		#expect(transcriptView.topicField.toolTip == "bold and red plain")
 
 		let boldRange = (topic.string as NSString).range(of: "bold")
 		let boldFont = try #require(topic.attribute(.font, at: boldRange.location, effectiveRange: nil) as? NSFont)
@@ -35,10 +35,10 @@ struct TranscriptPresentationTests {
 	/// characters.
 	@Test("A link in a formatted topic is attached to the words that spell it")
 	func topicLinkRangeFollowsTheRenderedText() throws {
-		let logView = makeLogView()
-		logView.setTopic("\u{02}rules\u{02} at https://example.com/rules")
+		let transcriptView = makeTranscriptView()
+		transcriptView.setTopic("\u{02}rules\u{02} at https://example.com/rules")
 
-		let topic = logView.topicField.attributedStringValue
+		let topic = transcriptView.topicField.attributedStringValue
 		let visibleURL = (topic.string as NSString).range(of: "https://example.com/rules")
 		try #require(visibleURL.location != NSNotFound)
 		var linkRange = NSRange(location: NSNotFound, length: 0)
@@ -54,33 +54,33 @@ struct TranscriptPresentationTests {
 	 it rather than nowhere. */
 	@Test("An unread boundary lands on its line, or above the whole buffer when that line is gone")
 	func unreadMarkerFallsBackToTheOldestLine() {
-		let logView = makeLogView()
-		logView.replaceLines([line("one"), line("two")])
+		let transcriptView = makeTranscriptView()
+		transcriptView.replaceLines([line("one"), line("two")])
 
-		logView.setUnreadMarker(.line("two"))
-		#expect(logView.displayedLines.last?.markers.contains(where: \.isUnread) == true)
+		transcriptView.setUnreadMarker(.line("two"))
+		#expect(transcriptView.displayedLines.last?.markers.contains(where: \.isUnread) == true)
 
-		logView.setUnreadMarker(.line("trimmed-away"))
-		#expect(logView.displayedLines.first?.markers.contains(where: \.isUnread) == true)
-		#expect(logView.displayedLines.last?.markers.contains(where: \.isUnread) == false)
+		transcriptView.setUnreadMarker(.line("trimmed-away"))
+		#expect(transcriptView.displayedLines.first?.markers.contains(where: \.isUnread) == true)
+		#expect(transcriptView.displayedLines.last?.markers.contains(where: \.isUnread) == false)
 	}
 
 	/// The menu asks on every validation pass, so the transcript counts as it
 	/// is edited instead of walking the whole scrollback for an answer.
 	@Test("The highlight count follows what the document holds")
 	func highlightCountFollowsTheDocument() {
-		let logView = makeLogView(bufferLimit: 2)
-		#expect(logView.hasHighlightedLines == false)
+		let transcriptView = makeTranscriptView(bufferLimit: 2)
+		#expect(transcriptView.hasHighlightedLines == false)
 
-		logView.appendLines([line("plain"), line("shouted", isHighlight: true)])
-		#expect(logView.hasHighlightedLines)
+		transcriptView.appendLines([line("plain"), line("shouted", isHighlight: true)])
+		#expect(transcriptView.hasHighlightedLines)
 
 		// The highlight is the older of the two once the buffer trims.
-		logView.appendLines([line("after"), line("later")])
-		#expect(logView.hasHighlightedLines == false)
+		transcriptView.appendLines([line("after"), line("later")])
+		#expect(transcriptView.hasHighlightedLines == false)
 
-		logView.clearLines()
-		#expect(logView.hasHighlightedLines == false)
+		transcriptView.clearLines()
+		#expect(transcriptView.hasHighlightedLines == false)
 	}
 
 	/// A restored row answers to the history row it came back from as well as
@@ -88,7 +88,7 @@ struct TranscriptPresentationTests {
 	/// already seen is not drawn again beside its restored self.
 	@Test("A restored row is found under both identifiers it answers to")
 	func restoredRowsAnswerToBothIdentifiers() {
-		let logView = makeLogView()
+		let transcriptView = makeTranscriptView()
 		var restored = line("row-uri")
 		restored.historyCursor = ScrollbackRowCursor(
 			timestamp: 0,
@@ -96,14 +96,14 @@ struct TranscriptPresentationTests {
 			lineIdentifier: "printed-line",
 			rowURI: "row-uri"
 		)
-		logView.replaceLines([restored])
+		transcriptView.replaceLines([restored])
 
-		#expect(logView.containsLine(identifier: "row-uri"))
-		#expect(logView.containsLine(identifier: "printed-line"))
-		#expect(logView.containsLine(identifier: "something-else") == false)
+		#expect(transcriptView.containsLine(identifier: "row-uri"))
+		#expect(transcriptView.containsLine(identifier: "printed-line"))
+		#expect(transcriptView.containsLine(identifier: "something-else") == false)
 
-		logView.clearLines()
-		#expect(logView.containsLine(identifier: "printed-line") == false)
+		transcriptView.clearLines()
+		#expect(transcriptView.containsLine(identifier: "printed-line") == false)
 	}
 
 	/** The window subtitle no longer carries the channel's modes, so the topic
@@ -129,28 +129,28 @@ struct TranscriptPresentationTests {
 		/* The view holds its controller weakly, so the controller has to outlive
 		 the assertions for the bar to have a channel to read modes from. */
 		let controller = TranscriptController(channel: channel, in: window)
-		let logView = controller.ensureBackingView()
-		logView.setTopic("House rules")
+		let transcriptView = controller.ensureBackingView()
+		transcriptView.setTopic("House rules")
 
-		let drawn = visibleTranscriptText(logView.topicField.attributedStringValue)
+		let drawn = visibleTranscriptText(transcriptView.topicField.attributedStringValue)
 		#expect(drawn.hasPrefix("House rules"))
 		#expect(drawn.hasSuffix("+knt ******"))
 		/* The key never reaches the bar, only the mask. */
 		#expect(drawn.contains("secret") == false)
-		#expect(logView.topicField.toolTip == "House rules")
-		#expect(logView.copyableTopic == "House rules")
+		#expect(transcriptView.topicField.toolTip == "House rules")
+		#expect(transcriptView.copyableTopic == "House rules")
 	}
 
 	/// A channel whose modes are not known yet draws the topic and nothing else.
 	@Test("A view with no modes captions nothing")
 	func topicBarWithoutModesDrawsTheTopicAlone() {
-		let logView = makeLogView()
-		logView.setTopic("House rules")
+		let transcriptView = makeTranscriptView()
+		transcriptView.setTopic("House rules")
 
-		#expect(visibleTranscriptText(logView.topicField.attributedStringValue) == "House rules")
+		#expect(visibleTranscriptText(transcriptView.topicField.attributedStringValue) == "House rules")
 	}
 
-	private func makeLogView(bufferLimit: Int = 1000) -> TranscriptView {
+	private func makeTranscriptView(bufferLimit: Int = 1000) -> TranscriptView {
 		let client = Client(config: ClientConfig())
 		let window = MainWindow(
 			contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
@@ -159,11 +159,11 @@ struct TranscriptPresentationTests {
 			defer: false
 		)
 		let controller = TranscriptController(client: client, in: window)
-		let logView = controller.ensureBackingView()
-		logView.frame = NSRect(x: 0, y: 0, width: 800, height: 600)
-		window.contentView = logView
-		logView.setBufferLimit(bufferLimit)
-		return logView
+		let transcriptView = controller.ensureBackingView()
+		transcriptView.frame = NSRect(x: 0, y: 0, width: 800, height: 600)
+		window.contentView = transcriptView
+		transcriptView.setBufferLimit(bufferLimit)
+		return transcriptView
 	}
 
 	private func line(_ text: String, isHighlight: Bool = false) -> TranscriptRow {

@@ -32,11 +32,7 @@ struct ScrollbackShippedFixtureTests {
 		}
 		#expect(original.count == 5)
 		#expect(original.map(\.1).sorted() == [1, 100, 100, 100, 9000])
-		let decoded = original.compactMap { LogLine(data: $0.0.data) }
-		#expect(Set(decoded.map(\.messageBody)) == ["older", "duplicate-a", "duplicate-b", "duplicate-c", "newer"])
-		#expect(decoded
-			.allSatisfy { $0.sessionIdentifier == 77 && $0.nickname == "alice" && $0.reactions == ["+1": ["bob"]] })
-		let store = ScrollbackStore(filenameStore: ScrollbackFilenameFixture("fixture.sqlite"))
+		let store = ScrollbackStore(filenameStore: ScrollbackFilenameFixture("fixture.sqlite").store)
 		#expect(await store.openDatabase(inDirectory: directory.path).isOpen)
 		var cursor: ScrollbackRowCursor?
 		var visited: [ScrollbackEntry] = []

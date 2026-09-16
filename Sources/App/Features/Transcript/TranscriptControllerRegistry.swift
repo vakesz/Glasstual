@@ -38,7 +38,7 @@
 
 import AppKit
 
-/** The window's log controllers, keyed by the identifier of the tree item each
+/** The window's transcript controllers, keyed by the identifier of the chat item each
  one draws.
 
  The controllers used to hang off the model objects, which meant the IRC layer
@@ -121,5 +121,16 @@ final class TranscriptControllerRegistry {
 
 	func forgetAll() {
 		controllers.removeAll()
+	}
+}
+
+extension ChatItem {
+	/** The view this item is drawn into, if a window has made one.
+
+	 This reads the weak seam the registry installed rather than a property the
+	 item owns, so it is `nil` for an item no window is showing — a client in a
+	 test, or one whose registry entry has already been dropped. */
+	var transcriptController: TranscriptController? {
+		presentation as? TranscriptController
 	}
 }

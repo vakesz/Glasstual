@@ -30,8 +30,8 @@ struct MemberListUserInfoTests {
 		#expect(String(content.address.characters) == "example.test")
 		#expect(String(content.realName.characters) == "Ada Lovelace")
 		#expect(content.account == "ada-account")
-		#expect(content.awayStatus == MemberListStrings.awayStatus(isAway: true))
-		#expect(content.privileges == "Operator (\(MemberListStrings.botCaption))")
+		#expect(content.awayStatus == MemberListUserInfoContent.awayStatus(isAway: true))
+		#expect(content.privileges == "Operator (\(String(localized: .MemberList.botCaption)))")
 	}
 
 	@Test("Missing identity fields use the feature-owned fallback labels")
@@ -41,11 +41,11 @@ struct MemberListUserInfoTests {
 			privileges: ""
 		)
 
-		#expect(content.username == MemberListStrings.informationUnavailable)
-		#expect(String(content.address.characters) == MemberListStrings.informationUnavailable)
-		#expect(String(content.realName.characters) == MemberListStrings.informationUnavailable)
-		#expect(content.account == MemberListStrings.notLoggedIn)
-		#expect(content.awayStatus == MemberListStrings.awayStatus(isAway: false))
+		#expect(content.username == String(localized: .MemberList.informationUnavailable))
+		#expect(String(content.address.characters) == String(localized: .MemberList.informationUnavailable))
+		#expect(String(content.realName.characters) == String(localized: .MemberList.informationUnavailable))
+		#expect(content.account == String(localized: .MemberList.notLoggedIn))
+		#expect(content.awayStatus == MemberListUserInfoContent.awayStatus(isAway: false))
 	}
 
 	/** The Status row used to read "User is away", a sentence about a person
@@ -54,16 +54,16 @@ struct MemberListUserInfoTests {
 	 has nothing to attach itself to. */
 	@Test("The profile states a status; the row speaks a sentence")
 	func awayStatusReadsAsAValueInTheProfile() {
-		#expect(MemberListStrings.awayStatus(isAway: true) == "Away")
-		#expect(MemberListStrings.awayStatus(isAway: false) == "Available")
-		#expect(MemberListStrings.userIsAway == "User is away")
-		#expect(MemberListStrings.userIsNotAway == "User is not away")
+		#expect(MemberListUserInfoContent.awayStatus(isAway: true) == "Away")
+		#expect(MemberListUserInfoContent.awayStatus(isAway: false) == "Available")
+		#expect(String(localized: .MemberList.userIsAway) == "User is away")
+		#expect(String(localized: .MemberList.userIsNotAway) == "User is not away")
 	}
 
 	/// An empty row is empty, not broken: "Information Not Available" was a
 	/// sentence of apology in a column of one-word values.
 	@Test("A field the server never sent is an em dash")
 	func unavailableInformationIsAnEmDash() {
-		#expect(MemberListStrings.informationUnavailable == "—")
+		#expect(String(localized: .MemberList.informationUnavailable) == "—")
 	}
 }

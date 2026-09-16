@@ -66,14 +66,12 @@ private enum ClientDirectoryTiming {
 }
 
 extension Notification.Name {
-	static let ircWorldClientListWasModified = Notification.Name("IRCWorldClientListWasModifiedNotification")
-	static let ircWorldDateHasChanged = Notification.Name("IRCWorldDateHasChangedNotification")
-	static let ircWorldWillDestroyClient = Notification.Name("IRCWorldWillDestroyClientNotification")
-	static let ircWorldWillDestroyChannel = Notification.Name("IRCWorldWillDestroyChannelNotification")
+	static let clientDirectoryClientListWasModified = Notification.Name("IRCWorldClientListWasModifiedNotification")
+	static let clientDirectoryWillDestroyClient = Notification.Name("IRCWorldWillDestroyClientNotification")
 }
 
 @MainActor
-final class ClientDirectory: NSObject {
+final class ClientDirectory {
 	private var clients: [Client] = []
 
 	private(set) var messagesSent: UInt = 0
@@ -83,9 +81,6 @@ final class ClientDirectory: NSObject {
 
 	/// When the client list was last written by the periodic save.
 	private var savePeriodicallyLastSave = CFAbsoluteTimeGetCurrent()
-	private var lastDateHasChangedDate: Date?
-	/// Waits for the next local midnight so views can redraw their date rules.
-	private var midnightTask: Task<Void, Never>?
 	private let notifications = NotificationSubscriptions()
 	private var observers = ClientDirectoryObserverList()
 
@@ -95,23 +90,21 @@ final class ClientDirectory: NSObject {
 
 	var isImportingConfiguration = false
 
-	/** The application's world shares the services box with
+	/** The application's client directory shares the services box with
 	 `ClientEnvironment.shared`, so the window and menus only have to be
 	 installed once for both. */
-	override init() {
+	init() {
 		environment = ClientEnvironment(
 			preferences: .current(),
 			services: ClientEnvironment.shared.services
 		)
-		super.init()
-		environment.services.world = self
+		environment.services.clientDirectory = self
 		ClientEnvironment.shared.preferences = environment.preferences
 	}
 
 	init(environment: ClientEnvironment) {
 		self.environment = environment
-		super.init()
-		self.environment.services.world = self
+		self.environment.services.clientDirectory = self
 	}
 
 	var clientList: [Client] {
@@ -147,7 +140,7 @@ final class ClientDirectory: NSObject {
 
 	/// Republishes the navigation list after a client changed shape on its own.
 	func noteNavigationListDidChange() {
-		notifyObservers { $0.worldNavigationListDidChange(self) }
+		notifyObservers { $0.clientDirectoryNavigationListDidChange(self) }
 	}
 
 	// MARK: - Configuration
@@ -155,9 +148,9 @@ final class ClientDirectory: NSObject {
 	func setupConfiguration() {
 		isImportingConfiguration = true
 
-		notifyObservers { $0.worldWillBeginBulkUpdate(self) }
+		notifyObservers { $0.clientDirectoryWillBeginBulkUpdate(self) }
 
-		for dictionary in TextualPreferences.clientList() ?? [] {
+		for dictionary in Preferences.Connection.clientList.propertyListValue?.array?.compactMap(\.dictionary) ?? [] {
 			guard let config = PropertyListModel.decode(ClientConfig.self, from: dictionary) else {
 				continue
 			}
@@ -165,18 +158,13 @@ final class ClientDirectory: NSObject {
 			_ = createClient(with: config)
 		}
 
-		notifyObservers { $0.worldDidEndBulkUpdate(self) }
+		notifyObservers { $0.clientDirectoryDidEndBulkUpdate(self) }
 
 		isImportingConfiguration = false
 		setupOtherServices()
 	}
 
 	private func setupOtherServices() {
-		setupMidnightTimer()
-
-		notifications.observe(.NSSystemClockDidChange) { [weak self] notification in
-			self?.dateChanged(notification)
-		}
 		notifications
 			.observe(.glasstualUserDefaultsDidChange) { [weak self] notification in
 				self?.userDefaultsDidChange(notification)
@@ -191,7 +179,7 @@ final class ClientDirectory: NSObject {
 	}
 
 	func save() {
-		TextualPreferences.setClientList(clientConfigurations)
+		Preferences.Connection.clientList.propertyListValue = .array(clientConfigurations.map(PropertyListValue.dictionary))
 	}
 
 	func savePeriodically() {
@@ -212,8 +200,6 @@ final class ClientDirectory: NSObject {
 			self.sleepActivity = nil
 		}
 
-		midnightTask?.cancel()
-		midnightTask = nil
 		for client in clientList {
 			client.prepareForApplicationTermination()
 		}
@@ -289,7 +275,7 @@ final class ClientDirectory: NSObject {
 	// MARK: - Lifecycle
 
 	private func postClientListWasModifiedNotification() {
-		NotificationCenter.default.post(name: .ircWorldClientListWasModified, object: self)
+		NotificationCenter.default.post(name: .clientDirectoryClientListWasModified, object: self)
 	}
 
 	func autoConnect(afterWakeup afterWakeUp: Bool) {
@@ -350,52 +336,11 @@ final class ClientDirectory: NSObject {
 
 	func preferencesChanged() {
 		refreshEnvironmentPreferences()
-		notifyObservers { $0.worldPreferencesDidChange(self) }
+		notifyObservers { $0.clientDirectoryPreferencesDidChange(self) }
 
 		for client in clientList {
 			client.preferencesChanged()
 		}
-	}
-
-	private func setupMidnightTimer() {
-		setupMidnightTimer(firingNotification: false)
-	}
-
-	private func setupMidnightTimer(firingNotification fireNotification: Bool) {
-		let calendar = Calendar.current
-		let now = Date()
-		let currentDayComponents = calendar.dateComponents([.year, .month, .day], from: now)
-		guard let lastMidnight = calendar.date(from: currentDayComponents),
-		      let nextMidnight = calendar.date(byAdding: .day, value: 1, to: lastMidnight)
-		else {
-			return
-		}
-
-		midnightTask?.cancel()
-		let secondsUntilMidnight = max(0, nextMidnight.timeIntervalSinceNow)
-		midnightTask = Task { [weak self] in
-			try? await Task.sleep(for: .seconds(secondsUntilMidnight))
-
-			guard Task.isCancelled == false, let self else { return }
-
-			midnightTask = nil
-			dateChanged(nil)
-		}
-
-		if let lastDateHasChangedDate, calendar.isDate(lastDateHasChangedDate, inSameDayAs: lastMidnight) {
-			return
-		}
-
-		lastDateHasChangedDate = lastMidnight
-		guard fireNotification else {
-			return
-		}
-
-		NotificationCenter.default.post(name: .ircWorldDateHasChanged, object: nil)
-	}
-
-	private func dateChanged(_: Any?) {
-		setupMidnightTimer(firingNotification: true)
 	}
 
 	// MARK: - Traffic counters
@@ -477,16 +422,16 @@ final class ClientDirectory: NSObject {
 		let isOnlyClient = clients.count == 1
 
 		if let addedIndex {
-			notifyObservers { $0.world(self, didAddClient: client, at: addedIndex) }
+			notifyObservers { $0.clientDirectory(self, didAddClient: client, at: addedIndex) }
 		}
 
 		if isOnlyClient {
-			notifyObservers { $0.world(self, requestsSelectionOf: client) }
+			notifyObservers { $0.clientDirectory(self, requestsSelectionOf: client) }
 		}
 
 		notifyObservers {
-			$0.worldClientListDidChange(self)
-			$0.worldNavigationListDidChange(self)
+			$0.clientDirectoryClientListDidChange(self)
+			$0.clientDirectoryNavigationListDidChange(self)
 		}
 		postClientListWasModifiedNotification()
 
@@ -508,13 +453,13 @@ final class ClientDirectory: NSObject {
 		}
 
 		if reload, let index = client.channelList.firstIndex(where: { $0 === channel }) {
-			notifyObservers { $0.world(self, didAddChannel: channel, on: client, at: index) }
+			notifyObservers { $0.clientDirectory(self, didAddChannel: channel, on: client, at: index) }
 		}
 
 		if adjust {
 			notifyObservers {
-				$0.worldRequestsSelectionAdjustment(self)
-				$0.worldNavigationListDidChange(self)
+				$0.clientDirectoryRequestsSelectionAdjustment(self)
+				$0.clientDirectoryNavigationListDidChange(self)
 			}
 		}
 
@@ -554,8 +499,8 @@ final class ClientDirectory: NSObject {
 
 		postClientListWasModifiedNotification()
 		notifyObservers {
-			$0.world(self, didMoveClientFrom: oldIndex, to: insertedIndex)
-			$0.worldNavigationListDidChange(self)
+			$0.clientDirectory(self, didMoveClientFrom: oldIndex, to: insertedIndex)
+			$0.clientDirectoryNavigationListDidChange(self)
 		}
 	}
 
@@ -570,8 +515,8 @@ final class ClientDirectory: NSObject {
 		client.channelList = channels
 
 		notifyObservers {
-			$0.world(self, didMoveChannelOn: client, from: oldIndex, to: insertedIndex)
-			$0.worldNavigationListDidChange(self)
+			$0.clientDirectory(self, didMoveChannelOn: client, from: oldIndex, to: insertedIndex)
+			$0.clientDirectoryNavigationListDidChange(self)
 		}
 	}
 
@@ -581,16 +526,16 @@ final class ClientDirectory: NSObject {
 
 		client.channelList = channels
 		environment.output?.reloadServerListItems(for: client)
-		notifyObservers { $0.worldNavigationListDidChange(self) }
+		notifyObservers { $0.clientDirectoryNavigationListDidChange(self) }
 	}
 
 	// MARK: - Destruction
 
 	private func selectOtherBeforeDestroy(_ target: ChatItem) {
 		if target.isClient {
-			notifyObservers { $0.world(self, requestsGroupDeselectionOf: target) }
+			notifyObservers { $0.clientDirectory(self, requestsGroupDeselectionOf: target) }
 		} else {
-			notifyObservers { $0.world(self, requestsDeselectionOf: target) }
+			notifyObservers { $0.clientDirectory(self, requestsDeselectionOf: target) }
 		}
 	}
 
@@ -607,19 +552,19 @@ final class ClientDirectory: NSObject {
 		}
 
 		NotificationCenter.default.post(
-			name: .ircWorldWillDestroyClient,
+			name: .clientDirectoryWillDestroyClient,
 			object: client
 		)
 		selectOtherBeforeDestroy(client)
 		client.prepareForRemoval(preservingLocalData: preservingLocalData)
-		notifyObservers { $0.world(self, didRemoveClient: client) }
+		notifyObservers { $0.clientDirectory(self, didRemoveClient: client) }
 
 		clients.removeAll { $0 === client }
 
 		postClientListWasModifiedNotification()
 		notifyObservers {
-			$0.worldClientListDidChange(self)
-			$0.worldNavigationListDidChange(self)
+			$0.clientDirectoryClientListDidChange(self)
+			$0.clientDirectoryNavigationListDidChange(self)
 		}
 	}
 
@@ -632,11 +577,6 @@ final class ClientDirectory: NSObject {
 		 the channel down. It used to hear that through the notification below,
 		 which is delivered a turn later — after the channel had gone. */
 		channel.associatedClient?.willDestroyChannel(channel)
-
-		NotificationCenter.default.post(
-			name: .ircWorldWillDestroyChannel,
-			object: channel
-		)
 
 		guard let client = channel.associatedClient else {
 			return
@@ -661,11 +601,11 @@ final class ClientDirectory: NSObject {
 		client.remove(channel)
 
 		// Removal also releases the window's controller, even during a batched redraw.
-		notifyObservers { $0.world(self, didRemoveChannel: channel, on: client) }
+		notifyObservers { $0.clientDirectory(self, didRemoveChannel: channel, on: client) }
 		if reload {
 			notifyObservers {
-				$0.worldRequestsSelectionAdjustment(self)
-				$0.worldNavigationListDidChange(self)
+				$0.clientDirectoryRequestsSelectionAdjustment(self)
+				$0.clientDirectoryNavigationListDidChange(self)
 			}
 		}
 	}

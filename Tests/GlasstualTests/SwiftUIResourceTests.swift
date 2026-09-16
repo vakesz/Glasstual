@@ -83,11 +83,13 @@ struct SwiftUIResourceTests {
 		#expect(nibs.isEmpty, "Compiled Interface Builder resources found: \(nibs.map(\.path))")
 	}
 
+	/// `NSAlert` is not on the list: an alert is a sanctioned AppKit adapter, and
+	/// drawing one by hand in SwiftUI is what the ban used to force.
 	@Test("The application defines no migrated AppKit controls or outlets")
 	func sourceTreeContainsNoMigratedAppKitControls() throws {
 		let appSources = try Self.directory("Sources/App")
 		let swiftFiles = Self.files(withExtension: "swift", below: appSources)
-		let bannedTokens = ["@IBOutlet", "NSAlert", "NSButton", "NSTableView", "NSOutlineView"]
+		let bannedTokens = ["@IBOutlet", "NSButton", "NSTableView", "NSOutlineView"]
 		var offenders: [String] = []
 
 		#expect(swiftFiles.isEmpty == false, "\(appSources.path) held no Swift to audit")

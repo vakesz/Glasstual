@@ -57,11 +57,11 @@ struct MemberListAvatarContrastTests {
 			NSColor(srgbRed: 0.1, green: 0.1, blue: 0.6, alpha: 1),
 		]
 		let nickname = "pinned-avatar-\(UUID().uuidString.lowercased())"
-		let previous = NicknameColors.nicknameColorStyleOverride(forKey: nickname)
-		defer { NicknameColors.setNicknameColorStyleOverride(previous, forKey: nickname) }
+		let previous = NicknameColors.pinnedColor(for: nickname)
+		defer { NicknameColors.setOverride(previous, for: nickname) }
 
 		for pin in pins {
-			NicknameColors.setNicknameColorStyleOverride(pin, forKey: nickname)
+			NicknameColors.setOverride(pin, for: nickname)
 			let fill = MemberAvatar.fill(for: nickname)
 			#expect(fill.hexadecimalString == pin.hexadecimalString)
 			let ratio = MemberAvatar.initialColor(on: fill).contrastRatio(against: fill)

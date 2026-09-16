@@ -69,8 +69,8 @@ struct ServerEndpointListSheetTests {
 
 		#expect(model.validatedServers() == nil)
 		#expect(model.faults == [.address, .port])
-		#expect(ServerEndpointFault.address.message.isEmpty == false)
-		#expect(ServerEndpointFault.port.message.isEmpty == false)
+		#expect(String(localized: ServerEndpointFault.address.message).isEmpty == false)
+		#expect(String(localized: ServerEndpointFault.port.message).isEmpty == false)
 		// Selecting the first refused row is what points at the message.
 		#expect(model.selectedID == model.entries[0].id)
 	}

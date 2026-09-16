@@ -92,33 +92,4 @@ struct ClientShellPolicyTests {
 			)
 		)
 	}
-
-	@Test("An unreachable network disconnects a logged-in client only when asked to")
-	func reachabilityDisconnectRequiresAllConditions() {
-		#expect(
-			ClientReachabilityPolicy.shouldDisconnect(
-				isLoggedIn: true,
-				disconnectWhenUnreachable: true
-			)
-		)
-		#expect(
-			ClientReachabilityPolicy.shouldDisconnect(
-				isLoggedIn: true,
-				disconnectWhenUnreachable: false
-			) == false
-		)
-		#expect(
-			ClientReachabilityPolicy.shouldDisconnect(
-				isLoggedIn: false,
-				disconnectWhenUnreachable: true
-			) == false
-		)
-	}
-
-	@Test("Termination disconnects a client that is connecting or connected")
-	func terminationDisconnectsConnectingOrConnectedClients() {
-		#expect(ClientLifecyclePolicy.requiresDisconnect(isConnecting: true, isConnected: false))
-		#expect(ClientLifecyclePolicy.requiresDisconnect(isConnecting: false, isConnected: true))
-		#expect(ClientLifecyclePolicy.requiresDisconnect(isConnecting: false, isConnected: false) == false)
-	}
 }

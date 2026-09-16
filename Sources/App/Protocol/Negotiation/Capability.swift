@@ -279,3 +279,70 @@ struct CapabilityRegistry: Sendable {
 		return true
 	}
 }
+
+/// Opaque capability identifiers used by the client's negotiated-capability registry.
+nonisolated struct CapabilitySet: OptionSet, Hashable, Sendable { // nonisolated: value
+	let rawValue: UInt
+
+	static let awayNotify = Self(rawValue: 1 << 0)
+	static let batch = Self(rawValue: 1 << 1)
+	static let echoMessage = Self(rawValue: 1 << 2)
+	static let isIdentifiedWithSASL = Self(rawValue: 1 << 5)
+	static let isInSASLNegotiation = Self(rawValue: 1 << 6)
+	static let monitorCommand = Self(rawValue: 1 << 7)
+	static let multiPrefix = Self(rawValue: 1 << 8)
+	static let playback = Self(rawValue: 1 << 9)
+	static let serverTime = Self(rawValue: 1 << 10)
+	static let userhostInNames = Self(rawValue: 1 << 11)
+	static let watchCommand = Self(rawValue: 1 << 12)
+	static let zncCertInfoModule = Self(rawValue: 1 << 13)
+	static let zncSelfMessage = Self(rawValue: 1 << 14)
+	static let changeHost = Self(rawValue: 1 << 15)
+	static let messageTags = Self(rawValue: 1 << 16)
+	static let capNotify = Self(rawValue: 1 << 17)
+	static let standardReplies = Self(rawValue: 1 << 18)
+	static let chatHistory = Self(rawValue: 1 << 19)
+	static let readMarker = Self(rawValue: 1 << 20)
+	static let labeledResponse = Self(rawValue: 1 << 21)
+	/// `sasl`, as opposed to the mechanism-specific SASL bits.
+	static let saslGeneric = Self(rawValue: 1 << 22)
+	static let zncServerTime = Self(rawValue: 1 << 25)
+	static let zncServerTimeISO = Self(rawValue: 1 << 26)
+	static let zncPlaybackModule = Self(rawValue: 1 << 27)
+	static let accountNotify = Self(rawValue: 1 << 28)
+	static let extendedJoin = Self(rawValue: 1 << 29)
+	static let accountTag = Self(rawValue: 1 << 30)
+	static let setName = Self(rawValue: 1 << 31)
+	static let inviteNotify = Self(rawValue: 1 << 32)
+	static let extendedMonitor = Self(rawValue: 1 << 33)
+	static let preAway = Self(rawValue: 1 << 34)
+}
+
+/// What the negotiated session lets the client do, read by everything past
+/// registration. The negotiation that produces these answers lives in
+/// `ClientNegotiation`.
+extension Client {
+	func isCapabilityEnabled(_ capability: CapabilitySet) -> Bool {
+		capabilities.contains(capability)
+	}
+
+	func isCapabilitySupported(_ capability: String) -> Bool {
+		CapabilityRegistry.defaultRegistry.isCapabilitySupported(capability, preferences: environment.preferences)
+	}
+
+	var enabledCapabilitiesStringValue: String {
+		capabilityNegotiation.enabledCapabilitiesStringValue
+	}
+
+	/// Whether the server tracks presence for the client, through `MONITOR`
+	/// or `WATCH`.
+	var supportsAdvancedTracking: Bool {
+		isCapabilityEnabled(.monitorCommand) || isCapabilityEnabled(.watchCommand)
+	}
+
+	/// Whether member away state is kept current, by `away-notify` or by the
+	/// user's own polling preference.
+	var monitorAwayStatus: Bool {
+		isCapabilityEnabled(.awayNotify) || environment.preferences.trackUserAwayStatusMaximumChannelSize > 0
+	}
+}

@@ -43,10 +43,6 @@ struct PreferencesTransferPreview: Identifiable {
 	var plan: PreferencesTransferPlan? {
 		plans[mode]
 	}
-
-	var supportsRestore: Bool {
-		plans[.restore] != nil
-	}
 }
 
 enum PreferencesTransferHost {
@@ -55,7 +51,7 @@ enum PreferencesTransferHost {
 
 enum PreferencesTransferClientSource {
 	case application, stored
-	case world(ClientDirectory)
+	case clientDirectory(ClientDirectory)
 }
 
 private enum PreferencesTransferInput {
@@ -149,11 +145,11 @@ final class PreferencesTransferSession {
 	private let stores: PreferencesTransferStores
 	private let clientSource: PreferencesTransferClientSource
 
-	private var world: ClientDirectory? {
+	private var clientDirectory: ClientDirectory? {
 		switch clientSource {
-		case .application: AppServices.world
+		case .application: AppServices.clientDirectory
 		case .stored: nil
-		case let .world(world): world
+		case let .clientDirectory(clientDirectory): clientDirectory
 		}
 	}
 
@@ -281,8 +277,8 @@ final class PreferencesTransferSession {
 
 	func liveSnapshot() throws -> PreferencesArchive {
 		let clients: [ClientConfig]
-		if let world {
-			clients = world.clientList.map { client in
+		if let clientDirectory {
+			clients = clientDirectory.clientList.map { client in
 				client.updateStoredConfiguration()
 				var config = client.config
 				config.channelList = ClientConfigurationPolicy.storedChannelConfigurations(
@@ -375,7 +371,7 @@ final class PreferencesTransferSession {
 		}
 	}
 
-	/** Applies a plan to the live world.
+	/** Applies a plan to the live directory.
 
 	 The work either side of the QUIT barrier is different enough to be told
 	 apart: everything before it is teardown that can be abandoned, and
@@ -383,15 +379,15 @@ final class PreferencesTransferSession {
 	 import abandoned at the barrier has already disconnected servers, so it
 	 puts back the connections it took down before reporting why. */
 	private func commit(_ plan: PreferencesTransferPlan) async throws {
-		guard let world else {
+		guard let clientDirectory else {
 			guard case .stored = clientSource else { throw PreferencesTransferError.invalidDocument }
 			stores.apply(plan)
 			return
 		}
 		try checkApplicationIsRunning()
-		world.isImportingConfiguration = true
-		defer { world.isImportingConfiguration = false }
-		let changed = clientsAffected(by: plan, in: world)
+		clientDirectory.isImportingConfiguration = true
+		defer { clientDirectory.isImportingConfiguration = false }
+		let changed = clientsAffected(by: plan, in: clientDirectory)
 		let interrupted = changed.filter { $0.isConnecting || $0.isConnected || $0.isReconnecting }
 		do {
 			try await closeConnections(of: changed)
@@ -402,14 +398,14 @@ final class PreferencesTransferSession {
 			resumeConnections(of: interrupted)
 			throw error
 		}
-		apply(plan, to: world, changed: changed)
+		apply(plan, to: clientDirectory, changed: changed)
 	}
 
 	/// The clients whose configuration, or whose channel list under Restore,
 	/// the plan changes.
-	private func clientsAffected(by plan: PreferencesTransferPlan, in world: ClientDirectory) -> [Client] {
+	private func clientsAffected(by plan: PreferencesTransferPlan, in clientDirectory: ClientDirectory) -> [Client] {
 		let desired = plan.result.clients ?? []
-		return world.clientList.filter { client in
+		return clientDirectory.clientList.filter { client in
 			let before = plan.before.clients?.first { $0.uniqueIdentifier == client.uniqueIdentifier }
 			let after = desired.first { $0.uniqueIdentifier == client.uniqueIdentifier }
 			return before != after || (plan.mode == .restore &&
@@ -497,8 +493,8 @@ final class PreferencesTransferSession {
 	}
 
 	/// Everything after the barrier: publish the imported values, then bring
-	/// the world's clients into line with the plan's.
-	private func apply(_ plan: PreferencesTransferPlan, to world: ClientDirectory, changed: [Client]) {
+	/// the directory's clients into line with the plan's.
+	private func apply(_ plan: PreferencesTransferPlan, to clientDirectory: ClientDirectory, changed: [Client]) {
 		let desired = plan.result.clients ?? []
 		for client in changed {
 			client.cancelReconnect()
@@ -507,14 +503,14 @@ final class PreferencesTransferSession {
 		// Publish it first, after validation/backup and the final stale-state check.
 		stores.apply(plan, persistClients: false)
 		let preferences = ClientPreferences.current(stores: stores)
-		world.applyPreferences(preferences)
+		clientDirectory.applyPreferences(preferences)
 		if usesApplication {
 			ClientEnvironment.shared.preferences = preferences
 		}
-		for client in world.clientList
+		for client in clientDirectory.clientList
 			where !desired.contains(where: { $0.uniqueIdentifier == client.uniqueIdentifier })
 		{
-			world.destroyClient(client, preservingLocalData: true)
+			clientDirectory.destroyClient(client, preservingLocalData: true)
 		}
 		for configuration in desired {
 			let before = plan.before.clients?.first { $0.uniqueIdentifier == configuration.uniqueIdentifier }
@@ -523,29 +519,29 @@ final class PreferencesTransferSession {
 			else { continue }
 			var configuration = configuration
 			configuration.autoConnect = false
-			if let client = world.findClient(withId: configuration.uniqueIdentifier) {
+			if let client = clientDirectory.findClient(withId: configuration.uniqueIdentifier) {
 				client.updateConfig(configuration, for: plan.mode == .restore ? .restore : .transfer)
 			} else {
-				_ = world.createClient(with: configuration)
+				_ = clientDirectory.createClient(with: configuration)
 			}
 		}
 		for (index, configuration) in desired.enumerated() {
-			if let oldIndex = world.clientList
+			if let oldIndex = clientDirectory.clientList
 				.firstIndex(where: { $0.uniqueIdentifier == configuration.uniqueIdentifier }),
 				oldIndex != index
 			{
-				world.moveClient(from: oldIndex, to: index)
+				clientDirectory.moveClient(from: oldIndex, to: index)
 			}
 		}
 		// Include unchanged clients too: a policy-only import can make their live queries persistent.
-		for client in world.clientList {
+		for client in clientDirectory.clientList {
 			client.updateStoredChannelList()
 		}
-		stores.set(.array(world.clientList.map { .dictionary($0.configurationDictionary()) }),
+		stores.set(.array(clientDirectory.clientList.map { .dictionary($0.configurationDictionary()) }),
 		           for: Preferences.Connection.clientList)
 		if usesApplication {
 			ObservablePreferences.shared.invalidate()
-			TextualPreferences.performReloadAction(forKeys: plan.changedKeys)
+			PreferenceReload.perform(forKeys: plan.changedKeys)
 		}
 	}
 
@@ -578,12 +574,10 @@ private nonisolated enum PreferencesTransferPreparation { // nonisolated: value
 	                  current: PreferencesArchive) async throws -> [PreferencesTransferMode: PreferencesTransferPlan]
 	{
 		try Task.checkCancellation()
-		var plans: [PreferencesTransferMode: PreferencesTransferPlan] = try [
+		let plans: [PreferencesTransferMode: PreferencesTransferPlan] = try [
 			.merge: PreferencesTransferPlan(archive: archive, current: current, mode: .merge),
+			.restore: PreferencesTransferPlan(archive: archive, current: current, mode: .restore),
 		]
-		if archive.isComplete {
-			plans[.restore] = try PreferencesTransferPlan(archive: archive, current: current, mode: .restore)
-		}
 		try Task.checkCancellation()
 		return plans
 	}

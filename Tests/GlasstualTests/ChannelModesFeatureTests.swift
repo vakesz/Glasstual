@@ -10,15 +10,6 @@ import SwiftUI
 import Testing
 
 @MainActor
-private final class ChannelModesDelegateSpy: NSObject, ChannelModesSheetDelegate {
-	private(set) var acceptedModes: ChannelModeContainer?
-
-	func channelModifyModesSheet(_: ChannelModesSheet, onOk modes: ChannelModeContainer) {
-		acceptedModes = modes
-	}
-}
-
-@MainActor
 @Suite("Channel modes sheet")
 struct ChannelModesFeatureTests {
 	@Test("Mode raw values are the letters that go on the wire")
@@ -145,13 +136,13 @@ struct ChannelModesFeatureTests {
 		model.updateSecretKey("abc")
 		#expect(model.remainingKeyLength == 0)
 		#expect(model.fitsMaximumKeyLength)
-		#expect(ChannelModesStrings.keyLengthWarning(remaining: 0) == nil)
+		#expect(ChannelModesModel.keyLengthWarning(remaining: 0) == nil)
 
 		model.updateSecretKey("abcde")
 		#expect(model.remainingKeyLength == -2)
 		#expect(model.fitsMaximumKeyLength == false)
-		#expect(ChannelModesStrings.keyLengthWarning(remaining: -2) == "2 bytes too many")
-		#expect(ChannelModesStrings.keyLengthWarning(remaining: -1) == "1 byte too many")
+		#expect(ChannelModesModel.keyLengthWarning(remaining: -2) == "2 bytes too many")
+		#expect(ChannelModesModel.keyLengthWarning(remaining: -1) == "1 byte too many")
 
 		let (_, unlimitedModel) = try makeModel(maximumKeyLength: 0)
 		unlimitedModel.updateSecretKey(String(repeating: "x", count: 1000))
@@ -167,35 +158,34 @@ struct ChannelModesFeatureTests {
 
 	@Test("Sheet copy comes from the namespaced table")
 	func contentUsesNamespacedLocalizedCopy() {
-		#expect(ChannelModesStrings.headingTitle(channelName: "#swift") == "Modes for #swift")
-		#expect(ChannelMode.secretChannel.title == "Secret channel (+s)")
-		#expect(ChannelMode.privateChannel.title == "Private channel (+p)")
-		#expect(ChannelMode.noExternalMessages.title == "No external channel messages (+n)")
-		#expect(ChannelMode.operatorTopic.title == "Only operators can change topic (+t)")
-		#expect(ChannelMode.inviteOnly.title == "Invite-only channel (+i)")
-		#expect(ChannelMode.moderated.title == "Moderated channel (+m)")
+		#expect(String(localized: .ChannelProperties.heading("#swift")) == "Modes for #swift")
+		#expect(String(localized: ChannelMode.secretChannel.title) == "Secret channel (+s)")
+		#expect(String(localized: ChannelMode.privateChannel.title) == "Private channel (+p)")
+		#expect(String(localized: ChannelMode.noExternalMessages.title) == "No external channel messages (+n)")
+		#expect(String(localized: ChannelMode.operatorTopic.title) == "Only operators can change topic (+t)")
+		#expect(String(localized: ChannelMode.inviteOnly.title) == "Invite-only channel (+i)")
+		#expect(String(localized: ChannelMode.moderated.title) == "Moderated channel (+m)")
 		// Named for the IRC term, and with no trailing colon: the checkbox is
 		// also the field's label for an assistive reader.
-		#expect(ChannelMode.key.title == "Channel key (+k)")
-		#expect(ChannelMode.userLimit.title == "Limit number of users (+l)")
-		#expect(ChannelModesStrings.changeModesButtonTitle == "Change Modes")
-		#expect(ChannelModesStrings.cancelButtonTitle == "Cancel")
-		#expect(ChannelModesStrings.channelKeyPlaceholder == "Channel key")
-		#expect(ChannelModesStrings.userLimitPlaceholder == "0–99999")
+		#expect(String(localized: ChannelMode.key.title) == "Channel key (+k)")
+		#expect(String(localized: ChannelMode.userLimit.title) == "Limit number of users (+l)")
+		#expect(String(localized: .ChannelProperties.changeModesButton) == "Change Modes")
+		#expect(PromptStrings.Action.cancel == "Cancel")
+		#expect(String(localized: .ChannelProperties.channelKeyPlaceholder) == "Channel key")
+		#expect(String(localized: .ChannelProperties.userLimitPlaceholder) == "0–99999")
 	}
 
-	@Test("The sheet adapter copies the channel's modes and reports edits to its delegate")
-	func adapterPreservesIdentityCopiedModesAndTypedDelegateCallbacks() throws {
+	@Test("The sheet copies the channel's modes and reports the edits it accepted")
+	func sheetPreservesIdentityCopiedModesAndReportsEdits() throws {
 		let client = TestClient()
 		client.supportInfo.processConfigurationData("CHANMODES=beI,k,l,imnpst PREFIX=(ov)@+ KEYLEN=8")
 		let channel = try #require(client.findChannelOrCreate("#swift"))
 		channel.activate()
 		_ = channel.modeInfo?.updateModes("+ntk original +l 12")
 
-		let adapter = ChannelModesSheet(channel: channel)
+		var acceptedModes: ChannelModeContainer?
+		let adapter = ChannelModesSheet(channel: channel) { acceptedModes = $0 }
 		let channelPrototype: ChannelScoped = adapter
-		let delegate = ChannelModesDelegateSpy()
-		adapter.delegate = delegate
 
 		#expect(adapter.client === client)
 		#expect(adapter.channel === channel)
@@ -213,10 +203,10 @@ struct ChannelModesFeatureTests {
 
 		adapter.submit()
 
-		let acceptedModes = try #require(delegate.acceptedModes)
-		let acceptedModerated = try #require(acceptedModes.modeInfo(for: ChannelMode.moderated.rawValue))
+		let accepted = try #require(acceptedModes)
+		let acceptedModerated = try #require(accepted.modeInfo(for: ChannelMode.moderated.rawValue))
 		#expect(acceptedModerated.modeIsSet)
-		#expect(acceptedModes.modeInfo(for: ChannelMode.key.rawValue)?.modeParameter == "edited")
+		#expect(accepted.modeInfo(for: ChannelMode.key.rawValue)?.modeParameter == "edited")
 	}
 
 	@Test("The submit action rejects a key above KEYLEN even when invoked from Return")
@@ -225,18 +215,17 @@ struct ChannelModesFeatureTests {
 		client.supportInfo.processConfigurationData("CHANMODES=beI,k,l,imnpst PREFIX=(ov)@+ KEYLEN=3")
 		let channel = try #require(client.findChannelOrCreate("#swift"))
 		channel.activate()
-		let adapter = ChannelModesSheet(channel: channel)
-		let delegate = ChannelModesDelegateSpy()
-		adapter.delegate = delegate
+		var acceptedModes: ChannelModeContainer?
+		let adapter = ChannelModesSheet(channel: channel) { acceptedModes = $0 }
 		adapter.model.setMode(.key, enabled: true)
 		adapter.model.updateSecretKey("💬")
 
 		adapter.submit()
-		#expect(delegate.acceptedModes == nil)
+		#expect(acceptedModes == nil)
 
 		adapter.model.updateSecretKey("key")
 		adapter.submit()
-		#expect(delegate.acceptedModes?.modeInfo(for: ChannelMode.key.rawValue)?.modeParameter == "key")
+		#expect(acceptedModes?.modeInfo(for: ChannelMode.key.rawValue)?.modeParameter == "key")
 	}
 
 	private func makeModel(

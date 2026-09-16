@@ -106,8 +106,8 @@ struct FileTransferResumeSafetyTests {
 		#expect(transfer.errorMessageDescription != nil)
 	}
 
-	private func receiver(filename: String, in directory: String) throws -> FileTransferController {
-		let transfer = try #require(FileTransferController.receiver(
+	private func receiver(filename: String, in directory: String) throws -> FileTransfer {
+		let transfer = try #require(FileTransfer.receiver(
 			for: TestClient(),
 			nickname: "alice",
 			address: "203.0.113.5",

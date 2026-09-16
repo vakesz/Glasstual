@@ -290,7 +290,7 @@ struct InboundPresenceTrackingTests {
 			($0 as? [String: Any])?["messageBody"] as? String
 		}
 
-		#expect(bodies.filter { $0 == InboundStrings.Numeric.nicknameRetriesExhausted }.count == 1)
+		#expect(bodies.filter { $0 == String(localized: .IRC.nicknameRetriesExhausted) }.count == 1)
 	}
 
 	/// The count is the retry sequence, and a nickname the client now holds
@@ -299,10 +299,10 @@ struct InboundPresenceTrackingTests {
 	func aNicknameThatLandsResetsTheRetryCount() throws {
 		let client = client(nickname: "mara")
 		client.isConnected = true
-		client.tryingNicknameNumber = NicknameRetryPolicy.maximumAttempts
+		client.nicknameRetry.attempt = NicknameRetryPolicy.maximumAttempts
 
 		try receive(":mara!m@example.org NICK mara2", on: client)
 
-		#expect(client.tryingNicknameNumber == 0)
+		#expect(client.nicknameRetry.attempt == 0)
 	}
 }

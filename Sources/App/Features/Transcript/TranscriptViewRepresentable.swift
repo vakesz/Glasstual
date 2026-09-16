@@ -7,9 +7,9 @@ import AppKit
 import SwiftUI
 
 struct TranscriptViewRepresentable: NSViewRepresentable {
-	let logView: TranscriptView?
+	let transcriptView: TranscriptView?
 	/// The field floating over the transcript's foot, measured for the inset.
-	var inputField: MainWindowTextViewContentView?
+	var inputField: InputFieldContentView?
 	/// Height of the accessory strip above the field, from what it is showing.
 	var accessoryHeight: CGFloat = 0
 	/// Whether the loading overlay covers the transcript.
@@ -17,13 +17,13 @@ struct TranscriptViewRepresentable: NSViewRepresentable {
 
 	func makeNSView(context _: Context) -> TranscriptHostView {
 		let host = TranscriptHostView()
-		host.show(logView, inputField: inputField, accessoryHeight: accessoryHeight)
+		host.show(transcriptView, inputField: inputField, accessoryHeight: accessoryHeight)
 		host.isHidden = isObscured
 		return host
 	}
 
 	func updateNSView(_ host: TranscriptHostView, context _: Context) {
-		host.show(logView, inputField: inputField, accessoryHeight: accessoryHeight)
+		host.show(transcriptView, inputField: inputField, accessoryHeight: accessoryHeight)
 		host.isHidden = isObscured
 	}
 
@@ -48,13 +48,13 @@ struct TranscriptViewRepresentable: NSViewRepresentable {
 }
 
 final class TranscriptHostView: NSView {
-	private weak var logView: TranscriptView?
-	private weak var inputField: MainWindowTextViewContentView?
+	private weak var transcriptView: TranscriptView?
+	private weak var inputField: InputFieldContentView?
 	private var accessoryHeight: CGFloat = 0
 
 	func show(
-		_ nextLogView: TranscriptView?,
-		inputField nextInputField: MainWindowTextViewContentView?,
+		_ nextTranscriptView: TranscriptView?,
+		inputField nextInputField: InputFieldContentView?,
 		accessoryHeight nextAccessoryHeight: CGFloat
 	) {
 		defer {
@@ -68,11 +68,11 @@ final class TranscriptHostView: NSView {
 				self?.updateBottomInset()
 			}
 		}
-		guard logView !== nextLogView else { return }
-		logView?.removeFromSuperview()
-		logView = nextLogView
+		guard transcriptView !== nextTranscriptView else { return }
+		transcriptView?.removeFromSuperview()
+		transcriptView = nextTranscriptView
 
-		guard let transcriptView = nextLogView else { return }
+		guard let transcriptView = nextTranscriptView else { return }
 		transcriptView.translatesAutoresizingMaskIntoConstraints = false
 		addSubview(transcriptView)
 		NSLayoutConstraint.activate([
@@ -97,11 +97,11 @@ final class TranscriptHostView: NSView {
 	 window yet -- it is re-hosted when the appearance changes -- keeps the
 	 inset it had rather than pulling the transcript under the bar and back. */
 	private func updateBottomInset() {
-		guard let logView, let inputField, let window, inputField.window === window else { return }
+		guard let transcriptView, let inputField, let window, inputField.window === window else { return }
 		let fieldFrame = inputField.convert(inputField.bounds, to: self)
 		let fieldTop = isFlipped ? bounds.maxY - fieldFrame.minY : fieldFrame.maxY
-		logView.setBottomContentInset(
-			max(0, fieldTop) + MainWindowInputBarLayout.fieldVerticalPadding + accessoryHeight
+		transcriptView.setBottomContentInset(
+			max(0, fieldTop) + InputBarLayout.fieldVerticalPadding + accessoryHeight
 		)
 	}
 }

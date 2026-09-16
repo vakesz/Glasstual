@@ -4,6 +4,7 @@
  *********************************************************************** */
 
 import CocoaExtensions
+import Foundation
 @testable import Glasstual
 import Testing
 
@@ -29,7 +30,7 @@ struct ChannelPropertiesModelTests {
 
 		key.value = true
 		#expect(model.overridesInlineMediaByDisabling)
-		#expect(model.inlineMediaOverrideTitle == ChannelPropertiesStrings.disableInlineMedia)
+		#expect(model.inlineMediaOverrideTitle == LocalizedStringResource.ChannelProperties.disableInlineMedia)
 		#expect(model.inlineMediaOverride == false)
 		model.inlineMediaOverride = true
 		#expect(model.config.inlineMediaDisabled)
@@ -37,7 +38,7 @@ struct ChannelPropertiesModelTests {
 
 		key.value = false
 		#expect(model.overridesInlineMediaByDisabling == false)
-		#expect(model.inlineMediaOverrideTitle == ChannelPropertiesStrings.showInlineMedia)
+		#expect(model.inlineMediaOverrideTitle == LocalizedStringResource.ChannelProperties.showInlineMedia)
 		#expect(model.inlineMediaOverride == false)
 		model.inlineMediaOverride = true
 		#expect(model.config.inlineMediaEnabled)
@@ -77,7 +78,7 @@ struct ChannelPropertiesModelTests {
 		#expect(model.channelNameValidationMessage == nil)
 
 		#expect(model.validateForSubmission() == false)
-		#expect(model.channelNameValidationMessage == ChannelPropertiesStrings.invalidChannelName)
+		#expect(model.channelNameValidationMessage == String(localized: .ChannelProperties.pleaseEnterAProperlyFormattedChannel))
 
 		// And it goes as soon as the name is one, without another save.
 		model.channelName = "#glasstual"
@@ -140,7 +141,7 @@ struct ChannelPropertiesModelTests {
 		client.supportInfo.processConfigurationData("KEYLEN=3")
 		let model = ChannelPropertiesModel(config: ChannelConfig(channelName: "#swift"), client: client)
 		model.secretKey = "  é ignored"
-		#expect(model.secretKeyLengthCaption == ChannelPropertiesStrings.secretKeyLength(2, maximum: 3))
+		#expect(model.secretKeyLengthCaption == String(localized: .ChannelProperties.secretKeyLength(2, 3)))
 		#expect(model.secretKeyIsTooLong == false)
 
 		model.secretKey = "💬"
@@ -202,29 +203,5 @@ struct ChannelPropertiesModelTests {
 
 		#expect(cleared.secretKey.isEmpty)
 		#expect(cleared.submittedConfig.pendingSecretKey == .cleared)
-	}
-
-	/** The notification table kept its rows in view state, and the rows copy
-	 the channel's overrides when they are made. Reloading the sheet after the
-	 channel changed elsewhere left the table showing the old overrides. */
-	@Test("Reloading the configuration rebuilds the notification table")
-	func replacingTheConfigurationRebuildsTheNotificationTable() throws {
-		let model = ChannelPropertiesModel(config: ChannelConfig(channelName: "#glasstual"))
-		let before = try #require(model.notificationConfiguration.rows.first { $0.event == .highlight })
-
-		#expect(before.showsNotification == .inherited)
-		#expect(model.notificationConfiguration.rows.map(\.event) == [
-			.highlight, .channelMessage, .channelNotice, .userJoined, .userParted,
-		])
-
-		var changed = model.config
-		changed.setNotificationEnabled(.off, forEvent: .highlight)
-		model.replace(with: changed)
-
-		let after = try #require(model.notificationConfiguration.rows.first { $0.event == .highlight })
-		#expect(after.showsNotification == .off)
-
-		after.showsNotification = .on
-		#expect(model.config.notificationEnabled(forEvent: .highlight) == .on)
 	}
 }

@@ -5,9 +5,33 @@
  *                   | |  __/>  <| |_| |_| | (_| | |
  *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
- * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+ * Copyright (c) 2010 - 2019 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *  * Neither the name of Textual, "Codeux Software, LLC", nor the
+ *    names of its contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
  *
  *********************************************************************** */
 
@@ -22,7 +46,7 @@ import Foundation
  survive, and `Int64(_:)` traps on it rather than reporting the overflow. */
 private nonisolated let maximumServerTimeInterval: Double = 1e11 // nonisolated: let
 
-/** A wire parameter carrying whole Unix seconds, read as a date.
+/*  A wire parameter carrying whole Unix seconds, read as a date.
 
  RPL_TOPICWHOTIME, RPL_WHOISIDLE and the mode-list numerics all end in a
  timestamp the server generated, and it is no more trustworthy than the
@@ -30,6 +54,23 @@ private nonisolated let maximumServerTimeInterval: Double = 1e11 // nonisolated:
  and a forty-digit or infinite one as a date past the year 3000. The same
  bound applies here, and `nil` means "the server said nothing usable", which
  lets the caller leave the date out rather than print a wrong one. */
+
+/** How far a bouncer's `server-time` may run behind arrival and still be live.
+
+ A bouncer replays without a batch, so the only thing separating playback from
+ a line that took a moment to reach the client is how old the server time is. */
+nonisolated let liveServerTimeTolerance: TimeInterval = 30 // nonisolated: let
+
+/// Whether a line is replayed history rather than something happening now.
+nonisolated func messageIsHistoric( // nonisolated: pure
+	serverTime: Date,
+	arrivedAt: Date,
+	inReplayBatch: Bool,
+	isKnownBouncer: Bool = false
+) -> Bool {
+	inReplayBatch || (isKnownBouncer && arrivedAt.timeIntervalSince(serverTime) > liveServerTimeTolerance)
+}
+
 nonisolated func ircWireTimestampDate(from value: String) -> Date? { // nonisolated: pure
 	guard let seconds = Double(value), seconds.isFinite,
 	      abs(seconds) <= maximumServerTimeInterval
@@ -54,7 +95,7 @@ private nonisolated func serverTimeDate(from value: String) -> Date? { // noniso
 		return ircWireTimestampDate(from: value)
 	}
 
-	return ISOStandardDateFormatter().date(from: value)
+	return DateFormatting.date(fromISO8601: value)
 }
 
 /** One line received from the server, parsed.
@@ -227,11 +268,11 @@ final class Message {
 				let arrivedAt = receivedAt
 				receivedAt = dateObject
 				hasServerTime = true
-				isHistoric = ClientHistoricMessagePolicy.isHistoric(
+				isHistoric = messageIsHistoric(
 					serverTime: dateObject,
 					arrivedAt: arrivedAt,
 					inReplayBatch: isHistoric,
-					isKnownBouncer: client.isConnectedToZNC
+					isKnownBouncer: client.znc.isConnected
 				)
 			}
 		}
@@ -244,5 +285,210 @@ final class Message {
 		}
 
 		sender = parsed
+	}
+}
+
+nonisolated struct ParsedLine: Sendable { // nonisolated: value
+	let messageTagSection: String?
+	let senderSection: String?
+	let command: String
+	let commandNumeric: UInt
+	let parameters: [String]
+
+	init(messageTagSection: String?, senderSection: String?, command: String, parameters: [String]) {
+		self.messageTagSection = messageTagSection
+		self.senderSection = senderSection
+		self.command = command
+		commandNumeric = Self.numericValue(of: command)
+		self.parameters = parameters
+	}
+
+	/// IRC numerics are exactly three ASCII digits. `CharacterSet.decimalDigits`
+	/// also matches non-ASCII digits, which `integerValue` then reads as 0,
+	/// and an oversized run of digits saturates rather than being rejected.
+	static func numericValue(of command: String) -> UInt {
+		guard command.count == 3, isASCIIDigits(command), let numeric = UInt(command) else {
+			return 0
+		}
+
+		return numeric
+	}
+
+	static func isASCIIDigits(_ string: String) -> Bool {
+		string.isEmpty == false && string.utf8.allSatisfy { $0 >= 48 && $0 <= 57 }
+	}
+}
+
+nonisolated enum LineParser { // nonisolated: value
+	/// RFC 1459/2812 and IRCv3 separate tokens on SPACE (0x20) only, never on
+	/// the wider Unicode whitespace set.
+	private static let space: Unicode.Scalar = " "
+
+	/// Splits a wire string into tokens on SPACE (0x20), dropping empty runs.
+	static func wireTokens(in string: String) -> [String] {
+		string.unicodeScalars.split(separator: space).map(String.init)
+	}
+
+	static func parsedLine(fromLine line: String) -> ParsedLine? {
+		var remainder = line.unicodeScalars[...]
+		var messageTagSection: String?
+		var senderSection: String?
+
+		if remainder.first == "@" {
+			let token = nextToken(from: &remainder)
+
+			guard token.count > 1 else {
+				return nil
+			}
+
+			messageTagSection = String(token.dropFirst())
+		}
+
+		if remainder.first == ":" {
+			let token = nextToken(from: &remainder)
+
+			guard token.count > 1 else {
+				return nil
+			}
+
+			senderSection = String(token.dropFirst())
+		}
+
+		let commandToken = nextToken(from: &remainder)
+
+		guard commandToken.isEmpty == false else {
+			return nil
+		}
+
+		let command = ParsedLine.isASCIIDigits(commandToken) ? commandToken : commandToken.uppercased()
+		var parameters: [String] = []
+
+		while remainder.isEmpty == false {
+			if remainder.first == ":" {
+				parameters.append(String(remainder.dropFirst()))
+				break
+			}
+
+			/* The last slot takes everything that is left, verbatim: a line of
+			 single-character parameters would otherwise cost one array element
+			 per two bytes received, before any handler sees the command. */
+			if parameters.count == ProtocolLimits.maximumInboundParameterCount - 1 {
+				parameters.append(String(remainder))
+				break
+			}
+
+			parameters.append(nextToken(from: &remainder))
+		}
+
+		return ParsedLine(
+			messageTagSection: messageTagSection,
+			senderSection: senderSection,
+			command: command,
+			parameters: parameters
+		)
+	}
+
+	private static func nextToken(from remainder: inout Substring.UnicodeScalarView) -> String {
+		guard let separator = remainder.firstIndex(of: space) else {
+			let token = String(remainder)
+
+			remainder = remainder[remainder.endIndex...]
+
+			return token
+		}
+
+		let token = String(remainder[..<separator])
+		let nextToken = remainder[separator...].firstIndex(where: { $0 != space })
+
+		remainder = nextToken.map { remainder[$0...] } ?? remainder[remainder.endIndex...]
+
+		return token
+	}
+}
+
+/// The message tags of one line, with the two the client reads by name pulled
+/// out of them.
+nonisolated struct ParsedMessageTags: Sendable, Equatable { // nonisolated: value
+	let tags: [String: String]
+	let messageIdentifier: String?
+	let senderAccount: String?
+
+	init(tags: [String: String]) {
+		self.tags = tags
+		messageIdentifier = tags["msgid"]?.nonEmpty
+		senderAccount = tags["account"]?.nonEmpty
+	}
+}
+
+nonisolated enum MessageTagParser { // nonisolated: value
+	/// IRCv3 message-tags caps the tag section at 8191 bytes, counting the
+	/// leading `@` and the space that ends it. Anything longer is a server
+	/// that is not playing by the rules, so its tags are dropped rather than
+	/// parsed into an unbounded dictionary.
+	static let maximumSectionLength = 8191
+
+	/// The `@` and the trailing space: counted by the cap, but already taken
+	/// off the section this parser is handed.
+	private static let sectionDelimiterLength = 2
+
+	/// - Parameter section: The tags between the `@` and the space.
+	static func parsedTags(fromSection section: String) -> ParsedMessageTags {
+		guard section.utf8.count + sectionDelimiterLength <= maximumSectionLength else {
+			return ParsedMessageTags(tags: [:])
+		}
+
+		var tags: [String: String] = [:]
+
+		for component in section.split(separator: ";", omittingEmptySubsequences: true) {
+			if let equals = component.firstIndex(of: "=") {
+				let name = String(component[..<equals])
+				let value = component[component.index(after: equals)...]
+
+				tags[name] = decode(value)
+			} else {
+				tags[String(component)] = ""
+			}
+		}
+
+		return ParsedMessageTags(tags: tags)
+	}
+
+	private static func decode(_ encoded: Substring) -> String {
+		var output: [UInt16] = []
+		let input = Array(encoded.utf16)
+		var index = 0
+
+		while index < input.count {
+			let character = input[index]
+
+			guard character == 0x5C else {
+				output.append(character)
+				index += 1
+				continue
+			}
+
+			index += 1
+
+			guard index < input.count else {
+				break
+			}
+
+			switch input[index] {
+			case 0x3A:
+				output.append(0x3B)
+			case 0x73:
+				output.append(0x20)
+			case 0x72:
+				output.append(0x0D)
+			case 0x6E:
+				output.append(0x0A)
+			default:
+				output.append(input[index])
+			}
+
+			index += 1
+		}
+
+		return String(decoding: output, as: UTF16.self)
 	}
 }

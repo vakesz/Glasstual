@@ -55,7 +55,7 @@ public extension Notification.Name {
 /// Main actor throughout: every caller is a DCC transfer or dialog that already
 /// runs there, and the mDNSResponder callback is delivered on the main queue.
 @MainActor
-public final class PortMapper: NSObject {
+public final class PortMapper {
 	public var mapTCP = true
 	public var mapUDP = false
 	public var desiredPublicPort: UInt16 = 0
@@ -79,7 +79,6 @@ public final class PortMapper: NSObject {
 
 	public init(port: UInt16) {
 		self.port = port
-		super.init()
 	}
 
 	/// Closes a mapping whose owner simply let go of it. Isolated so it can

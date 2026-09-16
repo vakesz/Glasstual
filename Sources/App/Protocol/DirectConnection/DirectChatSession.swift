@@ -41,7 +41,7 @@ enum DirectChatSessionState: UInt {
  framing and hands whole lines back through its event stream. Everything here —
  the state machine, the port mapping and the encoding — belongs to
  the main actor, and the event loop below is the one seam between the two. */
-final class DirectChatSession: NSObject {
+final class DirectChatSession {
 	private(set) weak var client: Client?
 	private(set) var peerNickname: String
 	/** Only the connecting variant has an address; the listening variant learns its
@@ -84,16 +84,10 @@ final class DirectChatSession: NSObject {
 		client?.environment.preferences ?? ClientPreferences()
 	}
 
-	@available(*, unavailable)
-	override init() {
-		fatalError("Use factory methods")
-	}
-
 	private init(peer nickname: String, role: Role, onClient client: Client) {
 		peerNickname = nickname
 		self.role = role
 		self.client = client
-		super.init()
 	}
 
 	isolated deinit {

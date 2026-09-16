@@ -7,6 +7,7 @@ import Foundation
 @testable import Glasstual
 import Testing
 
+@Suite("App language selection")
 struct AppLanguageTests {
 	@Test("Missing app overrides follow the system, while explicit choices persist their language")
 	func overrides() {

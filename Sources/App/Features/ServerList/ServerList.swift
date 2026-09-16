@@ -39,9 +39,69 @@ import AppKit
 import Observation
 import SwiftUI
 
+/// One server in the sidebar, with the conversations drawn beneath it.
+///
+/// A snapshot: the tree it describes lives on `NSObject`s that change under
+/// SwiftUI's feet, so the list publishes values instead and rebuilds them when
+/// the tree says something changed. A row is a plain function of its value.
+struct ServerRow: Identifiable, Equatable {
+	let id: String
+	let title: String
+	let isActive: Bool
+	let isSecured: Bool
+	/// What is drawn beneath the row, not what the user disclosed: a filter
+	/// shows matching conversations under a collapsed server too.
+	let isExpanded: Bool
+	/// Whether the row is an outline group at all. A server with nothing under
+	/// it is a plain row: a chevron that opened onto an empty list would be
+	/// offering something the sidebar does not have.
+	let showsDisclosure: Bool
+	/// Every conversation under the server, disclosed or not — the outline hides
+	/// what is closed. A filter is the one thing that takes rows out of this.
+	let channels: [ChannelRow]
+}
+
+/// One conversation in the sidebar.
+struct ChannelRow: Identifiable, Equatable {
+	enum Kind: Equatable {
+		case channel
+		case privateMessage
+		case directChat
+		case utility
+	}
+
+	let id: String
+	let title: String
+	let kind: Kind
+	let isActive: Bool
+	let hasJoinError: Bool
+	let unreadCount: Int
+	let showsUnreadCount: Bool
+	let highlightCount: Int
+	/// The colour the user chose for a badge that asks for attention, resolved
+	/// where the rows are built. A row is compared by what it draws, so a
+	/// colour it went and read for itself would change nothing here and the
+	/// list would keep the badges it already had.
+	let unreadBadgeTint: NSColor?
+
+	/// Asks for attention: a channel where the nickname was said, or a
+	/// conversation with one person that has anything unread — every line of a
+	/// direct message is addressed to the reader.
+	var isEmphasized: Bool {
+		if highlightCount > 0 {
+			return true
+		}
+		return (kind == .privateMessage || kind == .directChat) && unreadCount > 0
+	}
+
+	var showsUnreadBadge: Bool {
+		showsUnreadCount && unreadCount > 0
+	}
+}
+
 /// Selection, expansion and ordering state for the SwiftUI server sidebar.
 ///
-/// The IRC world remains the source of truth for clients and channels. This
+/// The client directory remains the source of truth for clients and channels. This
 /// model derives `rows` from it — value snapshots the view draws without
 /// touching the tree — and owns only presentation state, which keeps the view
 /// independent of protocol mutation details.
@@ -65,15 +125,15 @@ final class ServerList {
 	@ObservationIgnored weak var mainWindow: MainWindow?
 	/** Where the servers come from.
 
-	 The window's world, once one is attached. Holding it as a source rather
+	 The window's client directory, once one is attached. Holding it as a source rather
 	 than reaching through the window on every read is what lets the projections
 	 below be exercised against a tree that was built rather than connected to:
-	 the world itself is the application's, and a test that filled it would be
+	 the directory itself is the application's, and a test that filled it would be
 	 editing the reader's own conversations. */
 	@ObservationIgnored var clientSource: @MainActor () -> [Client] = { [] }
-	/// The world those servers live in, held as a source for the same reason:
+	/// The directory those servers live in, held as a source for the same reason:
 	/// reordering is answered here rather than reached for through the window.
-	@ObservationIgnored var worldSource: @MainActor () -> ClientDirectory? = { nil }
+	@ObservationIgnored var clientDirectorySource: @MainActor () -> ClientDirectory? = { nil }
 
 	/** The index space, resolved once per change rather than per question.
 
@@ -94,13 +154,13 @@ final class ServerList {
 
 	init() {}
 
-	/** No rows are built here: the window attaches before the world exists, and
-	 the world's first `addItem` is what fills them. */
+	/** No rows are built here: the window attaches before the directory exists,
+	 and the directory's first `addItem` is what fills them. */
 	func attach(to window: MainWindow) {
 		precondition(mainWindow == nil || mainWindow === window)
 		mainWindow = window
-		clientSource = { [weak window] in window?.world?.clientList ?? [] }
-		worldSource = { [weak window] in window?.world }
+		clientSource = { [weak window] in window?.clientDirectory?.clientList ?? [] }
+		clientDirectorySource = { [weak window] in window?.clientDirectory }
 	}
 
 	// MARK: - Rows
@@ -113,7 +173,7 @@ final class ServerList {
 	 rather than one, and the outline begins the second while it is still
 	 applying the first -- a reentrant operation in its own table delegate,
 	 which AppKit warns about on every launch and says it will assert on. That
-	 is what happened here: the world published its first rows without
+	 is what happened here: the directory published its first rows without
 	 animation, and the saved expansion followed in the same turn through a
 	 path that left the transaction to whatever was ambient.
 
@@ -196,14 +256,14 @@ final class ServerList {
 		clientSource()
 	}
 
-	private var world: ClientDirectory? {
-		worldSource()
+	private var clientDirectory: ClientDirectory? {
+		clientDirectorySource()
 	}
 
 	/** The index space every selection command addresses.
 
 	 Not what the filter leaves on screen. The filter is a way of looking at the
-	 sidebar, not a way of closing conversations: a world that asks for a
+	 sidebar, not a way of closing conversations: a directory that asks for a
 	 channel to be selected, and `adjustSelection` checking that the open one
 	 still exists, both have to find an item the reader has typed out of sight,
 	 or typing in the search field switches the transcript. What does narrow it
@@ -244,7 +304,7 @@ final class ServerList {
 
 	var selectedItem: ChatItem? {
 		guard let selectedItemIdentifier else { return nil }
-		return world?.findItem(withId: selectedItemIdentifier)
+		return clientDirectory?.findItem(withId: selectedItemIdentifier)
 	}
 
 	var groupItems: [ChatItem] {
@@ -319,7 +379,7 @@ final class ServerList {
 
 	 Not animated: this is the application's own call -- the saved expansion
 	 restored at launch, and the server a selection had to be disclosed to reach
-	 -- and those arrive in the same turn as the rows the world has just
+	 -- and those arrive in the same turn as the rows the directory has just
 	 published. ``setExpanded(_:forServerID:)`` is the reader's chevron and is
 	 the one that animates. */
 	func setExpanded(_ expanded: Bool, for client: Client) {
@@ -386,7 +446,7 @@ final class ServerList {
 
 	/** Something about the tree changed: rebuild the rows from it.
 
-	 The rows are values derived from the world, so what changed does not
+	 The rows are values derived from the directory, so what changed does not
 	 matter -- there is one answer and it is recomputed whole. This used to be
 	 seven entry points carrying insertion indices, parents and occlusion
 	 flags from the outline view the sidebar no longer is, every one of them
@@ -412,7 +472,7 @@ final class ServerList {
 
 	func menu(for identifiers: Set<String>) -> (menu: NSMenu, context: AppMenuContext)? {
 		guard let controller = AppServices.delegate.menuController else { return nil }
-		let item = identifiers.first.flatMap { world?.findItem(withId: $0) }
+		let item = identifiers.first.flatMap { clientDirectory?.findItem(withId: $0) }
 		let menu: NSMenu? = if let item {
 			if item.isClient {
 				controller.mainMenuServerMenuItem?.submenu
@@ -423,23 +483,23 @@ final class ServerList {
 			controller.serverListNoSelectionMenu
 		}
 		guard let menu else { return nil }
-		return (menu, AppMenuContext(coordinator: controller.actionCoordinator, item: item))
+		return (menu, AppMenuContext(coordinator: controller, item: item))
 	}
 
 	/** Reorders the servers.
 
 	 Not while the sidebar is filtered: the rows on screen are then a different
-	 list from the one the world holds, and an index into them means nothing to
+	 list from the one the directory holds, and an index into them means nothing to
 	 it. The order the reader set stands once the field is cleared. */
 	@discardableResult
 	func moveServers(fromOffsets offsets: IndexSet, toOffset destination: Int) -> Bool {
 		guard isFiltering == false,
-		      let world,
+		      let clientDirectory,
 		      let move = ServerListReorderPolicy.move(fromOffsets: offsets, toOffset: destination),
-		      world.clientList.indices.contains(move.from)
+		      clientDirectory.clientList.indices.contains(move.from)
 		else { return false }
 
-		world.moveClient(from: move.from, to: move.to)
+		clientDirectory.moveClient(from: move.from, to: move.to)
 		return true
 	}
 
@@ -451,7 +511,7 @@ final class ServerList {
 		-> Bool
 	{
 		guard isFiltering == false,
-		      let world,
+		      let clientDirectory,
 		      let client = clients.first(where: { $0.uniqueIdentifier == serverID }),
 		      let move = ServerListReorderPolicy.move(fromOffsets: offsets, toOffset: destination),
 		      client.channelList.indices.contains(move.from),
@@ -463,7 +523,7 @@ final class ServerList {
 			destinationIsChannel: client.channelList[move.to].isChannel
 		) else { return false }
 
-		world.moveChannel(on: client, from: move.from, to: move.to)
+		clientDirectory.moveChannel(on: client, from: move.from, to: move.to)
 		return true
 	}
 }

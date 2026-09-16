@@ -26,7 +26,7 @@ struct MessageRuleClientOption: Identifiable {
 	/// The connections and their channels, as the editor lists them for a rule
 	/// limited to specific conversations.
 	static func current() -> [MessageRuleClientOption] {
-		(AppServices.world?.clientList ?? []).map { client in
+		(AppServices.clientDirectory?.clientList ?? []).map { client in
 			MessageRuleClientOption(
 				id: client.uniqueIdentifier,
 				name: client.networkName ?? client.serverAddress ?? client.userNickname,
@@ -97,12 +97,12 @@ private struct RuleActionPlaceholder: Identifiable {
 	]
 }
 
-/** What a match pattern is: whether it compiles at all, and whether its shape
- can backtrack for a long time.
+/** Whether a match pattern compiles.
 
- Compiling is the expensive half, and a `body` pass asks several questions
- about two patterns, so this is computed when a pattern changes rather than
- each time the sheet is drawn. */
+ Compiling is expensive and a `body` pass asks about two patterns, so this is
+ computed when a pattern changes rather than each time the sheet is drawn. How
+ long a pattern takes to run is bounded at match time by
+ `RegularExpression.matchBudget` instead. */
 private struct RulePatternValidation: Equatable {
 	var error: String?
 
@@ -115,12 +115,7 @@ private struct RulePatternValidation: Equatable {
 			error = String(
 				localized: .RuleEditor.regularExpressionInvalid(failure.localizedDescription)
 			)
-			return
 		}
-
-		guard RegularExpression.hasNestedQuantifier(pattern) else { return }
-
-		error = String(localized: .RuleEditor.regularExpressionNestedQuantifier)
 	}
 }
 

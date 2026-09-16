@@ -35,6 +35,7 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 
 nonisolated enum ProtocolLimits { // nonisolated: value
@@ -90,14 +91,14 @@ nonisolated enum ProtocolLimits { // nonisolated: value
 		let bodyLimit = max(bodyLimit, 1)
 
 		guard let tagSectionEnd = tagSectionEnd(of: line) else {
-			return ClientWireUtilities.truncated(line, toByteCount: bodyLimit)
+			return truncated(line, toByteCount: bodyLimit)
 		}
 
 		let tagSection = String(line[line.startIndex ..< tagSectionEnd])
 		let body = String(line[tagSectionEnd...])
 
 		return enforcedTagSection(tagSection)
-			+ ClientWireUtilities.truncated(body, toByteCount: bodyLimit)
+			+ truncated(body, toByteCount: bodyLimit)
 	}
 
 	/// The body budget a server advertising `maximumLineLength` leaves, where
@@ -140,5 +141,16 @@ nonisolated enum ProtocolLimits { // nonisolated: value
 		}
 
 		return ""
+	}
+
+	/// `text` cut to at most `maximumByteCount` UTF-8 bytes without splitting a
+	/// character. Zero means the server named no limit, which leaves the text
+	/// alone: every ISUPPORT byte budget spells "unlimited" that way.
+	static func truncated(_ text: String, toByteCount maximumByteCount: Int) -> String {
+		guard maximumByteCount > 0 else {
+			return text
+		}
+
+		return text.truncated(toUTF8Bytes: maximumByteCount)
 	}
 }

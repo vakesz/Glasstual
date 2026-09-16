@@ -214,7 +214,7 @@ enum ServerConnectionController {
 		 used to skip this, so every one added another saved copy of a server
 		 the reader already had. */
 		if request.options.mergeConnectionIfPossible {
-			for candidate in clients ?? ClientEnvironment.shared.world?.clientList ?? []
+			for candidate in clients ?? ClientEnvironment.shared.clientDirectory?.clientList ?? []
 				where await credentialsAllowReuse(candidate, for: request)
 			{
 				existingClient = candidate
@@ -243,7 +243,7 @@ enum ServerConnectionController {
 			      matchedClient.startup.identifier == session,
 			      matchedClient.socket?.uniqueIdentifier == connection,
 			      stillMatches,
-			      (clients ?? ClientEnvironment.shared.world?.clientList ?? []).contains(where: { $0 === matchedClient })
+			      (clients ?? ClientEnvironment.shared.clientDirectory?.clientList ?? []).contains(where: { $0 === matchedClient })
 			else { return }
 		}
 
@@ -294,7 +294,7 @@ enum ServerConnectionController {
 			}
 		}
 
-		client.world?.save()
+		client.clientDirectory?.save()
 		if request.options.selectFirstChannelAdded, let firstChannel {
 			client.output?.select(firstChannel)
 		} else if request.channels.isEmpty {
@@ -316,10 +316,10 @@ enum ServerConnectionController {
 		config.serverList = [server]
 		config.channelList = request.channels.map(ChannelConfig.seed(withName:))
 
-		guard let client = ClientEnvironment.shared.world?.createClient(with: config) else {
+		guard let client = ClientEnvironment.shared.clientDirectory?.createClient(with: config) else {
 			return
 		}
-		ClientEnvironment.shared.world?.save()
+		ClientEnvironment.shared.clientDirectory?.save()
 
 		if request.options.connectWhenCreated {
 			client.connect()

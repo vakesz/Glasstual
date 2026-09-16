@@ -384,7 +384,7 @@ struct ClientOutboundPolicyTests {
 		client.modifyWatchList(byAdding: true, nicknames: ["a", "b", "c", "d", "e"])
 
 		expectPrintedLineContaining(
-			ISupportStrings.presenceListIsFull(droppedCount: 2, ceiling: 3),
+			String(localized: .IRC.presenceListIsFull(2, arg2: Int(clamping: 3))),
 			on: client
 		)
 	}
@@ -401,10 +401,7 @@ struct ClientOutboundPolicyTests {
 
 		#expect(sentLines(of: client).isEmpty)
 		expectPrintedLineContaining(
-			ISupportStrings.channelNameTooLong(
-				channelName: "#waytoolongforthisserver",
-				maximumLength: 8
-			),
+			String(localized: .IRC.joinRefusedNameTooLong("#waytoolongforthisserver", arg2: Int(clamping: 8))),
 			on: client
 		)
 	}
@@ -486,7 +483,7 @@ struct ClientOutboundPolicyTests {
 		/* Read as zero, the echo dated the ping to 1970 and the client reported
 		 a lag of fifty-six years; the untimed form is the honest one. */
 		let printed = client.printedLines.compactMap { ($0 as? [String: Any])?["messageBody"] as? String }
-		#expect(printed.contains(CTCPStrings.reply(sender: "alice", command: "PING", arguments: "not-a-number")))
+		#expect(printed.contains(String(localized: .IRC.ctcp("alice", "PING", "not-a-number"))))
 	}
 
 	// MARK: - Helpers

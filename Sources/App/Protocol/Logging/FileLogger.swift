@@ -100,7 +100,7 @@ final class FileLogger {
 	}
 
 	static func writePath(for item: ChatItem) -> String? {
-		guard let sourcePath = PathInfo.transcriptFolder else { return nil }
+		guard let sourcePath = ApplicationPaths.transcriptFolder else { return nil }
 		return writePath(for: item, relativeTo: sourcePath)
 	}
 

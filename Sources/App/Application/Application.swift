@@ -22,13 +22,13 @@ protocol CustomKeyboardEventResponder: AnyObject {
 @objc(GlasstualApplication)
 final class Application: NSApplication, CustomKeyboardEventResponder {
 	private var applicationController: ApplicationDelegate!
-	private var menuController: MenuController!
+	private var menuController: MenuActionController!
 
 	override init() {
 		super.init()
 
 		let applicationController = ApplicationDelegate()
-		let menuController = MenuController()
+		let menuController = MenuActionController()
 		applicationController.menuController = menuController
 		delegate = applicationController
 		self.applicationController = applicationController

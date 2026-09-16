@@ -25,7 +25,7 @@ XCODEBUILD   := xcodebuild -project $(PROJECT) -scheme $(SCHEME) -destination '$
 # one. `make clean` removes the wrappers with the rest of build/.
 TOOLS_BIN    := $(CURDIR)/build/tools/bin
 
-.PHONY: help generate validate-generated-metadata build archive run test tsan smoke e2e e2e-build e2e-fixtures coverage lint format format-check ensure-xcodegen ensure-formatters ensure-linters clean
+.PHONY: help generate validate-generated-metadata build archive run test tsan smoke e2e e2e-build e2e-fixtures lint format format-check ensure-xcodegen ensure-formatters ensure-linters clean
 
 help: ## Show this help
 	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z0-9_-]+:.*##/ {printf "  \033[1m%-27s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -58,8 +58,8 @@ run: build ## Build and launch the Debug app
 	open "$(DERIVED_DATA)/Build/Products/$(CONFIG)/Glasstual.app"
 
 # The scheme's test action sets gatherCoverageData, so the run always measures
-# coverage; -resultBundlePath is what keeps the measurement afterwards. Read it
-# with `make coverage`, or open the bundle in Xcode.
+# coverage; -resultBundlePath is what keeps the measurement afterwards. Open the
+# bundle in Xcode, or read it with `xcrun xccov view --report`.
 test: generate ## Run the unit tests (GlasstualTests) inside the Debug app
 	rm -rf "$(RESULT_BUNDLE)"
 	$(XCODEBUILD) -configuration Debug -resultBundlePath "$(RESULT_BUNDLE)" test
@@ -89,9 +89,6 @@ e2e-build: generate ## Build the GlasstualE2E scheme (app, harness and E2E tests
 e2e-fixtures: e2e-build ## Build and check loopback peers without launching the app or using Accessibility
 	E2E_HELPER="$(E2E_HELPER)" bash scripts/e2e-fixtures.sh
 
-coverage: ## Print the line coverage of the last `make test` run
-	xcrun xccov view --report --only-targets "$(RESULT_BUNDLE)"
-
 ensure-formatters:
 	@scripts/ensure-tool.sh swiftformat
 
@@ -105,7 +102,6 @@ lint: ensure-linters format-check ## Run whole-tree linters and format checks
 	$(TOOLS_BIN)/actionlint
 	$(TOOLS_BIN)/shellcheck scripts/*.sh
 	@set -euo pipefail; git ls-files --cached --others --exclude-standard -z -- '*.entitlements' '*.plist' '*.strings' '*.xcprivacy' | while IFS= read -r -d '' file; do if [ -f "$$file" ] && [ ! -L "$$file" ]; then plutil -lint "$$file" >/dev/null || exit 1; fi; done
-	@set -euo pipefail; git ls-files --cached --others --exclude-standard -z -- '*.xib' '*.xcscheme' '*.xcworkspacedata' | while IFS= read -r -d '' file; do if [ -f "$$file" ] && [ ! -L "$$file" ]; then xmllint --noout "$$file" || exit 1; fi; done
 	git diff --check
 
 format: ensure-formatters ## Format Swift sources in place

@@ -36,6 +36,7 @@
  *********************************************************************** */
 
 import Foundation
+import os
 import Security
 
 /// The client side identity a connection presents, when one is configured.

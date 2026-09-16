@@ -32,7 +32,7 @@ struct PreferencesIRCv3CapabilityListingTests {
 	@Test("Every capability the pane switches carries a summary")
 	func everySwitchableCapabilityHasASummary() {
 		for capability in switchableCapabilities {
-			let summary = PreferencesIRCv3Strings.capabilitySummary(for: capability.name)
+			let summary = IRCv3Pane.summary(for: capability.name).map { String(localized: $0) }
 
 			#expect(summary?.isEmpty == false, "\(capability.name) has no summary")
 		}
@@ -62,19 +62,19 @@ struct PreferencesIRCv3CapabilityListingTests {
 
 	@Test("A name the registry does not declare has no summary")
 	func unknownCapabilitiesHaveNoSummary() {
-		#expect(PreferencesIRCv3Strings.capabilitySummary(for: "example.com/vendor") == nil)
+		#expect(IRCv3Pane.summary(for: "example.com/vendor") == nil)
 		/* Capability names are case-sensitive, and so is the lookup. */
-		#expect(PreferencesIRCv3Strings.capabilitySummary(for: "Away-Notify") == nil)
+		#expect(IRCv3Pane.summary(for: "Away-Notify") == nil)
 	}
 
 	@Test("The summary reads as its own sentence beside the wire name")
 	func summariesAreSentences() throws {
-		let summary = try #require(PreferencesIRCv3Strings.capabilitySummary(for: "away-notify"))
+		let summary = try String(localized: #require(IRCv3Pane.summary(for: "away-notify")))
 
 		#expect(summary.hasSuffix("."))
 		#expect(summary.contains("away"))
 		#expect(
-			PreferencesIRCv3Strings.capabilityAccessibilityLabel(name: "away-notify", summary: summary)
+			IRCv3Pane.accessibilityLabel(for: "away-notify", summary: summary)
 				== "away-notify. \(summary)"
 		)
 	}

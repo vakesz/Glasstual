@@ -133,12 +133,20 @@ nonisolated enum NicknameColors { // nonisolated: value
 		isDark: Bool,
 		overrides: NicknameColorOverrides? = nil
 	) -> NSColor {
-		let normalized = inputString.lowercased()
-		if let override = nicknameColorStyleOverride(forKey: normalized, in: overrides) {
-			return override
+		if let pinned = pinnedColor(for: inputString, in: overrides) {
+			return pinned
 		}
 
 		return generatedColor(for: inputString, isDark: isDark)
+	}
+
+	/** The key a nickname's pinned colour is stored under.
+
+	 Case is folded the ASCII way rather than under the server's casemapping:
+	 the store is shared by every connection and its keys were written this way
+	 before there was one to ask. */
+	static func colorKey(for nickname: String) -> String {
+		nickname.lowercased()
 	}
 
 	/// The colour a nickname hashes to, before any pinned colour replaces it.
@@ -155,7 +163,7 @@ nonisolated enum NicknameColors { // nonisolated: value
 	/// a ground of its own — an avatar, a chip — keeps the identity the reader
 	/// learned from the transcript while choosing its own lightness.
 	static func hue(for inputString: String) -> Double {
-		Double(hash(for: inputString.lowercased()).uint32Value % 360)
+		Double(hash(for: colorKey(for: inputString)).uint32Value % 360)
 	}
 
 	/// The theme's colour style does not take part in the hash; the parameter
@@ -172,10 +180,11 @@ nonisolated enum NicknameColors { // nonisolated: value
 	/// Overrides are stored as their sRGB components. Values written by earlier
 	/// builds are `NSKeyedArchiver` blobs and are still read, so a user's pinned
 	/// colours survive the format change; the next edit rewrites them.
-	static func nicknameColorStyleOverride(
-		forKey styleKey: String,
+	static func pinnedColor(
+		for nickname: String,
 		in overrides: NicknameColorOverrides? = nil
 	) -> NSColor? {
+		let styleKey = colorKey(for: nickname)
 		guard let stored = (overrides?.stored ?? storedOverrides())[styleKey] else {
 			return nil
 		}
@@ -201,7 +210,8 @@ nonisolated enum NicknameColors { // nonisolated: value
 		}
 	}
 
-	static func setNicknameColorStyleOverride(_ styleValue: NSColor?, forKey styleKey: String) {
+	static func setOverride(_ styleValue: NSColor?, for nickname: String) {
+		let styleKey = colorKey(for: nickname)
 		let existingOverrides = overridesKey.detachedPropertyListValue?.dictionary
 
 		if existingOverrides == nil, styleValue == nil {

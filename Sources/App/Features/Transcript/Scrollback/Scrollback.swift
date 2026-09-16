@@ -283,11 +283,11 @@ final class Scrollback {
 	static func noteWillDeleteLines(_ uniqueIdentifiers: [String], inView viewIdentifier: String) {
 		shared.forgetLines(uniqueIdentifiers, inView: viewIdentifier)
 
-		guard let item = AppServices.world?.findItem(withId: viewIdentifier) else {
+		guard let item = AppServices.clientDirectory?.findItem(withId: viewIdentifier) else {
 			return
 		}
 
-		item.logController?.notifyHistoricLogWillDeleteLines(uniqueIdentifiers)
+		item.transcriptController?.notifyScrollbackWillDeleteLines(uniqueIdentifiers)
 	}
 
 	// MARK: - Duplicate index

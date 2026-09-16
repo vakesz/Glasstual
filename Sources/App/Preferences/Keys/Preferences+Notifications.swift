@@ -37,84 +37,29 @@
 
 import Foundation
 
-/// The per-event settings each notification type carries.
-nonisolated enum NotificationSetting: String, CaseIterable, Sendable { // nonisolated: value
-	case enabled = "Enabled"
-	case sound = "Sound"
-	case disabledWhileAway = "Disable While Away"
-	case bounceDockIcon = "Bounce Dock Icon"
-	case bounceDockIconRepeatedly = "Bounce Dock Icon Repeatedly"
-	case speak = "Speak"
-	case speakChannelName = "Speak Channel Name"
-	case speakNickname = "Speak Nickname"
-}
-
-nonisolated extension NotificationEvent { // nonisolated: value
-	/// The preference-key prefix this event's settings live under.
-	var preferenceKeyPrefix: String {
-		let name = switch self {
-		case .addressBookMatch: "Address Book Match"
-		case .channelMessage: "Public Message"
-		case .channelNotice: "Public Notice"
-		case .connect: "Connected"
-		case .disconnect: "Disconnected"
-		case .highlight: "Highlight"
-		case .invite: "Channel Invitation"
-		case .kick: "Kicked from Channel"
-		case .newPrivateMessage: "Private Message (New)"
-		case .privateMessage: "Private Message"
-		case .privateNotice: "Private Notice"
-		case .fileTransferSendSuccessful: "Successful File Transfer (Sending)"
-		case .fileTransferReceiveSuccessful: "Successful File Transfer (Receiving)"
-		case .fileTransferSendFailed: "Failed File Transfer (Sending)"
-		case .fileTransferReceiveFailed: "Failed File Transfer (Receiving)"
-		case .fileTransferReceiveRequested: "File Transfer Request"
-		case .userJoined: "User Joined"
-		case .userParted: "User Parted"
-		case .userDisconnected: "User Disconnected"
-		}
-
-		return "\(Preferences.Notifications.keyPrefix)\(name) -> "
-	}
-
-	func preferenceKeyName(for setting: NotificationSetting) -> String {
-		preferenceKeyPrefix + setting.rawValue
-	}
-}
-
 nonisolated extension Preferences { // nonisolated: value
-	/// Per-event notification settings, plus the switches that apply to all of
-	/// them.
+	/** What the person is told about, and how.
+
+	 Four switches, the way Messages has four: is a conversation muted, does a
+	 mention reach me, does it make a sound, and does it count on the Dock. The
+	 per-conversation half is `ChannelConfig.pushNotifications`; the rest is
+	 here. The nineteen events times eight settings this replaced is why the
+	 `NotificationType -> ` names below read the way they do: keeping them is
+	 what carries a person's existing choice over. */
 	enum Notifications {
-		static let keyPrefix = "NotificationType -> "
+		/** Whether a mention or a private message raises a notification.
 
-		/** The individual `NotificationType -> …` keys are matched by prefix in
-		 the catalogue rather than listed one by one, because a name is made
-		 from an event and a setting at the point of use.
-
-		 The family carries the shape those names hold — a sound is a string and
-		 every other setting is a flag — so an imported file cannot write a
-		 dictionary or a blob under a name no declaration covers one by one. */
-		static let family = PreferenceKeyFamily(keyPrefix, coerce: { name, value in
-			guard let setting = NotificationSetting.allCases.first(where: {
-				name.hasSuffix(" -> \($0.rawValue)")
-			}) else {
-				return PreferenceKeyFamily.scalar(name, value)
-			}
-			return setting == .sound
-				? PreferenceKey(name, default: "").coerce(value)
-				: PreferenceKey(name, default: false).coerce(value)
-		})
+		 Stored under the name the old per-event grid gave "Highlight ->
+		 Enabled", so someone who switched highlights off keeps them off. */
+		static let notifyAboutMentions = PreferenceKey(
+			"NotificationType -> Highlight -> Enabled",
+			default: true
+		)
 
 		static let soundIsMuted = PreferenceKey(
 			"Notification Sound Is Muted",
 			default: false,
 			traits: .unregistered
-		)
-
-		static let onlySpeakForSelection = PreferenceKey(
-			"OnlySpeakNotificationsForSelection",
-			default: true
 		)
 
 		static let postWhileInFocus = PreferenceKey("PostNotificationsWhileInFocus", default: true)
@@ -125,72 +70,9 @@ nonisolated extension Preferences { // nonisolated: value
 			default: false
 		)
 
-		/// A typed key for one event's setting. Reads fall back to whatever the
-		/// registration domain holds for it, so the `false`/`""` here only
-		/// applies to a setting that ships with no default at all.
-		static func flag(
-			_ event: NotificationEvent,
-			_ setting: NotificationSetting
-		) -> PreferenceKey<Bool> {
-			PreferenceKey(event.preferenceKeyName(for: setting), default: false, traits: .uncatalogued)
-		}
-
-		static func sound(_ event: NotificationEvent) -> PreferenceKey<String> {
-			PreferenceKey(event.preferenceKeyName(for: .sound), default: "", traits: .uncatalogued)
-		}
-
-		/** The settings that ship switched on, by event; anything not listed
-		 defaults to off. `.enabled` and `.bounceDockIcon` travel together for
-		 every event that has either, which is why one list covers both. */
-		private static let enabledByDefault: [(event: NotificationEvent, settings: [NotificationSetting])] = [
-			(.addressBookMatch, [.enabled]),
-			(.channelMessage, [.speakChannelName, .speakNickname]),
-			(.highlight, [.enabled, .bounceDockIcon]),
-			(.newPrivateMessage, [.enabled, .bounceDockIcon]),
-			(.privateMessage, [.enabled, .bounceDockIcon]),
-			(.fileTransferReceiveRequested, [.enabled, .bounceDockIcon]),
-			(.fileTransferSendSuccessful, [.enabled, .bounceDockIcon]),
-			(.fileTransferReceiveSuccessful, [.enabled, .bounceDockIcon]),
-			(.fileTransferSendFailed, [.enabled, .bounceDockIcon]),
-			(.fileTransferReceiveFailed, [.enabled, .bounceDockIcon]),
+		static let all: [any AnyPreferenceKey] = [
+			notifyAboutMentions, soundIsMuted, postWhileInFocus, displayDockBadge,
+			publicMessageCountOnDockBadge,
 		]
-
-		private static let registeredSounds: [(NotificationEvent, String)] = [
-			(.highlight, "Glass"),
-			(.newPrivateMessage, "Submarine"),
-			(.privateMessage, "Submarine"),
-			(.fileTransferReceiveRequested, "Blow"),
-		]
-
-		static let all: [any AnyPreferenceKey] = {
-			var keys: [any AnyPreferenceKey] = [
-				soundIsMuted, onlySpeakForSelection, postWhileInFocus, displayDockBadge,
-				publicMessageCountOnDockBadge,
-			]
-
-			for (event, settings) in enabledByDefault {
-				for setting in settings {
-					keys.append(
-						PreferenceKey(
-							event.preferenceKeyName(for: setting),
-							default: true,
-							traits: .uncatalogued
-						)
-					)
-				}
-			}
-
-			for (event, soundName) in registeredSounds {
-				keys.append(
-					PreferenceKey(
-						event.preferenceKeyName(for: .sound),
-						default: soundName,
-						traits: .uncatalogued
-					)
-				)
-			}
-
-			return keys
-		}()
 	}
 }

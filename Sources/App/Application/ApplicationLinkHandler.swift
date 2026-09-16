@@ -145,12 +145,12 @@ enum ApplicationLinkHandler {
 		case .acknowledgements:
 			menu?.openAcknowledgements(nil)
 		case .applicationSupportFolder:
-			reveal(PathInfo.groupContainerApplicationSupportURL, with: menu)
+			reveal(ApplicationPaths.groupContainerApplicationSupportURL, with: menu)
 		case .customScriptsFolder:
 			reveal(AppServices.scripts.customScriptsURL, with: menu)
 		case .diagnosticReportsFolder:
-			reveal(PathInfo.userDiagnosticReportsURL, with: menu)
-			reveal(PathInfo.systemDiagnosticReportsURL, with: menu)
+			reveal(ApplicationPaths.userDiagnosticReportsURL, with: menu)
+			reveal(ApplicationPaths.systemDiagnosticReportsURL, with: menu)
 		case .goto:
 			menu?.navigateToTreeItem(at: source)
 		case .supportChannel:

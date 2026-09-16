@@ -187,3 +187,71 @@ nonisolated extension Preferences { // nonisolated: value
 		]
 	}
 }
+
+/** How a highlight keyword is compared against a message.
+
+ Stored as the integer it declares, so the typed store reads and writes it
+ directly. A stored value with no matching case decodes to nothing and the read
+ falls back to the key's declared default. The conformance is here because the
+ synthesis only happens in the file that declares the enum. */
+enum NicknameHighlightMatchMode: UInt, Sendable {
+	case partial
+	case exact
+	case regularExpression
+}
+
+extension NicknameHighlightMatchMode: PreferenceEnum {}
+
+/// What the tab key does in the input field.
+enum TabKeyAction: UInt, Sendable {
+	case nicknameComplete = 0
+	case unreadChannel = 1
+	case none = 100
+}
+
+extension TabKeyAction: PreferenceEnum {}
+
+/// What a double click on a name in the member list does.
+enum UserDoubleClickAction: UInt, Sendable {
+	case whois = 100
+	case privateMessage = 200
+	case insertTextField = 300
+}
+
+extension UserDoubleClickAction: PreferenceEnum {}
+
+/// What Command-W closes.
+enum CommandWShortcutAction: UInt, Sendable {
+	case closeWindow
+	case partChannel
+	case disconnect
+	case terminate
+}
+
+extension CommandWShortcutAction: PreferenceEnum {}
+
+/// The size the input field draws its text at.
+enum MainWindowTextFontSize: UInt, Sendable {
+	case normal = 1
+	case large
+	case extraLarge
+	case humongous
+}
+
+extension MainWindowTextFontSize: PreferenceEnum {}
+
+@MainActor
+extension Preferences.Highlights {
+	/// Drops the entries that match nothing and sorts what is left, so the
+	/// Settings list and the stored value stay in one order.
+	static func cleanUpStoredKeywords() {
+		clean(matchKeywords)
+		clean(excludeKeywords)
+	}
+
+	private static func clean(_ key: PreferenceKey<[HighlightKeyword]>) {
+		key.value = keywords(in: key.value)
+			.sorted { $0.caseInsensitiveCompare($1) == .orderedAscending }
+			.map(HighlightKeyword.init(string:))
+	}
+}

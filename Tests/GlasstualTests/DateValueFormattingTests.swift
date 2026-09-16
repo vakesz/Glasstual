@@ -12,14 +12,19 @@ import Testing
 struct DateValueFormattingTests {
 	@Test("A Date is formatted")
 	func formatsDate() {
-		let formatted = formatDate(Date(timeIntervalSince1970: 0) as Any, .long, .long, false)
+		let formatted = DateFormatting.formatted(Date(timeIntervalSince1970: 0), dateStyle: .long, timeStyle: .long, relative: false)
 
-		#expect(formatted?.isEmpty == false)
+		#expect(formatted.isEmpty == false)
 	}
 
 	@Test("An ISO 8601 string is parsed before it is formatted")
 	func formatsISOString() throws {
-		let formatted = try #require(formatDate("2024-03-05T12:30:00.000Z" as Any, .long, .long, false))
+		let formatted = try #require(DateFormatting.formatted(
+			serverText: "2024-03-05T12:30:00.000Z",
+			dateStyle: .long,
+			timeStyle: .long,
+			relative: false
+		))
 
 		#expect(formatted.contains("2024"))
 		// The raw server text must not simply be echoed back.
@@ -28,14 +33,19 @@ struct DateValueFormattingTests {
 
 	@Test("A Unix timestamp string is parsed before it is formatted")
 	func formatsEpochString() throws {
-		let formatted = try #require(formatDate("1709641800" as Any, .long, .long, false))
+		let formatted = try #require(DateFormatting.formatted(
+			serverText: "1709641800",
+			dateStyle: .long,
+			timeStyle: .long,
+			relative: false
+		))
 
 		#expect(formatted.contains("2024"))
 	}
 
 	@Test("An unparseable string yields nil so callers can show it verbatim")
 	func rejectsUnparseableString() {
-		#expect(formatDate("not a date" as Any, .long, .long, false) == nil)
+		#expect(DateFormatting.formatted(serverText: "not a date", dateStyle: .long, timeStyle: .long, relative: false) == nil)
 	}
 
 	/// `TimeInterval("inf")` and `TimeInterval("nan")` both parse, so a server
@@ -45,6 +55,6 @@ struct DateValueFormattingTests {
 		arguments: ["inf", "-inf", "infinity", "nan", "1e400"]
 	)
 	func rejectsNonFiniteEpochString(_ text: String) {
-		#expect(formatDate(text as Any, .long, .long, false) == nil)
+		#expect(DateFormatting.formatted(serverText: text, dateStyle: .long, timeStyle: .long, relative: false) == nil)
 	}
 }

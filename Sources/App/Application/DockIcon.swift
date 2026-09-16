@@ -26,11 +26,11 @@ enum DockIcon {
 			return
 		}
 
-		guard let world = AppServices.world else { return }
+		guard let clientDirectory = AppServices.clientDirectory else { return }
 
 		var highlightCount: UInt = 0
 		var messageCount: UInt = 0
-		for client in world.clientList {
+		for client in clientDirectory.clientList {
 			for channel in client.channelList {
 				if channel.config.pushNotifications {
 					messageCount += UInt(channel.dockUnreadCount)
@@ -99,9 +99,9 @@ enum DockIcon {
 
 	static func badgeString(forCount count: UInt) -> String {
 		if count > maximumDisplayedCount {
-			return MainWindowStrings.Dock.overflowBadge(
-				maximum: maximumDisplayedCount.formatted(.number)
-			)
+			return String(localized: .MainWindow.dockIconBadgeShown(
+				maximumDisplayedCount.formatted(.number)
+			))
 		}
 		return count.formatted(.number)
 	}

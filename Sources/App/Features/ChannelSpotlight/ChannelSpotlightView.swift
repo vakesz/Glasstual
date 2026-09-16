@@ -5,6 +5,56 @@
 
 import SwiftUI
 
+struct ChannelSpotlightScene: Scene {
+	let scenes: ApplicationScenes
+
+	var body: some Scene {
+		Window(String(localized: .ChannelSpotlight.windowTitle), id: ApplicationSceneID.channelSpotlight) {
+			ChannelSpotlightSceneRoot(scenes: scenes)
+		}
+		.windowResizability(.contentSize)
+		/* A spotlight panel, not a document window: it floats over what it
+		 searches, opens in the middle of the screen, carries no chrome of its
+		 own so the glass effect is not drawn on an opaque square, and is never
+		 restored -- a search nobody asked to resume. */
+		.windowStyle(.plain)
+		.windowLevel(.floating)
+		.defaultPosition(.center)
+		.restorationBehavior(.disabled)
+	}
+}
+
+private struct ChannelSpotlightSceneRoot: View {
+	@Environment(\.dismissWindow) private var dismissWindow
+	@Environment(\.controlActiveState) private var controlActiveState
+	let scenes: ApplicationScenes
+
+	var body: some View {
+		if let model = scenes.currentChannelSpotlightModel() {
+			ChannelSpotlightView(
+				model: model,
+				select: { result in
+					model.select(result)
+					dismiss()
+				},
+				close: dismiss
+			)
+			.onDisappear {
+				scenes.channelSpotlightDidClose()
+			}
+			.onChange(of: controlActiveState) { _, state in
+				// A spotlight panel goes away as soon as it stops being typed into.
+				guard state != .key else { return }
+				dismiss()
+			}
+		}
+	}
+
+	private func dismiss() {
+		dismissWindow(id: ApplicationSceneID.channelSpotlight)
+	}
+}
+
 /// What the spotlight panel is built from. The panel sizes itself to its
 /// content, so the heights the rows are drawn at are also the heights the
 /// window is asked for; naming them once is what keeps the two in step.
@@ -47,17 +97,14 @@ struct ChannelSpotlightView: View {
 				Image(systemName: "magnifyingglass")
 					.imageScale(.small)
 					.foregroundStyle(.secondary)
-				TextField(
-					ChannelSpotlightStrings.searchPlaceholder,
-					text: $model.searchText
-				)
-				.textFieldStyle(.plain)
-				.focused($searchIsFocused)
-				.onSubmit {
-					if let result = model.selectedResult {
-						select(result)
+				TextField(.ChannelSpotlight.searchPlaceholder, text: $model.searchText)
+					.textFieldStyle(.plain)
+					.focused($searchIsFocused)
+					.onSubmit {
+						if let result = model.selectedResult {
+							select(result)
+						}
 					}
-				}
 			}
 			.font(.largeTitle.weight(.light))
 			.padding(.horizontal, UISpacing.loose)
@@ -67,7 +114,7 @@ struct ChannelSpotlightView: View {
 				Divider()
 				if model.displayedResults.isEmpty {
 					ContentUnavailableView(
-						ChannelSpotlightStrings.noResults,
+						String(localized: .ChannelSpotlight.noResults),
 						systemImage: "magnifyingglass"
 					)
 					.frame(height: ChannelSpotlightLayout.emptyStateHeight)
@@ -138,7 +185,7 @@ struct ChannelSpotlightView: View {
 				withAnimation { proxy.scrollTo(identifier, anchor: .center) }
 			}
 		}
-		.accessibilityLabel(ChannelSpotlightStrings.resultsAccessibilityLabel)
+		.accessibilityLabel(.ChannelSpotlight.resultsAccessibilityLabel)
 	}
 
 	/// The shortcut label for one row: ⌘1 … ⌘0 for the first ten matches, and

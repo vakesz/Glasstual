@@ -232,23 +232,18 @@ nonisolated enum PreferencesClientArchive { // nonisolated: value
 		case .uniqueIdentifier, .connectionName, .nickname, .awayNickname, .username, .realName,
 		     .saslMechanismPreference,
 		     .proxyAddress, .proxyUsername, .normalLeavingComment, .sleepModeLeavingComment, .ctcpVersionReply,
-		     .serverAddress, .identityAwayNickname, .identityNickname, .connectionDisconnectDefaultMessage,
-		     .proxyServerAddress, .proxyServerUsername, .identityRealname, .connectionDisconnectSleepModeMessage,
-		     .identityUsername:
+		     .serverAddress:
 			.text
 		case .dictionaryVersion, .addressType, .proxyType, .cipherSuites, .primaryEncoding, .fallbackEncoding,
-		     .floodControlDelayTimerInterval, .floodControlMaximumMessages, .proxyServerType,
-		     .characterEncodingDefault, .characterEncodingFallback: .unsigned
-		case .proxyPort, .serverPort, .proxyServerPort: .port
-		case .autojoinDelayAfterConnectCommands, .lastMessageServerTime,
-		     .cachedLastServerTimeCapacityReceivedAtTimestamp: .real
-		case .identityClientSideCertificate, .identitySSLCertificate: .bytes
-		case .alternateNicknames, .loginCommands, .identityAlternateNicknames: .texts
+		     .floodControlDelayTimerInterval, .floodControlMaximumMessages: .unsigned
+		case .proxyPort, .serverPort: .port
+		case .autojoinDelayAfterConnectCommands, .lastMessageServerTime: .real
+		case .identityClientSideCertificate: .bytes
+		case .alternateNicknames, .loginCommands: .texts
 		case .serverList: .records(.server)
 		case .channelList: .records(.channel)
 		case .highlightList: .records(.highlight)
 		case .ignoreList: .records(.ignore)
-		case .floodControl: .record(.flood)
 		case .usesSASL, .saslAuthenticationDisableExternalMechanism, .sendAuthenticationRequestsToUserServ,
 		     .connectionPrefersIPv4,
 		     .validateServerCertificateChain, .autoConnect, .autoReconnect, .autoSleepModeDisconnect,
@@ -260,11 +255,7 @@ nonisolated enum PreferencesClientArchive { // nonisolated: value
 		     .sidebarItemExpanded,
 		     .zncIgnoreConfiguredAutojoin, .zncIgnorePlaybackNotifications, .zncIgnoreUserNotifications,
 		     .zncOnlyPlaybackLatest,
-		     .prefersSecuredConnection, .connectionPrefersModernCiphers, .connectOnLaunch, .connectOnDisconnect,
-		     .disconnectOnSleepMode,
-		     .autojoinWaitsForNickServIdentification, .connectUsingSSL, .setInvisibleOnConnect,
-		     .serverListItemIsExpanded,
-		     .validateServerSideSSLCertificate, .isOutgoingFloodControlEnabled, .migratedToServerListV1Layout: .flag
+		     .prefersSecuredConnection, .connectionPrefersModernCiphers: .flag
 		}
 	}
 }

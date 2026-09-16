@@ -35,13 +35,13 @@ struct PreferencesReloadActionMappingTests {
 
 	@Test("LogTranscript and the client list reach an action")
 	func newlyMappedKeys() {
-		#expect(TextualPreferences.reloadAction(forKeys: ["LogTranscript"]).contains(.logTranscripts))
-		#expect(TextualPreferences.reloadAction(forKeys: [worldClientListDefaultsKey]).contains(.serverList))
+		#expect(PreferenceReload.action(forKeys: ["LogTranscript"]).contains(.logTranscripts))
+		#expect(PreferenceReload.action(forKeys: [worldClientListDefaultsKey]).contains(.serverList))
 	}
 
 	@Test("An unrelated key still asks observers to re-read preferences")
 	func unrelatedKeyStillNotifies() {
-		let action = TextualPreferences.reloadAction(forKeys: ["SomeKeyNothingMaps"])
+		let action = PreferenceReload.action(forKeys: ["SomeKeyNothingMaps"])
 		#expect(action.contains(.preferencesChanged))
 		#expect(action.contains(.logTranscripts) == false)
 		#expect(action.contains(.serverList) == false)
@@ -49,13 +49,13 @@ struct PreferencesReloadActionMappingTests {
 
 	@Test("Keys that already had a mapping keep it")
 	func existingMappingsAreIntact() {
-		#expect(TextualPreferences.reloadAction(forKeys: ["LogHighlights"]).contains(.highlightLogging))
+		#expect(PreferenceReload.action(forKeys: ["LogHighlights"]).contains(.highlightLogging))
 		#expect(
-			TextualPreferences.reloadAction(forKeys: ["ScrollbackMaximumSavedLineCount"])
+			PreferenceReload.action(forKeys: ["ScrollbackMaximumSavedLineCount"])
 				.contains(.scrollbackSaveLimit)
 		)
 		#expect(
-			TextualPreferences.reloadAction(forKeys: [Preferences.Theme.transcriptTheme.name]).contains(.style)
+			PreferenceReload.action(forKeys: [Preferences.Theme.transcriptTheme.name]).contains(.style)
 		)
 	}
 }

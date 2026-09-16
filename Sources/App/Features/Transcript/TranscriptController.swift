@@ -43,7 +43,7 @@ import os
 
 typealias PrintedLineCompletion = (PrintedLineContext) -> Void
 
-private nonisolated let logControllerLogger = Logger( // nonisolated: let
+private nonisolated let transcriptControllerLogger = Logger( // nonisolated: let
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 	category: "LogController"
 )
@@ -106,7 +106,7 @@ final class TranscriptController: ServerHistoryPresentation {
 
 	let historyRecovery = TranscriptHistoryRecoveryState()
 	var historyStorageRecovery: TranscriptHistoryRecoveryState {
-		historicLog.recovery
+		scrollback.recovery
 	}
 
 	var historyRetryTask: Task<Void, Never>?
@@ -124,10 +124,10 @@ final class TranscriptController: ServerHistoryPresentation {
 	 so a preference change still takes effect at once. */
 	var loadsHistoryLazily: @MainActor () -> Bool = { Preferences.Logging.loadHistoryLazily.value }
 
-	private let memberRenderCache = MemberListRenderCache()
+	private let memberRenderCache = TranscriptMemberDirectoryCache()
 	let inlineImageLoader: InlineImageLoader
-	let historicLog: Scrollback
-	private(set) var historicLogMutationTask: Task<Void, Never>?
+	let scrollback: Scrollback
+	private(set) var scrollbackMutationTask: Task<Void, Never>?
 
 	private var lastVisitedHighlight: String?
 	/// Whether any line on screen is a highlight. Cheap: the transcript counts
@@ -245,11 +245,11 @@ final class TranscriptController: ServerHistoryPresentation {
 
 	init(
 		client: Client, in window: MainWindow, inlineImageLoader: InlineImageLoader,
-		historicLog: Scrollback = .shared
+		scrollback: Scrollback = .shared
 	) {
 		self.inlineImageLoader = inlineImageLoader
-		self.historicLog = historicLog
-		historyPageFetcher = { await historicLog.fetchOutcome($0) }
+		self.scrollback = scrollback
+		historyPageFetcher = { await scrollback.fetchOutcome($0) }
 		associatedClient = client
 		uniqueIdentifier = client.uniqueIdentifier
 		attachedWindow = window
@@ -258,8 +258,8 @@ final class TranscriptController: ServerHistoryPresentation {
 
 	init(channel: Channel, in window: MainWindow) {
 		inlineImageLoader = .shared
-		historicLog = .shared
-		let storage = historicLog
+		scrollback = .shared
+		let storage = scrollback
 		historyPageFetcher = { await storage.fetchOutcome($0) }
 		associatedClient = channel.associatedClient
 		associatedChannel = channel
@@ -374,27 +374,27 @@ final class TranscriptController: ServerHistoryPresentation {
 		renderGeneration == generation && !terminating
 	}
 
-	private func historicLogForgetChannel() {
+	private func scrollbackForgetChannel() {
 		guard let associatedItem else {
 			return
 		}
-		historicLogMutationTask = historicLog.removeHistory(forView: associatedItem.uniqueIdentifier, forget: true)
+		scrollbackMutationTask = scrollback.removeHistory(forView: associatedItem.uniqueIdentifier, forget: true)
 	}
 
-	private func historicLogResetChannel() {
+	private func scrollbackResetChannel() {
 		guard let associatedItem else {
 			return
 		}
-		historicLogMutationTask = historicLog.removeHistory(forView: associatedItem.uniqueIdentifier, forget: false)
+		scrollbackMutationTask = scrollback.removeHistory(forView: associatedItem.uniqueIdentifier, forget: false)
 	}
 
-	private func closeHistoricLog() {
+	private func closeScrollback() {
 		let channel = associatedChannel
 		if !Preferences.Logging.reloadScrollbackOnLaunch.value || channel?.isUtility == true || channel?
 			.isDirectChat == true ||
 			(channel?.isPrivateMessage == true && !Preferences.Appearance.rememberQueryStates.value)
 		{
-			historicLogResetChannel()
+			scrollbackResetChannel()
 		}
 	}
 
@@ -404,7 +404,7 @@ final class TranscriptController: ServerHistoryPresentation {
 			/* Bound to a local because the log message is an autoclosure, where
 			 `self.` would be required and SwiftFormat would strip it. */
 			let identifier = uniqueIdentifier
-			logControllerLogger.debug("Preparing view controller: \(identifier, privacy: .public)")
+			transcriptControllerLogger.debug("Preparing view controller: \(identifier, privacy: .public)")
 		}
 		renderGeneration += 1
 		terminating = true
@@ -422,8 +422,8 @@ final class TranscriptController: ServerHistoryPresentation {
 		inlineImageLoader.cancelLoads(forView: uniqueIdentifier)
 		stopPipeline()
 		switch reason {
-		case .applicationTermination: closeHistoricLog()
-		case .permanentRemoval: historicLogForgetChannel()
+		case .applicationTermination: closeScrollback()
+		case .permanentRemoval: scrollbackForgetChannel()
 		case .preservingRemoval: break
 		}
 	}
@@ -663,7 +663,7 @@ extension TranscriptController {
 		forgetRetiredProjectionMessages()
 	}
 
-	func notifyHistoricLogWillDeleteLines(_ lineNumbers: [String]) {
+	func notifyScrollbackWillDeleteLines(_ lineNumbers: [String]) {
 		guard !terminating else {
 			return
 		}
@@ -719,7 +719,7 @@ extension TranscriptController {
 				}
 			case let .failure(error):
 				let reason = (error as? InlineImageError)?.logDescription ?? error.localizedDescription
-				logControllerLogger.error(
+				transcriptControllerLogger.error(
 					"Inline image request failed for '\(address, privacy: .public)': \(reason, privacy: .public)"
 				)
 			}
@@ -757,7 +757,7 @@ extension TranscriptController {
 		}
 		cancelRenderJobs()
 		inlineImageLoader.cancelLoads(forView: uniqueIdentifier)
-		historicLogResetChannel()
+		scrollbackResetChannel()
 		transcriptProjection.reset()
 		transcriptSessionBoundary.reset()
 		newestLineNumberFromPreviousSession = nil
@@ -883,7 +883,7 @@ extension TranscriptController {
 		let alreadyPrinted = alreadyDisplayed || transcriptProjection
 			.containsLine(withIdentifier: logLine.uniqueIdentifier)
 		let isDuplicate = alreadyPrinted
-			|| logLine.messageIdentifier.map { historicLog.containsMessageIdentifier(
+			|| logLine.messageIdentifier.map { scrollback.containsMessageIdentifier(
 				$0,
 				forView: associatedItem.uniqueIdentifier
 			) } == true
@@ -898,7 +898,7 @@ extension TranscriptController {
 			var displayedLine = applyingCurrentState(to: result.transcriptLine)
 			if transcriptSessionBoundary.consumePendingMarker(for: result) {
 				displayedLine.markers.insert(
-					.currentSession(MainWindowStrings.Conversation.currentSession),
+					.currentSession(String(localized: .MainWindow.currentSession)),
 					at: 0
 				)
 			}
@@ -908,7 +908,7 @@ extension TranscriptController {
 			processInlineMedia(result.links, atLineNumber: lineNumber)
 		}
 		if alreadyPrinted == false {
-			historicLog.writeNewEntry(
+			scrollback.writeNewEntry(
 				rendered.historicEntry ?? logLine.historicEntry(forView: associatedItem.uniqueIdentifier),
 				for: logLine
 			)
@@ -969,7 +969,7 @@ extension TranscriptController {
 	 a printed line still rendering, or a replay that is still loading. */
 	private func holdsMessage(withIdentifier identifier: String) -> Bool {
 		transcriptProjection.phase != .active
-			|| backingView?.messageLineOrdinals[identifier] != nil
+			|| backingView?.document.ordinals(ofMessage: identifier) != nil
 			|| transcriptProjection.containsMessage(withIdentifier: identifier)
 			|| linesAwaitingRender.contains { $0.messageIdentifier == identifier }
 	}
@@ -985,7 +985,7 @@ extension TranscriptController {
 
 	private func forgetReactions(for identifiers: [String]) {
 		for identifier in identifiers where reactionsByMessageIdentifier[identifier] != nil {
-			guard backingView?.messageLineOrdinals[identifier] == nil,
+			guard backingView?.document.ordinals(ofMessage: identifier) == nil,
 			      transcriptProjection.containsMessage(withIdentifier: identifier) == false
 			else { continue }
 			reactionsByMessageIdentifier.removeValue(forKey: identifier)
@@ -1042,12 +1042,12 @@ extension TranscriptController {
 		}
 	}
 
-	func logViewKeyDown(_ event: NSEvent) {
+	func transcriptViewKeyDown(_ event: NSEvent) {
 		attachedWindow?.redirectKeyDown(event)
 	}
 
-	func logViewReceivedDrop(withFile filename: String) {
-		AppServices.delegate.menuController?.actionCoordinator.sendDroppedFilesToSelectedChannel([filename])
+	func transcriptViewReceivedDrop(withFile filename: String) {
+		AppServices.delegate.menuController?.sendDroppedFilesToSelectedChannel([filename])
 	}
 
 	/// The newest line this view printed. The IRC layer consults it when it

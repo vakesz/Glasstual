@@ -36,25 +36,73 @@
  *********************************************************************** */
 
 import AppKit
+import Observation
 import SwiftUI
 
 @MainActor
+@Observable
+final class NicknameColorModel {
+	static let initialPickerColor = NSColor(
+		calibratedRed: 0.058_130_498_98,
+		green: 0.055_541_899_06,
+		blue: 1,
+		alpha: 1
+	)
+
+	let nickname: String
+	private(set) var selectedColor: NSColor
+	private(set) var usesDefaultColor: Bool
+
+	init(nickname: String, overrideColor: NSColor?) {
+		self.nickname = nickname
+		selectedColor = overrideColor ?? Self.initialPickerColor
+		usesDefaultColor = overrideColor == nil
+	}
+
+	var colorForPersistence: NSColor? {
+		usesDefaultColor ? nil : selectedColor
+	}
+
+	/// The colour the transcript would draw the nickname in, as the sheet
+	/// stands: what was chosen, or the colour the nickname hashes to when the
+	/// sheet is offering to pin nothing.
+	var previewColor: NSColor {
+		usesDefaultColor
+			? NicknameColors.generatedColor(for: nickname)
+			: selectedColor
+	}
+
+	func setUsesDefaultColor(_ usesDefaultColor: Bool) {
+		self.usesDefaultColor = usesDefaultColor
+
+		/* The system colour panel is shared and modeless. Left open over a
+		 picker that is now disabled it goes on offering colours to nothing. */
+		if usesDefaultColor, NSColorPanel.sharedColorPanelExists {
+			NSColorPanel.shared.close()
+		}
+	}
+
+	func selectColor(_ color: NSColor) {
+		selectedColor = color
+		usesDefaultColor = false
+	}
+}
+
+@MainActor
 final class NicknameColorSheet: SheetSession {
-	/* The style generator normalises with lowercased() before looking an
-	 override up, so the sheet has to read and write under the same key or the
-	 override it stores is never applied. */
-	private let overrideKey: String
 	let model: NicknameColorModel
+
+	private let nickname: String
 	/// Run once the override has been stored, so the caller can redraw whatever
 	/// draws a nickname in it.
-	var colorDidChange: (() -> Void)?
+	private let onColorChange: () -> Void
 
-	init(nickname: String) {
-		let normalizedKey = nickname.lowercased()
-		overrideKey = normalizedKey
+	init(nickname: String, onColorChange: @escaping () -> Void) {
+		self.nickname = nickname
+		self.onColorChange = onColorChange
 		model = NicknameColorModel(
 			nickname: nickname,
-			overrideColor: NicknameColors.nicknameColorStyleOverride(forKey: normalizedKey)
+			overrideColor: NicknameColors.pinnedColor(for: nickname)
 		)
 
 		super.init(window: nil)
@@ -74,13 +122,74 @@ final class NicknameColorSheet: SheetSession {
 	}
 
 	override func submit() {
-		NicknameColors.setNicknameColorStyleOverride(
-			model.colorForPersistence,
-			forKey: overrideKey
-		)
+		NicknameColors.setOverride(model.colorForPersistence, for: nickname)
 
-		colorDidChange?()
+		onColorChange()
 
 		super.submit()
+	}
+}
+
+@MainActor
+struct NicknameColorView: View {
+	@Bindable var model: NicknameColorModel
+	let changeColor: @MainActor () -> Void
+	let cancel: @MainActor () -> Void
+
+	private var selectedColor: Binding<Color> {
+		Binding(
+			get: { Color(nsColor: model.selectedColor) },
+			set: { model.selectColor(NSColor($0)) }
+		)
+	}
+
+	private var usesDefaultColor: Binding<Bool> {
+		Binding(
+			get: { model.usesDefaultColor },
+			set: model.setUsesDefaultColor
+		)
+	}
+
+	var body: some View {
+		VStack(alignment: .leading, spacing: UISpacing.loose) {
+			Text(.MemberList.windowTitle(model.nickname))
+				.font(.headline)
+
+			/* The nickname as the transcript will draw it, in the colour being
+			 chosen: a swatch in a picker says nothing about whether the name is
+			 legible where it is read. */
+			Text(verbatim: model.nickname)
+				.font(.body.weight(.semibold))
+				.foregroundStyle(Color(nsColor: model.previewColor))
+				.lineLimit(1)
+				.truncationMode(.tail)
+				.frame(maxWidth: .infinity, alignment: .leading)
+				.padding(.vertical, UISpacing.regular)
+				.padding(.horizontal, UISpacing.wide)
+				.background(.quaternary, in: RoundedRectangle(cornerRadius: 6))
+				.accessibilityLabel(.MemberList.previewAccessibilityLabel(model.nickname))
+
+			HStack(spacing: UISpacing.wide) {
+				ColorPicker(.MemberList.colorPickerLabel, selection: selectedColor)
+					.disabled(model.usesDefaultColor)
+					.accessibilityHint(.MemberList.colorPickerAccessibilityHint)
+
+				Toggle(.MemberList.useDefaultColor, isOn: usesDefaultColor)
+					.accessibilityHint(.MemberList.useDefaultColorAccessibilityHint)
+			}
+
+			HStack(spacing: UISpacing.regular) {
+				Spacer()
+
+				Button(PromptStrings.Action.cancel, action: cancel)
+					.keyboardShortcut(.cancelAction)
+
+				Button(.MemberList.changeColor, action: changeColor)
+					.keyboardShortcut(.defaultAction)
+			}
+		}
+		.padding(UISpacing.loose + UISpacing.tight)
+		.frame(width: 390)
+		.onExitCommand(perform: cancel)
 	}
 }

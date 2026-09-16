@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="Documentation/Images/AppIcon.png" width="160" alt="Glasstual app icon">
+  <img src=".github/website/assets/app-icon.png" width="160" alt="Glasstual app icon">
 </p>
 
 <h1 align="center">Glasstual</h1>
@@ -25,16 +25,16 @@ runs in a sandboxed XPC host.
 ## Screenshots
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="Documentation/Screenshots/main-window-dark.png">
-  <img src="Documentation/Screenshots/main-window-light.png" alt="The Glasstual main window showing servers, a conversation and the member list">
+  <source media="(prefers-color-scheme: dark)" srcset=".github/website/assets/main-window-dark.png">
+  <img src=".github/website/assets/main-window-light.png" alt="The Glasstual main window showing servers, a conversation and the member list">
 </picture>
 
 <details>
 <summary>First launch</summary>
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="Documentation/Screenshots/welcome-dark.png">
-  <img src="Documentation/Screenshots/welcome-light.png" alt="The Glasstual first-launch welcome screen">
+  <source media="(prefers-color-scheme: dark)" srcset=".github/website/assets/welcome-dark.png">
+  <img src=".github/website/assets/welcome-light.png" alt="The Glasstual first-launch welcome screen">
 </picture>
 
 </details>

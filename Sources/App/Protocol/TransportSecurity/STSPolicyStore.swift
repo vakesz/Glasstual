@@ -44,7 +44,7 @@ let stsPolicyStoreDefaultsKey = Preferences.Connection.stsPolicies.name
 ///
 /// Main-actor, like the connection setup and the capability negotiation that
 /// are its only callers, so the policies need no lock of their own.
-final class STSPolicyStore: NSObject {
+final class STSPolicyStore {
 	private let userDefaults: UserDefaults?
 	private var policies: [String: STSPolicy] = [:]
 
@@ -52,8 +52,6 @@ final class STSPolicyStore: NSObject {
 
 	init(userDefaults: UserDefaults?) {
 		self.userDefaults = userDefaults
-
-		super.init()
 
 		load()
 	}

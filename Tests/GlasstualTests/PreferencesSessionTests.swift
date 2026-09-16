@@ -18,16 +18,16 @@ struct PreferencesSessionTests {
 	private static let cancellation = NSError(domain: NSCocoaErrorDomain, code: NSUserCancelledError)
 
 	@Test("External Settings navigation clears filters even for the already-selected destination", arguments: [
-		PreferencesSceneSelection.notifications, .style, .hiddenPreferences,
+		SettingsSceneSelection.notifications, .style, .hiddenPreferences,
 	])
-	func externalNavigationClearsSearch(_ request: PreferencesSceneSelection) {
+	func externalNavigationClearsSearch(_ request: SettingsSceneSelection) {
 		let rememberedSelection = Preferences.Internals.selectedPreferencePane.value
-		let session = PreferencesSession()
+		let session = SettingsSession()
 		defer {
 			session.deactivate()
 			Preferences.Internals.selectedPreferencePane.value = rememberedSelection
 		}
-		let expected: PreferencesSelection = switch request {
+		let expected: SettingsSelection = switch request {
 		case .notifications: .notifications
 		case .style: .style
 		case .hiddenPreferences: .advanced
@@ -53,8 +53,8 @@ struct PreferencesSessionTests {
 
 	@Test("File importer dismissal retains the request until its completion is applied")
 	func importCompletionSurvivesDismissal() throws {
-		let model = PreferencesPaneModel()
-		var pending = PendingFileRequest<PreferencesImportRequest>()
+		let model = SettingsModel()
+		var pending = PendingFileRequest<SettingsImportRequest>()
 		pending.present(.transcriptTheme)
 		let request = try #require(pending.request)
 		pending.dismiss(request.id)
@@ -69,8 +69,8 @@ struct PreferencesSessionTests {
 
 	@Test("Cancelled imports finish quietly and stale callbacks cannot consume a newer request")
 	func importCancellationAndStaleCallbacks() throws {
-		let model = PreferencesPaneModel()
-		var pending = PendingFileRequest<PreferencesImportRequest>()
+		let model = SettingsModel()
+		var pending = PendingFileRequest<SettingsImportRequest>()
 		pending.present(.transcriptFolder)
 		let first = try #require(pending.request)
 		pending.dismiss(first.id)
@@ -95,8 +95,8 @@ struct PreferencesSessionTests {
 
 	@Test("A replaced picker ignores a late success instead of opening its URL")
 	func supersededImportIgnoresSuccess() throws {
-		let model = PreferencesPaneModel()
-		var pending = PendingFileRequest<PreferencesImportRequest>()
+		let model = SettingsModel()
+		var pending = PendingFileRequest<SettingsImportRequest>()
 		pending.present(.transcriptTheme)
 		let first = try #require(pending.request)
 		pending.present(.downloadFolder)
@@ -109,8 +109,8 @@ struct PreferencesSessionTests {
 
 	@Test("A selected theme URL is processed after the picker has dismissed")
 	func selectedURLSurvivesDismissal() async throws {
-		let model = PreferencesPaneModel()
-		var pending = PendingFileRequest<PreferencesImportRequest>()
+		let model = SettingsModel()
+		var pending = PendingFileRequest<SettingsImportRequest>()
 		pending.present(.transcriptTheme)
 		let request = try #require(pending.request)
 		pending.dismiss(request.id)
@@ -129,7 +129,7 @@ struct PreferencesSessionTests {
 	/// request that the next appearance would answer.
 	@Test("Resetting a pending request leaves nothing to complete")
 	func resetDropsThePendingRequest() throws {
-		var pending = PendingFileRequest<PreferencesImportRequest>()
+		var pending = PendingFileRequest<SettingsImportRequest>()
 		pending.present(.downloadFolder)
 		let request = try #require(pending.request)
 		pending.reset()

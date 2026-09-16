@@ -158,11 +158,11 @@ final class RecordingClientOutput: ClientOutput {
 		visibleItems.contains { $0 === item }
 	}
 
-	func reloadTreeItem(_ item: ChatItem) {
+	func reloadChatItem(_ item: ChatItem) {
 		reloadedItems.append(item)
 	}
 
-	func reloadTreeGroup(_ item: ChatItem) {
+	func reloadChatItemGroup(_ item: ChatItem) {
 		reloadedGroups.append(item)
 	}
 
@@ -251,9 +251,9 @@ final class ClientEnvironmentFixture {
 	let output = RecordingClientOutput()
 	let menu = RecordingMenuPresenter()
 	let applicationState = RecordingApplicationState()
-	/// A world of this fixture's own, so channel creation works without the
+	/// A client directory of this fixture's own, so channel creation works without the
 	/// application's. `ClientServices` refers to it weakly; this keeps it alive.
-	let world: ClientDirectory
+	let clientDirectory: ClientDirectory
 	private(set) var environment: ClientEnvironment
 
 	init(preferences: ClientPreferences = .current()) {
@@ -263,8 +263,8 @@ final class ClientEnvironmentFixture {
 			applicationState: applicationState
 		)
 		environment = ClientEnvironment(preferences: preferences, services: services)
-		/* The world installs itself in the services it is given. */
-		world = ClientDirectory(environment: environment)
+		/* The directory installs itself in the services it is given. */
+		clientDirectory = ClientDirectory(environment: environment)
 	}
 
 	/// Re-reads the defaults store, for a test that writes a preference after

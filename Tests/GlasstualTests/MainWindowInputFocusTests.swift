@@ -18,7 +18,7 @@ import Testing
 struct MainWindowInputFocusTests {
 	@Test("The ring needs the first responder and the key window, not either one")
 	func ringNeedsBothHalves() {
-		let model = MainWindowInputFocusModel()
+		let model = InputFocusModel()
 		#expect(model.isFocused == false)
 
 		model.isFirstResponder = true
@@ -35,7 +35,7 @@ struct MainWindowInputFocusTests {
 
 	@Test("A key window whose field does not hold the keyboard draws no ring")
 	func keyWindowAloneIsNotFocus() {
-		let model = MainWindowInputFocusModel()
+		let model = InputFocusModel()
 		model.windowIsKey = true
 		#expect(model.isFocused == false)
 

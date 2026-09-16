@@ -75,7 +75,7 @@ nonisolated extension Preferences { // nonisolated: value
 		)
 
 		static let nicknameColorStyleOverrides = UntypedPreferenceKey(
-			"Nickname Color Style Overrides (v2)", validation: PreferencesPayloadValidation.nicknameColors
+			"Nickname Color Style Overrides (v2)", validation: PreferenceValueRepair.nicknameColors
 		)
 
 		static let all: [any AnyPreferenceKey] = [
@@ -134,5 +134,30 @@ nonisolated extension Preferences { // nonisolated: value
 			logToDisk, logHighlights, reloadScrollbackOnLaunch, loadHistoryLazily,
 			scrollbackSaveLimit, scrollbackVisibleLimit, transcriptFolderBookmark, historicLogFileName,
 		]
+	}
+}
+
+nonisolated extension Preferences { // nonisolated: value
+	/// What the transcript's reaction picker offers first.
+	enum Reactions {
+		/// The emoji the user has reacted with, most recent first. Kept short by
+		/// `RecentReactions`; the picker fills the rest of the row from its
+		/// common set.
+		static let recent = PreferenceKey(
+			"Reactions -> Recently Used",
+			default: [String](),
+			traits: .unregistered
+		)
+
+		static let all: [any AnyPreferenceKey] = [recent]
+	}
+}
+
+@MainActor
+extension Preferences.Logging {
+	/// Whether a transcript is actually being written: the setting is on and a
+	/// folder the application can still reach has been chosen.
+	static var logToDiskIsEnabled: Bool {
+		logToDisk.value && ApplicationPaths.transcriptFolderURL != nil
 	}
 }

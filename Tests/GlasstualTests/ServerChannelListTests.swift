@@ -120,11 +120,11 @@ struct ServerChannelListTests {
 	@Test("A refresh a client cannot send does not leave the list waiting")
 	func refreshWhileLoggedOutEndsAtOnce() {
 		let client = TestClient()
-		let session = ServerChannelListSession(client: client)
+		let list = ServerChannelList(client: client)
 
-		session.beginRefresh()
+		list.beginRefresh()
 
-		#expect(session.model.isRefreshing == false)
+		#expect(list.model.isRefreshing == false)
 		#expect(client.sentLines.count == 0)
 	}
 
@@ -132,30 +132,30 @@ struct ServerChannelListTests {
 	func unfinishedListingTimesOut() async {
 		let client = TestClient()
 		client.markAsLoggedIn()
-		let session = ServerChannelListSession(client: client, replyTimeout: .milliseconds(50))
+		let list = ServerChannelList(client: client, replyTimeout: 0.05)
 
-		session.beginRefresh()
-		#expect(session.model.isRefreshing)
+		list.beginRefresh()
+		#expect(list.model.isRefreshing)
 		#expect(client.sentLines.count == 1)
-		session.addChannel("#swift", count: 12, topic: nil)
+		list.addChannel("#swift", count: 12, topic: nil)
 
-		await refreshEnded(in: session.model)
-		#expect(session.model.rows.map(\.channelName) == ["#swift"])
-		session.close()
+		await refreshEnded(in: list.model)
+		#expect(list.model.rows.map(\.channelName) == ["#swift"])
+		list.close()
 	}
 
 	@Test("A listing ends when the connection it was asked on logs out")
 	func disconnectEndsTheListing() async {
 		let client = TestClient()
 		client.markAsLoggedIn()
-		let session = ServerChannelListSession(client: client, replyTimeout: .seconds(3600))
+		let list = ServerChannelList(client: client, replyTimeout: 3600)
 
-		session.beginRefresh()
-		#expect(session.model.isRefreshing)
+		list.beginRefresh()
+		#expect(list.model.isRefreshing)
 		client.isLoggedIn = false
 
-		await refreshEnded(in: session.model)
-		session.close()
+		await refreshEnded(in: list.model)
+		list.close()
 	}
 
 	private var entries: [ServerChannelListEntry] {

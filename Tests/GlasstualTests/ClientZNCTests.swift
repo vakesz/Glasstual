@@ -14,7 +14,7 @@ import Testing
 struct ClientZNCTests {
 	private func client() -> TestClient {
 		let client = TestClient()
-		client.isConnectedToZNC = true
+		client.znc.isConnected = true
 		return client
 	}
 

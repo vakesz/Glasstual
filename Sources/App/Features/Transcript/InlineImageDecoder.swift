@@ -49,12 +49,6 @@ nonisolated enum InlineImageDecoder { // nonisolated: value
 		let residentByteCount: Int
 	}
 
-	private struct Output {
-		var data = Data()
-		let limit: Int
-		var exceeded = false
-	}
-
 	@concurrent
 	static func prepare(_ data: Data, limits: InlineImageLimits) async throws -> Preview {
 		try Task.checkCancellation()
@@ -62,7 +56,6 @@ nonisolated enum InlineImageDecoder { // nonisolated: value
 			throw InlineImageError.resourceLimit
 		}
 		return try autoreleasepool {
-			let animation = try InlineImageContainer.animation(in: data, limits: limits)
 			let options = [kCGImageSourceShouldCache: false] as CFDictionary
 			guard let source = CGImageSourceCreateWithData(data as CFData, options),
 			      CGImageSourceGetStatus(source) == .statusComplete,
@@ -73,9 +66,7 @@ nonisolated enum InlineImageDecoder { // nonisolated: value
 			else { throw InlineImageError.unsupportedContent }
 			let count = CGImageSourceGetCount(source)
 			guard count > 0, count <= limits.maximumFrames else { throw InlineImageError.resourceLimit }
-			guard animation == nil || animation?.frames == count
-			else { throw InlineImageError.unsupportedContent }
-			let animated = count > 1 || animation != nil
+			let animated = count > 1
 			guard !animated || type == UTType.gif.identifier || type == UTType.png.identifier else {
 				throw InlineImageError.unsupportedContent
 			}
@@ -117,7 +108,7 @@ nonisolated enum InlineImageDecoder { // nonisolated: value
 				try Task.checkCancellation()
 				// Byte preservation also preserves disposal, blend operations, loop counts,
 				// unclamped delays and colour profiles. Never transcode to a still frame.
-				return Preview(data: data, residentByteCount: data.count + max(aggregate, animation?.decodedBytes ?? 0))
+				return Preview(data: data, residentByteCount: data.count + aggregate)
 			}
 			guard let image = CGImageSourceCreateThumbnailAtIndex(source, 0, [
 				kCGImageSourceCreateThumbnailFromImageAlways: true,
@@ -134,37 +125,23 @@ nonisolated enum InlineImageDecoder { // nonisolated: value
 		}
 	}
 
+	/** Writes the thumbnail as PNG and refuses one that came out larger than the
+	 encoded limit.
+
+	 The image is already bounded to ``InlineImageLimits/thumbnailDimension`` and
+	 its pixel footprint is checked before it is drawn, so the output is bounded
+	 too; the length check is what turns that into a guarantee. */
 	private static func encode(_ image: CGImage, maximumBytes: Int) throws -> Data {
-		var output = Output(limit: maximumBytes)
-		// ImageIO writes synchronously through this consumer. The pointer never
-		// escapes this scope and its value is confined to the decoding executor.
-		try withUnsafeMutablePointer(to: &output) { pointer in
-			var callbacks = CGDataConsumerCallbacks(putBytes: { info, bytes, count in
-				guard let info else { return 0 }
-				let output = info.assumingMemoryBound(to: Output.self)
-				guard !output.pointee.exceeded, count <= output.pointee.limit - output.pointee.data.count else {
-					output.pointee.exceeded = true
-					return 0
-				}
-				output.pointee.data.append(bytes.assumingMemoryBound(to: UInt8.self), count: count)
-				return count
-			}, releaseConsumer: nil)
-			guard let consumer = CGDataConsumer(info: pointer, cbks: &callbacks),
-			      let destination = CGImageDestinationCreateWithDataConsumer(
-			      	consumer,
-			      	UTType.png.identifier as CFString,
-			      	1,
-			      	nil
-			      )
-			else { throw InlineImageError.unsupportedContent }
-			// The transform bakes EXIF orientation into pixels. ImageIO embeds the
-			// resulting CGImage colour space instead of dropping its profile.
-			CGImageDestinationAddImage(destination, image, [kCGImagePropertyOrientation: 1] as CFDictionary)
-			guard CGImageDestinationFinalize(destination), !pointer.pointee.exceeded else {
-				throw InlineImageError.resourceLimit
-			}
-		}
-		return output.data
+		let output = NSMutableData()
+		guard let destination = CGImageDestinationCreateWithData(
+			output, UTType.png.identifier as CFString, 1, nil
+		) else { throw InlineImageError.unsupportedContent }
+		// The transform bakes EXIF orientation into pixels. ImageIO embeds the
+		// resulting CGImage colour space instead of dropping its profile.
+		CGImageDestinationAddImage(destination, image, [kCGImagePropertyOrientation: 1] as CFDictionary)
+		guard CGImageDestinationFinalize(destination) else { throw InlineImageError.unsupportedContent }
+		guard output.length <= maximumBytes else { throw InlineImageError.resourceLimit }
+		return output as Data
 	}
 
 	private static func validate(_ image: CGImage, limits: InlineImageLimits) throws {

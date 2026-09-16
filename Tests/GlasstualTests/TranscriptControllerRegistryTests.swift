@@ -46,7 +46,7 @@ private struct RegistryFixture {
 	let client: Client
 
 	var registry: TranscriptControllerRegistry {
-		window.logControllers
+		window.transcriptControllers
 	}
 
 	init() {
@@ -56,11 +56,11 @@ private struct RegistryFixture {
 			backing: .buffered,
 			defer: false
 		)
-		client = fixture.world.createClient(with: ClientConfig())
+		client = fixture.clientDirectory.createClient(with: ClientConfig())
 	}
 
 	func makeChannel(named name: String) -> Channel {
-		fixture.world.createChannel(
+		fixture.clientDirectory.createChannel(
 			with: ChannelConfig.seed(withName: name),
 			on: client,
 			add: true,
@@ -90,7 +90,7 @@ struct TranscriptControllerRegistryTests {
 
 		#expect(context.registry.existingController(for: context.client) === controller)
 		#expect(context.client.presentation === controller)
-		#expect(context.client.logController === controller)
+		#expect(context.client.transcriptController === controller)
 		#expect(controller.backingView == nil)
 	}
 

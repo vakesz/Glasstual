@@ -62,63 +62,63 @@ enum RecordedDirectoryEvent: Equatable {
 final class RecordingDirectoryObserver: ClientDirectoryObserver {
 	private(set) var events: [RecordedDirectoryEvent] = []
 
-	func worldWillBeginBulkUpdate(_: ClientDirectory) {
+	func clientDirectoryWillBeginBulkUpdate(_: ClientDirectory) {
 		events.append(.willBeginBulkUpdate)
 	}
 
-	func worldDidEndBulkUpdate(_: ClientDirectory) {
+	func clientDirectoryDidEndBulkUpdate(_: ClientDirectory) {
 		events.append(.didEndBulkUpdate)
 	}
 
-	func world(_: ClientDirectory, didAddClient client: Client, at index: Int) {
+	func clientDirectory(_: ClientDirectory, didAddClient client: Client, at index: Int) {
 		events.append(.addedClient(client.uniqueIdentifier, index))
 	}
 
-	func world(_: ClientDirectory, didRemoveClient client: Client) {
+	func clientDirectory(_: ClientDirectory, didRemoveClient client: Client) {
 		events.append(.removedClient(client.uniqueIdentifier))
 	}
 
-	func world(_: ClientDirectory, didMoveClientFrom oldIndex: Int, to newIndex: Int) {
+	func clientDirectory(_: ClientDirectory, didMoveClientFrom oldIndex: Int, to newIndex: Int) {
 		events.append(.movedClient(oldIndex, newIndex))
 	}
 
-	func world(_: ClientDirectory, didAddChannel channel: Channel, on client: Client, at index: Int) {
+	func clientDirectory(_: ClientDirectory, didAddChannel channel: Channel, on client: Client, at index: Int) {
 		events.append(.addedChannel(channel.name, on: client.uniqueIdentifier, at: index))
 	}
 
-	func world(_: ClientDirectory, didRemoveChannel channel: Channel, on client: Client) {
+	func clientDirectory(_: ClientDirectory, didRemoveChannel channel: Channel, on client: Client) {
 		events.append(.removedChannel(channel.name, on: client.uniqueIdentifier))
 	}
 
-	func world(_: ClientDirectory, didMoveChannelOn client: Client, from oldIndex: Int, to newIndex: Int) {
+	func clientDirectory(_: ClientDirectory, didMoveChannelOn client: Client, from oldIndex: Int, to newIndex: Int) {
 		events.append(.movedChannel(on: client.uniqueIdentifier, from: oldIndex, to: newIndex))
 	}
 
-	func world(_: ClientDirectory, requestsSelectionOf item: ChatItem) {
+	func clientDirectory(_: ClientDirectory, requestsSelectionOf item: ChatItem) {
 		events.append(.selectionRequested(item.uniqueIdentifier))
 	}
 
-	func world(_: ClientDirectory, requestsDeselectionOf item: ChatItem) {
+	func clientDirectory(_: ClientDirectory, requestsDeselectionOf item: ChatItem) {
 		events.append(.deselectionRequested(item.uniqueIdentifier))
 	}
 
-	func world(_: ClientDirectory, requestsGroupDeselectionOf item: ChatItem) {
+	func clientDirectory(_: ClientDirectory, requestsGroupDeselectionOf item: ChatItem) {
 		events.append(.groupDeselectionRequested(item.uniqueIdentifier))
 	}
 
-	func worldRequestsSelectionAdjustment(_: ClientDirectory) {
+	func clientDirectoryRequestsSelectionAdjustment(_: ClientDirectory) {
 		events.append(.selectionAdjustmentRequested)
 	}
 
-	func worldClientListDidChange(_: ClientDirectory) {
+	func clientDirectoryClientListDidChange(_: ClientDirectory) {
 		events.append(.clientListChanged)
 	}
 
-	func worldNavigationListDidChange(_: ClientDirectory) {
+	func clientDirectoryNavigationListDidChange(_: ClientDirectory) {
 		events.append(.navigationListChanged)
 	}
 
-	func worldPreferencesDidChange(_: ClientDirectory) {
+	func clientDirectoryPreferencesDidChange(_: ClientDirectory) {
 		events.append(.preferencesChanged)
 	}
 }
@@ -129,7 +129,7 @@ private final class RegisteringDirectoryObserver: ClientDirectoryObserver {
 	let late = RecordingDirectoryObserver()
 	private var registered = false
 
-	func worldClientListDidChange(_ world: ClientDirectory) {
+	func clientDirectoryClientListDidChange(_ world: ClientDirectory) {
 		guard registered == false else { return }
 		registered = true
 		world.addObserver(late)
@@ -141,18 +141,18 @@ private struct ClientDirectoryFixture {
 	let fixture = ClientEnvironmentFixture()
 	let observer = RecordingDirectoryObserver()
 
-	var world: ClientDirectory {
-		fixture.world
+	var clientDirectory: ClientDirectory {
+		fixture.clientDirectory
 	}
 
 	init() {
-		world.addObserver(observer)
+		clientDirectory.addObserver(observer)
 	}
 
 	func makeClient(named name: String) -> Client {
 		var config = ClientConfig()
 		config.connectionName = name
-		return world.createClient(with: config)
+		return clientDirectory.createClient(with: config)
 	}
 }
 
@@ -176,7 +176,7 @@ struct ClientDirectoryObserverTests {
 	func observerRegisteredDuringDeliveryIsKept() {
 		let context = ClientDirectoryFixture()
 		let registering = RegisteringDirectoryObserver()
-		context.world.addObserver(registering)
+		context.clientDirectory.addObserver(registering)
 
 		let first = context.makeClient(named: "First")
 		#expect(registering.late.events.contains(.addedClient(first.uniqueIdentifier, 0)) == false)
@@ -201,12 +201,12 @@ struct ClientDirectoryObserverTests {
 		let client = context.makeClient(named: "First")
 		let identifier = client.uniqueIdentifier
 
-		context.world.destroyClient(client)
+		context.clientDirectory.destroyClient(client)
 
 		let events = context.observer.events
 		#expect(events.contains(.groupDeselectionRequested(identifier)))
 		#expect(events.contains(.removedClient(identifier)))
-		#expect(context.world.clientList.isEmpty)
+		#expect(context.clientDirectory.clientList.isEmpty)
 	}
 
 	@Test("A client is deselected before it is removed")
@@ -215,7 +215,7 @@ struct ClientDirectoryObserverTests {
 		let client = context.makeClient(named: "First")
 		let identifier = client.uniqueIdentifier
 
-		context.world.destroyClient(client)
+		context.clientDirectory.destroyClient(client)
 
 		let events = context.observer.events
 		let deselected = try #require(events.firstIndex(of: .groupDeselectionRequested(identifier)))
@@ -229,10 +229,10 @@ struct ClientDirectoryObserverTests {
 		let first = context.makeClient(named: "First")
 		let second = context.makeClient(named: "Second")
 
-		context.world.moveClient(from: 1, to: 0)
+		context.clientDirectory.moveClient(from: 1, to: 0)
 
 		#expect(context.observer.events.contains(.movedClient(1, 0)))
-		#expect(context.world.clientList.map(\.uniqueIdentifier) == [
+		#expect(context.clientDirectory.clientList.map(\.uniqueIdentifier) == [
 			second.uniqueIdentifier, first.uniqueIdentifier,
 		])
 	}
@@ -242,7 +242,7 @@ struct ClientDirectoryObserverTests {
 		let context = ClientDirectoryFixture()
 		_ = context.makeClient(named: "First")
 
-		context.world.moveClient(from: 4, to: 0)
+		context.clientDirectory.moveClient(from: 4, to: 0)
 
 		#expect(context.observer.events.contains { event in
 			if case .movedClient = event {
@@ -257,7 +257,7 @@ struct ClientDirectoryObserverTests {
 		let context = ClientDirectoryFixture()
 		let client = context.makeClient(named: "First")
 
-		let channel = context.world.createChannel(with: ChannelConfig.seed(withName: "#one"), on: client)
+		let channel = context.clientDirectory.createChannel(with: ChannelConfig.seed(withName: "#one"), on: client)
 
 		#expect(context.observer.events.contains(
 			.addedChannel(channel.name, on: client.uniqueIdentifier, at: 0)
@@ -269,9 +269,9 @@ struct ClientDirectoryObserverTests {
 	func removingAChannelPublishesIt() {
 		let context = ClientDirectoryFixture()
 		let client = context.makeClient(named: "First")
-		let channel = context.world.createChannel(with: ChannelConfig.seed(withName: "#one"), on: client)
+		let channel = context.clientDirectory.createChannel(with: ChannelConfig.seed(withName: "#one"), on: client)
 
-		context.world.destroyChannel(channel, options: [.reloadsNavigationList])
+		context.clientDirectory.destroyChannel(channel, options: [.reloadsNavigationList])
 
 		#expect(context.observer.events.contains(
 			.removedChannel("#one", on: client.uniqueIdentifier)
@@ -283,9 +283,9 @@ struct ClientDirectoryObserverTests {
 	func removingAChannelWithoutReloadStillDropsItFromTheClient() {
 		let context = ClientDirectoryFixture()
 		let client = context.makeClient(named: "First")
-		let channel = context.world.createChannel(with: ChannelConfig.seed(withName: "#one"), on: client)
+		let channel = context.clientDirectory.createChannel(with: ChannelConfig.seed(withName: "#one"), on: client)
 
-		context.world.destroyChannel(channel, options: [])
+		context.clientDirectory.destroyChannel(channel, options: [])
 
 		#expect(client.channelList.isEmpty)
 		// Removal releases the controller even when redraw is batched.
@@ -300,11 +300,11 @@ struct ClientDirectoryObserverTests {
 		let first = context.makeClient(named: "First")
 		let second = context.makeClient(named: "Second")
 
-		context.world.moveClient(from: 0, to: 9)
+		context.clientDirectory.moveClient(from: 0, to: 9)
 
 		#expect(context.observer.events.contains(.movedClient(0, 1)))
 		#expect(context.observer.events.contains(.movedClient(0, 9)) == false)
-		#expect(context.world.clientList.map(\.uniqueIdentifier) == [
+		#expect(context.clientDirectory.clientList.map(\.uniqueIdentifier) == [
 			second.uniqueIdentifier, first.uniqueIdentifier,
 		])
 	}
@@ -313,10 +313,10 @@ struct ClientDirectoryObserverTests {
 	func movingAChannelPastTheEndReportsTheClampedIndex() {
 		let context = ClientDirectoryFixture()
 		let client = context.makeClient(named: "First")
-		_ = context.world.createChannel(with: ChannelConfig.seed(withName: "#one"), on: client)
-		_ = context.world.createChannel(with: ChannelConfig.seed(withName: "#two"), on: client)
+		_ = context.clientDirectory.createChannel(with: ChannelConfig.seed(withName: "#one"), on: client)
+		_ = context.clientDirectory.createChannel(with: ChannelConfig.seed(withName: "#two"), on: client)
 
-		context.world.moveChannel(on: client, from: 0, to: 9)
+		context.clientDirectory.moveChannel(on: client, from: 0, to: 9)
 
 		#expect(context.observer.events.contains(
 			.movedChannel(on: client.uniqueIdentifier, from: 0, to: 1)
@@ -332,7 +332,7 @@ struct ClientDirectoryObserverTests {
 		do {
 			let transient = RecordingDirectoryObserver()
 			weakTransient = transient
-			context.world.addObserver(transient)
+			context.clientDirectory.addObserver(transient)
 		}
 
 		#expect(weakTransient == nil)
@@ -344,7 +344,7 @@ struct ClientDirectoryObserverTests {
 	@Test("Removing an observer stops the events")
 	func removedObserversAreNotTold() {
 		let context = ClientDirectoryFixture()
-		context.world.removeObserver(context.observer)
+		context.clientDirectory.removeObserver(context.observer)
 
 		_ = context.makeClient(named: "First")
 

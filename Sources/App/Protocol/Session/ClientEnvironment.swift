@@ -51,7 +51,7 @@ nonisolated struct ClientPreferences: Sendable, Equatable { // nonisolated: valu
 	var autojoinOnInvite = false
 	var rejoinOnKick = false
 	var appNapEnabled = false
-	var preferModernCiphers = false
+	var preferModernCiphers = true
 	var disconnectOnSleep = false
 	var awayOnScreenSleep = false
 	var enableEchoMessageCapability = false
@@ -124,20 +124,28 @@ final class ClientServices {
 	weak var menu: (any ClientMenuPresenting)?
 	weak var channelList: (any ClientChannelListPresenting)?
 	weak var applicationState: (any ClientApplicationState)?
-	weak var world: ClientDirectory?
+	weak var clientDirectory: ClientDirectory?
+
+	/** Where a certificate the system would not vouch for is put in front of
+	 the user.
+
+	 Owned rather than borrowed: it is a panel with no other home, and a
+	 connection that raises one has to be able to take it down again from
+	 wherever the session ends. */
+	let certificateTrust = CertificateTrustPanel()
 
 	init(
 		output: (any ClientOutput)? = nil,
 		menu: (any ClientMenuPresenting)? = nil,
 		channelList: (any ClientChannelListPresenting)? = nil,
 		applicationState: (any ClientApplicationState)? = nil,
-		world: ClientDirectory? = nil
+		clientDirectory: ClientDirectory? = nil
 	) {
 		self.output = output
 		self.menu = menu
 		self.channelList = channelList
 		self.applicationState = applicationState
-		self.world = world
+		self.clientDirectory = clientDirectory
 	}
 }
 
@@ -160,8 +168,8 @@ struct ClientEnvironment {
 		services.menu
 	}
 
-	var world: ClientDirectory? {
-		services.world
+	var clientDirectory: ClientDirectory? {
+		services.clientDirectory
 	}
 }
 
@@ -196,7 +204,7 @@ extension Client {
 		environment.services.channelList
 	}
 
-	var world: ClientDirectory? {
-		environment.services.world
+	var clientDirectory: ClientDirectory? {
+		environment.services.clientDirectory
 	}
 }

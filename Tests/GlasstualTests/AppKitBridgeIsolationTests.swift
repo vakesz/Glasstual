@@ -52,8 +52,8 @@ struct AppKitBridgeIsolationTests {
 	func noAwakeFromNibOverridesRemain() {
 		let classes: [AnyClass] = [
 			MainWindow.self,
-			MainWindowTextView.self,
-			TextViewIRCFormattingMenu.self,
+			InputField.self,
+			IRCFormattingMenu.self,
 			ApplicationDelegate.self,
 		]
 
@@ -75,7 +75,7 @@ struct AppKitBridgeIsolationTests {
 
 	@Test("The input field is built in code and backed by TextKit 2")
 	func inputFieldUsesTextKit2() {
-		let contentView = MainWindowTextViewContentView(frame: NSRect(x: 0, y: 0, width: 800, height: 38))
+		let contentView = InputFieldContentView(frame: NSRect(x: 0, y: 0, width: 800, height: 38))
 		contentView.configure()
 
 		let textView = contentView.textView

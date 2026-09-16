@@ -29,47 +29,4 @@ struct AppKitSupportTests {
 
 		#expect(Alerts.isSuppressed(baseKey: baseKey))
 	}
-
-	@Test("A notification about a client names that client and no channel")
-	func spokenNotificationResolvesClientTarget() {
-		let client = TestClient()
-		let notification = SpokenNotification(
-			notificationType: .connect,
-			lineType: .notice,
-			target: client,
-			nickname: "alice",
-			text: "connected"
-		)
-
-		#expect(notification.clientIdentifier == client.uniqueIdentifier)
-		#expect(notification.channelIdentifier == nil)
-		#expect(notification.notificationType == .connect)
-		#expect(notification.lineType == .notice)
-		#expect(notification.nickname == "alice")
-		#expect(notification.text == "connected")
-	}
-
-	@Test("A notification about a channel names the channel and the client behind it")
-	func spokenNotificationResolvesChannelAndItsClient() {
-		let client = TestClient()
-		let channel = makeChannel(named: "#chat", client: client)
-		let notification = SpokenNotification(
-			notificationType: .channelMessage,
-			lineType: .privateMessage,
-			target: channel,
-			nickname: "alice",
-			text: "hello"
-		)
-
-		#expect(notification.clientIdentifier == client.uniqueIdentifier)
-		#expect(notification.channelIdentifier == channel.uniqueIdentifier)
-	}
-
-	private func makeChannel(named name: String, client: Client) -> Channel {
-		let channel = Channel(config: ChannelConfig(channelName: name))
-
-		channel.associatedClient = client
-
-		return channel
-	}
 }

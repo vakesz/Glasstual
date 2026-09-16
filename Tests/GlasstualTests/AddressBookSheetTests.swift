@@ -59,7 +59,7 @@ struct AddressBookSheetTests {
 		model.hostmask = "not-a-hostmask"
 
 		#expect(model.validatedEntry() == nil)
-		#expect(model.validationMessage == AddressBookStrings.invalidIgnoreMask)
+		#expect(model.validationMessage == String(localized: .AddressBook.pleaseEnterAProperlyFormattedIgnore))
 	}
 
 	@Test("A tracking rule validates a nickname and preserves its notification choice")
@@ -105,23 +105,13 @@ struct AddressBookSheetTests {
 		#expect(model.validationMessage == CommonValidationStrings.invalidNickname)
 	}
 
-	@Test("The sheet submits through its typed delegate")
-	func nativeSheetAndDelegate() throws {
-		let delegate = Delegate()
-		let sheet = AddressBookSheet(entryType: .userTracking)
-		sheet.delegate = delegate
+	@Test("The sheet reports the entry it accepted")
+	func sheetReportsTheAcceptedEntry() throws {
+		var submitted: AddressBookEntry?
+		let sheet = AddressBookEntrySheet(entryType: .userTracking) { submitted = $0 }
 		sheet.model.hostmask = "vakesz"
 
 		sheet.submit()
-		let submitted = try #require(delegate.submittedEntry)
-		#expect(submitted.hostmask == "vakesz")
-	}
-
-	private final class Delegate: NSObject, AddressBookSheetDelegate {
-		var submittedEntry: AddressBookEntry?
-
-		func addressBookSheet(_: AddressBookSheet, onOk entry: AddressBookEntry) {
-			submittedEntry = entry
-		}
+		#expect(try #require(submitted).hostmask == "vakesz")
 	}
 }

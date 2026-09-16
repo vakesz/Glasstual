@@ -80,7 +80,7 @@ nonisolated struct ChannelSpotlightSearchResult: Identifiable, Hashable, Sendabl
 	/// server to name.
 	var title: String {
 		guard networkName.isEmpty == false else { return channelName }
-		return ChannelSpotlightStrings.channelOnNetwork(channelName, networkName)
+		return String(localized: .ChannelSpotlight.channelOnNetwork(channelName, networkName))
 	}
 
 	/** What is waiting in the channel, or nothing at all.
@@ -93,14 +93,14 @@ nonisolated struct ChannelSpotlightSearchResult: Identifiable, Hashable, Sendabl
 		case (0, 0):
 			nil
 		case let (highlights, 0):
-			ChannelSpotlightStrings.highlights(highlights)
+			String(localized: .ChannelSpotlight.highlightCount(highlights))
 		case let (0, unread):
-			ChannelSpotlightStrings.unreadMessages(unread)
+			String(localized: .ChannelSpotlight.unreadMessageCount(unread))
 		case let (highlights, unread):
-			ChannelSpotlightStrings.combined(
-				ChannelSpotlightStrings.highlights(highlights),
-				ChannelSpotlightStrings.unreadMessages(unread)
-			)
+			String(localized: .ChannelSpotlight.joinsTwoChannelStatus(
+				String(localized: .ChannelSpotlight.highlightCount(highlights)),
+				String(localized: .ChannelSpotlight.unreadMessageCount(unread))
+			))
 		}
 	}
 

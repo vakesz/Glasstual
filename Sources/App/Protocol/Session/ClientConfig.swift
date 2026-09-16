@@ -43,8 +43,6 @@ nonisolated enum ClientConfigDefaults { // nonisolated: value
 	/// Bumped whenever a stored dictionary needs migrating. A dictionary that
 	/// carries version 0 is run through the legacy migration on load.
 	static let dictionaryVersion: UInt = 710
-	static let proxyPort: UInt16 = 1080
-	static let serverPort: UInt16 = 6667
 	static let floodDelay: UInt = 2
 	static let floodMaximum: UInt = 6
 	static let limitedFloodDelay: UInt = 2
@@ -108,9 +106,16 @@ nonisolated struct ClientConfig: Codable, Equatable, Sendable { // nonisolated: 
 	var connectionPrefersIPv4 = false
 	var proxyType = ConnectionProxyType.automatic
 	var proxyAddress: String?
-	var proxyPort = ClientConfigDefaults.proxyPort
+	var proxyPort = ConnectionDefaults.proxyPort
 	var proxyUsername: String?
-	var cipherSuites = CipherSuiteCollection.default
+	/** Which cipher suites the connection offers.
+
+	 A fresh connection takes the platform's own group, which is what the
+	 system keeps current. The named collections are frozen lists from years
+	 ago and still carry suites that have since been deprecated; they stay for
+	 a user who has to reach an old server, and are not what anyone gets by
+	 default. */
+	var cipherSuites = CipherSuiteCollection.none
 	var validateServerCertificateChain = true
 	var primaryEncoding = String.Encoding.utf8.rawValue
 	var fallbackEncoding = String.Encoding.isoLatin1.rawValue
@@ -174,7 +179,7 @@ nonisolated struct ClientConfig: Codable, Equatable, Sendable { // nonisolated: 
 	 list stored. They are still written out so an older build can read the
 	 file, and are only read back when there is no server list. */
 	var legacyServerAddress: String?
-	var legacyServerPort = ClientConfigDefaults.serverPort
+	var legacyServerPort = ConnectionDefaults.serverPort
 	var legacyPrefersSecuredConnection = false
 
 	init(connectionName: String? = nil) {

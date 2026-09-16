@@ -22,15 +22,16 @@ struct TranscriptControllerRemovalTests {
 		)
 		try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
 		defer { try? FileManager.default.removeItem(at: directory) }
-		let store = ScrollbackStore(filenameStore: ScrollbackFilenameFixture("removal.sqlite"))
+		let store = ScrollbackStore(filenameStore: ScrollbackFilenameFixture("removal.sqlite").store)
 		let historyClient = ScrollbackClient(
-			store: store, databaseDirectory: { directory.path }, reportFailure: { Issue.record(Comment(rawValue: $0)) }
+			store: .store(store), databaseDirectory: { directory.path },
+			reportFailure: { Issue.record(Comment(rawValue: $0)) }
 		)
 		let history = Scrollback(client: historyClient)
 		let client = Client(config: ClientConfig())
 		let window = MainWindow(contentRect: .zero, styleMask: .borderless, backing: .buffered, defer: false)
 		let controller = TranscriptController(
-			client: client, in: window, inlineImageLoader: InlineImageLoader(), historicLog: history
+			client: client, in: window, inlineImageLoader: InlineImageLoader(), scrollback: history
 		)
 		controller.loadsHistoryLazily = { false }
 		controller.historyPageFetcher = { await historyClient.fetchOutcome($0) }
@@ -58,15 +59,15 @@ struct TranscriptControllerRemovalTests {
 		#expect(controller.backingView == nil)
 		#expect(!controller.viewIsLoaded)
 		#expect(view.displayedLines.isEmpty)
-		#expect((controller.historicLogMutationTask == nil) == preservingLocalData)
-		await controller.historicLogMutationTask?.value
+		#expect((controller.scrollbackMutationTask == nil) == preservingLocalData)
+		await controller.scrollbackMutationTask?.value
 		await controller.drainRenderJobs()
 		#expect(!completed)
 		// Later registry/application teardown must not turn a preserving removal into deletion.
 		presentation.tearDown(.applicationTermination)
 		presentation.tearDown(.permanentRemoval)
 		if preservingLocalData {
-			#expect(controller.historicLogMutationTask == nil)
+			#expect(controller.scrollbackMutationTask == nil)
 		}
 		await historyClient.prepareForTermination()
 		#expect(await store.openDatabase(inDirectory: directory.path).isOpen)

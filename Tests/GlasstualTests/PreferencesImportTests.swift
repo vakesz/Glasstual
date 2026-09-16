@@ -84,27 +84,6 @@ struct PreferencesImportTests {
 		#expect(archive.ignoredKeys.contains(name))
 	}
 
-	/** The per-event notification settings are named from an event and a
-	 setting at the point of use, so no declaration lists them one by one. The
-	 family is what says a sound is a string and everything else is a flag —
-	 without it, a catalogued name was the one import path that accepted an
-	 arbitrary property list. */
-	@Test("A family-catalogued name is held to the shape its family declares")
-	func familyCataloguedNamesAreCoerced() throws {
-		let sound = NotificationEvent.highlight.preferenceKeyName(for: .sound)
-		let flag = NotificationEvent.highlight.preferenceKeyName(for: .enabled)
-
-		#expect(Preferences.coerce("Beep", forKey: sound) == .string("Beep"))
-		#expect(Preferences.coerce("yes", forKey: flag) == .boolean(true))
-		#expect(Preferences.coerce(["a", "b"], forKey: sound) == nil)
-		#expect(Preferences.coerce(["nested": ["deeper": 1]], forKey: flag) == nil)
-		#expect(Preferences.coerce(.data(Data("blob".utf8)), forKey: "NotificationType -> Made Up -> Setting") == nil)
-
-		#expect(throws: PreferencesTransferError.self) {
-			try PreferencesArchive.decode(Self.encoded([flag: ["nested": 1]]))
-		}
-	}
-
 	/// A complete archive has to list every declared, exportable key, so the
 	/// fixture fills in whatever the test itself does not care about.
 	private static func encoded(_ values: [String: PropertyListValue]) throws -> Data {

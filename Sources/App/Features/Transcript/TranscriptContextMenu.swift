@@ -60,18 +60,18 @@ final class TranscriptContextMenu: NSObject {
 
 	func channelNameDoubleClicked(in view: TranscriptView) {
 		guard let channelName = view.takeContextMenuTarget().channelName else { return }
-		AppServices.delegate.menuController?.actionCoordinator.joinChannelClicked(channelName)
+		AppServices.delegate.menuController?.joinChannelClicked(channelName)
 	}
 
 	func nicknameDoubleClicked(in view: TranscriptView) {
 		guard let nickname = view.takeContextMenuTarget().nickname else { return }
-		guard let commands = AppServices.delegate.menuController?.actionCoordinator else { return }
+		guard let commands = AppServices.delegate.menuController else { return }
 		commands.pointedNickname = nickname
 		commands.memberInChannelViewDoubleClicked(nil)
 	}
 
 	func topicBarDoubleClicked() {
-		AppServices.delegate.menuController?.actionCoordinator.showChannelModifyTopicSheet(nil)
+		AppServices.delegate.menuController?.showChannelModifyTopicSheet(nil)
 	}
 
 	/** Reacts with the emoji a chip in the transcript stands for.
@@ -85,7 +85,7 @@ final class TranscriptContextMenu: NSObject {
 			nickname: nil,
 			excerpt: nil
 		).reacting(with: reaction.emoji)
-		AppServices.delegate.menuController?.actionCoordinator.reactToMessage(sender)
+		AppServices.delegate.menuController?.reactToMessage(sender)
 	}
 
 	private func menuItems(
@@ -106,7 +106,7 @@ final class TranscriptContextMenu: NSObject {
 		}
 		if let channelName = target.channelName {
 			return copiedMenuItems(
-				from: AppServices.delegate.menuController?.channelViewChannelNameMenu,
+				from: AppServices.delegate.menuController?.transcriptChannelNameMenu,
 				userInfo: channelName
 			)
 		}
@@ -125,7 +125,7 @@ final class TranscriptContextMenu: NSObject {
 	private func inlineImageMenuItems(for target: TranscriptContextTarget) -> [NSMenuItem] {
 		var items: [NSMenuItem] = []
 		let copy = NSMenuItem(
-			title: TranscriptViewStrings.copyImage,
+			title: String(localized: .Transcript.copyImage),
 			action: #selector(copyInlineImage(_:)),
 			keyEquivalent: ""
 		)
@@ -135,7 +135,7 @@ final class TranscriptContextMenu: NSObject {
 		items.append(copy)
 
 		let save = NSMenuItem(
-			title: TranscriptViewStrings.saveImage,
+			title: String(localized: .Transcript.saveImage),
 			action: #selector(saveInlineImage(_:)),
 			keyEquivalent: ""
 		)
@@ -147,7 +147,7 @@ final class TranscriptContextMenu: NSObject {
 		if let address = target.inlineImageURL, URL(string: address) != nil {
 			items.append(.separator())
 			let open = NSMenuItem(
-				title: TranscriptViewStrings.openImageLink,
+				title: String(localized: .Transcript.openImageLink),
 				action: #selector(openInlineImageLink(_:)),
 				keyEquivalent: ""
 			)
@@ -196,7 +196,7 @@ final class TranscriptContextMenu: NSObject {
 
 	private func linkMenuItems(for address: String) -> [NSMenuItem] {
 		var items = copiedMenuItems(
-			from: AppServices.delegate.menuController?.channelViewURLMenu,
+			from: AppServices.delegate.menuController?.transcriptURLMenu,
 			userInfo: address
 		)
 		items.append(.separator())
@@ -250,7 +250,7 @@ final class TranscriptContextMenu: NSObject {
 		else {
 			return []
 		}
-		return AppServices.delegate.menuController?.actionCoordinator.messageReplyItems(
+		return AppServices.delegate.menuController?.messageReplyItems(
 			messageIdentifier: messageIdentifier,
 			nickname: target.lineNickname,
 			excerpt: target.lineExcerpt
@@ -263,8 +263,7 @@ final class TranscriptContextMenu: NSObject {
 			openInBackground.toggle()
 		}
 
-		let scheme = url.scheme?.lowercased()
-		if scheme == "http" || scheme == "https" || scheme == "glasstual" || scheme == "textual" {
+		if LinkParser.opensDirectly(url) {
 			OpenLink.open(url: url, inBackground: openInBackground)
 			return
 		}
@@ -274,7 +273,7 @@ final class TranscriptContextMenu: NSObject {
 		 the address itself is the message: it is the one fact that decides
 		 whether the reader wants this at all. */
 		let request = AlertRequest(
-			title: TranscriptViewStrings.openLinkTitle(
+			title: TranscriptContextMenu.openLinkTitle(
 				applicationName: NSWorkspace.shared.textual_nameOfApplication(toOpen: url) ?? ""
 			),
 			body: url.absoluteString,
@@ -288,5 +287,17 @@ final class TranscriptContextMenu: NSObject {
 			guard !Task.isCancelled, outcome.response == .alternate else { return }
 			OpenLink.open(url: url, inBackground: openInBackground)
 		}
+	}
+}
+
+extension TranscriptContextMenu {
+	/** The question asked before a link is handed to another application.
+
+	 macOS does not always name the application that would open an address, and
+	 a name that is missing must not be quoted as an empty one. */
+	static func openLinkTitle(applicationName: String) -> String {
+		applicationName.isEmpty
+			? String(localized: .Transcript.openLinkInUnknownApplication)
+			: String(localized: .Transcript.openLinkInApplication(applicationName))
 	}
 }

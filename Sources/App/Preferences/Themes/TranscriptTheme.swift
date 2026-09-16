@@ -424,9 +424,9 @@ nonisolated enum TranscriptThemeCodingError: LocalizedError, Equatable, Sendable
 	var errorDescription: String? {
 		switch self {
 		case .invalidDocument:
-			TranscriptThemeStrings.invalidDocument
+			String(localized: .TranscriptTheme.invalidDocument)
 		case let .unsupportedVersion(version):
-			TranscriptThemeStrings.unsupportedVersion(version)
+			String(localized: .TranscriptTheme.unsupportedVersion(version))
 		}
 	}
 }

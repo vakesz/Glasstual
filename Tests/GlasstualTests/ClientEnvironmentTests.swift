@@ -45,9 +45,9 @@ struct ClientEnvironmentTests {
 	@Test("A client made by a world carries that world's environment")
 	func clientsInheritTheWorldEnvironment() {
 		let fixture = ClientEnvironmentFixture()
-		let client = fixture.world.createClient(with: ClientConfig())
+		let client = fixture.clientDirectory.createClient(with: ClientConfig())
 
-		#expect(client.world === fixture.world)
+		#expect(client.clientDirectory === fixture.clientDirectory)
 		#expect(client.output === fixture.output)
 		#expect(client.menu === fixture.menu)
 	}
@@ -59,7 +59,7 @@ struct ClientEnvironmentTests {
 		preferences.defaultKickMessage = "so long"
 		let fixture = ClientEnvironmentFixture(preferences: preferences)
 
-		let client = fixture.world.createClient(with: ClientConfig())
+		let client = fixture.clientDirectory.createClient(with: ClientConfig())
 
 		#expect(client.environment.preferences.showJoinLeave)
 		#expect(client.environment.preferences.defaultKickMessage == "so long")
@@ -68,12 +68,12 @@ struct ClientEnvironmentTests {
 	@Test("Refreshing the world's snapshot republishes it to every client")
 	func refreshReachesExistingClients() {
 		let fixture = ClientEnvironmentFixture(preferences: ClientPreferences())
-		let client = fixture.world.createClient(with: ClientConfig())
+		let client = fixture.clientDirectory.createClient(with: ClientConfig())
 		#expect(client.environment.preferences.showJoinLeave == false)
 
 		var updated = ClientPreferences()
 		updated.showJoinLeave = true
-		fixture.world.applyPreferences(updated)
+		fixture.clientDirectory.applyPreferences(updated)
 
 		#expect(client.environment.preferences.showJoinLeave)
 	}
@@ -135,7 +135,7 @@ struct ClientEnvironmentTests {
 	@Test("Services are shared by reference, so installing a window reaches the clients")
 	func servicesAreSharedByReference() {
 		let fixture = ClientEnvironmentFixture()
-		let client = fixture.world.createClient(with: ClientConfig())
+		let client = fixture.clientDirectory.createClient(with: ClientConfig())
 
 		fixture.environment.services.output = nil
 

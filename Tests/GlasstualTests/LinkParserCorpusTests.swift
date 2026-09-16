@@ -149,10 +149,10 @@ struct LinkParserCorpusTests {
 		#expect(located.isEmpty, "\(text) produced \(located.map(\.stringValue))")
 	}
 
-	// MARK: - Ranges and whole-string matches
+	// MARK: - Ranges and identity
 
 	@Test
-	func reportsTheRangeAndStrictnessOfEachMatch() throws {
+	func reportsTheRangeAndIdentityOfEachMatch() throws {
 		let text = "visit example.com and http://other.example/a"
 		let located = LinkParser.locateLinks(in: text)
 
@@ -162,34 +162,7 @@ struct LinkParserCorpusTests {
 		let second = try #require(located.last)
 
 		#expect(first.range == NSRange(location: 6, length: 11))
-		#expect(first.strictMatch == false)
-		#expect(second.strictMatch)
 		#expect(first.uniqueIdentifier != second.uniqueIdentifier)
-	}
-
-	@Test(arguments: [
-		"example.com",
-		"http://example.com/a",
-		"https://example.com/a",
-	])
-	func addsASchemeWhenTheWholeStringIsALink(address: String) {
-		#expect(LinkParser.urlWithProperScheme(address) != nil)
-	}
-
-	@Test(arguments: [
-		"not a url at all",
-		"see example.com here",
-		"javascript:alert(1)",
-		"file:///etc/passwd",
-		"",
-	])
-	func returnsNilWhenTheStringIsNotEntirelyALink(address: String) {
-		#expect(LinkParser.urlWithProperScheme(address) == nil)
-	}
-
-	@Test
-	func prependsTheDefaultSchemeToBareDomains() {
-		#expect(LinkParser.urlWithProperScheme("example.com") == "http://example.com")
 	}
 }
 

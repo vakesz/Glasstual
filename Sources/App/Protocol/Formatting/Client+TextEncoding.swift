@@ -96,7 +96,6 @@ extension Client {
 		let data = textEncodingPolicy.encode(string)
 		if data == nil {
 			clientTextEncodingLogger.error("NSData encode failure")
-			Logging.logStackTrace(ofType: .error)
 		}
 		return data
 	}
@@ -105,7 +104,6 @@ extension Client {
 		let string = textEncodingPolicy.decode(data)
 		if string == nil {
 			clientTextEncodingLogger.error("NSData decode failure")
-			Logging.logStackTrace(ofType: .error)
 		}
 		return string
 	}

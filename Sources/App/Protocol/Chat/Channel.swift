@@ -88,7 +88,7 @@ class Channel: ChatItem {
 	 supplies one and on this Mac's otherwise. `nil` until the channel is joined.
 
 	 A bouncer or a server replays the tail of a conversation right after the
-	 JOIN, so this is the reference point `ChannelJoinBurstPolicy` measures that
+	 JOIN, so this is the reference point `JoinBurstPolicy` measures that
 	 burst against. */
 	private(set) var joinedAt: Date?
 	private(set) var modeInfo: ChannelModeState?

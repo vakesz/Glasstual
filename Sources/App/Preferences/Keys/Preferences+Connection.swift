@@ -86,7 +86,7 @@ nonisolated extension Preferences { // nonisolated: value
 			default: false
 		)
 		static let awayOnScreenSleep = PreferenceKey("SetAwayOnScreenSleep", default: false)
-		static let preferModernCiphers = PreferenceKey("PreferModernCiphers", default: false)
+		static let preferModernCiphers = PreferenceKey("PreferModernCiphers", default: true)
 		static let displayServerMOTD = PreferenceKey("DisplayServerMessageOfTheDayOnConnect", default: true)
 		static let rejoinOnKick = PreferenceKey("RejoinChannelOnLocalKick", default: false)
 		static let sendTypingNotifications = PreferenceKey("SendTypingNotifications", default: true)
@@ -206,3 +206,25 @@ nonisolated extension Preferences { // nonisolated: value
 		]
 	}
 }
+
+/** Where a notice that names no channel is shown.
+
+ Stored as the integer it declares; a stored value with no matching case falls
+ back to the key's declared default. */
+enum NoticeSendLocation: UInt, Sendable {
+	case serverConsole
+	case selectedChannel
+	case query
+}
+
+extension NoticeSendLocation: PreferenceEnum {}
+
+/// Which parts of a hostmask a generated ban covers.
+enum HostmaskBanFormat: UInt, Sendable {
+	case whnin
+	case whainn
+	case whanni
+	case exact
+}
+
+extension HostmaskBanFormat: PreferenceEnum {}

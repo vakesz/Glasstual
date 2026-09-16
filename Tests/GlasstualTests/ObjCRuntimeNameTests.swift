@@ -27,14 +27,6 @@ import Testing
 @Suite("Objective-C runtime names")
 @MainActor
 struct ObjCRuntimeNameTests {
-	/// `NSKeyedArchiver` writes the class name into every blob in the historic
-	/// log store, so an installation that upgrades has to keep reading the name
-	/// its existing rows were written with.
-	@Test("The archived log line keeps the runtime name its blobs were written with")
-	func archivedLogLineKeepsItsRuntimeName() {
-		#expect(NSStringFromClass(LogLineArchive.self) == "TVCLogLine")
-	}
-
 	/// `publisher(for:)` resolves a key path through key-value observing, which
 	/// needs the property visible to the Objective-C runtime: a key path to a
 	/// property without `@objc` has no KVC string and the observation traps the
