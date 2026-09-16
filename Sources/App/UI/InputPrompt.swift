@@ -81,13 +81,15 @@ struct InputPromptView: View {
 					.fixedSize(horizontal: false, vertical: true)
 			}
 
-			TextField(text: $presentation.value, prompt: promptText) { EmptyView() }
-				.labelsHidden()
-				.focused($inputIsFocused)
-				.onSubmit {
-					guard hasInput else { return }
-					submit()
-				}
+			TextField(text: $presentation.value, prompt: promptText) {
+				Text(verbatim: presentation.request.title)
+			}
+			.labelsHidden()
+			.focused($inputIsFocused)
+			.onSubmit {
+				guard hasInput else { return }
+				submit()
+			}
 
 			HStack {
 				Spacer()

@@ -77,6 +77,10 @@ public extension IRCClient {
 	}
 
 	func connect(_ mode: IRCClientConnectMode, bypassProxy: Bool) {
+		connect(mode, bypassProxy: bypassProxy, retryingServerIdentifier: nil)
+	}
+
+	private func connect(_ mode: IRCClientConnectMode, bypassProxy: Bool, retryingServerIdentifier: String?) {
 		guard isTerminating == false else { return }
 		guard isConnecting == false, isConnected == false, isQuitting == false, isDisconnecting == false else {
 			return
@@ -85,9 +89,11 @@ public extension IRCClient {
 			connectionLifecycleLogger.info("Refusing to connect because the system is sleeping")
 			return
 		}
+		let configurationSnapshot = config
+		let requestedEndpoint = pendingEndpoint
 		let diagnostics = ConnectionDiagnostics()
 		diagnostics.record(.requested)
-		guard var socketConfig = takeConnectionEndpoint() else { return }
+		guard var socketConfig = takeConnectionEndpoint(retryingServerIdentifier: retryingServerIdentifier) else { return }
 		socketConfig.diagnostics = diagnostics
 		cancelConnectCommandSettling()
 		connectType = mode
@@ -120,19 +126,49 @@ public extension IRCClient {
 			if socketConfig.proxyType == .socks5 || socketConfig.proxyType == .HTTP {
 				socketConfig.proxyPort = config.proxyPort
 				socketConfig.proxyAddress = config.proxyAddress
-				socketConfig.proxyPassword = config.proxyPassword
 				socketConfig.proxyUsername = config.proxyUsername
 			}
 		}
 		socketConfig.floodControlDelayInterval = config.floodControlDelayTimerInterval
 		socketConfig.floodControlMaximumMessages = config.floodControlMaximumMessages
 		socketConfig.connectionPrefersModernCiphersOnly = environment.preferences.preferModernCiphers
-		let connection = Connection(config: socketConfig, onClient: self)
-		socket = connection
-		connection.open()
+		let session = startup.identifier
+		let loadCredentials = credentialLoader
+		let selectedServer = server
+		let channels = channelList.map(\.config)
+		let items = configurationSnapshot.keychainItems + channels.map(\.keychainItem)
+			+ (selectedServer.map { [$0.keychainItem] } ?? [])
+		pendingCredentialTask = Task { [weak self] in
+			let stored = await loadCredentials(items)
+			guard !Task.isCancelled, let self, !isTerminating, isConnecting, startup.identifier == session else { return }
+			guard config == configurationSnapshot else {
+				// Refresh the same attempt. Endpoint selection has already consumed
+				// an explicit target or advanced the configured-server rotation.
+				pendingCredentialTask = nil
+				isConnecting = false
+				pendingEndpoint = requestedEndpoint
+				connect(mode, bypassProxy: bypassProxy, retryingServerIdentifier: selectedServer?.uniqueIdentifier)
+				return
+			}
+			var edits = configurationSnapshot.pendingKeychainEdits
+			for channel in channels {
+				edits.merge(channel.pendingKeychainEdits) { _, newest in newest }
+			}
+			if let selectedServer {
+				edits[selectedServer.keychainItem] = selectedServer.pendingServerPassword
+			}
+			sessionCredentials.install(stored, items: items, applying: edits)
+			socketConfig.proxyPassword = configurationSnapshot.pendingProxyPassword.value(
+				orStored: sessionCredentials.password(for: configurationSnapshot.proxyPasswordKeychainItem)
+			)
+			let connection = Connection(config: socketConfig, onClient: self)
+			socket = connection
+			pendingCredentialTask = nil
+			connection.open()
+		}
 	}
 
-	internal func takeConnectionEndpoint() -> IRCConnectionConfig? {
+	internal func takeConnectionEndpoint(retryingServerIdentifier: String? = nil) -> IRCConnectionConfig? {
 		let servers = config.serverList
 		guard servers.isEmpty == false else {
 			printDebugInformation(toConsole: IRCConnectionStrings.noConfiguredServers)
@@ -145,7 +181,9 @@ public extension IRCClient {
 		var secured = endpoint?.secured ?? false
 		server = endpoint?.credentialEndpoint
 		if (host as NSString).isValidInternetAddress == false {
-			let nextIndex = lastServerSelected == UInt(NSNotFound) ? 0 : (lastServerSelected + 1) % UInt(servers.count)
+			let retryIndex = servers.firstIndex { $0.uniqueIdentifier == retryingServerIdentifier }
+			let nextIndex = retryIndex.map(UInt.init)
+				?? (lastServerSelected == UInt(NSNotFound) ? 0 : (lastServerSelected + 1) % UInt(servers.count))
 			lastServerSelected = nextIndex
 			let selected = servers[Int(nextIndex)]
 			host = selected.serverAddress
@@ -226,6 +264,17 @@ public extension IRCClient {
 	}
 
 	func disconnect() {
+		if isConnecting, socket == nil {
+			// Credential preparation is already a connection attempt, but has no
+			// socket delegate to deliver its completion to removal/reconnect callers.
+			isDisconnecting = true
+			output?.updateTitle(for: self)
+			NotificationCenter.default.post(name: .IRCClientWillDisconnect, object: self)
+			changeStateOff()
+			invokeDisconnectCallbacks()
+			NotificationCenter.default.post(name: .IRCClientDidDisconnect, object: self)
+			return
+		}
 		cancelPendingSessionTasks()
 		cancelDelayedDisconnect()
 		guard isConnecting || isConnected, let socket else { return }
@@ -245,6 +294,12 @@ public extension IRCClient {
 	func quit(withComment comment: String) {
 		guard isConnecting || isConnected, isQuitting == false, isDisconnecting == false else { return }
 		isQuitting = true
+		if isConnecting, socket == nil {
+			cancelReconnect()
+			NotificationCenter.default.post(name: .IRCClientWillSendQuit, object: self)
+			disconnect()
+			return
+		}
 		cancelPendingSessionTasks()
 		socket?.beginCloseDeadline()
 		cancelReconnect()
@@ -279,6 +334,16 @@ public extension IRCClient {
 	}
 
 	func cancelPendingSessionTasks() {
+		outboundTextProducer?.cancel()
+		if pendingCredentialTask != nil, socket == nil {
+			isConnecting = false
+			isQuitting = false
+			output?.updateTitle(for: self)
+		}
+		pendingCredentialTask?.cancel()
+		pendingCredentialTask = nil
+		pendingConfirmationTasks.values.forEach { $0.cancel() }
+		pendingConfirmationTasks.removeAll()
 		readMarkerTimer.stop()
 		readMarkerPendingChannels.removeAll()
 		resetSASLNegotiation()

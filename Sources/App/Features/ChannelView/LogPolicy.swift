@@ -41,6 +41,10 @@ public final class LogPolicyTarget: NSObject {
 
 @MainActor
 public final class LogPolicy: NSObject {
+	private var openingLinkTask: Task<Void, Never>?
+
+	isolated deinit { openingLinkTask?.cancel() }
+
 	func contextMenu(for transcript: LogView, defaultMenuItems: [NSMenuItem]) -> NSMenu {
 		let menu = NSMenu()
 		for item in menuItems(
@@ -269,17 +273,19 @@ public final class LogPolicy: NSObject {
 		 Cancel is the one Return presses. The buttons name what they do, and
 		 the address itself is the message: it is the one fact that decides
 		 whether the reader wants this at all. */
-		let cancelled = Alerts.modalAlert(
-			withMessage: url.absoluteString,
+		let request = AlertRequest(
 			title: TranscriptViewStrings.openLinkTitle(
 				applicationName: NSWorkspace.shared.textual_nameOfApplication(toOpen: url) ?? ""
 			),
+			body: url.absoluteString,
 			defaultButton: PromptStrings.Action.cancel,
 			alternateButton: PromptStrings.Action.open,
-			suppressionKey: LogPolicySuppressionKey.openExternalURL.rawValue,
-			suppressionText: nil
+			suppressionKey: LogPolicySuppressionKey.openExternalURL.rawValue
 		)
-		if cancelled == false {
+		openingLinkTask?.cancel()
+		openingLinkTask = Task {
+			let outcome = await Alerts.run(request, on: .mainWindow)
+			guard !Task.isCancelled, outcome.response == .alternate else { return }
 			OpenLink.open(url: url, inBackground: openInBackground)
 		}
 	}

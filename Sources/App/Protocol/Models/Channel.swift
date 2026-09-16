@@ -100,6 +100,8 @@ open class Channel: TreeItem {
 
 	private var logFile: FileLogger?
 	private var statusChangedByAction = false
+	private var cachedSecretKey: String?
+	private var credentialLoadTask: Task<Void, Never>?
 
 	@available(*, unavailable)
 	override public init() {
@@ -111,7 +113,7 @@ open class Channel: TreeItem {
 
 		super.init()
 
-		self.config.writeSecretKeyToKeychain()
+		persistSecretKey()
 	}
 
 	public func updateConfig(_ config: ChannelConfig) {
@@ -144,7 +146,7 @@ open class Channel: TreeItem {
 		}
 
 		self.config = config
-		self.config.writeSecretKeyToKeychain()
+		persistSecretKey()
 
 		if updateStoredChannelList {
 			associatedClient?.updateStoredChannelList()
@@ -192,7 +194,34 @@ open class Channel: TreeItem {
 	}
 
 	public var secretKey: String? {
-		config.secretKey
+		let stored: String? = if let client = associatedClient, client.sessionCredentials.hasResolved(config.keychainItem) {
+			client.sessionCredentials.password(for: config.keychainItem)
+		} else {
+			cachedSecretKey
+		}
+		return config.pendingSecretKey.value(orStored: stored)
+	}
+
+	private func persistSecretKey() {
+		credentialLoadTask?.cancel()
+		let edits = config.pendingKeychainEdits
+		let item = config.keychainItem
+		if !edits.isEmpty {
+			cachedSecretKey = config.pendingSecretKey.value(orStored: cachedSecretKey)
+			KeychainPersistence.shared.persist(edits) { [weak self] committed in
+				guard let self else { return }
+				let acknowledged = committed.filter { config.pendingKeychainEdits[$0.key] == $0.value }
+				associatedClient?.sessionCredentials.apply(acknowledged)
+				config.acknowledgeKeychainEdits(acknowledged)
+			}
+		} else {
+			credentialLoadTask = Task { [weak self] in
+				let stored = await KeychainSecretLoader.passwords(for: [item])
+				guard !Task.isCancelled, let self, config.keychainItem == item, config.pendingSecretKey == .unchanged else { return }
+				cachedSecretKey = stored[item]
+				credentialLoadTask = nil
+			}
+		}
 	}
 
 	public var autoJoin: Bool {
@@ -349,13 +378,15 @@ open class Channel: TreeItem {
 
 	@MainActor func prepareForRemoval(preservingLocalData: Bool) {
 		statusChangedByAction = true
+		credentialLoadTask?.cancel()
+		credentialLoadTask = nil
 		resetStatus(.terminated)
 		closeDirectChatConnection()
 		closeLogFile()
 
 		associatedClient?.output?.closeSheets(forChannelId: uniqueIdentifier)
 		if !preservingLocalData {
-			config.destroySecretKeyKeychainItem()
+			KeychainPersistence.shared.persist([config.keychainItem: .cleared])
 			associatedClient?.output?.destroyInputHistory(for: self)
 		}
 		presentation?.tearDown(preservingLocalData ? .preservingRemoval : .permanentRemoval)
@@ -366,12 +397,14 @@ open class Channel: TreeItem {
 		let channelIdentifier = uniqueIdentifier
 		Self.terminationLogger.debug("Preparing channel: <\(channelIdentifier, privacy: .public)>")
 		statusChangedByAction = true
+		credentialLoadTask?.cancel()
+		credentialLoadTask = nil
 		resetStatus(.terminated)
 		closeDirectChatConnection()
 		closeLogFile()
 
 		if isPrivateMessage {
-			config.destroySecretKeyKeychainItem()
+			KeychainPersistence.shared.persist([config.keychainItem: .cleared])
 		}
 
 		let viewIdentifier = presentation?.presentationIdentifier ?? ""

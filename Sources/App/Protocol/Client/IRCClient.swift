@@ -51,7 +51,7 @@ public extension Notification.Name {
 	static let IRCClientWillSendQuit = Self("IRCClientWillSendQuitNotification")
 	static let IRCClientWillDisconnect = Self("IRCClientWillDisconnectNotification")
 	static let IRCClientDidDisconnect = Self("IRCClientDidDisconnectNotification")
-	static let IRCClientUserNicknameChanged = Self("IRCClientUserNicknameChangedNotification")
+	nonisolated static let IRCClientUserNicknameChanged = Self("IRCClientUserNicknameChangedNotification") // nonisolated: let
 }
 
 open class IRCClient: TreeItem {
@@ -94,8 +94,12 @@ open class IRCClient: TreeItem {
 	}
 
 	public var config: ClientConfig {
-		// A changed configuration may carry a changed password.
-		didSet { sessionCredentials.forget() }
+		didSet {
+			if oldValue.uniqueIdentifier != config.uniqueIdentifier {
+				sessionCredentials.forget()
+			}
+			sessionCredentials.apply(config.pendingKeychainEdits)
+		}
 	}
 
 	var sessionCredentials = SessionCredentials()
@@ -175,9 +179,17 @@ open class IRCClient: TreeItem {
 	 cannot have a stale block act on the new session. */
 	var pendingDisconnectTask: Task<Void, Never>?
 	var pendingConnectionTask: Task<Void, Never>?
+	var pendingCredentialTask: Task<Void, Never>?
+	var credentialLoader: @Sendable ([KeychainItem]) async -> [KeychainItem: String] = {
+		await KeychainSecretLoader.passwords(for: $0)
+	}
+
 	var startup = IRCStartupCoordinator()
 	var trackedUserPopulationTask: Task<Void, Never>?
 	var rejoinTasks: [String: Task<Void, Never>] = [:]
+	var pendingConfirmationTasks: [UUID: Task<Void, Never>] = [:]
+	var renderAdmission = TranscriptRenderAdmission()
+	var outboundTextProducer: OutboundTextProducer?
 	public var connectType: IRCClientConnectMode = .normal
 	public var disconnectType: IRCClientDisconnectMode = .normal
 	/// The whole of `CAP` negotiation: what the server offered, what is still
@@ -393,6 +405,8 @@ open class IRCClient: TreeItem {
 		saslScramTask?.cancel()
 		pendingDisconnectTask?.cancel()
 		pendingConnectionTask?.cancel()
+		pendingCredentialTask?.cancel()
+		outboundTextProducer?.cancel()
 		notifications.cancelAll()
 		[
 			autojoinTimer, autojoinDelayedWarningTimer,
@@ -402,6 +416,7 @@ open class IRCClient: TreeItem {
 		startup.cancel()
 		trackedUserPopulationTask?.cancel()
 		rejoinTasks.values.forEach { $0.cancel() }
+		pendingConfirmationTasks.values.forEach { $0.cancel() }
 		labeledDeliveryDeadlineTask?.cancel()
 	}
 

@@ -35,7 +35,7 @@ struct PreferencesRootView: View {
 		return NavigationSplitView(columnVisibility: .constant(.all)) {
 			/* The rows are identified by their selection, so the list needs no
 			 tags: choosing one hands back the destination it stands for. */
-			List(model.destinations, selection: selection) { destination in
+			List(model.matchingDestinations, selection: selection) { destination in
 				Label(destination.title, systemImage: destination.symbolName)
 			}
 			.listStyle(.sidebar)
@@ -47,10 +47,21 @@ struct PreferencesRootView: View {
 			 column's content: on the split view itself it does nothing. */
 			.toolbar(removing: .sidebarToggle)
 			.navigationSplitViewColumnWidth(PreferencesMetrics.sidebarWidth)
+			.searchable(text: $model.searchText, placement: .sidebar, prompt: .Settings.searchPlaceholder)
 		} detail: {
-			detail
+			if model.matchingDestinations.isEmpty {
+				ContentUnavailableView.search(text: model.searchText)
+			} else {
+				detail
+			}
 		}
 		.navigationSplitViewStyle(.balanced)
+		.onChange(of: model.searchText) {
+			guard let first = model.matchingDestinations.first,
+			      model.matchingDestinations.contains(where: { $0.selection == model.selection }) == false
+			else { return }
+			model.select(first.selection)
+		}
 		.modifier(PreferencesTransferPresentation(session: .shared, host: .settings))
 		/* The Settings window takes its size from here and nowhere else: one
 		 ideal size for every pane, so moving between them does not resize the

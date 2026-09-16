@@ -23,7 +23,7 @@ struct FileTransferResumeSafetyTests {
 		#expect(FileManager.default.createFile(atPath: existing, contents: Data(repeating: 0xAB, count: 512)))
 
 		let transfer = try receiver(filename: "photo.jpg", in: directory)
-		transfer.claimDestinationFilename()
+		await transfer.claimDestinationFilename()
 
 		#expect(transfer.filename != "photo.jpg")
 		/* Nothing to resume from, so the client offers no RESUME at all. */
@@ -38,12 +38,12 @@ struct FileTransferResumeSafetyTests {
 		defer { try? FileManager.default.removeItem(atPath: directory) }
 		let transfer = try receiver(filename: "photo.jpg", in: directory)
 
-		transfer.claimDestinationFilename()
+		await transfer.claimDestinationFilename()
 		let claimed = transfer.filename
 		let file = try #require(transfer.ownedFile)
 		try await file.write(Data(count: 128), at: 0)
 
-		transfer.claimDestinationFilename()
+		await transfer.claimDestinationFilename()
 
 		#expect(transfer.filename == claimed)
 		#expect(try await file.size() == 128)

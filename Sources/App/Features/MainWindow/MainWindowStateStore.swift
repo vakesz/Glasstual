@@ -10,6 +10,7 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import CoreGraphics
 import Foundation
 
@@ -83,26 +84,26 @@ struct MainWindowStateStore {
 	}
 
 	func saveLayout(_ state: MainWindowLayoutState) {
-		defaults.set(state.isServerListVisible, forKey: Preferences.MainWindow.serverListVisible.name)
-		defaults.set(state.isMemberListVisible, forKey: Preferences.MainWindow.memberListVisible.name)
+		defaults[Preferences.MainWindow.serverListVisible] = state.isServerListVisible
+		defaults[Preferences.MainWindow.memberListVisible] = state.isMemberListVisible
 	}
 
 	func loadLayout() -> MainWindowLayoutState {
 		MainWindowLayoutState(
-			isServerListVisible: storedBoolean(for: Preferences.MainWindow.serverListVisible) ?? true,
-			isMemberListVisible: storedBoolean(for: Preferences.MainWindow.memberListVisible) ?? true
+			isServerListVisible: defaults[Preferences.MainWindow.serverListVisible],
+			isMemberListVisible: defaults[Preferences.MainWindow.memberListVisible]
 		)
 	}
 
 	func saveTextSizeMultiplier(_ multiplier: Double) {
-		defaults.set(multiplier, forKey: Preferences.MainWindow.textSizeMultiplier.name)
+		defaults[Preferences.MainWindow.textSizeMultiplier] = multiplier
 	}
 
 	/// The stored transcript zoom, or the declared default when what is stored
 	/// is not a zoom the window is willing to apply.
 	func loadTextSizeMultiplier() -> Double {
 		let key = Preferences.MainWindow.textSizeMultiplier
-		guard let stored = (defaults.object(forKey: key.name) as? NSNumber)?.doubleValue,
+		guard let stored = defaults[stored: key],
 		      key.accepts(stored)
 		else {
 			return key.defaultValue
@@ -113,27 +114,24 @@ struct MainWindowStateStore {
 
 	func saveSelection(itemIdentifier: String?) {
 		guard let itemIdentifier, itemIdentifier.isEmpty == false else {
-			defaults.removeObject(forKey: Preferences.MainWindow.serverListSelection.name)
+			defaults.removeValue(for: Preferences.MainWindow.serverListSelection)
 			return
 		}
-		defaults.set(itemIdentifier, forKey: Preferences.MainWindow.serverListSelection.name)
+		defaults.setPropertyListValue(.string(itemIdentifier), for: Preferences.MainWindow.serverListSelection)
 	}
 
 	func loadSelectionItemIdentifier() -> String? {
-		let key = Preferences.MainWindow.serverListSelection.name
-		if let identifier = defaults.string(forKey: key), !identifier.isEmpty {
+		let key = Preferences.MainWindow.serverListSelection
+		let stored = defaults.propertyListValue(for: key)
+		if let identifier = stored?.string, !identifier.isEmpty {
 			return identifier
 		}
-		guard let identifier = defaults.stringArray(forKey: key)?.last,
+		guard let identifier = stored?.stringArray?.last,
 		      !identifier.isEmpty
 		else {
 			return nil
 		}
-		defaults.set(identifier, forKey: key)
+		defaults.setPropertyListValue(.string(identifier), for: key)
 		return identifier
-	}
-
-	private func storedBoolean(for key: PreferenceKey<Bool>) -> Bool? {
-		(defaults.object(forKey: key.name) as? NSNumber)?.boolValue
 	}
 }

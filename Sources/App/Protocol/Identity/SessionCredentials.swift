@@ -3,40 +3,45 @@
  *       Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 
-/** The account credentials one connection authenticates with.
-
- The nickname password lives in the keychain, and a keychain read on the main
- actor is not free: it can wait on the security daemon or on an access prompt.
- SASL asks for the password every time it decides whether `sasl` can be
- requested, and NickServ asked on every notice it sent, so the read is made
- once and kept for the session. The client forgets it when the session ends and
- whenever its configuration changes, so an edited password is what the next
- read sees. */
+/// Credentials resolved before a connection opens. Pending edits can replace
+/// individual entries without performing Security calls on the main actor.
 struct SessionCredentials {
-	private enum CachedSecret {
-		case unread
-		case read(String?)
+	private var passwords: [KeychainItem: String] = [:]
+	private var resolvedItems: Set<KeychainItem> = []
+
+	func password(for item: KeychainItem) -> String? {
+		passwords[item]
 	}
 
-	private var nicknamePassword = CachedSecret.unread
+	func hasResolved(_ item: KeychainItem) -> Bool {
+		resolvedItems.contains(item)
+	}
+
+	mutating func install(_ stored: [KeychainItem: String], items: [KeychainItem], applying edits: KeychainPersistence.Edits) {
+		passwords = stored
+		resolvedItems = Set(items)
+		apply(edits)
+	}
+
+	mutating func apply(_ edits: KeychainPersistence.Edits) {
+		for (item, edit) in edits {
+			if edit != .unchanged {
+				resolvedItems.insert(item)
+			}
+			switch edit {
+			case .unchanged: break
+			case let .set(value): passwords[item] = value
+			case .cleared: passwords[item] = nil
+			}
+		}
+	}
 
 	/// Whether the notice saying a password was withheld from an unencrypted
 	/// connection has been printed for this session.
 	var reportedWithheldCredentials = false
-
-	/// The cached nickname password, reading it with `read` the first time.
-	mutating func nicknamePassword(reading read: () -> String?) -> String? {
-		if case let .read(password) = nicknamePassword {
-			return password
-		}
-
-		let password = read()
-		nicknamePassword = .read(password)
-
-		return password
-	}
 
 	mutating func forget() {
 		self = SessionCredentials()
@@ -45,10 +50,14 @@ struct SessionCredentials {
 
 @MainActor
 extension IRCClient {
-	/// The nickname password for this session, read from the keychain at most
-	/// once until ``SessionCredentials/forget()``.
+	/// Resolves the current pending edit over the session's stored snapshot.
 	var sessionNicknamePassword: String? {
-		sessionCredentials.nicknamePassword { config.nicknamePassword }
+		config.pendingNicknamePassword.value(orStored: sessionCredentials.password(for: config.nicknamePasswordKeychainItem))
+	}
+
+	var sessionServerPassword: String? {
+		guard let server else { return nil }
+		return server.pendingServerPassword.value(orStored: sessionCredentials.password(for: server.keychainItem))
 	}
 
 	/** Whether a password may be written to the socket as it stands.

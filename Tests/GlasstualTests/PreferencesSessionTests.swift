@@ -17,6 +17,40 @@ struct PreferencesSessionTests {
 
 	private static let cancellation = NSError(domain: NSCocoaErrorDomain, code: NSUserCancelledError)
 
+	@Test("External Settings navigation clears filters even for the already-selected destination", arguments: [
+		PreferencesSceneSelection.notifications, .style, .hiddenPreferences,
+	])
+	func externalNavigationClearsSearch(_ request: PreferencesSceneSelection) {
+		let rememberedSelection = Preferences.Internals.selectedPreferencePane.value
+		let session = PreferencesSession()
+		defer {
+			session.deactivate()
+			Preferences.Internals.selectedPreferencePane.value = rememberedSelection
+		}
+		let expected: PreferencesSelection = switch request {
+		case .notifications: .notifications
+		case .style: .style
+		case .hiddenPreferences: .advanced
+		case .default: .general
+		}
+		let unmatchedSearch = "__glasstual_no_settings_destination_7be2a913__"
+		session.model.searchText = unmatchedSearch
+		#expect(session.model.matchingDestinations.isEmpty)
+		session.activate(selection: request)
+		#expect(session.model.searchText.isEmpty)
+		#expect(session.model.selection == expected)
+		#expect(session.model.matchingDestinations.contains { $0.selection == expected })
+
+		// The second request does not change selection, so observing selection
+		// alone would leave the requested pane absent from the sidebar.
+		session.model.searchText = unmatchedSearch
+		#expect(session.model.matchingDestinations.isEmpty)
+		session.activate(selection: request)
+		#expect(session.model.searchText.isEmpty)
+		#expect(session.model.selection == expected)
+		#expect(session.model.matchingDestinations.contains { $0.selection == expected })
+	}
+
 	@Test("File importer dismissal retains the request until its completion is applied")
 	func importCompletionSurvivesDismissal() throws {
 		let model = PreferencesPaneModel()

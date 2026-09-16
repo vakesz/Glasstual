@@ -67,7 +67,7 @@ struct SystemProfilerReportTests {
 		)
 	}
 
-	private func makeClient(sending sent: SentLines) -> PluginClient {
+	private func makeClient(sending sent: SentLines, sessionIsCurrent: @escaping () -> Bool = { true }) -> PluginClient {
 		PluginClient(
 			identifier: "client",
 			userNickname: "tester",
@@ -95,8 +95,33 @@ struct SystemProfilerReportTests {
 			printMessage: { _, _, _, _, _, _, _, completion in completion(false) },
 			markUnread: { _, _ in },
 			markHighlight: { _ in },
-			refreshSidebar: {}
+			refreshSidebar: {},
+			sessionIsCurrent: sessionIsCurrent
 		)
+	}
+
+	@Test("A collected report cannot send to a replaced session", .timeLimit(.minutes(1)), arguments: ["SYSINFO", "DISKSPACE"])
+	func replacedSessionDropsCollectedReport(command: String) async throws {
+		let bundleURL = PathInfo.bundledExtensionsURL.appendingPathComponent("System Info.bundle", isDirectory: true)
+		let bundle = try #require(Bundle(url: bundleURL))
+		let suiteName = "SystemProfilerReportTests.\(UUID().uuidString)"
+		let defaults = try #require(UserDefaults(suiteName: suiteName))
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let channel = makeChannel()
+		let plugin = try #require(PluginItem.load(bundle, host: makeHost(defaults: defaults, channel: channel)))
+		defer { plugin.unloadBundle() }
+		let handler = try #require(plugin.primaryClass as? any PluginCommandHandling)
+		let sent = SentLines()
+		let (validated, validation) = AsyncStream<Void>.makeStream()
+		let client = makeClient(sending: sent, sessionIsCurrent: {
+			validation.finish()
+			return false
+		})
+		handler.userInputCommandInvoked(PluginCommandInvocation(
+			client: client, command: command, message: "", selectedChannel: channel, connectedClients: []
+		))
+		for await _ in validated {}
+		#expect(sent.lines.isEmpty)
 	}
 
 	/// Runs one command against a freshly loaded System Info plugin and returns

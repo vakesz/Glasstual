@@ -3,6 +3,7 @@
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
 
+import CocoaExtensions
 import Darwin
 import Foundation
 @testable import Glasstual
@@ -12,6 +13,118 @@ import Testing
 @MainActor
 @Suite("DCC controller lifecycle", .serialized)
 struct FileTransferControllerTests {
+	@Test("A sender follows peer NICK changes while its source reservation is suspended", .timeLimit(.minutes(1)))
+	func senderFollowsNicknameDuringReservation() async throws {
+		let directory = try TransferFixture.makeDirectory()
+		defer { TransferFixture.remove(directory) }
+		let source = directory.appendingPathComponent("source")
+		try Data([7]).write(to: source)
+		let file = try await DCCTransferFile.open(url: source, receiving: false)
+		let (gate, release) = AsyncStream<Void>.makeStream()
+		let (started, didStart) = AsyncStream<Void>.makeStream()
+		defer { release.finish(); didStart.finish() }
+		let client = TestClient()
+		let preparation = Task {
+			await FileTransferController.sender(for: client, nickname: "alice", path: source.path) { _, _, _ in
+				didStart.yield(())
+				for await _ in gate {}
+				return file
+			}
+		}
+		var iterator = started.makeAsyncIterator()
+		_ = await iterator.next()
+		try receiveNicknameChange(":alice!ali@example.org NICK :bob", on: client)
+		try receiveNicknameChange(":bob!ali@example.org NICK :carol", on: client)
+		release.finish()
+		let controller = try #require(await preparation.value)
+		#expect(controller.peerNickname == "carol")
+		#expect(controller.ownedFile === file)
+		assertOfferTargets("carol", from: controller, on: client)
+		controller.prepareForPermanentDestruction()
+		await controller.stopTask?.value
+	}
+
+	@Test("Peer NICK tracking applies inline and ends when a transfer is removed")
+	func nicknameObservationLifetime() throws {
+		let client = TestClient()
+		let controller = try receiver(on: client)
+		try receiveNicknameChange(":alice!ali@example.org NICK :mallory", on: TestClient())
+		#expect(controller.peerNickname == "alice")
+		try receiveNicknameChange(":alice!ali@example.org NICK :bob", on: client)
+		#expect(controller.peerNickname == "bob")
+		controller.prepareForPermanentDestruction()
+		try receiveNicknameChange(":bob!ali@example.org NICK :carol", on: client)
+		#expect(controller.peerNickname == "bob")
+	}
+
+	@Test("Cancelling a suspended sender closes a late source reservation", .timeLimit(.minutes(1)))
+	func cancelledSenderClosesReservation() async throws {
+		let directory = try TransferFixture.makeDirectory()
+		defer { TransferFixture.remove(directory) }
+		let source = directory.appendingPathComponent("source")
+		try Data([7]).write(to: source)
+		let file = try await DCCTransferFile.open(url: source, receiving: false)
+		let (gate, release) = AsyncStream<Void>.makeStream()
+		let (started, didStart) = AsyncStream<Void>.makeStream()
+		defer { release.finish(); didStart.finish() }
+		let client = TestClient()
+		let preparation = Task {
+			await FileTransferController.sender(for: client, nickname: "alice", path: source.path) { _, _, _ in
+				didStart.yield(())
+				for await _ in gate {}
+				return file
+			}
+		}
+		var iterator = started.makeAsyncIterator()
+		_ = await iterator.next()
+		preparation.cancel()
+		release.finish()
+		#expect(await preparation.value == nil)
+		await #expect(throws: DCCTransferError.fileUnreadable) { try await file.read(at: 0, count: 1) }
+	}
+
+	@Test("Closing during reservation releases a late descriptor instead of adopting it")
+	func closedReservationCannotBeAdopted() async throws {
+		let directory = try TransferFixture.makeDirectory()
+		defer { TransferFixture.remove(directory) }
+		let file = try await DCCTransferFile.open(url: directory.appendingPathComponent("reserved"), receiving: true)
+		let (gate, release) = AsyncStream<Void>.makeStream()
+		let (started, didStart) = AsyncStream<Void>.makeStream()
+		let client = TestClient()
+		let controller = try receiver(on: client, size: 1)
+		controller.path = directory.path
+		controller.fileFactory = { _, _, _ in
+			didStart.yield(())
+			for await _ in gate {}
+			return file
+		}
+		let preparation = Task { await controller.claimDestinationFilename() }
+		var iterator = started.makeAsyncIterator()
+		_ = await iterator.next()
+		controller.close()
+		release.finish()
+		await preparation.value
+		#expect(controller.ownedFile == nil)
+		await #expect(throws: DCCTransferError.fileUnreadable) { try await file.read(at: 0, count: 1) }
+	}
+
+	@Test("Empty files can be offered and accepted")
+	func emptyFileFactories() async throws {
+		let directory = try TransferFixture.makeDirectory()
+		defer { TransferFixture.remove(directory) }
+		let source = directory.appendingPathComponent("empty")
+		try Data().write(to: source)
+		let client = TestClient()
+		let outgoing = try #require(await FileTransferController.sender(for: client, nickname: "alice", path: source.path))
+		let incoming = try #require(FileTransferController.receiver(for: client, nickname: "alice", address: "127.0.0.1",
+		                                                            port: 5000, filename: "empty", filesize: 0, token: nil))
+		#expect(outgoing.totalFilesize == 0)
+		#expect(incoming.totalFilesize == 0)
+		outgoing.prepareForPermanentDestruction()
+		incoming.prepareForPermanentDestruction()
+		await outgoing.stopTask?.value
+	}
+
 	@Test("Completed rows release their source descriptors and scope leases", .timeLimit(.minutes(1)))
 	func completedRowsReleaseFiles() async throws {
 		let directory = try TransferFixture.makeDirectory()
@@ -142,10 +255,11 @@ struct FileTransferControllerTests {
 
 		controller.didReceiveResumeAccept(3)
 
-		#expect(controller.transferStatus == .fatalError)
+		#expect(controller.transferStatus == .recoverableError)
 		#expect(controller.ownedFile == nil)
 		#expect(model.transfers.count == 1 && model.transfers.first === controller)
-		#expect(!model.canPerform(.start, on: [controller.uniqueIdentifier]))
+		#expect(model.canPerform(.start, on: [controller.uniqueIdentifier]))
+		#expect(controller.restartsFromBeginning)
 		#expect(try await file.size() == 2)
 		#expect(counts.withLock { $0.started == 1 && $0.stopped == 0 })
 		#expect(try openDescriptorCount(for: destination) == 1)
@@ -208,7 +322,7 @@ struct FileTransferControllerTests {
 		let payload = TransferFixture.payload(byteCount: 100_003)
 		try payload.write(to: source)
 		let client = TestClient()
-		let sender = try #require(FileTransferController.sender(for: client, nickname: "alice", path: source.path))
+		let sender = try #require(await FileTransferController.sender(for: client, nickname: "alice", path: source.path))
 		sender.isReversed = false
 		let configuration = try TransferFixture.listeningSender(
 			file: #require(sender.ownedFile),
@@ -266,10 +380,11 @@ struct FileTransferControllerTests {
 		client.markAsLoggedIn()
 		let receiver = try receiver(on: client, port: port, size: UInt64(payload.count))
 		receiver.path = directory.path
-		receiver.claimDestinationFilename()
+		await receiver.claimDestinationFilename()
 		let file = try #require(receiver.ownedFile)
 		try await file.write(Data(payload.prefix(37003)), at: 0)
 		receiver.open()
+		await receiver.filePreparationTask?.value
 		await receiver.negotiationTask?.value
 		#expect(receiver.transferStatus == .waitingForResumeAccept)
 		#expect(receiver.processedFilesize == 37003)
@@ -301,7 +416,7 @@ struct FileTransferControllerTests {
 		let receiving = TransferFixture.collectEvents(from: receiver)
 		let client = TestClient()
 		client.markAsLoggedIn()
-		let sender = try #require(FileTransferController.sender(for: client, nickname: "alice", path: source.path))
+		let sender = try #require(await FileTransferController.sender(for: client, nickname: "alice", path: source.path))
 		sender.isReversed = true
 		sender.transferToken = "42"
 		sender.transferStatus = .waitingForReceiverToAccept
@@ -318,7 +433,7 @@ struct FileTransferControllerTests {
 		await file.close()
 	}
 
-	@Test("Stop during initialization cancels pending negotiation")
+	@Test("Stop during initialization cancels pending file preparation")
 	func stopInitializing() async throws {
 		let directory = try TransferFixture.makeDirectory()
 		defer { TransferFixture.remove(directory) }
@@ -327,12 +442,12 @@ struct FileTransferControllerTests {
 		let transfer = try receiver(on: client)
 		transfer.open(withPath: directory.path)
 		#expect(transfer.transferStatus == .initializing)
-		let pending = transfer.negotiationTask
+		let pending = try #require(transfer.filePreparationTask)
 		let model = FileTransferCenterModel()
 		model.add(transfer)
 		#expect(model.canPerform(.stop, on: [transfer.uniqueIdentifier]))
 		transfer.closeAndPostNotification(false)
-		await pending?.value
+		await pending.value
 		#expect(transfer.transfer == nil)
 		#expect(transfer.transferStatus == .stopped)
 		#expect(client.sentLines.count == 0)
@@ -346,8 +461,8 @@ struct FileTransferControllerTests {
 		let source = directory.appendingPathComponent("source")
 		try Data([1, 2, 3]).write(to: source)
 		let client = TestClient()
-		let first = try #require(FileTransferController.sender(for: client, nickname: "alice", path: source.path))
-		let second = try #require(FileTransferController.sender(for: client, nickname: "bob", path: source.path))
+		let first = try #require(await FileTransferController.sender(for: client, nickname: "alice", path: source.path))
+		let second = try #require(await FileTransferController.sender(for: client, nickname: "bob", path: source.path))
 		let firstFile = try #require(first.ownedFile)
 		let secondFile = try #require(second.ownedFile)
 		first.prepareForPermanentDestruction()
@@ -383,12 +498,13 @@ struct FileTransferControllerTests {
 	}
 
 	@Test("Giving up on the address settles receivers as well as senders")
-	func reverseReceiverLookupFailure() throws {
-		let center = FileTransferCenter()
+	func reverseReceiverLookupFailure() async throws {
+		let center = FileTransferCenter(addressSource: { nil })
 		let receiver = try receiver(on: TestClient(), token: "42")
 		receiver.transferStatus = .waitingForLocalIPAddress
 		center.model.add(receiver)
 		center.clearIPAddress()
+		_ = await center.ipAddressLookup?.value
 		#expect(receiver.transferStatus == .recoverableError)
 		receiver.prepareForPermanentDestruction()
 	}
@@ -477,6 +593,30 @@ struct FileTransferControllerTests {
 		transfer.completion = .acknowledged
 		#expect(FileTransferRowPresentation(transfer: transfer).status != FileTransferStrings
 			.unacknowledgedCompletion(peerNickname: "alice"))
+	}
+
+	private func receiveNicknameChange(_ line: String, on client: TestClient) throws {
+		let message = try #require(Message(line: line, on: client))
+		client.forwardsProcessedMessages = true
+		client.processIncomingMessage(message)
+	}
+
+	private func assertOfferTargets(_ nickname: String, from controller: FileTransferController, on client: TestClient) {
+		let methodKey = Preferences.FileTransfers.ipAddressDetectionMethod
+		let addressKey = Preferences.FileTransfers.manuallyEnteredIPAddress
+		let previousMethod = methodKey.storedValue
+		let previousAddress = addressKey.storedValue
+		defer {
+			methodKey.storedValue = previousMethod
+			addressKey.storedValue = previousAddress
+		}
+		methodKey.value = .manual
+		addressKey.storedValue = "127.0.0.1"
+		controller.isReversed = false
+		controller.hostPort = 5000
+		controller.sendTransferRequestToClient()
+		let lines = client.sentLines.compactMap { $0 as? String }
+		#expect(lines == ["PRIVMSG \(nickname) :\u{1}DCC SEND source 2130706433 5000 1\u{1}"])
 	}
 
 	private func receiver(on client: IRCClient, port: UInt16 = 1234, size: UInt64 = 2048,

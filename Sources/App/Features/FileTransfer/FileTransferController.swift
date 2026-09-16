@@ -41,6 +41,24 @@ import CocoaExtensions
 import Foundation
 import os
 
+private struct FileTransferPeerNicknameChange: NotificationCenter.MainActorMessage {
+	typealias Subject = IRCClient
+
+	static var name: Notification.Name {
+		.IRCClientUserNicknameChanged
+	}
+
+	let oldNickname: String
+	let newNickname: String
+
+	static func makeMessage(_ notification: Notification) -> Self? {
+		guard let oldNickname = notification.userInfo?["oldNickname"] as? String,
+		      let newNickname = notification.userInfo?["newNickname"] as? String
+		else { return nil }
+		return Self(oldNickname: oldNickname, newNickname: newNickname)
+	}
+}
+
 enum FileTransferLimits {
 	static let speedRecordCount = 10
 	static let connectTimeout: TimeInterval = 30
@@ -166,6 +184,11 @@ public final class FileTransferController: ClientScoped {
 	var fileAccessURL: URL?
 	var destinationAccessURL: URL?
 	var negotiationTask: Task<Void, Never>?
+	var filePreparationTask: Task<Void, Never>?
+	var fileFactory: @Sendable (URL, Bool, URL?) async throws -> DCCTransferFile = { url, receiving, accessURL in
+		try await DCCTransferFile.open(url: url, receiving: receiving, accessURL: accessURL)
+	}
+
 	var stopTask: Task<Void, Never>?
 	var sessionID = UUID()
 	public internal(set) var completion: DCCTransfer.Completion?
@@ -181,6 +204,7 @@ public final class FileTransferController: ClientScoped {
 	var transferProgressHandler: NSObjectProtocol?
 	var lifecycleNotifications = NotificationSubscriptions()
 	var portMapperNotifications = NotificationSubscriptions()
+	private var peerNicknameObservation: NotificationCenter.ObservationToken?
 
 	public var canStart: Bool {
 		transferStatus.canRetry
@@ -192,17 +216,28 @@ public final class FileTransferController: ClientScoped {
 		lifecycleNotifications.observe(.IRCClientDidDisconnect, object: client) { [weak self] notification in
 			self?.clientDisconnected(notification)
 		}
-		lifecycleNotifications.observe(.IRCClientUserNicknameChanged, object: client) { [weak self] notification in
-			self?.peerNicknameChanged(notification)
-		}
+		/* A NICK must update the destination before another main-actor operation
+		 can send an offer, including the turn that resumes file preparation. */
+		peerNicknameObservation = NotificationCenter.default
+			.addObserver(of: client, for: FileTransferPeerNicknameChange.self) { [weak self] change in
+				self?.peerNicknameChanged(from: change.oldNickname, to: change.newNickname)
+			}
+	}
+
+	func stopObservingPeerNicknameChanges() {
+		guard let peerNicknameObservation else { return }
+		NotificationCenter.default.removeObserver(peerNicknameObservation)
+		self.peerNicknameObservation = nil
 	}
 
 	isolated deinit {
+		filePreparationTask?.cancel()
 		negotiationTask?.cancel()
 		resumeRequestTimeout?.cancel()
 		offerTimeout?.cancel()
 		transferEvents?.cancel()
 		lifecycleNotifications.cancelAll()
+		stopObservingPeerNicknameChanges()
 		portMapperNotifications.cancelAll()
 		/* An open NAT-PMP mapping keeps its mapper alive so that mDNSResponder's
 		 callback context stays valid, so dropping the controller is not enough
@@ -232,7 +267,7 @@ public final class FileTransferController: ClientScoped {
 		token transferToken: String?
 	) -> FileTransferController? {
 		let wireFilename = filename.safeFilename
-		guard !wireFilename.isEmpty, totalFilesize > 0 else { return nil }
+		guard !wireFilename.isEmpty else { return nil }
 		let controller = FileTransferController(client: client)
 
 		if let transferToken, !transferToken.isEmpty {
@@ -254,29 +289,34 @@ public final class FileTransferController: ClientScoped {
 		nickname: String,
 		path: String,
 		accessURL: URL? = nil
-	) -> FileTransferController? {
-		let filename = (path as NSString).lastPathComponent
-
-		guard let file = try? DCCTransferFile(url: URL(fileURLWithPath: path), receiving: false, accessURL: accessURL)
-		else {
-			return nil
+	) async -> FileTransferController? {
+		await sender(for: client, nickname: nickname, path: path, accessURL: accessURL) { url, receiving, accessURL in
+			try await DCCTransferFile.open(url: url, receiving: receiving, accessURL: accessURL)
 		}
+	}
 
-		let totalFilesize = file.initialSize
-		guard totalFilesize > 0 else {
-			fileTransferLogger.error("Cannot create a sender for an empty file")
-			return nil
-		}
-
+	static func sender(
+		for client: IRCClient,
+		nickname: String,
+		path: String,
+		accessURL: URL? = nil,
+		fileFactory: @Sendable (URL, Bool, URL?) async throws -> DCCTransferFile
+	) async -> FileTransferController? {
 		let controller = FileTransferController(client: client)
 		controller.isReversed = Preferences.FileTransfers.requestsAreReversed.value
 		controller.isSender = true
 		controller.peerNickname = nickname
 		controller.path = (path as NSString).deletingLastPathComponent
-		controller.filename = filename
-		controller.wireFilename = filename.safeFilename
+		controller.filename = (path as NSString).lastPathComponent
+		controller.wireFilename = controller.filename.safeFilename
+
+		guard let file = try? await fileFactory(URL(fileURLWithPath: path), false, accessURL) else { return nil }
+		guard !Task.isCancelled else {
+			await file.close()
+			return nil
+		}
 		controller.takeOwnership(of: file)
-		controller.totalFilesize = totalFilesize
+		controller.totalFilesize = file.initialSize
 		return controller
 	}
 

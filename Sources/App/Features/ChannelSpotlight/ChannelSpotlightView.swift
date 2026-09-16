@@ -129,7 +129,6 @@ struct ChannelSpotlightView: View {
 			}
 			.listStyle(.plain)
 			.scrollContentBackground(.hidden)
-			.overlayScrollers()
 			.onChange(of: model.selectedResultID) { _, identifier in
 				guard let identifier else { return }
 				guard reduceMotion == false else {

@@ -12,6 +12,26 @@ import Testing
 /// the two halves still line up.
 @MainActor
 struct PreferencesPaneInventoryTests {
+	@Test("Settings search finds localized control labels inside grouped destinations")
+	func settingsSearchFindsControls() throws {
+		let identity = try #require(PreferencesDestination.builtIn.first { $0.selection == .identity })
+		#expect(identity.matches(searchText: "  NICKNAME  "))
+		#expect(identity.matches(searchText: "identity nickname"))
+		#expect(identity.matches(searchText: "nickname unfindable-setting") == false)
+		let controls = try #require(PreferencesDestination.builtIn.first { $0.selection == .controls })
+		#expect(controls.matches(searchText: "spell check"))
+		#expect(PreferencesDestination.builtIn.allSatisfy { $0.matches(searchText: " \n ") })
+	}
+
+	@Test("Add-on settings are searchable by their localized title")
+	func settingsSearchIncludesAddOns() {
+		let destination = PreferencesDestination(
+			.plugin(bundleIdentifier: "example.addon"), symbol: "puzzlepiece.extension", title: "Café", panes: []
+		)
+		#expect(destination.matches(searchText: "cafe"))
+		#expect(destination.matches(searchText: "irrelevant") == false)
+	}
+
 	@Test("Every catalogued pane declares the keys it binds")
 	func everyPaneDeclaresItsKeys() {
 		let declared = Set(PreferencesPaneKeys.keysByPane.keys)

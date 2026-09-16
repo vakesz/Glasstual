@@ -75,6 +75,13 @@ struct ServerChannelListTests {
 	/// Waits for the list to stop spinning, however it gets there.
 	private func refreshEnded(in model: ServerChannelListModel) async {
 		for await refreshing in Observations({ model.isRefreshing }) where refreshing == false {
+			await rowsUpdated(in: model)
+			return
+		}
+	}
+
+	private func rowsUpdated(in model: ServerChannelListModel) async {
+		for await filtering in Observations({ model.isFiltering }) where filtering == false {
 			return
 		}
 	}
@@ -162,62 +169,69 @@ struct ServerChannelListTests {
 	/// `RPL_LIST` carries whatever the server decided to put in the field, and
 	/// a count that does not fit an `Int` used to end the process.
 	@Test("A member count too large for the row is saturated rather than fatal")
-	func oversizedMemberCountIsSaturated() {
+	func oversizedMemberCountIsSaturated() async {
 		let model = ServerChannelListModel()
 
 		model.enqueue(channelName: "#huge", memberCount: .max, topic: nil)
 		model.flushQueuedEntries()
+		await rowsUpdated(in: model)
 
 		#expect(model.rows.map(\.memberCount) == [.max])
 	}
 
 	@Test("The native table starts with the largest channels first")
-	func defaultSortIsDescendingMemberCount() {
-		let model = populatedModel()
+	func defaultSortIsDescendingMemberCount() async {
+		let model = await populatedModel()
 
 		#expect(model.rows.map(\.channelName) == ["#Rust", "#swift", "#cocoa"])
 	}
 
 	@Test("Search matches channel names and topics without case sensitivity")
-	func searchMatchesNamesAndTopics() {
-		let model = populatedModel()
+	func searchMatchesNamesAndTopics() async {
+		let model = await populatedModel()
 
 		/* Typing is debounced; the matching itself is what is under test. */
 		model.searchString = "RUST"
 		model.applyFilterAndSort()
+		await rowsUpdated(in: model)
 		#expect(model.rows.map(\.channelName) == ["#Rust"])
 
 		model.searchString = "appkit"
 		model.applyFilterAndSort()
+		await rowsUpdated(in: model)
 		#expect(model.rows.map(\.channelName) == ["#cocoa"])
 
 		model.searchString = "   "
 		model.applyFilterAndSort()
+		await rowsUpdated(in: model)
 		#expect(model.rows.count == 3)
 	}
 
 	@Test("Changing a column sort reorders the model")
-	func typedSortOrderReordersRows() {
-		let model = populatedModel()
+	func typedSortOrderReordersRows() async {
+		let model = await populatedModel()
 
 		model.sortOrder = [ServerChannelListComparator(field: .channelName, order: .forward)]
+		await rowsUpdated(in: model)
 
 		#expect(model.rows.map(\.channelName) == ["#cocoa", "#Rust", "#swift"])
 	}
 
 	@Test("Topic sorting ignores letter case")
-	func topicSortIsCaseInsensitive() {
-		let model = populatedModel()
+	func topicSortIsCaseInsensitive() async {
+		let model = await populatedModel()
 
 		model.sortOrder = [ServerChannelListComparator(field: .topic, order: .forward)]
+		await rowsUpdated(in: model)
 
 		#expect(model.rows.map(\.channelName) == ["#swift", "#cocoa", "#Rust"])
 	}
 
 	@Test("Two same-named channels remain distinct rows")
-	func duplicateNamesKeepDistinctIdentity() {
+	func duplicateNamesKeepDistinctIdentity() async {
 		let model = ServerChannelListModel()
 		model.replace(with: [entry(name: "#dup", count: 1), entry(name: "#dup", count: 1)])
+		await rowsUpdated(in: model)
 
 		#expect(model.rows.count == 2)
 		#expect(Set(model.rows.map(\.id)).count == 2)
@@ -228,9 +242,10 @@ struct ServerChannelListTests {
 	 the CHANLIMIT warning both live on the client -- so the table keeps whatever
 	 was selected. */
 	@Test("Selecting more rows than one JOIN would carry keeps every one of them")
-	func selectionIsNotCapped() {
+	func selectionIsNotCapped() async {
 		let model = ServerChannelListModel()
 		model.replace(with: (0 ..< 10).map { entry(name: "#\($0)", count: $0) })
+		await rowsUpdated(in: model)
 
 		model.selection = Set(model.rows.map(\.id))
 
@@ -249,12 +264,13 @@ struct ServerChannelListTests {
 		#expect(model.rows.isEmpty)
 	}
 
-	@Test("Finishing a refresh immediately publishes its final queued replies")
-	func finishRefreshFlushesEntries() {
+	@Test("Finishing a refresh publishes its final queued replies")
+	func finishRefreshFlushesEntries() async {
 		let model = ServerChannelListModel()
 		model.enqueue(channelName: "#swift", memberCount: 120, topic: "Swift")
 
 		model.finishRefresh()
+		await rowsUpdated(in: model)
 
 		#expect(model.rows.map(\.channelName) == ["#swift"])
 		#expect(model.isRefreshing == false)
@@ -264,24 +280,21 @@ struct ServerChannelListTests {
 	func extendedListArguments() {
 		#expect(ServerChannelListModel.listArguments(
 			minimumUserCount: 10,
-			pattern: "swift",
 			supportedTokens: ["U", "M"]
-		) == ">9,*swift*")
+		) == ">9")
 		#expect(ServerChannelListModel.listArguments(
 			minimumUserCount: 10,
-			pattern: "swift",
 			supportedTokens: []
 		) == nil)
 		#expect(ServerChannelListModel.listArguments(
 			minimumUserCount: 10,
-			pattern: "bad,pattern",
-			supportedTokens: ["U", "M"]
-		) == ">9")
+			supportedTokens: ["M"]
+		) == nil)
 	}
 
 	@Test("Copying selected channels produces one visible tabular item")
-	func copySelection() throws {
-		let model = populatedModel()
+	func copySelection() async throws {
+		let model = await populatedModel()
 		model.selection = Set(model.rows.prefix(2).map(\.id))
 
 		let copied = try #require(model.selectedCopyItems.first)
@@ -297,7 +310,7 @@ struct ServerChannelListTests {
 	}
 
 	@Test("The list stops growing at its cap and says how much it is showing")
-	func entriesAreCapped() {
+	func entriesAreCapped() async {
 		let model = ServerChannelListModel()
 		let overflow = 5
 
@@ -305,6 +318,7 @@ struct ServerChannelListTests {
 			model.enqueue(channelName: "#channel\(index)", memberCount: 1, topic: nil)
 		}
 		model.flushQueuedEntries()
+		await rowsUpdated(in: model)
 
 		#expect(model.rows.count == ServerChannelListModel.maximumEntryCount)
 		#expect(model.discardedEntryCount == overflow)
@@ -315,19 +329,21 @@ struct ServerChannelListTests {
 	 change. It used to read as the number of channels on screen, so typing
 	 anything into the search field made it a count of rows that were not there. */
 	@Test("The truncation notice is about what was kept, not what is on screen")
-	func truncationNoticeCountsWhatWasKept() {
+	func truncationNoticeCountsWhatWasKept() async {
 		let model = ServerChannelListModel()
 
 		for index in 0 ..< (ServerChannelListModel.maximumEntryCount + 1) {
 			model.enqueue(channelName: "#channel\(index)", memberCount: 1, topic: nil)
 		}
 		model.flushQueuedEntries()
+		await rowsUpdated(in: model)
 
 		let notice = model.truncationNotice
 		#expect(notice != nil)
 
 		model.searchString = "#channel1"
 		model.applyFilterAndSort()
+		await rowsUpdated(in: model)
 
 		#expect(model.rows.count < ServerChannelListModel.maximumEntryCount)
 		#expect(model.truncationNotice == notice)
@@ -337,34 +353,36 @@ struct ServerChannelListTests {
 	 to count the table's rows, so typing anything into the search field made the
 	 title a count of channels the server had never stopped sending. */
 	@Test("The window's channel count is what was kept, not what the search left")
-	func keptEntryCountIgnoresTheSearchField() {
-		let model = populatedModel()
+	func keptEntryCountIgnoresTheSearchField() async {
+		let model = await populatedModel()
 		let kept = model.keptEntryCount
 		#expect(kept == model.rows.count)
 
 		model.searchString = "#swift"
 		model.applyFilterAndSort()
+		await rowsUpdated(in: model)
 
 		#expect(model.rows.count == 1)
 		#expect(model.keptEntryCount == kept)
 	}
 
 	@Test("A complete list says nothing about truncation")
-	func completeListHasNoNotice() {
-		let model = populatedModel()
+	func completeListHasNoNotice() async {
+		let model = await populatedModel()
 
 		#expect(model.discardedEntryCount == 0)
 		#expect(model.truncationNotice == nil)
 	}
 
 	@Test("Replacing the entries wholesale is capped the same way")
-	func replacementIsCapped() {
+	func replacementIsCapped() async {
 		let model = ServerChannelListModel()
 		let entries = (0 ..< (ServerChannelListModel.maximumEntryCount + 3)).map {
 			ServerChannelListEntry(channelName: "#channel\($0)", memberCount: 1)
 		}
 
 		model.replace(with: entries)
+		await rowsUpdated(in: model)
 
 		#expect(model.rows.count == ServerChannelListModel.maximumEntryCount)
 		#expect(model.discardedEntryCount == 3)
@@ -402,21 +420,68 @@ struct ServerChannelListTests {
 	}
 
 	@Test("Typing does not filter until it stops, and the filter still runs")
-	func filteringIsDebounced() async throws {
-		let model = populatedModel()
+	func filteringIsDebounced() async {
+		let model = await populatedModel()
 		let everything = model.rows.count
 
 		model.searchString = "Rust"
 		#expect(model.rows.count == everything, "Filtering on each keystroke is what made typing slow")
 
-		try await Task.sleep(for: ServerChannelListModel.filterDelay + .milliseconds(250))
+		await rowsUpdated(in: model)
 		#expect(model.rows.count < everything)
 		#expect(model.rows.allSatisfy { $0.matches("Rust") })
 	}
 
-	private func populatedModel() -> ServerChannelListModel {
+	@Test("Refresh keeps topic matches available and clearing search restores every retained row")
+	func refreshPreservesLocalSearchSemantics() async {
+		let model = await populatedModel()
+		model.searchString = "appkit"
+		#expect(model.listArguments(supportedTokens: ["U", "M"]) == nil)
+		model.beginRefresh()
+		for entry in entries {
+			model.enqueue(channelName: entry.channelName, memberCount: UInt(entry.memberCount), topic: entry.unformattedTopic)
+		}
+		model.finishRefresh()
+		await rowsUpdated(in: model)
+		#expect(model.rows.map(\.channelName) == ["#cocoa"])
+
+		model.searchString = ""
+		await rowsUpdated(in: model)
+		#expect(model.rows.count == entries.count)
+	}
+
+	@Test("A replacement query publishes only its own matching rows and selection")
+	func latestQueryWins() async {
+		let model = await populatedModel()
+		model.selection = Set(model.rows.map(\.id))
+		model.searchString = "Rust"
+		model.applyFilterAndSort()
+		model.searchString = "AppKit"
+		await rowsUpdated(in: model)
+
+		#expect(model.rows.map(\.channelName) == ["#cocoa"])
+		#expect(model.selection == Set(model.rows.map(\.id)))
+	}
+
+	@Test("Clearing and closing discard a pending filter without republishing old rows")
+	func clearingCancelsPendingFilter() async {
+		let model = await populatedModel()
+		model.searchString = "Swift"
+		model.clear()
+		await rowsUpdated(in: model)
+		#expect(model.rows.isEmpty)
+		#expect(model.isFiltering == false)
+
+		model.replace(with: entries)
+		model.cancelPendingWrites()
+		await rowsUpdated(in: model)
+		#expect(model.rows.isEmpty)
+	}
+
+	private func populatedModel() async -> ServerChannelListModel {
 		let model = ServerChannelListModel()
 		model.replace(with: entries)
+		await rowsUpdated(in: model)
 		return model
 	}
 

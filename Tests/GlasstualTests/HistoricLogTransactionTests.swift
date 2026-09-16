@@ -11,7 +11,9 @@ private actor HistoryOperationGate {
 	private var blocked: CheckedContinuation<Void, Never>?
 	private var entered = false
 	private var observer: CheckedContinuation<Void, Never>?
+	private var released = false
 	func wait() async {
+		guard !released else { return }
 		entered = true
 		observer?.resume()
 		observer = nil
@@ -25,6 +27,7 @@ private actor HistoryOperationGate {
 	}
 
 	func release() {
+		released = true
 		blocked?.resume(); blocked = nil
 	}
 }
@@ -56,6 +59,46 @@ private actor SaveSignal {
 @MainActor
 @Suite("Historic store transactions", .serialized)
 struct HistoricLogTransactionTests {
+	@Test("A history clear preserves messages indexed while its deletion is pending", arguments: [false, true])
+	func clearPreservesNewerIndexEntries(forget: Bool) async throws {
+		let directory = try directory()
+		defer { try? FileManager.default.removeItem(at: directory) }
+		let gate = HistoryOperationGate()
+		let store = HistoricLogStore(filenameStore: HistoricLogFilenameFixture(), willPerform: { operation in
+			switch operation {
+			case .reset, .forget: await gate.wait()
+			default: break
+			}
+		})
+		let client = HistoricLogClient(store: store, databaseDirectory: { directory.path }, reportFailure: {
+			Issue.record(Comment(rawValue: $0))
+		})
+		let history = LogControllerHistoricLogFile(client: client)
+		var old = LogLine()
+		old.messageIdentifier = "old"
+		old.receivedAt = Date(timeIntervalSince1970: 100)
+		history.writeNewEntry(with: old, forView: "view")
+		_ = await history.fetchOutcome(.newestEntries(forView: "view", fetchLimit: 10))
+		let removal = history.removeHistory(forView: "view", forget: forget)
+		await gate.ready()
+		var newer = LogLine()
+		newer.messageIdentifier = "newer"
+		newer.receivedAt = Date(timeIntervalSince1970: 200)
+		history.writeNewEntry(with: newer, forView: "view")
+		#expect(history.containsMessageIdentifier("newer", forView: "view"))
+		await gate.release()
+		await removal.value
+		let rows = await history.fetchOutcome(.newestEntries(forView: "view", fetchLimit: 10)).entries
+		#expect(rows.map(\.uniqueIdentifier) == [newer.uniqueIdentifier])
+		#expect(!history.containsMessageIdentifier("old", forView: "view"))
+		#expect(history.containsMessageIdentifier("newer", forView: "view"))
+		#expect(history.newestLineDate(forView: "view") == newer.receivedAt)
+		await history.removeHistory(forView: "view", forget: true).value
+		#expect(history.activeLaneCount == 0)
+		#expect(history.newestLineDate(forView: "view") == nil)
+		#expect(await client.prepareForTermination() == .saved)
+	}
+
 	private func directory() throws -> URL {
 		let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
 		try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
@@ -174,6 +217,7 @@ struct HistoricLogTransactionTests {
 			)
 		}
 		#expect(await store.close() == .saved)
+		try await HistoricLogFixture.close(context)
 	}
 
 	@Test("Failed save, deletion and close retain the accepted archive for repair")
@@ -209,6 +253,7 @@ struct HistoricLogTransactionTests {
 		}
 		#expect(await store.saveData() == .saved)
 		#expect(await store.close() == .saved)
+		try await HistoricLogFixture.close(context)
 		let reopened = HistoricLogStore(filenameStore: HistoricLogFilenameFixture())
 		#expect(await reopened.openDatabase(inDirectory: directory.path).isOpen)
 		#expect(await reopened.fetchOutcome(.newestEntries(forView: "view", fetchLimit: 10)).entries

@@ -200,7 +200,20 @@ public final class DirectChatConnection: NSObject {
 			for await event in chat.events {
 				guard let self else { return }
 
-				handle(event)
+				if case let .lines(lines, acknowledged) = event {
+					for (index, line) in lines.enumerated() {
+						await client?.renderAdmission.waitForCapacity()
+						guard isConnected, !Task.isCancelled else { break }
+						consumeReceivedLine(line)
+						if (index + 1).isMultiple(of: 64) {
+							await Task.yield()
+						}
+					}
+					await client?.renderAdmission.waitForCapacity()
+					acknowledged.finish()
+				} else {
+					handle(event)
+				}
 			}
 		}
 
@@ -358,10 +371,8 @@ public final class DirectChatConnection: NSObject {
 			cancelListenTimeout()
 			state = .connected
 			client?.directChatConnectionDidConnect(self)
-		case let .line(data):
-			guard isConnected else { return }
-
-			consumeReceivedLine(data)
+		case let .lines(_, acknowledged):
+			acknowledged.finish()
 		case let .closed(error):
 			/* A peer that hangs up cleanly ends the conversation; only a real
 			 fault is worth reporting as one. */

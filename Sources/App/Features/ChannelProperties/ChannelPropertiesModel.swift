@@ -28,6 +28,7 @@ enum ChannelPropertiesSection: Int, CaseIterable, Identifiable {
 @MainActor
 @Observable
 final class ChannelPropertiesModel {
+	var isSaving = false
 	var config: ChannelConfig
 	var selection: ChannelPropertiesSection = .general
 	let channelNameIsEditable: Bool
@@ -238,7 +239,7 @@ final class ChannelPropertiesModel {
 		let maximum = Int(clamping: client.supportInfo.maximumKeyLength)
 		guard maximum > 0 else { return nil }
 
-		return SecretKeyLimit(used: secretKey.count, maximum: maximum, networkName: client.networkNameAlt)
+		return SecretKeyLimit(used: secretKey.firstToken.utf8.count, maximum: maximum, networkName: client.networkNameAlt)
 	}
 
 	/** What to say under the password field about the server's key length.

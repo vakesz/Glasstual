@@ -153,14 +153,14 @@
       "localizations": { "en": { "stringUnit": { "state": "translated", "value": "The channel’s key, sent when joining. Stored in your keychain." } } }
     },
     "secret-key-length": {
-      "comment": "Counter under the channel secret key field, saying how much of the length the server accepts is used. The first argument is how many characters were typed and the second is the maximum.",
+      "comment": "Counter under the channel secret key field, saying how much of the length the server accepts is used. The first argument is how many UTF-8 bytes the submitted key token uses and the second is the maximum.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "%1$ld of %2$ld characters" } } }
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "%1$ld of %2$ld bytes" } } }
     },
     "secret-key-too-long": {
-      "comment": "Warning under the channel secret key field once the key is too long for the server. The first argument is the network name and the second is the maximum number of characters.",
+      "comment": "Warning under the channel secret key field once the key is too long for the server. The first argument is the network name and the second is the maximum number of UTF-8 bytes.",
       "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "%1$@ accepts at most %2$ld characters. Anything past that may be cut off." } } }
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "%1$@ accepts at most %2$ld bytes. Anything past that may be cut off." } } }
     }
   },
   "version": "1.0"

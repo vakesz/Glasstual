@@ -13,6 +13,28 @@
 import CocoaExtensions
 import Foundation
 
+/// The on-disk history payload. The Core Data row stays unchanged, and its
+/// opaque data can be decoded independently of the application's runtime names.
+nonisolated struct LogLineStoredPayload: Codable { // nonisolated: value
+	static let currentVersion = 1
+	var version = currentVersion
+	let line: LogLine
+
+	/// Reads the stored time without constructing a line or assigning identity.
+	static func receivedAt(in data: Data) -> Date? {
+		guard let timestamp = try? PropertyListDecoder().decode(Timestamp.self, from: data),
+		      timestamp.version == currentVersion else { return nil }
+		return timestamp.line.receivedAt
+	}
+
+	private struct Timestamp: Decodable {
+		let version: Int
+		let line: TimestampLine
+	}
+
+	private struct TimestampLine: Decodable { let receivedAt: Date }
+}
+
 private nonisolated enum LogLineArchiveKey { // nonisolated: value
 	static let command = "command"
 	static let deliveryState = "deliveryState"
@@ -32,13 +54,10 @@ private nonisolated enum LogLineArchiveKey { // nonisolated: value
 	static let uniqueIdentifier = "uniqueIdentifier"
 }
 
-/** The archive form of a ``LogLine``.
+/** The legacy archive form of a ``LogLine``.
 
- A ``LogLine`` is a value, and `NSKeyedArchiver` needs a class, so the coding
- lives here: the envelope is built at the archive boundary, immutable, and
- discarded on the far side of it. It answers to `TVCLogLine` because that is the
- class name every archive on disk records as its root object, and the key names
- and encoding order are the ones those archives were written with.
+ Kept for reading existing history. New writes use ``LogLineStoredPayload``.
+ This decoder answers to `TVCLogLine`, the root class older archives recorded.
  */
 @objc(TVCLogLine)
 public final nonisolated class LogLineArchive: NSObject, NSSecureCoding, Sendable { // nonisolated: immutable
@@ -154,12 +173,5 @@ public final nonisolated class LogLineArchive: NSObject, NSSecureCoding, Sendabl
 
 	override public var description: String {
 		line.description
-	}
-}
-
-public extension LogLine {
-	/// The line's `NSSecureCoding` form, ready for `NSKeyedArchiver`.
-	var archived: LogLineArchive {
-		LogLineArchive(self)
 	}
 }

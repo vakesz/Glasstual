@@ -183,13 +183,13 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%arg character too many"
+                      "value" : "%arg byte too many"
                     }
                   },
                   "other" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%arg characters too many"
+                      "value" : "%arg bytes too many"
                     }
                   }
                 }

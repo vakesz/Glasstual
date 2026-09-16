@@ -110,6 +110,8 @@ struct IRCConnectionInboundDeliveryTests {
 		}
 		client.config.serverList = [origin]
 		client.server = origin
+		let stored = await KeychainSecretLoader.passwords(for: [origin.keychainItem])
+		client.sessionCredentials.install(stored, items: [origin.keychainItem], applying: client.config.pendingKeychainEdits)
 		var config = IRCConnectionConfig()
 		config.serverAddress = origin.serverAddress
 		config.serverPort = 6667

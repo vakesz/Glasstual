@@ -50,7 +50,7 @@
       }
     },
     "characters-remaining" : {
-      "comment" : "Footer below the topic editor counting the characters remaining before the server's topic limit. Replaces the warning alert that used to interrupt typing. Migrated from the legacy keys zm4-cr and 27l-qx.",
+      "comment" : "Footer below the topic editor counting the UTF-8 bytes remaining before the server's topic limit. Replaces the warning alert that used to interrupt typing. Migrated from the legacy keys zm4-cr and 27l-qx.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -63,13 +63,13 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%arg character remaining"
+                      "value" : "%arg byte remaining"
                     }
                   },
                   "other" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%arg characters remaining"
+                      "value" : "%arg bytes remaining"
                     }
                   }
                 }
@@ -84,7 +84,7 @@
       }
     },
     "characters-over-limit" : {
-      "comment" : "Footer below the topic editor once the topic is longer than the server accepts, counting the characters over the limit. The Change Topic button stays disabled until the topic fits.",
+      "comment" : "Footer below the topic editor once the topic is longer than the server accepts, counting the UTF-8 bytes over the limit. The Change Topic button stays disabled until the topic fits.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -97,13 +97,13 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%arg character too many"
+                      "value" : "%arg byte too many"
                     }
                   },
                   "other" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%arg characters too many"
+                      "value" : "%arg bytes too many"
                     }
                   }
                 }

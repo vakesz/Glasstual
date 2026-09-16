@@ -654,27 +654,6 @@ struct IRCClientNegotiationTests {
 		#expect(bodies.contains(ConnectionSafetyStrings.Credentials.withheldOverPlaintext) == serverPrefersTLS)
 	}
 
-	/// The nickname password is read from the keychain once per session and
-	/// again only after the session or the configuration changes.
-	@Test("Session credentials read the password once until they are forgotten")
-	func sessionCredentialsReadOnce() {
-		var credentials = SessionCredentials()
-		var reads = 0
-		let read = { () -> String? in
-			reads += 1
-			return "secret"
-		}
-
-		#expect(credentials.nicknamePassword(reading: read) == "secret")
-		#expect(credentials.nicknamePassword(reading: read) == "secret")
-		#expect(reads == 1)
-
-		credentials.forget()
-
-		#expect(credentials.nicknamePassword(reading: read) == "secret")
-		#expect(reads == 2)
-	}
-
 	@Test("A changed configuration is what the next password read sees")
 	func configurationChangeForgetsThePassword() {
 		let client = makeClient(configuration: [:], nicknamePassword: "first")

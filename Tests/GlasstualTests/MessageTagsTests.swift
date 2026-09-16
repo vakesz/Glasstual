@@ -235,6 +235,31 @@ final class MessageTagsTests {
 		#expect(sentLines(of: client).last == "PRIVMSG #chat :third")
 	}
 
+	@Test("Queued input keeps its own reply tag across a capacity wait")
+	func queuedInputKeepsItsOwnReply() async throws {
+		let client = makeMessageTagsClient()
+		let channel = try addChannel(named: "#chat", to: client)
+		let admission = TranscriptRenderAdmission(capacity: 1)
+		client.renderAdmission = admission
+		let ticket = admission.submit(for: "existing")
+		defer { client.cancelPendingSessionTasks(); admission.finish(ticket) }
+		client.nextMessageReplyIdentifier = "first-reply"
+		client.inputText("first", destination: channel)
+		client.nextMessageReplyIdentifier = "second-reply"
+		client.inputText("second", destination: channel)
+		#expect(sentLines(of: client).isEmpty)
+		admission.finish(ticket)
+		let deadline = ContinuousClock.now + .seconds(5)
+		while client.outboundTextProducer?.pendingProducerCount != 0, ContinuousClock.now < deadline {
+			await Task.yield()
+		}
+		#expect(sentLines(of: client) == [
+			"@+draft/reply=first-reply PRIVMSG #chat :first",
+			"@+draft/reply=second-reply PRIVMSG #chat :second",
+		])
+		#expect(client.nextMessageReplyIdentifier == nil)
+	}
+
 	@Test("Without message-tags the reply tag is dropped from the wire")
 	func replyTagIsDroppedWithoutMessageTags() throws {
 		let client = TestClient()

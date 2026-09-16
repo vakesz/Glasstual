@@ -177,21 +177,65 @@ public enum KeychainItem: Sendable, Equatable, Hashable {
 	/// Writes `password`, creating the item when it does not exist yet.
 	@discardableResult
 	public func write(_ password: String) -> Bool {
-		KeychainStore.modifyOrAddItem(label, kind: itemClass, newPassword: password, service: storedService)
+		KeychainStore.modifyOrAddItem(label, kind: itemClass, newPassword: password, service: storedService) == errSecSuccess
 	}
 
 	@discardableResult
 	public func delete() -> Bool {
-		KeychainStore.deleteItem(kind: itemClass, service: storedService)
+		KeychainStore.deleteItem(kind: itemClass, service: storedService) == errSecSuccess
 	}
 
 	/// Writes or deletes the item so it matches `secret`. `.unchanged` leaves
 	/// whatever is stored alone.
-	public func apply(_ secret: PendingKeychainSecret) {
+	@discardableResult
+	public func apply(_ secret: PendingKeychainSecret) -> KeychainWriteResult {
+		let status: OSStatus
 		switch secret {
-		case .unchanged: break
-		case let .set(password): write(password)
-		case .cleared: delete()
+		case .unchanged: return .saved
+		case let .set(password):
+			status = KeychainStore.modifyOrAddItem(label, kind: itemClass, newPassword: password, service: storedService)
+		case .cleared:
+			status = KeychainStore.deleteItem(kind: itemClass, service: storedService)
+			if status == errSecItemNotFound {
+				return .saved
+			}
+		}
+		return status == errSecSuccess ? .saved : .failed(status)
+	}
+}
+
+/// The result of a requested secret edit. Failure preserves the pending edit.
+public enum KeychainWriteResult: Sendable, Equatable {
+	case saved
+	case failed(OSStatus)
+
+	public func get() throws {
+		if case let .failed(status) = self {
+			throw KeychainWriteError(status: status)
+		}
+	}
+}
+
+public struct KeychainWriteError: Error, LocalizedError, Sendable {
+	public let status: OSStatus
+
+	public init(status: OSStatus) {
+		self.status = status
+	}
+
+	public var errorDescription: String? {
+		SecCopyErrorMessageString(status, nil) as String?
+	}
+}
+
+/// Serializes each batch without suspension between its individual mutations.
+public actor KeychainWriter {
+	public static let shared = KeychainWriter()
+
+	public func apply(_ edits: [KeychainItem: PendingKeychainSecret]) async throws {
+		try Task.checkCancellation()
+		for (item, edit) in edits {
+			try item.apply(edit).get()
 		}
 	}
 }
@@ -246,8 +290,8 @@ enum KeychainStore {
 	/// Deletes the item from every group this process can reach, so a copy an
 	/// earlier build left elsewhere cannot come back on the next read.
 	@discardableResult
-	static func deleteItem(kind: KeychainItemClass, service: String) -> Bool {
-		SecItemDelete(identityQuery(kind: kind, service: service, accessGroup: nil) as CFDictionary) == errSecSuccess
+	static func deleteItem(kind: KeychainItemClass, service: String) -> OSStatus {
+		SecItemDelete(identityQuery(kind: kind, service: service, accessGroup: nil) as CFDictionary)
 	}
 
 	@discardableResult
@@ -256,7 +300,7 @@ enum KeychainStore {
 		kind: KeychainItemClass,
 		newPassword: String?,
 		service: String
-	) -> Bool {
+	) -> OSStatus {
 		var changes: [CFString: Any] = [
 			kSecAttrAccessible: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly,
 		]
@@ -269,10 +313,10 @@ enum KeychainStore {
 			if status == errSecSuccess {
 				removeCopiesOutsideAccessGroup(kind: kind, service: service)
 			}
-			return status == errSecSuccess
+			return status
 		}
 		guard let newPassword, newPassword.isEmpty == false else {
-			return false
+			return errSecParam
 		}
 
 		/* An add can still collide: another process may have created the item
@@ -281,11 +325,10 @@ enum KeychainStore {
 		 so a duplicate is a second chance rather than a dropped password. */
 		let addStatus = addItem(name, kind: kind, password: newPassword, service: service)
 		let written = switch addStatus {
-		case errSecSuccess: true
-		case errSecDuplicateItem: SecItemUpdate(query as CFDictionary, changes as CFDictionary) == errSecSuccess
-		default: false
+		case errSecDuplicateItem: SecItemUpdate(query as CFDictionary, changes as CFDictionary)
+		default: addStatus
 		}
-		if written {
+		if written == errSecSuccess {
 			removeCopiesOutsideAccessGroup(kind: kind, service: service)
 		}
 		return written

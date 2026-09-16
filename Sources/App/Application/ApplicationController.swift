@@ -45,10 +45,14 @@ enum ApplicationTerminationStage: Int, Comparable, Sendable {
 	case running
 	/// The quit confirmation is on screen and its answer decides.
 	case confirming
+	/// Already submitted Settings saves finish before their editors close.
+	case finishingSettings
 	/// Clients are leaving IRC.
 	case disconnecting
 	/// The transcript files and the history store are being flushed.
 	case savingLogs
+	/// Accepted credential mutations finish before the application exits.
+	case savingCredentials
 	/// `NSApp` has been told it may quit.
 	case finished
 
@@ -121,9 +125,9 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 	public private(set) var ghostModeIsOn = false
 	public private(set) var applicationIsLaunched = false
 
-	/// Teardown has begun: nothing may act on the connection tree any more.
+	/// Shutdown has begun; accepted Settings saves finish before teardown.
 	public var applicationIsTerminating: Bool {
-		terminationStage >= .disconnecting
+		terminationStage >= .finishingSettings
 	}
 
 	private var terminationStage: ApplicationTerminationStage = .running
@@ -136,6 +140,8 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 	/// The quit confirmation while it is on screen. Cancelling it takes the
 	/// sheet down without its answer being acted on.
 	private var terminationConfirmation: Task<Void, Never>?
+	private var settingsTerminationTask: Task<Void, Never>?
+	private var credentialTerminationTask: Task<Void, Never>?
 	private let notifications = NotificationSubscriptions()
 	private lazy var resourceFileImporter = ResourceFileImporter()
 
@@ -427,13 +433,9 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 			terminationConfirmation?.cancel()
 			terminationConfirmation = nil
 			terminationStage = .running
-			Task { [weak self] in
-				self?.performApplicationTerminationStepOne()
-			}
+			performApplicationTerminationStepOne()
 		case .begin:
-			Task { [weak self] in
-				self?.performApplicationTerminationStepOne()
-			}
+			performApplicationTerminationStepOne()
 		case .confirm:
 			presentTerminationConfirmation()
 		}
@@ -534,7 +536,13 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 		guard terminationStage == .savingLogs else { return }
 		historicLogSaveTimeoutTask?.cancel()
 		historicLogSaveTimeoutTask = nil
-		performApplicationTerminationStepThree()
+		terminationStage = .savingCredentials
+		credentialTerminationTask = Task { [weak self] in
+			await KeychainPersistence.shared.finishForTermination(confirmRetry: KeychainAlerts.confirmTerminationRetry)
+			guard let self else { return }
+			credentialTerminationTask = nil
+			performApplicationTerminationStepThree()
+		}
 	}
 
 	private func performApplicationTerminationStepOne() {
@@ -545,10 +553,35 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 			Self.terminationLogger.debug("Step one skipped; termination is already in progress")
 			return
 		}
+		terminationStage = .finishingSettings
+		var acceptedSaves = KeychainPersistence.shared.waitForSettingsSaves()
+		settingsTerminationTask = Task { [weak self] in
+			while true {
+				let saved = await acceptedSaves.value
+				guard let self else { return }
+				guard saved else {
+					settingsTerminationTask = nil
+					terminationStage = .running
+					NSApp.reply(toApplicationShouldTerminate: false)
+					return
+				}
+				if KeychainPersistence.shared.hasPendingSettingsSaves {
+					acceptedSaves = KeychainPersistence.shared.waitForSettingsSaves()
+					continue
+				}
+				settingsTerminationTask = nil
+				beginApplicationTeardown()
+				return
+			}
+		}
+	}
 
+	private func beginApplicationTeardown() {
+		guard terminationStage == .finishingSettings else { return }
 		Self.terminationLogger.debug("Step one entry")
 
 		terminationStage = .disconnecting
+		ServerConnectionCoordinator.cancelPendingRequests()
 
 		SharedApplication.sharedAppearance().prepareForApplicationTermination()
 

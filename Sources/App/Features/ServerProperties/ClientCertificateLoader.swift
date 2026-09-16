@@ -16,23 +16,30 @@ struct ClientCertificateDetails: Equatable, Sendable {
 	let sha1: String
 }
 
-/** Reads keychain secrets away from the main actor.
-
- Every `KeychainItem.password` is a synchronous `SecItemCopyMatching`, and a
- sheet needs several at once: read them together, off the main actor, and let
- the sheet cache the answers for as long as it is open. */
-nonisolated enum KeychainSecretLoader { // nonisolated: value
+/// Loads certificate choices and details for Server Properties.
+nonisolated enum ClientCertificateLoader { // nonisolated: value
+	/// Transfers newly created, non-Sendable identity handles exclusively to
+	/// the caller. The native picker becomes their only owner after this hop.
 	@concurrent
-	static func passwords(for items: [KeychainItem]) async -> [KeychainItem: String] {
-		var passwords: [KeychainItem: String] = [:]
+	static func identities() async -> sending [SecIdentity] {
+		guard !Task.isCancelled else { return [] }
+		let query: [CFString: Any] = [kSecClass: kSecClassIdentity, kSecMatchLimit: kSecMatchLimitAll,
+		                              kSecReturnRef: true]
+		var result: CFTypeRef?
+		guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
+		      !Task.isCancelled else { return [] }
+		return result as? [SecIdentity] ?? []
+	}
 
-		for item in Set(items) {
-			if let password = item.password {
-				passwords[item] = password
-			}
-		}
-
-		return passwords
+	@concurrent
+	static func persistentReference(for certificate: SecCertificate) async -> Data? {
+		guard !Task.isCancelled else { return nil }
+		let query: [CFString: Any] = [kSecClass: kSecClassCertificate, kSecValueRef: certificate,
+		                              kSecReturnPersistentRef: true]
+		var result: CFTypeRef?
+		guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
+		      !Task.isCancelled else { return nil }
+		return result as? Data
 	}
 
 	/// The name and fingerprints of the certificate a persistent keychain

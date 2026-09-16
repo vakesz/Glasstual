@@ -170,6 +170,21 @@ struct PreferencesDestination: Identifiable, Equatable, Sendable {
 		selection
 	}
 
+	/// Uses the same localized labels as the controls and import preview. The
+	/// search never depends on internal defaults keys or English-only keywords.
+	func matches(searchText: String) -> Bool {
+		let terms = searchText.split(whereSeparator: \.isWhitespace)
+		guard terms.isEmpty == false else { return true }
+		let labels = [title] + panes.flatMap { pane in
+			[pane.title] + (PreferencesPaneKeys.keysByPane[pane] ?? []).map {
+				String(localized: $0.displayName)
+			}
+		}
+		return terms.allSatisfy { term in
+			labels.contains { $0.localizedStandardContains(String(term)) }
+		}
+	}
+
 	init(
 		_ selection: PreferencesSelection,
 		symbol symbolName: String,

@@ -321,6 +321,7 @@ nonisolated enum SystemProfileInformation { // nonisolated: value
 	 to answer. */
 	@concurrent
 	static func mountedVolumeCapacities() async -> [VolumeCapacity] {
+		guard !Task.isCancelled else { return [] }
 		let keys: Set<URLResourceKey> = [
 			.volumeTotalCapacityKey,
 			.volumeAvailableCapacityForImportantUsageKey,
@@ -331,7 +332,7 @@ nonisolated enum SystemProfileInformation { // nonisolated: value
 		) ?? []
 
 		return volumes.compactMap { volume -> VolumeCapacity? in
-			guard let values = try? volume.resourceValues(forKeys: keys),
+			guard !Task.isCancelled, let values = try? volume.resourceValues(forKeys: keys),
 			      let total = values.volumeTotalCapacity,
 			      let free = values.volumeAvailableCapacityForImportantUsage
 			else { return nil }
@@ -353,6 +354,7 @@ nonisolated enum SystemProfileInformation { // nonisolated: value
 	@concurrent
 	static func hardwareFacts() async -> HardwareFacts {
 		var facts = HardwareFacts()
+		guard !Task.isCancelled else { return facts }
 		if let identifier = modelIdentifier(), identifier.isEmpty == false {
 			facts.modelName = modelName(for: identifier)
 		}
@@ -360,7 +362,9 @@ nonisolated enum SystemProfileInformation { // nonisolated: value
 		facts.physicalCoreCount = physicalCoreCount()
 		facts.physicalMemory = ProcessInfo.processInfo.physicalMemory
 		facts.systemUptime = ProcessInfo.processInfo.systemUptime
+		guard !Task.isCancelled else { return facts }
 		facts.rootVolumeCapacity = rootVolumeCapacity()
+		guard !Task.isCancelled else { return facts }
 		facts.graphicsDescription = graphicsDescription()
 		return facts
 	}

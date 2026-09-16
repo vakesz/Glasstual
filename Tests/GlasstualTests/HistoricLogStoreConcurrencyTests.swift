@@ -53,8 +53,7 @@ private actor HistoricLogStoreHarness {
 	}
 
 	func seed(_ rows: [(identifier: UInt, entry: HistoricLogEntry)]) async throws {
-		let context = try HistoricLogDatabase.makeStack(at: directory.appendingPathComponent(filenameStore.filename))
-		try await context.perform {
+		try await HistoricLogFixture.withContext(at: directory.appendingPathComponent(filenameStore.filename)) { context in
 			for row in rows {
 				HistoricLogDatabase.insert(row.entry, in: context, entryIdentifier: row.identifier)
 			}
@@ -63,8 +62,7 @@ private actor HistoricLogStoreHarness {
 	}
 
 	func persistedRows(inView view: String) async throws -> [(identifier: UInt, entry: HistoricLogEntry)] {
-		let context = try HistoricLogDatabase.makeStack(at: directory.appendingPathComponent(filenameStore.filename))
-		return try await context.perform {
+		try await HistoricLogFixture.withContext(at: directory.appendingPathComponent(filenameStore.filename)) { context in
 			let request = NSFetchRequest<NSManagedObject>(entityName: HistoricLogDatabase.entityName)
 			request.predicate = NSPredicate(
 				format: "%K == %@", HistoricLogAttribute.logLineViewIdentifier.rawValue, view
@@ -440,6 +438,7 @@ struct HistoricLogStoreConcurrencyTests {
 			).entries
 			#expect(saved.map(\.data) == [line.data])
 		}
+		try await HistoricLogFixture.close(context)
 		await harness.shutdown()
 	}
 

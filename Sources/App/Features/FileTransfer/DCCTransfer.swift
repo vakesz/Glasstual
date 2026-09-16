@@ -106,7 +106,7 @@ public actor DCCTransfer {
 		case listen(portRange: ClosedRange<UInt16>)
 	}
 
-	public nonisolated struct Configuration: Sendable { // nonisolated: value
+	public struct Configuration: Sendable {
 		public var role: Role
 		public var endpoint: Endpoint
 		/// The file to read from, or the file to write into. The caller

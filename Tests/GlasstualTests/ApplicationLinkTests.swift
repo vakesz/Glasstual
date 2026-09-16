@@ -118,7 +118,7 @@ struct ApplicationLinkTests {
 			.cancel,
 		]
 	)
-	func reuseRequiresConfirmation(choice: ServerConnectionMergeChoice) throws {
+	func reuseRequiresConfirmation(choice: ServerConnectionMergeChoice) async throws {
 		let request = try #require(connectionIntent(for: "ircs://irc.example.test/chat"))
 		let client = TestClient()
 		client.config.serverList = [Server(
@@ -129,7 +129,7 @@ struct ApplicationLinkTests {
 		var confirmations = 0
 		var merged: [ServerConnectionRequest] = []
 		var created: [ServerConnectionRequest] = []
-		ServerConnectionCoordinator.connect(
+		await ServerConnectionCoordinator.resolve(
 			using: request,
 			clients: [client],
 			confirmMerge: { candidate, address, channels in
@@ -152,7 +152,7 @@ struct ApplicationLinkTests {
 		"Hostname matches cannot reuse a different endpoint or TLS policy",
 		arguments: ["port", "tls", "ciphers", "certificate"]
 	)
-	func mismatchedConnectionsAreNotOffered(kind: String) throws {
+	func mismatchedConnectionsAreNotOffered(kind: String) async throws {
 		let request = try #require(connectionIntent(for: "ircs://irc.example.test/chat"))
 		let client = TestClient()
 		client.config.serverList = [Server(
@@ -167,7 +167,7 @@ struct ApplicationLinkTests {
 			client.config.validateServerCertificateChain = false
 		}
 		var created = 0
-		ServerConnectionCoordinator.connect(
+		await ServerConnectionCoordinator.resolve(
 			using: request,
 			clients: [client],
 			confirmMerge: { _, _, _ in
@@ -184,7 +184,7 @@ struct ApplicationLinkTests {
 	}
 
 	@Test("The real merge path does not JOIN for an external link, even on a logged-in client")
-	func externalMergeDoesNotJoin() throws {
+	func externalMergeDoesNotJoin() async throws {
 		let request = try #require(connectionIntent(for: "ircs://irc.example.test/chat"))
 		let client = TestClient()
 		client.config.serverList = [Server(
@@ -195,7 +195,7 @@ struct ApplicationLinkTests {
 		channel.associatedClient = client
 		client.add(channel)
 		try #require(client.canJoin(channel))
-		ServerConnectionCoordinator.connect(
+		await ServerConnectionCoordinator.resolve(
 			using: request,
 			clients: [client],
 			confirmMerge: { _, _, _ in .useExisting },
@@ -211,13 +211,35 @@ struct ApplicationLinkTests {
 				connectWhenCreated: true, mergeConnectionIfPossible: true, selectFirstChannelAdded: false
 			)
 		))
-		ServerConnectionCoordinator.connect(
+		await ServerConnectionCoordinator.resolve(
 			using: command,
 			clients: [client],
 			confirmMerge: { _, _, _ in .useExisting },
 			createConnection: { _ in Issue.record("Expected reuse") }
 		)
 		#expect(channel.status == .joining)
+	}
+
+	@Test("An endpoint edit invalidates reuse but does not cancel an explicit new connection",
+	      arguments: [ServerConnectionMergeChoice.useExisting, .createNew])
+	func changedEndpointInvalidatesPendingConfirmation(_ choice: ServerConnectionMergeChoice) async throws {
+		let request = try #require(connectionIntent(for: "ircs://irc.example.test/chat"))
+		let client = TestClient()
+		client.config.serverList = [Server(
+			serverAddress: "irc.example.test", serverPort: 6697, prefersSecuredConnection: true
+		)]
+		var created = false
+		await ServerConnectionCoordinator.resolve(
+			using: request,
+			clients: [client],
+			confirmMerge: { _, _, _ in
+				client.config.serverList[0].serverAddress = "replacement.invalid"
+				return choice
+			},
+			mergeConnection: { _, _ in Issue.record("A stale answer reused the changed endpoint") },
+			createConnection: { _ in created = true }
+		)
+		#expect(created == (choice == .createNew))
 	}
 
 	@Test("A matching saved endpoint cannot hide a different live socket")
@@ -259,7 +281,7 @@ struct ApplicationLinkTests {
 	/// A link naming only a server skipped the search for a saved one, so each
 	/// click saved another copy of a server the reader already had.
 	@Test("A link to a saved server opens that server instead of saving it again")
-	func serverOnlyLinkReusesTheSavedServer() throws {
+	func serverOnlyLinkReusesTheSavedServer() async throws {
 		let request = try #require(connectionIntent(for: "ircs://irc.example.test"))
 		try #require(request.channels.isEmpty)
 		let client = TestClient()
@@ -267,7 +289,7 @@ struct ApplicationLinkTests {
 			serverAddress: "irc.example.test", serverPort: 6697, prefersSecuredConnection: true
 		)]
 
-		ServerConnectionCoordinator.connect(
+		await ServerConnectionCoordinator.resolve(
 			using: request,
 			clients: [client],
 			confirmMerge: { _, _, _ in

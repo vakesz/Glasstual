@@ -33,6 +33,35 @@ private actor RetentionPassCounter {
 @MainActor
 @Suite("Historic log retention", .serialized)
 struct HistoricLogRetentionTests {
+	@Test("Fetching a reopened view schedules retention without a new message", .timeLimit(.minutes(1)))
+	func reopenedViewSchedulesRetention() async throws {
+		let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+		try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+		defer { try? FileManager.default.removeItem(at: directory) }
+		let passes = RetentionPassCounter()
+		let store = HistoricLogStore(
+			filenameStore: HistoricLogFilenameFixture(),
+			resizeDelay: { .zero },
+			willPerform: { operation in
+				if case .resize = operation {
+					await passes.record()
+				}
+			}
+		)
+		#expect(await store.openDatabase(inDirectory: directory.path).isOpen)
+		await store.setMaximumLineCount(100)
+		for index in 0 ..< 5 {
+			#expect(await store.writeLogLine(entry("line-\(index)")) == .accepted)
+		}
+		#expect(await store.close() == .saved)
+		#expect(await store.openDatabase(inDirectory: directory.path).isOpen)
+		await store.setMaximumLineCount(2)
+		_ = await store.fetchOutcome(.newestEntries(forView: "view", fetchLimit: 10))
+		await passes.wait(for: 1)
+		#expect(await store.fetchOutcome(.newestEntries(forView: "view", fetchLimit: 10)).entries.count == 2)
+		#expect(await store.close() == .saved)
+	}
+
 	private func entry(_ id: String, date: TimeInterval = 100) -> HistoricLogEntry {
 		HistoricLogEntry(
 			logLineData: Data(id.utf8),

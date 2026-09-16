@@ -53,6 +53,11 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, CustomKeybo
 	private var hasPreparedInitialState = false
 	private var preferredFontStorage: NSFont = .systemFont(ofSize: NSFont.systemFontSize)
 	private var preferredFontColorStorage: NSColor = .textColor
+	private let editingUndoManager = UndoManager()
+
+	override open var undoManager: UndoManager? {
+		editingUndoManager
+	}
 
 	public var preferredFont: NSFont {
 		get { preferredFontStorage }
@@ -203,8 +208,8 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, CustomKeybo
 	/** The one path both value setters take. It asks, replaces the text, tells
 	 the delegate, and then forgets the undo actions the old text recorded.
 
-	 Only this field's actions go. The undo manager belongs to the window, and
-	 `removeAllActions()` also emptied every other editor's undo stack in it. */
+	 Each editor owns its undo manager so clearing it also removes empty undo
+	 groups without touching another editor in the same window. */
 	private func replaceEntireValue(with newValue: NSAttributedString) {
 		let entireRange = range
 		guard shouldChangeText(in: entireRange, replacementString: newValue.string) else { return }
@@ -212,9 +217,8 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, CustomKeybo
 		defer { isReplacingEntireValue = false }
 		textStorage?.replaceCharacters(in: entireRange, with: newValue)
 		didChangeText()
-		if let textStorage {
-			undoManager?.removeAllActions(withTarget: textStorage)
-		}
+		breakUndoCoalescing()
+		editingUndoManager.removeAllActions()
 	}
 
 	open func textDidChange(_: Notification) {

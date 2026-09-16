@@ -38,6 +38,18 @@ public actor DCCTransferFile {
 		accessLease = lease
 	}
 
+	/// Reserves the descriptor away from the caller's actor.
+	@concurrent
+	static func open(url: URL, receiving: Bool, accessURL: URL? = nil) async throws -> DCCTransferFile {
+		try Task.checkCancellation()
+		let file = try DCCTransferFile(url: url, receiving: receiving, accessURL: accessURL)
+		if Task.isCancelled {
+			await file.close()
+			throw CancellationError()
+		}
+		return file
+	}
+
 	/// The descriptor a transfer owns, and what it was opened on.
 	private struct Reservation {
 		let descriptor: Int32
@@ -61,6 +73,7 @@ public actor DCCTransferFile {
 		var descriptor: Int32
 
 		repeat {
+			try Task.checkCancellation()
 			descriptor = Darwin.open(candidate.path, receiving
 				? O_RDWR | O_CREAT | O_EXCL | O_NOFOLLOW | O_CLOEXEC
 				: O_RDONLY | O_NONBLOCK | O_CLOEXEC, S_IRUSR | S_IWUSR)

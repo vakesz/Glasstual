@@ -524,7 +524,7 @@ public nonisolated enum Preferences {} // nonisolated: value
 
 // MARK: - Typed access
 
-public nonisolated extension TextualUserDefaults { // nonisolated: guarded
+public nonisolated extension UserDefaults { // nonisolated: guarded
 	/// The defaults database a declaration is stored in.
 	func store(for storage: PreferenceStorage) -> UserDefaults {
 		switch storage {

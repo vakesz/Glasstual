@@ -26,6 +26,8 @@ public final class ChannelPropertiesSheet: MainWindowSheetSession, ChannelScoped
 
 	let model: ChannelPropertiesModel
 	private let notifications = NotificationSubscriptions()
+	private var saveTask: Task<Void, Never>?
+	var credentialPersistence = KeychainPersistence.shared
 
 	public convenience init(client: IRCClient) {
 		self.init(config: nil, onClient: client)
@@ -64,14 +66,47 @@ public final class ChannelPropertiesSheet: MainWindowSheetSession, ChannelScoped
 	}
 
 	override public func submit() {
-		guard model.validateForSubmission() else { return }
+		guard !model.isSaving, model.validateForSubmission() else { return }
+		let submitted = model.submittedConfig
+		// A nested channel editor is part of its parent server's pending edit.
+		guard !(delegate is ServerPropertiesSheet) else {
+			finishSaving(submitted)
+			return
+		}
+		model.isSaving = true
+		let write = credentialPersistence.enqueue(submitted.pendingKeychainEdits, retainsFailureForTermination: false)
+		saveTask = credentialPersistence.submitSettingsSave { [self] in
+			do {
+				try await write.value
+				let edits = submitted.pendingKeychainEdits
+				var saved = submitted
+				saved.acknowledgeKeychainEdits(edits)
+				client?.sessionCredentials.apply(edits)
+				finishSaving(saved)
+				return true
+			} catch {
+				model.isSaving = false
+				saveTask = nil
+				KeychainAlerts.showFailure(error)
+				return false
+			}
+		}
+	}
+
+	private func finishSaving(_ submitted: ChannelConfig) {
+		saveTask = nil
+		model.isSaving = false
 		removeConfigurationObserver()
-		model.config = model.submittedConfig
-		(delegate as? any ChannelPropertiesSheetDelegate)?.channelPropertiesSheet(self, onOk: model.config)
+		model.config = submitted
+		(delegate as? any ChannelPropertiesSheetDelegate)?.channelPropertiesSheet(self, onOk: submitted)
 		super.submit()
 	}
 
 	override public func cancel() {
+		guard !model.isSaving else { return }
+		saveTask?.cancel()
+		saveTask = nil
+		model.isSaving = false
 		removeConfigurationObserver()
 		super.cancel()
 	}

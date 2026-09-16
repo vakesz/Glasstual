@@ -42,6 +42,7 @@ extension FileTransferController {
 	public func prepareForPermanentDestruction() {
 		closeAndPostNotification(false)
 		lifecycleNotifications.cancelAll()
+		stopObservingPeerNicknameChanges()
 		portMapperNotifications.cancelAll()
 		releaseOwnedFile()
 	}
@@ -51,6 +52,8 @@ extension FileTransferController {
 	}
 
 	public func closeAndPostNotification(_ postNotification: Bool) {
+		filePreparationTask?.cancel()
+		filePreparationTask = nil
 		negotiationTask?.cancel()
 		negotiationTask = nil
 		resumeRequestTimeout?.cancel()
@@ -91,10 +94,8 @@ extension FileTransferController {
 		close(with: .notConnectedToIRC)
 	}
 
-	func peerNicknameChanged(_ notification: Notification) {
-		guard let oldNickname = notification.userInfo?["oldNickname"] as? String,
-		      let newNickname = notification.userInfo?["newNickname"] as? String,
-		      let client,
+	func peerNicknameChanged(from oldNickname: String, to newNickname: String) {
+		guard let client,
 		      client.supportInfo.casefoldString(peerNickname) == client.supportInfo.casefoldString(oldNickname)
 		else {
 			return

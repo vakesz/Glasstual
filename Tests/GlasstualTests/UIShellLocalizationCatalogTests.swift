@@ -142,9 +142,9 @@ struct UIShellLocalizationCatalogTests {
 				"copy-nickserv-command-for": "Copy NickServ Command for %@",
 			],
 			"TDCChannelPropertiesSheet": [
-				"secret-key-length": "%1$ld of %2$ld characters",
+				"secret-key-length": "%1$ld of %2$ld bytes",
 				"secret-key-too-long":
-					"%1$@ accepts at most %2$ld characters. Anything past that may be cut off.",
+					"%1$@ accepts at most %2$ld bytes. Anything past that may be cut off.",
 			],
 			/* The member-list entries moved into the feature's own catalog with
 				the list itself. */

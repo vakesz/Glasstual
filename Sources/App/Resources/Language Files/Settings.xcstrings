@@ -1,6 +1,13 @@
 {
   "sourceLanguage": "en",
   "strings": {
+	"search-placeholder": {
+	  "comment": "Placeholder in the Settings sidebar search field. Search matches localized pane titles and setting labels.",
+	  "extractionState": "manual",
+	  "localizations": {
+	    "en": { "stringUnit": { "state": "translated", "value": "Search Settings" } }
+	  }
+	},
     "accessibility-label-settings": {
       "comment": "Accessibility label for the Settings sidebar. Legacy key: sb-tt.",
       "extractionState": "manual",

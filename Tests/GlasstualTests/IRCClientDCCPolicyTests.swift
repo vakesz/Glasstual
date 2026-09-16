@@ -56,7 +56,10 @@ struct IRCClientDCCPolicyTests {
 	func rejectsInvalidFileTransferRanges() {
 		#expect(DCCFileTransferRequestParser.parse("SEND file 3232235777 0 42") == nil)
 		#expect(DCCFileTransferRequestParser.parse("SEND file 3232235777 65536 42") == nil)
-		#expect(DCCFileTransferRequestParser.parse("SEND file 3232235777 5000 0") == nil)
+		#expect(
+			DCCFileTransferRequestParser.parse("SEND file 3232235777 5000 0")
+				== .send(filename: "file", address: "192.168.1.1", port: 5000, filesize: 0, token: nil)
+		)
 		#expect(DCCFileTransferRequestParser.parse("RESUME file 5000 12 token") == nil)
 	}
 

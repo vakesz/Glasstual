@@ -31,18 +31,26 @@ private nonisolated struct HistoricLogViewIndex: Sendable { // nonisolated: valu
 	struct Contribution: Sendable {
 		var messageIdentifier: String?
 		var fallbackKey: String?
+		var receivedAt: Date
+		var isConversation: Bool
+	}
+
+	private struct Entry: Sendable {
+		let contribution: Contribution
+		let generation: UUID
 	}
 
 	private(set) var messageIdentifiers: [String: Int] = [:]
 	private(set) var fallbackKeys: [String: Int] = [:]
-	private var contributions: [String: Contribution] = [:]
-	var newestDate: Date?
+	private var contributions: [String: Entry] = [:]
+	private var generation = UUID()
+	private(set) var newestDate: Date?
 	/** The newest line a person wrote, as opposed to one the client narrated.
 
 	 A read marker is answered against this rather than `newestDate`: joining a
 	 channel prints a topic, a mode and a join line stamped now, and none of them
 	 is news the badge should count. */
-	var newestConversationDate: Date?
+	private(set) var newestConversationDate: Date?
 
 	/// Records what `uniqueIdentifier` contributes, and reports whether this
 	/// call added it. A line the index already holds is left alone: the same
@@ -57,16 +65,45 @@ private nonisolated struct HistoricLogViewIndex: Sendable { // nonisolated: valu
 			return false
 		}
 		guard contributions[uniqueIdentifier] == nil else { return false }
-		contributions[uniqueIdentifier] = contribution
+		contributions[uniqueIdentifier] = Entry(contribution: contribution, generation: generation)
 		retain(contribution)
+		newestDate = max(newestDate ?? contribution.receivedAt, contribution.receivedAt)
+		if contribution.isConversation {
+			newestConversationDate = max(newestConversationDate ?? contribution.receivedAt, contribution.receivedAt)
+		}
 		return true
 	}
 
+	/// Later writes belong to a new generation. A successful deletion only
+	/// withdraws the generations that existed when it was requested.
+	mutating func beginRemoval() -> Set<UUID> {
+		let removed = Set(contributions.values.map(\.generation))
+		generation = UUID()
+		return removed
+	}
+
+	mutating func remove(generations: Set<UUID>) {
+		let identifiers = contributions.filter { generations.contains($0.value.generation) }.map(\.key)
+		for identifier in identifiers {
+			remove(identifier, updateDates: false)
+		}
+		refreshDates()
+	}
+
 	/// Withdraws what a pruned line contributed.
-	mutating func remove(_ uniqueIdentifier: String) {
-		guard let contribution = contributions.removeValue(forKey: uniqueIdentifier) else { return }
+	mutating func remove(_ uniqueIdentifier: String, updateDates: Bool = true) {
+		guard let contribution = contributions.removeValue(forKey: uniqueIdentifier)?.contribution else { return }
 		Self.release(contribution.messageIdentifier, from: &messageIdentifiers)
 		Self.release(contribution.fallbackKey, from: &fallbackKeys)
+		if updateDates, contribution.receivedAt == newestDate || contribution.receivedAt == newestConversationDate {
+			refreshDates()
+		}
+	}
+
+	private mutating func refreshDates() {
+		newestDate = contributions.values.map(\.contribution.receivedAt).max()
+		newestConversationDate = contributions.values.filter(\.contribution.isConversation)
+			.map(\.contribution.receivedAt).max()
 	}
 
 	private mutating func retain(_ contribution: Contribution) {
@@ -107,14 +144,21 @@ public final class LogControllerHistoricLogFile {
 	 the writes queued ahead of it, but nothing about one conversation waits on
 	 another's. The store serializes the transactions themselves. */
 	private struct Lane {
+		let identifier = UUID()
 		let operations: AsyncStream<Operation>.Continuation
 		let pump: Task<Void, Never>
+		var pendingOperations = 0
+		var retiresWhenIdle = false
 	}
 
 	private var viewIndexes: [String: HistoricLogViewIndex] = [:]
 	private let client: HistoricLogClient
 	let recovery = TranscriptHistoryRecoveryState()
 	private var lanes: [String: Lane] = [:]
+	var activeLaneCount: Int {
+		lanes.count
+	}
+
 	private var terminationTask: Task<Void, Never>?
 	private enum Termination {
 		case none
@@ -153,17 +197,32 @@ public final class LogControllerHistoricLogFile {
 	/// the lane took it.
 	@discardableResult
 	private func enqueue(_ operation: @escaping Operation, forView viewIdentifier: String) -> Bool {
-		if case .terminated = lane(for: viewIdentifier).operations.yield(operation) {
+		let lane = lane(for: viewIdentifier)
+		lanes[viewIdentifier]?.pendingOperations += 1
+		if case .terminated = lane.operations.yield({ [weak self] in
+			await operation()
+			self?.completedOperation(forView: viewIdentifier, laneIdentifier: lane.identifier)
+		}) {
+			completedOperation(forView: viewIdentifier, laneIdentifier: lane.identifier)
 			return false
 		}
 		return true
 	}
 
+	private func completedOperation(forView viewIdentifier: String, laneIdentifier: UUID) {
+		guard lanes[viewIdentifier]?.identifier == laneIdentifier else { return }
+		lanes[viewIdentifier]?.pendingOperations -= 1
+		if let lane = lanes[viewIdentifier], lane.retiresWhenIdle, lane.pendingOperations == 0 {
+			lanes.removeValue(forKey: viewIdentifier)
+			lane.operations.finish()
+		}
+	}
+
 	/// Returns once everything already queued for the view has run.
 	private func drain(view viewIdentifier: String) async {
-		guard let lane = lanes[viewIdentifier] else { return }
+		guard lanes[viewIdentifier] != nil else { return }
 		await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-			if case .terminated = lane.operations.yield({ continuation.resume() }) {
+			if !enqueue({ continuation.resume() }, forView: viewIdentifier) {
 				continuation.resume()
 			}
 		}
@@ -260,28 +319,19 @@ public final class LogControllerHistoricLogFile {
 	public func indexLogLine(_ logLine: LogLine, forView viewIdentifier: String) -> Bool {
 		let messageIdentifier = logLine.messageIdentifier
 
-		let added = viewIndexes[viewIdentifier, default: HistoricLogViewIndex()].add(
+		return viewIndexes[viewIdentifier, default: HistoricLogViewIndex()].add(
 			HistoricLogViewIndex.Contribution(
 				messageIdentifier: messageIdentifier?.isEmpty == false ? messageIdentifier : nil,
 				fallbackKey: Self.fallbackKey(
 					for: logLine.receivedAt,
 					nickname: logLine.nickname,
 					messageBody: logLine.messageBody
-				)
+				),
+				receivedAt: logLine.receivedAt,
+				isConversation: logLine.lineType.isConversation
 			),
 			for: logLine.uniqueIdentifier
 		)
-
-		let receivedAt = logLine.receivedAt
-
-		let newestDate = viewIndexes[viewIdentifier]?.newestDate ?? receivedAt
-		viewIndexes[viewIdentifier]?.newestDate = max(newestDate, receivedAt)
-
-		guard logLine.lineType.isConversation else { return added }
-
-		let newestConversationDate = viewIndexes[viewIdentifier]?.newestConversationDate ?? receivedAt
-		viewIndexes[viewIdentifier]?.newestConversationDate = max(newestConversationDate, receivedAt)
-		return added
 	}
 
 	public func indexLogLines(_ logLines: [LogLine], forView viewIdentifier: String) {
@@ -351,6 +401,9 @@ public final class LogControllerHistoricLogFile {
 			let outcome = await client.writeEntry(entry)
 			guard let self else { return }
 			if case .accepted = outcome {
+				// A preceding clear may have removed an earlier contribution
+				// with this identity while the replacement write was queued.
+				indexLogLine(logLine, forView: viewIdentifier)
 				return
 			}
 			if indexed {
@@ -372,6 +425,7 @@ public final class LogControllerHistoricLogFile {
 	@discardableResult
 	public func removeHistory(forView viewIdentifier: String, forget: Bool) -> Task<Void, Never> {
 		let client = client
+		let removedGenerations = viewIndexes[viewIdentifier]?.beginRemoval() ?? []
 		let (finished, finish) = AsyncStream<Void>.makeStream()
 		let queued = enqueue({ [weak self] in
 			defer { finish.finish() }
@@ -379,7 +433,13 @@ public final class LogControllerHistoricLogFile {
 			guard let self else { return }
 			switch outcome {
 			case .deleted:
-				viewIndexes.removeValue(forKey: viewIdentifier)
+				viewIndexes[viewIdentifier]?.remove(generations: removedGenerations)
+				if forget {
+					lanes[viewIdentifier]?.retiresWhenIdle = true
+					if viewIndexes[viewIdentifier]?.newestDate == nil {
+						viewIndexes.removeValue(forKey: viewIdentifier)
+					}
+				}
 				recovery.deletionFailures.removeValue(forKey: viewIdentifier)
 			case let .failed(reason): recovery.deletionFailures[viewIdentifier] = reason
 			case .unavailable: recovery.deletionFailures[viewIdentifier] = PromptStrings.Logging.scrollbackFailureBody

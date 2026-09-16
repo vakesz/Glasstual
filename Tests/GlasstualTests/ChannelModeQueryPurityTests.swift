@@ -16,19 +16,20 @@ import Testing
 
 @MainActor
 struct ChannelModeQueryPurityTests {
-	private func channelMode(currentModes modeString: String) throws -> ChannelModeState {
+	private func channelMode(currentModes modeString: String) throws -> (TestClient, ChannelModeState) {
 		let client = TestClient()
 		client.supportInfo.processConfigurationData("CHANMODES=beI,k,l,imnpst PREFIX=(ov)@+")
 
 		let channel = try #require(client.findChannelOrCreate("#chat"))
 		let channelMode = ChannelModeState(channel: channel)
 		_ = channelMode.updateModes(modeString)
-		return channelMode
+		return (client, channelMode)
 	}
 
 	@Test("Querying a mode does not define it")
 	func queryingAModeDoesNotDefineIt() throws {
-		let channelMode = try channelMode(currentModes: "")
+		let (client, channelMode) = try channelMode(currentModes: "")
+		defer { withExtendedLifetime(client) {} }
 
 		#expect(channelMode.modeInfo(for: "n") == nil)
 		#expect(channelMode.modeIsDefined("n") == false)
@@ -36,7 +37,8 @@ struct ChannelModeQueryPurityTests {
 
 	@Test("Reading modes for the properties sheet does not produce a removal command")
 	func readingModesProducesNoRemovalCommand() throws {
-		let channelMode = try channelMode(currentModes: "")
+		let (client, channelMode) = try channelMode(currentModes: "")
+		defer { withExtendedLifetime(client) {} }
 		let modes = try #require(channelMode.modes.copy() as? ChannelModeContainer)
 
 		/* This is what the channel-properties sheet does: read each mode it displays. */
@@ -49,7 +51,8 @@ struct ChannelModeQueryPurityTests {
 
 	@Test("A mode set after being queried still produces an add command")
 	func settingAQueriedModeStillWorks() throws {
-		let channelMode = try channelMode(currentModes: "")
+		let (client, channelMode) = try channelMode(currentModes: "")
+		defer { withExtendedLifetime(client) {} }
 		let modes = try #require(channelMode.modes.copy() as? ChannelModeContainer)
 
 		_ = modes.modeInfo(for: "k")

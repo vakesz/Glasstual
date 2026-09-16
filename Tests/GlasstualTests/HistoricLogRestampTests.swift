@@ -49,9 +49,7 @@ struct HistoricLogRestampTests {
 	}
 
 	private func seed(_ rows: [HistoricLogEntry], at url: URL, startingAt firstIdentifier: UInt) async throws {
-		let context = try HistoricLogDatabase.makeStack(at: url)
-
-		await context.perform {
+		try await HistoricLogFixture.withContext(at: url) { context in
 			for (offset, row) in rows.enumerated() {
 				HistoricLogDatabase.insert(
 					row,
@@ -60,14 +58,12 @@ struct HistoricLogRestampTests {
 				)
 			}
 
-			HistoricLogDatabase.quickSave(context)
+			try context.save()
 		}
 	}
 
 	private func storedCreationDates(at url: URL) async throws -> [String: TimeInterval] {
-		let context = try HistoricLogDatabase.makeStack(at: url)
-
-		return await context.perform {
+		try await HistoricLogFixture.withContext(at: url) { context in
 			HistoricLogDatabase.fetchOutcome(
 				in: context,
 				viewIdentifier: Self.view,
@@ -83,9 +79,7 @@ struct HistoricLogRestampTests {
 	}
 
 	private func restampIsOutstanding(at url: URL) async throws -> Bool {
-		let context = try HistoricLogDatabase.makeStack(at: url)
-
-		return await context.perform {
+		try await HistoricLogFixture.withContext(at: url) { context in
 			HistoricLogDatabase.needsEntryCreationDateRestamp(in: context)
 		}
 	}

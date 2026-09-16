@@ -3,8 +3,39 @@
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
 
+import CoreData
 import Foundation
 @testable import Glasstual
+
+/// A test that holds a context beyond the store's lifetime closes its SQLite
+/// connection before deleting the scratch directory.
+nonisolated enum HistoricLogFixture { // nonisolated: value
+	static func close(_ context: NSManagedObjectContext) async throws {
+		try await context.perform {
+			context.reset()
+			guard let coordinator = context.persistentStoreCoordinator else { return }
+			for store in coordinator.persistentStores {
+				try coordinator.remove(store)
+			}
+			context.persistentStoreCoordinator = nil
+		}
+	}
+
+	static func withContext<Result: Sendable>(
+		at url: URL,
+		operation: @escaping @Sendable (NSManagedObjectContext) throws -> Result
+	) async throws -> Result {
+		let context = try HistoricLogDatabase.makeStack(at: url)
+		do {
+			let result = try await context.perform { try operation(context) }
+			try await close(context)
+			return result
+		} catch {
+			try await close(context)
+			throw error
+		}
+	}
+}
 
 /// The one page shape history tests read back with: everything a view holds,
 /// oldest first. The store answers fetches with an outcome, and a test that is

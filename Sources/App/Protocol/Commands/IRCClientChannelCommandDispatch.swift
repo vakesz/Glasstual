@@ -433,7 +433,8 @@ extension IRCClient {
 			/* Delete/Cancel, not Yes/No: the button says what accepting does, and
 			 the destructive role is what tints it and tells VoiceOver the
 			 existing conversation is not coming back. */
-			let shouldDelete = output?.confirmModally(
+			let originalName = targetChannel.name
+			requestConfirmation(
 				AlertRequest(
 					title: PromptStrings.Deletion.existingQueryTitle(name: existingQuery.name),
 					body: PromptStrings.Deletion.warning(for: .query),
@@ -441,10 +442,18 @@ extension IRCClient {
 					alternateButton: PromptStrings.Action.cancel,
 					destructiveButton: .default,
 					style: .warning
-				)
-			) ?? true
-			guard shouldDelete else { return }
-			world?.destroyChannel(existingQuery)
+				),
+				isCurrent: { client in
+					client.channelList.contains { $0 === targetChannel }
+						&& targetChannel.name == originalName
+						&& client.findChannel(nickname) === existingQuery
+				},
+				perform: { client in
+					client.world?.destroyChannel(existingQuery)
+					client.retitleQuery(targetChannel, from: originalName, to: nickname)
+				}
+			)
+			return
 		}
 		retitleQuery(targetChannel, from: targetChannel.name, to: nickname)
 	}

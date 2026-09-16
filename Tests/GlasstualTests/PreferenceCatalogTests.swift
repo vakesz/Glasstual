@@ -10,6 +10,7 @@
  *
  *********************************************************************** */
 
+import AppKit
 import CocoaExtensions
 import Foundation
 @testable import Glasstual
@@ -136,6 +137,37 @@ struct PreferenceCatalogTests {
 	}
 
 	// MARK: - Helpers
+
+	@Test("Legacy NSColor preferences become versioned Codable colors when saved")
+	func legacyColorsRemainReadable() throws {
+		let original = NSColor(calibratedRed: 0.2, green: 0.4, blue: 0.6, alpha: 0.8)
+		let legacy = try NSKeyedArchiver.archivedData(withRootObject: original, requiringSecureCoding: true)
+		let color = try #require(PreferenceColor.preferenceValue(from: legacy))
+		let rewritten = try #require(color.preferenceObject as? Data)
+		let propertyList = try #require(PropertyListSerialization.propertyList(from: rewritten, format: nil) as? [String: Any])
+		#expect(propertyList["version"] as? Int == 1)
+		#expect(propertyList["$archiver"] == nil)
+		#expect(PreferenceColor.preferenceValue(from: rewritten) == color)
+		#expect(abs(color.red - 0.2) < 0.001)
+		#expect(abs(color.green - 0.4) < 0.001)
+		#expect(abs(color.blue - 0.6) < 0.001)
+		#expect(abs(color.alpha - 0.8) < 0.001)
+	}
+
+	@Test("Colors reject unsupported payload versions and nonfinite components")
+	func invalidStoredColorsAreRejected() throws {
+		let color = PreferenceColor(red: 0.2, green: 0.4, blue: 0.6)
+		let data = try #require(color.preferenceObject as? Data)
+		var propertyList = try #require(PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any])
+		propertyList["version"] = 2
+		let unsupported = try PropertyListSerialization.data(fromPropertyList: propertyList, format: .binary, options: 0)
+		#expect(PreferenceColor.preferenceValue(from: unsupported) == nil)
+		#expect(PreferenceColor(red: .nan, green: 0, blue: 0).preferenceObject == nil)
+		propertyList["version"] = 1
+		propertyList["color"] = ["red": Double.infinity, "green": 0, "blue": 0, "alpha": 1]
+		let nonfinite = try PropertyListSerialization.data(fromPropertyList: propertyList, format: .binary, options: 0)
+		#expect(PreferenceColor.preferenceValue(from: nonfinite) == nil)
+	}
 
 	/** Archived colours are not byte-identical between two archives of the same
 	 colour, and a number that was written as a real compares equal to the same

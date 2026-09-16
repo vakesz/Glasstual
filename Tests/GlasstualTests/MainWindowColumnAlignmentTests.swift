@@ -57,7 +57,7 @@ struct MainWindowColumnAlignmentTests {
 		let safeTop = host.view.safeAreaInsets.top
 		#expect(safeTop > 0)
 
-		let transcript = try #require(descendants(of: OverlayScrollView.self, in: host.view).first)
+		let transcript = logView.scrollView
 		let transcriptFrame = transcript.convert(transcript.bounds, to: host.view)
 		#expect(abs(transcriptFrame.minY - safeTop) < 0.5, "transcript at \(transcriptFrame)")
 		/* Its insets are the input bar's, set by hand; nothing adjusts them for

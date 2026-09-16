@@ -57,6 +57,7 @@ public final class ChannelModifyModesSheet: MainWindowSheetSession, ChannelScope
 	}
 
 	override public func submit() {
+		guard model.fitsMaximumKeyLength else { return }
 		(delegate as? ChannelModifyModesSheetDelegate)?.channelModifyModesSheet(
 			self,
 			onOk: model.modesForSubmission()

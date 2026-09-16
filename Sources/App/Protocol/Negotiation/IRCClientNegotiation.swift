@@ -260,7 +260,7 @@ extension IRCClient {
 
 			// Snapshot the pending secret too: teardown may retire its keychain item.
 			var origin = server
-			origin?.pendingServerPassword = PendingKeychainSecret(server?.serverPassword)
+			origin?.pendingServerPassword = PendingKeychainSecret(sessionServerPassword)
 			let endpoint = PendingIRCEndpoint(
 				host: host,
 				port: upgradePort,

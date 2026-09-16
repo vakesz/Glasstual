@@ -150,10 +150,12 @@ public extension IRCClient {
 				printInvalidSyntaxMessage(for: command)
 				return
 			}
-			if SharedApplication.sharedFileTransferCenter().addSender(
+			SharedApplication.sharedFileTransferCenter().offerSender(
 				for: self, nickname: nickname, path: path, autoOpen: true
-			) == nil {
-				printDebugInformation(IRCDirectChatStrings.fileCouldNotBeOffered(path: path))
+			) { [weak self] identifier in
+				if identifier == nil {
+					self?.printDebugInformation(IRCDirectChatStrings.fileCouldNotBeOffered(path: path))
+				}
 			}
 		default:
 			printInvalidSyntaxMessage(for: command)
@@ -276,17 +278,18 @@ public extension IRCClient {
 		}
 		let isAction = command == .privmsgAction
 		let lineType: LogLineType = isAction ? .action : .privateMessage
-		for line in string.splitIntoLines {
-			var cursor = IRCLineCursor(line)
-			while let message = cursor.nextLine(forChannel: channel.name, on: self, with: lineType) {
-				if isAction {
-					connection.sendAction(message)
-				} else {
-					connection.sendMessage(message)
-				}
-				print(message, by: userNickname, in: channel, as: lineType, command: "PRIVMSG",
-				      receivedAt: Date(), isEncrypted: false)
+		var cursor = OutboundTextCursor(string)
+		enqueueOutboundText(channels: [channel]) { client in
+			guard channel.directChatConnection === connection, connection.isConnected,
+			      let message = cursor.next(for: channel.name, on: client, as: lineType) else { return false }
+			if isAction {
+				connection.sendAction(message)
+			} else {
+				connection.sendMessage(message)
 			}
+			client.print(message, by: client.userNickname, in: channel, as: lineType, command: "PRIVMSG",
+			             receivedAt: Date(), isEncrypted: false)
+			return true
 		}
 	}
 

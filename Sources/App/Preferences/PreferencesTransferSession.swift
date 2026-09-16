@@ -309,7 +309,7 @@ final class PreferencesTransferSession {
 	}
 
 	private func preparePreview(_ input: PreferencesTransferInput) async {
-		guard canStart else { report(PreferencesTransferError.busy); return }
+		guard canStart else { return }
 		state = .preparing
 		do {
 			let archive: PreferencesArchive = switch input {
@@ -317,20 +317,13 @@ final class PreferencesTransferSession {
 			case let .recovery(backup): try await recoveryStore.read(backup)
 			}
 			let current = try liveSnapshot()
-			let plans = try await Task.detached {
-				var plans: [PreferencesTransferMode: PreferencesTransferPlan] = try [
-					.merge: PreferencesTransferPlan(archive: archive, current: current, mode: .merge),
-				]
-				if archive.isComplete {
-					plans[.restore] = try PreferencesTransferPlan(
-						archive: archive, current: current, mode: .restore
-					)
-				}
-				return plans
-			}.value
+			let plans = try await PreferencesTransferPreparation.plans(archive: archive, current: current)
+			try Task.checkCancellation()
 			state = .previewing(PreferencesTransferPreview(
 				filename: input.url.lastPathComponent, archive: archive, current: current, plans: plans
 			))
+		} catch is CancellationError {
+			finishPreparing()
 		} catch {
 			finishPreparing()
 			report(error)
@@ -342,12 +335,7 @@ final class PreferencesTransferSession {
 		state = .preparing
 		defer { finishPreparing() }
 		let snapshot = try liveSnapshot()
-		return try await Task.detached {
-			let data = try snapshot.encoded(includeConnectCommands: includeConnectCommands)
-			let decoded = try PreferencesArchive.decode(data)
-			_ = try PreferencesTransferPlan(archive: decoded, current: snapshot, mode: .restore)
-			return data
-		}.value
+		return try await PreferencesTransferPreparation.export(snapshot, includeConnectCommands: includeConnectCommands)
 	}
 
 	/// Leaves the preparing state without disturbing whatever replaced it.
@@ -360,20 +348,19 @@ final class PreferencesTransferSession {
 	// MARK: - Committing
 
 	func commitPreview() async {
-		guard case let .previewing(preview) = state else { report(PreferencesTransferError.busy); return }
+		guard case let .previewing(preview) = state else { return }
 		state = .committing(preview)
 		do {
 			let current = try liveSnapshot()
 			guard current.hasSameConfiguration(as: preview.current) else { throw PreferencesTransferError.stalePreview }
 			let archive = preview.archive
 			let mode = preview.mode
-			let plan = try await Task.detached {
-				try PreferencesTransferPlan(archive: archive, current: current, mode: mode)
-			}.value
+			let plan = try await PreferencesTransferPreparation.plan(archive: archive, current: current, mode: mode)
 			let backup = try await recoveryStore.save(current)
 			// Settings and clients may change while backup I/O suspends. Do not apply a stale preview.
 			guard try liveSnapshot().hasSameConfiguration(as: current)
 			else { throw PreferencesTransferError.stalePreview }
+			try Task.checkCancellation()
 			try await commit(plan)
 			state = .finished(.imported(PreferencesTransferResult(
 				changedPreferences: plan.changedKeys.count, addedClients: plan.addedClients.count,
@@ -581,5 +568,43 @@ final class PreferencesTransferSession {
 		case .success: state = .finished(.exported)
 		case let .failure(error): report(error)
 		}
+	}
+}
+
+/// CPU work leaves the calling actor without creating an independent task.
+private nonisolated enum PreferencesTransferPreparation { // nonisolated: value
+	@concurrent
+	static func plans(archive: PreferencesArchive,
+	                  current: PreferencesArchive) async throws -> [PreferencesTransferMode: PreferencesTransferPlan]
+	{
+		try Task.checkCancellation()
+		var plans: [PreferencesTransferMode: PreferencesTransferPlan] = try [
+			.merge: PreferencesTransferPlan(archive: archive, current: current, mode: .merge),
+		]
+		if archive.isComplete {
+			plans[.restore] = try PreferencesTransferPlan(archive: archive, current: current, mode: .restore)
+		}
+		try Task.checkCancellation()
+		return plans
+	}
+
+	@concurrent
+	static func plan(archive: PreferencesArchive, current: PreferencesArchive,
+	                 mode: PreferencesTransferMode) async throws -> PreferencesTransferPlan
+	{
+		try Task.checkCancellation()
+		let plan = try PreferencesTransferPlan(archive: archive, current: current, mode: mode)
+		try Task.checkCancellation()
+		return plan
+	}
+
+	@concurrent
+	static func export(_ snapshot: PreferencesArchive, includeConnectCommands: Bool) async throws -> Data {
+		try Task.checkCancellation()
+		let data = try snapshot.encoded(includeConnectCommands: includeConnectCommands)
+		let decoded = try PreferencesArchive.decode(data)
+		_ = try PreferencesTransferPlan(archive: decoded, current: snapshot, mode: .restore)
+		try Task.checkCancellation()
+		return data
 	}
 }

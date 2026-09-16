@@ -152,17 +152,18 @@ public extension IRCClient {
 	}
 
 	func writePasswordsToKeychain() {
-		config.writeNicknamePasswordToKeychain()
-		config.writeProxyPasswordToKeychain()
+		let edits = config.pendingKeychainEdits
+		KeychainPersistence.shared.persist(edits) { [weak self] committed in
+			guard let self else { return }
+			let acknowledged = committed.filter { config.pendingKeychainEdits[$0.key] == $0.value }
+			sessionCredentials.apply(acknowledged)
+			config.acknowledgeKeychainEdits(acknowledged)
+		}
 	}
 
-	/// Flushes every endpoint's password to the keychain.
+	/// Flushes every endpoint's password with the other pending client edits.
 	func writeServerPasswordsToKeychain() {
-		config.serverList = config.serverList.map { server in
-			var server = server
-			server.writeServerPasswordToKeychain()
-			return server
-		}
+		writePasswordsToKeychain()
 	}
 
 	func updateStoredConfiguration() {
@@ -248,9 +249,10 @@ public extension IRCClient {
 		clearAddressBookCache()
 		clearTrackedUsers()
 		if !preservingLocalData {
-			config.destroyNicknamePasswordKeychainItem()
-			config.destroyProxyPasswordKeychainItem()
-			destroyServerPasswordsKeychainItems()
+			KeychainPersistence.shared.persist(Dictionary(
+				config.keychainItems.map { ($0, PendingKeychainSecret.cleared) },
+				uniquingKeysWith: { _, newest in newest }
+			))
 			output?.destroyInputHistory(for: self)
 		}
 		channelList.forEach { $0.prepareForRemoval(preservingLocalData: preservingLocalData) }
@@ -286,7 +288,7 @@ public extension IRCClient {
 	}
 
 	func destroyServerPasswordsKeychainItems() {
-		config.serverList.forEach { $0.keychainItem.delete() }
+		KeychainPersistence.shared.persist(Dictionary(uniqueKeysWithValues: config.serverList.map { ($0.keychainItem, .cleared) }))
 	}
 
 	private func reconcileChannels(with configurations: [ChannelConfig], preservingLocalData: Bool,
@@ -340,7 +342,7 @@ public extension IRCClient {
 			if oldServer.uniqueIdentifier == server?.uniqueIdentifier {
 				retiredServerKeychainItems.insert(oldServer.keychainItem)
 			} else {
-				oldServer.keychainItem.delete()
+				KeychainPersistence.shared.persist([oldServer.keychainItem: .cleared])
 			}
 		}
 

@@ -29,6 +29,7 @@
  * SUCH DAMAGE.
  *********************************************************************** */
 
+import Darwin
 import Foundation
 import os
 
@@ -89,40 +90,81 @@ enum ScriptExecutionSupport {
 	 something reads, so a reader that waits for termination first would wedge
 	 the script and never start.
 
-	 The bytes arrive through `FileHandle.bytes`, which suspends between reads.
-	 A blocking `read(upToCount:)` held one of the few cooperative-pool threads
-	 for as long as the script ran, however long that was. */
+	 Readiness notifications only wake this task. The descriptor is nonblocking,
+	 so a silent script neither occupies a cooperative-pool thread nor prevents
+	 another script's output from being read. The caller owns the open handle
+	 until this method returns and must not read it concurrently. */
 	@concurrent
 	static func readOutput(from handle: FileHandle) async throws -> Data {
+		try Task.checkCancellation()
+		let descriptor = handle.fileDescriptor
+		let flags = fcntl(descriptor, F_GETFL)
+		guard flags != -1 else { throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO) }
+		guard flags & O_ACCMODE != O_WRONLY else { throw POSIXError(.EBADF) }
+		guard fcntl(descriptor, F_SETFL, flags | O_NONBLOCK) != -1 else {
+			throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+		}
+		let (readiness, continuation) = AsyncStream<Void>.makeStream(bufferingPolicy: .bufferingNewest(1))
+		handle.readabilityHandler = { _ in continuation.yield(()) }
+		defer {
+			handle.readabilityHandler = nil
+			continuation.finish()
+			_ = fcntl(descriptor, F_SETFL, flags)
+		}
+		continuation.yield(())
 		var accumulated = Data()
 		var exceededLimit = false
-
-		for try await byte in handle.bytes {
-			if accumulated.count < maximumOutputBytes {
-				accumulated.append(byte)
-			} else {
-				exceededLimit = true
+		var buffer = [UInt8](repeating: 0, count: 64 * 1024)
+		for await _ in readiness {
+			while true {
+				try Task.checkCancellation()
+				let count = buffer.withUnsafeMutableBytes { Darwin.read(descriptor, $0.baseAddress, $0.count) }
+				if count == 0 {
+					guard exceededLimit == false else { throw OutputError.tooLarge }
+					return accumulated
+				}
+				if count < 0 {
+					let error = errno
+					if error == EINTR {
+						continue
+					}
+					if error == EAGAIN || error == EWOULDBLOCK {
+						break
+					}
+					throw POSIXError(POSIXErrorCode(rawValue: error) ?? .EIO)
+				}
+				let kept = min(count, maximumOutputBytes - accumulated.count)
+				accumulated.append(contentsOf: buffer.prefix(kept))
+				exceededLimit = exceededLimit || kept < count
 			}
 		}
-
-		guard exceededLimit == false else { throw OutputError.tooLarge }
-		return accumulated
+		throw CancellationError()
 	}
 
 	/// Runs the executable at `url` with `arguments` and returns what it wrote
-	/// to standard output, read while it runs.
+	/// to standard output, read while it runs. `NSUserUnixTask` has no process
+	/// termination API: cancellation discards its result after execution ends,
+	/// while the reader keeps draining so the script can finish writing.
 	@concurrent
 	static func runUnixScript(at url: URL, arguments: [String]) async throws -> Data {
+		try Task.checkCancellation()
 		let task = try NSUserUnixTask(url: url)
 		let pipe = Pipe()
 		let readHandle = pipe.fileHandleForReading
 		let writeHandle = pipe.fileHandleForWriting
 		task.standardOutput = writeHandle
-		defer { try? readHandle.close() }
+		defer {
+			try? readHandle.close()
+			try? writeHandle.close()
+		}
 
 		// Start draining before the script runs. Reading only once it has
-		// terminated deadlocks a script whose output overflows the pipe.
-		async let output = readOutput(from: readHandle)
+		// terminated deadlocks a script whose output overflows the pipe. This
+		// task deliberately outlives caller cancellation: the Foundation task
+		// keeps executing, so cancelling an async-let reader would strand it in
+		// write(2). This scope joins the reader before closing its handle.
+		let output = Task { try await readOutput(from: readHandle) }
+		defer { output.cancel() }
 		let executionError: (any Error)?
 		do {
 			try await task.execute(withArguments: arguments)
@@ -134,7 +176,9 @@ enum ScriptExecutionSupport {
 		// The task holds the only other reference to the write end; closing it
 		// here is what lets the drain above see EOF.
 		try? writeHandle.close()
-		let data = try await output
+		let outputResult = await output.result
+		try Task.checkCancellation()
+		let data = try outputResult.get()
 
 		if let executionError {
 			throw executionError

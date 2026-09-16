@@ -49,16 +49,15 @@ private nonisolated let dccTransportLogger = Logger( // nonisolated: let
 /** The transport both DCC features are built on: listening, connecting,
  deadlines and address canonicalisation.
 
- Every member is a pure function of `Sendable` arguments. None reads or writes
- actor state, which is why a file transfer and a direct chat can each call them
- without handing any of their own state across. */
+ The helpers return owned Sendable handles. Network operations create their
+ resources locally, and each transfer owns the resulting listener lifetime. */
 nonisolated enum DCCTransport { // nonisolated: value
 	/// Read buffer, and the ceiling on a single connection receive.
 	static let bufferSize = 64 * 1024
 
 	// MARK: - Listening
 
-	nonisolated struct ListeningSession: Sendable { // nonisolated: value
+	struct ListeningSession: Sendable {
 		let listener: NetworkListener<TCP>
 		let port: UInt16
 		let connections: AsyncStream<NetworkConnection<TCP>>
@@ -73,7 +72,7 @@ nonisolated enum DCCTransport { // nonisolated: value
 	/// believe the range's first port is available even when another listener
 	/// already owns it. This helper owns that asynchronous startup boundary and
 	/// returns only after Network.framework confirms the selected port.
-	nonisolated static func startListener( // nonisolated: pure
+	static func startListener(
 		portRange: ClosedRange<UInt16>
 	) async throws -> ListeningSession {
 		guard portRange.lowerBound > 0 else {
@@ -160,11 +159,11 @@ nonisolated enum DCCTransport { // nonisolated: value
 	}
 
 	/// Runs `operation`, failing with `error` if it outlasts `duration`.
-	nonisolated static func withTimeout<Value: Sendable>( // nonisolated: pure
+	static func withTimeout<Value: Sendable>(
 		_ duration: Duration?,
 		failingWith error: DCCTransferError,
 		operation: @escaping @Sendable () async throws -> Value
-	) async throws -> Value { // nonisolated: pure
+	) async throws -> Value {
 		guard let duration else {
 			return try await operation()
 		}
@@ -185,11 +184,11 @@ nonisolated enum DCCTransport { // nonisolated: value
 
 	/// Runs `operation` against a deadline shared with the other steps in the
 	/// same window, rather than restarting the clock for each of them.
-	nonisolated static func withDeadline<Value: Sendable>( // nonisolated: pure
+	static func withDeadline<Value: Sendable>(
 		_ deadline: ContinuousClock.Instant?,
 		failingWith error: DCCTransferError,
 		operation: @escaping @Sendable () async throws -> Value
-	) async throws -> Value { // nonisolated: pure
+	) async throws -> Value {
 		let remaining = deadline.map { max(.zero, $0 - ContinuousClock.now) }
 
 		return try await withTimeout(remaining, failingWith: error, operation: operation)
@@ -197,7 +196,7 @@ nonisolated enum DCCTransport { // nonisolated: value
 
 	// MARK: - Addresses
 
-	nonisolated static func parameters( // nonisolated: pure
+	static func parameters(
 		interfaceName: String?,
 		connectTimeout: Duration?
 	) -> NWParameters {
@@ -235,7 +234,7 @@ nonisolated enum DCCTransport { // nonisolated: value
 	 address has many spellings: `2001:0db8::1` and `2001:db8::1` are the same
 	 host, and `Network` renders what it resolved rather than what the offer
 	 wrote, so comparing the text refused the very peer the offer named. */
-	nonisolated static func connection( // nonisolated: pure
+	static func connection(
 		_ connection: NetworkConnection<TCP>,
 		isFrom expectedPeerAddress: String
 	) -> Bool {
@@ -258,7 +257,7 @@ nonisolated enum DCCTransport { // nonisolated: value
 		return peerBytes == expectedBytes
 	}
 
-	private nonisolated static func host(of endpoint: NWEndpoint) -> String? { // nonisolated: pure
+	private static func host(of endpoint: NWEndpoint) -> String? {
 		guard case let .hostPort(host, _) = endpoint else {
 			return nil
 		}
@@ -275,7 +274,7 @@ nonisolated enum DCCTransport { // nonisolated: value
 		}
 	}
 
-	private nonisolated static func normalized(_ address: String) -> String { // nonisolated: pure
+	private static func normalized(_ address: String) -> String {
 		/* `IPv6Address` renders an interface zone as a `%en0` suffix, and a
 		 dual-stack listener reports IPv4 peers in the `::ffff:` mapped form. */
 		var address = address
@@ -295,7 +294,7 @@ nonisolated enum DCCTransport { // nonisolated: value
 
 	/// The address the given interface is reachable at, preferring IPv4 and
 	/// skipping link-local IPv6.
-	nonisolated static func address(ofInterfaceNamed interfaceName: String) -> String? { // nonisolated: pure
+	static func address(ofInterfaceNamed interfaceName: String) -> String? {
 		var interfaceList: UnsafeMutablePointer<ifaddrs>?
 
 		guard getifaddrs(&interfaceList) == 0, let firstInterface = interfaceList else {
@@ -328,7 +327,7 @@ nonisolated enum DCCTransport { // nonisolated: value
 		return ipv4Address ?? ipv6Address
 	}
 
-	private nonisolated static func address( // nonisolated: pure
+	private static func address(
 		of interface: UnsafeMutablePointer<ifaddrs>,
 		named interfaceName: String
 	) -> (address: String, isIPv4: Bool)? {

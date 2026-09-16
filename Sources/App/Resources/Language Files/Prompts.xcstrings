@@ -864,6 +864,54 @@
           }
         }
       }
+    },
+    "keychain-quit-save-failed-body": {
+      "comment": "Explanation during app termination after a password save or deletion failed. The user can retry or explicitly quit with these changes unsaved.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some password changes have not been saved. Try again before quitting, or quit without saving these changes."
+          }
+        }
+      }
+    },
+    "keychain-quit-without-saving": {
+      "comment": "Explicit action to finish quitting even though password changes could not be saved.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quit Without Saving"
+          }
+        }
+      }
+    },
+    "keychain-save-failed-title": {
+      "comment": "Title shown when saving or deleting a password in the keychain failed. Pending settings edits remain available for retry.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passwords could not be saved"
+          }
+        }
+      }
+    },
+    "keychain-retry-save": {
+      "comment": "Retry saving or deleting the pending passwords after a keychain error. Newer edits always supersede an old retry.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try Again"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

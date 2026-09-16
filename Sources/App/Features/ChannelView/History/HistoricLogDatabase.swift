@@ -62,7 +62,12 @@ private final nonisolated class HistoricTimestampArchive: NSObject, NSSecureCodi
 	}
 
 	static func read(_ data: Data) -> Date? {
-		guard let decoder = try? NSKeyedUnarchiver(forReadingFrom: data) else { return nil }
+		if let date = LogLineStoredPayload.receivedAt(in: data) {
+			return date
+		}
+		guard let propertyList = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any],
+		      propertyList["$archiver"] as? String == "NSKeyedArchiver",
+		      let decoder = try? NSKeyedUnarchiver(forReadingFrom: data) else { return nil }
 		decoder.requiresSecureCoding = true
 		decoder.decodingFailurePolicy = .setErrorAndReturn
 		decoder.setClass(Self.self, forClassName: "TVCLogLine")

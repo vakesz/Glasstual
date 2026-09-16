@@ -142,11 +142,11 @@ actor HistoricLogRequestQueue {
 private nonisolated struct HistoricLogDefaultsFilenameStore: HistoricLogFilenameStoring { // nonisolated: value
 	var databaseFilename: String? {
 		get {
-			let value = TextualUserDefaults.suite().string(forKey: Preferences.Logging.historicLogFileName.name)
+			let value = Preferences.Logging.historicLogFileName.detachedStoredValue
 			return value?.isEmpty == false ? value : nil
 		}
 		nonmutating set {
-			TextualUserDefaults.suite().set(newValue, forKey: Preferences.Logging.historicLogFileName.name)
+			Preferences.Logging.historicLogFileName.detachedStoredValue = newValue
 		}
 	}
 }

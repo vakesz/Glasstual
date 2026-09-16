@@ -44,14 +44,13 @@ private nonisolated let preferenceColorLogger = Logger( // nonisolated: let
 	category: "Preferences"
 )
 
-/** A colour preference, stored as an archived `NSColor`, which is the format
- already written into every existing preferences file.
+/** A colour preference with a versioned Codable representation. Existing
+ `NSColor` keyed archives remain readable when an older preference is loaded.
 
  Holding the components rather than the archived bytes keeps the declared
- default comparable: two archives of the same colour are not byte-identical
- across releases, so a drift check against the checked-in plist has to compare
- colours, not `Data`. */
-public nonisolated struct PreferenceColor: PreferenceValue { // nonisolated: value
+ default comparable after decoding: two legacy archives of the same colour
+ need not contain identical bytes. */
+public nonisolated struct PreferenceColor: PreferenceValue, Codable { // nonisolated: value
 	public let red: Double
 	public let green: Double
 	public let blue: Double
@@ -83,7 +82,15 @@ public nonisolated struct PreferenceColor: PreferenceValue { // nonisolated: val
 	}
 
 	public static func preferenceValue(from object: Any) -> PreferenceColor? {
-		guard let data = object as? Data,
+		guard let data = object as? Data else { return nil }
+		if let payload = try? PropertyListDecoder().decode(StoredColor.self, from: data) {
+			guard payload.version == StoredColor.currentVersion,
+			      [payload.color.red, payload.color.green, payload.color.blue, payload.color.alpha].allSatisfy(\.isFinite)
+			else { return nil }
+			return payload.color
+		}
+		guard let propertyList = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any],
+		      propertyList["$archiver"] as? String == "NSKeyedArchiver",
 		      let color = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSColor.self, from: data)
 		else {
 			return nil
@@ -94,7 +101,8 @@ public nonisolated struct PreferenceColor: PreferenceValue { // nonisolated: val
 
 	public var preferenceObject: Any? {
 		do {
-			return try NSKeyedArchiver.archivedData(withRootObject: color, requiringSecureCoding: true)
+			guard [red, green, blue, alpha].allSatisfy(\.isFinite) else { return nil }
+			return try PropertyListEncoder().encode(StoredColor(color: self))
 		} catch {
 			/* Nothing is written for a colour that will not archive. The empty
 			 `Data` this used to store read back as unarchivable, so the choice
@@ -105,6 +113,12 @@ public nonisolated struct PreferenceColor: PreferenceValue { // nonisolated: val
 
 			return nil
 		}
+	}
+
+	private struct StoredColor: Codable {
+		static let currentVersion = 1
+		var version = currentVersion
+		let color: PreferenceColor
 	}
 }
 

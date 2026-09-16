@@ -129,7 +129,8 @@ struct ChatFilterEngineTests {
 	func matchingIsBounded() {
 		let subject = String(repeating: "a", count: RegularExpression.inputLengthLimit + 32) + "needle"
 
-		#expect(RegularExpression.string(subject, isMatchedByRegex: "needle", withoutCase: true))
+		#expect(RegularExpression.string(subject, isMatchedByRegex: "needle", withoutCase: true,
+		                                 inputLimit: subject.utf16.count))
 		#expect(
 			RegularExpression.string(
 				subject,

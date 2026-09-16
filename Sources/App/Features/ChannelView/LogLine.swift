@@ -59,9 +59,8 @@ public nonisolated enum LogLineFormat { // nonisolated: value
  is its identity: assigned once when the line is created and carried through
  every copy and every archive.
 
- Archiving lives on ``LogLineArchive``. `NSKeyedArchiver` needs a class, and the
- archives on disk name `TVCLogLine` as their root object, so the envelope wears
- that name and this type stays free of Objective-C. */
+ New history entries use a versioned Codable property list. ``LogLineArchive``
+ reads the older keyed archives whose root object was named `TVCLogLine`. */
 public nonisolated struct LogLine: Codable, Hashable, Sendable, CustomStringConvertible { // nonisolated: value
 	public internal(set) var isEncrypted = false
 	public internal(set) var isFirstForDay = false
@@ -88,6 +87,17 @@ public nonisolated struct LogLine: Codable, Hashable, Sendable, CustomStringConv
 	}
 
 	public init?(data: Data) {
+		if let payload = try? PropertyListDecoder().decode(LogLineStoredPayload.self, from: data) {
+			guard payload.version == LogLineStoredPayload.currentVersion else { return nil }
+			self = payload.line
+			if deliveryState == .pending {
+				deliveryState = .none
+			}
+			populateDefaultsPostflight()
+			return
+		}
+		guard let propertyList = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any],
+		      propertyList["$archiver"] as? String == "NSKeyedArchiver" else { return nil }
 		guard let archive = try? NSKeyedUnarchiver.unarchivedObject(
 			ofClass: LogLineArchive.self,
 			from: data
@@ -157,11 +167,8 @@ public nonisolated struct LogLine: Codable, Hashable, Sendable, CustomStringConv
 	}
 
 	func historicEntry(forView viewIdentifier: String) -> HistoricLogEntry {
-		guard let data = try? NSKeyedArchiver.archivedData(
-			withRootObject: LogLineArchive(self),
-			requiringSecureCoding: true
-		) else {
-			preconditionFailure("A log line must remain securely archivable")
+		guard let data = try? PropertyListEncoder().encode(LogLineStoredPayload(line: self)) else {
+			preconditionFailure("A log line must remain encodable")
 		}
 
 		return HistoricLogEntry(

@@ -73,6 +73,7 @@ struct LogControllerHistoryRecoveryTests {
 		#expect(controller.historicLogMutationTask == nil)
 		controller.tearDown(.preservingRemoval)
 		await historyClient.prepareForTermination()
+		try await HistoricLogFixture.close(context)
 	}
 
 	@Test("Retry saves newer messages but leaves failed deletion visible until an explicit clear succeeds",
@@ -142,6 +143,7 @@ struct LogControllerHistoryRecoveryTests {
 		#expect(history.recovery.deletionFailures.isEmpty)
 		#expect(history.recovery.localMessage == nil)
 		#expect(await client.prepareForTermination() == .saved)
+		try await HistoricLogFixture.close(context)
 	}
 
 	private func setSession(_ value: Int?, context: NSManagedObjectContext, view: String) async throws {

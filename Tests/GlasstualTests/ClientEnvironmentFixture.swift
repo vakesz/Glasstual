@@ -51,8 +51,8 @@ final class RecordingClientOutput: ClientOutput {
 	/// Every sheet the protocol layer asked for, in order. No window is
 	/// involved, which is the point of the seam.
 	private(set) var presentedAlerts: [AlertRequest] = []
-	/// Every blocking confirmation the protocol layer asked for, in order.
-	private(set) var modalConfirmations: [AlertRequest] = []
+	/// Every confirmation the protocol layer asked for, in order.
+	private(set) var confirmations: [AlertRequest] = []
 	private(set) var closedSheetClients: [IRCClient] = []
 	/// One `+b`/`+e`/`+I`/`+q` entry a window would have taken, and the list it
 	/// was routed to.
@@ -71,8 +71,9 @@ final class RecordingClientOutput: ClientOutput {
 		accessListFinishes.count
 	}
 
-	/// What `confirmModally` answers, and whether an access list window is up.
-	var modalConfirmationAnswer = true
+	/// Tests can suspend the answer to exercise stale-session handling.
+	var confirmation: (@MainActor (AlertRequest) async -> Bool)?
+	var confirmationAnswer = true
 	var showsAccessListSheet = false
 	/// The channels whose sheets the protocol layer asked to have closed.
 	private(set) var closedSheetChannelIds: [String] = []
@@ -90,10 +91,12 @@ final class RecordingClientOutput: ClientOutput {
 		presentedAlerts.append(request)
 	}
 
-	func confirmModally(_ request: AlertRequest) -> Bool {
-		modalConfirmations.append(request)
-
-		return modalConfirmationAnswer
+	func confirm(_ request: AlertRequest) async -> Bool {
+		confirmations.append(request)
+		if let confirmation {
+			return await confirmation(request)
+		}
+		return confirmationAnswer
 	}
 
 	func closeSheets(for client: IRCClient) {

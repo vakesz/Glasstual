@@ -15,6 +15,121 @@ import Testing
 @MainActor
 @Suite("Multi-target text sending")
 struct IRCClientMultiTargetSendTests {
+	@Test("A queued slash command retains its original channel after selection changes")
+	func queuedSlashCommandKeepsTarget() async throws {
+		let client = client()
+		client.markAsLoggedIn()
+		let targets = try channels(["#one", "#two"], on: client)
+		client.recordedOutput.selectedClient = client
+		client.recordedOutput.selectedChannel = targets[0]
+		let admission = TranscriptRenderAdmission(capacity: 1)
+		client.renderAdmission = admission
+		let ticket = admission.submit(for: "existing")
+		defer { client.cancelPendingSessionTasks(); admission.finish(ticket) }
+		client.inputText("/me hello", destination: targets[0])
+		#expect(client.sentLines.count == 0)
+		client.recordedOutput.selectedChannel = targets[1]
+		admission.finish(ticket)
+		await drainProducer(on: client)
+		#expect(client.sentLines as? [String] == ["PRIVMSG #one :\u{1}ACTION hello\u{1}"])
+	}
+
+	@Test("A queued console command cannot adopt a newly selected channel")
+	func queuedConsoleCommandKeepsNoTarget() async throws {
+		let client = client()
+		client.markAsLoggedIn()
+		let channel = try #require(channels(["#one"], on: client).first)
+		client.recordedOutput.selectedClient = client
+		client.recordedOutput.selectedChannel = nil
+		let admission = TranscriptRenderAdmission(capacity: 1)
+		client.renderAdmission = admission
+		let ticket = admission.submit(for: "existing")
+		defer { client.cancelPendingSessionTasks(); admission.finish(ticket) }
+		client.inputText("/part", destination: client)
+		#expect(client.sentLines.count == 0)
+		client.recordedOutput.selectedChannel = channel
+		admission.finish(ticket)
+		await drainProducer(on: client)
+		#expect(client.sentLines.count == 0)
+	}
+
+	private func drainProducer(on client: IRCClient) async {
+		let deadline = ContinuousClock.now + .seconds(5)
+		while client.outboundTextProducer?.pendingProducerCount != 0, ContinuousClock.now < deadline {
+			await Task.yield()
+		}
+		#expect(client.outboundTextProducer?.pendingProducerCount == 0)
+	}
+
+	@Test("An approved large paste waits for transcript capacity and keeps later input behind it", .timeLimit(.minutes(1)))
+	func largePasteHasBoundedOrderedAdmission() async throws {
+		let client = client()
+		let channel = try #require(channels(["#one"], on: client).first)
+		let admission = TranscriptRenderAdmission(capacity: 2)
+		client.renderAdmission = admission
+		let initial = [admission.submit(for: "existing"), admission.submit(for: "existing")]
+		var tickets: [UUID] = []
+		let (printed, continuation) = AsyncStream<String>.makeStream()
+		defer { client.cancelPendingSessionTasks(); continuation.finish() }
+		client.linePrintObserver = { request in
+			tickets.append(admission.submit(for: channel.uniqueIdentifier))
+			continuation.yield(request.messageBody)
+		}
+		let expected = (0 ..< 80).map { "line-\($0)" }
+		client.inputText(expected.joined(separator: "\n"), destination: channel)
+		let confirmation = try #require(client.pendingConfirmationTasks.values.first)
+		await confirmation.value
+		#expect(client.sentLines.count == 0)
+		#expect(client.outboundTextProducer?.pendingProducerCount == 1)
+		client.inputText("after", destination: channel)
+		#expect(client.outboundTextProducer?.pendingProducerCount == 2)
+		for ticket in initial {
+			admission.finish(ticket)
+		}
+		var iterator = printed.makeAsyncIterator()
+		for body in expected + ["after"] {
+			#expect(await iterator.next() == body)
+			#expect(admission.pendingCount <= 2)
+			let ticket = try #require(tickets.first)
+			tickets.removeFirst()
+			admission.finish(ticket)
+		}
+		#expect(client.sentLines.compactMap { $0 as? String } == (expected + ["after"]).map { "PRIVMSG #one :\($0)" })
+	}
+
+	private nonisolated enum DestinationChange: CaseIterable { // nonisolated: value
+		case removed, renamed, reconnected
+	}
+
+	@Test("A queued text producer rejects a changed target or IRC session", arguments: DestinationChange.allCases)
+	private func queuedTextValidatesDestination(change: DestinationChange) async throws {
+		let client = client()
+		let channel = try #require(client.findChannelOrCreate("alice", isPrivateMessage: true))
+		channel.activate()
+		let admission = TranscriptRenderAdmission(capacity: 1)
+		client.renderAdmission = admission
+		let ticket = admission.submit(for: "existing")
+		defer { client.cancelPendingSessionTasks(); admission.finish(ticket) }
+		client.sendText(NSAttributedString(string: "must not cross the boundary"), as: .privmsg, to: channel)
+		#expect(client.sentLines.count == 0)
+		switch change {
+		case .reconnected:
+			client.startup = IRCStartupCoordinator()
+		case .removed:
+			client.channelList.removeAll { $0 === channel }
+		case .renamed:
+			channel.name = "bob"
+			try #require(channel.name == "bob")
+		}
+		admission.finish(ticket)
+		let deadline = ContinuousClock.now + .seconds(5)
+		while client.outboundTextProducer?.pendingProducerCount != 0, ContinuousClock.now < deadline {
+			await Task.yield()
+		}
+		#expect(client.outboundTextProducer?.pendingProducerCount == 0)
+		#expect(client.sentLines.count == 0)
+	}
+
 	private func client() -> TestClient {
 		let client = TestClient(configDictionary: ["nickname": "me", "username": "me"])
 		client.userHostmask = "me!user@example.org"

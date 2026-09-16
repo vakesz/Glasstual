@@ -98,13 +98,20 @@ public extension MenuActionCoordinator {
 	@objc func duplicateServer(_: Any?) {
 		guard isRunning, let client = selectedClient, let world else { return }
 
-		var config = client.config.uniqueCopy()
-		config.connectionName = MenuServerNamePolicy.duplicateName(of: config.connectionName)
-		let newClient = world.createClient(with: config)
-		if newClient.config.sidebarItemExpanded {
-			mainWindow.expandClient(newClient)
+		let snapshot = client.config
+		let identifier = UUID()
+		serverDuplicationTasks[identifier] = Task { [weak self, weak client, weak world] in
+			var config = await KeychainSecretLoader.duplicate(snapshot)
+			guard let self else { return }
+			defer { serverDuplicationTasks[identifier] = nil }
+			guard !Task.isCancelled, isRunning, let client, !client.isTerminating, let world else { return }
+			config.connectionName = MenuServerNamePolicy.duplicateName(of: config.connectionName)
+			let newClient = world.createClient(with: config)
+			if newClient.config.sidebarItemExpanded {
+				mainWindow.expandClient(newClient)
+			}
+			world.save()
 		}
-		world.save()
 	}
 
 	@objc func deleteServer(_: Any?) {

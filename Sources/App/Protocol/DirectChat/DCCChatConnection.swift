@@ -43,14 +43,15 @@ import os
 /// What a ``DCCChatConnection`` reports to whoever is driving it.
 ///
 /// The sequence is always zero or one `listening`, then `connected`, then any
-/// number of `line`, then exactly one `closed`. A cancelled session ends the
+/// number of `lines`, then exactly one `closed`. A cancelled session ends the
 /// stream without a `closed`.
 public nonisolated enum DCCChatEvent: Sendable { // nonisolated: value
 	case listening(port: UInt16)
 	case connected
-	/// One line as it arrived, without its newline. Still in the peer's
-	/// encoding: only the client knows which one that is.
-	case line(Data)
+	/// The complete lines in one bounded read, without their newlines, in the
+	/// peer's encoding. Finish the acknowledgement after consuming the batch;
+	/// the connection waits for it before reading again.
+	case lines([Data], acknowledged: AsyncStream<Void>.Continuation)
 	/// `nil` when the peer closed cleanly.
 	case closed(DCCTransferError?)
 }
@@ -352,8 +353,13 @@ public actor DCCChatConnection {
 			let (payload, isComplete) = try await receive(on: connection)
 
 			if let payload, payload.isEmpty == false {
-				for line in try framer.lines(appending: payload) {
-					emit(.line(line))
+				let lines = try framer.lines(appending: payload)
+				if !lines.isEmpty {
+					let (drained, acknowledgement) = AsyncStream<Void>.makeStream()
+					emit(.lines(lines, acknowledged: acknowledgement))
+					// Admit another bounded read only after the consumer handles this one.
+					for await _ in drained {}
+					try Task.checkCancellation()
 				}
 			}
 
