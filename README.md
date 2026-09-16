@@ -43,9 +43,10 @@ runs in a sandboxed XPC host.
 
 Glasstual runs on macOS 26 or later on an Apple Silicon Mac. Building it takes
 Xcode 27, the version CI and the release workflow use. The Makefile pins
-XcodeGen, SwiftFormat, SwiftLint, actionlint and ShellCheck. When the pinned
-version is not on `PATH`, `make` downloads that release, checks its SHA-256
-and unpacks it under `build/tools`.
+XcodeGen, SwiftFormat, SwiftLint, actionlint and ShellCheck, and runs each
+one through a wrapper under `build/tools/bin`. A pinned version already on
+`PATH` is used as it is; otherwise `make` downloads that release, checks its
+SHA-256 and unpacks it under `build/tools`.
 
 `project.yml` is the source of truth for targets, build settings, signing,
 entitlements and generated metadata. Do not edit target settings or generated
