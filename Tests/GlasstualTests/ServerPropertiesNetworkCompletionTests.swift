@@ -215,6 +215,6 @@ struct ServerPropertiesNetworkCompletionTests {
 			#expect(model.validationFault == nil, "\(network.networkName) was refused")
 		}
 
-		#expect(ServerPropertiesValidation.isInternetAddress("Fuel Rats") == false)
+		#expect(("Fuel Rats" as NSString).isValidInternetAddress == false)
 	}
 }

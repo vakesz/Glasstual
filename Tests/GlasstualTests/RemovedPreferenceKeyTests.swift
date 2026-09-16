@@ -36,7 +36,7 @@ struct RemovedPreferenceKeyTests {
 
 	@Test("The registration domain no longer carries a removed key")
 	func registrationDomainIsClean() {
-		let registered = TextualPreferences.defaultPreferences()
+		let registered = PreferenceRegistration.registeredDefaults
 		for removed in Self.removedKeys {
 			#expect(registered[removed] == nil)
 		}

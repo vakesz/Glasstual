@@ -55,7 +55,7 @@ struct IRCSpecWhoTests {
 		client.isConnected = true
 		let revision = list.presentationRevision
 		let names = (0 ..< 256).map { "member\($0)" }.joined(separator: " ")
-		client.ircConnection(connection, didReceiveData: ":server 353 me = #names :\(names)")
+		client.connectionDidReceive(":server 353 me = #names :\(names)")
 		#expect(channel.numberOfMembers == 256)
 		#expect(channel.findMember("member255") != nil)
 		#expect(list.presentationRevision == revision + 1)
@@ -86,7 +86,7 @@ struct IRCSpecWhoTests {
 		let line = whox
 			? ":server 354 me \(ServerQuirks.whoxToken) #first ali example.org alice G* account :Alice Example"
 			: ":server 352 me #first ali example.org server alice G* :0 Alice Example"
-		client.ircConnection(connection, didReceiveData: line)
+		client.connectionDidReceive(line)
 		for (index, list) in [firstList, secondList].enumerated() {
 			#expect(list.presentationRevision == revisions[index] + 1)
 			#expect(list.selectedMemberIDs == [user.id])
@@ -95,7 +95,7 @@ struct IRCSpecWhoTests {
 			#expect(shown.isIRCop)
 			#expect(shown.realName == "Alice Example")
 		}
-		client.ircConnection(connection, didReceiveData: line)
+		client.connectionDidReceive(line)
 		#expect(firstList.presentationRevision == revisions[0] + 1)
 		#expect(secondList.presentationRevision == revisions[1] + 1)
 		firstList.assign(to: nil)

@@ -37,12 +37,6 @@
 
 import Foundation
 
-enum InboundTypingState: UInt {
-	case done
-	case active
-	case paused
-}
-
 extension Notification.Name {
 	static let TypingTrackerDidChange = Self("IRCTypingTrackerDidChangeNotification")
 }
@@ -52,10 +46,10 @@ nonisolated let typingTrackerChannelKey = "channel" // nonisolated: let
 private final class TypingEntry {
 	let nickname: String
 	let sequence: UInt
-	var state: InboundTypingState
+	var state: TypingState
 	var updatedAt: Date
 
-	init(nickname: String, sequence: UInt, state: InboundTypingState, updatedAt: Date) {
+	init(nickname: String, sequence: UInt, state: TypingState, updatedAt: Date) {
 		self.nickname = nickname
 		self.sequence = sequence
 		self.state = state
@@ -69,42 +63,31 @@ private final class TypingEntry {
 	}
 }
 
-final class TypingTracker: NSObject {
+final class TypingTracker {
 	private weak var client: Client?
 
 	private var entries: [String: [String: TypingEntry]] = [:]
 	private let channels = NSMapTable<NSString, Channel>.strongToWeakObjects()
-	private var expiryTimer: ClientTimer?
-	private var sequence: UInt = 0
-
-	@available(*, unavailable)
-	override init() {
-		fatalError("Use init(client:)")
+	/// Drops the indicators whose timeout has passed, for as long as there is
+	/// one to drop.
+	private lazy var expiryTimer = ClientTimer { [weak self] _ in
+		self?.expireEntries(at: Date())
 	}
+
+	private var sequence: UInt = 0
 
 	init(client: Client) {
 		self.client = client
-
-		super.init()
 	}
 
-	isolated deinit {
-		expiryTimer?.stop()
-	}
-
-	static func state(forTagValue value: String?) -> InboundTypingState {
-		switch value {
-		case "active":
-			.active
-		case "paused":
-			.paused
-		default:
-			.done
-		}
+	/// The state a `+typing` tag stands for. An unknown value is read as
+	/// `done`, which is what clears the indicator rather than leaving it up.
+	static func state(forTagValue value: String?) -> TypingState {
+		value.flatMap(TypingState.init(rawValue:)) ?? .done
 	}
 
 	func noteTypingState(
-		_ state: InboundTypingState,
+		_ state: TypingState,
 		fromNickname nickname: String,
 		in channel: Channel
 	) {
@@ -112,7 +95,7 @@ final class TypingTracker: NSObject {
 	}
 
 	func noteTypingState(
-		_ state: InboundTypingState,
+		_ state: TypingState,
 		fromNickname nickname: String,
 		in channel: Channel,
 		at date: Date
@@ -220,8 +203,7 @@ final class TypingTracker: NSObject {
 		}
 
 		channels.removeAllObjects()
-		expiryTimer?.stop()
-		expiryTimer = nil
+		expiryTimer.stop()
 	}
 
 	func typingNicknames(in channel: Channel) -> [String] {
@@ -267,20 +249,11 @@ final class TypingTracker: NSObject {
 
 	private func scheduleExpiry() {
 		guard entries.isEmpty == false else {
-			expiryTimer?.stop()
-			expiryTimer = nil
+			expiryTimer.stop()
 			return
 		}
 
-		guard expiryTimer == nil else {
-			return
-		}
-
-		let timer = ClientTimer { [weak self] _ in
-			self?.expireEntries(at: Date())
-		}
-		timer.start(1.0, repeats: true)
-		expiryTimer = timer
+		expiryTimer.startIfIdle(1.0, repeats: true)
 	}
 
 	private func postChange(for channel: Channel) {

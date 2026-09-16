@@ -85,7 +85,7 @@ struct FileTransferCenterTests {
 		let second = try transfer(on: client, filename: "two.jpg")
 		let third = try transfer(on: client, filename: "three.jpg")
 
-		let model = FileTransferCenterModel()
+		let model = FileTransferList()
 		model.add(first)
 		model.add(second)
 		model.add(third)
@@ -107,7 +107,7 @@ struct FileTransferCenterTests {
 		let outgoing = try transfer(on: client, filename: "outgoing.jpg")
 		outgoing.isSender = true
 
-		let model = FileTransferCenterModel()
+		let model = FileTransferList()
 		model.add(incoming)
 		model.add(outgoing)
 		#expect(
@@ -167,27 +167,27 @@ struct FileTransferCenterTests {
 		let offered = try transfer(on: client, filename: "offered.jpg")
 		let failed = try transfer(on: client, filename: "failed.jpg")
 		failed.transferStatus = .recoverableError
-		let model = FileTransferCenterModel()
+		let model = FileTransferList()
 		model.add(offered)
 		model.add(failed)
 
-		#expect(model.startActionTitle(for: [offered.uniqueIdentifier]) == FileTransferStrings.acceptTransfer)
-		#expect(model.startActionTitle(for: [failed.uniqueIdentifier]) == FileTransferStrings.retryTransfer)
+		#expect(model.startActionTitle(for: [offered.uniqueIdentifier]) == String(localized: .FileTransfers.acceptTransfer))
+		#expect(model.startActionTitle(for: [failed.uniqueIdentifier]) == String(localized: .FileTransfers.retryTransfer))
 		/* Two rows that would do different things share the generic verb. */
 		#expect(
 			model.startActionTitle(for: [offered.uniqueIdentifier, failed.uniqueIdentifier])
-				== FileTransferStrings.startTransfer
+				== String(localized: .FileTransfers.startTransfer)
 		)
 		/* An outgoing offer is started, never "accepted". */
 		offered.isSender = true
-		#expect(model.startActionTitle(for: [offered.uniqueIdentifier]) == FileTransferStrings.startTransfer)
+		#expect(model.startActionTitle(for: [offered.uniqueIdentifier]) == String(localized: .FileTransfers.startTransfer))
 	}
 
 	private func transfer(
 		on client: Client,
 		filename: String
-	) throws -> FileTransferController {
-		try #require(FileTransferController.receiver(
+	) throws -> FileTransfer {
+		try #require(FileTransfer.receiver(
 			for: client,
 			nickname: "alice",
 			address: "203.0.113.5",

@@ -95,7 +95,7 @@ struct ServerHighlightListSessionTests {
 	func aHighlightLoggedWhileOpenIsAdded() {
 		let client = TestClient()
 		client.cachedHighlights = [entry(body: "earlier", receivedAt: Date(timeIntervalSince1970: 100))]
-		let session = ServerHighlightListSession(client: client)
+		let session = ServerHighlightList(client: client)
 
 		#expect(session.model.rows.count == 1)
 
@@ -111,7 +111,7 @@ struct ServerHighlightListSessionTests {
 	func clearingTheWindowClearsTheClientLog() {
 		let client = TestClient()
 		client.cachedHighlights = [entry(body: "message", receivedAt: .now)]
-		let session = ServerHighlightListSession(client: client)
+		let session = ServerHighlightList(client: client)
 
 		session.clearHighlights()
 

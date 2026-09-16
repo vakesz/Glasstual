@@ -254,7 +254,7 @@ nonisolated struct TranscriptRenderer { // nonisolated: value
 	private func isSurroundedByNonAlphanumerics(_ range: NSRange) -> Bool {
 		let source = body as NSString
 		guard range.length > 0, range.location < source.length, NSMaxRange(range) <= source.length else { return false }
-		/* `Unicode.Scalar.Properties` carries the current tables. The hand-written
+		/** `Unicode.Scalar.Properties` carries the current tables. The hand-written
 		 range tables this replaced were generated around 2007 and stopped at
 		 U+1D7CB, so every script added since was classified as non-alphabetic. */
 		func isAlphanumeric(_ character: UniChar) -> Bool {
@@ -306,7 +306,7 @@ nonisolated struct TranscriptRenderer { // nonisolated: value
 			let text = source.substring(with: range)
 			let action: TranscriptRunAction? = if let link = attributes[RendererFormatting.url]
 				as? LinkParserResult,
-				Self.isSafeLink(link.stringValue, allowing: policy.linkSchemes),
+				LinkParser.isPermittedLink(link.stringValue, allowing: policy.linkSchemes),
 				let url = URL(string: link.stringValue)
 			{
 				.link(url)
@@ -333,23 +333,6 @@ nonisolated struct TranscriptRenderer { // nonisolated: value
 			mentionedNicknames: mentionedNicknames,
 			isHighlight: isHighlight
 		)
-	}
-
-	private static let refusedLinkSchemes: Set<String> = [
-		"javascript", "data", "vbscript", "blob", "filesystem", "about",
-	]
-
-	static func isSafeLink(_ location: String, allowing schemes: LinkSchemePolicy) -> Bool {
-		guard let url = URL(string: location), let scheme = url.scheme?.lowercased() else { return false }
-		return refusedLinkSchemes.contains(scheme) == false
-			&& LinkParser.isPermittedScheme(scheme, allowing: schemes)
-	}
-
-	/** The same answer for a caller already on the main actor, which can read the
-	 reader's scheme customization itself — a topic being drawn, a clicked link. */
-	@MainActor
-	static func isSafeLink(_ location: String) -> Bool {
-		isSafeLink(location, allowing: .current())
 	}
 
 	private static func nativeColor(_ value: Any?) -> TranscriptRunColor? {

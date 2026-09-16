@@ -11,22 +11,32 @@ import UserNotifications
 @MainActor
 @Suite("SwiftUI onboarding")
 struct OnboardingTests {
-	/// The live value reaches for the application's notification controller, so
-	/// the tests supply their own answer and their own sound-delivery hook.
+	/// The live value asks the system, so the tests supply their own answer.
 	private var testAuthorization: OnboardingNotificationAuthorization {
-		var authorization = OnboardingNotificationAuthorization(
+		OnboardingNotificationAuthorization(
 			currentStatus: { .notDetermined },
 			request: { true }
 		)
-		authorization.soundDeliveryDidChange = {}
-		return authorization
 	}
 
-	private func identifiedModel(nickname: String = "alice") -> OnboardingModel {
+	/// A model that is past the identity step's rules, with whatever the test
+	/// needs to watch standing in for what the model would otherwise reach for.
+	private func identifiedModel(
+		nickname: String = "alice",
+		createConnection: (@MainActor (ClientConfig, Bool) -> Bool)? = nil,
+		applySettings: (@MainActor (OnboardingModel) -> Void)? = nil,
+		markCompleted: (@MainActor () -> Void)? = nil
+	) -> OnboardingModel {
 		let settings = OnboardingSettings()
 		settings.nickname = nickname
 		settings.realName = "Alice Example"
-		return OnboardingModel(settings: settings, notificationAuthorization: testAuthorization)
+		return OnboardingModel(
+			settings: settings,
+			notificationAuthorization: testAuthorization,
+			createConnection: createConnection,
+			applySettings: applySettings,
+			markCompleted: markCompleted
+		)
 	}
 
 	/// Walks to `step` by accepting everything in front of it.
@@ -37,47 +47,22 @@ struct OnboardingTests {
 	}
 
 	@MainActor
-	private final class SoundDeliveryRefreshes {
+	private final class PermissionReads {
 		var count = 0
-	}
-
-	/** Whether the system will play a notification's sound follows from the
-	 permission answer, and the notification controller reads it once at launch —
-	 which on a first launch is before the onboarding window has asked. Nothing
-	 told it the answer had arrived, so the rest of that session had the
-	 application playing every sound itself. */
-	@Test("Granting permission during onboarding has the sound delivery read again")
-	func grantingPermissionRefreshesSoundDelivery() async {
-		let refreshes = SoundDeliveryRefreshes()
-		var authorization = testAuthorization
-		authorization.soundDeliveryDidChange = { refreshes.count += 1 }
-		let settings = OnboardingSettings()
-		settings.nickname = "alice"
-		settings.realName = "Alice Example"
-		let model = OnboardingModel(settings: settings, notificationAuthorization: authorization)
-
-		advance(model, to: .network)
-
-		/* The prompt is answered in a task of its own, and the window must not
-		 close while the system is still showing it. */
-		await model.completePendingWork()
-
-		#expect(refreshes.count == 1)
 	}
 
 	/// The notifications step reads the permission from its view's task. The
 	/// model started a second read of its own on every visit to the step.
 	@Test("Moving onto the notifications step leaves the permission read to its view")
 	func movingOntoNotificationsReadsNothing() async {
-		let reads = SoundDeliveryRefreshes()
-		var authorization = OnboardingNotificationAuthorization(
+		let reads = PermissionReads()
+		let authorization = OnboardingNotificationAuthorization(
 			currentStatus: { @MainActor in
 				reads.count += 1
 				return .authorized
 			},
 			request: { true }
 		)
-		authorization.soundDeliveryDidChange = {}
 		let settings = OnboardingSettings()
 		settings.nickname = "alice"
 		settings.realName = "Alice Example"
@@ -94,27 +79,23 @@ struct OnboardingTests {
 		await model.refreshNotificationPermission()
 
 		#expect(reads.count == 1)
-		#expect(model.notificationPermissionMessage == OnboardingStrings.Notifications.permissionGranted)
+		#expect(model.notificationPermissionMessage == .Onboarding.notificationsAreAllowedForGlasstual)
 	}
 
 	/// Skipping the notifications step is a refusal, so it must not raise the
 	/// system permission prompt either.
 	@Test("Skipping the notifications step asks for no permission")
 	func skippingNotificationsAsksForNothing() async {
-		let refreshes = SoundDeliveryRefreshes()
-		var authorization = testAuthorization
-		authorization.soundDeliveryDidChange = { refreshes.count += 1 }
 		let settings = OnboardingSettings()
 		settings.nickname = "alice"
 		settings.realName = "Alice Example"
-		let model = OnboardingModel(settings: settings, notificationAuthorization: authorization)
+		let model = OnboardingModel(settings: settings, notificationAuthorization: testAuthorization)
 
 		advance(model, to: .notifications)
 		model.skip()
 
 		#expect(model.currentStep == .network)
 		await model.completePendingWork()
-		#expect(refreshes.count == 0)
 		#expect(model.acceptedNotifications == nil)
 	}
 
@@ -122,7 +103,7 @@ struct OnboardingTests {
 	func invalidIdentityIsReportedInline() {
 		let model = identifiedModel(nickname: "")
 
-		#expect(model.nicknameProblem == OnboardingStrings.Identity.nicknameRequired)
+		#expect(model.nicknameProblem == String(localized: .Onboarding.stepWelcomeAndIdentityNicknameRequired))
 		#expect(model.isCurrentStepValid == false)
 		#expect(model.advance() == false)
 		#expect(model.currentStep == .identity)
@@ -270,12 +251,12 @@ struct OnboardingTests {
 
 		picker.draft.serverAddress = "irc.example.test"
 		picker.draft.serverPort = 0
-		#expect(picker.serverPortProblem == OnboardingStrings.NetworkPicker.invalidPort)
+		#expect(picker.serverPortProblem == String(localized: .Onboarding.enterAPortBetween1))
 
 		picker.draft.serverPort = 6697
 		picker.draft.accountPassword = "secret"
 		picker.setAccountName("not a username")
-		#expect(picker.accountProblem == OnboardingStrings.NetworkPicker.invalidAccount)
+		#expect(picker.accountProblem == String(localized: .Onboarding.invalidAccount))
 
 		picker.setAccountName("alice")
 		#expect(picker.isValid)
@@ -304,25 +285,23 @@ struct OnboardingTests {
 	 preference the person had typed on their way past it. */
 	@Test("Set Up Later applies nothing and does not come back")
 	func setUpLaterCompletesWithoutApplying() {
-		let model = identifiedModel()
 		var events: [String] = []
-		let session = OnboardingSession(
-			model: model,
+		let model = identifiedModel(
 			createConnection: { _, _ in Issue.record("Set Up Later created a connection"); return false },
 			applySettings: { _ in Issue.record("Set Up Later saved settings") },
 			markCompleted: { events.append("complete") }
 		)
 		_ = model.advance()
 
-		session.setUpLater()
-		session.setUpLater()
+		model.setUpLater()
+		model.setUpLater()
 
 		#expect(events == ["complete"])
 	}
 
 	@Test("Every appearance the picker offers has a title of its own")
 	func appearanceTitlesCoverEveryCase() {
-		let titles = PreferredAppearance.allCases.map(OnboardingStrings.Appearance.interfaceStyleTitle)
+		let titles = PreferredAppearance.allCases.map { String(localized: $0.onboardingTitle) }
 
 		#expect(titles.count == PreferredAppearance.allCases.count)
 		#expect(Set(titles).count == titles.count)
@@ -330,11 +309,9 @@ struct OnboardingTests {
 	}
 
 	@Test("Finish without a network saves preferences and completes once")
-	func sessionFinishesWithoutNetwork() async {
-		let model = identifiedModel()
+	func finishesWithoutNetwork() async {
 		var events: [String] = []
-		let session = OnboardingSession(
-			model: model,
+		let model = identifiedModel(
 			createConnection: { _, _ in Issue.record("Unexpected connection"); return false },
 			applySettings: { accepted in
 				#expect(accepted.acceptedIdentity?.nickname == "alice")
@@ -346,21 +323,19 @@ struct OnboardingTests {
 		#expect(model.advance())
 		#expect(events.isEmpty)
 
-		#expect(await session.finish())
-		#expect(await session.finish())
+		#expect(await model.finish())
+		#expect(await model.finish())
 
 		#expect(events == ["save", "complete"])
-		#expect(session.isCompleting == false)
+		#expect(model.isCompleting == false)
 	}
 
 	/// A skipped step leaves its preferences alone, which is the whole reason a
 	/// step records what it accepted rather than what its controls show.
 	@Test("Only the steps that were accepted are applied")
 	func skippedStepsApplyNothing() async {
-		let model = identifiedModel()
 		var saves = 0
-		let session = OnboardingSession(
-			model: model,
+		let model = identifiedModel(
 			createConnection: { _, _ in Issue.record("Unexpected connection"); return false },
 			applySettings: { accepted in
 				#expect(accepted.acceptedIdentity?.nickname == "alice")
@@ -379,7 +354,7 @@ struct OnboardingTests {
 		#expect(model.currentStep == .summary)
 		#expect(model.advance())
 
-		#expect(await session.finish())
+		#expect(await model.finish())
 		#expect(saves == 1)
 	}
 
@@ -390,13 +365,11 @@ struct OnboardingTests {
 		settings.realName = "Alice"
 		settings.alternateNickname = "alice_"
 		settings.connectWhenFinished = false
-		let model = OnboardingModel(settings: settings, notificationAuthorization: testAuthorization)
-		model.networkPicker.selection = .customServer
-		model.networkPicker.draft.serverAddress = "irc.example.test"
 		var attempts = 0
 		var events: [String] = []
-		let session = OnboardingSession(
-			model: model,
+		let model = OnboardingModel(
+			settings: settings,
+			notificationAuthorization: testAuthorization,
 			createConnection: { config, connect in
 				#expect(config.nickname == "alice")
 				#expect(config.realName == "Alice")
@@ -409,17 +382,19 @@ struct OnboardingTests {
 			applySettings: { _ in events.append("save") },
 			markCompleted: { events.append("complete") }
 		)
+		model.networkPicker.selection = .customServer
+		model.networkPicker.draft.serverAddress = "irc.example.test"
 		advance(model, to: .summary)
 		#expect(model.advance())
 
-		#expect(await session.finish() == false)
-		#expect(session.completionFailure == OnboardingStrings.Window.connectionUnavailable)
-		#expect(session.isCompletionFailurePresented)
+		#expect(await model.finish() == false)
+		#expect(model.completionFailure == String(localized: .Onboarding.connectionUnavailable))
+		#expect(model.isCompletionFailurePresented)
 		#expect(events.isEmpty)
 
-		session.isCompletionFailurePresented = false
-		#expect(session.completionFailure == nil)
-		#expect(await session.finish())
+		model.isCompletionFailurePresented = false
+		#expect(model.completionFailure == nil)
+		#expect(await model.finish())
 		#expect(attempts == 2)
 		#expect(events == ["save", "complete"])
 	}

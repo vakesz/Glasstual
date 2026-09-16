@@ -66,8 +66,8 @@ struct MemberListResizeHandle: View {
 				apply(width + (press.key == .leftArrow ? step : -step), persist: false)
 				return .handled
 			}
-			.accessibilityLabel(MainWindowStrings.Toolbar.memberListWidth)
-			.accessibilityHint(MainWindowStrings.Toolbar.memberListWidthHint)
+			.accessibilityLabel(String(localized: .MainWindow.memberListWidth))
+			.accessibilityHint(String(localized: .MainWindow.memberListWidthHint))
 			/* A splitter adjusts, it does not activate: the button trait
 			 offered VoiceOver a "press" that does nothing, and described the
 			 arrow keys in prose instead of exposing them. */
@@ -83,7 +83,7 @@ struct MemberListResizeHandle: View {
 					break
 				}
 			}
-			.help(MainWindowStrings.Toolbar.memberListWidth)
+			.help(String(localized: .MainWindow.memberListWidth))
 	}
 
 	private func apply(_ candidate: CGFloat, persist: Bool) {

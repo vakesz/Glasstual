@@ -15,8 +15,8 @@ struct FileTransferScopeTests {
 		on client: Client,
 		nickname: String = "alice",
 		filename: String = "photo.jpg"
-	) throws -> FileTransferController {
-		try #require(FileTransferController.receiver(
+	) throws -> FileTransfer {
+		try #require(FileTransfer.receiver(
 			for: client,
 			nickname: nickname,
 			address: "203.0.113.5",

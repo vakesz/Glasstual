@@ -94,7 +94,7 @@ final class ResourceFileImporter {
 			guard UserScript(url: url, origin: .custom)?.kind == .appleScript,
 			      NSAppleScript(contentsOf: url, error: nil) != nil
 			else { throw ImportError.invalidScript }
-			let defaultScriptsURL = PathInfo.customScriptsURL
+			let defaultScriptsURL = ApplicationPaths.customScriptsURL
 
 			guard let scriptsURL = AppServices.scripts.customScriptsURL ?? defaultScriptsURL
 			else {
@@ -133,19 +133,6 @@ final class ResourceFileImporter {
 			),
 			on: .anyVisibleWindow
 		)
-	}
-
-	private func confirmImport(of filename: String) async -> Bool {
-		await Alerts.run(
-			AlertRequest(
-				title: PromptStrings.DocumentImport.documentOpenTitle(filename: filename),
-				body: PromptStrings.DocumentImport.documentOpenBody,
-				defaultButton: PromptStrings.Action.open,
-				alternateButton: PromptStrings.Action.cancel,
-				style: .warning
-			),
-			on: .anyVisibleWindow
-		).response == .default
 	}
 
 	// MARK: - General Import Controller

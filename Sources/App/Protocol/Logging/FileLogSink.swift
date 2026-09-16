@@ -49,8 +49,20 @@ nonisolated struct FileLogResult: Sendable { // nonisolated: value
 	}
 }
 
-protocol FileLogSinking: Actor {
-	func process(_ operation: FileLogOperation) async -> FileLogResult
+/** Where a file-log operation is carried out.
+
+ A value holding one closure rather than a protocol: the only thing that varies
+ is which actor is behind it, and the one production actor is
+ ``FileLogSink``. */
+nonisolated struct FileLogSinkPort: Sendable { // nonisolated: value
+	let process: @Sendable (FileLogOperation) async -> FileLogResult
+
+	/// The real transcript files on disk.
+	static func fileSystem() -> Self {
+		let sink = FileLogSink()
+
+		return Self { await sink.process($0) }
+	}
 }
 
 /// One consumer, not one Task per write. Awaiting even a reentrant test sink
@@ -63,11 +75,11 @@ final class FileLogCommands {
 	}
 
 	private let continuation: AsyncStream<Command>.Continuation
-	private var idleSweepTask: Task<Void, Never>?
+	private var idleSweep: ClientTimer?
 	private var finished = false
 
 	init(
-		sink: any FileLogSinking = FileLogSink(),
+		sink: FileLogSinkPort = .fileSystem(),
 		reportNoSpace: @escaping @MainActor @Sendable () -> Void = { FileLogger.reportNoSpace() }
 	) {
 		let (stream, continuation) = AsyncStream<Command>.makeStream()
@@ -87,16 +99,19 @@ final class FileLogCommands {
 			}
 			_ = await sink.process(.shutdown)
 		}
-		idleSweepTask = Task { [weak self] in
-			while !Task.isCancelled {
-				do { try await Task.sleep(for: .seconds(600)) } catch { return }
-				self?.submit(.sweep(Date()))
-			}
+		/* A transcript file left open holds a security-scoped lease on a folder
+		 the user chose. The sweep closes the ones nothing has written to. */
+		idleSweep = ClientTimer { [weak self] _ in
+			self?.submit(.sweep(Date()))
 		}
+		idleSweep?.start(Self.idleSweepInterval, repeats: true)
 	}
 
+	/// How often open transcript files are checked for having gone idle.
+	private static let idleSweepInterval: TimeInterval = 600
+
 	isolated deinit {
-		idleSweepTask?.cancel()
+		idleSweep?.stop()
 		continuation.finish()
 	}
 
@@ -121,8 +136,8 @@ final class FileLogCommands {
 	func finish(completion: @escaping @MainActor @Sendable (Bool) -> Void) {
 		guard !finished else { completion(false); return }
 		finished = true
-		idleSweepTask?.cancel()
-		idleSweepTask = nil
+		idleSweep?.stop()
+		idleSweep = nil
 		continuation.yield(Command(operation: .shutdown, completion: completion))
 		continuation.finish()
 	}
@@ -130,7 +145,7 @@ final class FileLogCommands {
 
 /// Owns all transcript handles, bookmark resolution and security-scope leases.
 /// Only the FIFO consumer calls process; file operations do not suspend.
-actor FileLogSink: FileLogSinking {
+actor FileLogSink {
 	private struct OpenFile: Sendable {
 		let handle: FileHandle
 		let scope: URL?

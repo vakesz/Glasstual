@@ -42,7 +42,7 @@ struct PreferencesTransferFixture {
 		PreferencesTransferSession(stores: stores,
 		                           recoveryDirectory: backupDirectory ?? directory
 		                           	.appendingPathComponent("Backups"),
-		                           clientSource: world.map(PreferencesTransferClientSource.world) ?? .stored)
+		                           clientSource: world.map(PreferencesTransferClientSource.clientDirectory) ?? .stored)
 	}
 
 	func reopenWorld() throws -> ClientEnvironmentFixture {
@@ -59,7 +59,7 @@ struct PreferencesTransferFixture {
 		for value in saved?.array ?? [] {
 			let dictionary = try #require(value.dictionary)
 			let configuration = try #require(PropertyListModel.decode(ClientConfig.self, from: dictionary))
-			_ = fixture.world.createClient(with: configuration)
+			_ = fixture.clientDirectory.createClient(with: configuration)
 		}
 		return fixture
 	}

@@ -37,21 +37,18 @@
 
 import Foundation
 
-final class AddressBookMatchCache: NSObject {
-	private(set) weak var client: Client?
-
+/// Remembers which address book entry a hostmask matched.
+///
+/// The entries are passed in at every lookup rather than held: the cache
+/// answers for whatever list the client holds now, and the client clears it
+/// when that list changes.
+final class AddressBookMatchCache {
 	/** Hostmask to the rule that matched it, or to `nil` when nothing did.
 	 The entry is a value type now, so this is a plain dictionary trimmed at a
 	 fixed size rather than an `NSCache`. */
 	private var matches: [String: AddressBookEntry?] = [:]
 	private var matchOrder: [String] = []
 	private static let matchLimit = 100
-
-	init(client: Client) {
-		self.client = client
-
-		super.init()
-	}
 
 	func clearCachedMatches() {
 		matches.removeAll()
@@ -63,8 +60,8 @@ final class AddressBookMatchCache: NSObject {
 		matchOrder.removeAll { $0 == hostmask }
 	}
 
-	func findIgnores(forHostmask hostmask: String) -> [AddressBookEntry] {
-		guard let match = findAddressBookEntry(forHostmask: hostmask) else {
+	func findIgnores(forHostmask hostmask: String, in entries: [AddressBookEntry]) -> [AddressBookEntry] {
+		guard let match = findAddressBookEntry(forHostmask: hostmask, in: entries) else {
 			return []
 		}
 
@@ -79,12 +76,12 @@ final class AddressBookMatchCache: NSObject {
 		return match.parentEntries?.filter { $0.entryType == .ignore } ?? []
 	}
 
-	func findAddressBookEntry(forHostmask hostmask: String) -> AddressBookEntry? {
+	func findAddressBookEntry(forHostmask hostmask: String, in entries: [AddressBookEntry]) -> AddressBookEntry? {
 		if let cached = matches[hostmask] {
 			return cached
 		}
 
-		let match = uncachedMatch(forHostmask: hostmask)
+		let match = uncachedMatch(forHostmask: hostmask, in: entries)
 
 		matches[hostmask] = match
 		matchOrder.append(hostmask)
@@ -96,11 +93,11 @@ final class AddressBookMatchCache: NSObject {
 		return match
 	}
 
-	private func uncachedMatch(forHostmask hostmask: String) -> AddressBookEntry? {
+	private func uncachedMatch(forHostmask hostmask: String, in entries: [AddressBookEntry]) -> AddressBookEntry? {
 		var singleMatch: AddressBookEntry?
 		var multipleMatches: [AddressBookEntry]?
 
-		for entry in client?.config.ignoreList ?? [] where entry.checkMatch(hostmask) {
+		for entry in entries where entry.checkMatch(hostmask) {
 			if multipleMatches != nil {
 				multipleMatches?.append(entry)
 			} else if let existingMatch = singleMatch {

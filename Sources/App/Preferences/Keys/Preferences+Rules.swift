@@ -16,7 +16,7 @@ nonisolated extension Preferences { // nonisolated: value
 		 bundled extension, so a user's rules survive that extension going away. */
 		static let messageRules = UntypedPreferenceKey(
 			"Glasstual Chat Filter Extension -> Filters",
-			validation: PreferencesPayloadValidation.messageRules
+			validation: PreferenceValueRepair.messageRules
 		)
 
 		static let all: [any AnyPreferenceKey] = [messageRules]

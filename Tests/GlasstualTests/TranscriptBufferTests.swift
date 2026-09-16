@@ -29,7 +29,7 @@ struct TranscriptBufferTests {
 			Preferences.Messages.copyOnSelect.value = copyOnSelect
 		}
 		Preferences.Messages.copyOnSelect.value = false
-		let view = makeLogView(bufferLimit: 3)
+		let view = makeTranscriptView(bufferLimit: 3)
 		view.appendLines([
 			transcriptLine("before"),
 			transcriptLine("first e\u{0301}"),
@@ -59,7 +59,7 @@ struct TranscriptBufferTests {
 		let copyOnSelect = Preferences.Messages.copyOnSelect.value
 		defer { Preferences.Messages.copyOnSelect.value = copyOnSelect }
 		Preferences.Messages.copyOnSelect.value = false
-		let view = makeLogView()
+		let view = makeTranscriptView()
 		var first = transcriptLine("selected body")
 		first.reactions = ["+1": ["alice"]]
 		view.appendLines([first, transcriptLine("last")])
@@ -78,7 +78,7 @@ struct TranscriptBufferTests {
 
 	@Test("Prepend reports only adjacent accepted rows and does not spend capacity on duplicates")
 	func prependReportsAcceptedRows() {
-		let view = makeLogView(bufferLimit: 1)
+		let view = makeTranscriptView(bufferLimit: 1)
 		let newest = transcriptLine("newest")
 		view.appendLines([newest])
 		let accepted = view.prependLines([transcriptLine("older"), newest])
@@ -92,7 +92,7 @@ struct TranscriptBufferTests {
 	@Test("Capacity keeps only the adjacent part of a page without advancing past refused rows")
 	func prependAtCapacityRetainsAdjacentRows() {
 		let limit = TranscriptBufferPolicy.validLimits.upperBound
-		let view = makeLogView(bufferLimit: limit)
+		let view = makeTranscriptView(bufferLimit: limit)
 		view.removeFromSuperview()
 		view.appendLines((0 ..< limit - 1).map(message))
 		#expect(view.prependLines([transcriptLine("oldest"), transcriptLine("adjacent")]) == ["adjacent"])
@@ -105,7 +105,7 @@ struct TranscriptBufferTests {
 
 	@Test("Refreshing a line reuses its decoded image and attachment")
 	func attachmentIsCachedAcrossRefreshes() throws {
-		let view = makeLogView()
+		let view = makeTranscriptView()
 		view.appendLines([transcriptLine("image")])
 		let bitmap = try #require(NSBitmapImageRep(
 			bitmapDataPlanes: nil, pixelsWide: 2, pixelsHigh: 2, bitsPerSample: 8, samplesPerPixel: 4,
@@ -143,51 +143,51 @@ struct TranscriptBufferTests {
 	 fetched the same page again once per line. */
 	@Test("Scrollback is not trimmed while the reader is reading it, and gives way when they return to the end")
 	func scrollbackStaysWhileTheReaderIsReadingIt() {
-		let logView = makeLogView(bufferLimit: 6)
+		let transcriptView = makeTranscriptView(bufferLimit: 6)
 
-		logView.appendLines((0 ..< 8).map(message))
-		#expect(logView.displayedLines.count == 6)
-		logView.followsBottom = false
-		logView.prependLines((0 ..< 3).map { transcriptLine("older \($0)") })
+		transcriptView.appendLines((0 ..< 8).map(message))
+		#expect(transcriptView.displayedLines.count == 6)
+		transcriptView.followsBottom = false
+		transcriptView.prependLines((0 ..< 3).map { transcriptLine("older \($0)") })
 		for index in 0 ..< 20 {
-			logView.appendLines([transcriptLine("while reading \(index)")])
+			transcriptView.appendLines([transcriptLine("while reading \(index)")])
 		}
-		#expect(logView.displayedLines.count == 29)
-		#expect(logView.displayedBounds.oldest == "older 0")
+		#expect(transcriptView.displayedLines.count == 29)
+		#expect(transcriptView.displayedBounds.oldest == "older 0")
 
-		logView.scrollToBottom()
-		logView.appendLines([transcriptLine("after returning")])
-		#expect(logView.displayedLines.count == 6)
-		#expect(logView.displayedLines.contains { $0.lineNumber.hasPrefix("older") } == false)
-		#expect(logView.displayedBounds.newest == "after returning")
+		transcriptView.scrollToBottom()
+		transcriptView.appendLines([transcriptLine("after returning")])
+		#expect(transcriptView.displayedLines.count == 6)
+		#expect(transcriptView.displayedLines.contains { $0.lineNumber.hasPrefix("older") } == false)
+		#expect(transcriptView.displayedBounds.newest == "after returning")
 	}
 
 	@Test("History loaded while following the end is kept by the trim that follows it, and nothing older goes")
 	func scrollbackLoadedWhileFollowingIsKept() {
-		let logView = makeLogView(bufferLimit: 6)
+		let transcriptView = makeTranscriptView(bufferLimit: 6)
 
-		logView.appendLines((0 ..< 6).map(message))
-		logView.prependLines((0 ..< 3).map { transcriptLine("older \($0)") })
-		#expect(logView.displayedLines.count == 9)
+		transcriptView.appendLines((0 ..< 6).map(message))
+		transcriptView.prependLines((0 ..< 3).map { transcriptLine("older \($0)") })
+		#expect(transcriptView.displayedLines.count == 9)
 		for index in 0 ..< 5 {
-			logView.appendLines([transcriptLine("newer \(index)")])
+			transcriptView.appendLines([transcriptLine("newer \(index)")])
 		}
 		/* One line in, one line out: the widened ceiling holds steady instead
 		 of shrinking faster with each message. */
-		#expect(logView.displayedLines.count == 9)
+		#expect(transcriptView.displayedLines.count == 9)
 	}
 
 	@Test("A scroll the view makes to keep text in place is not taken for the reader scrolling up")
 	func viewportAdjustmentIsRecordedAsTheReadersPlace() throws {
-		let logView = makeLogView(bufferLimit: 1000)
-		logView.appendLines((0 ..< 200).map(message))
-		logView.layoutSubtreeIfNeeded()
-		let clip = try #require(textView(of: logView).enclosingScrollView?.contentView)
-		logView.followsBottom = false
+		let transcriptView = makeTranscriptView(bufferLimit: 1000)
+		transcriptView.appendLines((0 ..< 200).map(message))
+		transcriptView.layoutSubtreeIfNeeded()
+		let clip = try #require(textView(of: transcriptView).enclosingScrollView?.contentView)
+		transcriptView.followsBottom = false
 
-		logView.prependLines((0 ..< 50).map { transcriptLine("older \($0)") })
+		transcriptView.prependLines((0 ..< 50).map { transcriptLine("older \($0)") })
 
-		#expect(logView.lastVisibleTop == clip.bounds.minY)
+		#expect(transcriptView.lastVisibleTop == clip.bounds.minY)
 	}
 
 	/** A reload that has to be retried re-sends lines the document already
@@ -195,25 +195,25 @@ struct TranscriptBufferTests {
 	 drew it a second time, so the reader read the same message twice. */
 	@Test("Appending a line the document already holds changes nothing")
 	func appendingRefusesLinesAlreadyOnScreen() throws {
-		let logView = makeLogView(bufferLimit: 20)
+		let transcriptView = makeTranscriptView(bufferLimit: 20)
 		let lines = (0 ..< 4).map(message)
 
-		logView.appendLines(lines)
-		logView.appendLines(lines)
-		logView.appendLines(Array(lines[2 ..< 4]) + [message(4)])
+		transcriptView.appendLines(lines)
+		transcriptView.appendLines(lines)
+		transcriptView.appendLines(Array(lines[2 ..< 4]) + [message(4)])
 
-		#expect(logView.displayedLines.map(\.lineNumber) == (0 ..< 5).map { "message \($0)" })
-		#expect(try document(of: logView) == rebuiltDocument(of: (0 ..< 5).map(message)))
+		#expect(transcriptView.displayedLines.map(\.lineNumber) == (0 ..< 5).map { "message \($0)" })
+		#expect(try document(of: transcriptView) == rebuiltDocument(of: (0 ..< 5).map(message)))
 	}
 
 	@Test("A batch that repeats a line within itself draws it once")
 	func appendingRefusesRepeatsWithinOneBatch() {
-		let logView = makeLogView(bufferLimit: 20)
-		logView.appendLines([message(0), message(1), message(0)])
-		#expect(logView.displayedLines.map(\.lineNumber) == ["message 0", "message 1"])
+		let transcriptView = makeTranscriptView(bufferLimit: 20)
+		transcriptView.appendLines([message(0), message(1), message(0)])
+		#expect(transcriptView.displayedLines.map(\.lineNumber) == ["message 0", "message 1"])
 	}
 
-	private func makeLogView(bufferLimit: Int = 1000) -> TranscriptView {
+	private func makeTranscriptView(bufferLimit: Int = 1000) -> TranscriptView {
 		let client = Client(config: ClientConfig())
 		let window = MainWindow(
 			contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
@@ -222,11 +222,11 @@ struct TranscriptBufferTests {
 			defer: false
 		)
 		let controller = TranscriptController(client: client, in: window)
-		let logView = controller.ensureBackingView()
-		logView.frame = NSRect(x: 0, y: 0, width: 800, height: 600)
-		window.contentView = logView
-		logView.setBufferLimit(bufferLimit)
-		return logView
+		let transcriptView = controller.ensureBackingView()
+		transcriptView.frame = NSRect(x: 0, y: 0, width: 800, height: 600)
+		window.contentView = transcriptView
+		transcriptView.setBufferLimit(bufferLimit)
+		return transcriptView
 	}
 
 	/** One stamp for every fixture line. Asking `Date()` per line made the
@@ -256,13 +256,13 @@ struct TranscriptBufferTests {
 		transcriptLine("message \(index)")
 	}
 
-	private func textView(of logView: TranscriptView) throws -> NSTextView {
+	private func textView(of transcriptView: TranscriptView) throws -> NSTextView {
 		func descendants(in root: NSView) -> [NSTextView] {
 			root.subviews.flatMap { view in
 				(view as? NSTextView).map { [$0] } ?? descendants(in: view)
 			}
 		}
-		return try #require(descendants(in: logView).first)
+		return try #require(descendants(in: transcriptView).first)
 	}
 
 	/** The view is hidden while a channel is not selected, and lines keep
@@ -278,16 +278,16 @@ struct TranscriptBufferTests {
 			defer: false
 		)
 		let controller = TranscriptController(client: client, in: window)
-		let logView = controller.ensureBackingView()
-		logView.frame = NSRect(x: 0, y: 0, width: 800, height: 200)
+		let transcriptView = controller.ensureBackingView()
+		transcriptView.frame = NSRect(x: 0, y: 0, width: 800, height: 200)
 
 		/* Detached, as a channel that is not selected is: nothing on screen. */
-		logView.appendLines((1 ... 200).map(message))
+		transcriptView.appendLines((1 ... 200).map(message))
 
-		window.contentView = logView
-		logView.layoutSubtreeIfNeeded()
+		window.contentView = transcriptView
+		transcriptView.layoutSubtreeIfNeeded()
 
-		let textView = try textView(of: logView)
+		let textView = try textView(of: transcriptView)
 		let scrollView = try #require(textView.enclosingScrollView)
 		let clip = scrollView.contentView
 		/* The document settles its height a turn or two after landing in the
@@ -309,26 +309,26 @@ struct TranscriptBufferTests {
 	 out again, and the transcript stays parked where the reader left it. */
 	@Test("A scroll to the end asked for while hidden marks the view for layout")
 	func hiddenScrollToBottomRequestsLayout() {
-		let logView = makeLogView()
-		logView.appendLines((1 ... 20).map(message))
-		logView.layoutSubtreeIfNeeded()
-		logView.isHidden = true
-		logView.layoutSubtreeIfNeeded()
-		#expect(logView.needsLayout == false)
+		let transcriptView = makeTranscriptView()
+		transcriptView.appendLines((1 ... 20).map(message))
+		transcriptView.layoutSubtreeIfNeeded()
+		transcriptView.isHidden = true
+		transcriptView.layoutSubtreeIfNeeded()
+		#expect(transcriptView.needsLayout == false)
 
-		logView.scrollToBottom()
+		transcriptView.scrollToBottom()
 
-		#expect(logView.needsLayout)
+		#expect(transcriptView.needsLayout)
 	}
 
-	private func document(of logView: TranscriptView) throws -> String {
-		try textView(of: logView).string
+	private func document(of transcriptView: TranscriptView) throws -> String {
+		try textView(of: transcriptView).string
 	}
 
 	/// The document a view holding exactly `lines` would draw, rendered in one
 	/// pass rather than spliced together.
 	private func rebuiltDocument(of lines: [TranscriptRow]) throws -> String {
-		let reference = makeLogView()
+		let reference = makeTranscriptView()
 		reference.replaceLines(lines)
 		return try document(of: reference)
 	}
@@ -336,34 +336,34 @@ struct TranscriptBufferTests {
 	@Test("Appending in batches leaves the document a full rebuild would leave")
 	func appendingMatchesARebuild() throws {
 		let lines = (0 ..< 12).map(message)
-		let logView = makeLogView()
+		let transcriptView = makeTranscriptView()
 
-		logView.appendLines(Array(lines[0 ..< 4]))
-		logView.appendLines(Array(lines[4 ..< 5]))
-		logView.appendLines(Array(lines[5 ..< 12]))
+		transcriptView.appendLines(Array(lines[0 ..< 4]))
+		transcriptView.appendLines(Array(lines[4 ..< 5]))
+		transcriptView.appendLines(Array(lines[5 ..< 12]))
 
-		#expect(try document(of: logView) == rebuiltDocument(of: lines))
+		#expect(try document(of: transcriptView) == rebuiltDocument(of: lines))
 	}
 
 	@Test("Appending uses the storage end after UTF-16 edits, trimming and clearing")
 	func appendAfterVariableLengthEditsMatchesRebuild() throws {
-		let logView = makeLogView(bufferLimit: 3)
+		let transcriptView = makeTranscriptView(bufferLimit: 3)
 		let first = transcriptLine("first \u{1F600}")
 		var changed = transcriptLine("changed e\u{0301}")
 		let last = transcriptLine("last")
-		logView.appendLines([first, changed])
-		logView.updateDelivery(TranscriptDeliveryUpdate(
+		transcriptView.appendLines([first, changed])
+		transcriptView.updateDelivery(TranscriptDeliveryUpdate(
 			lineNumber: changed.lineNumber, state: .failed, messageIdentifier: nil, reason: "longer reason"
 		))
 		changed.deliveryState = .failed
 		changed.deliveryFailureReason = "longer reason"
-		logView.prependLines([transcriptLine("older")])
-		logView.appendLines([last, transcriptLine("newest")])
-		#expect(try document(of: logView) == rebuiltDocument(of: [first, changed, last, transcriptLine("newest")]))
+		transcriptView.prependLines([transcriptLine("older")])
+		transcriptView.appendLines([last, transcriptLine("newest")])
+		#expect(try document(of: transcriptView) == rebuiltDocument(of: [first, changed, last, transcriptLine("newest")]))
 
-		logView.clearLines()
-		logView.appendLines([last])
-		#expect(try document(of: logView) == rebuiltDocument(of: [last]))
+		transcriptView.clearLines()
+		transcriptView.appendLines([last])
+		#expect(try document(of: transcriptView) == rebuiltDocument(of: [last]))
 	}
 
 	/// The two ways a reader moves off the end of the transcript.
@@ -391,31 +391,31 @@ struct TranscriptBufferTests {
 		let copyOnSelect = Preferences.Messages.copyOnSelect.value
 		defer { Preferences.Messages.copyOnSelect.value = copyOnSelect }
 		Preferences.Messages.copyOnSelect.value = false
-		let logView = makeLogView()
-		logView.appendLines((0 ..< 200).map(message))
-		let textView = try textView(of: logView)
+		let transcriptView = makeTranscriptView()
+		transcriptView.appendLines((0 ..< 200).map(message))
+		let textView = try textView(of: transcriptView)
 		let scrollView = try #require(textView.enclosingScrollView)
 		switch navigation {
 		case .usingJump:
-			#expect(logView.jump(to: "message 0"))
+			#expect(transcriptView.jump(to: "message 0"))
 		case .usingFind:
 			/* The find bar is `NSTextFinder`'s and it has no search session in a
 			 test process, so the transcript's own half of the command is what is
 			 driven here: the command suspends following, and the scroll onto the
 			 first line stands for the one the bar performs onto a match. */
-			logView.performFindAction(.nextMatch)
+			transcriptView.performFindAction(.nextMatch)
 			textView.scrollRangeToVisible(NSRange(location: 0, length: 0))
 		}
 		// A pending first layout must not undo the navigation either.
-		logView.layoutSubtreeIfNeeded()
-		logView.appendLines((200 ..< 220).map(message))
+		transcriptView.layoutSubtreeIfNeeded()
+		transcriptView.appendLines((200 ..< 220).map(message))
 		let layoutManager = try #require(textView.textLayoutManager)
 		layoutManager.ensureLayout(for: layoutManager.documentRange)
 		textView.sizeToFit()
 		#expect(scrollView.contentView.bounds.maxY < textView.frame.maxY - 100)
 
-		logView.scrollToBottom()
-		logView.appendLines([message(220)])
+		transcriptView.scrollToBottom()
+		transcriptView.appendLines([message(220)])
 		let visibleBottom = scrollView.contentView.bounds.maxY - scrollView.contentInsets.bottom
 		#expect(abs(visibleBottom - textView.frame.maxY) < 2)
 	}
@@ -425,33 +425,33 @@ struct TranscriptBufferTests {
 	 where it is. Every find command used to take it for the transcript. */
 	@Test("Stepping through matches leaves the keyboard where it is")
 	func steppingThroughMatchesKeepsFirstResponder() throws {
-		let logView = makeLogView()
-		logView.appendLines((0 ..< 20).map(message))
-		let window = try #require(logView.window)
+		let transcriptView = makeTranscriptView()
+		transcriptView.appendLines((0 ..< 20).map(message))
+		let window = try #require(transcriptView.window)
 		let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 100, height: 20))
-		logView.addSubview(field)
+		transcriptView.addSubview(field)
 		#expect(window.makeFirstResponder(field))
 		let editor = window.firstResponder
 
-		logView.performFindAction(.nextMatch)
+		transcriptView.performFindAction(.nextMatch)
 		#expect(window.firstResponder === editor)
-		logView.performFindAction(.previousMatch)
+		transcriptView.performFindAction(.previousMatch)
 		#expect(window.firstResponder === editor)
 
 		/* Opening the bar is the one command that does take the keyboard: it is
 		 how the reader gets to the search field at all. */
-		logView.performFindAction(.showFindInterface)
+		transcriptView.performFindAction(.showFindInterface)
 		#expect(window.firstResponder !== editor)
 	}
 
 	@Test("An unknown jump target leaves bottom following enabled")
 	func failedJumpKeepsBottomFollowing() throws {
-		let logView = makeLogView()
-		logView.appendLines((0 ..< 200).map(message))
-		logView.layoutSubtreeIfNeeded()
-		#expect(logView.jump(to: "missing") == false)
-		logView.appendLines([message(200)])
-		let textView = try textView(of: logView)
+		let transcriptView = makeTranscriptView()
+		transcriptView.appendLines((0 ..< 200).map(message))
+		transcriptView.layoutSubtreeIfNeeded()
+		#expect(transcriptView.jump(to: "missing") == false)
+		transcriptView.appendLines([message(200)])
+		let textView = try textView(of: transcriptView)
 		let scrollView = try #require(textView.enclosingScrollView)
 		let visibleBottom = scrollView.contentView.bounds.maxY - scrollView.contentInsets.bottom
 		#expect(abs(visibleBottom - textView.frame.maxY) < 2)
@@ -467,15 +467,15 @@ struct TranscriptBufferTests {
 			Preferences.Theme.transcriptTheme.value = previousData
 		}
 		#expect(controller.apply(.bubbles))
-		let logView = makeLogView()
+		let transcriptView = makeTranscriptView()
 		var line = transcriptLine("plain colored highlighted")
 		line.body.runs = [
 			TranscriptTextRun(text: "plain "),
 			TranscriptTextRun(text: "colored ", background: .palette(4)),
 			TranscriptTextRun(text: "highlighted", traits: .highlighted, background: .palette(4)),
 		]
-		logView.appendLines([line])
-		let storage = try #require(textView(of: logView).textStorage)
+		transcriptView.appendLines([line])
+		let storage = try #require(textView(of: transcriptView).textStorage)
 		for (text, expected) in [
 			("plain", controller.resolved(controller.theme.palette.bubbleIncoming)),
 			("colored", NSColor.formatterColors[4]),
@@ -489,59 +489,59 @@ struct TranscriptBufferTests {
 
 	@Test("Trimming drops the oldest lines and keeps the newest addressable")
 	func trimmingDropsOnlyTheOldest() throws {
-		let logView = makeLogView(bufferLimit: 5)
+		let transcriptView = makeTranscriptView(bufferLimit: 5)
 
-		logView.appendLines((0 ..< 8).map(message))
+		transcriptView.appendLines((0 ..< 8).map(message))
 
-		#expect(try document(of: logView) == rebuiltDocument(of: (3 ..< 8).map(message)))
-		#expect(logView.jump(to: "message 7"))
-		#expect(logView.jump(to: "message 3"))
-		#expect(logView.jump(to: "message 2") == false)
+		#expect(try document(of: transcriptView) == rebuiltDocument(of: (3 ..< 8).map(message)))
+		#expect(transcriptView.jump(to: "message 7"))
+		#expect(transcriptView.jump(to: "message 3"))
+		#expect(transcriptView.jump(to: "message 2") == false)
 	}
 
 	@Test("Loading older history never drops the newest lines")
 	func prependingKeepsTheNewestLines() throws {
-		let logView = makeLogView(bufferLimit: 5)
+		let transcriptView = makeTranscriptView(bufferLimit: 5)
 
-		logView.appendLines((5 ..< 10).map(message))
-		logView.prependLines((0 ..< 5).map(message))
+		transcriptView.appendLines((5 ..< 10).map(message))
+		transcriptView.prependLines((0 ..< 5).map(message))
 
-		#expect(try document(of: logView) == rebuiltDocument(of: (0 ..< 10).map(message)))
-		#expect(logView.jump(to: "message 9"))
-		#expect(logView.jump(to: "message 0"))
+		#expect(try document(of: transcriptView) == rebuiltDocument(of: (0 ..< 10).map(message)))
+		#expect(transcriptView.jump(to: "message 9"))
+		#expect(transcriptView.jump(to: "message 0"))
 	}
 
 	@Test("A line's characters follow it through an append, a trim and a prepend")
 	func theDocumentSurvivesEveryKindOfEdit() throws {
-		let logView = makeLogView(bufferLimit: 6)
+		let transcriptView = makeTranscriptView(bufferLimit: 6)
 
-		logView.appendLines((0 ..< 8).map(message))
-		logView.prependLines((0 ..< 3).map { transcriptLine("older \($0)") })
-		logView.appendLines([transcriptLine("newest")])
+		transcriptView.appendLines((0 ..< 8).map(message))
+		transcriptView.prependLines((0 ..< 3).map { transcriptLine("older \($0)") })
+		transcriptView.appendLines([transcriptLine("newest")])
 
 		/* Six live lines, widened by the three older ones, then slid by one when
 		 the newest arrived: the oldest of the prepended block is what goes. */
 		let expected = [transcriptLine("older 1"), transcriptLine("older 2")]
 			+ (2 ..< 8).map(message)
 			+ [transcriptLine("newest")]
-		#expect(try document(of: logView) == rebuiltDocument(of: expected))
-		#expect(logView.jump(to: "newest"))
-		#expect(logView.jump(to: "older 1"))
-		#expect(logView.jump(to: "older 0") == false)
+		#expect(try document(of: transcriptView) == rebuiltDocument(of: expected))
+		#expect(transcriptView.jump(to: "newest"))
+		#expect(transcriptView.jump(to: "older 1"))
+		#expect(transcriptView.jump(to: "older 0") == false)
 	}
 
 	/// A range that no longer matched its line would scroll to the wrong place;
 	/// the order the targets appear in is what says the ranges still line up.
 	@Test("Jump targets stay in document order after the buffer has been edited")
 	func jumpTargetsStayInDocumentOrder() throws {
-		let logView = makeLogView(bufferLimit: 120)
-		logView.appendLines((0 ..< 100).map(message))
-		logView.prependLines((0 ..< 10).map { transcriptLine("older \($0)") })
-		logView.layoutSubtreeIfNeeded()
+		let transcriptView = makeTranscriptView(bufferLimit: 120)
+		transcriptView.appendLines((0 ..< 100).map(message))
+		transcriptView.prependLines((0 ..< 10).map { transcriptLine("older \($0)") })
+		transcriptView.layoutSubtreeIfNeeded()
 
 		func scrollOffset(after lineNumber: String) throws -> CGFloat {
-			#expect(logView.jump(to: lineNumber))
-			let scrollView = try #require(textView(of: logView).enclosingScrollView)
+			#expect(transcriptView.jump(to: lineNumber))
+			let scrollView = try #require(textView(of: transcriptView).enclosingScrollView)
 			return scrollView.contentView.bounds.origin.y
 		}
 
@@ -555,10 +555,10 @@ struct TranscriptBufferTests {
 
 	@Test("A delivery receipt redraws its own line and leaves the rest alone")
 	func aDeliveryReceiptTouchesOneLineOnly() throws {
-		let logView = makeLogView()
-		logView.appendLines((0 ..< 4).map(message))
+		let transcriptView = makeTranscriptView()
+		transcriptView.appendLines((0 ..< 4).map(message))
 
-		logView.updateDelivery(TranscriptDeliveryUpdate(
+		transcriptView.updateDelivery(TranscriptDeliveryUpdate(
 			lineNumber: "message 1",
 			state: .failed,
 			messageIdentifier: nil,
@@ -568,39 +568,39 @@ struct TranscriptBufferTests {
 		var expected = (0 ..< 4).map(message)
 		expected[1].deliveryState = .failed
 		expected[1].deliveryFailureReason = "no such nick"
-		#expect(try document(of: logView) == rebuiltDocument(of: expected))
+		#expect(try document(of: transcriptView) == rebuiltDocument(of: expected))
 	}
 
 	@Test("A reaction is drawn on the line it names and nowhere else")
 	func aReactionIsDrawnOnItsOwnLine() throws {
-		let logView = makeLogView()
-		logView.appendLines((0 ..< 3).map(message))
+		let transcriptView = makeTranscriptView()
+		transcriptView.appendLines((0 ..< 3).map(message))
 
-		logView.updateReactions(["👍": ["bob", "carol"]], messageIdentifier: "id-message 2")
+		transcriptView.updateReactions(["👍": ["bob", "carol"]], messageIdentifier: "id-message 2")
 
 		var expected = (0 ..< 3).map(message)
 		expected[2].reactions = ["👍": ["bob", "carol"]]
-		#expect(try document(of: logView) == rebuiltDocument(of: expected))
-		#expect(try visibleTranscriptText(textView(of: logView).attributedString()).contains("👍 2"))
+		#expect(try document(of: transcriptView) == rebuiltDocument(of: expected))
+		#expect(try visibleTranscriptText(textView(of: transcriptView).attributedString()).contains("👍 2"))
 	}
 
 	/// An image whose line has already been trimmed has nothing to be drawn on,
 	/// and keeping its bytes would hold a whole download alive for nothing.
 	@Test("An image that arrives after its line was trimmed is dropped")
 	func aLateInlineImageIsDropped() throws {
-		let logView = makeLogView(bufferLimit: 2)
-		logView.appendLines((0 ..< 4).map(message))
-		let before = try document(of: logView)
+		let transcriptView = makeTranscriptView(bufferLimit: 2)
+		transcriptView.appendLines((0 ..< 4).map(message))
+		let before = try document(of: transcriptView)
 
 		let url = try #require(URL(string: "https://example.com/cat.png"))
-		logView.addInlineImage(TranscriptInlineImage(
+		transcriptView.addInlineImage(TranscriptInlineImage(
 			lineNumber: "message 0",
 			linkIdentifier: "link-1",
 			sourceURL: url,
 			imageData: Data([0x00])
 		))
 
-		#expect(try document(of: logView) == before)
-		#expect(try document(of: logView) == rebuiltDocument(of: (2 ..< 4).map(message)))
+		#expect(try document(of: transcriptView) == before)
+		#expect(try document(of: transcriptView) == rebuiltDocument(of: (2 ..< 4).map(message)))
 	}
 }

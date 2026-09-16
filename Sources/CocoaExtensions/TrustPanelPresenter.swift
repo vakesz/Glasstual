@@ -34,18 +34,25 @@ import AppKit
 import Security
 import SecurityInterface
 
-/* `@Sendable` because the connection host calls this from its own XPC queue
+/** `@Sendable` because the connection host calls this from its own XPC queue
  while the answer is decided on the main actor, and the closure is what carries
  the decision back across. */
 public typealias TrustDecisionHandler = @Sendable (Bool) -> Void
-public typealias TrustPanelCompletion = (SecTrust, Bool) -> Void
 
-/// Presents the system's certificate trust sheet.
+/// One showing of the system's certificate trust sheet.
+///
+/// The presenter holds itself until the sheet ends, so a caller that only wants
+/// to show a certificate can drop the result. A caller that may have to take
+/// the sheet down again keeps it and calls ``dismiss()``.
 ///
 /// Main actor throughout: it drives an AppKit sheet, and every caller is
 /// already there.
 @MainActor
 public final class TrustPanelPresenter: NSObject {
+	/// Puts the trust sheet for `trust` in front of the user, on `window` when
+	/// there is one. `completion` is called with what the user answered, and not
+	/// at all when the sheet is dismissed by ``dismiss()``.
+	@discardableResult
 	public static func present(
 		in window: NSWindow?,
 		body: String,
@@ -53,17 +60,64 @@ public final class TrustPanelPresenter: NSObject {
 		defaultButton: String,
 		alternateButton: String?,
 		trust: SecTrust,
-		completion: @escaping TrustPanelCompletion
-	) -> SFCertificateTrustPanel {
-		let callback = TrustPanelContext(trust: trust, completion: completion)
-		let panel = SFCertificateTrustPanel()
-		/* The panel owns the callback, because `didEnd` is not the only way a
-		 sheet goes away: a caller that dismisses it with `orderOut(_:)` never
-		 reaches the selector, and a retain balanced only there is never
-		 released. `contextInfo` therefore only names the callback; the panel's
-		 own lifetime is what keeps it alive. */
-		objc_setAssociatedObject(panel, Self.callbackKey, callback, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
-		let callbackPointer = Unmanaged.passUnretained(callback).toOpaque()
+		completion: ((Bool) -> Void)? = nil
+	) -> TrustPanelPresenter {
+		let presenter = TrustPanelPresenter(trust: trust, completion: completion)
+		presenter.begin(
+			in: window,
+			body: body,
+			title: title,
+			defaultButton: defaultButton,
+			alternateButton: alternateButton
+		)
+		return presenter
+	}
+
+	/// Takes the sheet down without answering it.
+	public func dismiss() {
+		completion = nil
+		let panel = panel
+		finish()
+
+		if let parent = panel.sheetParent {
+			parent.endSheet(panel, returnCode: .cancel)
+			return
+		}
+
+		if NSApp.modalWindow === panel {
+			NSApp.stopModal(withCode: .cancel)
+			return
+		}
+
+		panel.orderOut(nil)
+	}
+
+	/* SecTrust is ARC-managed in Swift; holding it strongly keeps the retain
+	 balanced. */
+	private let trust: SecTrust
+	private let panel = SFCertificateTrustPanel()
+	private var completion: ((Bool) -> Void)?
+	/** What keeps the presenter alive while the sheet is up.
+
+	 `didEnd` is not the only way a sheet goes away -- a caller that dismisses it
+	 never reaches the selector -- so both exits release this, and nothing else
+	 has to hold the presenter for it to work. */
+	private var whileOnScreen: TrustPanelPresenter?
+
+	private init(trust: SecTrust, completion: ((Bool) -> Void)?) {
+		self.trust = trust
+		self.completion = completion
+		super.init()
+		whileOnScreen = self
+	}
+
+	private func begin(
+		in window: NSWindow?,
+		body: String,
+		title: String,
+		defaultButton: String,
+		alternateButton: String?
+	) {
 		panel.setDefaultButtonTitle(defaultButton)
 		panel.setAlternateButtonTitle(alternateButton)
 		panel.setInformativeText(body)
@@ -71,39 +125,24 @@ public final class TrustPanelPresenter: NSObject {
 			for: window,
 			modalDelegate: self,
 			didEnd: #selector(trustPanelDidEnd(_:returnCode:contextInfo:)),
-			contextInfo: callbackPointer,
+			contextInfo: nil,
 			trust: trust,
 			message: title
 		)
-		return panel
 	}
 
-	@objc private static func trustPanelDidEnd(
+	@objc private func trustPanelDidEnd(
 		_: NSWindow,
 		returnCode: Int,
-		contextInfo: UnsafeMutableRawPointer
+		contextInfo _: UnsafeMutableRawPointer?
 	) {
-		let context = Unmanaged<TrustPanelContext>.fromOpaque(contextInfo).takeUnretainedValue()
-		context.completion(context.trust, returnCode == NSApplication.ModalResponse.OK.rawValue)
+		let completion = completion
+		finish()
+		completion?(returnCode == NSApplication.ModalResponse.OK.rawValue)
 	}
 
-	/// Keys the callback the panel carries. The token is never read: only the
-	/// address it occupies for the life of the process matters.
-	private static let callbackToken = NSObject()
-
-	private static var callbackKey: UnsafeRawPointer {
-		UnsafeRawPointer(Unmanaged.passUnretained(callbackToken).toOpaque())
-	}
-}
-
-@MainActor
-private final class TrustPanelContext: NSObject {
-	/* SecTrust is ARC-managed in Swift; holding it strongly keeps the retain balanced. */
-	let trust: SecTrust
-	let completion: TrustPanelCompletion
-
-	init(trust: SecTrust, completion: @escaping TrustPanelCompletion) {
-		self.trust = trust
-		self.completion = completion
+	private func finish() {
+		completion = nil
+		whileOnScreen = nil
 	}
 }

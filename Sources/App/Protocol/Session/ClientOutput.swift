@@ -192,8 +192,8 @@ protocol ClientOutput: AnyObject {
 
 	// MARK: Server list
 
-	func reloadTreeItem(_ item: ChatItem)
-	func reloadTreeGroup(_ item: ChatItem)
+	func reloadChatItem(_ item: ChatItem)
+	func reloadChatItemGroup(_ item: ChatItem)
 	/// Reloads a client and its children in place, keeping the selection.
 	func reloadServerListItems(for client: Client)
 	func refreshMessageCount(for item: ChatItem)

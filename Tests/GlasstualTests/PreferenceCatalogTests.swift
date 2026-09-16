@@ -33,7 +33,7 @@ struct PreferenceCatalogTests {
 
 	@Test("Every registered declaration reaches the registration domain with its default")
 	func registeredDefaultsAreRegistered() {
-		TextualPreferences.registerDefaults()
+		PreferenceRegistration.registerDefaults()
 
 		let container = GlasstualUserDefaults.container
 			.volatileDomain(forName: UserDefaults.registrationDomain)
@@ -127,7 +127,7 @@ struct PreferenceCatalogTests {
 
 	@Test("Storage follows the declaration, not the call site")
 	func storageFollowsDeclarations() {
-		#expect(Preferences.storage(for: "com.adiumX.AutoHyperlinks.permittedSchemes") == .standard)
+		#expect(Preferences.storage(for: "Link Schemes -> Permitted") == .standard)
 		#expect(Preferences.storage(for: "NSWindow Frame -> Internal (v3) -> Main Window") == .standard)
 		// Both of these used to read and write UserDefaults.standard while the
 		// catalogue said they belonged in the container, so an imported value
@@ -186,5 +186,112 @@ struct PreferenceCatalogTests {
 		}
 
 		return (lhs.propertyListObject as AnyObject).isEqual(rhs.propertyListObject)
+	}
+}
+
+/** Each domain lists the keys it declares, and `Preferences.allDomains` lists
+ the domains. Swift cannot enumerate static members, so what would otherwise be
+ an unchecked hand-kept list is checked here against the declarations
+ themselves: the source of the `Keys` directory is read back and every declared
+ key has to reach its domain's list, and every domain has to reach the
+ catalogue. */
+@Suite("Preference declaration lists")
+struct PreferenceDeclarationListTests {
+	/// One domain as its source file declares it.
+	private struct Domain {
+		let name: String
+		/// The properties declared as keys, in declaration order.
+		let declared: [String]
+		/// The text of the `all` list, or `nil` for a domain that has none.
+		let registration: String?
+	}
+
+	private static let keysDirectory = URL(filePath: #filePath)
+		.deletingLastPathComponent()
+		.deletingLastPathComponent()
+		.deletingLastPathComponent()
+		.appending(path: "Sources/App/Preferences/Keys")
+
+	private static func domains() throws -> [Domain] {
+		let names = try FileManager.default.contentsOfDirectory(atPath: keysDirectory.path())
+			.filter { $0.hasPrefix("Preferences+") && $0.hasSuffix(".swift") }
+			.sorted()
+		try #require(names.isEmpty == false, "no preference declarations at \(keysDirectory.path())")
+
+		return try names.flatMap { name -> [Domain] in
+			let source = try String(contentsOf: keysDirectory.appending(path: name), encoding: .utf8)
+			return source.components(separatedBy: "\n\tenum ").dropFirst().compactMap { block in
+				guard let name = block.prefix(while: { $0 != " " }).nilIfEmpty else { return nil }
+				let halves = block.components(separatedBy: "\n\t\tstatic let all: [any AnyPreferenceKey]")
+				return Domain(
+					name: String(name),
+					declared: declaredKeys(in: halves[0]),
+					registration: halves.count > 1 ? halves[1] : nil
+				)
+			}
+		}
+	}
+
+	/// The properties a block declares as preference keys, by the shape of the
+	/// declaration rather than by its type, which the source does not spell.
+	private static func declaredKeys(in block: String) -> [String] {
+		block.components(separatedBy: "\n\t\tstatic let ").dropFirst().compactMap { declaration in
+			let parts = declaration.components(separatedBy: " = ")
+			guard parts.count > 1,
+			      parts[1].hasPrefix("PreferenceKey(") || parts[1].hasPrefix("UntypedPreferenceKey(")
+			else { return nil }
+			return parts[0].nilIfEmpty
+		}
+	}
+
+	@Test("Every declared key reaches its own domain's list")
+	func declaredKeysAreRegistered() throws {
+		for domain in try Self.domains() where domain.declared.isEmpty == false {
+			let registration = try #require(
+				domain.registration,
+				"\(domain.name) declares keys but has no list of them"
+			)
+			for key in domain.declared {
+				#expect(
+					registration.contains(key),
+					"Preferences.\(domain.name).\(key) is declared but is in no list"
+				)
+			}
+		}
+	}
+
+	@Test("Every domain that declares keys reaches the catalogue")
+	func everyDomainIsCatalogued() throws {
+		let catalogue = try String(
+			contentsOf: Self.keysDirectory.appending(path: "PreferenceCatalog.swift"),
+			encoding: .utf8
+		)
+		for domain in try Self.domains() where domain.registration != nil {
+			#expect(
+				catalogue.contains("\(domain.name).self"),
+				"Preferences.\(domain.name) is not in Preferences.allDomains"
+			)
+		}
+	}
+
+	/// Every key the code declares is one the catalogue can answer for, which
+	/// is what the two source checks above add up to at runtime.
+	@Test("The catalogue answers for every key it lists")
+	func catalogueAnswersForEveryKey() {
+		for key in Preferences.allKeys {
+			#expect(Preferences.key(named: key.name) != nil, "\(key.name) is not reachable by name")
+		}
+	}
+}
+
+private extension String {
+	var nilIfEmpty: Self? {
+		isEmpty ? nil : self
+	}
+}
+
+private extension Substring {
+	var nilIfEmpty: Self? {
+		isEmpty ? nil : self
 	}
 }

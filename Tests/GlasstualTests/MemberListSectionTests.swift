@@ -280,7 +280,7 @@ struct MemberListSectionTests {
 	@Test("Render snapshots ignore weights and details but refresh names, marks and list identity")
 	func renderSnapshotRevisions() throws {
 		channel.addMember(makeMember(named: "alice"))
-		let cache = MemberListRenderCache()
+		let cache = TranscriptMemberDirectoryCache()
 		let original = cache.members(in: channel)
 		#expect(original == [RenderedMember(nickname: "alice")])
 		let revision = memberList.presentationRevision
@@ -302,7 +302,7 @@ struct MemberListSectionTests {
 		#expect(cache.rebuildCount == 1)
 		let displayed = try #require(memberList.groups.first?.members.first)
 		let details = MemberListUserInfoContent(member: displayed, privileges: "")
-		#expect(details.awayStatus == MemberListStrings.awayStatus(isAway: true))
+		#expect(details.awayStatus == MemberListUserInfoContent.awayStatus(isAway: true))
 		#expect(details.account == "account")
 		#expect(details.username == "username")
 

@@ -14,7 +14,7 @@ import Testing
 struct ServerPropertiesSheetTests {
 	@Test("Closing the sheet suppresses identity enumeration that finishes late", .timeLimit(.minutes(1)))
 	func closedCertificateLookupCannotPresent() async throws {
-		let sheet = ServerPropertiesSheet(client: nil)
+		let sheet = ServerPropertiesSheet(client: nil) { _ in }
 		let (gate, release) = AsyncStream<Void>.makeStream()
 		let loading = Task { for await _ in gate {} }
 		let (started, didStart) = AsyncStream<Void>.makeStream()
@@ -58,13 +58,12 @@ struct ServerPropertiesSheetTests {
 
 	@Test("Save includes a chosen certificate whose keychain reference is still loading", .timeLimit(.minutes(1)))
 	func saveAwaitsSelectedCertificate() async throws {
-		let sheet = ServerPropertiesSheet(client: nil)
+		let (saved, didSave) = AsyncStream<ClientConfig>.makeStream()
+		let recorder = CertificateSaveRecorder(saved: didSave)
+		let sheet = ServerPropertiesSheet(client: nil, onSave: recorder.record)
 		let persistence = KeychainPersistence { _ in }
 		sheet.credentialPersistence = persistence
 		sheet.model.replace(with: Self.configuration(withSecrets: false))
-		let (saved, didSave) = AsyncStream<ClientConfig>.makeStream()
-		let delegate = CertificateSaveRecorder(saved: didSave)
-		sheet.delegate = delegate
 		let (gate, release) = AsyncStream<Void>.makeStream()
 		let loading = Task { for await _ in gate {}; return Data([3]) }
 		sheet.certificateSelection.resolveReference(using: { await loading.value }, apply: { reference in
@@ -72,13 +71,13 @@ struct ServerPropertiesSheetTests {
 		})
 		sheet.submit()
 		#expect(sheet.model.isSaving)
-		#expect(delegate.savedCount == 0)
+		#expect(recorder.savedCount == 0)
 		let quit = persistence.waitForSettingsSaves()
 		release.finish()
 		var iterator = saved.makeAsyncIterator()
 		let submitted = try #require(await iterator.next())
 		#expect(submitted.identityClientSideCertificate == Data([3]))
-		#expect(delegate.savedCount == 1)
+		#expect(recorder.savedCount == 1)
 		#expect(!sheet.model.isSaving)
 		#expect(await quit.value)
 	}
@@ -133,7 +132,7 @@ struct ServerPropertiesSheetTests {
 		let model = ServerPropertiesModel(config: config)
 
 		#expect(model.config.usesSASL == initialValue)
-		#expect(ServerPropertiesStrings.Identity.signInWithSASL.isEmpty == false)
+		#expect(String(localized: .ServerProperties.signInWithSasl).isEmpty == false)
 
 		model.config.usesSASL = !initialValue
 		let submitted = try #require(model.submittedConfig())
@@ -382,10 +381,10 @@ struct ServerPropertiesSheetTests {
 
 	@Test("Identity fields accept what IRC accepts and nothing else")
 	func identityValidationMatchesIRCRestrictions() {
-		#expect(ServerPropertiesValidation.isNickname("valid_nick"))
-		#expect(ServerPropertiesValidation.isNickname("invalid nickname") == false)
-		#expect(ServerPropertiesValidation.isUsername("valid-user"))
-		#expect(ServerPropertiesValidation.isUsername("invalid user") == false)
+		#expect(("valid_nick" as NSString).isHostmaskNickname)
+		#expect(("invalid nickname" as NSString).isHostmaskNickname == false)
+		#expect(("valid-user" as NSString).isHostmaskUsername)
+		#expect(("invalid user" as NSString).isHostmaskUsername == false)
 		#expect(ServerPropertiesValidation.invalidAlternateNickname(in: "") == nil)
 		#expect(ServerPropertiesValidation.invalidAlternateNickname(in: "   ") == nil)
 		#expect(ServerPropertiesValidation.invalidAlternateNickname(in: "first second") == nil)
@@ -395,12 +394,12 @@ struct ServerPropertiesSheetTests {
 
 	@Test("An endpoint needs a host that resolves as a name or an address, and a port in range")
 	func endpointValidationRejectsInvalidAddressesAndPorts() {
-		#expect(ServerPropertiesValidation.isInternetAddress("irc.libera.chat"))
-		#expect(ServerPropertiesValidation.isInternetAddress("2001:db8::1"))
-		#expect(ServerPropertiesValidation.isInternetAddress("not a host") == false)
-		#expect(ServerPropertiesValidation.isInternetPort("6697"))
-		#expect(ServerPropertiesValidation.isInternetPort("0") == false)
-		#expect(ServerPropertiesValidation.isInternetPort("70000") == false)
+		#expect(("irc.libera.chat" as NSString).isValidInternetAddress)
+		#expect(("2001:db8::1" as NSString).isValidInternetAddress)
+		#expect(("not a host" as NSString).isValidInternetAddress == false)
+		#expect(("6697" as NSString).isValidInternetPort)
+		#expect(("0" as NSString).isValidInternetPort == false)
+		#expect(("70000" as NSString).isValidInternetPort == false)
 	}
 
 	@Test("A disconnect message stays inside the protocol's length limit and on one line")
@@ -416,7 +415,7 @@ struct ServerPropertiesSheetTests {
 }
 
 @MainActor
-private final class CertificateSaveRecorder: ServerPropertiesSheetDelegate {
+private final class CertificateSaveRecorder {
 	let saved: AsyncStream<ClientConfig>.Continuation
 	private(set) var savedCount = 0
 
@@ -424,7 +423,7 @@ private final class CertificateSaveRecorder: ServerPropertiesSheetDelegate {
 		self.saved = saved
 	}
 
-	func serverPropertiesSheet(_: ServerPropertiesSheet, onOk config: ClientConfig) {
+	func record(_ config: ClientConfig) {
 		savedCount += 1
 		saved.yield(config)
 		saved.finish()

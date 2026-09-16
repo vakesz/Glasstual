@@ -244,7 +244,6 @@ targets:
       - path: Sources/Shared/ConnectionErrorCode.swift
       - path: Sources/Shared/RemoteConnectionProtocols.swift
       - path: Sources/Shared/SecureConnectionInformation.swift
-      - path: Sources/Shared/AppSleepPreference.swift
     dependencies:
       - sdk: Security.framework
       - sdk: SecurityInterface.framework
@@ -350,8 +349,6 @@ targets:
       - path: Sources/App/Resources/IRCNetworks.plist
       - path: Sources/App/Resources/PrivacyInfo.xcprivacy
       - path: Sources/App/Resources/StaticStore.plist
-      - path: Sources/App/Resources/TVCMainWindowAppearance.plist
-      - path: Sources/App/Resources/TVCMainWindowTextViewAppearance.plist
       # The leaf name is a runtime bundle path, so it keeps its spelling and
       # ships as a folder reference.
       - path: Sources/App/Resources/Bundled Scripts

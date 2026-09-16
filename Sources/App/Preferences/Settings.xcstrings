@@ -5617,78 +5617,6 @@
         }
       }
     },
-    "notifications-heading-speech": {
-      "comment": "Section heading in the Notifications pane.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Speech"
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Beszéd"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sprachausgabe"
-          }
-        }
-      }
-    },
-    "notifications-heading-speech-include": {
-      "comment": "Header of the Notifications section that holds what a spoken channel message includes.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Include When Speaking a Channel Message"
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Csatornaüzenet felolvasásakor belefoglalva"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bei der Sprachausgabe von Kanalnachrichten einbeziehen"
-          }
-        }
-      }
-    },
-    "notifications-only-speak-selection": {
-      "comment": "Checkbox in the Notifications pane.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Only speak Channel Messages for the selected channel"
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Csak a kijelölt csatorna üzeneteinek felolvasása"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nur Nachrichten des ausgewählten Kanals vorlesen"
-          }
-        }
-      }
-    },
     "notifications-post-while-in-focus": {
       "comment": "Checkbox in the Notifications pane.",
       "extractionState": "manual",
@@ -5709,54 +5637,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Benachrichtigungen anzeigen, wenn Glasstual im Vordergrund ist"
-          }
-        }
-      }
-    },
-    "notifications-speak-channel-name": {
-      "comment": "Checkbox choosing whether the channel name is spoken.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Channel name"
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Csatornanév"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kanalname"
-          }
-        }
-      }
-    },
-    "notifications-speak-nickname": {
-      "comment": "Checkbox choosing whether the sender nickname is spoken.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nickname"
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Becenév"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nickname"
           }
         }
       }
@@ -6741,6 +6621,78 @@
           "stringUnit": {
             "state": "translated",
             "value": "Beende Glasstual und öffne die App erneut, um die Sprache zu ändern."
+          }
+        }
+      }
+    },
+    "notifications-notify-mentions": {
+      "comment": "Checkbox in the Notifications pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notify me about mentions and private messages"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Értesítés az említésekről és a privát üzenetekről"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bei Erwähnungen und privaten Nachrichten benachrichtigen"
+          }
+        }
+      }
+    },
+    "notifications-play-sound": {
+      "comment": "Checkbox in the Notifications pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Play a sound with notifications"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hang lejátszása az értesítésekhez"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ton zu Benachrichtigungen abspielen"
+          }
+        }
+      }
+    },
+    "notifications-mute-note": {
+      "comment": "Explanatory note under the mentions checkbox in the Notifications pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mute a single conversation from its Server or Channel properties."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Egy adott beszélgetést a kiszolgáló vagy a csatorna beállításainál némíthat el."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eine einzelne Unterhaltung stummschalten Sie in deren Server- oder Kanaleinstellungen."
           }
         }
       }

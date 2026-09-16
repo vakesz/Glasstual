@@ -29,12 +29,12 @@ struct RegularExpressionSafetyTests {
 	func failureIsScopedToItsKey() {
 		let broken = "(\(UUID().uuidString)"
 
-		#expect(RegularExpression.string("hello", isMatchedByRegex: broken) == false)
-		#expect(RegularExpression.string("hello", isMatchedByRegex: broken, withoutCase: true) == false)
-		#expect(RegularExpression.string("hello", isMatchedByRegex: broken) == false)
+		#expect(RegularExpression.firstMatch(of: broken, in: "hello") == .invalidPattern)
+		#expect(RegularExpression.firstMatch(of: broken, in: "hello", withoutCase: true) == .invalidPattern)
+		#expect(RegularExpression.firstMatch(of: broken, in: "hello") == .invalidPattern)
 
-		#expect(RegularExpression.string("HELLO", isMatchedByRegex: "hello", withoutCase: true))
-		#expect(RegularExpression.string("hello", isMatchedByRegex: "^hello$"))
+		#expect(RegularExpression.firstMatch(of: "hello", in: "HELLO", withoutCase: true) == .matched)
+		#expect(RegularExpression.firstMatch(of: "^hello$", in: "hello") == .matched)
 	}
 
 	/// Cutting by characters rather than by code units, so a subject never ends
@@ -42,19 +42,19 @@ struct RegularExpressionSafetyTests {
 	/// subject.
 	@Test("The subject is cut to the requested length, on a character boundary")
 	func boundedInputCutsTheSubject() {
-		#expect(RegularExpression.string("a👩‍👩‍👧b", isMatchedByRegex: "b", inputLimit: 2) == false)
-		#expect(RegularExpression.string("a👩‍👩‍👧b", isMatchedByRegex: "👩‍👩‍👧", inputLimit: 2))
-		#expect(RegularExpression.string("a👩‍👩‍👧b", isMatchedByRegex: "b"))
-		#expect(RegularExpression.string("hello", isMatchedByRegex: "h", inputLimit: 0) == false)
+		#expect(RegularExpression.firstMatch(of: "b", in: "a👩‍👩‍👧b", inputLimit: 2) == .unmatched)
+		#expect(RegularExpression.firstMatch(of: "👩‍👩‍👧", in: "a👩‍👩‍👧b", inputLimit: 2) == .matched)
+		#expect(RegularExpression.firstMatch(of: "b", in: "a👩‍👩‍👧b") == .matched)
+		#expect(RegularExpression.firstMatch(of: "h", in: "hello", inputLimit: 0) == .unmatched)
 	}
 
 	@Test("A bounded match never looks past the limit")
 	func boundedMatchStopsAtTheLimit() {
 		let subject = String(repeating: "x", count: 64) + "needle"
 
-		#expect(RegularExpression.string(subject, isMatchedByRegex: "needle", withoutCase: false, inputLimit: 4096))
+		#expect(RegularExpression.firstMatch(of: "needle", in: subject, inputLimit: 4096) == .matched)
 		#expect(
-			RegularExpression.string(subject, isMatchedByRegex: "needle", withoutCase: false, inputLimit: 64) == false
+			RegularExpression.firstMatch(of: "needle", in: subject, inputLimit: 64) == .unmatched
 		)
 		#expect(
 			RegularExpression.matches(
@@ -65,64 +65,5 @@ struct RegularExpressionSafetyTests {
 				inputLimit: 64
 			).isEmpty
 		)
-	}
-
-	/** The shape the editor warns about: an unbounded repetition wrapped around a
-	 body that can already match the same text in more than one length, which is
-	 what makes ICU backtrack exponentially. */
-	@Test(
-		"A repetition wrapped around an unbounded repetition is reported",
-		arguments: [
-			"(a+)+",
-			"(a*)*",
-			"(a+)*",
-			"(\\d+)*",
-			"((x*))+",
-			"(\\d{2,}){3,}",
-			"(?:a+)+",
-			"(a+)+$",
-			"^(?:[a-z]+\\s?)+$",
-			"(\\w+\\s*)+",
-		]
-	)
-	func nestedQuantifiersAreReported(_ pattern: String) {
-		#expect(RegularExpression.hasNestedQuantifier(pattern))
-	}
-
-	/** Patterns people actually write have to keep working: a repetition on its
-	 own, an alternation, a bounded repeat, and a literal quantifier inside a
-	 character class or behind a backslash are all fine.
-
-	 The last four are what the heuristic used to report and no longer does. A
-	 group that repeats around a body with anything mandatory in it — the `#`,
-	 the comma, the dot — has one way to divide a subject, and a repetition with
-	 a ceiling costs what its own limits say whatever it wraps. */
-	@Test(
-		"A pattern that does not nest unbounded repetitions is accepted",
-		arguments: [
-			"hello",
-			"^[a-z]+$",
-			"(cat|dog)",
-			"(cat|dog)+",
-			"a+b+c+",
-			"(abc)+",
-			"[+*]+",
-			"\\(a+\\)+",
-			"(a{2}){2}",
-			"(https?://\\S+)",
-			"(a+)?",
-			"(#\\w+ )+",
-			"(\\w+, )+",
-			"(\\d{1,3}\\.){1,4}",
-			"(a{1,2}){1,2}",
-		]
-	)
-	func ordinaryPatternsAreAccepted(_ pattern: String) {
-		#expect(RegularExpression.hasNestedQuantifier(pattern) == false)
-	}
-
-	@Test("An empty pattern nests nothing")
-	func emptyPatternNestsNothing() {
-		#expect(RegularExpression.hasNestedQuantifier("") == false)
 	}
 }

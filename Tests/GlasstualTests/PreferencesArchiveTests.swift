@@ -66,7 +66,6 @@ struct PreferencesArchiveTests {
 		let session = fixture.session()
 		try await prepare(data, source: source, session: session, fixture: fixture)
 		let preview = try #require(session.preview)
-		#expect(preview.supportsRestore)
 		#expect(preview.archive.source == source)
 
 		await session.commitPreview()
@@ -148,7 +147,7 @@ struct PreferencesArchiveTests {
 
 	@Test("An archive value built in code claims no local-recovery privileges")
 	func archivesDefaultToPortable() {
-		let archive = PreferencesArchive(isComplete: true, values: [:], unset: [], clients: [])
+		let archive = PreferencesArchive(values: [:], unset: [], clients: [])
 		#expect(archive.source == .portable)
 		#expect(throws: PreferencesTransferError.self) { try archive.recoveryEncoded() }
 	}

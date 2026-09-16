@@ -185,7 +185,7 @@ nonisolated struct UserPrefixTable: Sendable { // nonisolated: value
 	}
 }
 
-class ISupport: NSObject {
+final class ISupport {
 	private(set) weak var client: Client?
 	var serverAddress: String?
 	private(set) var maximumAwayLength: UInt = 0
@@ -288,15 +288,8 @@ class ISupport: NSObject {
 	private var lastConfiguration: [String: ISupportValue] = [:]
 	private var hasReceivedConfiguration = false
 
-	override init() {
-		client = nil
-		super.init()
-		prepareInitialState()
-	}
-
-	init(client: Client?) {
+	init(client: Client? = nil) {
 		self.client = client
-		super.init()
 		prepareInitialState()
 	}
 
@@ -635,14 +628,14 @@ class ISupport: NSObject {
 		let description = Self.localizedDescription(forExtendedBanType: type, argument: argument)
 
 		if negated {
-			return ISupportStrings.everyoneExcept(description)
+			return String(localized: .IRC.everyoneExcept(description))
 		}
 
 		return description
 	}
 
 	static func localizedDescription(forExtendedBanType type: String, argument: String?) -> String {
-		ISupportStrings.extendedBanDescription(type: type, argument: argument)
+		ExtendedBanKind.describing(type: type, argument: argument)
 	}
 
 	func stringValue(forConfiguration configuration: [String: ISupportValue]) -> String? {
@@ -837,7 +830,7 @@ private extension ISupport {
 			updateChannelNamePrefixes(from: value)
 		case .network:
 			networkName = value
-			networkNameFormatted = ISupportStrings.networkName(value)
+			networkNameFormatted = String(localized: .IRC.ircNetwork(value))
 		case .prefix:
 			parseUserModeSymbols(value)
 		case .statusmsg:

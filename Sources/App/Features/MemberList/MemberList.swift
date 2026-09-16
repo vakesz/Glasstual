@@ -159,7 +159,7 @@ final class MemberList: ChannelMemberListPresentation {
 			let identifier = MemberListSectionIdentifier(rank: rank, ordinal: ordinal)
 			let section = MemberListSection(
 				identifier: identifier,
-				title: MemberListStrings.sectionTitle(for: rank)
+				title: MemberListRanks.sectionTitle(for: rank)
 			)
 			builtGroups.append(MemberListGroup(section: section, members: currentMembers))
 		}

@@ -7,13 +7,13 @@
 import Testing
 
 @MainActor
-@Suite("Reachability")
+@Suite("Network reachability")
 struct ReachabilityTests {
 	@Test("The first path seeds the state without reporting a change")
 	func firstPathSeedsWithoutEvent() {
 		var currentlyReachable = false
 		var receivedInitialPath = false
-		let event = Reachability.evaluatePathChange(
+		let event = ApplicationDelegate.evaluatePathChange(
 			reachable: true,
 			currentlyReachable: &currentlyReachable,
 			receivedInitialPath: &receivedInitialPath
@@ -28,7 +28,7 @@ struct ReachabilityTests {
 	func unchangedPathProducesNoEvent() {
 		var currentlyReachable = true
 		var receivedInitialPath = true
-		let event = Reachability.evaluatePathChange(
+		let event = ApplicationDelegate.evaluatePathChange(
 			reachable: true,
 			currentlyReachable: &currentlyReachable,
 			receivedInitialPath: &receivedInitialPath
@@ -49,7 +49,7 @@ struct ReachabilityTests {
 		var currentlyReachable = false
 		var receivedInitialPath = false
 
-		_ = Reachability.evaluatePathChange(
+		_ = ApplicationDelegate.evaluatePathChange(
 			reachable: true,
 			currentlyReachable: &currentlyReachable,
 			receivedInitialPath: &receivedInitialPath
@@ -57,7 +57,7 @@ struct ReachabilityTests {
 
 		#expect(receivedInitialPath)
 
-		let event = Reachability.evaluatePathChange(
+		let event = ApplicationDelegate.evaluatePathChange(
 			reachable: false,
 			currentlyReachable: &currentlyReachable,
 			receivedInitialPath: &receivedInitialPath
@@ -71,7 +71,7 @@ struct ReachabilityTests {
 	func reachabilityTransitionsEmitExpectedEvents() {
 		var currentlyReachable = true
 		var receivedInitialPath = true
-		let becameUnreachable = Reachability.evaluatePathChange(
+		let becameUnreachable = ApplicationDelegate.evaluatePathChange(
 			reachable: false,
 			currentlyReachable: &currentlyReachable,
 			receivedInitialPath: &receivedInitialPath
@@ -80,7 +80,7 @@ struct ReachabilityTests {
 		#expect(becameUnreachable == .becameUnreachable)
 		#expect(currentlyReachable == false)
 
-		let becameReachable = Reachability.evaluatePathChange(
+		let becameReachable = ApplicationDelegate.evaluatePathChange(
 			reachable: true,
 			currentlyReachable: &currentlyReachable,
 			receivedInitialPath: &receivedInitialPath

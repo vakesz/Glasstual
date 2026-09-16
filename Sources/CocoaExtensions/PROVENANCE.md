@@ -67,13 +67,18 @@ deliberate removal rather than a missing port.
 - `RegularExpression.compilationCount(of:caseless:)` and the per-pattern
   compile counter behind it, `string(_:rangeOfRegex:)` with its `withoutCase:`
   overload, and `string(_:replacedByRegex:with:)`
-- `PortMapper.init()`, `localAddress` and `localAddressIsPrivate`
+- `PortMapper.init()`, `localAddress` and `localAddressIsPrivate`, and the
+  `NSObject` base class, which no selector, override or KVO observation needed
 - `KeychainStore`'s `username:` parameter, which every caller passed as `nil`,
   and the `kSecAttrAccount` branch it selected
 - The `TrustPanelPresenter.present(…)` forwarding overload, together with the
   `context:` parameter both overloads carried and the `Any?` the completion was
-  handed back: every caller passed `nil`, so `TrustPanelCompletion` is now
-  `(SecTrust, Bool) -> Void`
+  handed back. The `TrustPanelCompletion` typealias and the `SecTrust` it handed
+  back are gone as well: a caller that presented the panel already holds the
+  trust, so the completion is `(Bool) -> Void` and defaults to nothing. The
+  presenter is now an instance that holds itself while its sheet is up and
+  offers `dismiss()`, in place of the `objc_setAssociatedObject` callback box
+  and the `Unmanaged` pointer threaded through `contextInfo`
 - `SecureTransportSupport.description(forCipherSuite:)`,
   `descriptions(forCipherListCollection:)` and
   `cipherSuites(inCollection:)`, three overloads that forwarded to the
@@ -81,6 +86,53 @@ deliberate removal rather than a missing port.
   `description(forProtocolType:)` and `description(forCipherSuite:withProtocol:)`
   also lost their `Optional` return: both name an unrecognised value `"Unknown"`
   rather than returning `nil`
+- `Accessibility.isVoiceOverEnabled`, the framework's whole `Accessibility`
+  enum, which forwarded to `NSWorkspace.shared.isVoiceOverEnabled`. Its two
+  callers ask the workspace directly. What the doc comment recorded is worth
+  keeping: reading `com.apple.universalaccess` instead is denied by the app
+  sandbox, and the denial is indistinguishable from "off", so that form always
+  answered `false` in a shipping build
+- `NSWindow.isBeneathMouse` and its private `windowBeneathMouse`, which had no
+  caller, and `NSWindow.isInFullScreenMode`, inlined as
+  `styleMask.contains(.fullScreen)` at its two call sites
+- The whole `NSScreen` category -- `resolutionDescription`, `refreshRate` and
+  the private `textualDisplayIdentifier` behind them -- which the System
+  Profiler plugin was the only reader of
+- `Bundle.textualDisplayName`, `Bundle.textual_formattedDisplayNames(for:)` and
+  `Bundle.textual_openInstallationLocations(for:)`, which named and revealed
+  loaded plugin bundles
+- `Logging.defaultSubsystem`, `setDefaultSubsystem(toMainBundleCategory:)` and
+  `logStackTrace(ofType:)`. Every logger in the tree names its own subsystem and
+  category at the point it is declared, so nothing was left for a process-wide
+  default to answer. `Logging` keeps `frameworkSubsystem`, which is what the
+  framework's own loggers name
+- `FileOperationOptions` entirely, with the `options:` parameter of
+  `stageAndReplaceItem(at:withItemAt:)`. `symlinkPackages` was never passed, and
+  neither was any other combination: the one behaviour in use replaces what is
+  at the destination and sends the replaced copy to the Trash, which is what the
+  call does now
+- `CommandTokenizer.Options`, with the `options:` parameter of
+  `nextQuotedToken()`. Every caller took the default, so the tokenizer states it:
+  a token opens on `"`, a closing quote counts only before whitespace or the end
+  of the line, and backslash runs collapse. `singleQuotes` had no caller at all
+- `RegularExpression.hasNestedQuantifier(_:)` and the 300-line branch scanner
+  behind it, a heuristic that refused a pattern shape while the user was typing
+  it. `matchBudget` bounds what a pattern costs at match time, which is the
+  defence that does not have to guess. `RegularExpression.string(_:isMatchedByRegex:)`
+  went with it: it forwarded to `firstMatch(of:in:)` and had no caller outside
+  the tests
+- `KeychainItemClass`, which named the two `kSecClass` values.
+  `internetPassword` was never selected, so every item is a generic password and
+  nothing threads a `kind:` any more. `KeychainReadOutcome` went with it: only
+  the tests ever asked whether a read found nothing or was refused, so
+  `KeychainItem.password` answering `nil` for both is the whole surface.
+  `PendingKeychainSecret.merged(over:)` had no caller
+- `KeychainStore.migrateFromOtherAccessGroup(...)`,
+  `removeCopiesOutsideAccessGroup(...)` and the `entitledAccessGroups` lookup
+  that named the group to write to. Secrets go to the process's default keychain
+  access group, which is the first entitled one -- the same group the explicit
+  name selected -- so a build that predates this fork's container is not
+  something the read path still looks for
 
 Narrowed rather than removed: `String.IPv4AddressBytes` / `IPv6AddressBytes`
 (read only by `isIPv4Address` / `isIPv6Address`),
@@ -110,6 +162,11 @@ names are:
 - `NSWindow.ceIsInFullscreenMode` -> `NSWindow.isInFullScreenMode`
 - `NSWindow.ceIsBeneathMouse` / `ceWindowBeneathMouse` ->
   `NSWindow.isBeneathMouse` / `windowBeneathMouse`
+- `RegularExpression.makeExpression(_:caseless:)` ->
+  `RegularExpression.expression(for:caseless:)`, and public, so a caller that
+  matches one pattern against many subjects shares the one cache
+- `NSColor.textualChannelByte(_:)` / `textualChannel(_:)`, both private, ->
+  `channelByte(_:)` / `channel(_:)`
 
 ## Files renamed or merged
 
@@ -123,6 +180,24 @@ no `SW` prefix or `Compatibility` suffix:
   `FileManagerCompatibility.swift` → `FileManagerHelper.swift`,
   `FoundationCompatibility.swift` → `FoundationHelper.swift`,
   `PasteboardCompatibility.swift` → `PasteboardHelper.swift`
+
+The `Helper` suffix then said nothing that the framework being extended does not
+say better, and eight of those files were a dozen lines of code under a
+thirty-line notice each. One file per extended framework, and a file of its own
+for each standalone type:
+
+- `AppKitHelper.swift` + `NSWindowHelper.swift` + `NSTextViewHelper.swift` +
+  `PasteboardHelper.swift` → `AppKitExtensions.swift`. It carries the widest of
+  the four Codeux copyright ranges and the LimeChat notice `PasteboardHelper.swift`
+  brought with it
+- `FoundationHelper.swift` + `ErrorHelper.swift` + `NumericHelper.swift` +
+  `URLHelper.swift` → `FoundationExtensions.swift`, again with the widest
+  copyright range of the four
+- `ColorHelper.swift` → `ColorExtensions.swift`,
+  `StringHelper.swift` → `StringExtensions.swift`,
+  `DataHelper.swift` → `DataExtensions.swift`
+- `FileManagerHelper.swift` → `FileReplacement.swift`, after which
+  `stageAndReplaceItem(at:withItemAt:)` is what the file is about
 
 ## Files removed
 
@@ -142,6 +217,15 @@ no `SW` prefix or `Compatibility` suffix:
   travel with their source: `Sources/CocoaExtensions/LICENSE.txt`,
   `Sources/CocoaExtensions/ACKNOWLEDGEMENT.txt` and the per-file notices listed
   below.
+
+## Files authored here
+
+These are not vendored, and a diff against upstream should read them as
+additions rather than as drift:
+
+- `PropertyListModel.swift`, written for this tree
+- `PropertyListValue.swift`, which carries a Textual lineage but has been
+  rewritten around `Codable`
 
 ## Third-party work inside the vendored source
 

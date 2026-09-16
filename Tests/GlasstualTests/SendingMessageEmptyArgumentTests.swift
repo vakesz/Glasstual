@@ -49,7 +49,7 @@ struct SendingMessageEmptyArgumentTests {
 
 		#expect(client.sentLines.count == 0)
 		let bodies = client.printedLines.compactMap { ($0 as? [String: Any])?["messageBody"] as? String }
-		#expect(bodies.contains(CommandStrings.invalidArguments))
+		#expect(bodies.contains(String(localized: .IRC.oneOrMoreArgumentsAreNot)))
 	}
 
 	/// RFC 1459 2.3.1 allows an empty trailing parameter, and the `ircdocs`

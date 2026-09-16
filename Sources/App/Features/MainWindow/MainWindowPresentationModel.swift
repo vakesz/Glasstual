@@ -6,6 +6,7 @@
 import Foundation
 import Observation
 import os
+import SwiftUI
 
 private let mainWindowPresentationLogger = Logger(
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
@@ -50,7 +51,7 @@ final class MainWindowPresentationModel {
 	var areNotificationsDisabled = false
 	/// The outermost sheet the window is showing; each one holds whatever it
 	/// raised on top of itself.
-	private(set) var presentedSheet: PresentedSheet?
+	private(set) var presentedSheet: MainWindowSheet?
 
 	@ObservationIgnored weak var window: MainWindow?
 	@ObservationIgnored private var transferFileSelection: (([URL]) -> Void)?
@@ -70,7 +71,7 @@ final class MainWindowPresentationModel {
 	/// commands, sent to the object that performs them, rather than eight
 	/// methods on this model that only renamed them.
 	var commands: MenuActionController? {
-		AppServices.delegate.menuController?.actionCoordinator
+		AppServices.delegate.menuController
 	}
 
 	/** Applies a selection to the member-list column.
@@ -145,7 +146,7 @@ final class MainWindowPresentationModel {
 
 	/// Raises a sheet: the first one on the window, any after it on whichever
 	/// sheet is innermost.
-	func presentSheet(_ presentation: PresentedSheet) {
+	func presentSheet(_ presentation: MainWindowSheet) {
 		guard let innermost = presentedSheet?.chain.last else {
 			presentedSheet = presentation
 			return
@@ -166,7 +167,7 @@ final class MainWindowPresentationModel {
 	}
 
 	/// Takes `presentation` down, and everything it raised with it.
-	func dismiss(_ presentation: PresentedSheet?) {
+	func dismiss(_ presentation: MainWindowSheet?) {
 		guard let presentation else { return }
 		if presentedSheet === presentation {
 			presentedSheet = nil
@@ -174,5 +175,16 @@ final class MainWindowPresentationModel {
 			presentedSheet?.chain.first { $0.child === presentation }?.child = nil
 		}
 		presentation.finish()
+	}
+}
+
+extension MainWindowPresentationModel {
+	/** The ground the sidebar and the conversation both paint.
+
+	 `appearanceRevision` is read so a theme change redraws it: the colour comes
+	 from the theme controller, which is not observable on its own. */
+	var conversationBackground: Color {
+		_ = appearanceRevision
+		return Color(nsColor: AppServices.theme.backgroundColor)
 	}
 }

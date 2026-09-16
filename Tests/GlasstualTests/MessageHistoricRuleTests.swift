@@ -80,7 +80,7 @@ struct MessageHistoricRuleTests {
 	@Test("Clock skew on an ordinary server does not classify live traffic as playback")
 	func clockSkewIsNotPlayback() throws {
 		let client = historicRuleClient()
-		let stamp = ISOStandardDateFormatter().string(from: Date().addingTimeInterval(-120))
+		let stamp = DateFormatting.iso8601String(from: Date().addingTimeInterval(-120))
 		let message = try #require(Message(line: "@time=\(stamp) :bob!u@h PRIVMSG #chat :live", on: client))
 		#expect(!message.isHistoric)
 	}
@@ -91,7 +91,7 @@ struct MessageHistoricRuleTests {
 	)
 	func staleServerTimeIsHistoric(_ offset: TimeInterval) throws {
 		let client = historicRuleClient()
-		client.isConnectedToZNC = true
+		client.znc.isConnected = true
 		let stamp = timestamp(Date().addingTimeInterval(offset))
 		let message = try #require(Message(line: "@time=\(stamp) :mara!u@h PRIVMSG #chat :hi", on: client))
 

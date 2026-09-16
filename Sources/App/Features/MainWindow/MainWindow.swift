@@ -94,13 +94,13 @@ nonisolated enum MainWindowConstants { // nonisolated: value
 @MainActor
 @objc(TVCMainWindow)
 final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, CustomKeyboardEventResponder {
-	private(set) var formattingMenu: TextViewIRCFormattingMenu!
-	private(set) var inputContentView: MainWindowTextViewContentView!
+	private(set) var formattingMenu: IRCFormattingMenu!
+	private(set) var inputContentView: InputFieldContentView!
 	let presentationModel = MainWindowPresentationModel()
 	private var hostingController: NSHostingController<MainWindowRootView>?
 
 	/// The input field is built by its content view so it can use TextKit 2.
-	var inputTextField: MainWindowTextView! {
+	var inputTextField: InputField! {
 		inputContentView?.textView
 	}
 
@@ -108,20 +108,12 @@ final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, CustomK
 	private(set) var memberList: MemberList!
 	private(set) var serverList: ServerList!
 	var inputHistory: InputHistory!
-	var nicknameCompletionStatus: NicknameCompletionStatus!
+	var nicknameCompletionStatus: NicknameCompletion!
 	/// The views the tree items are drawn into. The window owns them; the items
 	/// hold only a weak back-reference the registry installs.
-	private(set) lazy var logControllers = TranscriptControllerRegistry(window: self)
-	private var appearanceStorage: MainWindowAppearance?
+	private(set) lazy var transcriptControllers = TranscriptControllerRegistry(window: self)
 	/// The application-wide snapshot ``appearanceStorage`` was built from.
 	private var appearanceSnapshot: AppearancePropertyCollection?
-	var userInterfaceObjects: MainWindowAppearance {
-		guard let appearanceStorage else {
-			preconditionFailure("Main-window appearance requested before initialization finished")
-		}
-		return appearanceStorage
-	}
-
 	var selectedItem: ChatItem?
 	var previousSelectedItemId: String?
 	private var keyEventHandler: KeyEventHandler!
@@ -160,14 +152,14 @@ final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, CustomK
 		installUIObjects()
 		inputHistory = InputHistory(window: self)
 		keyEventHandler = KeyEventHandler()
-		nicknameCompletionStatus = NicknameCompletionStatus(window: self)
+		nicknameCompletionStatus = NicknameCompletion(window: self)
 		updateAppearance()
 	}
 
 	private func installUIObjects() {
-		formattingMenu = TextViewIRCFormattingMenu()
+		formattingMenu = IRCFormattingMenu()
 		formattingMenu.attach(to: self)
-		inputContentView = MainWindowTextViewContentView(frame: .zero)
+		inputContentView = InputFieldContentView(frame: .zero)
 		loadingScreen = MainWindowLoadingScreen()
 		memberList = MemberList()
 		serverList = ServerList()
@@ -207,20 +199,20 @@ final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, CustomK
 		/* Both have to be listening before the stored clients are restored:
 		 that restore is what publishes the tree they draw. */
 		controller.installClientServices()
-		controller.world.setupConfiguration()
+		controller.clientDirectory.setupConfiguration()
 		setupTrees()
 		DockIcon.drawWithoutCount()
 		observeNotifications()
 		controller.applicationWakeStepTwo()
 	}
 
-	/// The world the window draws. It is `nil` until the application finishes
-	/// waking, which window restoration can precede.
-	var world: ClientDirectory? {
-		AppServices.world
+	/// The connections the window draws. It is `nil` until the application
+	/// finishes waking, which window restoration can precede.
+	var clientDirectory: ClientDirectory? {
+		AppServices.clientDirectory
 	}
 
-	var menuController: MenuController {
+	var menuController: MenuActionController {
 		guard let menuController = AppServices.delegate.menuController else {
 			preconditionFailure("Menu controller is unavailable while the main window is loading")
 		}
@@ -283,25 +275,20 @@ extension MainWindow {
 	}
 
 	var isUsingDarkAppearance: Bool {
-		userInterfaceObjects.isDarkAppearance
+		AppServices.appearance.properties.isDarkAppearance
 	}
 
-	/** Rebuilds the window's appearance objects, when there is a new appearance
-	 to build them from.
+	/** Adopts a new application appearance, when there is a new one to adopt.
 
-	 Each one decodes a property list, and this used to run for every
-	 appearance notification and every screen change: dragging the window
-	 between displays reparsed two files and bumped `appearanceRevision`, which
-	 rebuilds the whole transcript representable. The snapshot the objects are
-	 built from is a value, so comparing it answers whether there is anything
-	 to rebuild. */
+	 This runs for every appearance notification and every screen change, and
+	 it bumps `appearanceRevision`, which rebuilds the whole transcript
+	 representable. The application's appearance snapshot is a value, so
+	 comparing it answers whether there is anything to rebuild. */
 	private func updateAppearance() {
-		let properties = ApplicationAppearance.currentApplicationProperties
-		guard appearanceStorage == nil || appearanceSnapshot != properties else { return }
-		guard let appearance = MainWindowAppearance() else { return }
+		let properties = AppServices.appearance.properties
+		guard appearanceSnapshot != properties else { return }
 		appearanceSnapshot = properties
-		appearanceStorage = appearance
-		self.appearance = appearance.appKitAppearance
+		appearance = properties.appKitAppearance
 		notifyMainWindowAppearanceChanged()
 	}
 
@@ -370,7 +357,7 @@ extension MainWindow {
 
 	/* The selected item is not encoded into the window's restorable state.
 	 `MainWindowStateStore` already persists it -- written at termination, read
-	 by `restoreSelectionDuringSetup()` once the world exists, and migrating the
+	 by `restoreSelectionDuringSetup()` once the directory exists, and migrating the
 	 legacy array form on the way. AppKit restores the window itself, meaning
 	 its frame, whether it was in full screen, and the Space it was on. That
 	 happens between `applicationWillFinishLaunching` and

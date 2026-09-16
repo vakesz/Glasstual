@@ -20,9 +20,9 @@ struct ServerEndpointListView: View {
 	var body: some View {
 		VStack(spacing: 0) {
 			VStack(alignment: .leading, spacing: 6) {
-				Text(verbatim: ServerEndpointStrings.windowTitle)
+				Text(.ServerEndpointList.windowTitle)
 					.font(.title2.weight(.semibold))
-				Text(verbatim: ServerEndpointStrings.explanation)
+				Text(.ServerEndpointList.explanation)
 					.foregroundStyle(.secondary)
 					.fixedSize(horizontal: false, vertical: true)
 			}
@@ -34,9 +34,9 @@ struct ServerEndpointListView: View {
 
 			VStack(alignment: .leading, spacing: 4) {
 				ForEach(model.faults, id: \.self) { fault in
-					ValidationMessageLabel(fault.message)
+					ValidationMessageLabel(String(localized: fault.message))
 				}
-				Text(verbatim: ServerEndpointStrings.serverPasswordHelp)
+				Text(.ServerEndpointList.serverPasswordHelp)
 					.font(.caption)
 					.foregroundStyle(.secondary)
 			}
@@ -49,15 +49,15 @@ struct ServerEndpointListView: View {
 				Button(action: model.addEntry) {
 					Image(systemName: "plus")
 				}
-				.help(ServerEndpointStrings.addServer)
-				.accessibilityLabel(ServerEndpointStrings.addServer)
+				.help(.ServerEndpointList.addServer)
+				.accessibilityLabel(.ServerEndpointList.addServer)
 
 				Button(role: .destructive, action: model.removeSelection) {
 					Image(systemName: "minus")
 				}
 				.disabled(model.selectedID == nil)
-				.help(ServerEndpointStrings.removeServer)
-				.accessibilityLabel(ServerEndpointStrings.removeServer)
+				.help(.ServerEndpointList.removeServer)
+				.accessibilityLabel(.ServerEndpointList.removeServer)
 
 				Divider().frame(height: 18)
 
@@ -65,15 +65,15 @@ struct ServerEndpointListView: View {
 					Image(systemName: "arrow.up")
 				}
 				.disabled(model.canMoveSelectionUp == false)
-				.help(ServerEndpointStrings.moveUp)
-				.accessibilityLabel(ServerEndpointStrings.moveUp)
+				.help(.ServerEndpointList.moveUp)
+				.accessibilityLabel(.ServerEndpointList.moveUp)
 
 				Button { model.moveSelection(by: 1) } label: {
 					Image(systemName: "arrow.down")
 				}
 				.disabled(model.canMoveSelectionDown == false)
-				.help(ServerEndpointStrings.moveDown)
-				.accessibilityLabel(ServerEndpointStrings.moveDown)
+				.help(.ServerEndpointList.moveDown)
+				.accessibilityLabel(.ServerEndpointList.moveDown)
 
 				Spacer()
 				Button(PromptStrings.Action.cancel, action: cancel)
@@ -105,55 +105,49 @@ struct ServerEndpointListView: View {
 	 the editors take theirs from the model by identity. */
 	private var endpointTable: some View {
 		Table(model.entries, selection: $model.selectedID) {
-			TableColumn(ServerEndpointStrings.serverAddress) { entry in
-				TextField(
-					ServerEndpointStrings.serverAddress,
-					text: model.address(for: entry.id)
-				)
-				.labelsHidden()
-				.accessibilityLabel(ServerEndpointStrings.serverAddress)
+			TableColumn(String(localized: .ServerEndpointList.serverAddress)) { entry in
+				TextField(.ServerEndpointList.serverAddress, text: model.address(for: entry.id))
+					.labelsHidden()
+					.accessibilityLabel(.ServerEndpointList.serverAddress)
 			}
 			.width(min: 160, ideal: 240)
 
-			TableColumn(ServerEndpointStrings.port) { entry in
-				TextField(ServerEndpointStrings.port, text: model.port(for: entry.id))
+			TableColumn(String(localized: .ServerEndpointList.port)) { entry in
+				TextField(.ServerEndpointList.port, text: model.port(for: entry.id))
 					.labelsHidden()
-					.accessibilityLabel(ServerEndpointStrings.port)
+					.accessibilityLabel(.ServerEndpointList.port)
 			}
 			.width(min: 60, ideal: 80)
 
-			TableColumn(ServerEndpointStrings.connectSecurely) { entry in
-				Toggle(ServerEndpointStrings.connectSecurely, isOn: model.isSecured(for: entry.id))
+			TableColumn(String(localized: .ServerEndpointList.connectSecurely)) { entry in
+				Toggle(.ServerEndpointList.connectSecurely, isOn: model.isSecured(for: entry.id))
 					.labelsHidden()
-					.accessibilityLabel(ServerEndpointStrings.connectSecurely)
+					.accessibilityLabel(.ServerEndpointList.connectSecurely)
 			}
 			.width(min: 52, ideal: 64)
 
-			TableColumn(ServerEndpointStrings.serverPassword) { entry in
-				SecureField(
-					ServerEndpointStrings.serverPassword,
-					text: model.password(for: entry.id)
-				)
-				.labelsHidden()
-				.accessibilityLabel(ServerEndpointStrings.serverPassword)
+			TableColumn(String(localized: .ServerEndpointList.serverPassword)) { entry in
+				SecureField(.ServerEndpointList.serverPassword, text: model.password(for: entry.id))
+					.labelsHidden()
+					.accessibilityLabel(.ServerEndpointList.serverPassword)
 			}
 			.width(min: 120, ideal: 200)
 		}
 		.onDeleteCommand(perform: model.removeSelection)
 		.contextMenu(forSelectionType: ServerEndpointDraft.ID.self) { selection in
-			Button(ServerEndpointStrings.moveUp) { move(selection, by: -1) }
+			Button(.ServerEndpointList.moveUp) { move(selection, by: -1) }
 				.disabled(selection.count != 1)
-			Button(ServerEndpointStrings.moveDown) { move(selection, by: 1) }
+			Button(.ServerEndpointList.moveDown) { move(selection, by: 1) }
 				.disabled(selection.count != 1)
 			Divider()
-			Button(ServerEndpointStrings.removeServer, role: .destructive) {
+			Button(.ServerEndpointList.removeServer, role: .destructive) {
 				guard let id = selection.first else { return }
 				model.selectedID = id
 				model.removeSelection()
 			}
 			.disabled(selection.isEmpty)
 		}
-		.accessibilityLabel(ServerEndpointStrings.serverList)
+		.accessibilityLabel(.ServerEndpointList.serverList)
 	}
 
 	private func move(_ selection: Set<ServerEndpointDraft.ID>, by offset: Int) {

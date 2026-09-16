@@ -75,8 +75,6 @@ final class ConnectionHostProcess: NSObject, RemoteConnectionServerProtocol {
 		}
 
 		super.init()
-
-		Logging.setDefaultSubsystem(toMainBundleCategory: "General")
 	}
 
 	deinit {

@@ -58,7 +58,7 @@ struct LabeledResponseRetirementTests {
 	func pendingDeliveriesAreBounded() throws {
 		let client = clientWithLabeledResponse()
 		defer {
-			for label in Array(client.pendingDeliveries.keys) {
+			for label in Array(client.labeledResponses.pending.keys) {
 				client.timeoutDelivery(withLabel: label)
 			}
 		}
@@ -66,7 +66,7 @@ struct LabeledResponseRetirementTests {
 			#expect(client.registerPendingDelivery(for: nil) != nil)
 		}
 		#expect(client.registerPendingDelivery(for: nil) == nil)
-		let label = try #require(client.pendingDeliveries.keys.first)
+		let label = try #require(client.labeledResponses.pending.keys.first)
 		client.timeoutDelivery(withLabel: label)
 		#expect(client.registerPendingDelivery(for: nil) != nil)
 	}
@@ -108,7 +108,7 @@ struct LabeledResponseRetirementTests {
 		let close = try #require(Message(line: "BATCH -reply", on: client))
 		#expect(client.resolveLabeledResponse(for: close) == false)
 		client.receiveBatch(close)
-		#expect(client.pendingDeliveries[first] == nil)
+		#expect(client.labeledResponses.pending[first] == nil)
 		#expect(client.deliveryState(forLabel: second) == .pending)
 		client.timeoutDelivery(withLabel: second)
 	}
@@ -138,9 +138,9 @@ struct LabeledResponseRetirementTests {
 		channel.presentation = presentation
 		let label = try #require(client.registerPendingDelivery(for: channel))
 		client.attachLineNumber("42", toDeliveryWithLabel: label)
-		let delivery = try #require(client.pendingDeliveries[label])
+		let delivery = try #require(client.labeledResponses.pending[label])
 		func receive(_ line: String) {
-			client.ircConnection(socket, didReceiveData: line)
+			client.connectionDidReceive(line)
 		}
 		receive("\(labelOnRoot ? "@label=\(label) " : "")BATCH +root labeled-response")
 		receive("@batch=root\(labelOnRoot ? "" : ";label=\(label)") BATCH +child labeled-response")
@@ -158,7 +158,7 @@ struct LabeledResponseRetirementTests {
 			.init(lineNumber: "42", state: failure ? .failed : .delivered,
 			      messageIdentifier: failure ? nil : "echo", reason: failure ? "Not delivered" : nil),
 		])
-		#expect(client.pendingDeliveries[label] == nil)
+		#expect(client.labeledResponses.pending[label] == nil)
 		#expect(client.batchMessages.queuedEntries.isEmpty)
 		#expect(client.printedLines.count == 0, "The correlated echo must not print a duplicate outgoing line")
 	}
@@ -181,7 +181,7 @@ struct LabeledResponseRetirementTests {
 			"@batch=root :alice!u@h PRIVMSG #chat :second",
 			"BATCH -root",
 		] {
-			client.ircConnection(socket, didReceiveData: line)
+			client.connectionDidReceive(line)
 		}
 		let messages = client.processedMessages.compactMap { $0 as? Message }
 		#expect(messages.map { $0.params.last ?? "" } == ["first", "second"])
@@ -199,9 +199,9 @@ struct LabeledResponseRetirementTests {
 		channel.presentation = presentation
 		let label = try #require(client.registerPendingDelivery(for: channel))
 		client.attachLineNumber("7", toDeliveryWithLabel: label)
-		let delivery = try #require(client.pendingDeliveries[label])
+		let delivery = try #require(client.labeledResponses.pending[label])
 
-		#expect(client.labeledDeliveryDeadlineTask != nil)
+		#expect(client.labeledResponses.deadlineTask != nil)
 
 		client.resetCapabilityNegotiation()
 
@@ -209,8 +209,8 @@ struct LabeledResponseRetirementTests {
 		#expect(presentation.updates == [
 			.init(lineNumber: "7", state: .failed, messageIdentifier: nil, reason: "Disconnected"),
 		])
-		#expect(client.pendingDeliveries.isEmpty)
-		#expect(client.labeledDeliveryDeadlineTask == nil)
+		#expect(client.labeledResponses.pending.isEmpty)
+		#expect(client.labeledResponses.deadlineTask == nil)
 	}
 
 	@Test("A deadline sweep fails only the deliveries that have come due")
@@ -218,17 +218,17 @@ struct LabeledResponseRetirementTests {
 		let client = clientWithLabeledResponse()
 		let overdue = try #require(client.registerPendingDelivery(for: nil))
 		let waiting = try #require(client.registerPendingDelivery(for: nil))
-		try #require(client.pendingDeliveries[overdue]).deadline = .now - .seconds(1)
+		try #require(client.labeledResponses.pending[overdue]).deadline = .now - .seconds(1)
 
 		client.failDeliveries(dueBy: .now)
 
-		#expect(client.pendingDeliveries[overdue] == nil)
+		#expect(client.labeledResponses.pending[overdue] == nil)
 		#expect(client.deliveryState(forLabel: waiting) == .pending)
-		#expect(client.labeledDeliveryDeadlineTask != nil)
+		#expect(client.labeledResponses.deadlineTask != nil)
 
 		client.resolveDelivery(withLabel: waiting, state: .delivered, messageIdentifier: nil, reason: nil)
 
-		#expect(client.labeledDeliveryDeadlineTask == nil, "Nothing left to wait for")
+		#expect(client.labeledResponses.deadlineTask == nil, "Nothing left to wait for")
 	}
 
 	@Test("The deadline sweep fails a delivery nobody answered once its deadline passes", .timeLimit(.minutes(1)))
@@ -238,15 +238,15 @@ struct LabeledResponseRetirementTests {
 		delivery.label = "due"
 		delivery.state = .pending
 		delivery.deadline = .now
-		client.pendingDeliveries["due"] = delivery
+		client.labeledResponses.pending["due"] = delivery
 		_ = try #require(client.registerPendingDelivery(for: nil))
 
-		let sweep = try #require(client.labeledDeliveryDeadlineTask)
+		let sweep = try #require(client.labeledResponses.deadlineTask)
 		await sweep.value
 
 		#expect(delivery.state == .failed)
-		#expect(client.pendingDeliveries["due"] == nil)
-		#expect(client.pendingDeliveries.count == 1)
+		#expect(client.labeledResponses.pending["due"] == nil)
+		#expect(client.labeledResponses.pending.count == 1)
 		client.failPendingDeliveriesForDisconnect()
 	}
 
@@ -260,7 +260,7 @@ struct LabeledResponseRetirementTests {
 			client.resolveDelivery(withLabel: label, state: .delivered, messageIdentifier: nil, reason: nil)
 		}
 
-		#expect(client.pendingDeliveries.count == 0)
+		#expect(client.labeledResponses.pending.count == 0)
 	}
 
 	@Test("A label the server reuses after resolution does not swallow the message")

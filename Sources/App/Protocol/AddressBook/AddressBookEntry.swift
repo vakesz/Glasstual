@@ -52,6 +52,17 @@ enum AddressBookUserTrackingStatus: UInt, Sendable {
 	case notAvailable = 4
 	case away = 5
 	case notAway = 6
+
+	/// What a notification says when a watched person's availability changed,
+	/// or nil where the change is not worth telling anyone about.
+	func availabilityNotice(forNickname nickname: String) -> String? {
+		switch self {
+		case .signedOn: String(localized: .Notifications.bodyUserNowAvailable(nickname))
+		case .signedOff: String(localized: .Notifications.bodyUserNoLongerAvailable(nickname))
+		case .available: String(localized: .Notifications.bodyUserAvailable(nickname))
+		default: nil
+		}
+	}
 }
 
 /** One address-book rule: a hostmask, what to suppress from whoever matches it,

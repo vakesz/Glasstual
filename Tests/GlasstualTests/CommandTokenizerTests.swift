@@ -75,37 +75,20 @@ struct CommandTokenizerTests {
 		#expect(tokenizer.remainder == #""value"suffix"#)
 	}
 
-	@Test("Single quotes only open a token when the option asks for them")
-	func singleQuotesAreOptional() {
-		var withoutOption = CommandTokenizer("'one two' next")
+	@Test("Single quotes do not open a token")
+	func singleQuotesDoNotOpenAToken() {
+		var tokenizer = CommandTokenizer("'one two' next")
 
-		#expect(withoutOption.nextQuotedToken() == "")
-
-		var withOption = CommandTokenizer("'one two' next")
-		let options: CommandTokenizer.Options = [.singleQuotes, .terminatesWithSpace, .collapseSlashes]
-
-		#expect(withOption.nextQuotedToken(options: options) == "one two")
-		#expect(withOption.remainder == "next")
+		#expect(tokenizer.nextQuotedToken() == "")
+		#expect(tokenizer.remainder == "'one two' next")
 	}
 
-	@Test("Without terminatesWithSpace the first unescaped quote closes the token")
-	func terminationOptionIsHonored() {
-		var tokenizer = CommandTokenizer(#""value"suffix"#)
-
-		#expect(tokenizer.nextQuotedToken(options: [.doubleQuotes]) == "value")
-		#expect(tokenizer.remainder == "suffix")
-	}
-
-	@Test("Backslash runs are halved when collapsing is asked for")
+	@Test("Backslash runs are halved")
 	func slashRunsCollapse() {
-		var collapsing = CommandTokenizer(#""a\\\\b" tail"#)
+		var tokenizer = CommandTokenizer(#""a\\\\b" tail"#)
 
-		#expect(collapsing.nextQuotedToken() == #"a\\b"#)
-
-		var verbatim = CommandTokenizer(#""a\\\\b" tail"#)
-		let options: CommandTokenizer.Options = [.doubleQuotes, .terminatesWithSpace]
-
-		#expect(verbatim.nextQuotedToken(options: options) == #"a\\\\b"#)
+		#expect(tokenizer.nextQuotedToken() == #"a\\b"#)
+		#expect(tokenizer.remainder == "tail")
 	}
 
 	@Test("A token with no closing quote yields nothing")

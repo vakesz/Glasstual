@@ -62,8 +62,8 @@ struct FrameworkUtilityHelperTests {
 		}
 	}
 
-	@Test("An existing destination is not silently reported as replaced")
-	func existingDestinationWithoutRemovalFails() throws {
+	@Test("An existing destination is replaced with the staged copy")
+	func existingDestinationIsReplaced() throws {
 		let directory = FileManager.default.temporaryDirectory
 			.appendingPathComponent("glasstual-replace-\(UUID().uuidString)", isDirectory: true)
 		try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -74,16 +74,7 @@ struct FrameworkUtilityHelperTests {
 		try Data("a".utf8).write(to: source)
 		try Data("b".utf8).write(to: destination)
 
-		#expect(throws: (any Error).self) {
-			try FileManager.default.stageAndReplaceItem(at: destination, withItemAt: source, options: [])
-		}
-		#expect(try Data(contentsOf: destination) == Data("b".utf8))
-
-		try FileManager.default.stageAndReplaceItem(
-			at: destination,
-			withItemAt: source,
-			options: .removeIfExists
-		)
+		try FileManager.default.stageAndReplaceItem(at: destination, withItemAt: source)
 		#expect(try Data(contentsOf: destination) == Data("a".utf8))
 	}
 }

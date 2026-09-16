@@ -48,20 +48,20 @@ struct TranscriptViewLifecycleTests {
 			defer: false
 		)
 		var controller: TranscriptController? = TranscriptController(client: client, in: window)
-		let logView = try #require(controller?.ensureBackingView())
+		let transcriptView = try #require(controller?.ensureBackingView())
 		weak let weakController = controller
 
 		controller = nil
 
 		#expect(weakController == nil)
-		#expect(logView.viewController == nil)
+		#expect(transcriptView.viewController == nil)
 	}
 
 	@Test("A topic received while connecting is fixed above the transcript")
 	func connectingTopicAppearsInHeader() throws {
 		let fixture = ClientEnvironmentFixture()
-		let client = fixture.world.createClient(with: ClientConfig())
-		let channel = fixture.world.createChannel(
+		let client = fixture.clientDirectory.createClient(with: ClientConfig())
+		let channel = fixture.clientDirectory.createChannel(
 			with: ChannelConfig.seed(withName: "#swift"),
 			on: client,
 			add: true,
@@ -74,9 +74,9 @@ struct TranscriptViewLifecycleTests {
 			backing: .buffered,
 			defer: false
 		)
-		let controller = window.logControllers.controller(for: channel)
-		let logView = controller.ensureBackingView()
-		let host = NSHostingController(rootView: TranscriptViewRepresentable(logView: logView))
+		let controller = window.transcriptControllers.controller(for: channel)
+		let transcriptView = controller.ensureBackingView()
+		let host = NSHostingController(rootView: TranscriptViewRepresentable(transcriptView: transcriptView))
 		host.preferredContentSize = NSSize(width: 800, height: 600)
 		window.contentViewController = host
 		window.setContentSize(NSSize(width: 800, height: 600))
@@ -86,7 +86,7 @@ struct TranscriptViewLifecycleTests {
 		host.view.layoutSubtreeIfNeeded()
 
 		let topicField = try #require(
-			descendants(of: NSTextField.self, in: logView)
+			descendants(of: NSTextField.self, in: transcriptView)
 				.first { visibleTranscriptText($0.attributedStringValue) == "Native AppKit discussion" }
 		)
 		#expect(topicField.isHidden == false)
@@ -113,10 +113,10 @@ struct TranscriptViewLifecycleTests {
 			defer: false
 		)
 		let controller = TranscriptController(client: client, in: window)
-		let logView = controller.ensureBackingView()
-		logView.setTopic(topic)
-		logView.replaceLines([transcriptLine("hello there")])
-		let hostingView = NSHostingView(rootView: TranscriptViewRepresentable(logView: logView))
+		let transcriptView = controller.ensureBackingView()
+		transcriptView.setTopic(topic)
+		transcriptView.replaceLines([transcriptLine("hello there")])
+		let hostingView = NSHostingView(rootView: TranscriptViewRepresentable(transcriptView: transcriptView))
 		hostingView.sizingOptions = [.minSize, .intrinsicContentSize, .maxSize]
 		hostingView.frame = NSRect(x: 0, y: 0, width: 800, height: 600)
 		window.contentView = hostingView
@@ -124,10 +124,10 @@ struct TranscriptViewLifecycleTests {
 
 		let minimum = hostingView.fittingSize
 		let ideal = hostingView.intrinsicContentSize
-		let frame = logView.convert(logView.bounds, to: hostingView)
+		let frame = transcriptView.convert(transcriptView.bounds, to: hostingView)
 		let columnMinimum = MainWindowConstants.conversationMinimumWidth
-		#expect(minimum.width <= columnMinimum, "minimum \(minimum) fitting \(logView.fittingSize)")
-		#expect(ideal.width >= columnMinimum, "ideal \(ideal) fitting \(logView.fittingSize)")
+		#expect(minimum.width <= columnMinimum, "minimum \(minimum) fitting \(transcriptView.fittingSize)")
+		#expect(ideal.width >= columnMinimum, "ideal \(ideal) fitting \(transcriptView.fittingSize)")
 		#expect(abs(frame.width - 800) < 1, "frame \(frame)")
 	}
 
@@ -140,8 +140,8 @@ struct TranscriptViewLifecycleTests {
 	@Test("The transcript makes room for the member list and takes it back")
 	func transcriptMakesRoomForMemberList() throws {
 		let fixture = ClientEnvironmentFixture()
-		let client = fixture.world.createClient(with: ClientConfig())
-		let channel = fixture.world.createChannel(
+		let client = fixture.clientDirectory.createClient(with: ClientConfig())
+		let channel = fixture.clientDirectory.createChannel(
 			with: ChannelConfig.seed(withName: "#swift"),
 			on: client,
 			add: true,
@@ -155,7 +155,7 @@ struct TranscriptViewLifecycleTests {
 			backing: .buffered,
 			defer: false
 		)
-		let logView = window.logControllers.controller(for: channel).ensureBackingView()
+		let transcriptView = window.transcriptControllers.controller(for: channel).ensureBackingView()
 		let host = NSHostingController(rootView: MainWindowRootView(
 			model: window.presentationModel,
 			loadingScreen: window.loadingScreen,
@@ -166,19 +166,19 @@ struct TranscriptViewLifecycleTests {
 		host.sizingOptions = []
 		window.contentViewController = host
 		window.setContentSize(size)
-		window.presentationModel.transcript = logView
+		window.presentationModel.transcript = transcriptView
 		window.presentationModel.applyMemberListAvailability(false)
-		logView.setTopic("Native AppKit discussion")
-		logView.replaceLines([transcriptLine("hello there")])
+		transcriptView.setTopic("Native AppKit discussion")
+		transcriptView.replaceLines([transcriptLine("hello there")])
 		window.contentView?.layoutSubtreeIfNeeded()
-		let frameAlone = logView.convert(logView.bounds, to: host.view)
+		let frameAlone = transcriptView.convert(transcriptView.bounds, to: host.view)
 
 		window.presentationModel.applyMemberListAvailability(true)
 		window.contentView?.layoutSubtreeIfNeeded()
 		host.view.layoutSubtreeIfNeeded()
 
 		let rootFrame = host.view.frame
-		let transcriptFrame = logView.convert(logView.bounds, to: host.view)
+		let transcriptFrame = transcriptView.convert(transcriptView.bounds, to: host.view)
 		#expect(transcriptFrame.minX >= 0, "transcript \(transcriptFrame) root \(rootFrame)")
 		#expect(transcriptFrame.maxX <= rootFrame.width + 0.5, "transcript \(transcriptFrame) root \(rootFrame)")
 		#expect(transcriptFrame.width >= MainWindowConstants.conversationMinimumWidth, "transcript \(transcriptFrame)")
@@ -189,17 +189,17 @@ struct TranscriptViewLifecycleTests {
 
 		/* The bar floats over the transcript, and the inset is what keeps the
 		 last line out from under it. */
-		let scrollView = try #require(descendants(of: NSScrollView.self, in: logView).first)
+		let scrollView = try #require(descendants(of: NSScrollView.self, in: transcriptView).first)
 		let field = window.inputContentView.frame
-		let barHeight = field.height + MainWindowInputBarLayout.fieldVerticalPadding * 2
-			+ MainWindowInputBarLayout.bottomPadding
+		let barHeight = field.height + InputBarLayout.fieldVerticalPadding * 2
+			+ InputBarLayout.bottomPadding
 		let inset = scrollView.contentInsets.bottom
 		#expect(abs(inset - barHeight) < 1, "inset \(inset) bar \(barHeight)")
 
 		window.presentationModel.toggleMemberList()
 		window.contentView?.layoutSubtreeIfNeeded()
 		host.view.layoutSubtreeIfNeeded()
-		let frameAgain = logView.convert(logView.bounds, to: host.view)
+		let frameAgain = transcriptView.convert(transcriptView.bounds, to: host.view)
 		#expect(abs(frameAgain.width - frameAlone.width) < 1, "alone \(frameAlone) again \(frameAgain)")
 	}
 
@@ -213,13 +213,13 @@ struct TranscriptViewLifecycleTests {
 			defer: false
 		)
 		let controller = TranscriptController(client: client, in: window)
-		let logView = controller.ensureBackingView()
+		let transcriptView = controller.ensureBackingView()
 		let topic = "Project https://example.com and docs.example.org/guide"
 
-		logView.setTopic(topic)
+		transcriptView.setTopic(topic)
 
 		let topicField = try #require(
-			descendants(of: NSTextField.self, in: logView)
+			descendants(of: NSTextField.self, in: transcriptView)
 				.first { visibleTranscriptText($0.attributedStringValue) == topic }
 		)
 		let attributedTopic = topicField.attributedStringValue
@@ -248,14 +248,14 @@ struct TranscriptViewLifecycleTests {
 			defer: false
 		)
 		let controller = TranscriptController(client: client, in: window)
-		let logView = controller.ensureBackingView()
-		logView.frame = window.contentView?.bounds ?? NSRect(x: 0, y: 0, width: 800, height: 600)
-		window.contentView = logView
-		logView.layoutSubtreeIfNeeded()
+		let transcriptView = controller.ensureBackingView()
+		transcriptView.frame = window.contentView?.bounds ?? NSRect(x: 0, y: 0, width: 800, height: 600)
+		window.contentView = transcriptView
+		transcriptView.layoutSubtreeIfNeeded()
 
-		let scrollView = try #require(descendants(of: NSScrollView.self, in: logView).first)
-		let allTopicFieldsHidden = descendants(of: NSTextField.self, in: logView).allSatisfy(\.isHidden)
-		#expect(scrollView.frame.maxY == logView.bounds.maxY)
+		let scrollView = try #require(descendants(of: NSScrollView.self, in: transcriptView).first)
+		let allTopicFieldsHidden = descendants(of: NSTextField.self, in: transcriptView).allSatisfy(\.isHidden)
+		#expect(scrollView.frame.maxY == transcriptView.bounds.maxY)
 		#expect(allTopicFieldsHidden)
 	}
 
@@ -269,13 +269,13 @@ struct TranscriptViewLifecycleTests {
 			defer: false
 		)
 		let controller = TranscriptController(client: client, in: window)
-		let logView = controller.ensureBackingView()
-		logView.frame = window.contentView?.bounds ?? NSRect(x: 0, y: 0, width: 800, height: 600)
-		window.contentView = logView
-		logView.replaceLines([transcriptLine("hello")])
-		logView.layoutSubtreeIfNeeded()
+		let transcriptView = controller.ensureBackingView()
+		transcriptView.frame = window.contentView?.bounds ?? NSRect(x: 0, y: 0, width: 800, height: 600)
+		window.contentView = transcriptView
+		transcriptView.replaceLines([transcriptLine("hello")])
+		transcriptView.layoutSubtreeIfNeeded()
 
-		let scrollView = try #require(descendants(of: NSScrollView.self, in: logView).first)
+		let scrollView = try #require(descendants(of: NSScrollView.self, in: transcriptView).first)
 		let textView = try #require(scrollView.documentView as? NSTextView)
 		let layoutManager = try #require(textView.textLayoutManager)
 		layoutManager.ensureLayout(for: layoutManager.documentRange)
@@ -309,21 +309,21 @@ struct TranscriptViewLifecycleTests {
 	 pixels: the row `transcriptRuleInset` below the paragraph's top holds
 	 something other than the background, and the row just above it does not.
 	 The view is drawn into an 800 by 600 window for the check. */
-	private func ruleIsDrawn(for location: Int, in logView: TranscriptView, textView: NSTextView) throws -> Bool {
-		let window = try #require(logView.window ?? {
+	private func ruleIsDrawn(for location: Int, in transcriptView: TranscriptView, textView: NSTextView) throws -> Bool {
+		let window = try #require(transcriptView.window ?? {
 			let window = MainWindow(
 				contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
 				styleMask: .borderless,
 				backing: .buffered,
 				defer: false
 			)
-			logView.frame = NSRect(x: 0, y: 0, width: 800, height: 600)
-			window.contentView = logView
+			transcriptView.frame = NSRect(x: 0, y: 0, width: 800, height: 600)
+			window.contentView = transcriptView
 			return window
 		}())
 		_ = window
-		logView.layoutSubtreeIfNeeded()
-		logView.displayIfNeeded()
+		transcriptView.layoutSubtreeIfNeeded()
+		transcriptView.displayIfNeeded()
 		let layoutManager = try #require(textView.textLayoutManager)
 		let storage = try #require(textView.textStorage)
 		let inset = try #require(
@@ -333,7 +333,7 @@ struct TranscriptViewLifecycleTests {
 		let fragment = try #require(layoutManager.textLayoutFragment(for: start))
 		let origin = textView.textContainerOrigin
 		let ruleY = fragment.layoutFragmentFrame.minY + origin.y + CGFloat(inset.doubleValue)
-		let view = logView
+		let view = transcriptView
 		let ruleInView = textView.convert(NSPoint(x: textView.bounds.midX, y: ruleY), to: view)
 		let aboveInView = textView.convert(NSPoint(x: textView.bounds.midX, y: ruleY - 3), to: view)
 		guard let bitmap = view.bitmapImageRepForCachingDisplay(in: view.bounds) else { return false }
@@ -378,14 +378,14 @@ struct TranscriptViewLifecycleTests {
 			defer: false
 		)
 		let controller = TranscriptController(client: client, in: window)
-		let logView = controller.ensureBackingView()
-		logView.frame = NSRect(x: 0, y: 0, width: 800, height: 600)
-		window.contentView = logView
-		logView.replaceLines([transcriptLine("hello"), transcriptLine("there")])
-		logView.layoutSubtreeIfNeeded()
-		logView.displayIfNeeded()
+		let transcriptView = controller.ensureBackingView()
+		transcriptView.frame = NSRect(x: 0, y: 0, width: 800, height: 600)
+		window.contentView = transcriptView
+		transcriptView.replaceLines([transcriptLine("hello"), transcriptLine("there")])
+		transcriptView.layoutSubtreeIfNeeded()
+		transcriptView.displayIfNeeded()
 
-		let firstRow = try #require(firstDrawnRowFraction(in: logView))
+		let firstRow = try #require(firstDrawnRowFraction(in: transcriptView))
 		#expect(firstRow > 0.6, "first drawn row at \(firstRow) of the height")
 	}
 
@@ -402,16 +402,16 @@ struct TranscriptViewLifecycleTests {
 			defer: false
 		)
 		let controller = TranscriptController(client: client, in: window)
-		let logView = controller.ensureBackingView()
-		logView.appendLines([transcriptLine("hello")])
-		logView.appendLines([transcriptLine("there")])
+		let transcriptView = controller.ensureBackingView()
+		transcriptView.appendLines([transcriptLine("hello")])
+		transcriptView.appendLines([transcriptLine("there")])
 
-		logView.frame = NSRect(x: 0, y: 0, width: 800, height: 600)
-		window.contentView = logView
-		logView.layoutSubtreeIfNeeded()
-		logView.displayIfNeeded()
+		transcriptView.frame = NSRect(x: 0, y: 0, width: 800, height: 600)
+		window.contentView = transcriptView
+		transcriptView.layoutSubtreeIfNeeded()
+		transcriptView.displayIfNeeded()
 
-		let firstRow = try #require(firstDrawnRowFraction(in: logView))
+		let firstRow = try #require(firstDrawnRowFraction(in: transcriptView))
 		#expect(firstRow > 0.6, "first drawn row at \(firstRow) of the height")
 	}
 
@@ -429,18 +429,18 @@ struct TranscriptViewLifecycleTests {
 			defer: false
 		)
 		let controller = TranscriptController(client: client, in: window)
-		let logView = controller.ensureBackingView()
-		logView.appendLines([transcriptLine("hello"), transcriptLine("there")])
+		let transcriptView = controller.ensureBackingView()
+		transcriptView.appendLines([transcriptLine("hello"), transcriptLine("there")])
 		/* An identifier the transcript does not hold marks its first line,
 		 which is where a query that opened unseen carries the marker. */
-		logView.setUnreadMarker(.line("missing"))
+		transcriptView.setUnreadMarker(.line("missing"))
 
-		logView.frame = NSRect(x: 0, y: 0, width: 800, height: 600)
-		window.contentView = logView
-		logView.layoutSubtreeIfNeeded()
-		logView.displayIfNeeded()
+		transcriptView.frame = NSRect(x: 0, y: 0, width: 800, height: 600)
+		window.contentView = transcriptView
+		transcriptView.layoutSubtreeIfNeeded()
+		transcriptView.displayIfNeeded()
 
-		let scrollView = try #require(descendants(of: NSScrollView.self, in: logView).first)
+		let scrollView = try #require(descendants(of: NSScrollView.self, in: transcriptView).first)
 		let textView = try #require(scrollView.documentView as? NSTextView)
 		/* The marker must not have moved the view back to TextKit 1; the
 		 alignment below only exists on TextKit 2. */
@@ -451,7 +451,7 @@ struct TranscriptViewLifecycleTests {
 			.transcriptRuleColor, at: markerRange.location, effectiveRange: nil
 		)
 		#expect(ruleColor != nil)
-		let firstRow = try #require(firstDrawnRowFraction(in: logView))
+		let firstRow = try #require(firstDrawnRowFraction(in: transcriptView))
 		#expect(firstRow > 0.6, "first drawn row at \(firstRow) of the height")
 	}
 
@@ -465,13 +465,13 @@ struct TranscriptViewLifecycleTests {
 			defer: false
 		)
 		let controller = TranscriptController(client: client, in: window)
-		let logView = controller.ensureBackingView()
-		logView.frame = window.contentView?.bounds ?? NSRect(x: 0, y: 0, width: 800, height: 600)
-		window.contentView = logView
-		logView.replaceLines((0 ..< 100).map { transcriptLine("message \($0)") })
-		logView.layoutSubtreeIfNeeded()
+		let transcriptView = controller.ensureBackingView()
+		transcriptView.frame = window.contentView?.bounds ?? NSRect(x: 0, y: 0, width: 800, height: 600)
+		window.contentView = transcriptView
+		transcriptView.replaceLines((0 ..< 100).map { transcriptLine("message \($0)") })
+		transcriptView.layoutSubtreeIfNeeded()
 
-		let scrollView = try #require(descendants(of: NSScrollView.self, in: logView).first)
+		let scrollView = try #require(descendants(of: NSScrollView.self, in: transcriptView).first)
 		let textView = try #require(scrollView.documentView as? NSTextView)
 		let layoutManager = try #require(textView.textLayoutManager)
 		layoutManager.ensureLayout(for: layoutManager.documentRange)
@@ -489,13 +489,13 @@ struct TranscriptViewLifecycleTests {
 			defer: false
 		)
 		let controller = TranscriptController(client: client, in: window)
-		let logView = controller.ensureBackingView()
+		let transcriptView = controller.ensureBackingView()
 		var liveLine = transcriptLine("live")
 		liveLine.markers = [.currentSession("Current Session")]
 
-		logView.replaceLines([transcriptLine("history"), liveLine])
+		transcriptView.replaceLines([transcriptLine("history"), liveLine])
 
-		let scrollView = try #require(descendants(of: NSScrollView.self, in: logView).first)
+		let scrollView = try #require(descendants(of: NSScrollView.self, in: transcriptView).first)
 		let textView = try #require(scrollView.documentView as? NSTextView)
 		let markerRange = (textView.string as NSString).range(of: "Current Session")
 		let paragraph = try #require(
@@ -509,7 +509,7 @@ struct TranscriptViewLifecycleTests {
 		#expect(paragraph.textBlocks.isEmpty)
 		#expect(rule is NSColor)
 		#expect(textView.textLayoutManager != nil)
-		#expect(try ruleIsDrawn(for: markerRange.location, in: logView, textView: textView))
+		#expect(try ruleIsDrawn(for: markerRange.location, in: transcriptView, textView: textView))
 		#expect(try layoutFragment(for: markerRange.location, in: textView) is TranscriptRuleLayoutFragment)
 	}
 
@@ -531,13 +531,13 @@ struct TranscriptViewLifecycleTests {
 			defer: false
 		)
 		let controller = TranscriptController(client: client, in: window)
-		let logView = controller.ensureBackingView()
+		let transcriptView = controller.ensureBackingView()
 		var unreadLine = transcriptLine("unread")
 		unreadLine.markers = [.unread("Unread messages")]
 
-		logView.replaceLines([transcriptLine("read"), unreadLine])
+		transcriptView.replaceLines([transcriptLine("read"), unreadLine])
 
-		let scrollView = try #require(descendants(of: NSScrollView.self, in: logView).first)
+		let scrollView = try #require(descendants(of: NSScrollView.self, in: transcriptView).first)
 		let textView = try #require(scrollView.documentView as? NSTextView)
 		#expect(textView.string.contains("Unread messages") == false)
 		let markerRange = (textView.string as NSString).range(of: "\u{200B}")
@@ -549,7 +549,7 @@ struct TranscriptViewLifecycleTests {
 		#expect(paragraph.textBlocks.isEmpty)
 		#expect(rule is NSColor)
 		#expect(textView.textLayoutManager != nil)
-		#expect(try ruleIsDrawn(for: markerRange.location, in: logView, textView: textView))
+		#expect(try ruleIsDrawn(for: markerRange.location, in: transcriptView, textView: textView))
 		#expect(try layoutFragment(for: markerRange.location, in: textView) is TranscriptRuleLayoutFragment)
 	}
 
@@ -563,12 +563,12 @@ struct TranscriptViewLifecycleTests {
 	@Test("A one-line topic offers no chevron at any text scale", arguments: [1.0, 2.0] as [CGFloat])
 	func oneLineTopicHasNoChevron(scale: CGFloat) {
 		let transcript = makeTranscript(width: 800)
-		transcript.logView.setTopic("Short topic")
-		transcript.logView.setTextScale(scale)
+		transcript.transcriptView.setTopic("Short topic")
+		transcript.transcriptView.setTextScale(scale)
 		transcript.window.contentView?.layoutSubtreeIfNeeded()
 
-		#expect(transcript.logView.topicField.isHidden == false)
-		#expect(transcript.logView.topicDisclosure.isHidden)
+		#expect(transcript.transcriptView.topicField.isHidden == false)
+		#expect(transcript.transcriptView.topicDisclosure.isHidden)
 	}
 
 	/// A topic too long for the column keeps its chevron, whatever the scale:
@@ -576,11 +576,11 @@ struct TranscriptViewLifecycleTests {
 	@Test("A topic that does not fit keeps its chevron", arguments: [1.0, 2.0] as [CGFloat])
 	func wrappingTopicKeepsItsChevron(scale: CGFloat) {
 		let transcript = makeTranscript(width: 400)
-		transcript.logView.setTopic(String(repeating: "a long topic that cannot fit on one line ", count: 6))
-		transcript.logView.setTextScale(scale)
+		transcript.transcriptView.setTopic(String(repeating: "a long topic that cannot fit on one line ", count: 6))
+		transcript.transcriptView.setTextScale(scale)
 		transcript.window.contentView?.layoutSubtreeIfNeeded()
 
-		#expect(transcript.logView.topicDisclosure.isHidden == false)
+		#expect(transcript.transcriptView.topicDisclosure.isHidden == false)
 	}
 
 	/** The profile used to wait out the double-click interval before opening,
@@ -590,11 +590,11 @@ struct TranscriptViewLifecycleTests {
 	@Test("A click on a name opens the profile at once")
 	func clickingANameOpensTheProfileAtOnce() throws {
 		let transcript = makeTranscript(width: 800, withMember: "alice")
-		transcript.logView.replaceLines([transcriptLine("hello there")])
+		transcript.transcriptView.replaceLines([transcriptLine("hello there")])
 		transcript.window.contentView?.layoutSubtreeIfNeeded()
 
 		try clickNickname(in: transcript)
-		#expect(transcript.logView.memberInformationPopover != nil)
+		#expect(transcript.transcriptView.memberInformationPopover != nil)
 	}
 
 	/// Clearing and trimming remove the characters the popover is anchored
@@ -602,33 +602,33 @@ struct TranscriptViewLifecycleTests {
 	@Test("Clearing the transcript closes the profile popover")
 	func clearingClosesTheProfilePopover() throws {
 		let transcript = makeTranscript(width: 800, withMember: "alice")
-		transcript.logView.replaceLines([transcriptLine("hello there")])
+		transcript.transcriptView.replaceLines([transcriptLine("hello there")])
 		transcript.window.contentView?.layoutSubtreeIfNeeded()
 
 		try clickNickname(in: transcript)
-		#expect(transcript.logView.memberInformationPopover != nil)
+		#expect(transcript.transcriptView.memberInformationPopover != nil)
 
-		transcript.logView.clearLines()
-		#expect(transcript.logView.memberInformationPopover == nil)
+		transcript.transcriptView.clearLines()
+		#expect(transcript.transcriptView.memberInformationPopover == nil)
 	}
 
 	/// A transcript that leaves its window has nothing to anchor a popover to.
 	@Test("Leaving the window closes the profile popover")
 	func leavingTheWindowClosesTheProfilePopover() throws {
 		let transcript = makeTranscript(width: 800, withMember: "alice")
-		transcript.logView.replaceLines([transcriptLine("hello there")])
+		transcript.transcriptView.replaceLines([transcriptLine("hello there")])
 		transcript.window.contentView?.layoutSubtreeIfNeeded()
 
 		try clickNickname(in: transcript)
-		#expect(transcript.logView.memberInformationPopover != nil)
+		#expect(transcript.transcriptView.memberInformationPopover != nil)
 
-		transcript.logView.removeFromSuperview()
-		#expect(transcript.logView.memberInformationPopover == nil)
+		transcript.transcriptView.removeFromSuperview()
+		#expect(transcript.transcriptView.memberInformationPopover == nil)
 	}
 
 	private struct Transcript {
 		let window: MainWindow
-		let logView: TranscriptView
+		let transcriptView: TranscriptView
 		/// Held here because the view, the controller and the channel hold
 		/// the controller, the channel and the client weakly.
 		let controller: TranscriptController
@@ -660,24 +660,24 @@ struct TranscriptViewLifecycleTests {
 		} else {
 			controller = TranscriptController(client: client, in: window)
 		}
-		let logView = controller.ensureBackingView()
+		let transcriptView = controller.ensureBackingView()
 		let container = NSView(frame: NSRect(x: 0, y: 0, width: width, height: 600))
-		container.addSubview(logView)
+		container.addSubview(transcriptView)
 		NSLayoutConstraint.activate([
-			logView.leadingAnchor.constraint(equalTo: container.leadingAnchor),
-			logView.trailingAnchor.constraint(equalTo: container.trailingAnchor),
-			logView.topAnchor.constraint(equalTo: container.topAnchor),
-			logView.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+			transcriptView.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+			transcriptView.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+			transcriptView.topAnchor.constraint(equalTo: container.topAnchor),
+			transcriptView.bottomAnchor.constraint(equalTo: container.bottomAnchor),
 		])
 		window.contentView = container
 		container.layoutSubtreeIfNeeded()
-		return Transcript(window: window, logView: logView, controller: controller, client: client, channel: channel)
+		return Transcript(window: window, transcriptView: transcriptView, controller: controller, client: client, channel: channel)
 	}
 
 	/// Clicks the middle of the first nickname the transcript drew, the way the
 	/// text view reports a click of its own.
 	private func clickNickname(in transcript: Transcript) throws {
-		let textView = transcript.logView.textView
+		let textView = transcript.transcriptView.textView
 		let storage = try #require(textView.textStorage)
 		var nicknameRange: NSRange?
 		storage.enumerateAttribute(

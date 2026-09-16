@@ -8,7 +8,7 @@ import Foundation
 @testable import Glasstual
 import Testing
 
-actor RecordingFileLogSink: FileLogSinking {
+actor RecordingFileLogSink {
 	private(set) var operations: [FileLogOperation] = []
 	private let blocksFirstWrite: Bool
 	private let firstWriteResult: FileLogResult
@@ -58,7 +58,7 @@ struct FileLoggerIdleSweepTests {
 	@Test("A blocked write leaves MainActor responsive and cannot be overtaken by flush or shutdown")
 	func blockedWriteKeepsOrder() async {
 		let sink = RecordingFileLogSink(blocksFirstWrite: true)
-		let commands = FileLogCommands(sink: sink)
+		let commands = FileLogCommands(sink: FileLogSinkPort { await sink.process($0) })
 		let destination = FileLogDestination(
 			folder: .directory(URL(fileURLWithPath: "/unused")),
 			relativePath: "Console"
@@ -96,7 +96,7 @@ struct FileLoggerIdleSweepTests {
 	func failuresReachBarriers() async {
 		let sink = RecordingFileLogSink(firstWriteResult: FileLogResult(succeeded: false, outOfSpace: true))
 		var alerts = 0
-		let commands = FileLogCommands(sink: sink, reportNoSpace: { alerts += 1 })
+		let commands = FileLogCommands(sink: FileLogSinkPort { await sink.process($0) }, reportNoSpace: { alerts += 1 })
 		let destination = FileLogDestination(
 			folder: .directory(URL(fileURLWithPath: "/unused")),
 			relativePath: "Console"
@@ -243,14 +243,14 @@ struct FileLoggerIdleSweepTests {
 			.joined()
 		let lines = contents.split(separator: "\n")
 		#expect(lines.count == 14)
-		let markers = lines.filter { $0.hasSuffix(LogStrings.sessionMarker(startsSession: true)) ||
-			$0.hasSuffix(LogStrings.sessionMarker(startsSession: false)) || $0.hasSuffix("body")
+		let markers = lines.filter { $0.hasSuffix(String(localized: .IRC.beginSession)) ||
+			$0.hasSuffix(String(localized: .IRC.endSession)) || $0.hasSuffix("body")
 		}
 		let expected = [
-			LogStrings.sessionMarker(startsSession: true), "first body",
-			LogStrings.sessionMarker(startsSession: false),
-			LogStrings.sessionMarker(startsSession: true), "second body",
-			LogStrings.sessionMarker(startsSession: false),
+			String(localized: .IRC.beginSession), "first body",
+			String(localized: .IRC.endSession),
+			String(localized: .IRC.beginSession), "second body",
+			String(localized: .IRC.endSession),
 		]
 		#expect(markers.count == expected.count)
 		for (line, suffix) in zip(markers, expected) {

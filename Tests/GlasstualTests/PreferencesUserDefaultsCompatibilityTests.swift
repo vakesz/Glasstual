@@ -53,16 +53,4 @@ struct PreferencesUserDefaultsCompatibilityTests {
 		#expect(defaults.bool(forKey: soundKey))
 		#expect(defaults.integer(forKey: portKey) == 51234)
 	}
-
-	@Test("A notification preference maps to the key the stored schema already holds")
-	func notificationKeyMappingPreservesStoredSchema() {
-		#expect(
-			NotificationEvent.channelMessage.preferenceKeyName(for: .sound)
-				== "NotificationType -> Public Message -> Sound"
-		)
-		#expect(
-			NotificationEvent.fileTransferReceiveSuccessful.preferenceKeyName(for: .enabled)
-				== "NotificationType -> Successful File Transfer (Receiving) -> Enabled"
-		)
-	}
 }

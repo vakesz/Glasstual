@@ -12,7 +12,7 @@ import Testing
 struct MainWindowTextViewAppearanceTests {
 	@Test("Text with no IRC colour of its own is drawn in the preferred colour")
 	func attributedValueUsesPreferredColorForUnformattedText() {
-		let textView = MainWindowTextView(frame: .zero)
+		let textView = InputField(frame: .zero)
 		textView.preferredFontColor = .systemRed
 		textView.attributedStringValue = NSAttributedString(
 			string: "plain",
@@ -30,7 +30,7 @@ struct MainWindowTextViewAppearanceTests {
 
 	@Test("An explicit IRC colour survives the preferred colour pass")
 	func attributedValuePreservesExplicitIRCColor() {
-		let textView = MainWindowTextView(frame: .zero)
+		let textView = InputField(frame: .zero)
 		textView.preferredFontColor = .systemRed
 		let formatterKey = NSAttributedString.Key(
 			TextFormatterAttributeName.foregroundColorAttributeName.rawValue
@@ -66,10 +66,10 @@ struct MainWindowTextViewAppearanceTests {
 			backing: .buffered,
 			defer: false
 		)
-		let textView = MainWindowTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 40))
+		let textView = InputField(frame: NSRect(x: 0, y: 0, width: 400, height: 40))
 		host.contentView?.addSubview(textView)
 
-		#expect(textView.drawnPlaceholderText == MainWindowStrings.Conversation.inputPlaceholder)
+		#expect(textView.drawnPlaceholderText == String(localized: .MainWindow.sendMessage))
 
 		textView.insertText("h", replacementRange: textView.selectedRange())
 
@@ -78,7 +78,7 @@ struct MainWindowTextViewAppearanceTests {
 
 	@Test("The content view stays transparent and refuses vibrancy")
 	func contentViewRemainsTransparentAndNonVibrant() {
-		let contentView = MainWindowTextViewContentView(frame: .zero)
+		let contentView = InputFieldContentView(frame: .zero)
 
 		#expect(contentView.isOpaque == false)
 		#expect(contentView.allowsVibrancy == false)

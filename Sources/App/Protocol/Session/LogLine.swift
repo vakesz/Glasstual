@@ -59,8 +59,8 @@ nonisolated enum LogLineFormat { // nonisolated: value
  is its identity: assigned once when the line is created and carried through
  every copy and every archive.
 
- New history entries use a versioned Codable property list. ``LogLineArchive``
- reads the older keyed archives whose root object was named `TVCLogLine`. */
+ A history entry is stored as ``LogLineStoredPayload``, a versioned Codable
+ property list. */
 nonisolated struct LogLine: Codable, Hashable, Sendable, CustomStringConvertible { // nonisolated: value
 	var isEncrypted = false
 	var isFirstForDay = false
@@ -96,16 +96,7 @@ nonisolated struct LogLine: Codable, Hashable, Sendable, CustomStringConvertible
 			populateDefaultsPostflight()
 			return
 		}
-		guard let propertyList = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any],
-		      propertyList["$archiver"] as? String == "NSKeyedArchiver" else { return nil }
-		guard let archive = try? NSKeyedUnarchiver.unarchivedObject(
-			ofClass: LogLineArchive.self,
-			from: data
-		) else {
-			return nil
-		}
-
-		self = archive.line
+		return nil
 	}
 
 	static func logLine(from historicEntry: ScrollbackEntry) -> LogLine? {
@@ -150,11 +141,10 @@ nonisolated struct LogLine: Codable, Hashable, Sendable, CustomStringConvertible
 		}
 	}
 
-	/// Restores the two identities an archive carried. Every other field is
-	/// settable within the module; these are the line's own, so only
-	/// ``LogLineArchive`` puts them back. An archive that carried none leaves
-	/// them empty, which is what tells `populateDefaultsPostflight` to mint a
-	/// fresh one.
+	/// Restores the two identities a stored line carried. Every other field is
+	/// settable within the module; these are the line's own. A stored line that
+	/// carried none leaves them empty, which is what tells
+	/// `populateDefaultsPostflight` to mint a fresh one.
 	mutating func restoreIdentity(uniqueIdentifier: String?, sessionIdentifier: UInt) {
 		self.uniqueIdentifier = uniqueIdentifier ?? ""
 		self.sessionIdentifier = sessionIdentifier
@@ -275,7 +265,7 @@ nonisolated struct LogLine: Codable, Hashable, Sendable, CustomStringConvertible
 		.compactMap(\.self)
 		.first { !$0.isEmpty } ?? ""
 
-		return Glasstual.formattedTimestamp(receivedAt as NSDate, selectedFormat as NSString) ?? ""
+		return DateFormatting.timestamp(receivedAt, format: selectedFormat) ?? ""
 	}
 
 	@MainActor var formattedNickname: String {
@@ -298,21 +288,6 @@ nonisolated struct LogLine: Codable, Hashable, Sendable, CustomStringConvertible
 		}
 
 		return channel?.associatedClient?.formatNickname(nickname, in: channel, withFormat: format)
-	}
-
-	/** The same text as `formattedNickname(in:with:)` but from values the caller
-	 already resolved, so that rendering can format the sender off the main actor.
-	 `modeSymbol` is the sender's mark in the channel, empty outside one. */
-	func formattedNickname(modeSymbol: String, format: String) -> String? {
-		guard let nickname else {
-			return nil
-		}
-
-		if let decorated = decoratedNicknameForLineType(nickname) {
-			return decorated
-		}
-
-		return ClientWireUtilities.formatNickname(nickname, modeSymbol: modeSymbol, format: format)
 	}
 
 	/// Actions and notices carry their own decoration instead of the theme format.
@@ -372,4 +347,24 @@ nonisolated struct LogLine: Codable, Hashable, Sendable, CustomStringConvertible
 			return newSessionIdentifier(using: &generator)
 		}()
 	}
+}
+
+nonisolated struct LogLineStoredPayload: Codable { // nonisolated: value
+	static let currentVersion = 1
+	var version = currentVersion
+	let line: LogLine
+
+	/// Reads the stored time without constructing a line or assigning identity.
+	static func receivedAt(in data: Data) -> Date? {
+		guard let timestamp = try? PropertyListDecoder().decode(Timestamp.self, from: data),
+		      timestamp.version == currentVersion else { return nil }
+		return timestamp.line.receivedAt
+	}
+
+	private struct Timestamp: Decodable {
+		let version: Int
+		let line: TimestampLine
+	}
+
+	private struct TimestampLine: Decodable { let receivedAt: Date }
 }

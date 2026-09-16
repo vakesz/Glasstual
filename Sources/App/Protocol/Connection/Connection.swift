@@ -40,7 +40,6 @@ import CocoaExtensions
 import Foundation
 import os
 import Security
-import SecurityInterface
 
 private nonisolated let connectionLogger = Logger( // nonisolated: let
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
@@ -128,7 +127,7 @@ private final class ConnectionClientShim: NSObject, RemoteConnectionClientProtoc
 /** Owned by `Client` on the main actor. The connection host's callbacks
  arrive on an NSXPC queue and are forwarded through `events`, which the main
  actor drains in order; nothing else on this type is touched off-main. */
-final class Connection: NSObject {
+final class Connection {
 	private(set) weak var client: Client?
 	private(set) var config: ConnectionConfig
 	private(set) var isConnected = false
@@ -180,15 +179,13 @@ final class Connection: NSObject {
 		clientShim
 	}
 
-	private var trustPanel: SFCertificateTrustPanel?
-	/** `trustPanel` is only assigned once the asynchronous certificate export lands, so it
-	 cannot gate re-entry on its own. This latch is set synchronously on the main queue. */
-	private var trustPanelIsPresenting = false
+	/// What answers a pending trust request once the user has decided.
 	private var trustResponse: TrustDecisionHandler?
 
-	@available(*, unavailable)
-	override init() {
-		fatalError("init() is unavailable; use init(config:onClient:)")
+	/// Where the user is asked about a certificate. Reached through the
+	/// environment so that nothing here presents AppKit itself.
+	private var trustPanel: CertificateTrustPanel? {
+		client?.environment.services.certificateTrust
 	}
 
 	convenience init(config: ConnectionConfig, onClient client: Client) {
@@ -210,7 +207,6 @@ final class Connection: NSObject {
 		uniqueIdentifier = UUID().uuidString
 		(events, eventContinuation) = AsyncStream.makeStream()
 		clientShim = ConnectionClientShim(events: eventContinuation)
-		super.init()
 		startDeliveringEvents()
 	}
 
@@ -251,7 +247,7 @@ final class Connection: NSObject {
 			await client.renderAdmission.waitForCapacity()
 			guard !Task.isCancelled, terminal == false, client.socket === self else { return }
 			if let string = convertFromCommonEncoding(line) {
-				client.ircConnection(self, didReceiveData: string)
+				client.connectionDidReceive(string)
 			}
 			if (index + 1).isMultiple(of: Self.linesPerTurn) {
 				await Task.yield()
@@ -272,25 +268,21 @@ final class Connection: NSObject {
 		}
 		switch event {
 		case let .willConnectToProxy(host, port):
-			client?.ircConnection(self, willConnectToProxy: host, port: port)
+			client?.connectionWillConnect(toProxy: host, port: port)
 		case let .didConnect(host):
 			guard isDisconnecting == false else { return }
 			connectedAddress = host
 			isConnecting = false
 			isConnected = true
-			client?.ircConnectionDidConnect(self)
+			client?.connectionDidConnect()
 		case let .didSecure(protocolType, cipherSuite):
 			guard isDisconnecting == false else { return }
 			isSecured = true
 			isConnectedWithClientSideCertificate = config.identityClientSideCertificate != nil
-			client?.ircConnectionDidSecureConnection(
-				self,
-				withProtocolType: protocolType,
-				cipherSuite: cipherSuite
-			)
+			client?.connectionDidSecure(protocolType: protocolType, cipherSuite: cipherSuite)
 		case .didCloseReadStream:
 			EOFReceived = true
-			client?.ircConnectionDidCloseReadStream(self)
+			client?.connectionDidCloseReadStream()
 		case let .didDisconnect(error):
 			didDisconnect(with: error)
 		case .didReceive:
@@ -321,7 +313,7 @@ final class Connection: NSObject {
 		} else {
 			nil
 		}
-		client?.ircConnection(self, willSendData: string)
+		client?.connectionWillSend(string)
 	}
 
 	private func didWrite() {
@@ -344,7 +336,7 @@ final class Connection: NSObject {
 			let error = NSError(
 				domain: connectionErrorDomain,
 				code: Int(ConnectionErrorCode.other.rawValue),
-				userInfo: [NSLocalizedDescriptionKey: ConnectionStrings.serviceClosedUnexpectedly]
+				userInfo: [NSLocalizedDescriptionKey: String(localized: .IRC.connectionServiceClosedUnexpectedly)]
 			)
 			didDisconnect(with: error)
 		}
@@ -455,59 +447,23 @@ final class Connection: NSObject {
 			 side of it. What crosses is `SecureConnectionInformation`, which is
 			 `Sendable` and already carries the DER chain. */
 			Task { @MainActor in
-				Self.presentCertificateModal(for: information)
+				CertificateTrustPanel.presentSummary(for: information)
 			}
 		}
 	}
 
-	@MainActor
-	private static func presentCertificateModal(for information: SecureConnectionInformation) {
-		let cipherSuite = information.cipherSuite
+	/** Puts a certificate the system would not vouch for in front of the user.
 
-		guard
-			let policyName = information.policyName,
-			let trust = SecureTransportSupport.trust(
-				fromCertificateChain: information.certificateChain,
-				policyName: policyName
-			)
-		else { return }
-
-		let cipherStatus: PromptCipherStatus = SecureTransportSupport.isCipherSuiteDeprecated(cipherSuite)
-			? .deprecated
-			: .current
-		let summary = PromptStrings.TransportSecurity.cipherSummary(
-			policyName: SecureTransportSupport.description(forProtocolType: information.protocolVersion),
-			cipherSuite: SecureTransportSupport.description(forCipherSuite: cipherSuite),
-			status: cipherStatus
-		)
-		var body = PromptStrings.TransportSecurity.certificateSummary(
-			policyName: policyName,
-			cipherSummary: summary
-		)
-
-		if let failure = information.trustFailureDescription {
-			body += PromptStrings.TransportSecurity.trustFailure(failure)
-		}
-
-		_ = TrustPanelPresenter.present(
-			in: NSApp.keyWindow,
-			body: body,
-			title: PromptStrings.TransportSecurity.encryptedConnectionTitle(policyName: policyName),
-			defaultButton: PromptStrings.Action.close,
-			alternateButton: nil,
-			trust: trust
-		) { _, _ in }
-	}
-
+	 The connection host blocks its handshake on the answer, so every path out
+	 of here answers exactly once. */
 	private func openInsecureCertificateTrustPanel(_ response: @escaping TrustDecisionHandler) {
 		guard terminal == false, isDisconnecting == false, client?.isTerminating == false,
-		      trustPanelIsPresenting == false
+		      let trustPanel, trustPanel.reserve()
 		else {
-			/* The connection host blocks its handshake until this reply arrives. */
 			response(false)
 			return
 		}
-		trustPanelIsPresenting = true
+
 		trustResponse = response
 
 		/* Reaching this panel means the chain did not validate. Whatever the
@@ -518,84 +474,39 @@ final class Connection: NSObject {
 
 		exportSecureConnectionInformation { [weak self] information in
 			Task { @MainActor [weak self] in
-				/* The host blocks its handshake on this reply, so every path out
-				 of here answers. Only a deallocated connection cannot, and that
-				 has already invalidated the service the handshake belongs to. */
+				/* Only a deallocated connection cannot answer, and that has
+				 already invalidated the service the handshake belongs to. */
 				guard let self else { return }
 
 				guard terminal == false, isDisconnecting == false, client?.socket === self else {
-					trustPanelIsPresenting = false
+					trustPanel.cancelReservation()
 					resolveTrust(false)
 					return
 				}
 
 				guard trustResponse != nil else {
-					trustPanelIsPresenting = false
+					trustPanel.cancelReservation()
 					return
 				}
 
-				presentInsecureCertificateTrustPanel(for: information)
-			}
-		}
-	}
-
-	/// Builds the `SecTrust` from the chain the service exported and puts it in
-	/// front of the user.
-	///
-	/// The rebuild happens here rather than in the export callback so that no
-	/// Security.framework object ever leaves the main actor.
-	private func presentInsecureCertificateTrustPanel(
-		for information: SecureConnectionInformation
-	) {
-		guard
-			let policyName = information.policyName,
-			let trust = SecureTransportSupport.trust(
-				fromCertificateChain: information.certificateChain,
-				policyName: policyName
-			)
-		else {
-			trustPanelIsPresenting = false
-			resolveTrust(false)
-			return
-		}
-
-		trustPanel = TrustPanelPresenter.present(
-			in: nil,
-			body: PromptStrings.TransportSecurity.certificateFailureBody(serverName: policyName),
-			title: PromptStrings.TransportSecurity.certificateFailureTitle(serverName: policyName),
-			defaultButton: PromptStrings.TransportSecurity.invalidCertificateContinueButtonTitle,
-			alternateButton: PromptStrings.Action.cancel,
-			trust: trust,
-			completion: { [weak self] _, trusted in
-				Task { @MainActor [weak self] in
+				let presented = trustPanel.present(for: information) { [weak self] trusted in
 					guard let self else { return }
-
-					trustPanel = nil
-					trustPanelIsPresenting = false
 
 					resolveTrust(trusted && terminal == false && isDisconnecting == false)
 				}
+
+				if presented == false {
+					resolveTrust(false)
+				}
 			}
-		)
+		}
 	}
 
+	/// Answers whatever was waiting on the panel with a refusal and takes it
+	/// down: the connection is going away, and the host is still blocked.
 	private func closeInsecureCertificateTrustPanel() {
 		resolveTrust(false)
-		trustPanelIsPresenting = false
-		guard let trustPanel else { return }
-		self.trustPanel = nil
-
-		if let parent = trustPanel.sheetParent {
-			parent.endSheet(trustPanel, returnCode: .cancel)
-			return
-		}
-
-		if NSApp.modalWindow === trustPanel {
-			NSApp.stopModal(withCode: .cancel)
-			return
-		}
-
-		trustPanel.orderOut(nil)
+		trustPanel?.close()
 	}
 
 	private func resolveTrust(_ trusted: Bool) {
@@ -681,7 +592,7 @@ final class Connection: NSObject {
 		closeInsecureCertificateTrustPanel()
 		resetState()
 		if client?.socket === self {
-			client?.ircConnection(self, didDisconnectWithError: error)
+			client?.connectionDidDisconnect(error: error)
 		}
 		eventContinuation.finish()
 		eventTask?.cancel()

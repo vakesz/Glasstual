@@ -39,45 +39,6 @@
 import CocoaExtensions
 import Foundation
 
-/** A channel's answer to one notification setting.
-
- A channel either turns the setting on, turns it off, or says nothing and lets
- the application-wide preference answer. Keeping that choice in the protocol
- model means neither persistence nor the editor depends on AppKit controls. */
-nonisolated enum ChannelEventOverride: CaseIterable, Sendable, Equatable, Hashable { // nonisolated: value
-	case on
-	case off
-	/// No override: whatever the application-wide preference says.
-	case inherited
-}
-
-/// One notification override a channel carries: either a sound name or an
-/// on/off flag. A channel with no override for an event inherits the
-/// application-wide setting, which the sheets show as a mixed checkbox.
-nonisolated enum ChannelNotificationSetting: Codable, Sendable, Equatable, Hashable { // nonisolated: value
-	case sound(String)
-	case flag(Bool)
-
-	init(from decoder: any Decoder) throws {
-		let container = try decoder.singleValueContainer()
-
-		if let flag = try? container.decode(Bool.self) {
-			self = .flag(flag)
-		} else {
-			self = try .sound(container.decode(String.self))
-		}
-	}
-
-	func encode(to encoder: any Encoder) throws {
-		var container = encoder.singleValueContainer()
-
-		switch self {
-		case let .sound(name): try container.encode(name)
-		case let .flag(value): try container.encode(value)
-		}
-	}
-}
-
 /** A channel or query as its connection stores it.
 
  A query keeps only its name, identifier and type; the channel settings below
@@ -90,18 +51,18 @@ nonisolated struct ChannelConfig: Codable, Sendable, Equatable, Hashable { // no
 
 	var autoJoin = true
 	var ignoreGeneralEventMessages = false
+	/// Whether a mention in this channel is worth interrupting for.
 	var ignoreHighlights = false
 	var inlineMediaDisabled = false
 	var inlineMediaEnabled = false
+	/// Whether this conversation notifies at all. The Messages "Hide Alerts"
+	/// switch, under the name it has always been stored as.
 	var pushNotifications = true
 	var showTreeBadgeCount = true
 
 	var label: String?
 	var defaultModes: String?
 	var defaultTopic: String?
-
-	/// Per-event overrides, keyed by the notification preference schema.
-	var notifications: [String: ChannelNotificationSetting] = [:]
 
 	/** An unflushed edit to the channel key: one waiting to be written to the
 	 keychain, a request to delete the stored one, or a stored key read back so
@@ -137,7 +98,6 @@ nonisolated struct ChannelConfig: Codable, Sendable, Equatable, Hashable { // no
 		case label
 		case defaultModes = "defaultMode"
 		case defaultTopic
-		case notifications
 
 		// Spellings written by releases before these settings were renamed.
 		case joinOnConnect
@@ -187,11 +147,6 @@ nonisolated struct ChannelConfig: Codable, Sendable, Equatable, Hashable { // no
 		label = container.decodeOptional(String.self, forKey: .label)
 		defaultModes = container.decodeOptional(String.self, forKey: .defaultModes)
 		defaultTopic = container.decodeOptional(String.self, forKey: .defaultTopic)
-		notifications = container.decodeOptional(
-			[String: ChannelNotificationSetting].self,
-			forKey: .notifications
-		) ?? [:]
-
 		decodeInlineMediaSettings(from: container)
 	}
 
@@ -244,9 +199,6 @@ nonisolated struct ChannelConfig: Codable, Sendable, Equatable, Hashable { // no
 		try container.encodeIfPresent(label, forKey: .label)
 		try container.encodeIfPresent(defaultModes, forKey: .defaultModes)
 		try container.encodeIfPresent(defaultTopic, forKey: .defaultTopic)
-		// Written even when empty, as it always has been.
-		try container.encode(notifications, forKey: .notifications)
-
 		if autoJoin == false {
 			try container.encode(false, forKey: .autoJoin)
 		}
@@ -310,84 +262,5 @@ nonisolated extension ChannelConfig { // nonisolated: value
 		copy.uniqueIdentifier = UUID().uuidString
 
 		return copy
-	}
-
-	func sound(forEvent event: NotificationEvent) -> String? {
-		guard case let .sound(name) = notifications[event.preferenceKeyName(for: .sound)]
-		else {
-			return nil
-		}
-
-		return name
-	}
-
-	func notificationEnabled(forEvent event: NotificationEvent) -> ChannelEventOverride {
-		state(for: event, setting: .enabled)
-	}
-
-	func disabledWhileAway(forEvent event: NotificationEvent) -> ChannelEventOverride {
-		state(for: event, setting: .disabledWhileAway)
-	}
-
-	func bounceDockIcon(forEvent event: NotificationEvent) -> ChannelEventOverride {
-		state(for: event, setting: .bounceDockIcon)
-	}
-
-	func bounceDockIconRepeatedly(forEvent event: NotificationEvent) -> ChannelEventOverride {
-		state(for: event, setting: .bounceDockIconRepeatedly)
-	}
-
-	func speakEvent(_ event: NotificationEvent) -> ChannelEventOverride {
-		state(for: event, setting: .speak)
-	}
-
-	mutating func setSound(_ value: String?, forEvent event: NotificationEvent) {
-		notifications[event.preferenceKeyName(for: .sound)] = value.map(ChannelNotificationSetting.sound)
-	}
-
-	mutating func setNotificationEnabled(_ value: ChannelEventOverride, forEvent event: NotificationEvent) {
-		setState(value, forEvent: event, setting: .enabled)
-	}
-
-	mutating func setDisabledWhileAway(_ value: ChannelEventOverride, forEvent event: NotificationEvent) {
-		setState(value, forEvent: event, setting: .disabledWhileAway)
-	}
-
-	mutating func setBounceDockIcon(_ value: ChannelEventOverride, forEvent event: NotificationEvent) {
-		setState(value, forEvent: event, setting: .bounceDockIcon)
-	}
-
-	mutating func setBounceDockIconRepeatedly(_ value: ChannelEventOverride, forEvent event: NotificationEvent) {
-		setState(value, forEvent: event, setting: .bounceDockIconRepeatedly)
-	}
-
-	mutating func setEventIsSpoken(_ value: ChannelEventOverride, forEvent event: NotificationEvent) {
-		setState(value, forEvent: event, setting: .speak)
-	}
-
-	private mutating func setState(
-		_ value: ChannelEventOverride,
-		forEvent event: NotificationEvent,
-		setting: NotificationSetting
-	) {
-		let key = event.preferenceKeyName(for: setting)
-
-		switch value {
-		case .on:
-			notifications[key] = .flag(true)
-		case .off:
-			notifications[key] = .flag(false)
-		case .inherited:
-			notifications.removeValue(forKey: key)
-		}
-	}
-
-	private func state(for event: NotificationEvent, setting: NotificationSetting) -> ChannelEventOverride {
-		guard case let .flag(value) = notifications[event.preferenceKeyName(for: setting)]
-		else {
-			return .inherited
-		}
-
-		return value ? .on : .off
 	}
 }

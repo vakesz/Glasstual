@@ -61,17 +61,19 @@ final class ScriptController {
 		catalog.customScriptsURL
 	}
 
-	/// What claims an outgoing command the client has no built-in handler for.
-	func handler(forOutgoingCommand command: String) -> OutgoingCommandOwner {
-		guard let script = catalog.commandsByName[command.lowercased()] else { return .none }
-		return .script(path: script.url.path)
+	/** The user script an outgoing command runs, if any.
+
+	 A command the client has no built-in handler for goes to the server as
+	 written unless a script claims it. */
+	func scriptPath(forOutgoingCommand command: String) -> String? {
+		catalog.commandsByName[command.lowercased()]?.url.path
 	}
 
 	@concurrent
 	private static func scan() async -> ScriptCatalog {
 		ScriptCatalog.discover(
-			customURL: PathInfo.customScriptsURL,
-			bundledURL: URL(fileURLWithPath: PathInfo.bundledScripts, isDirectory: true),
+			customURL: ApplicationPaths.customScriptsURL,
+			bundledURL: ApplicationPaths.bundledScriptsURL,
 			forbiddenCommands: Set(forbiddenCommandNames())
 		)
 	}

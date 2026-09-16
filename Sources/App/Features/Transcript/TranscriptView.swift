@@ -232,48 +232,13 @@ final class TranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 	var scrollViewTopWithTopicConstraint: NSLayoutConstraint?
 	var scrollViewTopWithoutTopicConstraint: NSLayoutConstraint?
 	private let notifications = NotificationSubscriptions()
-	var lines: [TranscriptRow] = []
-	/** Where each line begins in the text storage, in the order ``lines`` holds
-	 them, with the end of the document at the end.
-
-	 It is what lets an edit reach one line's characters without rewriting the
-	 document around them, and it is stored rather than summed per lookup:
-	 restoring the selection after a single append asks for two of these, and
-	 summing the lengths before a line made each answer a walk of the buffer.
-	 The invariant is `lineStarts.count == lines.count + 1`. */
-	var lineStarts: [Int] = [0]
-	/// How many lines on screen are highlights. Counted as the document is
-	/// edited because the menu asks on every validation pass, and the answer
-	/// used to be a walk of the whole scrollback.
-	var highlightedLineCount = 0
-	/** Where each identifier the document answers to sits, so an edit, a jump
-	 or a duplicate check reaches its line without walking the buffer.
-
-	 A row restored from storage answers to two: the history row it came back
-	 from and the line number it was printed with. Both are held, which is what
-	 keeps a message the reader has already seen from being drawn again beside
-	 its restored self.
-
-	 The values are ordinals rather than indices. Lines only ever arrive at
-	 either end and leave from the top, so an ordinal is fixed for as long as
-	 its line is held; `firstLineOrdinal` is the ordinal of `lines[0]`, and an
-	 index is the difference. Nothing is renumbered when older lines are put in
-	 front or the oldest are trimmed. */
-	var lineOrdinals: [String: Int] = [:]
-	/// The ordinals of the lines that carry each message identifier, oldest
-	/// first, for the reactions addressed to a message.
-	var messageLineOrdinals: [String: [Int]] = [:]
-	var firstLineOrdinal = 0
-	var inlineImages: [String: [CachedTranscriptImage]] = [:]
+	/// The lines, the indexes over them and the trim. A value: the storage edits
+	/// are this view's, and everything that decides which line an edit reaches
+	/// is the document's.
+	var document = TranscriptDocument()
 	var editDepth = 0
 	var batchSelection: SelectionAnchor?
 	var batchViewport: (endpoint: SelectionAnchor.Endpoint, offset: CGFloat)?
-	var bufferLimit = TranscriptBufferPolicy.defaultHardLimit
-	/** Older lines pulled in while the reader follows the end, which raise the
-	 buffer's ceiling so the trim after the prepend does not take them straight
-	 back out. Scrollback the reader loads by scrolling back needs none: nothing
-	 is trimmed from the top while they read. */
-	var scrollbackAllowance = 0
 	var textScale: CGFloat = 1
 	/** Whether the reader is following the end of the transcript. Scrolling,
 	 find and jump commands set it; appends, document growth and a return
@@ -285,7 +250,7 @@ final class TranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 	var followsBottom = true {
 		didSet {
 			if followsBottom, oldValue == false {
-				scrollbackAllowance = 0
+				document.scrollbackAllowance = 0
 			}
 			updateJumpToLatestVisibility()
 		}
@@ -357,20 +322,20 @@ final class TranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 	}
 
 	var displayedLines: [TranscriptRow] {
-		lines
+		document.lines
 	}
 
 	/// Whether the document already draws the line `identifier` names, under
 	/// either of the identifiers a restored row answers to.
 	func containsLine(identifier: String) -> Bool {
-		lineOrdinals[identifier] != nil
+		document.contains(identifier: identifier)
 	}
 
 	var displayedBounds: TranscriptDisplayedBounds {
 		TranscriptDisplayedBounds(
-			oldest: lines.first?.lineNumber, newest: lines.last?.lineNumber,
-			count: lines.count,
-			remainingCapacity: max(0, TranscriptBufferPolicy.validLimits.upperBound - lines.count)
+			oldest: document.lines.first?.lineNumber, newest: document.lines.last?.lineNumber,
+			count: document.count,
+			remainingCapacity: max(0, document.roomBeforeCeiling)
 		)
 	}
 
@@ -379,7 +344,7 @@ final class TranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 	/// keeps as it is edited, rather than a walk of the whole buffer per menu
 	/// update.
 	var hasHighlightedLines: Bool {
-		highlightedLineCount > 0
+		document.highlightedLineCount > 0
 	}
 
 	/** Sends what the reader typed to the input field, and nothing else.
@@ -393,7 +358,7 @@ final class TranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 		guard modifiers.isDisjoint(with: [.command, .option, .control]),
 		      Self.isTextInput(event.charactersIgnoringModifiers)
 		else { return false }
-		viewController?.logViewKeyDown(event)
+		viewController?.transcriptViewKeyDown(event)
 		return true
 	}
 
@@ -413,7 +378,7 @@ final class TranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 		guard let fileURL = NSURL(from: sender.draggingPasteboard) as URL?, fileURL.isFileURL else {
 			return false
 		}
-		viewController?.logViewReceivedDrop(withFile: fileURL.path)
+		viewController?.transcriptViewReceivedDrop(withFile: fileURL.path)
 		return true
 	}
 
@@ -662,7 +627,7 @@ final class TranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 
 	func setBufferLimit(_ limit: Int) {
 		performEditingBatch {
-			bufferLimit = max(1, limit)
+			document.bufferLimit = max(1, limit)
 			let anchor = selectionAnchor()
 			trimToBufferLimit()
 			restoreSelection(anchor)
@@ -771,7 +736,7 @@ struct TranscriptJumpToLatestButton: View {
 		.buttonStyle(.plain)
 		.background(.thinMaterial, in: Circle())
 		.overlay(Circle().strokeBorder(.separator))
-		.accessibilityLabel(MenuStrings.Navigation.jumpToPresent)
-		.help(MenuStrings.Navigation.jumpToPresent)
+		.accessibilityLabel(Text(.MainWindow.menuNavigationJumpToPresent))
+		.help(Text(.MainWindow.menuNavigationJumpToPresent))
 	}
 }

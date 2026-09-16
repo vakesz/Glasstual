@@ -129,34 +129,8 @@ struct ClientConfigCodableTests {
 		#expect(config.pendingNicknamePassword == .set("nick-secret"))
 	}
 
-	/// The class this replaced assigned every optional unconditionally, so a
-	/// merge from a configuration that left one out wiped it.
-	@Test("A version 0 dictionary moves its flood-control settings across")
-	func versionZeroFloodControl() throws {
-		let config = try #require(PropertyListModel.decode(ClientConfig.self, from: [
-			"floodControl": [
-				"serviceEnabled": true,
-				"delayTimerInterval": 5,
-				"maximumMessageCount": 3,
-			],
-		]))
-
-		#expect(config.floodControlDelayTimerInterval == 5)
-		#expect(config.floodControlMaximumMessages == 3)
-	}
-
-	@Test("Turning version 0 flood control off means the loosest settings")
-	func versionZeroFloodControlDisabled() throws {
-		let config = try #require(PropertyListModel.decode(ClientConfig.self, from: [
-			"isOutgoingFloodControlEnabled": false,
-		]))
-
-		#expect(config.floodControlDelayTimerInterval == 1)
-		#expect(config.floodControlMaximumMessages == 60)
-	}
-
-	@Test("A version 0 IPv4 preference becomes the IPv4 address type")
-	func versionZeroAddressType() throws {
+	@Test("A stored IPv4 preference becomes the IPv4 address type")
+	func ipv4PreferenceBecomesTheAddressType() throws {
 		let config = try #require(PropertyListModel.decode(ClientConfig.self, from: [
 			"connectionPrefersIPv4": true,
 		]))
@@ -165,10 +139,11 @@ struct ClientConfigCodableTests {
 		#expect(config.showConnectionPrefersIPv4Warning)
 	}
 
-	/// A version 0 configuration that never wrote a port was connecting to the
-	/// standard one; reading it as port 0 cancelled the whole server list.
-	@Test("A version 0 endpoint without a port migrates on the standard port", arguments: [nil, UInt16(6697)])
-	func versionZeroEndpointMigratesItsPort(_ storedPort: UInt16?) throws {
+	/// A configuration written before the server list never wrote a port: it was
+	/// connecting to the standard one, and reading it as port 0 cancelled the
+	/// whole server list.
+	@Test("A single endpoint without a port migrates on the standard port", arguments: [nil, UInt16(6697)])
+	func singleEndpointWithoutAPortMigratesOnTheStandardPort(_ storedPort: UInt16?) throws {
 		var dictionary: [String: PropertyListValue] = [
 			"serverAddress": "irc.example.net",
 			"prefersSecuredConnection": true,

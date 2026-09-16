@@ -13,9 +13,8 @@
 
 import AppKit
 import CocoaExtensions
+import Network
 import os
-
-private let terminationHistoricLogSaveTimeout: TimeInterval = 15.0
 
 /// AppKit ships `NSWorkspace.WillSleepMessage` but no power-off equivalent, so
 /// the interop shape is spelled out here: the notification to bridge from, and
@@ -34,78 +33,12 @@ private struct WorkspaceWillPowerOffMessage: NotificationCenter.MainActorMessage
 	}
 }
 
-/** How far shutdown has got.
-
- One value instead of the five booleans that used to answer for it, each of
- which could disagree with the others: a stage only ever moves forward, and
- every step reads the same value to decide whether its work has already been
- done. */
-enum ApplicationTerminationStage: Int, Comparable, Sendable {
-	/// Nothing has asked the application to quit.
-	case running
-	/// The quit confirmation is on screen and its answer decides.
-	case confirming
-	/// Already submitted Settings saves finish before their editors close.
-	case finishingSettings
-	/// Clients are leaving IRC.
-	case disconnecting
-	/// The transcript files and the history store are being flushed.
-	case savingLogs
-	/// Accepted credential mutations finish before the application exits.
-	case savingCredentials
-	/// `NSApp` has been told it may quit.
-	case finished
-
-	static func < (lhs: Self, rhs: Self) -> Bool {
-		lhs.rawValue < rhs.rawValue
-	}
-}
-
-/** What `applicationShouldTerminate` does with the request.
-
- Every route ends at `.terminateLater` and the three termination steps report
- back to NSApp themselves, so what is actually being decided is whether to
- start those steps, ask the user first, or leave a shutdown already in flight
- alone. */
-enum ApplicationTerminationPolicy {
-	enum Decision: Equatable {
-		/// Termination is already running: do nothing and let it finish.
-		case alreadyTerminating
-		/// The confirmation sheet is on screen: the answer to that one decides
-		/// this request too, so do not ask a second time.
-		case alreadyDeciding
-		/// The confirmation sheet is on screen, but this request cannot wait for
-		/// an answer. Take the sheet down and run the termination steps.
-		case overrideConfirmation
-		/// Run the termination steps now.
-		case begin
-		/// Ask before quitting on top of a live connection.
-		case confirm
-	}
-
-	static func decision(
-		isTerminating: Bool,
-		isAwaitingConfirmation: Bool,
-		skipConfirmation: Bool,
-		confirmQuitPreference: Bool,
-		hasLiveConnection: Bool
-	) -> Decision {
-		if isTerminating {
-			return .alreadyTerminating
-		}
-
-		/* The machine powering off cannot wait for a question the reader may
-		 never come back to answer. */
-		if isAwaitingConfirmation {
-			return skipConfirmation ? .overrideConfirmation : .alreadyDeciding
-		}
-
-		if skipConfirmation || confirmQuitPreference == false || hasLiveConnection == false {
-			return .begin
-		}
-
-		return .confirm
-	}
+/// What a network path update means for the clients that watch it.
+enum ReachabilityPathEvent {
+	/// Nothing to report: the first path, or one that repeats the last.
+	case none
+	case becameReachable
+	case becameUnreachable
 }
 
 @MainActor
@@ -115,7 +48,7 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 		category: "General"
 	)
 
-	private static let terminationLogger = Logger(
+	static let terminationLogger = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 		category: "Termination"
 	)
@@ -130,25 +63,38 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 		terminationStage >= .finishingSettings
 	}
 
-	private var terminationStage: ApplicationTerminationStage = .running
+	/* The shutdown sequence itself is in ApplicationTermination.swift. Stored
+	 properties cannot live in an extension, so its state is declared here and
+	 nothing else reads it. */
+
+	var terminationStage: ApplicationTerminationStage = .running
 	/// The two log drains still running. Step three waits for both, or for the
 	/// deadline, whichever comes first.
-	private var pendingLogDrains = 0
-	/// Bounds both history persistence and the independent transcript-file drain.
-	private var historicLogSaveTimeoutTask: Task<Void, Never>?
-	private var skipTerminateConfirmation = false
+	var pendingLogDrains = 0
+	/// Bounds both scrollback persistence and the independent transcript-file drain.
+	var scrollbackSaveDeadline: ClientTimer?
+	var skipTerminateConfirmation = false
 	/// The quit confirmation while it is on screen. Cancelling it takes the
 	/// sheet down without its answer being acted on.
-	private var terminationConfirmation: Task<Void, Never>?
-	private var settingsTerminationTask: Task<Void, Never>?
-	private var credentialTerminationTask: Task<Void, Never>?
-	private let notifications = NotificationSubscriptions()
+	var terminationConfirmation: Task<Void, Never>?
+	var settingsTerminationTask: Task<Void, Never>?
+	var credentialTerminationTask: Task<Void, Never>?
+
+	private var reachabilityTask: Task<Void, Never>?
+	private var isNetworkReachable = false
+	/** Seeded once per process rather than per monitor. The monitor is stopped on
+	 sleep and started again on wake, and resetting the seed there made every
+	 restart discard its first update, so a connectivity change across the sleep
+	 was never reported. */
+	private var receivedInitialPath = false
+
+	let notifications = NotificationSubscriptions()
 	private lazy var resourceFileImporter = ResourceFileImporter()
 
 	/// IUO preserves the established launch-time contract while allowing nil in tests.
 	var mainWindow: MainWindow!
-	weak var menuController: MenuController?
-	var world: ClientDirectory!
+	weak var menuController: MenuActionController?
+	var clientDirectory: ClientDirectory!
 
 	var terminatingClientCount: UInt = 0 {
 		didSet {
@@ -172,8 +118,6 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 	}
 
 	private func prepareInitialState() {
-		Logging.setDefaultSubsystem(toMainBundleCategory: "General")
-
 		#if DEBUG
 			ghostModeIsOn = true // Do not use auto connect during debug
 		#else
@@ -198,7 +142,7 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 
 		hasInstalledMainWindow = true
 
-		TextualPreferences.initPreferences()
+		PreferenceRegistration.prepareForLaunch()
 
 		_ = AppServices.appearance
 
@@ -222,11 +166,11 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 	}
 
 	func applicationWakeStepOne() {
-		world = ClientDirectory()
+		clientDirectory = ClientDirectory()
 	}
 
 	/** Hands the IRC layer the window, the menus and this controller, and makes
-	 both of the first two observers of the world. Everything the connection code
+	 both of the first two observers of the client directory. Everything the connection code
 	 used to reach for through `AppServices.delegate` arrives this way. */
 	func installClientServices() {
 		let services = ClientEnvironment.shared.services
@@ -234,21 +178,21 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 		services.menu = menuController
 		services.channelList = AppServices.scenes
 		services.applicationState = self
-		services.world = world
+		services.clientDirectory = clientDirectory
 
 		if let mainWindow {
-			world?.addObserver(mainWindow)
+			clientDirectory?.addObserver(mainWindow)
 		}
 
 		if let menuController {
-			world?.addObserver(menuController)
+			clientDirectory?.addObserver(menuController)
 		}
 	}
 
 	func applicationWakeStepTwo() {
 		SystemInformation.beginObservingSleepState()
 
-		prepareNetworkReachabilityNotifier()
+		startWatchingNetworkPath()
 
 		let workspaceCenter = NSWorkspace.shared.notificationCenter
 		notifications.observe(NSWorkspace.didWakeNotification, center: workspaceCenter) { [weak self] notification in
@@ -302,20 +246,63 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 		completeApplicationLaunch()
 	}
 
-	// MARK: - Services
+	// MARK: - Network reachability
 
-	private func prepareNetworkReachabilityNotifier() {
-		let notifier = AppServices.reachability
+	/** Watches the default network path and tells the clients when it comes and
+	 goes. `ClientDirectory` lives on the main actor, so the loop does too: no
+	 lock, no queue hop, no opting out of the checker. */
+	private func startWatchingNetworkPath() {
+		/* A path monitor is single use: once cancelled it never delivers another
+		 update. Create a fresh one for every start. */
+		reachabilityTask?.cancel()
 
-		notifier.reachableBlock = { [weak self] _ in
-			self?.world.noteReachabilityChanged(true)
+		reachabilityTask = Task { @MainActor [weak self] in
+			for await path in NWPathMonitor() {
+				guard let self else { return }
+
+				let event = Self.evaluatePathChange(
+					reachable: path.status == .satisfied,
+					currentlyReachable: &isNetworkReachable,
+					receivedInitialPath: &receivedInitialPath
+				)
+
+				switch event {
+				case .none: break
+				case .becameReachable: clientDirectory?.noteReachabilityChanged(true)
+				case .becameUnreachable: clientDirectory?.noteReachabilityChanged(false)
+				}
+			}
+		}
+	}
+
+	func stopWatchingNetworkPath() {
+		reachabilityTask?.cancel()
+		reachabilityTask = nil
+	}
+
+	/// What one path update means, given what the last one said.
+	nonisolated static func evaluatePathChange( // nonisolated: pure
+		reachable: Bool,
+		currentlyReachable: inout Bool,
+		receivedInitialPath: inout Bool
+	) -> ReachabilityPathEvent {
+		let wasReachable = currentlyReachable
+
+		currentlyReachable = reachable
+
+		/* The first path update describes the state at launch rather than a
+		 change. Seed from it without reporting one. */
+		if receivedInitialPath == false {
+			receivedInitialPath = true
+
+			return .none
 		}
 
-		notifier.unreachableBlock = { [weak self] _ in
-			self?.world.noteReachabilityChanged(false)
+		if reachable == wasReachable {
+			return .none
 		}
 
-		_ = notifier.startNotifier()
+		return reachable ? .becameReachable : .becameUnreachable
 	}
 
 	// MARK: - NSApplication Delegate
@@ -344,7 +331,7 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 		applicationIsLaunched = true
 
 		if mainWindow.reloadLoadingScreen() {
-			world.autoConnect(afterWakeup: false)
+			clientDirectory.autoConnect(afterWakeup: false)
 		}
 
 		presentOnboardingIfNeeded()
@@ -354,7 +341,7 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 	 been completed or skipped before. The flow is shown on top of the main
 	 window's "add a server" placeholder. */
 	private func presentOnboardingIfNeeded() {
-		guard OnboardingSession.shouldPresentOnLaunch() else {
+		guard OnboardingModel.shouldPresentOnLaunch() else {
 			return
 		}
 
@@ -388,270 +375,13 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 		resourceFileImporter.open(urls)
 	}
 
-	func applicationSupportsSecureRestorableState(_: NSApplication) -> Bool {
-		/* The main window encodes its selection with secure coding. */
-		true
-	}
-
-	// MARK: - NSApplication Terminate Procedure
-
 	func applicationDockMenu(_: NSApplication) -> NSMenu? {
 		menuController?.dockMenu
 	}
 
-	/** The answer is always `.terminateLater`: every route to shutting down
-	 runs the three termination steps, and step three is what reports back to
-	 NSApp. */
-	func applicationShouldTerminate(_: NSApplication) -> NSApplication.TerminateReply {
-		let stillConnected = world.clientList.contains { $0.isConnecting || $0.isConnected }
-
-		switch ApplicationTerminationPolicy.decision(
-			isTerminating: applicationIsTerminating,
-			isAwaitingConfirmation: terminationStage == .confirming,
-			skipConfirmation: skipTerminateConfirmation,
-			confirmQuitPreference: Preferences.Connection.confirmQuit.value,
-			hasLiveConnection: stillConnected
-		) {
-		case .alreadyTerminating:
-			/* Termination is already under way. Answering .terminateNow here
-			 used to schedule step one a second time, tearing everything down
-			 twice. */
-			Self.terminationLogger.debug("Termination is already in progress")
-		case .alreadyDeciding:
-			Self.terminationLogger.debug("Termination confirmation is already on screen")
-		case .overrideConfirmation:
-			Self.terminationLogger.debug("Termination can no longer wait for the confirmation")
-			terminationConfirmation?.cancel()
-			terminationConfirmation = nil
-			terminationStage = .running
-			performApplicationTerminationStepOne()
-		case .begin:
-			performApplicationTerminationStepOne()
-		case .confirm:
-			presentTerminationConfirmation()
-		}
-
-		return .terminateLater
-	}
-
-	/** The sheet's answer reports to NSApp and begins termination itself.
-
-	 Sheets stack, so a second ⌘Q while this one is up would queue a second
-	 sheet and run both completions: two shutdowns, or a cancel answered on top
-	 of one already in flight. The stage is what keeps the second request from
-	 asking again.
-
-	 The window comes forward first, because nobody can answer a sheet on a
-	 window they cannot see. Quitting from the Dock with the main window closed,
-	 or with the application hidden, left termination stuck behind that sheet
-	 for good, and a logout stuck behind termination. */
-	private func presentTerminationConfirmation() {
-		terminationStage = .confirming
-
-		NSApp.activate()
-		mainWindow.makeKeyAndOrderFront(nil)
-
-		let request = AlertRequest(
-			title: PromptStrings.Application.quitTitle,
-			body: PromptStrings.Application.quitBody,
-			defaultButton: PromptStrings.Application.quitButtonTitle,
-			alternateButton: PromptStrings.Action.cancel
-		)
-
-		terminationConfirmation = Task { [weak self] in
-			let outcome = await Alerts.run(request, on: .mainWindow)
-			/* A request that could not wait cancelled this task. It took the
-			 sheet down and began termination itself. */
-			guard Task.isCancelled == false, let self else { return }
-			terminationConfirmation = nil
-			terminationStage = .running
-
-			let result = outcome.response == .default
-
-			Self.terminationLogger.debug("Perform termination: \(result)")
-
-			if result == false {
-				NSApp.reply(toApplicationShouldTerminate: false)
-				return
-			}
-
-			performApplicationTerminationStepOne()
-		}
-	}
-
-	private func terminatingClientsDidFinish() {
-		guard terminationStage == .disconnecting else {
-			return
-		}
-
-		terminationStage = .savingLogs
-		pendingLogDrains = 2
-
-		Self.terminationLogger.debug("All clients finished; saving history and draining transcript files")
-
-		// Do not await a blocked disk operation in a task group: cancellation cannot
-		// interrupt fsync, and the group would still wait for its child to return.
-		historicLogSaveTimeoutTask = Task { [weak self] in
-			try? await Task.sleep(for: .seconds(terminationHistoricLogSaveTimeout))
-			guard Task.isCancelled == false, let self else { return }
-			Self.terminationLogger.error("Log shutdown deadline expired; pending log data may be lost")
-			finishTermination()
-		}
-
-		FileLogger.prepareForApplicationTermination { [weak self] succeeded in
-			guard let self else { return }
-			if !succeeded {
-				Self.terminationLogger.error("Transcript drain completed with file errors; some log data was not saved")
-			}
-			logDrainDidFinish()
-		}
-
-		Scrollback.shared
-			.prepareForApplicationTermination { [weak self] in
-				Task { @MainActor in
-					self?.logDrainDidFinish()
-				}
-			}
-	}
-
-	private func logDrainDidFinish() {
-		guard terminationStage == .savingLogs, pendingLogDrains > 0 else { return }
-		pendingLogDrains -= 1
-		guard pendingLogDrains == 0 else { return }
-		finishTermination()
-	}
-
-	/// Runs step three once, whether both drains reported in or the deadline
-	/// expired first.
-	private func finishTermination() {
-		guard terminationStage == .savingLogs else { return }
-		historicLogSaveTimeoutTask?.cancel()
-		historicLogSaveTimeoutTask = nil
-		terminationStage = .savingCredentials
-		credentialTerminationTask = Task { [weak self] in
-			await KeychainPersistence.shared.finishForTermination(confirmRetry: KeychainAlerts.confirmTerminationRetry)
-			guard let self else { return }
-			credentialTerminationTask = nil
-			performApplicationTerminationStepThree()
-		}
-	}
-
-	private func performApplicationTerminationStepOne() {
-		/* Nothing may run the teardown twice. A second pass re-seeds
-		 `terminatingClientCount` while the first round's clients are still
-		 reporting in. */
-		guard applicationIsTerminating == false else {
-			Self.terminationLogger.debug("Step one skipped; termination is already in progress")
-			return
-		}
-		terminationStage = .finishingSettings
-		var acceptedSaves = KeychainPersistence.shared.waitForSettingsSaves()
-		settingsTerminationTask = Task { [weak self] in
-			while true {
-				let saved = await acceptedSaves.value
-				guard let self else { return }
-				guard saved else {
-					settingsTerminationTask = nil
-					terminationStage = .running
-					NSApp.reply(toApplicationShouldTerminate: false)
-					return
-				}
-				if KeychainPersistence.shared.hasPendingSettingsSaves {
-					acceptedSaves = KeychainPersistence.shared.waitForSettingsSaves()
-					continue
-				}
-				settingsTerminationTask = nil
-				beginApplicationTeardown()
-				return
-			}
-		}
-	}
-
-	private func beginApplicationTeardown() {
-		guard terminationStage == .finishingSettings else { return }
-		Self.terminationLogger.debug("Step one entry")
-
-		terminationStage = .disconnecting
-		ServerConnectionController.cancelPendingRequests()
-
-		AppServices.appearance.prepareForApplicationTermination()
-
-		mainWindow.prepareForApplicationTermination()
-
-		/* The application keeps its delegate here. Without one, AppKit answers
-		 a second quit request, such as another ⌘Q, the Dock's Quit or a
-		 logout, with an immediate exit. That exit came before step three saved
-		 the world and drained the logs.
-		 `applicationShouldTerminate` answers the request instead and leaves
-		 this shutdown alone. */
-
-		Self.terminationLogger.debug("Cancelling lifecycle notification subscriptions")
-		notifications.cancelAll()
-
-		Self.terminationLogger.debug("Removing AppleScript event observer")
-		NSAppleEventManager.shared().removeEventHandler(
-			forEventClass: AEEventClass(kInternetEventClass),
-			andEventID: AEEventID(kAEGetURL)
-		)
-
-		Self.terminationLogger.debug("Stopping reachability notifier")
-		AppServices.reachability.stopNotifier()
-
-		Self.terminationLogger.debug("Stopping speech synthesizer")
-		AppServices.existingSpeech?.isStopped = true
-
-		menuController?.prepareForApplicationTermination()
-
-		performApplicationTerminationStepTwo()
-	}
-
-	private func performApplicationTerminationStepTwo() {
-		guard applicationIsTerminating else {
-			return
-		}
-
-		Self.terminationLogger.debug("Step two entry")
-
-		/* We want certain things to 100% happen before the app completely closes.
-		 Notable actions: gracefully leaving IRC, saving historic logs, etc.
-		 Each client decrements -terminatingClientCount once it has finished and
-		 the setter continues with step three once the count reaches zero and the
-		 historic log has been saved and transcript files drained. With no clients,
-		 assigning zero here continues immediately. */
-		terminatingClientCount = world.clientCount
-
-		world.prepareForApplicationTermination()
-	}
-
-	private func performApplicationTerminationStepThree() {
-		Self.terminationLogger.debug("Step three entry")
-
-		terminationStage = .finished
-
-		Self.terminationLogger.debug("Saving IRC world")
-		world.save()
-
-		SoundPlayer.prepareForApplicationTermination()
-
-		Self.terminationLogger.debug("Saving running internal")
-		ApplicationInfo.saveTimeIntervalSinceApplicationInstall()
-
-		Self.terminationLogger.debug("Terminate")
-		NSApp.reply(toApplicationShouldTerminate: true)
-	}
-
-	/** Quit without arguing about it — the machine is powering off.
-
-	 This used to set `applicationIsTerminating` itself, which made
-	 `applicationShouldTerminate` read termination as already under way and
-	 answer `.terminateLater` without ever running step one: no client left IRC
-	 gracefully and no historic log was saved. The flag belongs to step one;
-	 all this path skips is the confirmation sheet. A sheet already on screen
-	 comes down instead of holding termination up. */
-	func terminateGracefully() {
-		skipTerminateConfirmation = true
-
-		NSApp.terminate(nil)
+	func applicationSupportsSecureRestorableState(_: NSApplication) -> Bool {
+		/* The main window encodes its selection with secure coding. */
+		true
 	}
 
 	// MARK: - NSWorkspace Notifications
@@ -667,53 +397,31 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 
 	private func computerScreenWillSleep(_: Notification) {
 		Self.logger.log("Preparing for screen sleep")
-		world.prepareForScreenSleep()
+		clientDirectory.prepareForScreenSleep()
 	}
 
 	private func computerScreenDidWake(_: Notification) {
 		Self.logger.log("Waking from screen sleep")
-		world.wakeFromScreenSleep()
+		clientDirectory.wakeFromScreenSleep()
 	}
 
 	private func computerWillSleep() {
 		Self.logger.log("Preparing for sleep")
 
-		world.prepareForSleep()
+		clientDirectory.prepareForSleep()
 
-		/* Only an engine that already exists. Going to sleep is no reason to
-		 start one. */
-		if let speechSynthesizer = AppServices.existingSpeech {
-			speechSynthesizer.isStopped = true
-			speechSynthesizer.clearQueue()
-		}
-
-		AppServices.reachability.stopNotifier()
+		stopWatchingNetworkPath()
 	}
 
 	private func computerDidWakeUp(_: Notification) {
 		Self.logger.log("Waking from sleep")
 
-		AppServices.existingSpeech?.isStopped = false
-		_ = AppServices.reachability.startNotifier()
+		startWatchingNetworkPath()
 
-		world.autoConnect(afterWakeup: true)
+		clientDirectory.autoConnect(afterWakeup: true)
 	}
 
 	private func computerWillPowerOff() {
 		terminateGracefully()
-	}
-}
-
-/// The application state the IRC layer branches on, behind a seam so that the
-/// connection code does not name the application controller.
-extension ApplicationDelegate: ClientApplicationState {
-	func noteClientDidFinishTerminating() {
-		/* A client that reports in more than once must not trap the subtraction
-		 on an unsigned count. */
-		guard terminatingClientCount > 0 else {
-			return
-		}
-
-		terminatingClientCount -= 1
 	}
 }

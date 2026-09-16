@@ -237,3 +237,45 @@ nonisolated extension Preferences { // nonisolated: value
 		]
 	}
 }
+
+/** What the window chrome follows.
+
+ The case order is the order the appearance picker offers, because the picker
+ builds its rows from `allCases`. The conformance is here rather than beside the
+ picker because the synthesis only happens in the file that declares the enum. */
+enum PreferredAppearance: UInt, CaseIterable, Sendable {
+	case inherited
+	case light
+	case dark
+}
+
+extension PreferredAppearance: PreferenceEnum {}
+
+/** What the settings call each user-list mode.
+
+ The pane's colour wells and the inventory that gives every bound key a
+ user-facing name read the same declaration, so a mode cannot be spelled one
+ way beside its colour and another in an import preview. */
+extension UserListModeBadge {
+	var displayName: LocalizedStringResource {
+		switch self {
+		case .ircOperator: .Settings.interfaceModeServerStaff
+		case .channelOwner: .Settings.interfaceModeChannelOwner
+		case .superOperator: .Settings.interfaceModeChannelAdministrator
+		case .normalOperator: .Settings.interfaceModeChannelOperator
+		case .halfOperator: .Settings.interfaceModeChannelHalfOperator
+		case .voiced: .Settings.interfaceModeVoicedUser
+		}
+	}
+}
+
+extension PreferredAppearance {
+	/// What the appearance picker calls this choice.
+	var displayName: LocalizedStringResource {
+		switch self {
+		case .inherited: .Settings.interfaceAppearanceSystem
+		case .light: .Settings.interfaceAppearanceLight
+		case .dark: .Settings.interfaceAppearanceDark
+		}
+	}
+}

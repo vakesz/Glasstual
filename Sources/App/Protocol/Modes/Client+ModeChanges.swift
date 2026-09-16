@@ -94,7 +94,7 @@ extension Client {
 		modeIsSet: Bool,
 		modeParameters: [String]
 	) -> [ModeChangeGroup] {
-		ClientWireUtilities.compileModeChanges(
+		ModeParser.compileModeChanges(
 			symbol: modeSymbol,
 			isSet: modeIsSet,
 			parameters: modeParameters,

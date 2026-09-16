@@ -66,7 +66,7 @@ actor ScrollbackStore {
 	private var views: [String: ViewState] = [:]
 	private var maximumLineCount: UInt = 100
 	private var saveTask: Task<Void, Never>?
-	private let filenameStore: any ScrollbackFilenameStoring
+	private let filenameStore: ScrollbackFilenameStore
 	private let deletionHandler: DeletionHandler
 	private let makeStack: StackFactory
 	private let resizeDelay: ResizeDelay
@@ -78,7 +78,7 @@ actor ScrollbackStore {
 	}
 
 	init(
-		filenameStore: any ScrollbackFilenameStoring,
+		filenameStore: ScrollbackFilenameStore,
 		makeStack: @escaping StackFactory = { try ScrollbackDatabase.makeStack(at: $0) },
 		resizeDelay: @escaping ResizeDelay = { .seconds(Int.random(in: 0 ..< 1800)) },
 		saveInterval: Duration = .seconds(120),
@@ -113,11 +113,11 @@ actor ScrollbackStore {
 		await enter()
 		defer { leave() }
 		let filename: String
-		if let saved = filenameStore.databaseFilename {
+		if let saved = filenameStore.load() {
 			filename = saved
 		} else {
 			filename = "logControllerHistoricLog_\(UUID().uuidString).sqlite"
-			filenameStore.databaseFilename = filename
+			filenameStore.save(filename)
 		}
 		let url = URL(fileURLWithPath: directory, isDirectory: true).appendingPathComponent(filename)
 		if let databaseURL, context != nil, databaseURL != url {

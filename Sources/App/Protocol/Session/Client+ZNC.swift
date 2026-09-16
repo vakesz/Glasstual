@@ -39,6 +39,25 @@ import AppKit
 import CocoaExtensions
 import Security
 
+/** What the client knows about the bouncer on the other end.
+
+ ZNC answers a handful of questions differently from a server: it plays back
+ history on connect, it can forward the real server's certificate, and its
+ modules take commands addressed to them. All of that is one session's worth
+ of state, held together rather than as four flags on the client. */
+struct ZNCSession {
+	/// Whether the server this session reached identified itself as a ZNC.
+	var isConnected = false
+	/// Whether the `znc.in/cert` module is mid-way through sending the real
+	/// server's certificate chain.
+	var isSendingCertificateInfo = false
+	/// Whether the playback module is replaying history right now.
+	var isPlayingBackHistory = false
+	/// The PEM chain being assembled, line by line, while
+	/// ``isSendingCertificateInfo`` is true.
+	var certificateChainText: String?
+}
+
 /** What ZNC adds on top of plain IRC: the `/attach`, `/detach` and `/znccert`
  commands, and the rewriting of what its `buffextras` and `playback` modules
  send as ordinary chat. */
@@ -48,7 +67,7 @@ extension Client {
 
 	func dispatchBouncerCommand(_ parsed: ParsedUserCommand, targetChannel: Channel?) {
 		guard let command = parsed.localCommand else { return }
-		guard isConnectedToZNC else {
+		guard znc.isConnected else {
 			printDebugInformation(String(localized: .Bouncer.zncConnectionRequired))
 			return
 		}
@@ -98,14 +117,14 @@ extension Client {
 			return
 		}
 
-		_ = TrustPanelPresenter.present(
+		TrustPanelPresenter.present(
 			in: NSApp.mainWindow,
 			body: "",
 			title: networkName ?? serverAddress ?? "",
 			defaultButton: String(localized: .Bouncer.closeButton),
 			alternateButton: nil,
 			trust: trust
-		) { _, _ in }
+		)
 	}
 
 	private static func certificates(fromPEMSequence data: Data) -> [SecCertificate]? {
@@ -154,7 +173,7 @@ extension Client {
 	 cleared a buffer. Both are turned back into what they describe here, before
 	 anything else in the client reads the message. */
 	func interceptZNCServerInput(_ message: Message) -> Message? {
-		guard isConnectedToZNC, message.command == "PRIVMSG", message.params.count == 2 else {
+		guard znc.isConnected, message.command == "PRIVMSG", message.params.count == 2 else {
 			return message
 		}
 
@@ -184,7 +203,7 @@ extension Client {
 	/// to IRC. Every channel is then parted as far as the network is concerned,
 	/// so they are deactivated rather than left looking joined.
 	func handleZNCStatusNotice(_ message: Message) {
-		guard isConnectedToZNC, message.command == "PRIVMSG",
+		guard znc.isConnected, message.command == "PRIVMSG",
 		      let sender = message.senderNickname, nickname(sender, isZNCUser: "status"),
 		      message.sequence.hasPrefix("Disconnected from IRC")
 		else { return }
@@ -192,7 +211,7 @@ extension Client {
 		for channel in channelList where channel.isActive && channel.name.hasPrefix("~#") == false {
 			channel.deactivate()
 		}
-		output?.reloadTreeGroup(self)
+		output?.reloadChatItemGroup(self)
 	}
 
 	// MARK: - buffextras

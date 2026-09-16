@@ -64,13 +64,13 @@ struct ScrollbackTransactionTests {
 		let directory = try directory()
 		defer { try? FileManager.default.removeItem(at: directory) }
 		let gate = HistoryOperationGate()
-		let store = ScrollbackStore(filenameStore: ScrollbackFilenameFixture(), willPerform: { operation in
+		let store = ScrollbackStore(filenameStore: ScrollbackFilenameFixture().store, willPerform: { operation in
 			switch operation {
 			case .reset, .forget: await gate.wait()
 			default: break
 			}
 		})
-		let client = ScrollbackClient(store: store, databaseDirectory: { directory.path }, reportFailure: {
+		let client = ScrollbackClient(store: .store(store), databaseDirectory: { directory.path }, reportFailure: {
 			Issue.record(Comment(rawValue: $0))
 		})
 		let history = Scrollback(client: client)
@@ -120,7 +120,7 @@ struct ScrollbackTransactionTests {
 		let directory = try directory()
 		defer { try? FileManager.default.removeItem(at: directory) }
 		let gate = HistoryOperationGate()
-		let store = ScrollbackStore(filenameStore: ScrollbackFilenameFixture(), willPerform: { operation in
+		let store = ScrollbackStore(filenameStore: ScrollbackFilenameFixture().store, willPerform: { operation in
 			switch operation {
 			case .reset, .forget: await gate.wait()
 			default: break
@@ -157,7 +157,7 @@ struct ScrollbackTransactionTests {
 		let directory = try directory()
 		defer { try? FileManager.default.removeItem(at: directory) }
 		let gate = HistoryOperationGate()
-		let store = ScrollbackStore(filenameStore: ScrollbackFilenameFixture(), willPerform: { operation in
+		let store = ScrollbackStore(filenameStore: ScrollbackFilenameFixture().store, willPerform: { operation in
 			if case .write = operation {
 				await gate.wait()
 			}
@@ -186,7 +186,7 @@ struct ScrollbackTransactionTests {
 		let context = try ScrollbackDatabase.makeStack(at: directory.appendingPathComponent("history.sqlite"))
 		let signal = SaveSignal()
 		let store = ScrollbackStore(
-			filenameStore: ScrollbackFilenameFixture(),
+			filenameStore: ScrollbackFilenameFixture().store,
 			makeStack: { _ in context },
 			saveInterval: .milliseconds(20),
 			willPerform: { operation in
@@ -225,7 +225,7 @@ struct ScrollbackTransactionTests {
 		let directory = try directory()
 		defer { try? FileManager.default.removeItem(at: directory) }
 		let context = try ScrollbackDatabase.makeStack(at: directory.appendingPathComponent("history.sqlite"))
-		let store = ScrollbackStore(filenameStore: ScrollbackFilenameFixture(), makeStack: { _ in context })
+		let store = ScrollbackStore(filenameStore: ScrollbackFilenameFixture().store, makeStack: { _ in context })
 		#expect(await store.openDatabase(inDirectory: directory.path).isOpen)
 		let row = entry("pending")
 		#expect(await store.writeLogLine(row) == .accepted)
@@ -254,7 +254,7 @@ struct ScrollbackTransactionTests {
 		#expect(await store.saveData() == .saved)
 		#expect(await store.close() == .saved)
 		try await ScrollbackFixture.close(context)
-		let reopened = ScrollbackStore(filenameStore: ScrollbackFilenameFixture())
+		let reopened = ScrollbackStore(filenameStore: ScrollbackFilenameFixture().store)
 		#expect(await reopened.openDatabase(inDirectory: directory.path).isOpen)
 		#expect(await reopened.fetchOutcome(.newestEntries(forView: "view", fetchLimit: 10)).entries
 			.map(\.data) == [row.data])

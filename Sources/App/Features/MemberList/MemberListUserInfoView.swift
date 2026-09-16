@@ -26,18 +26,31 @@ struct MemberListUserInfoContent {
 
 	init(member: ChannelUser, privileges: String) {
 		let user = member.user
-		let unavailable = MemberListStrings.informationUnavailable
+		let unavailable = String(localized: .MemberList.informationUnavailable)
 		let stripsFormatting = Preferences.Messages.removeAllFormatting.value
 
 		nickname = user.nickname
 		username = user.username.nonEmpty ?? unavailable
 		address = Self.displayText(user.address.nonEmpty ?? unavailable, stripsFormatting: stripsFormatting)
 		realName = Self.displayText(user.realName.nonEmpty ?? unavailable, stripsFormatting: stripsFormatting)
-		account = user.account.nonEmpty ?? MemberListStrings.notLoggedIn
-		awayStatus = MemberListStrings.awayStatus(isAway: user.isAway)
+		account = user.account.nonEmpty ?? String(localized: .MemberList.notLoggedIn)
+		awayStatus = Self.awayStatus(isAway: user.isAway)
 		self.privileges = user.isBot
-			? MemberListStrings.privileges(privileges, caption: MemberListStrings.botCaption)
+			? String(localized: .MemberList.privilegesWithCaption(
+				privileges,
+				String(localized: .MemberList.botCaption)
+			))
 			: privileges
+	}
+
+	/** What the profile's Status row shows.
+
+	 The sentence forms the row reads out ("User is away") have something to
+	 attach themselves to; "Away" on its own does not. */
+	static func awayStatus(isAway: Bool) -> String {
+		isAway
+			? String(localized: .MemberList.awayStatusAway)
+			: String(localized: .MemberList.awayStatusAvailable)
 	}
 
 	private static func displayText(_ value: String, stripsFormatting: Bool) -> AttributedString {
@@ -83,12 +96,12 @@ struct MemberListUserInfoView: View {
 				horizontalSpacing: UISpacing.regular,
 				verticalSpacing: UISpacing.tight
 			) {
-				infoRow(MemberListStrings.Info.username, content.username)
-				infoRow(MemberListStrings.Info.address, content.address)
-				infoRow(MemberListStrings.Info.realName, content.realName)
-				infoRow(MemberListStrings.Info.account, content.account)
-				infoRow(MemberListStrings.Info.privileges, content.privileges)
-				infoRow(MemberListStrings.Info.status, content.awayStatus)
+				infoRow(String(localized: .MemberList.infoUsername), content.username)
+				infoRow(String(localized: .MemberList.infoAddress), content.address)
+				infoRow(String(localized: .MemberList.infoRealName), content.realName)
+				infoRow(String(localized: .MemberList.infoAccount), content.account)
+				infoRow(String(localized: .MemberList.infoPrivileges), content.privileges)
+				infoRow(String(localized: .MemberList.infoStatus), content.awayStatus)
 			}
 		}
 		.padding(UISpacing.loose)

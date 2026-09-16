@@ -130,15 +130,21 @@ struct MessageRuleEngineTests {
 	func matchingIsBounded() {
 		let subject = String(repeating: "a", count: RegularExpression.inputLengthLimit + 32) + "needle"
 
-		#expect(RegularExpression.string(subject, isMatchedByRegex: "needle", withoutCase: true,
-		                                 inputLimit: subject.utf16.count))
 		#expect(
-			RegularExpression.string(
-				subject,
-				isMatchedByRegex: "needle",
+			RegularExpression.firstMatch(
+				of: "needle",
+				in: subject,
+				withoutCase: true,
+				inputLimit: subject.utf16.count
+			) == .matched
+		)
+		#expect(
+			RegularExpression.firstMatch(
+				of: "needle",
+				in: subject,
 				withoutCase: true,
 				inputLimit: RegularExpression.inputLengthLimit
-			) == false
+			) == .unmatched
 		)
 	}
 }

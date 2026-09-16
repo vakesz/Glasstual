@@ -6,21 +6,20 @@
 import CocoaExtensions
 import Foundation
 import Observation
+import SwiftUI
 
 enum ChannelPropertiesSection: Int, CaseIterable, Identifiable {
 	case general
 	case defaults
-	case notifications
 
 	var id: Int {
 		rawValue
 	}
 
-	var title: String {
+	var title: LocalizedStringResource {
 		switch self {
-		case .general: ChannelPropertiesStrings.general
-		case .defaults: ChannelPropertiesStrings.defaults
-		case .notifications: ChannelPropertiesStrings.notifications
+		case .general: .ChannelProperties.general
+		case .defaults: .ChannelProperties.defaults
 		}
 	}
 }
@@ -45,7 +44,7 @@ final class ChannelPropertiesModel {
 	 anything had been typed into it. */
 	var channelNameValidationMessage: String? {
 		submissionWasAttempted && channelNameIsValid == false
-			? ChannelPropertiesStrings.invalidChannelName
+			? String(localized: .ChannelProperties.pleaseEnterAProperlyFormattedChannel)
 			: nil
 	}
 
@@ -81,36 +80,11 @@ final class ChannelPropertiesModel {
 	/// keys its loading task on.
 	private(set) var secretKeyLoadGeneration = 0
 
-	/** The Notifications pane's table.
-
-	 Its rows copy the channel's overrides when they are made, so the model is
-	 built again whenever the configuration is replaced. */
-	private(set) var notificationConfiguration = NotificationConfigurationModel(
-		notifications: [],
-		allowsInheritedState: true
-	)
-
-	/// The events a channel can override, in the order the pane lists them,
-	/// with a separator between each group.
-	private static let notificationEvents: [NotificationEvent?] = [
-		.highlight, nil, .channelMessage, .channelNotice, nil, .userJoined, .userParted,
-	]
-
 	init(config: ChannelConfig, client: Client? = nil) {
 		self.config = config
 		self.client = client
 		channelNameIsEditable = config.channelName.isEmpty
 		secretKeyText = config.pendingSecretKey.value(orStored: nil) ?? ""
-		rebuildNotificationConfiguration()
-	}
-
-	private func rebuildNotificationConfiguration() {
-		notificationConfiguration = NotificationConfigurationModel(
-			notifications: Self.notificationEvents.map { event in
-				event.map { .configuration(ChannelNotificationConfiguration(eventType: $0, in: self)) } ?? .separator
-			},
-			allowsInheritedState: true
-		)
 	}
 
 	var channelName: String {
@@ -133,6 +107,17 @@ final class ChannelPropertiesModel {
 		set { config.defaultTopic = newValue }
 	}
 
+	/** Whether this conversation is silenced.
+
+	 The setting is stored the other way round, as whether notifications are
+	 shown, and the key that holds it is what earlier releases wrote. The
+	 switch reads as Messages' does, so the model is what inverts it rather
+	 than every reader of the configuration. */
+	var isMuted: Bool {
+		get { config.pushNotifications == false }
+		set { config.pushNotifications = newValue == false }
+	}
+
 	/** The channel's inline-media override, which is one switch and not two.
 
 	 `inlineMediaDisabled` and `inlineMediaEnabled` are the two halves of a
@@ -145,10 +130,10 @@ final class ChannelPropertiesModel {
 		Preferences.Messages.showInlineMedia.value
 	}
 
-	var inlineMediaOverrideTitle: String {
+	var inlineMediaOverrideTitle: LocalizedStringResource {
 		overridesInlineMediaByDisabling
-			? ChannelPropertiesStrings.disableInlineMedia
-			: ChannelPropertiesStrings.showInlineMedia
+			? .ChannelProperties.disableInlineMedia
+			: .ChannelProperties.showInlineMedia
 	}
 
 	var inlineMediaOverride: Bool {
@@ -187,7 +172,6 @@ final class ChannelPropertiesModel {
 	func replace(with config: ChannelConfig) {
 		self.config = config
 		submissionWasAttempted = false
-		rebuildNotificationConfiguration()
 		/* The replacement is what the channel now stores, and saving it may have
 		 rewritten the keychain item, so the field starts over and reads it
 		 again rather than trusting the last read. */
@@ -251,13 +235,10 @@ final class ChannelPropertiesModel {
 	var secretKeyLengthCaption: String? {
 		guard let limit = secretKeyLimit else { return nil }
 		guard limit.isExceeded else {
-			return ChannelPropertiesStrings.secretKeyLength(limit.used, maximum: limit.maximum)
+			return String(localized: .ChannelProperties.secretKeyLength(limit.used, limit.maximum))
 		}
 
-		return ChannelPropertiesStrings.secretKeyTooLong(
-			networkName: limit.networkName,
-			maximumLength: limit.maximum
-		)
+		return String(localized: .ChannelProperties.secretKeyTooLong(limit.networkName, limit.maximum))
 	}
 
 	var secretKeyIsTooLong: Bool {

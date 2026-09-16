@@ -56,7 +56,7 @@ private struct RuleEditorFailure: Identifiable {
 
 /// The Rules row of the Settings window: the rule list and the commands that
 /// edit it, as sections of the window's own form.
-struct RulesSections: View {
+struct RulesPane: View {
 	private static let listHeight = 240.0
 
 	@Bindable private var store = AppServices.messageRules.store

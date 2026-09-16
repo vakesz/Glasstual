@@ -126,9 +126,5 @@ verify_archive() {
 case "${1:-}" in
 	preflight) preflight "${2:?version}" "${3:?maintenance}" ;;
 	archive) verify_archive "${2:?app}" "${3:?version}" "${4:?build}" ;;
-	normalize) normalize_version "${2:?version}" ;;
-	versions) validate_versions "${2:?version}" "${3:?maintenance}" "$(< "${4:?tags file}")" ;;
-	run) validate_run "${2:?repository}" "${3:?branch}" "${4:?sha}" ;;
-	jobs) validate_jobs ;;
-	*) fail "Usage: $0 {preflight|archive|normalize|versions|run|jobs} ..." ;;
+	*) fail "Usage: $0 {preflight|archive} ..." ;;
 esac

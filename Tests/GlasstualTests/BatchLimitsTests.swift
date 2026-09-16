@@ -225,7 +225,7 @@ struct ClientOfferedCapabilityLimitTests {
 
 @MainActor
 struct ClientSASLPayloadLimitTests {
-	/// `saslIncomingPayload` grew 400 characters per AUTHENTICATE with no
+	/// `sasl.incomingPayload` grew 400 characters per AUTHENTICATE with no
 	/// ceiling, so a server could grow it until the process died.
 	@Test
 	func oversizedSASLPayloadsAbortNegotiation() throws {
@@ -240,11 +240,11 @@ struct ClientSASLPayloadLimitTests {
 			client.handleCapabilityOrAuthenticationRequest(message)
 		}
 
-		#expect(client.saslIncomingPayload?.count == chunksBeforeOverflow * 400)
+		#expect(client.sasl.incomingPayload?.count == chunksBeforeOverflow * 400)
 
 		let overflow = try #require(Message(line: "AUTHENTICATE \(chunk)", on: client))
 		client.handleCapabilityOrAuthenticationRequest(overflow)
 
-		#expect(client.saslIncomingPayload == nil)
+		#expect(client.sasl.incomingPayload == nil)
 	}
 }

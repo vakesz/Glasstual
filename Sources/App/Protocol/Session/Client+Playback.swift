@@ -38,19 +38,21 @@
 
 import Foundation
 
-enum PlaybackRequestPolicy {
-	static func command(
-		successfulConnects: UInt,
-		onlyLatestOnFirstConnect: Bool,
-		lastMessageServerTime: TimeInterval
-	) -> String {
-		let shouldUseTimestamp = (
-			successfulConnects > 1 || (successfulConnects == 1 && onlyLatestOnFirstConnect)
-		) && lastMessageServerTime > 0
+/** The ZNC playback request for this connect.
 
-		guard shouldUseTimestamp else { return "play * 0" }
-		return String(format: "play * %.0f", lastMessageServerTime)
-	}
+ A reconnect asks for everything since the last line the client saw; a first
+ connect asks for everything, unless the user only wants the latest. */
+func zncPlaybackCommand(
+	successfulConnects: UInt,
+	onlyLatestOnFirstConnect: Bool,
+	lastMessageServerTime: TimeInterval
+) -> String {
+	let shouldUseTimestamp = (
+		successfulConnects > 1 || (successfulConnects == 1 && onlyLatestOnFirstConnect)
+	) && lastMessageServerTime > 0
+
+	guard shouldUseTimestamp else { return "play * 0" }
+	return String(format: "play * %.0f", lastMessageServerTime)
 }
 
 extension Client {
@@ -59,7 +61,7 @@ extension Client {
 		guard channel.isPrivateMessage, channel.isPrivateMessageForZNCUser == false else { return }
 
 		let command = "clear \(channel.name)"
-		if isConnectedToZNC {
+		if znc.isConnected {
 			sendCommand(command, toZNCModuleNamed: ServerQuirks.ZNC.playbackModule)
 		} else {
 			send("PRIVMSG", arguments: ["*playback", command])
@@ -74,13 +76,13 @@ extension Client {
 		 everything. */
 		guard isCapabilityEnabled(.chatHistory) == false else { return }
 
-		let command = PlaybackRequestPolicy.command(
+		let command = zncPlaybackCommand(
 			successfulConnects: successfulConnects,
 			onlyLatestOnFirstConnect: config.zncOnlyPlaybackLatest,
 			lastMessageServerTime: lastMessageServerTime
 		)
 
-		if isConnectedToZNC {
+		if znc.isConnected {
 			sendCommand(command, toZNCModuleNamed: ServerQuirks.ZNC.playbackModule)
 		} else {
 			send("PRIVMSG", arguments: ["*playback", command])

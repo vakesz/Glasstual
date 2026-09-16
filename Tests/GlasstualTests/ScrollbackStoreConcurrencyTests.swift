@@ -29,7 +29,7 @@ private actor ScrollbackStoreHarness {
 		self.recorder = recorder
 		let filenameStore = ScrollbackFilenameFixture.unique()
 		self.filenameStore = filenameStore
-		store = ScrollbackStore(filenameStore: filenameStore, deletionHandler: { identifiers, _ in
+		store = ScrollbackStore(filenameStore: filenameStore.store, deletionHandler: { identifiers, _ in
 			await recorder.record(identifiers)
 		})
 	}
@@ -356,7 +356,7 @@ struct ScrollbackStoreConcurrencyTests {
 			entity.properties = [attribute]
 			let model = NSManagedObjectModel()
 			model.entities = [entity]
-			let modelURL = try #require(Bundle(for: LogLineArchive.self).url(
+			let modelURL = try #require(Bundle(for: Connection.self).url(
 				forResource: ScrollbackDatabase.modelName, withExtension: "momd"
 			))
 			let destination = try #require(NSManagedObjectModel(contentsOf: modelURL))
@@ -383,7 +383,7 @@ struct ScrollbackStoreConcurrencyTests {
 			return (hashes: hashes, identifier: identifier)
 		}
 
-		let store = ScrollbackStore(filenameStore: filenameStore)
+		let store = ScrollbackStore(filenameStore: filenameStore.store)
 		for _ in 0 ..< 2 {
 			let outcome = await store.openDatabase(inDirectory: directory.path)
 			#expect(outcome.isOpen == false)

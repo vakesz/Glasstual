@@ -255,10 +255,10 @@ struct KeychainPersistenceTests {
 		}
 		releaseFirst.finish()
 		#expect(await iterator.next() == 2)
-		let expected = ConnectionStrings.connecting(
-			host: explicit?.host ?? origin.serverAddress,
-			port: explicit?.port ?? origin.serverPort
-		)
+		let expected = String(localized: .IRC.connectingToOnPort(
+			explicit?.host ?? origin.serverAddress,
+			String(explicit?.port ?? origin.serverPort)
+		))
 		#expect(printed.filter { $0 == expected }.count == 2)
 		#expect(client.lastServerSelected == selectedIndex)
 		#expect(client.pendingEndpoint == nil)

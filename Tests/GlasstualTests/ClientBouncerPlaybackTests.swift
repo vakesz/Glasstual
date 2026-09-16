@@ -46,7 +46,7 @@ struct ClientBouncerPlaybackTests {
 	@Test("A ZNC module is recognised under the server's case folding", arguments: ["*status", "*Status", "*STATUS"])
 	func zncModuleNicknameIsCaseFolded(_ nickname: String) {
 		let client = TestClient()
-		client.isConnectedToZNC = true
+		client.znc.isConnected = true
 
 		#expect(client.nickname(nickname, isZNCUser: "status"))
 		#expect(client.nickname(nickname, isZNCUser: "playback") == false)
@@ -55,14 +55,14 @@ struct ClientBouncerPlaybackTests {
 	@Test("Playback starts from the beginning when no timestamp is eligible")
 	func playbackStartsFromBeginningWithoutAnEligibleTimestamp() {
 		#expect(
-			PlaybackRequestPolicy.command(
+			zncPlaybackCommand(
 				successfulConnects: 1,
 				onlyLatestOnFirstConnect: false,
 				lastMessageServerTime: 1_700_000_000
 			) == "play * 0"
 		)
 		#expect(
-			PlaybackRequestPolicy.command(
+			zncPlaybackCommand(
 				successfulConnects: 2,
 				onlyLatestOnFirstConnect: true,
 				lastMessageServerTime: 0
@@ -73,7 +73,7 @@ struct ClientBouncerPlaybackTests {
 	@Test("A reconnect resumes from the last server timestamp, rounded up to a second")
 	func playbackUsesRoundedServerTimestampAfterReconnect() {
 		#expect(
-			PlaybackRequestPolicy.command(
+			zncPlaybackCommand(
 				successfulConnects: 2,
 				onlyLatestOnFirstConnect: false,
 				lastMessageServerTime: 1_700_000_000.6
@@ -84,7 +84,7 @@ struct ClientBouncerPlaybackTests {
 	@Test("A first connect may resume from the timestamp when the client is configured to")
 	func playbackCanUseTimestampOnConfiguredFirstConnect() {
 		#expect(
-			PlaybackRequestPolicy.command(
+			zncPlaybackCommand(
 				successfulConnects: 1,
 				onlyLatestOnFirstConnect: true,
 				lastMessageServerTime: 42
@@ -182,7 +182,7 @@ struct ClientBouncerPlaybackTests {
 			"zncIgnorePlaybackNotifications": ignoresPlayback,
 		])
 
-		client.isConnectedToZNC = isConnectedToBouncer
+		client.znc.isConnected = isConnectedToBouncer
 
 		if supportsBatch {
 			client.enableCapability(.batch)

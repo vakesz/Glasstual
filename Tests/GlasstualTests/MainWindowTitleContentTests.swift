@@ -29,7 +29,7 @@ struct MainWindowTitleContentTests {
 
 		#expect(content.title == "Libera")
 		#expect(content.subtitle == [
-			MainWindowStrings.ConnectionStatus.disconnected.title,
+			MainWindowConnectionStatus.disconnected.title,
 			"Alice",
 			"irc.example.test",
 		].joined(separator: " · "))
@@ -49,9 +49,9 @@ struct MainWindowTitleContentTests {
 
 		#expect(content.title == "#swift")
 		#expect(content.subtitle == [
-			MainWindowStrings.ConnectionStatus.disconnected.title,
+			MainWindowConnectionStatus.disconnected.title,
 			"Libera",
-			MainWindowStrings.Conversation.memberCount(0),
+			MainWindowTitleContent.memberCount(0),
 		].joined(separator: " · "))
 	}
 
@@ -80,7 +80,7 @@ struct MainWindowTitleContentTests {
 		client.isDisconnecting = flags & 8 != 0
 
 		let content = MainWindowTitleContent(client: client, channel: nil)
-		#expect(content.subtitle.hasPrefix(MainWindowStrings.ConnectionStatus.disconnecting.title))
+		#expect(content.subtitle.hasPrefix(MainWindowConnectionStatus.disconnecting.title))
 	}
 
 	@Test("The native window updates a selected child's status when its client changes")
@@ -94,7 +94,7 @@ struct MainWindowTitleContentTests {
 		window.selectedItem = channel
 		window.updateTitle()
 
-		let phases: [MainWindowStrings.ConnectionStatus?] = [
+		let phases: [MainWindowConnectionStatus?] = [
 			.disconnected, .connecting, .loggingOn, nil, .disconnecting, .disconnected,
 		]
 		for status in phases {
@@ -109,7 +109,7 @@ struct MainWindowTitleContentTests {
 			let expectedSubtitle = [
 				status?.title,
 				"Test Network",
-				MainWindowStrings.Conversation.memberCount(0),
+				MainWindowTitleContent.memberCount(0),
 			].compactMap(\.self).joined(separator: " · ")
 			#expect(window.subtitle == expectedSubtitle)
 			#expect(window.accessibilityIdentifier() == "main-window")
@@ -138,7 +138,7 @@ struct MainWindowTitleContentTests {
 		#expect(window.accessibilityTitle() == accessibleTitle)
 
 		window.updateTitle(for: selected)
-		#expect(window.subtitle.hasPrefix(MainWindowStrings.ConnectionStatus.connecting.title))
+		#expect(window.subtitle.hasPrefix(MainWindowConnectionStatus.connecting.title))
 	}
 
 	@Test("A selected child's native title distinguishes waiting, cancelled, and retrying connections")
@@ -148,20 +148,20 @@ struct MainWindowTitleContentTests {
 		let channel = Channel(config: ChannelConfig(channelName: "#swift"))
 		channel.associatedClient = client
 		window.selectedItem = channel
-		client.reconnectTimer.start(3600, repeats: false)
-		defer { client.reconnectTimer.stop() }
+		client.reconnect.timer.start(3600, repeats: false)
+		defer { client.reconnect.timer.stop() }
 		window.updateTitle(for: client)
-		#expect(window.subtitle.hasPrefix(MainWindowStrings.ConnectionStatus.waitingToReconnect.title))
+		#expect(window.subtitle.hasPrefix(MainWindowConnectionStatus.waitingToReconnect.title))
 		#expect(window.accessibilityTitle() == window.title + ", " + window.subtitle)
 
 		client.cancelReconnect()
 		window.updateTitle(for: client)
-		#expect(window.subtitle.hasPrefix(MainWindowStrings.ConnectionStatus.disconnected.title))
+		#expect(window.subtitle.hasPrefix(MainWindowConnectionStatus.disconnected.title))
 		client.isConnecting = true
 		for mode in [ClientConnectMode.reconnect, .retry] {
 			client.connectType = mode
 			window.updateTitle(for: client)
-			#expect(window.subtitle.hasPrefix(MainWindowStrings.ConnectionStatus.reconnecting.title))
+			#expect(window.subtitle.hasPrefix(MainWindowConnectionStatus.reconnecting.title))
 			#expect(window.accessibilityTitle() == window.title + ", " + window.subtitle)
 		}
 	}
@@ -178,7 +178,7 @@ struct MainWindowTitleContentTests {
 
 		client.isDisconnecting = true
 		window.updateTitle(for: client)
-		#expect(window.subtitle.hasPrefix(MainWindowStrings.ConnectionStatus.disconnecting.title))
+		#expect(window.subtitle.hasPrefix(MainWindowConnectionStatus.disconnecting.title))
 		#expect(window.accessibilityTitle() == window.title + ", " + window.subtitle)
 
 		window.selectedItem = nil

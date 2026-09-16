@@ -9,27 +9,15 @@ import SwiftUI
 import Testing
 
 @MainActor
-private final class ServerNicknameChangeDelegateSpy: NSObject, ServerChangeNicknameSheetDelegate {
-	private(set) var acceptedNickname: String?
-	@objc(serverChangeNicknameSheet:didInputNickname:)
-	func serverChangeNicknameSheet(
-		_: ServerChangeNicknameSheet,
-		didInputNickname nickname: String
-	) {
-		acceptedNickname = nickname
-	}
-}
-
-@MainActor
 @Suite("Server nickname change sheet")
 struct ServerNicknameChangeFeatureTests {
 	@Test("The sheet's copy comes from the localized catalog")
 	func sheetUsesKeyedLocalizedCopy() {
-		#expect(ServerNicknameChangeStrings.currentNicknameLabel == "Current Nickname")
-		#expect(ServerNicknameChangeStrings.newNicknameLabel == "New Nickname")
-		#expect(ServerNicknameChangeStrings.changeButtonTitle == "Change Nickname")
-		#expect(ServerNicknameChangeStrings.changeDescription.isEmpty == false)
-		#expect(ServerNicknameChangeStrings.newNicknamePlaceholder.isEmpty == false)
+		#expect(String(localized: .ServerProperties.currentNicknameLabel) == "Current Nickname")
+		#expect(String(localized: .ServerProperties.newNicknameLabel) == "New Nickname")
+		#expect(String(localized: .ServerProperties.changeButton) == "Change Nickname")
+		#expect(String(localized: .ServerProperties.nicknameChangeDescription).isEmpty == false)
+		#expect(String(localized: .ServerProperties.newNicknamePlaceholder).isEmpty == false)
 	}
 
 	@Test("Validation runs on every keystroke but is only shown once the sheet is submitted")
@@ -60,7 +48,7 @@ struct ServerNicknameChangeFeatureTests {
 	func validatorHoldsTheClientWeakly() throws {
 		var client: TestClient? = TestClient()
 		weak let weakClient = client
-		let validator = try ServerChangeNicknameSheet.nicknameValidator(for: #require(client))
+		let validator = try ServerNicknameChangeSheet.nicknameValidator(for: #require(client))
 
 		#expect(validator("alice") == nil)
 		#expect(validator("") == ApplicationStrings.requiredField)
@@ -72,19 +60,17 @@ struct ServerNicknameChangeFeatureTests {
 		#expect(validator("not a nickname") == CommonValidationStrings.invalidNickname)
 	}
 
-	@Test("The sheet session keeps client identity and forwards its outcome")
-	func sessionKeepsClientAndDelegateContracts() {
+	@Test("The sheet keeps client identity and reports the nickname it accepted")
+	func sheetKeepsClientAndReportsTheAcceptedNickname() {
 		let client = TestClient()
 		client.userNickname = "OldNick"
-		let adapter = ServerChangeNicknameSheet(client: client)
-		let clientPrototype: ClientScoped = adapter
-		let delegate = ServerNicknameChangeDelegateSpy()
+		var acceptedNickname: String?
+		let sheet = ServerNicknameChangeSheet(client: client) { acceptedNickname = $0 }
+		let clientPrototype: ClientScoped = sheet
 
-		adapter.delegate = delegate
-
-		#expect(adapter.client === client)
+		#expect(sheet.client === client)
 		#expect(clientPrototype.clientId == client.uniqueIdentifier)
-		adapter.submit()
-		#expect(delegate.acceptedNickname == "OldNick")
+		sheet.submit()
+		#expect(acceptedNickname == "OldNick")
 	}
 }

@@ -104,7 +104,7 @@ struct ScrollbackRestampTests {
 
 		#expect(try await restampIsOutstanding(at: url))
 
-		let store = ScrollbackStore(filenameStore: ScrollbackFilenameFixture(filename))
+		let store = ScrollbackStore(filenameStore: ScrollbackFilenameFixture(filename).store)
 		#expect(await store.openDatabase(inDirectory: directory.path).isOpen)
 		await store.close()
 
@@ -133,7 +133,7 @@ struct ScrollbackRestampTests {
 		)
 		try await seed([first.entry], at: url, startingAt: 1)
 
-		let store = ScrollbackStore(filenameStore: ScrollbackFilenameFixture(filename))
+		let store = ScrollbackStore(filenameStore: ScrollbackFilenameFixture(filename).store)
 		#expect(await store.openDatabase(inDirectory: directory.path).isOpen)
 		await store.close()
 
@@ -146,7 +146,7 @@ struct ScrollbackRestampTests {
 		)
 		try await seed([late.entry], at: url, startingAt: 2)
 
-		let reopened = ScrollbackStore(filenameStore: ScrollbackFilenameFixture(filename))
+		let reopened = ScrollbackStore(filenameStore: ScrollbackFilenameFixture(filename).store)
 		#expect(await reopened.openDatabase(inDirectory: directory.path).isOpen)
 		await reopened.close()
 

@@ -19,7 +19,7 @@ import Testing
 struct MenuCommandTests {
 	@Test("The main menu is built in code without command tags")
 	func mainMenuIsProgrammatic() throws {
-		let controller = MenuController()
+		let controller = MenuActionController()
 		let mainMenu = try #require(NSApp.mainMenu)
 		#expect(mainMenu.items.allSatisfy { $0.tag == 0 })
 		#expect(controller.mainMenuServerMenuItem?.command == .serverMenu)
@@ -27,7 +27,7 @@ struct MenuCommandTests {
 
 	@Test("The programmatic graph carries the commands the application looks up")
 	func mainMenuContainsExpectedCommands() throws {
-		let controller = MenuController()
+		let controller = MenuActionController()
 		let menu = try #require(NSApp.mainMenu)
 		let menus = [menu, controller.mainMenuChannelMenu, controller.mainMenuQueryMenu]
 		// A sample from each validation group, so a renumbered nib is caught.
@@ -86,7 +86,7 @@ struct MenuCommandTests {
 	func topLevelMenusAlwaysValidate() {
 		for command in MenuCommand.allCases where command.isTopLevelMenu {
 			#expect(
-				MenuValidationPolicy.validate(
+				MenuValidation.isAvailable(
 					command: command,
 					commandSpecificResult: true,
 					applicationIsLaunched: false,
@@ -102,7 +102,7 @@ struct MenuCommandTests {
 	@Test("A sheet leaves the settings commands live and the channel commands dead")
 	func sheetPolicy() {
 		func validate(_ command: MenuCommand) -> Bool {
-			MenuValidationPolicy.validate(
+			MenuValidation.isAvailable(
 				command: command,
 				commandSpecificResult: true,
 				applicationIsLaunched: true,
@@ -121,7 +121,7 @@ struct MenuCommandTests {
 	func essentialCommands() {
 		for command in MenuCommand.allCases where command.isEssential {
 			#expect(
-				MenuValidationPolicy.validate(
+				MenuValidation.isAvailable(
 					command: command,
 					commandSpecificResult: true,
 					applicationIsLaunched: false,
@@ -141,7 +141,7 @@ struct MenuCommandTests {
 			(true, false, false, false),
 			(true, true, true, false),
 		] {
-			#expect(MenuValidationPolicy.validate(
+			#expect(MenuValidation.isAvailable(
 				command: .joinChannel, commandSpecificResult: eligible,
 				applicationIsLaunched: launched, mainWindowHasAttachedSheet: sheet,
 				mainWindowIsFocused: false,
@@ -153,7 +153,7 @@ struct MenuCommandTests {
 	@Test("A failed command-specific check is never overridden by the policy")
 	func commandSpecificFailureWins() {
 		#expect(
-			MenuValidationPolicy.validate(
+			MenuValidation.isAvailable(
 				command: .about,
 				commandSpecificResult: false,
 				applicationIsLaunched: true,
@@ -175,10 +175,10 @@ struct MenuCommandTests {
 		#expect(item.command == nil)
 	}
 
-	@Test("The formatting menu keeps its own vocabulary")
+	/// The formatting menu's commands are real AppKit tags; a `MenuCommand` is a
+	/// string in the item's identifier, so the two cannot collide at all.
+	@Test("Every formatting tag is its own")
 	func formatterCommandsAreSeparate() {
-		#expect(TextFormatterCommand.monospace.rawValue == 102)
-		#expect(MenuCommand.settings.rawValue == 102)
 		#expect(Set(TextFormatterCommand.allCases.map(\.rawValue)).count == TextFormatterCommand.allCases.count)
 	}
 
@@ -188,7 +188,7 @@ struct MenuCommandTests {
 		MenuCommand.settings, .about, .welcome,
 	])
 	func applicationCommandsOpenBeforeLaunchFinishes(command: MenuCommand) {
-		#expect(MenuValidationPolicy.validate(
+		#expect(MenuValidation.isAvailable(
 			command: command,
 			commandSpecificResult: true,
 			applicationIsLaunched: false,

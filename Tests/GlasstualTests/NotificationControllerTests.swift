@@ -16,7 +16,7 @@ struct NotificationControllerTests {
 	/// unlabelled row and a blank notification.
 	@Test("Every event has a name", arguments: NotificationEvent.allCases)
 	func everyEventHasAName(event: NotificationEvent) {
-		#expect(NotificationStrings.eventTypeTitle(for: event).isEmpty == false)
+		#expect(String(localized: event.title).isEmpty == false)
 	}
 
 	@Test("A thread identifier needs a client, and takes the channel when there is one")
@@ -62,39 +62,6 @@ struct NotificationControllerTests {
 		) == false)
 	}
 
-	/** The flags are written as an alternating pattern first. Comparing each
-	 lookup against the key it is meant to read passes for a lookup wired to the
-	 wrong key whenever the two keys agree, which at the shipped defaults they
-	 do for every boolean pair here. */
-	@Test("A lookup with no channel answers with the global preference")
-	func preferenceLookupsWithNilChannelMatchGlobalPreferences() {
-		let eventType = NotificationEvent.highlight
-		let sound = Preferences.Notifications.sound(eventType)
-		let flags: [NotificationSetting] = [
-			.enabled, .speak, .disabledWhileAway, .bounceDockIcon, .bounceDockIconRepeatedly,
-		]
-		let storedSound = sound.storedValue
-		let storedFlags = flags.map { Preferences.Notifications.flag(eventType, $0).storedValue }
-		defer {
-			sound.storedValue = storedSound
-			for (flag, stored) in zip(flags, storedFlags) {
-				Preferences.Notifications.flag(eventType, flag).storedValue = stored
-			}
-		}
-
-		sound.value = "Glass"
-		for (offset, flag) in flags.enumerated() {
-			Preferences.Notifications.flag(eventType, flag).value = offset.isMultiple(of: 2)
-		}
-
-		#expect(NotificationEventSettings.sound(for: eventType, in: nil) == "Glass")
-		#expect(NotificationEventSettings.isEnabled(eventType, in: nil))
-		#expect(NotificationEventSettings.speaks(eventType, in: nil) == false)
-		#expect(NotificationEventSettings.isDisabledWhileAway(eventType, in: nil))
-		#expect(NotificationEventSettings.bouncesDockIcon(for: eventType, in: nil) == false)
-		#expect(NotificationEventSettings.bouncesDockIconRepeatedly(for: eventType, in: nil))
-	}
-
 	/** What the delegate answers for a notification that arrives while Glasstual
 	 is frontmost. The options are the whole of what the system then does with
 	 it: without `.sound` the banner appears and the sound the notification
@@ -110,34 +77,68 @@ struct NotificationControllerTests {
 		#expect(NotificationController.presentationOptions(notificationsAreDisabled: true).isEmpty)
 	}
 
-	/// The system alert is the one sound that is not a file in a Sounds folder;
-	/// a notification names it by asking for the default sound.
-	@Test("The alert sound a notification carries is resolved by name")
-	func notificationSoundResolvesByName() {
-		#expect(NotificationController.notificationSound(named: NotificationAlertSound.noSoundPreferenceValue) == nil)
-		#expect(NotificationController.notificationSound(named: SoundPlayer.beepSoundName) == .default)
-		#expect(NotificationController.notificationSound(named: "Submarine") != nil)
+	/// A muted conversation stops before anything is built for the event.
+	@Test("A muted conversation is quiet, and a file transfer still asks")
+	func muteSilencesAConversationButNotATransfer() {
+		func admission(_ event: NotificationEvent, muted: Bool) -> NotificationAdmission {
+			NotificationPolicy.admission(for: NotificationAdmissionContext(
+				event: event,
+				isTerminating: false,
+				isCollapsingNetsplit: false,
+				nicknameIsLocalUser: false,
+				conversationIsMuted: muted
+			))
+		}
+
+		#expect(admission(.highlight, muted: true) == .quiet)
+		#expect(admission(.highlight, muted: false) == .proceed)
+		#expect(admission(.fileTransferReceiveRequested, muted: true) == .proceed)
 	}
 
-	/** A channel override wins over the application-wide value, and an
-	 inherited one falls back to it. */
-	@Test("A channel override answers before the global preference")
-	func channelOverrideAnswersFirst() {
-		let flag = Preferences.Notifications.flag(.highlight, .enabled)
-		let stored = flag.storedValue
-		defer { flag.storedValue = stored }
-		flag.value = true
+	/// Only what is addressed to the person interrupts; the room's own traffic
+	/// is the transcript's job.
+	@Test("Room events do not post, mentions and private messages do")
+	func onlyDirectEventsPost() {
+		func posts(_ event: NotificationEvent, mentions: Bool = true) -> Bool {
+			NotificationPolicy.postsNotification(
+				event: event,
+				notifiesAboutMentions: mentions,
+				postWhileFocused: true,
+				mainWindowIsFocused: false,
+				targetIsSelected: false
+			)
+		}
 
-		var config = ChannelConfig(channelName: "#glasstual")
-		config.setNotificationEnabled(.off, forEvent: .highlight)
-		let channel = Channel(config: config)
+		#expect(posts(.highlight))
+		#expect(posts(.privateMessage))
+		#expect(posts(.kick))
+		#expect(posts(.channelMessage) == false)
+		#expect(posts(.userJoined) == false)
+		#expect(posts(.connect) == false)
+		#expect(posts(.highlight, mentions: false) == false)
+		// A transfer asks a question the transcript cannot answer.
+		#expect(posts(.fileTransferReceiveRequested, mentions: false))
+	}
 
-		#expect(NotificationEventSettings.isEnabled(.highlight, in: channel) == false)
+	/// A conversation the person is reading needs no banner for what is already
+	/// on screen.
+	@Test("Nothing posts for the conversation in front of the person")
+	func focusedSelectionSuppressesTheNotification() {
+		#expect(NotificationPolicy.postsNotification(
+			event: .highlight,
+			notifiesAboutMentions: true,
+			postWhileFocused: true,
+			mainWindowIsFocused: true,
+			targetIsSelected: true
+		) == false)
 
-		config.setNotificationEnabled(.inherited, forEvent: .highlight)
-		channel.updateConfig(config, fireChangedNotification: false, updateStoredChannelList: false)
-
-		#expect(NotificationEventSettings.isEnabled(.highlight, in: channel))
+		#expect(NotificationPolicy.postsNotification(
+			event: .highlight,
+			notifiesAboutMentions: true,
+			postWhileFocused: false,
+			mainWindowIsFocused: true,
+			targetIsSelected: false
+		) == false)
 	}
 
 	/** A reply typed into a notification went nowhere once the query it came
@@ -146,7 +147,7 @@ struct NotificationControllerTests {
 	@Test("A reply to a closed query opens the query again")
 	func replyToAClosedQueryReopensIt() throws {
 		let fixture = ClientEnvironmentFixture()
-		let client = fixture.world.createClient(with: ClientConfig(connectionName: "Replies"))
+		let client = fixture.clientDirectory.createClient(with: ClientConfig(connectionName: "Replies"))
 		let query = try #require(client.findChannelOrCreate("alice", isPrivateMessage: true))
 		let payload = NotificationPayload(
 			clientIdentifier: client.uniqueIdentifier,
@@ -154,11 +155,11 @@ struct NotificationControllerTests {
 			queryName: "alice"
 		)
 
-		#expect(NotificationController.replyDestination(for: payload, in: fixture.world) === query)
+		#expect(NotificationController.replyDestination(for: payload, in: fixture.clientDirectory) === query)
 
-		fixture.world.destroyChannel(query)
+		fixture.clientDirectory.destroyChannel(query)
 
-		let reopened = try #require(NotificationController.replyDestination(for: payload, in: fixture.world))
+		let reopened = try #require(NotificationController.replyDestination(for: payload, in: fixture.clientDirectory))
 		#expect(reopened.isPrivateMessage)
 		#expect(reopened.name == "alice")
 		#expect(reopened !== query)
@@ -167,15 +168,15 @@ struct NotificationControllerTests {
 	@Test("A reply with no query name or no connection has nowhere to go")
 	func replyWithoutADestinationIsDropped() {
 		let fixture = ClientEnvironmentFixture()
-		let client = fixture.world.createClient(with: ClientConfig(connectionName: "Replies"))
+		let client = fixture.clientDirectory.createClient(with: ClientConfig(connectionName: "Replies"))
 
 		#expect(NotificationController.replyDestination(
 			for: NotificationPayload(clientIdentifier: client.uniqueIdentifier, channelIdentifier: "gone"),
-			in: fixture.world
+			in: fixture.clientDirectory
 		) == nil)
 		#expect(NotificationController.replyDestination(
 			for: NotificationPayload(clientIdentifier: "no-such-client", queryName: "alice"),
-			in: fixture.world
+			in: fixture.clientDirectory
 		) == nil)
 	}
 

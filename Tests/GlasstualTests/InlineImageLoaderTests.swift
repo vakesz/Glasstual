@@ -91,7 +91,8 @@ struct InlineImageLoaderTests {
 		try #require(CGImageDestinationFinalize(destination))
 		let preview = try await InlineImageDecoder.prepare(data as Data, limits: .init())
 		#expect(preview.data == data as Data)
-		#expect(try InlineImageContainer.animation(in: preview.data, limits: .init())?.frames == 2)
+		let source = try #require(CGImageSourceCreateWithData(preview.data as CFData, nil))
+		#expect(CGImageSourceGetCount(source) == 2)
 	}
 
 	@Test("Enormous compressed canvases and excess frames reject before pixel decoding")

@@ -39,30 +39,6 @@ import Foundation
 /// and past the whitespace that followed, so a sequence of calls walks the
 /// line. An exhausted tokenizer keeps returning the empty string.
 public struct CommandTokenizer: Sendable {
-	public struct Options: OptionSet, Sendable {
-		public let rawValue: UInt
-
-		public init(rawValue: UInt) {
-			self.rawValue = rawValue
-		}
-
-		/// `"` opens and closes a quoted token.
-		public static let doubleQuotes = Options(rawValue: 1 << 0)
-
-		/// `'` opens and closes a quoted token.
-		public static let singleQuotes = Options(rawValue: 1 << 1)
-
-		/// A closing quote only counts when whitespace or the end of the line
-		/// follows it.
-		public static let terminatesWithSpace = Options(rawValue: 1 << 2)
-
-		/// Each run of *n* backslashes in the token collapses to *n* minus
-		/// *n* / 2 of them.
-		public static let collapseSlashes = Options(rawValue: 1 << 3)
-
-		public static let `default`: Options = [.doubleQuotes, .terminatesWithSpace, .collapseSlashes]
-	}
-
 	private let base: String
 	private var cursor: String.Index
 
@@ -109,25 +85,21 @@ public struct CommandTokenizer: Sendable {
 		nextToken().uppercased()
 	}
 
-	/// Consumes and returns the quoted token at the cursor with its escapes
-	/// resolved, or the empty string when the cursor is not on one. The cursor
-	/// does not move when there is no token.
-	public mutating func nextQuotedToken(options: Options = .default) -> String {
+	/// Consumes and returns the double-quoted token at the cursor with its
+	/// escapes resolved, or the empty string when the cursor is not on one. The
+	/// cursor does not move when there is no token.
+	///
+	/// A closing quote counts only when whitespace or the end of the line
+	/// follows it, and each run of *n* backslashes collapses to *n* minus
+	/// *n* / 2 of them.
+	public mutating func nextQuotedToken() -> String {
 		let source = Array(remainder)
 
-		guard source.count >= 2 else {
+		guard source.count >= 2, source[0] == "\"" else {
 			return ""
 		}
 
-		let openingQuote = source[0]
-
-		guard openingQuote == "\"" && options.contains(.doubleQuotes)
-			|| openingQuote == "'" && options.contains(.singleQuotes)
-		else {
-			return ""
-		}
-
-		guard let scan = Self.scanQuotedToken(source, openingQuote: openingQuote, options: options) else {
+		guard let scan = Self.scanQuotedToken(source) else {
 			return ""
 		}
 
@@ -139,16 +111,12 @@ public struct CommandTokenizer: Sendable {
 			token.remove(at: position)
 		}
 
-		if options.contains(.collapseSlashes) {
-			token = Self.collapsingSlashRuns(token)
-		}
+		token = Self.collapsingSlashRuns(token)
 
 		var deletionEnd = scan.closingQuote + 1
 
-		if options.contains(.terminatesWithSpace) {
-			while deletionEnd < source.count, Self.isWhitespace(source[deletionEnd]) {
-				deletionEnd += 1
-			}
+		while deletionEnd < source.count, Self.isWhitespace(source[deletionEnd]) {
+			deletionEnd += 1
 		}
 
 		cursor = base.index(cursor, offsetBy: deletionEnd)
@@ -160,16 +128,12 @@ public struct CommandTokenizer: Sendable {
 		let escapedSlashPositions: [Int]
 	}
 
-	private static func scanQuotedToken(
-		_ source: [Character],
-		openingQuote: Character,
-		options: Options
-	) -> QuoteScan? {
+	private static func scanQuotedToken(_ source: [Character]) -> QuoteScan? {
 		var escapedSlashPositions: [Int] = []
 		var index = 1
 
 		while index < source.count {
-			while index < source.count, source[index] != openingQuote {
+			while index < source.count, source[index] != "\"" {
 				index += 1
 			}
 
@@ -194,7 +158,7 @@ public struct CommandTokenizer: Sendable {
 				guard probableEndQuote else {
 					return nil
 				}
-			} else if options.contains(.terminatesWithSpace), probableEndQuote {
+			} else if probableEndQuote {
 				guard isWhitespaceOrNewline(source[index]) else {
 					return nil
 				}

@@ -98,33 +98,6 @@ struct PreferencesTransferTests {
 		#expect(targetSession.backups.count == 2)
 	}
 
-	@Test("Legacy sparse Merge keeps absent settings and other servers, and cannot Restore")
-	func legacyMergeIsNonDestructive() async throws {
-		let fixture = try Fixture()
-		defer { fixture.cleanUp() }
-		let existing = client("Existing")
-		fixture.stores.set(.array([.dictionary(existing.dictionaryValue)]), for: Preferences.Connection.clientList)
-		fixture.stores.set(.array(["kept"]), for: Preferences.LinkSchemes.permitted)
-		let legacy: [String: PropertyListValue] = [Preferences.Messages.showJoinLeave.name: false]
-		let data = try PropertyListSerialization.data(
-			fromPropertyList: legacy.propertyListObject,
-			format: .binary,
-			options: 0
-		)
-		let session = fixture.session()
-		try await session.prepareImport(from: fixture.write(data))
-		let preview = try #require(session.preview)
-		#expect(!preview.archive.isComplete)
-		#expect(throws: PreferencesTransferError.self) {
-			try PreferencesTransferPlan(archive: preview.archive, current: preview.current, mode: .restore)
-		}
-		await session.commitPreview()
-		#expect(session.errorMessage == nil)
-		#expect(fixture.stores.container.bool(forKey: Preferences.Messages.showJoinLeave.name) == false)
-		#expect(fixture.stores.standard.stringArray(forKey: Preferences.LinkSchemes.permitted.name) == ["kept"])
-		#expect(try session.liveSnapshot().clients?.map(\.uniqueIdentifier) == [existing.uniqueIdentifier])
-	}
-
 	@Test("One malformed field or inverted port pair prevents every write")
 	func invalidWholeDocumentDoesNotMutate() async throws {
 		let fixture = try Fixture()
@@ -261,7 +234,7 @@ struct PreferencesTransferTests {
 	func transientNumberEditing() {
 		var committed = "15000"
 		let key = Preferences.Logging.scrollbackSaveLimit
-		let field = PreferencesFieldValue(text: { committed }, write: { text in
+		let field = SettingsFieldValue(text: { committed }, write: { text in
 			guard let value = UInt(text),
 			      let plist = value.preferenceObject.flatMap(PropertyListValue.init(propertyList:)),
 			      key.coerce(plist) != nil
@@ -269,7 +242,7 @@ struct PreferencesTransferTests {
 			committed = String(value)
 			return true
 		})
-		var draft = PreferencesFieldDraft()
+		var draft = SettingsFieldDraft()
 		for input in ["", "1", "12", "123"] {
 			draft.edit(input)
 			#expect(committed == "15000")
@@ -299,7 +272,7 @@ struct PreferencesTransferTests {
 		#expect(fixture.stores.container.data(forKey: Preferences.Theme.transcriptTheme.name) == data)
 		let roundTrip = try PreferencesArchive.decode(fixture.stores.snapshot(clients: []).encoded())
 		#expect(roundTrip.values[Preferences.Theme.transcriptTheme.name]?.data == data)
-		let model = PreferencesPaneModel(themeController: controller)
+		let model = SettingsModel(themeController: controller)
 		var replacement = TranscriptTheme.bubbles
 		replacement.fontSize = 24
 		replacement.fontName = "Menlo"
@@ -391,21 +364,21 @@ struct PreferencesTransferTests {
 		if existingClient {
 			var previous = configuration
 			previous.channelList.removeLast()
-			_ = model.world.createClient(with: previous)
+			_ = model.clientDirectory.createClient(with: previous)
 		}
-		#expect(!model.world.environment.preferences.rememberServerListQueryStates)
-		let session = target.session(world: model.world)
+		#expect(!model.clientDirectory.environment.preferences.rememberServerListQueryStates)
+		let session = target.session(world: model.clientDirectory)
 		try await session.prepareImport(from: source.write(sourceArchive.encoded()))
 		#expect(session.preview != nil)
 		session.previewMode = mode
 		await session.commitPreview()
 		#expect(session.errorMessage == nil)
-		let live = try #require(model.world.findClient(withId: configuration.uniqueIdentifier))
+		let live = try #require(model.clientDirectory.findClient(withId: configuration.uniqueIdentifier))
 		#expect(live.environment.preferences.rememberServerListQueryStates)
 		#expect(live.channelList.map(\.uniqueIdentifier) == configuration.channelList.map(\.uniqueIdentifier))
 		#expect(live.config.channelList.contains { $0.uniqueIdentifier == query.uniqueIdentifier })
 		let reopened = try target.reopenWorld()
-		let restored = try #require(reopened.world.findClient(withId: configuration.uniqueIdentifier))
+		let restored = try #require(reopened.clientDirectory.findClient(withId: configuration.uniqueIdentifier))
 		#expect(restored.channelList.map(\.uniqueIdentifier) == configuration.channelList.map(\.uniqueIdentifier))
 		#expect(restored.config.channelList.contains { $0.uniqueIdentifier == query.uniqueIdentifier })
 	}
@@ -416,8 +389,8 @@ struct PreferencesTransferTests {
 		defer { fixture.cleanUp() }
 		fixture.stores.set(false, for: Preferences.Appearance.rememberQueryStates)
 		let model = ClientEnvironmentFixture(preferences: .current(stores: fixture.stores))
-		let live = model.world.createClient(with: client("Existing live query"))
-		let query = model.world.createPrivateMessage("ExistingPeer", on: live)
+		let live = model.clientDirectory.createClient(with: client("Existing live query"))
+		let query = model.clientDirectory.createPrivateMessage("ExistingPeer", on: live)
 		#expect(!live.config.channelList.contains { $0.uniqueIdentifier == query.uniqueIdentifier })
 		let legacy: [String: PropertyListValue] = [Preferences.Appearance.rememberQueryStates.name: true]
 		let data = try PropertyListSerialization.data(
@@ -425,13 +398,13 @@ struct PreferencesTransferTests {
 			format: .xml,
 			options: 0
 		)
-		let session = fixture.session(world: model.world)
+		let session = fixture.session(world: model.clientDirectory)
 		try await session.prepareImport(from: fixture.write(data))
 		await session.commitPreview()
 		#expect(session.errorMessage == nil)
 		#expect(live.config.channelList.contains { $0.uniqueIdentifier == query.uniqueIdentifier })
 		let reopened = try fixture.reopenWorld()
-		let restored = try #require(reopened.world.findClient(withId: live.uniqueIdentifier))
+		let restored = try #require(reopened.clientDirectory.findClient(withId: live.uniqueIdentifier))
 		#expect(restored.channelList.contains { $0.uniqueIdentifier == query.uniqueIdentifier })
 	}
 
@@ -443,16 +416,16 @@ struct PreferencesTransferTests {
 		var configuration = client("Recover local authentication")
 		configuration.loginCommands = ["mode +i"]
 		configuration.identityClientSideCertificate = Data("fixture-certificate-reference".utf8)
-		let original = model.world.createClient(with: configuration)
+		let original = model.clientDirectory.createClient(with: configuration)
 		// Pending secret intent is deliberately not flushed to the Keychain or included in backups.
 		original.config.pendingNicknamePassword = .set("fixture-pending-secret")
-		let session = fixture.session(world: model.world)
+		let session = fixture.session(world: model.clientDirectory)
 		let removal = fixture.stores.snapshot(clients: [])
 		try await session.prepareImport(from: fixture.write(removal.encoded()))
 		session.previewMode = .restore
 		await session.commitPreview()
 		#expect(session.errorMessage == nil)
-		#expect(model.world.clientList.isEmpty)
+		#expect(model.clientDirectory.clientList.isEmpty)
 		#expect(original.isTerminating)
 		let backup = try #require(session.result?.backup)
 		let permissions = try FileManager.default.attributesOfItem(atPath: backup.url.path)
@@ -467,20 +440,20 @@ struct PreferencesTransferTests {
 		#expect(throws: PreferencesTransferError.self) { try PreferencesArchive.decode(bytes) }
 
 		let afterRemoval = try fixture.reopenWorld()
-		#expect(afterRemoval.world.clientList.isEmpty)
-		let recovery = fixture.session(world: afterRemoval.world)
+		#expect(afterRemoval.clientDirectory.clientList.isEmpty)
+		let recovery = fixture.session(world: afterRemoval.clientDirectory)
 		await recovery.prepareRecovery(backup)
 		#expect(recovery.preview?.archive.source == .localRecovery)
 		recovery.previewMode = .restore
 		await recovery.commitPreview()
 		#expect(recovery.errorMessage == nil)
-		let restored = try #require(afterRemoval.world.findClient(withId: configuration.uniqueIdentifier))
+		let restored = try #require(afterRemoval.clientDirectory.findClient(withId: configuration.uniqueIdentifier))
 		#expect(restored !== original)
 		#expect(restored.config.loginCommands == configuration.loginCommands)
 		#expect(restored.config.identityClientSideCertificate == configuration.identityClientSideCertificate)
 		#expect(!restored.config.autoConnect && !restored.isConnected && !restored.isConnecting)
 		let reopened = try fixture.reopenWorld()
-		let persisted = try #require(reopened.world.findClient(withId: configuration.uniqueIdentifier))
+		let persisted = try #require(reopened.clientDirectory.findClient(withId: configuration.uniqueIdentifier))
 		#expect(persisted.config.loginCommands == configuration.loginCommands)
 		#expect(persisted.config.identityClientSideCertificate == configuration.identityClientSideCertificate)
 
@@ -502,12 +475,12 @@ struct PreferencesTransferTests {
 		original.loginCommands = ["mode +i"]
 		original.identityClientSideCertificate = Data("existing-local-reference".utf8)
 		let model = ClientEnvironmentFixture(preferences: .current(stores: fixture.stores))
-		let live = model.world.createClient(with: original)
+		let live = model.clientDirectory.createClient(with: original)
 		var imported = original
 		imported.loginCommands = emptyCommands ? [] : ["whois TestNick"]
 		imported.identityClientSideCertificate = Data("must-not-import-reference".utf8)
 		let archive = fixture.stores.snapshot(clients: [imported])
-		let session = fixture.session(world: model.world)
+		let session = fixture.session(world: model.clientDirectory)
 		let data = try archive.encoded(includeConnectCommands: includeCommands)
 		let decoded = try PreferencesArchive.decode(data)
 		#expect(decoded.omittedConnectCommands.contains(original.uniqueIdentifier) == !includeCommands)
@@ -519,37 +492,7 @@ struct PreferencesTransferTests {
 		#expect(live.config.loginCommands == expected)
 		#expect(live.config.identityClientSideCertificate == original.identityClientSideCertificate)
 		let reopened = try fixture.reopenWorld()
-		#expect(reopened.world.clientList.first?.config.loginCommands == expected)
-	}
-
-	@Test("Legacy commands remain included, while a missing legacy command key preserves local commands",
-	      arguments: [false, true])
-	func legacyCommandPresenceIsPreserved(omitted: Bool) async throws {
-		let fixture = try Fixture()
-		defer { fixture.cleanUp() }
-		var original = client("Legacy commands")
-		original.loginCommands = ["mode +i"]
-		let model = ClientEnvironmentFixture(preferences: .current(stores: fixture.stores))
-		let live = model.world.createClient(with: original)
-		var imported = original
-		imported.loginCommands = ["whois TestNick"]
-		var dictionary = imported.dictionaryValue
-		if omitted {
-			dictionary.removeValue(forKey: ClientConfig.CodingKeys.loginCommands.rawValue)
-		}
-		let legacy: [String: PropertyListValue] =
-			[Preferences.Connection.clientList.name: .array([.dictionary(dictionary)])]
-		let data = try PropertyListSerialization.data(
-			fromPropertyList: legacy.propertyListObject,
-			format: .xml,
-			options: 0
-		)
-		let session = fixture.session(world: model.world)
-		try await session.prepareImport(from: fixture.write(data))
-		#expect(session.preview?.archive.isComplete == false)
-		await session.commitPreview()
-		#expect(session.errorMessage == nil)
-		#expect(live.config.loginCommands == (omitted ? original.loginCommands : imported.loginCommands))
+		#expect(reopened.clientDirectory.clientList.first?.config.loginCommands == expected)
 	}
 
 	@Test("Only private files in the owned backup folder can enter local recovery")
@@ -571,12 +514,12 @@ struct PreferencesTransferTests {
 		defer { fixture.cleanUp() }
 		let original = client("Empty local authentication configuration")
 		let model = ClientEnvironmentFixture(preferences: .current(stores: fixture.stores))
-		let session = fixture.session(world: model.world)
+		let session = fixture.session(world: model.clientDirectory)
 		let backup = try await session.recoveryStore.save(fixture.stores.snapshot(clients: [original]))
 		var changed = original
 		changed.loginCommands = ["mode +i"]
 		changed.identityClientSideCertificate = Data("subsequently-added-reference".utf8)
-		let live = model.world.createClient(with: changed)
+		let live = model.clientDirectory.createClient(with: changed)
 		await session.prepareRecovery(backup)
 		session.previewMode = .restore
 		await session.commitPreview()
@@ -584,8 +527,8 @@ struct PreferencesTransferTests {
 		#expect(live.config.loginCommands.isEmpty)
 		#expect(live.config.identityClientSideCertificate == nil)
 		let reopened = try fixture.reopenWorld()
-		#expect(reopened.world.clientList.first?.config.loginCommands.isEmpty == true)
-		#expect(reopened.world.clientList.first?.config.identityClientSideCertificate == nil)
+		#expect(reopened.clientDirectory.clientList.first?.config.loginCommands.isEmpty == true)
+		#expect(reopened.clientDirectory.clientList.first?.config.identityClientSideCertificate == nil)
 	}
 
 	@Test("Changes to local commands or certificate references invalidate an outstanding import preview")
@@ -593,8 +536,8 @@ struct PreferencesTransferTests {
 		let fixture = try Fixture()
 		defer { fixture.cleanUp() }
 		let model = ClientEnvironmentFixture(preferences: .current(stores: fixture.stores))
-		let live = model.world.createClient(with: client("Changed local authentication"))
-		let session = fixture.session(world: model.world)
+		let live = model.clientDirectory.createClient(with: client("Changed local authentication"))
+		let session = fixture.session(world: model.clientDirectory)
 		var archive = try session.liveSnapshot()
 		archive.values[Preferences.Messages.showJoinLeave.name] = false
 		try await session.prepareImport(from: fixture.write(archive.encoded()))
@@ -616,11 +559,11 @@ extension PreferencesTransferTests {
 		defer { fixture.cleanUp() }
 		fixture.stores.set(.boolean(rememberQueries), for: Preferences.Appearance.rememberQueryStates)
 		let model = ClientEnvironmentFixture(preferences: .current(stores: fixture.stores))
-		let live = model.world.createClient(with: client("Exact query restore"))
-		let session = fixture.session(world: model.world)
+		let live = model.clientDirectory.createClient(with: client("Exact query restore"))
+		let session = fixture.session(world: model.clientDirectory)
 		let original = try session.liveSnapshot()
 		let backup = try await session.recoveryStore.save(original)
-		let extra = model.world.createPrivateMessage("ExtraPeer", on: live)
+		let extra = model.clientDirectory.createPrivateMessage("ExtraPeer", on: live)
 		let presentation = RemovalPresentation()
 		extra.presentation = presentation
 		let extraConfiguration = extra.config
@@ -653,7 +596,7 @@ extension PreferencesTransferTests {
 		#expect(presentation.permanentRemovals == 0)
 		#expect(presentation.applicationTerminations == 0)
 		let reopened = try fixture.reopenWorld()
-		let restored = try #require(reopened.world.findClient(withId: live.uniqueIdentifier))
+		let restored = try #require(reopened.clientDirectory.findClient(withId: live.uniqueIdentifier))
 		#expect(restored.channelList.map(\.uniqueIdentifier) == live.channelList.map(\.uniqueIdentifier))
 		#expect(!restored.config.channelList.contains { $0.uniqueIdentifier == extra.uniqueIdentifier })
 	}

@@ -124,7 +124,7 @@ struct ClientJoinBurstTests {
 	}
 
 	private func stamp(_ date: Date) -> String {
-		ISOStandardDateFormatter().string(from: date)
+		DateFormatting.iso8601String(from: date)
 	}
 
 	private func message(_ line: String, on client: Client) throws -> Message {
@@ -174,10 +174,10 @@ struct ClientJoinBurstTests {
 			try client.receivePrivmsgAndNotice(message(":bob!u@h PRIVMSG #chat :hello", on: client))
 			channel.resetState()
 			client.markChannel(asRead: channel)
-			#expect(client.readMarkerPendingChannels.isEmpty)
+			#expect(client.readMarkers.pendingChannels.isEmpty)
 			presentation.finishPrinting()
 			#expect(channel.treeUnreadCount == 0)
-			#expect(client.readMarkerPendingChannels.isEmpty)
+			#expect(client.readMarkers.pendingChannels.isEmpty)
 		}
 	}
 
@@ -260,7 +260,7 @@ struct ClientJoinBurstTests {
 	func replayedJoinIsMeasuredFromArrival() throws {
 		try withNotificationsSilenced {
 			let client = makeClient()
-			client.isConnectedToZNC = true
+			client.znc.isConnected = true
 			let presentation = CompletingPresentation()
 			let now = Date()
 			/* A bouncer that replays the JOIN stamps it with when it happened,
@@ -353,7 +353,7 @@ struct ClientJoinBurstTests {
 
 			client.receiveReadMarker(marker)
 
-			#expect(client.readMarkerSentDates[channel.uniqueIdentifier] != nil)
+			#expect(client.readMarkers.sentDates[channel.uniqueIdentifier] != nil)
 
 			let behindTheMarker = try message(
 				"@time=\(stamp(now.addingTimeInterval(-1))) :bob!u@h PRIVMSG #chat :old news",
@@ -387,7 +387,7 @@ struct ClientJoinBurstTests {
 			replayed.isHistoric = true
 			client.receivePrivmsgAndNotice(replayed)
 
-			#expect(client.readMarkerPendingChannels.isEmpty)
+			#expect(client.readMarkers.pendingChannels.isEmpty)
 
 			/* Said a second after the join and still inside the window: live, so
 			 the marker may follow it. */
@@ -398,7 +398,7 @@ struct ClientJoinBurstTests {
 
 			client.receivePrivmsgAndNotice(live)
 
-			#expect(client.readMarkerPendingChannels.count == 1)
+			#expect(client.readMarkers.pendingChannels.count == 1)
 		}
 	}
 
@@ -558,7 +558,7 @@ struct ClientJoinBurstTests {
 			client.recordedOutput.isKeyWindow = true
 			client.recordedOutput.visibleItems = [channel]
 			try client.receivePrivmsgAndNotice(message(":bob!u@h PRIVMSG #chat :still loading", on: client))
-			#expect(client.readMarkerPendingChannels.isEmpty)
+			#expect(client.readMarkers.pendingChannels.isEmpty)
 		}
 	}
 }

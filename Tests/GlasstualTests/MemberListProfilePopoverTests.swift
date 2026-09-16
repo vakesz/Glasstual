@@ -94,12 +94,12 @@ struct MemberListProfilePopoverTests {
 		key.detachedValue = true
 		#expect(MemberListPresentation.displayRank(for: member) == .irCopByMode)
 		#expect(MemberListPresentation.privilegesDescription(for: member)
-			== MemberListStrings.privilegeDescription(for: .irCopByMode))
+			== MemberListRanks.privilegeDescription(for: .irCopByMode))
 
 		key.detachedValue = false
 		#expect(MemberListPresentation.displayRank(for: member) == member.rank)
 		#expect(MemberListPresentation.privilegesDescription(for: member)
-			== MemberListStrings.privilegeDescription(for: member.rank))
+			== MemberListRanks.privilegeDescription(for: member.rank))
 	}
 
 	/// "Use an x to indicate a user with no mode set" had no reader at all.

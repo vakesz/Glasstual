@@ -61,22 +61,22 @@ nonisolated enum BundleResources { // nonisolated: value
 
 	@concurrent
 	static func copyResourcesToApplicationSupportFolder() async {
-		guard let sourcePath = PathInfo.customScripts,
-		      let destinationRoot = PathInfo.groupContainerApplicationSupport
+		guard let sourceURL = ApplicationPaths.customScriptsURL,
+		      let destinationRoot = ApplicationPaths.groupContainerApplicationSupportURL
 		else {
 			return
 		}
 
-		let destinationPath = (destinationRoot as NSString).appendingPathComponent("/Custom Scripts/")
+		let destinationURL = destinationRoot.appendingPathComponent("Custom Scripts", isDirectory: true)
 		let fileManager = FileManager.default
 
-		guard fileManager.fileExists(atPath: sourcePath),
-		      fileManager.fileExists(atPath: destinationPath) == false
+		guard fileManager.fileExists(at: sourceURL),
+		      fileManager.fileExists(at: destinationURL) == false
 		else {
 			return
 		}
 
-		try? fileManager.createSymbolicLink(atPath: destinationPath, withDestinationPath: sourcePath)
+		try? fileManager.createSymbolicLink(at: destinationURL, withDestinationURL: sourceURL)
 	}
 
 	// MARK: - Loading

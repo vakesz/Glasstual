@@ -49,12 +49,12 @@ struct AddressBookMatchCacheTests {
 			"hostmask": "nick!*@example.com" as NSString,
 			"ignorePrivateMessages": true as NSNumber,
 		]])
-		let cache = AddressBookMatchCache(client: client)
-		let match = try #require(cache.findAddressBookEntry(forHostmask: "Nick!user@example.com"))
+		let cache = AddressBookMatchCache()
+		let match = try #require(cache.findAddressBookEntry(forHostmask: "Nick!user@example.com", in: client.config.ignoreList))
 
 		#expect(match.entryType == .ignore)
 		#expect(match.ignorePrivateMessages)
-		#expect(cache.findIgnores(forHostmask: "Nick!user@example.com").count == 1)
+		#expect(cache.findIgnores(forHostmask: "Nick!user@example.com", in: client.config.ignoreList).count == 1)
 	}
 
 	@Test("Entries that match the same hostmask are merged into one mixed entry")
@@ -71,16 +71,16 @@ struct AddressBookMatchCacheTests {
 				"ignorePublicMessages": true as NSNumber,
 			],
 		])
-		let cache = AddressBookMatchCache(client: client)
+		let cache = AddressBookMatchCache()
 		let hostmask = "nick!user@example.com"
-		let match = try #require(cache.findAddressBookEntry(forHostmask: hostmask))
+		let match = try #require(cache.findAddressBookEntry(forHostmask: hostmask, in: client.config.ignoreList))
 
 		#expect(match.entryType == .mixed)
 		#expect(match.parentEntries?.count == 2)
 		#expect(match.ignorePrivateMessages)
 		#expect(match.ignorePublicMessages)
-		#expect(cache.findIgnores(forHostmask: hostmask).count == 2)
-		#expect(match == cache.findAddressBookEntry(forHostmask: hostmask))
+		#expect(cache.findIgnores(forHostmask: hostmask, in: client.config.ignoreList).count == 2)
+		#expect(match == cache.findAddressBookEntry(forHostmask: hostmask, in: client.config.ignoreList))
 	}
 
 	@Test("A hostmask nothing matches yields no entry and no ignores")
@@ -89,11 +89,11 @@ struct AddressBookMatchCacheTests {
 			"entryType": AddressBookEntryType.ignore.rawValue as NSNumber,
 			"hostmask": "nick!*@example.com" as NSString,
 		]])
-		let cache = AddressBookMatchCache(client: client)
+		let cache = AddressBookMatchCache()
 		let hostmask = "someone!user@elsewhere.test"
 
-		#expect(cache.findAddressBookEntry(forHostmask: hostmask) == nil)
-		#expect(cache.findIgnores(forHostmask: hostmask).isEmpty)
+		#expect(cache.findAddressBookEntry(forHostmask: hostmask, in: client.config.ignoreList) == nil)
+		#expect(cache.findIgnores(forHostmask: hostmask, in: client.config.ignoreList).isEmpty)
 
 		cache.clearCachedMatches(forHostmask: hostmask)
 		cache.clearCachedMatches()

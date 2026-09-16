@@ -41,11 +41,4 @@ struct PendingKeychainSecretTests {
 		#expect(PendingKeychainSecret.set("typed").detached(from: "stored") == .set("typed"))
 		#expect(PendingKeychainSecret.cleared.detached(from: "stored") == .cleared)
 	}
-
-	@Test("Merging keeps the newer edit, including a clear")
-	func mergingKeepsTheNewerEdit() {
-		#expect(PendingKeychainSecret.unchanged.merged(over: .set("older")) == .set("older"))
-		#expect(PendingKeychainSecret.set("newer").merged(over: .set("older")) == .set("newer"))
-		#expect(PendingKeychainSecret.cleared.merged(over: .set("older")) == .cleared)
-	}
 }

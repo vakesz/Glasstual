@@ -18,10 +18,10 @@ Build Results/
 rule_docs/
 /Generated/Xcode/
 
+# Generated from project.yml by `make generate`.
+/Glasstual.xcodeproj/
+
 # Local agent/tool state.
 .agents/
 .claude/
 skills-lock.json
-
-# Shared editor configuration is tracked even when a global ignore hides it.
-!.vscode/

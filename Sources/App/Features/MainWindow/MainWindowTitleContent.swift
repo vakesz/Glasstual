@@ -51,7 +51,7 @@ struct MainWindowTitleContent: Equatable {
 		parts.compactMap(nonempty).joined(separator: " · ")
 	}
 
-	private static func connectionStatus(for client: Client) -> MainWindowStrings.ConnectionStatus? {
+	private static func connectionStatus(for client: Client) -> MainWindowConnectionStatus? {
 		if client.isQuitting || client.isDisconnecting {
 			return .disconnecting
 		}
@@ -72,17 +72,17 @@ struct MainWindowTitleContent: Equatable {
 		guard nickname.isEmpty == false else {
 			return nil
 		}
-		return client.userIsAway ? MainWindowStrings.Conversation.awayNickname(nickname) : nickname
+		return client.userIsAway ? String(localized: .MainWindow.awayNickname(nickname)) : nickname
 	}
 
 	private static func conversationDetails(for channel: Channel, on client: Client) -> [String] {
 		switch channel.type {
 		case .channel:
-			return [MainWindowStrings.Conversation.memberCount(Int(channel.numberOfMembers))]
+			return [MainWindowTitleContent.memberCount(Int(channel.numberOfMembers))]
 		case .privateMessage:
 			return [client.findUser(channel.name)?.hostmaskFragment].compactMap(nonempty)
 		case .directChat:
-			return [MainWindowStrings.Conversation.directChat]
+			return [String(localized: .MainWindow.directChat)]
 		case .utility:
 			return []
 		@unknown default:
@@ -90,10 +90,49 @@ struct MainWindowTitleContent: Equatable {
 		}
 	}
 
+	/** How many people are in the channel.
+
+	 The count reaches the catalog twice: once as text, so the digits are
+	 grouped the way the reader's locale groups them, and once as a number, so
+	 the noun beside it takes the right plural form. */
+	static func memberCount(_ count: Int) -> String {
+		String(localized: .MainWindow.mainWindowConnectionStatusUsers(
+			count.formatted(.number),
+			count: count
+		))
+	}
+
 	private static func nonempty(_ value: String?) -> String? {
 		guard let value, value.isEmpty == false else {
 			return nil
 		}
 		return value
+	}
+}
+
+/// Where a client stands, as the title bar says it.
+nonisolated enum MainWindowConnectionStatus { // nonisolated: value
+	case disconnected
+	case waitingToReconnect
+	case connecting
+	case reconnecting
+	case loggingOn
+	case disconnecting
+
+	var title: String {
+		switch self {
+		case .disconnected:
+			String(localized: .MainWindow.mainWindowConnectionStatusDisconnected)
+		case .waitingToReconnect:
+			String(localized: .MainWindow.waitingToReconnect)
+		case .connecting:
+			String(localized: .MainWindow.mainWindowConnectionStatusConnecting)
+		case .reconnecting:
+			String(localized: .MainWindow.mainWindowConnectionStatusReconnecting)
+		case .loggingOn:
+			String(localized: .MainWindow.mainWindowConnectionStatusLogging)
+		case .disconnecting:
+			String(localized: .MainWindow.mainWindowConnectionStatusDisconnecting)
+		}
 	}
 }

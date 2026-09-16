@@ -42,6 +42,10 @@ nonisolated extension Preferences { // nonisolated: value
 	/// Bookkeeping the application keeps about itself, and the handful of keys
 	/// AppKit or a vendored library reads out of `UserDefaults.standard`.
 	enum Internals {
+		/// What the current build writes into `dictionaryVersion`. Raised when a
+		/// release changes what the stored defaults mean.
+		static let currentDictionaryVersion: UInt = 602
+
 		static let dictionaryVersion = PreferenceKey(
 			"TPCPreferencesDictionaryVersion",
 			default: UInt(0),
@@ -95,7 +99,7 @@ nonisolated extension Preferences { // nonisolated: value
 		 declaration is what says so; it used to be an undocumented exception at
 		 the call site. */
 		static let appSleepDisabled = PreferenceKey(
-			AppSleepPreference.name,
+			"NSAppSleepDisabled",
 			default: false,
 			storage: .standard,
 			traits: [.unregistered, .uncatalogued]
@@ -109,12 +113,14 @@ nonisolated extension Preferences { // nonisolated: value
 }
 
 nonisolated extension Preferences { // nonisolated: value
-	/// The scheme allowlist the transcript's link parser consults. The names and
-	/// the standard domain are the ones the AutoHyperlinks framework it replaced
-	/// used, so a customization carries over.
+	/** The scheme allowlist the transcript's link parser consults.
+
+	 Stored in the application's own domain rather than in the shared container:
+	 which schemes this Mac turns into links is a browsing choice, and the
+	 connection host has no use for it. */
 	enum LinkSchemes {
 		static let permittedDefault = PreferenceKey(
-			"com.adiumX.AutoHyperlinks.permittedSchemesDefault",
+			"Link Schemes -> Permitted Default",
 			default: [
 				"feed", "ftp", "gopher", "irc", "ircs", "itms", "sftp", "ssh",
 				"telnet", "glasstual", "textual", "webcal", "x-man-page",
@@ -123,7 +129,7 @@ nonisolated extension Preferences { // nonisolated: value
 		)
 
 		static let permitted = PreferenceKey(
-			"com.adiumX.AutoHyperlinks.permittedSchemes",
+			"Link Schemes -> Permitted",
 			default: [String](),
 			storage: .standard,
 			traits: .unregistered
@@ -132,7 +138,7 @@ nonisolated extension Preferences { // nonisolated: value
 		/// Makes every scheme a link. A decision this Mac's user makes for
 		/// themselves, so no configuration file carries it in or out.
 		static let permitAny = PreferenceKey(
-			"com.adiumX.AutoHyperlinks.permittedSchemesAny",
+			"Link Schemes -> Permit Any",
 			default: false,
 			storage: .standard,
 			traits: [.unregistered, .excludedFromExport]
@@ -172,7 +178,6 @@ nonisolated extension Preferences { // nonisolated: value
 
 		static let all: [PreferenceKeyFamily] = [
 			windowFrames, themeSettings, alertSuppression, mainWindowState,
-			Preferences.Notifications.family,
 		]
 	}
 }

@@ -3,10 +3,42 @@
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
 
+import AppKit
 import SwiftUI
 
+struct OnboardingScene: Scene {
+	var body: some Scene {
+		Window(
+			String(localized: .Onboarding.windowChromeWelcomeToGlasstual),
+			id: ApplicationSceneID.onboarding
+		) {
+			OnboardingSceneRoot()
+		}
+		.windowResizability(.contentMinSize)
+		.windowStyle(.hiddenTitleBar)
+	}
+}
+
+private struct OnboardingSceneRoot: View {
+	@Environment(\.dismissWindow) private var dismissWindow
+	@State private var model = OnboardingModel()
+
+	var body: some View {
+		OnboardingView(
+			model: model,
+			applicationIcon: Image(nsImage: NSApp.applicationIconImage),
+			dismiss: { dismissWindow(id: ApplicationSceneID.onboarding) }
+		)
+		/* The window keeps its close button even with the title bar hidden.
+		 Closing it applies nothing, but it still records that onboarding was
+		 answered — leaving it unmarked is what made the window come back at
+		 every launch. A finished flow ignores this. */
+		.onDisappear(perform: model.setUpLater)
+	}
+}
+
 struct OnboardingView: View {
-	@Bindable var session: OnboardingSession
+	@Bindable var model: OnboardingModel
 	let applicationIcon: Image
 	let dismiss: () -> Void
 
@@ -14,16 +46,12 @@ struct OnboardingView: View {
 	/// Motion asks applications to stop making.
 	@Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-	private var model: OnboardingModel {
-		session.model
-	}
-
 	var body: some View {
 		VStack(spacing: 0) {
 			header
 
 			Group {
-				if session.isCompleting {
+				if model.isCompleting {
 					OnboardingCompletionProgress()
 				} else {
 					ScrollView {
@@ -46,14 +74,14 @@ struct OnboardingView: View {
 		}
 		.frame(minWidth: 720, idealWidth: 720, minHeight: 620, idealHeight: 700)
 		.animation(reduceMotion ? nil : .snappy(duration: 0.2), value: model.currentStep)
-		.animation(reduceMotion ? nil : .snappy(duration: 0.2), value: session.isCompleting)
+		.animation(reduceMotion ? nil : .snappy(duration: 0.2), value: model.isCompleting)
 		.alert(
-			Text(verbatim: OnboardingStrings.Window.connectionUnavailable),
-			isPresented: $session.isCompletionFailurePresented
+			Text(.Onboarding.connectionUnavailable),
+			isPresented: $model.isCompletionFailurePresented
 		) {
 			Button(PromptStrings.Action.confirmation, role: .cancel) {}
 		} message: {
-			Text(verbatim: OnboardingStrings.Window.connectionUnavailableRecovery)
+			Text(.Onboarding.connectionUnavailableRecovery)
 		}
 	}
 
@@ -65,11 +93,11 @@ struct OnboardingView: View {
 				.frame(width: 72, height: 72)
 				.accessibilityHidden(true)
 
-			Text(verbatim: model.currentStep.title)
+			Text(model.currentStep.title)
 				.font(.largeTitle.weight(.bold))
 				.contentTransition(.numericText())
 
-			Text(verbatim: model.currentStep.subtitle)
+			Text(model.currentStep.subtitle)
 				.foregroundStyle(.secondary)
 				.multilineTextAlignment(.center)
 				.frame(maxWidth: 560)
@@ -102,10 +130,10 @@ struct OnboardingView: View {
 		HStack {
 			/* Onboarding has to be dismissible without answering it, and
 			 without it asking again at the next launch. */
-			Button(OnboardingStrings.Window.setUpLaterButton, action: setUpLater)
+			Button(.Onboarding.windowChromeSetUpLater, action: setUpLater)
 				.buttonStyle(.link)
 
-			Button(OnboardingStrings.Window.skipButton) { model.skip() }
+			Button(.Onboarding.windowChromeSkip) { model.skip() }
 				.buttonStyle(.link)
 				.disabled(model.currentStep.isSkippable == false)
 				.opacity(model.currentStep.isSkippable ? 1 : 0)
@@ -120,7 +148,7 @@ struct OnboardingView: View {
 
 			Spacer()
 
-			Button(OnboardingStrings.Window.backButton, action: model.moveBack)
+			Button(.Onboarding.windowChromeBack, action: model.moveBack)
 				.disabled(model.isFirstStep)
 				.opacity(model.isFirstStep ? 0 : 1)
 				.keyboardShortcut(.leftArrow, modifiers: .command)
@@ -129,7 +157,7 @@ struct OnboardingView: View {
 				.keyboardShortcut(.defaultAction)
 				.disabled(model.isCurrentStepValid == false)
 		}
-		.disabled(session.isCompleting)
+		.disabled(model.isCompleting)
 		.padding(16)
 	}
 
@@ -137,33 +165,31 @@ struct OnboardingView: View {
 		guard model.advance() else { return }
 
 		Task {
-			if await session.finish() {
+			if await model.finish() {
 				dismiss()
 			}
 		}
 	}
 
 	private func setUpLater() {
-		session.setUpLater()
+		model.setUpLater()
 		dismiss()
 	}
 }
 
 private struct OnboardingCompletionProgress: View {
 	var body: some View {
-		ProgressView {
-			Text(verbatim: OnboardingStrings.Summary.settingUp)
-		}
-		.progressViewStyle(.circular)
-		.controlSize(.large)
-		.frame(maxWidth: .infinity, maxHeight: .infinity)
+		ProgressView(.Onboarding.summarySettingThingsUp)
+			.progressViewStyle(.circular)
+			.controlSize(.large)
+			.frame(maxWidth: .infinity, maxHeight: .infinity)
 	}
 }
 
 private struct OnboardingPageIndicator: View {
 	let currentStep: Int
 	let stepCount: Int
-	let accessibilityDescription: String
+	let accessibilityDescription: LocalizedStringResource
 
 	var body: some View {
 		HStack(spacing: 8) {
@@ -174,7 +200,7 @@ private struct OnboardingPageIndicator: View {
 			}
 		}
 		.accessibilityElement(children: .ignore)
-		.accessibilityLabel(Text(verbatim: accessibilityDescription))
+		.accessibilityLabel(Text(accessibilityDescription))
 	}
 }
 
@@ -212,35 +238,35 @@ private struct OnboardingIdentityView: View {
 	var body: some View {
 		Form {
 			OnboardingValidatedRow(
-				label: OnboardingStrings.Identity.nicknameLabel,
+				label: String(localized: .Onboarding.stepWelcomeAndIdentityNickname),
 				problem: model.nicknameProblem
 			) {
-				TextField(OnboardingStrings.Identity.nicknamePlaceholder, text: $settings.nickname)
+				TextField(.Onboarding.nickname, text: $settings.nickname)
 					.focused($focusedField, equals: .nickname)
 					.accessibilityIdentifier("onboarding-nickname")
 			}
 
 			OnboardingValidatedRow(
-				label: OnboardingStrings.Identity.realNameLabel,
+				label: String(localized: .Onboarding.realName),
 				problem: model.realNameProblem
 			) {
-				TextField(OnboardingStrings.Identity.realNamePlaceholder, text: $settings.realName)
+				TextField(.Onboarding.yourNameOrAnythingYouLike, text: $settings.realName)
 					.focused($focusedField, equals: .realName)
 					.accessibilityIdentifier("onboarding-real-name")
 			}
 
 			OnboardingValidatedRow(
-				label: OnboardingStrings.Identity.alternateNicknameLabel,
+				label: String(localized: .Onboarding.alternateNickname),
 				problem: model.alternateNicknameProblem
 			) {
 				TextField(
-					OnboardingStrings.Identity.optionalPlaceholder,
+					.Onboarding.stepWelcomeAndIdentityOptional,
 					text: $settings.alternateNickname
 				)
 				.focused($focusedField, equals: .alternateNickname)
 				.accessibilityIdentifier("onboarding-alternate-nickname")
 
-				Text(verbatim: OnboardingStrings.Identity.alternateNicknameHelp)
+				Text(.Onboarding.usedWhenYourNicknameIsAlready)
 					.font(.callout)
 					.foregroundStyle(.secondary)
 					.fixedSize(horizontal: false, vertical: true)
@@ -269,20 +295,19 @@ private struct OnboardingAppearanceView: View {
 				}
 			}
 			.accessibilityElement(children: .contain)
-			.accessibilityLabel(Text(verbatim: OnboardingStrings.Appearance.previewAccessibilityLabel))
+			.accessibilityLabel(Text(.Onboarding.chatStyle))
 
 			Form {
-				Picker(OnboardingStrings.Appearance.textSizeLabel, selection: $settings.textSize) {
+				Picker(.Onboarding.textSize, selection: $settings.textSize) {
 					ForEach(OnboardingTextSize.allCases) { size in
-						Text(verbatim: size.title).tag(size)
+						Text(size.title).tag(size)
 					}
 				}
 				.pickerStyle(.segmented)
 
-				Picker(OnboardingStrings.Appearance.interfaceStyleLabel, selection: $settings.appearance) {
+				Picker(.Onboarding.stepLookAndFeelAppearance, selection: $settings.appearance) {
 					ForEach(PreferredAppearance.allCases, id: \.self) { appearance in
-						Text(verbatim: OnboardingStrings.Appearance.interfaceStyleTitle(appearance))
-							.tag(appearance)
+						Text(appearance.onboardingTitle).tag(appearance)
 					}
 				}
 				.pickerStyle(.segmented)
@@ -294,18 +319,41 @@ private struct OnboardingAppearanceView: View {
 	}
 }
 
+/// One line of the mock transcript the appearance step previews.
+struct OnboardingAppearancePreviewMessage {
+	let nickname: LocalizedStringResource
+	let message: LocalizedStringResource
+}
+
 private struct OnboardingStylePreview: View {
 	let style: OnboardingTranscriptStyle
 	let fontSize: CGFloat
 	let isSelected: Bool
 	let select: () -> Void
 
+	/// The same short exchange under both styles, so the preview shows the
+	/// layout rather than a difference in what was said.
+	static let previewMessages: [OnboardingAppearancePreviewMessage] = [
+		OnboardingAppearancePreviewMessage(
+			nickname: .Onboarding.stepLookAndFeelAlice,
+			message: .Onboarding.goodMorningEveryone
+		),
+		OnboardingAppearancePreviewMessage(
+			nickname: .Onboarding.stepLookAndFeelBob,
+			message: .Onboarding.morningAnyoneTriedTheNewBuild
+		),
+		OnboardingAppearancePreviewMessage(
+			nickname: .Onboarding.stepLookAndFeelYou,
+			message: .Onboarding.yesItWorksWellSoFar
+		),
+	]
+
 	private var usesBubbles: Bool {
 		style == .bubbles
 	}
 
 	var body: some View {
-		let messages = Array(OnboardingStrings.Appearance.previewMessages.enumerated())
+		let messages = Array(Self.previewMessages.enumerated())
 
 		Button(action: select) {
 			VStack(spacing: 8) {
@@ -333,8 +381,8 @@ private struct OnboardingStylePreview: View {
 					}
 				}
 
-				Text(verbatim: style.title).font(.headline)
-				Text(verbatim: style.summary)
+				Text(style.title).font(.headline)
+				Text(style.summary)
 					.font(.caption)
 					.foregroundStyle(.secondary)
 			}
@@ -342,7 +390,7 @@ private struct OnboardingStylePreview: View {
 		.buttonStyle(.plain)
 		.frame(maxWidth: .infinity)
 		.accessibilityElement(children: .ignore)
-		.accessibilityLabel(Text(verbatim: style.title))
+		.accessibilityLabel(Text(style.title))
 		.accessibilityAddTraits(isSelected ? [.isSelected] : [])
 	}
 
@@ -355,11 +403,11 @@ private struct OnboardingStylePreview: View {
 				}
 				VStack(alignment: .leading, spacing: 1) {
 					if outgoing == false {
-						Text(verbatim: message.nickname)
+						Text(message.nickname)
 							.font(.system(size: max(9, fontSize - 2), weight: .semibold))
 							.foregroundStyle(.secondary)
 					}
-					Text(verbatim: message.message)
+					Text(message.message)
 						.font(.system(size: fontSize))
 						.foregroundStyle(outgoing ? Color.white : Color.primary)
 				}
@@ -373,13 +421,15 @@ private struct OnboardingStylePreview: View {
 			}
 		} else {
 			HStack(alignment: .firstTextBaseline, spacing: 5) {
-				Text(verbatim: OnboardingStrings.Appearance.previewTime)
+				Text(.Onboarding.stepLookAndFeel)
 					.font(.system(size: max(9, fontSize - 2), design: .monospaced))
 					.foregroundStyle(.tertiary)
-				Text(verbatim: "<\(message.nickname)>")
+				/* The angle brackets are how the lines style marks a nickname,
+				 so they are punctuation around the name rather than copy. */
+				Text(verbatim: "<\(String(localized: message.nickname))>")
 					.font(.system(size: fontSize, weight: .semibold))
 					.foregroundStyle(outgoing ? Color.accentColor : Color.primary)
-				Text(verbatim: message.message)
+				Text(message.message)
 					.font(.system(size: fontSize))
 					.lineLimit(1)
 				Spacer(minLength: 0)
@@ -394,15 +444,15 @@ private struct OnboardingNotificationsView: View {
 
 	var body: some View {
 		VStack(alignment: .leading, spacing: 12) {
-			Toggle(OnboardingStrings.Notifications.mentionCheckbox, isOn: $settings.notifyOnHighlight)
+			Toggle(.Onboarding.notifyMeWhenSomeoneMentionsMe, isOn: $settings.notifyOnHighlight)
 			Toggle(
-				OnboardingStrings.Notifications.privateMessageCheckbox,
+				.Onboarding.notifyMeAboutPrivateMessages,
 				isOn: $settings.notifyOnPrivateMessage
 			)
-			Toggle(OnboardingStrings.Notifications.soundCheckbox, isOn: $settings.playSounds)
+			Toggle(.Onboarding.playSounds, isOn: $settings.playSounds)
 
 			Label {
-				Text(verbatim: model.notificationPermissionMessage)
+				Text(model.notificationPermissionMessage)
 					.foregroundStyle(.secondary)
 					.fixedSize(horizontal: false, vertical: true)
 			} icon: {
@@ -429,9 +479,9 @@ private struct OnboardingNetworkView: View {
 			NetworkPickerView(model: picker, confirm: confirm)
 
 			VStack(alignment: .leading, spacing: 6) {
-				Text(verbatim: OnboardingStrings.FirstNetwork.suggestedChannelsLabel)
+				Text(.Onboarding.suggestedChannels)
 				if picker.suggestedChannels.isEmpty {
-					Text(verbatim: OnboardingStrings.FirstNetwork.suggestedChannelsPlaceholder)
+					Text(.Onboarding.chooseANetworkToSeeSuggested)
 						.font(.callout)
 						.foregroundStyle(.secondary)
 				} else {
@@ -441,7 +491,7 @@ private struct OnboardingNetworkView: View {
 				}
 			}
 
-			Toggle(OnboardingStrings.FirstNetwork.connectWhenFinished, isOn: $settings.connectWhenFinished)
+			Toggle(.Onboarding.connectWhenFinished, isOn: $settings.connectWhenFinished)
 		}
 		.padding(.bottom, 10)
 	}
@@ -450,65 +500,65 @@ private struct OnboardingNetworkView: View {
 private struct OnboardingSummaryView: View {
 	let model: OnboardingModel
 
+	private var nothingChosen: String {
+		String(localized: .Onboarding.summaryNothingChosen)
+	}
+
 	var body: some View {
 		Form {
-			LabeledContent(
-				OnboardingStrings.Summary.nicknameLabel,
-				value: model.acceptedIdentity?.nickname ?? OnboardingStrings.Summary.nothingChosen
-			)
-			LabeledContent(
-				OnboardingStrings.Summary.chatStyleLabel,
-				value: model.acceptedAppearance?.transcriptStyle.title ?? OnboardingStrings.Summary.nothingChosen
-			)
-			LabeledContent(
-				OnboardingStrings.Summary.textSizeLabel,
-				value: model.acceptedAppearance?.textSize.title ?? OnboardingStrings.Summary.nothingChosen
-			)
-			LabeledContent(
-				OnboardingStrings.Summary.appearanceLabel,
-				value: model.acceptedAppearance.map {
-					OnboardingStrings.Appearance.interfaceStyleTitle($0.preferredAppearance)
-				} ?? OnboardingStrings.Summary.nothingChosen
-			)
-			LabeledContent(
-				OnboardingStrings.Summary.notificationsLabel,
-				value: notificationSummary
-			)
-			LabeledContent(
-				OnboardingStrings.Summary.networkLabel,
-				value: model.settings.clientConfig?.connectionName ?? OnboardingStrings.Summary.nothingChosen
-			)
-			LabeledContent(
-				OnboardingStrings.Summary.channelsLabel,
-				value: channelSummary
-			)
+			LabeledContent(.Onboarding.summaryNickname, value: nicknameSummary)
+			LabeledContent(.Onboarding.summaryChatStyle, value: chatStyleSummary)
+			LabeledContent(.Onboarding.summaryTextSize, value: textSizeSummary)
+			LabeledContent(.Onboarding.summaryAppearance, value: appearanceSummary)
+			LabeledContent(.Onboarding.summaryNotifications, value: notificationSummary)
+			LabeledContent(.Onboarding.summaryNetwork, value: networkSummary)
+			LabeledContent(.Onboarding.summaryChannels, value: channelSummary)
 		}
 		.formStyle(.columns)
 		.frame(maxWidth: 460)
 		.frame(maxWidth: .infinity, alignment: .center)
 	}
 
+	private var nicknameSummary: String {
+		model.acceptedIdentity?.nickname ?? nothingChosen
+	}
+
+	private var chatStyleSummary: String {
+		guard let appearance = model.acceptedAppearance else { return nothingChosen }
+		return String(localized: appearance.transcriptStyle.title)
+	}
+
+	private var textSizeSummary: String {
+		guard let appearance = model.acceptedAppearance else { return nothingChosen }
+		return String(localized: appearance.textSize.title)
+	}
+
+	private var appearanceSummary: String {
+		guard let appearance = model.acceptedAppearance else { return nothingChosen }
+		return String(localized: appearance.preferredAppearance.onboardingTitle)
+	}
+
+	private var networkSummary: String {
+		model.settings.clientConfig?.connectionName ?? nothingChosen
+	}
+
 	private var notificationSummary: String {
 		guard let notifications = model.acceptedNotifications else {
-			return OnboardingStrings.Summary.nothingChosen
+			return nothingChosen
 		}
 
 		let kinds = [
-			notifications.highlight ? OnboardingStrings.Summary.mentions : nil,
-			notifications.privateMessage ? OnboardingStrings.Summary.privateMessages : nil,
-			notifications.sounds ? OnboardingStrings.Summary.sounds : nil,
+			notifications.highlight ? String(localized: .Onboarding.summaryMentions) : nil,
+			notifications.privateMessage ? String(localized: .Onboarding.summaryPrivateMessages) : nil,
+			notifications.sounds ? String(localized: .Onboarding.summarySounds) : nil,
 		].compactMap(\.self)
 
-		return kinds.isEmpty
-			? OnboardingStrings.Summary.nothingChosen
-			: kinds.formatted(.list(type: .and))
+		return kinds.isEmpty ? nothingChosen : kinds.formatted(.list(type: .and))
 	}
 
 	private var channelSummary: String {
 		let channels = model.settings.channelsToJoin
-		return channels.isEmpty
-			? OnboardingStrings.Summary.nothingChosen
-			: channels.formatted(.list(type: .and))
+		return channels.isEmpty ? nothingChosen : channels.formatted(.list(type: .and))
 	}
 }
 

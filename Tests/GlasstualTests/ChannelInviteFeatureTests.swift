@@ -8,15 +8,6 @@ import AppKit
 import Testing
 
 @MainActor
-private final class ChannelInviteDelegateSpy: NSObject, ChannelInviteSheetDelegate {
-	private(set) var selectedChannel: String?
-
-	func channelInviteSheet(_: ChannelInviteSheet, onSelectChannel channelName: String) {
-		selectedChannel = channelName
-	}
-}
-
-@MainActor
 @Suite("Channel invite sheet")
 struct ChannelInviteFeatureTests {
 	@Test(
@@ -28,19 +19,18 @@ struct ChannelInviteFeatureTests {
 		]
 	)
 	func headlineDescribesOneTwoAndManyInvitees(_ nicknames: [String], _ headline: String) {
-		#expect(ChannelInviteStrings.invitationTitle(for: nicknames) == headline)
+		#expect(ChannelInviteSheet.invitationTitle(for: nicknames) == headline)
 	}
 
-	@Test("Inviting reports the chosen channel to the delegate")
+	@Test("Inviting reports the chosen channel")
 	func invitingReportsTheChosenChannel() {
-		let adapter = ChannelInviteSheet(nicknames: ["alice"], on: TestClient())
-		let delegate = ChannelInviteDelegateSpy()
-		adapter.delegate = delegate
+		var selectedChannel: String?
+		let sheet = ChannelInviteSheet(nicknames: ["alice"], on: TestClient()) { selectedChannel = $0 }
 
-		adapter.start(withChannels: ["#general", "#support"])
-		adapter.invite(to: "#support")
+		sheet.start(withChannels: ["#general", "#support"])
+		sheet.invite(to: "#support")
 
-		#expect(delegate.selectedChannel == "#support")
+		#expect(selectedChannel == "#support")
 	}
 
 	@Test("The picker starts on the first channel offered", arguments: [

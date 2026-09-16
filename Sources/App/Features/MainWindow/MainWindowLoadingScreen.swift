@@ -66,12 +66,12 @@ struct MainWindowLoadingContent: View {
 	/// carry the placement, spacing and text styles every other one has.
 	private var noServers: some View {
 		ContentUnavailableView {
-			Label(MainWindowStrings.Loading.noServersTitle, systemImage: "server.rack")
+			Label(String(localized: .MainWindow.noServers), systemImage: "server.rack")
 		} description: {
-			Text(verbatim: MainWindowStrings.Loading.welcomeDescription)
+			Text(verbatim: String(localized: .MainWindow.getStartedDescription))
 		} actions: {
-			Button(MenuStrings.Server.addServer) {
-				AppServices.delegate.menuController?.actionCoordinator.addServer(nil)
+			Button(.MainWindow.menuServerAddServer) {
+				AppServices.delegate.menuController?.addServer(nil)
 			}
 			.keyboardShortcut(.defaultAction)
 		}
@@ -84,7 +84,7 @@ struct MainWindowLoadingContent: View {
 				.scaledToFit()
 				.frame(width: applicationIconSize, height: applicationIconSize)
 				.accessibilityHidden(true)
-			Text(verbatim: MainWindowStrings.Loading.welcomeTitle)
+			Text(verbatim: String(localized: .MainWindow.welcomeToGlasstual))
 				.font(.largeTitle)
 			HStack(spacing: UISpacing.regular) {
 				Text(verbatim: reason)

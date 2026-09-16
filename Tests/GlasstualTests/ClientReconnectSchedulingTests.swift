@@ -33,7 +33,7 @@ struct ClientReconnectSchedulingTests {
 
 		client.startReconnectTimer()
 
-		#expect(client.reconnectTimer.isActive == false)
+		#expect(client.reconnect.timer.isActive == false)
 	}
 
 	@Test("Automatic reconnection on schedules a repeating run")
@@ -43,7 +43,7 @@ struct ClientReconnectSchedulingTests {
 
 		client.startReconnectTimer()
 
-		#expect(client.reconnectTimer.isActive)
+		#expect(client.reconnect.timer.isActive)
 	}
 
 	/// A second drop while a reconnect is already pending must not restart the
@@ -90,13 +90,13 @@ struct ClientReconnectSchedulingTests {
 		defer { client.stopReconnectTimer() }
 
 		client.startReconnectTimer()
-		let first = client.reconnectTimer.interval
+		let first = client.reconnect.timer.interval
 		client.stopReconnectTimer()
 		client.startReconnectTimer()
-		let second = client.reconnectTimer.interval
+		let second = client.reconnect.timer.interval
 
 		#expect(second > first)
-		#expect(client.reconnectAttemptCount == 2)
+		#expect(client.reconnect.attemptCount == 2)
 	}
 
 	/// Registration is the only evidence the endpoint is usable, so it is what
@@ -112,15 +112,15 @@ struct ClientReconnectSchedulingTests {
 
 		client.markAsLoggedIn()
 
-		#expect(client.reconnectAttemptCount == 0)
+		#expect(client.reconnect.attemptCount == 0)
 
 		client.startReconnectTimer()
 
 		let first = ClientConnectionTimerPolicy.reconnectInterval
 
 		// The jitter is drawn at random, so the delay is a range, not a number.
-		#expect(client.reconnectTimer.interval <= first)
-		#expect(client.reconnectTimer.interval >= first * 0.75)
+		#expect(client.reconnect.timer.interval <= first)
+		#expect(client.reconnect.timer.interval >= first * 0.75)
 	}
 
 	@Test("A pending run is left alone rather than restarted")
@@ -129,11 +129,11 @@ struct ClientReconnectSchedulingTests {
 		defer { client.stopReconnectTimer() }
 
 		client.startReconnectTimer()
-		let scheduled = client.reconnectTimer
+		let scheduled = client.reconnect.timer
 		client.startReconnectTimer()
 
-		#expect(client.reconnectTimer === scheduled)
-		#expect(client.reconnectTimer.isActive)
+		#expect(client.reconnect.timer === scheduled)
+		#expect(client.reconnect.timer.isActive)
 	}
 
 	@Test("Stopping clears the pending run, and stopping twice is harmless")
@@ -144,7 +144,7 @@ struct ClientReconnectSchedulingTests {
 		client.stopReconnectTimer()
 		client.stopReconnectTimer()
 
-		#expect(client.reconnectTimer.isActive == false)
+		#expect(client.reconnect.timer.isActive == false)
 	}
 
 	/** After a sleep-mode disconnect the switch that decides is
@@ -155,19 +155,19 @@ struct ClientReconnectSchedulingTests {
 	func sleepModeUsesTheSleepSetting() {
 		let reconnecting = client(autoReconnect: false, autoSleepModeDisconnect: false)
 		defer { reconnecting.stopReconnectTimer() }
-		reconnecting.reconnectEnabledBecauseOfSleepMode = true
+		reconnecting.reconnect.isEnabledForSleepMode = true
 
 		reconnecting.startReconnectTimer()
 
-		#expect(reconnecting.reconnectTimer.isActive)
+		#expect(reconnecting.reconnect.timer.isActive)
 
 		let quiet = client(autoReconnect: true, autoSleepModeDisconnect: true)
 		defer { quiet.stopReconnectTimer() }
-		quiet.reconnectEnabledBecauseOfSleepMode = true
+		quiet.reconnect.isEnabledForSleepMode = true
 
 		quiet.startReconnectTimer()
 
-		#expect(quiet.reconnectTimer.isActive == false)
+		#expect(quiet.reconnect.timer.isActive == false)
 	}
 
 	/// The run fires on a schedule, so it has to answer for a client that

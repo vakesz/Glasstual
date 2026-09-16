@@ -200,10 +200,10 @@ struct ServerNumericReplyCorpusTests {
 
 		client.supportInfo.processConfigurationData("NICKLEN=9")
 		client.isConnected = true
-		client.tryingNicknameSentNickname = "abcdefghi"
+		client.nicknameRetry.sentNickname = "abcdefghi"
 		client.tryAnotherNickname()
 
-		#expect(client.tryingNicknameSentNickname == "abcdefgh_")
+		#expect(client.nicknameRetry.sentNickname == "abcdefgh_")
 	}
 
 	/// Before ISUPPORT lands there is nothing to read, so the RFC-era default
@@ -213,10 +213,10 @@ struct ServerNumericReplyCorpusTests {
 		let client = TestClient(configDictionary: ["nickname": "nick", "username": "nick"])
 
 		client.isConnected = true
-		client.tryingNicknameSentNickname = "nick"
+		client.nicknameRetry.sentNickname = "nick"
 		client.tryAnotherNickname()
 
-		#expect(client.tryingNicknameSentNickname == "nick_")
+		#expect(client.nicknameRetry.sentNickname == "nick_")
 	}
 }
 

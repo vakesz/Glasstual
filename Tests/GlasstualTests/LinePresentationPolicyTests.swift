@@ -100,10 +100,10 @@ struct LinePresentationPolicyTests {
 		)
 		client.isConnected = true
 		client.socket = Connection(config: ConnectionConfig(), onClient: client)
-		let socket = try #require(client.socket)
+		_ = try #require(client.socket)
 		let channel = try #require(client.findChannelOrCreate("#\u{2}chan"))
 
-		client.ircConnection(socket, didReceiveData: ":alice!a@host PRIVMSG #\u{2}chan :\u{3}4red")
+		client.connectionDidReceive(":alice!a@host PRIVMSG #\u{2}chan :\u{3}4red")
 
 		let printed = try #require(client.printedLines.lastObject as? [String: Any])
 		#expect(printed["channel"] as? Channel === channel)

@@ -94,7 +94,7 @@ extension TranscriptView {
 	/// The button is offered exactly while the reader is somewhere other than
 	/// the end of a transcript that has an end to go to.
 	func updateJumpToLatestVisibility() {
-		jumpToLatest.isHidden = followsBottom || lines.isEmpty
+		jumpToLatest.isHidden = followsBottom || document.isEmpty
 	}
 
 	func jump(to lineNumber: String) -> Bool {
@@ -149,7 +149,7 @@ extension TranscriptView {
 	func ensureLayoutForTail() {
 		guard let layoutManager = textView.textLayoutManager,
 		      let contentManager = layoutManager.textContentManager,
-		      let lastStart = lineStarts.dropLast().last,
+		      let lastStart = document.lineStarts.dropLast().last,
 		      let tailStart = contentManager.location(contentManager.documentRange.location, offsetBy: lastStart),
 		      let tail = NSTextRange(location: tailStart, end: contentManager.documentRange.endLocation)
 		else { return }

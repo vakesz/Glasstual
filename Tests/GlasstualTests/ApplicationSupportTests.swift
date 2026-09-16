@@ -39,34 +39,31 @@ struct ApplicationSupportTests {
 	}
 
 	@Test("Bundle and bundled resource locations point into the main bundle")
-	func pathInfoExposesBundleAndBundledResourceLocations() {
+	func applicationPathsExposeBundleAndBundledResourceLocations() {
 		let bundle = Bundle.main
 
-		#expect(PathInfo.applicationBundle == bundle.bundlePath)
-		#expect(PathInfo.applicationBundleURL == bundle.bundleURL)
-		#expect(PathInfo.applicationResources == bundle.resourcePath)
-		#expect(PathInfo.applicationResourcesURL == bundle.resourceURL)
-		#expect(PathInfo.bundledScripts.hasSuffix("Bundled Scripts"))
-		#expect(PathInfo.systemDiagnosticReports == "/Library/Logs/DiagnosticReports")
-		#expect(PathInfo.userHome.isEmpty == false)
+		#expect(ApplicationPaths.applicationBundleURL == bundle.bundleURL)
+		#expect(ApplicationPaths.applicationResourcesURL == bundle.resourceURL)
+		#expect(ApplicationPaths.bundledScriptsURL.path.hasSuffix("Bundled Scripts"))
+		#expect(ApplicationPaths.systemDiagnosticReportsURL.path == "/Library/Logs/DiagnosticReports")
 	}
 
 	@Test("The temporary directory is created on demand, and so is an explicitly named one")
-	func pathInfoCreatesTemporaryDirectoryAndExplicitDirectoryHelper() throws {
-		let temporaryPath = PathInfo.applicationTemporary
+	func applicationPathsCreateTemporaryDirectoryAndExplicitDirectory() throws {
+		let temporaryURL = ApplicationPaths.applicationTemporaryURL
 		var isDirectory = ObjCBool(false)
-		let temporaryExists = FileManager.default.fileExists(atPath: temporaryPath, isDirectory: &isDirectory)
+		let temporaryExists = FileManager.default.fileExists(atPath: temporaryURL.path, isDirectory: &isDirectory)
 
 		#expect(temporaryExists)
 		#expect(isDirectory.boolValue)
-		#expect(temporaryPath.contains(Bundle.main.bundleIdentifier ?? ""))
+		#expect(temporaryURL.path.contains(Bundle.main.bundleIdentifier ?? ""))
 
 		let directory = FileManager.default.temporaryDirectory
 			.appendingPathComponent("GlasstualPathTests-\(UUID().uuidString)", isDirectory: true)
 
 		#expect(FileManager.default.fileExists(atPath: directory.path) == false)
 
-		PathInfo.createDirectory(at: directory)
+		ApplicationPaths.createDirectory(at: directory)
 
 		#expect(FileManager.default.fileExists(atPath: directory.path))
 		try FileManager.default.removeItem(at: directory)
@@ -76,7 +73,7 @@ struct ApplicationSupportTests {
 	/// The path used to be recorded as ensured before the creation was even
 	/// attempted, so a directory that failed once was never tried again.
 	@Test("A directory that could not be created is created on the next call")
-	func pathInfoRetriesADirectoryItCouldNotCreate() throws {
+	func applicationPathsRetryADirectoryTheyCouldNotCreate() throws {
 		let fileManager = FileManager.default
 		let blocker = fileManager.temporaryDirectory
 			.appendingPathComponent("GlasstualPathTests-\(UUID().uuidString)", isDirectory: false)
@@ -86,13 +83,13 @@ struct ApplicationSupportTests {
 		/* A directory cannot be made inside a regular file. */
 		try Data().write(to: blocker)
 
-		PathInfo.createDirectory(at: directory)
+		ApplicationPaths.createDirectory(at: directory)
 
 		#expect(fileManager.fileExists(atPath: directory.path) == false)
 
 		try fileManager.removeItem(at: blocker)
 
-		PathInfo.createDirectory(at: directory)
+		ApplicationPaths.createDirectory(at: directory)
 
 		#expect(fileManager.fileExists(atPath: directory.path))
 	}
@@ -239,14 +236,7 @@ struct ApplicationSupportTests {
 		#expect(Preferences.Internals.runCount.coerce(.string("\(UInt.max)")) == nil)
 	}
 
-	/// The bound is exclusive, so there is no number below zero of them.
-	@Test("A random number below nothing is nothing")
-	func randomNumberBelowZeroIsZero() {
-		#expect(randomNumber(0) == 0)
-		#expect(randomNumber(1) == 0)
-	}
-
-	/** A transcript row carries an archived `NSDate`, and one that is not a
+	/** A transcript row carries a date read back off disk, and one that is not a
 	 moment `localtime_r` can name would trap on the narrowing to `time_t`.
 	 An unformattable stamp reads as no stamp, which is what callers expect. */
 	@Test(
@@ -254,15 +244,15 @@ struct ApplicationSupportTests {
 		arguments: [Double.nan, .infinity, -.infinity, 1e300, -1e300] as [TimeInterval]
 	)
 	func storedDatesThatAreNotMomentsFormatAsNothing(_ seconds: TimeInterval) {
-		let date = Date(timeIntervalSince1970: seconds) as NSDate
+		let date = Date(timeIntervalSince1970: seconds)
 
-		#expect(formattedTimestamp(date, "[%H:%M:%S]" as NSString) == nil)
+		#expect(DateFormatting.timestamp(date, format: "[%H:%M:%S]") == nil)
 	}
 
 	@Test("A stored date that is a moment still formats")
 	func storedDatesThatAreMomentsStillFormat() throws {
-		let date = Date(timeIntervalSince1970: 1_709_641_800) as NSDate
-		let formatted = try #require(formattedTimestamp(date, "[%H:%M:%S]" as NSString))
+		let date = Date(timeIntervalSince1970: 1_709_641_800)
+		let formatted = try #require(DateFormatting.timestamp(date, format: "[%H:%M:%S]"))
 
 		#expect(formatted.hasPrefix("["))
 		#expect(formatted.hasSuffix("]"))

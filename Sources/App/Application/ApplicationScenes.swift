@@ -8,12 +8,44 @@ import SwiftUI
 
 enum ApplicationSceneID {
 	static let about = "about"
-	static let channelAccessList = "channel-access-list"
+	static let channelBanList = "channel-ban-list"
 	static let channelSpotlight = "channel-spotlight"
 	static let fileTransfers = "file-transfers"
 	static let onboarding = "onboarding"
 	static let serverChannelList = "server-channel-list"
 	static let serverHighlightList = "server-highlight-list"
+}
+
+/** What one keyed scene has open, one session per window.
+
+ Every such scene wants the same three things: the session a window already has,
+ a new one where there is none, and the session back when the window goes so the
+ caller can close it. Each of them used to spell all three out. */
+struct SceneSessions<Key: Hashable, Session> {
+	private var sessions: [Key: Session] = [:]
+
+	/// The session `key` has open, or nil when no window is showing one.
+	subscript(key: Key) -> Session? {
+		sessions[key]
+	}
+
+	/// The session `key` already has, or a new one put in its place.
+	mutating func open(_ key: Key, making make: () -> Session) -> Session {
+		if let existing = sessions[key] {
+			return existing
+		}
+
+		let created = make()
+		sessions[key] = created
+
+		return created
+	}
+
+	/// Forgets `key`'s session and hands it back, so the caller can close it.
+	@discardableResult
+	mutating func close(_ key: Key) -> Session? {
+		sessions.removeValue(forKey: key)
+	}
 }
 
 /// Installs SwiftUI scenes while the process lifecycle is still hosted by the
@@ -22,12 +54,12 @@ enum ApplicationSceneID {
 @MainActor
 final class ApplicationScenes {
 	private let settingsRequest = SettingsSceneRequest()
-	private var channelSpotlightSession: ChannelSpotlightSession?
-	private var serverChannelListSessions: [String: ServerChannelListSession] = [:]
-	private var serverHighlightListSessions: [String: ServerHighlightListSession] = [:]
-	/// Observable, so replacing the access list redraws a window already open on
+	private var channelSpotlightModel: ChannelSpotlightModel?
+	private var serverChannelLists = SceneSessions<String, ServerChannelList>()
+	private var serverHighlightLists = SceneSessions<String, ServerHighlightList>()
+	/// Observable, so replacing the ban list redraws a window already open on
 	/// another channel's.
-	let channelAccessListWindowState = ChannelBanListWindowState()
+	let channelBanListWindowState = ChannelBanListWindowState()
 
 	private lazy var aboutRepresentation = NSHostingSceneRepresentation {
 		AboutScene()
@@ -42,10 +74,10 @@ final class ApplicationScenes {
 	}
 
 	private lazy var fileTransferRepresentation = NSHostingSceneRepresentation {
-		FileTransferScene(center: AppServices.fileTransfers)
+		FileTransferListScene(center: AppServices.fileTransfers)
 	}
 
-	private lazy var channelAccessListRepresentation = NSHostingSceneRepresentation { [unowned self] in
+	private lazy var channelBanListRepresentation = NSHostingSceneRepresentation { [unowned self] in
 		ChannelBanListScene(scenes: self)
 	}
 
@@ -58,7 +90,7 @@ final class ApplicationScenes {
 	}
 
 	private lazy var settingsRepresentation = NSHostingSceneRepresentation { [unowned self] in
-		PreferencesScene(request: settingsRequest)
+		SettingsScene(request: settingsRequest)
 	}
 
 	private var isInstalled = false
@@ -67,7 +99,7 @@ final class ApplicationScenes {
 		guard isInstalled == false else { return }
 		isInstalled = true
 		application.addSceneRepresentation(aboutRepresentation)
-		application.addSceneRepresentation(channelAccessListRepresentation)
+		application.addSceneRepresentation(channelBanListRepresentation)
 		application.addSceneRepresentation(channelSpotlightRepresentation)
 		application.addSceneRepresentation(fileTransferRepresentation)
 		application.addSceneRepresentation(onboardingRepresentation)
@@ -85,10 +117,10 @@ final class ApplicationScenes {
 	}
 
 	func openChannelSpotlight() {
-		if let channelSpotlightSession {
-			channelSpotlightSession.reloadResults()
+		if let channelSpotlightModel {
+			channelSpotlightModel.reloadResults()
 		} else {
-			channelSpotlightSession = ChannelSpotlightSession()
+			channelSpotlightModel = ChannelSpotlightModel()
 		}
 		channelSpotlightRepresentation.environment.openWindow(id: ApplicationSceneID.channelSpotlight)
 	}
@@ -101,20 +133,18 @@ final class ApplicationScenes {
 		fileTransferRepresentation.environment.dismissWindow(id: ApplicationSceneID.fileTransfers)
 	}
 
-	func currentChannelSpotlightSession() -> ChannelSpotlightSession? {
-		channelSpotlightSession
+	func currentChannelSpotlightModel() -> ChannelSpotlightModel? {
+		channelSpotlightModel
 	}
 
 	func channelSpotlightDidClose() {
-		channelSpotlightSession?.close()
-		channelSpotlightSession = nil
+		channelSpotlightModel?.close()
+		channelSpotlightModel = nil
 	}
 
 	func openServerChannelList(for client: Client) {
 		let clientIdentifier = client.uniqueIdentifier
-		let session = serverChannelListSessions[clientIdentifier] ?? ServerChannelListSession(client: client)
-		serverChannelListSessions[clientIdentifier] = session
-		session.beginRefresh()
+		serverChannelLists.open(clientIdentifier) { ServerChannelList(client: client) }.beginRefresh()
 		serverChannelListRepresentation.environment.openWindow(
 			id: ApplicationSceneID.serverChannelList,
 			value: clientIdentifier
@@ -124,15 +154,15 @@ final class ApplicationScenes {
 	/** The channel list open for a client, if there is one.
 
 	 Only a lookup. Protocol replies and the scene body both ask here, and a
-	 lookup that made a missing session sent the server another `LIST` for
+	 lookup that made a missing list sent the server another `LIST` for
 	 every row still arriving after the window closed. Opening the window is
-	 the one path that makes a session and asks for a listing. */
-	func serverChannelList(for clientIdentifier: String) -> ServerChannelListSession? {
-		serverChannelListSessions[clientIdentifier]
+	 the one path that makes a list and asks for a listing. */
+	func serverChannelList(for clientIdentifier: String) -> ServerChannelList? {
+		serverChannelLists[clientIdentifier]
 	}
 
 	func closeServerChannelList(for clientIdentifier: String) {
-		serverChannelListSessions.removeValue(forKey: clientIdentifier)?.close()
+		serverChannelLists.close(clientIdentifier)?.close()
 		serverChannelListRepresentation.environment.dismissWindow(
 			id: ApplicationSceneID.serverChannelList,
 			value: clientIdentifier
@@ -140,42 +170,41 @@ final class ApplicationScenes {
 	}
 
 	func serverChannelListDidClose(for clientIdentifier: String) {
-		serverChannelListSessions.removeValue(forKey: clientIdentifier)?.close()
+		serverChannelLists.close(clientIdentifier)?.close()
 	}
 
-	/** Opens one channel's access list, replacing whatever the window was
+	/** Opens one channel's ban list, replacing whatever the window was
 	 showing.
 
 	 A window rather than a sheet, so the channel the list is about can be read
 	 and typed into while its bans are being looked over. The mode query that
 	 fills it is sent by the caller, so the session is in place before the first
 	 reply can arrive. */
-	func openChannelAccessList(entryType: ChannelBanListEntryType, in channel: Channel) {
+	func openChannelBanList(entryType: ChannelBanListEntryType, in channel: Channel) {
 		guard let session = ChannelBanListSession(entryType: entryType, in: channel) else { return }
-		channelAccessListWindowState.session = session
-		channelAccessListRepresentation.environment.openWindow(id: ApplicationSceneID.channelAccessList)
+		channelBanListWindowState.session = session
+		channelBanListRepresentation.environment.openWindow(id: ApplicationSceneID.channelBanList)
 	}
 
-	func currentChannelAccessListSession() -> ChannelBanListSession? {
-		channelAccessListWindowState.session
+	func currentChannelBanListSession() -> ChannelBanListSession? {
+		channelBanListWindowState.session
 	}
 
-	func channelAccessListDidClose() {
-		channelAccessListWindowState.session = nil
+	func channelBanListDidClose() {
+		channelBanListWindowState.session = nil
 	}
 
-	/// Closes the access list when the channel or connection it is about goes
+	/// Closes the ban list when the channel or connection it is about goes
 	/// away, which is what the sheet it replaced got from the main window.
-	func closeChannelAccessList(matching isStale: (ChannelBanListSession) -> Bool) {
-		guard let session = channelAccessListWindowState.session, isStale(session) else { return }
-		channelAccessListWindowState.session = nil
-		channelAccessListRepresentation.environment.dismissWindow(id: ApplicationSceneID.channelAccessList)
+	func closeChannelBanList(matching isStale: (ChannelBanListSession) -> Bool) {
+		guard let session = channelBanListWindowState.session, isStale(session) else { return }
+		channelBanListWindowState.session = nil
+		channelBanListRepresentation.environment.dismissWindow(id: ApplicationSceneID.channelBanList)
 	}
 
 	func openServerHighlightList(for client: Client) {
 		let clientIdentifier = client.uniqueIdentifier
-		let session = serverHighlightListSessions[clientIdentifier] ?? ServerHighlightListSession(client: client)
-		serverHighlightListSessions[clientIdentifier] = session
+		_ = serverHighlightLists.open(clientIdentifier) { ServerHighlightList(client: client) }
 		serverHighlightListRepresentation.environment.openWindow(
 			id: ApplicationSceneID.serverHighlightList,
 			value: clientIdentifier
@@ -184,26 +213,25 @@ final class ApplicationScenes {
 
 	/// The highlight list of a window that is open, and nothing more: a highlight
 	/// logged with no list showing has nowhere to go.
-	func openServerHighlightListSession(for clientIdentifier: String) -> ServerHighlightListSession? {
-		serverHighlightListSessions[clientIdentifier]
+	func visibleServerHighlightList(for clientIdentifier: String) -> ServerHighlightList? {
+		serverHighlightLists[clientIdentifier]
 	}
 
-	func serverHighlightList(for clientIdentifier: String) -> ServerHighlightListSession? {
-		if let session = serverHighlightListSessions[clientIdentifier] {
-			return session
+	func serverHighlightList(for clientIdentifier: String) -> ServerHighlightList? {
+		if let list = serverHighlightLists[clientIdentifier] {
+			return list
 		}
-		guard let client = AppServices.world?.findClient(withId: clientIdentifier) else {
+		guard let client = AppServices.clientDirectory?.findClient(withId: clientIdentifier) else {
 			return nil
 		}
-		let session = ServerHighlightListSession(client: client)
-		serverHighlightListSessions[clientIdentifier] = session
-		return session
+
+		return serverHighlightLists.open(clientIdentifier) { ServerHighlightList(client: client) }
 	}
 
 	/// The list of a connection that is being taken away has nothing left to
 	/// jump into, so the window goes with it.
 	func closeServerHighlightList(for clientIdentifier: String) {
-		guard serverHighlightListSessions.removeValue(forKey: clientIdentifier) != nil else { return }
+		guard serverHighlightLists.close(clientIdentifier) != nil else { return }
 		serverHighlightListRepresentation.environment.dismissWindow(
 			id: ApplicationSceneID.serverHighlightList,
 			value: clientIdentifier
@@ -211,10 +239,10 @@ final class ApplicationScenes {
 	}
 
 	func serverHighlightListDidClose(for clientIdentifier: String) {
-		serverHighlightListSessions.removeValue(forKey: clientIdentifier)
+		serverHighlightLists.close(clientIdentifier)
 	}
 
-	func openSettings(_ selection: PreferencesSceneSelection = .default) {
+	func openSettings(_ selection: SettingsSceneSelection = .default) {
 		settingsRequest.open(selection)
 		settingsRepresentation.environment.openSettings()
 	}

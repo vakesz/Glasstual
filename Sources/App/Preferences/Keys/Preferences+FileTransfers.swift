@@ -120,3 +120,26 @@ nonisolated extension Preferences { // nonisolated: value
 		]
 	}
 }
+
+/** What happens when someone offers a file.
+
+ Stored as the integer it declares; a stored value with no matching case falls
+ back to the key's declared default. */
+enum FileTransferRequestBehavior: UInt, Sendable {
+	case ignore = 1
+	case openDialog
+	case automaticallyDownload
+}
+
+extension FileTransferRequestBehavior: PreferenceEnum {}
+
+/// Where the address offered to the other end comes from.
+enum FileTransferIPAddressSource: UInt, Sendable {
+	// Raw values preserve existing preferences.
+	case routerOnly = 3
+	case routerAndFirstParty = 1
+	case routerAndThirdParty = 4
+	case manual = 2
+}
+
+extension FileTransferIPAddressSource: PreferenceEnum {}

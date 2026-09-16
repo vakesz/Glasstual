@@ -122,7 +122,7 @@ struct ConnectionInboundDeliveryTests {
 		}
 		try #require(plain.isConnected)
 		client.sentLines.removeAllObjects()
-		client.ircConnection(plain, didReceiveData: "CAP * LS :sts=port=6697")
+		client.connectionDidReceive("CAP * LS :sts=port=6697")
 		try #require(client.isDisconnecting)
 		#expect(plain.isDisconnecting)
 		// Invoke the actual registered action while connect is guarded. This
@@ -172,7 +172,7 @@ struct ConnectionInboundDeliveryTests {
 		try #require(socket.isConnected)
 		#expect(client.sentLines.compactMap { $0 as? String }.contains { $0.hasPrefix("PASS ") })
 		client.sentLines.removeAllObjects()
-		client.ircConnection(socket, didReceiveData: ":server 010 me redirect.invalid 6668 :Try another server")
+		client.connectionDidReceive(":server 010 me redirect.invalid 6668 :Try another server")
 		try #require(client.isDisconnecting)
 		#expect(socket.isDisconnecting)
 		client.invokeDisconnectCallbacks()
@@ -211,7 +211,7 @@ struct ConnectionInboundDeliveryTests {
 		}
 		client.sentCapabilityCommands.removeAllObjects()
 
-		client.ircConnection(plain, didReceiveData: "CAP * LS :sts=port=6697 multi-prefix server-time")
+		client.connectionDidReceive("CAP * LS :sts=port=6697 multi-prefix server-time")
 
 		try #require(client.isDisconnecting)
 		#expect(client.sentCapabilityCommands.count == 0)
@@ -234,7 +234,7 @@ struct ConnectionInboundDeliveryTests {
 			socket.callbackReceiver.ircConnectionDidConnect(toHost: origin.serverAddress)
 		}
 
-		client.ircConnection(socket, didReceiveData: ":server 010 me redirect.invalid 6667 :Try another server")
+		client.connectionDidReceive(":server 010 me redirect.invalid 6667 :Try another server")
 		try #require(client.isDisconnecting)
 		client.invokeDisconnectCallbacks()
 
@@ -250,10 +250,10 @@ struct ConnectionInboundDeliveryTests {
 	/// not obeyed.
 	@Test("A redirect after registration is not followed")
 	func redirectAfterRegistrationIsIgnored() {
-		let (client, socket) = connectedClient()
+		let (client, _) = connectedClient()
 		client.markAsLoggedIn()
 
-		client.ircConnection(socket, didReceiveData: ":server 010 me redirect.invalid 6697 :Try another server")
+		client.connectionDidReceive(":server 010 me redirect.invalid 6697 :Try another server")
 
 		#expect(client.isDisconnecting == false)
 		#expect(client.pendingEndpoint == nil)
@@ -338,32 +338,34 @@ struct ConnectionInboundDeliveryTests {
 	/// the client answers the lines in the order the server sent them.
 	@Test("Lines are answered in the order the connection delivered them")
 	func answersInWireOrder() {
-		let (client, connection) = connectedClient()
+		let (client, _) = connectedClient()
 
 		for token in ["one", "two", "three"] {
-			client.ircConnection(connection, didReceiveData: "PING :\(token)")
+			client.connectionDidReceive("PING :\(token)")
 		}
 
 		#expect(client.sentLines as? [String] == ["PONG one", "PONG two", "PONG three"])
 	}
 
 	/// A reconnect replaces the socket. Lines that were already in flight on the
-	/// retired connection must not act on the new session.
+	/// retired connection must not act on the new session, which is why the
+	/// connection checks that the client still owns it before delivering.
 	@Test("A line from a connection the client no longer owns is dropped")
-	func ignoresRetiredConnection() {
+	func ignoresRetiredConnection() async {
 		let (client, _) = connectedClient()
 		let retired = Connection(config: ConnectionConfig(), onClient: client)
 
-		client.ircConnection(retired, didReceiveData: "PING :stale")
+		retired.callbackReceiver.ircConnectionDidReceive([Data("PING :stale".utf8)]) {}
+		await settle()
 
 		#expect(client.sentLines.count == 0)
 	}
 
 	@Test("Empty data is not treated as a line")
 	func ignoresEmptyData() {
-		let (client, connection) = connectedClient()
+		let (client, _) = connectedClient()
 
-		client.ircConnection(connection, didReceiveData: "")
+		client.connectionDidReceive("")
 
 		#expect(client.sentLines.count == 0)
 	}
@@ -383,7 +385,7 @@ struct ConnectionInboundDeliveryTests {
 		client.autoConnect(withDelay: 20, afterWakeUp: false)
 		client.startReconnectTimer()
 		#expect(client.pendingConnectionTask == nil)
-		#expect(client.reconnectTimer.isActive == false)
+		#expect(client.reconnect.timer.isActive == false)
 		client.cancelScheduledConnection()
 		client.stopAllTimers()
 	}
@@ -433,17 +435,25 @@ struct ConnectionInboundDeliveryTests {
 	}
 
 	@Test("Late lifecycle callbacks cannot disconnect a replacement session")
-	func retiredLifecycleCallbacksAreIgnored() {
+	func retiredLifecycleCallbacksAreIgnored() async {
 		let (client, replacement) = connectedClient()
 		let retired = Connection(config: ConnectionConfig(), onClient: client)
 		var completions = 0
 		client.addDisconnectCallback { completions += 1 }
-		client.ircConnectionDidConnect(retired)
-		client.ircConnectionDidCloseReadStream(retired)
-		client.ircConnection(retired, didDisconnectWithError: nil)
+		retired.callbackReceiver.ircConnectionDidConnect(toHost: nil)
+		retired.callbackReceiver.ircConnectionDidCloseReadStream()
+		retired.callbackReceiver.ircConnectionDidDisconnectWithError(nil)
+		await settle()
 		#expect(client.socket === replacement)
 		#expect(client.isConnected)
 		#expect(completions == 0)
 		#expect(client.sentLines.count == 0)
+	}
+
+	/// Lets the connection's event loop drain what was just pushed into it.
+	private func settle() async {
+		for _ in 0 ..< 100 {
+			await Task.yield()
+		}
 	}
 }

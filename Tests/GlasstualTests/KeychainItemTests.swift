@@ -44,18 +44,4 @@ struct KeychainItemTests {
 	func labels(item: KeychainItem, expected: String) {
 		#expect(item.label == expected)
 	}
-
-	@Test("Every secret is stored as an application password")
-	func itemClasses() {
-		let items: [KeychainItem] = [
-			.nicknamePassword("abc"),
-			.proxyPassword("abc"),
-			.serverPassword("abc"),
-			.channelSecretKey("abc"),
-		]
-
-		for item in items {
-			#expect(item.itemClass.descriptionAttribute == "application password")
-		}
-	}
 }

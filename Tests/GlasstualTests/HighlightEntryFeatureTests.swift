@@ -9,14 +9,6 @@ import SwiftUI
 import Testing
 
 @MainActor
-private final class HighlightEntryDelegateSpy: NSObject, HighlightEntrySheetDelegate {
-	private(set) var savedConfiguration: HighlightMatchCondition?
-	func highlightEntrySheet(_: HighlightEntrySheet, didSave configuration: HighlightMatchCondition) {
-		savedConfiguration = configuration
-	}
-}
-
-@MainActor
 @Suite("Highlight entry sheet")
 struct HighlightEntryFeatureTests {
 	@Test("The typed selections map the legacy booleans and channel identifiers")
@@ -100,30 +92,28 @@ struct HighlightEntryFeatureTests {
 
 	@Test("The sheet copy comes from the namespaced, deduplicated catalog entries")
 	func sheetUsesNamespacedAndDeduplicatedLocalizedCopy() {
-		#expect(ServerPropertiesStrings.Highlight.matchType(isExcluded: false) == "Match")
-		#expect(ServerPropertiesStrings.Highlight.matchType(isExcluded: true) == "Exclude")
-		#expect(ServerPropertiesStrings.Highlight.allChannels == "All Channels")
-		#expect(HighlightEntryStrings.windowTitle == "Highlight Rule")
-		#expect(HighlightEntryStrings.matchTypeLabel == "Match Type")
-		#expect(HighlightEntryStrings.keywordLabel == "Keyword")
-		#expect(HighlightEntryStrings.channelLabel == "Channel")
+		#expect(String(localized: HighlightMatchBehavior.include.title) == "Match")
+		#expect(String(localized: HighlightMatchBehavior.exclude.title) == "Exclude")
+		#expect(String(localized: .ServerProperties.allChannels) == "All Channels")
+		#expect(String(localized: .HighlightEntry.windowTitle) == "Highlight Rule")
+		#expect(String(localized: .HighlightEntry.matchTypeLabel) == "Match Type")
+		#expect(String(localized: .HighlightEntry.keywordLabel) == "Keyword")
+		#expect(String(localized: .HighlightEntry.channelLabel) == "Channel")
 	}
 
-	@Test("The sheet session reports through typed delegate callbacks")
-	func sessionUsesTypedDelegateCallbacks() throws {
+	@Test("The sheet reports the rule it accepted")
+	func sheetReportsTheAcceptedRule() throws {
 		let source = HighlightMatchCondition(uniqueIdentifier: "highlight-a", matchKeyword: "ping")
 		let channel = ChannelConfig(uniqueIdentifier: "channel-a", channelName: "#swift")
-		let adapter = HighlightEntrySheet(config: source, channels: [channel])
-		let delegate = HighlightEntryDelegateSpy()
-
-		adapter.delegate = delegate
+		var saved: HighlightMatchCondition?
+		let adapter = HighlightEntrySheet(config: source, channels: [channel]) { saved = $0 }
 
 		adapter.model.behavior = .exclude
 		adapter.model.keyword = " mention "
 		adapter.model.channelSelection = .channel(id: "channel-a")
 		adapter.submit()
 
-		let savedConfiguration = try #require(delegate.savedConfiguration)
+		let savedConfiguration = try #require(saved)
 		#expect(savedConfiguration.matchIsExcluded)
 		#expect(savedConfiguration.matchKeyword == "mention")
 		#expect(savedConfiguration.matchChannelId == "channel-a")

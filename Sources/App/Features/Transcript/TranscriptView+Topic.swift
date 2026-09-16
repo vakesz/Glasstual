@@ -143,14 +143,14 @@ extension TranscriptView {
 	func topicMenu() -> NSMenu {
 		let menu = NSMenu()
 		let copy = NSMenuItem(
-			title: TranscriptViewStrings.copyTopic,
+			title: String(localized: .Transcript.copyTopic),
 			action: #selector(copyTopicMenuItemClicked(_:)),
 			keyEquivalent: ""
 		)
 		copy.target = self
 		menu.addItem(copy)
 		let change = NSMenuItem(
-			title: MenuStrings.Channel.modifyTopic,
+			title: String(localized: .MainWindow.menuChannelModifyTopic),
 			action: #selector(changeTopicMenuItemClicked(_:)),
 			keyEquivalent: ""
 		)
@@ -164,8 +164,8 @@ extension TranscriptView {
 	func updateAccessibilityDescription() {
 		let name = viewController?.associatedChannel?.name
 			?? viewController?.associatedClient?.networkNameAlt ?? ""
-		textView.setAccessibilityLabel(TranscriptViewStrings.transcriptAccessibility(conversation: name))
-		textView.setAccessibilityRoleDescription(TranscriptViewStrings.transcriptRoleDescription)
+		textView.setAccessibilityLabel(String(localized: .Transcript.transcriptAccessibility(name)))
+		textView.setAccessibilityRoleDescription(String(localized: .Transcript.transcriptRole))
 	}
 }
 

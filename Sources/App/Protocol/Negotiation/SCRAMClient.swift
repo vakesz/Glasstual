@@ -85,7 +85,7 @@ nonisolated struct SCRAMClientError: LocalizedError, CustomNSError { // nonisola
 /// state, so the client's state machine belongs to the same domain. Only the
 /// PBKDF2 derivation leaves it, and that is a pure function.
 @MainActor
-final class SCRAMClient: NSObject {
+final class SCRAMClient {
 	/// The exchange, in the order it runs.
 	enum State {
 		case initial

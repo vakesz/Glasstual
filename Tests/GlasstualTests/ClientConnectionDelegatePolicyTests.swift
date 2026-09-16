@@ -58,14 +58,14 @@ struct ClientConnectionDelegatePolicyTests {
 	@Test("An untrusted certificate overrides the configured disconnect mode")
 	func badCertificateErrorOverridesConfiguredDisconnectMode() {
 		#expect(
-			ClientDisconnectPolicy.effectiveMode(
+			effectiveDisconnectMode(
 				configured: .serverRedirect,
 				errorDomain: connectionErrorDomain,
 				errorCode: Int(ConnectionErrorCode.badCertificate.rawValue)
 			) == .badCertificate
 		)
 		#expect(
-			ClientDisconnectPolicy.effectiveMode(
+			effectiveDisconnectMode(
 				configured: .serverRedirect,
 				errorDomain: "different.domain",
 				errorCode: Int(ConnectionErrorCode.badCertificate.rawValue)
@@ -75,18 +75,18 @@ struct ClientConnectionDelegatePolicyTests {
 
 	@Test("Each disconnect mode keeps the copy the user is shown")
 	func disconnectDescriptionsPreserveLegacyCopy() {
-		#expect(ConnectionStrings.disconnectReason(for: .normal) == "Disconnected")
-		#expect(ConnectionStrings.disconnectReason(for: .computerSleep) == "Disconnected for Sleep Mode")
+		#expect(ClientDisconnectMode.normal.reasonText == "Disconnected")
+		#expect(ClientDisconnectMode.computerSleep.reasonText == "Disconnected for Sleep Mode")
 		#expect(
-			ConnectionStrings.disconnectReason(for: .badCertificate)
+			ClientDisconnectMode.badCertificate.reasonText
 				== "Disconnected from server because of an untrusted certificate"
 		)
 		#expect(
-			ConnectionStrings.disconnectReason(for: .serverRedirect)
+			ClientDisconnectMode.serverRedirect.reasonText
 				== "Disconnected for server redirect"
 		)
 		#expect(
-			ConnectionStrings.disconnectReason(for: .reachabilityChange)
+			ClientDisconnectMode.reachabilityChange.reasonText
 				== "Disconnected from server because the Internet is not reachable"
 		)
 	}
@@ -100,7 +100,7 @@ struct ClientConnectionDelegatePolicyTests {
 			backing: .buffered,
 			defer: false
 		)
-		let controller = window.logControllers.controller(for: client)
+		let controller = window.transcriptControllers.controller(for: client)
 		var renderedLineCount = 0
 
 		for index in 0 ..< 16 {
@@ -121,14 +121,16 @@ struct ClientConnectionDelegatePolicyTests {
 
 	@Test("An empty username and real name fall back to the nickname, and invisible mode is selected")
 	func registrationFallsBackToNicknameAndSelectsInvisibleMode() {
-		#expect(
-			ClientRegistrationPolicy.values(
-				nickname: "Guest",
-				username: "",
-				realName: "",
-				setInvisibleMode: true
-			) == .init(username: "Guest", realName: "Guest", modeSymbols: "8")
+		let values = RegistrationValues(
+			nickname: "Guest",
+			username: "",
+			realName: "",
+			setInvisibleMode: true
 		)
+
+		#expect(values.username == "Guest")
+		#expect(values.realName == "Guest")
+		#expect(values.modeSymbols == "8")
 	}
 
 	@Test("The stored server time only advances for a newer stamped message")

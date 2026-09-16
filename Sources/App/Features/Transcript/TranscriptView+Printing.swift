@@ -80,12 +80,12 @@ extension TranscriptView {
 			/* Before and after: the nickname colours this pass resolves are the
 			 light ones, and the transcript on screen must not be handed them. */
 			beginNicknameColorBatch()
-			let document = NSMutableAttributedString()
-			for line in lines {
-				document.append(render(line))
+			let paper = NSMutableAttributedString()
+			for line in document.lines {
+				paper.append(render(line))
 			}
 			beginNicknameColorBatch()
-			return document
+			return paper
 		}
 	}
 

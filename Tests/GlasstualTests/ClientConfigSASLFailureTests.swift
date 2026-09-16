@@ -63,7 +63,7 @@ struct ClientConfigSASLFailureTests {
 
 	@Test("The disconnect reason resolves against the string catalog")
 	func disconnectReasonIsLocalized() {
-		let reason = InboundStrings.Numeric.saslAuthenticationFailedDisconnecting
+		let reason = String(localized: .IRC.saslAuthenticationFailedDisconnecting)
 		#expect(reason.isEmpty == false)
 		#expect(reason != "sasl-authentication-failed-disconnecting")
 	}

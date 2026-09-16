@@ -55,23 +55,6 @@ struct ModelPersistenceTests {
 		#expect(unique.uniqueIdentifier.isEmpty == false)
 	}
 
-	@Test("A per-channel notification override is three-state, not a boolean")
-	func channelConfigNotificationOverridesUseThreeStateSemantics() {
-		var config = ChannelConfig()
-		let event = NotificationEvent.highlight
-
-		#expect(config.notificationEnabled(forEvent: event) == .inherited)
-
-		config.setNotificationEnabled(.on, forEvent: event)
-		#expect(config.notificationEnabled(forEvent: event) == .on)
-
-		config.setNotificationEnabled(.off, forEvent: event)
-		#expect(config.notificationEnabled(forEvent: event) == .off)
-
-		config.setNotificationEnabled(.inherited, forEvent: event)
-		#expect(config.notificationEnabled(forEvent: event) == .inherited)
-	}
-
 	@Test("A highlight condition decodes the legacy channel key and encodes it back")
 	func highlightMatchConditionRoundTripsDictionaryAndDefaults() throws {
 		let condition = try #require(PropertyListModel.decode(HighlightMatchCondition.self, from: [

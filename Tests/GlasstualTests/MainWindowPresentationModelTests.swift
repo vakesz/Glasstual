@@ -36,10 +36,10 @@ struct MainWindowPresentationModelTests {
 		let secondOwner = NSObject()
 		var finished: [String] = []
 
-		model.presentSheet(PresentedSheet(owner: firstOwner, content: EmptyView()) {
+		model.presentSheet(MainWindowSheet(owner: firstOwner, content: EmptyView()) {
 			finished.append("first")
 		})
-		model.presentSheet(PresentedSheet(owner: secondOwner, content: EmptyView()) {
+		model.presentSheet(MainWindowSheet(owner: secondOwner, content: EmptyView()) {
 			finished.append("second")
 		})
 
@@ -60,10 +60,10 @@ struct MainWindowPresentationModelTests {
 		let secondOwner = NSObject()
 		var finished: [String] = []
 
-		model.presentSheet(PresentedSheet(owner: firstOwner, content: EmptyView()) {
+		model.presentSheet(MainWindowSheet(owner: firstOwner, content: EmptyView()) {
 			finished.append("first")
 		})
-		model.presentSheet(PresentedSheet(owner: secondOwner, content: EmptyView()) {
+		model.presentSheet(MainWindowSheet(owner: secondOwner, content: EmptyView()) {
 			finished.append("second")
 		})
 

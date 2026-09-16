@@ -157,18 +157,3 @@ struct MainWindowSwipePolicyTests {
 		#expect(MainWindowSwipePolicy.destination(gestureAmount: 0, phase: .cancelled, isComplete: true) == nil)
 	}
 }
-
-@Suite("Main window Tab key policy")
-struct MainWindowTabKeyPolicyTests {
-	@Test(
-		"Each Tab preference maps to what the window does with the key",
-		arguments: [
-			(TabKeyAction.nicknameComplete, MainWindowTabKeyPolicy.Outcome.completeNickname),
-			(.unreadChannel, .unreadChannel),
-			(.none, .keyboardNavigation),
-		]
-	)
-	func tabPreferenceOutcome(action: TabKeyAction, outcome: MainWindowTabKeyPolicy.Outcome) {
-		#expect(MainWindowTabKeyPolicy.outcome(for: action) == outcome)
-	}
-}

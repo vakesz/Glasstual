@@ -703,6 +703,30 @@
         }
       }
     },
+    "mute-this-conversation" : {
+      "comment" : "Channel option that silences notifications for one conversation. Inverted: the stored setting is whether notifications are shown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mute this conversation"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beszélgetés némítása"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Unterhaltung stummschalten"
+          }
+        }
+      }
+    },
     "name-label" : {
       "comment" : "Label for the channel name field.",
       "extractionState" : "manual",
@@ -747,30 +771,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Keine externen Kanalnachrichten (+n)"
-          }
-        }
-      }
-    },
-    "notifications" : {
-      "comment" : "Title of the channel notification overrides pane.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Notifications"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Értesítések"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Benachrichtigungen"
           }
         }
       }

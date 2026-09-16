@@ -3,7 +3,7 @@ import ApplicationServices
 import Foundation
 
 extension AccessibilityDriver {
-	/// The accessibility identifier `PreferencesRootView` puts on its sidebar.
+	/// The accessibility identifier `SettingsRootView` puts on its sidebar.
 	private static let settingsSidebar = "settings-sidebar"
 
 	func window(titled title: String) async throws -> AXUIElement {

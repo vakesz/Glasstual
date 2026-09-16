@@ -36,10 +36,10 @@ struct MainWindowColumnAlignmentTests {
 			defer: false
 		)
 		let controller = TranscriptController(client: client, in: window)
-		let logView = controller.ensureBackingView()
+		let transcriptView = controller.ensureBackingView()
 		let memberList = MemberList()
 		let host = NSHostingController(rootView: HStack(spacing: 0) {
-			TranscriptViewRepresentable(logView: logView)
+			TranscriptViewRepresentable(transcriptView: transcriptView)
 			MemberListView(model: memberList, redirectTyping: { _ in })
 				.scrollEdgeEffectStyle(.soft, for: .top)
 				.frame(width: 200)
@@ -57,7 +57,7 @@ struct MainWindowColumnAlignmentTests {
 		let safeTop = host.view.safeAreaInsets.top
 		#expect(safeTop > 0)
 
-		let transcript = logView.scrollView
+		let transcript = transcriptView.scrollView
 		let transcriptFrame = transcript.convert(transcript.bounds, to: host.view)
 		#expect(abs(transcriptFrame.minY - safeTop) < 0.5, "transcript at \(transcriptFrame)")
 		/* Its insets are the input bar's, set by hand; nothing adjusts them for

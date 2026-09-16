@@ -22,15 +22,15 @@ func expectLocalizedCopy(_ actual: String?, _ resource: LocalizedStringResource,
 struct FeatureLocalizationTests {
 	@Test("Channel properties preserve catalog symbols and corrected English copy")
 	func channelPropertiesStringsPreserveLegacyValues() throws {
-		try expectLocalizedCopy(ChannelPropertiesStrings.invalidChannelName,
+		try expectLocalizedCopy(String(localized: .ChannelProperties.pleaseEnterAProperlyFormattedChannel),
 		                        .ChannelProperties.pleaseEnterAProperlyFormattedChannel,
 		                        "Enter a channel name beginning with a channel prefix, such as #example.")
 		/* The alert asks whether to reload and offers Cancel and Reload, so
 		 neither half of it may name a "Yes" button that is not there. */
-		try expectLocalizedCopy(ChannelPropertiesStrings.configurationChangedTitle,
+		try expectLocalizedCopy(String(localized: .ChannelProperties.thisChannelsConfigurationHasChangedDo),
 		                        .ChannelProperties.thisChannelsConfigurationHasChangedDo,
 		                        "Reload the channel’s settings?")
-		try expectLocalizedCopy(ChannelPropertiesStrings.unsavedChangesWarning,
+		try expectLocalizedCopy(String(localized: .ChannelProperties.youWillLooseUnsavedChangesIf),
 		                        .ChannelProperties.youWillLooseUnsavedChangesIf,
 		                        "Your unsaved changes will be discarded.")
 	}
@@ -97,7 +97,7 @@ struct FeatureLocalizationTests {
 			)),
 		]
 		for (failure, (resource, english)) in cases {
-			try expectLocalizedCopy(FileTransferStrings.failure(failure, peerNickname: "Alice"), resource, english)
+			try expectLocalizedCopy(failure.message(peerNickname: "Alice"), resource, english)
 		}
 	}
 
@@ -119,15 +119,14 @@ struct FeatureLocalizationTests {
 
 	@Test("Transfer statuses preserve direction, and every preparing step reads as one wait")
 	func fileTransferStatusesPreserveDirectionAndCollapsePreparation() throws {
-		try expectLocalizedCopy(FileTransferStrings.status(.stopped, direction: .incoming, peerNickname: "Alice"),
+		try expectLocalizedCopy(FileTransferStatus.stopped.notice(direction: .incoming, peerNickname: "Alice"),
 		                        .FileTransfers.transferFromIsStopped("Alice"),
 		                        "Transfer from Alice has not started. Choose Start Transfer to begin.")
-		try expectLocalizedCopy(FileTransferStrings.status(.stopped, direction: .outgoing, peerNickname: "Alice"),
+		try expectLocalizedCopy(FileTransferStatus.stopped.notice(direction: .outgoing, peerNickname: "Alice"),
 		                        .FileTransfers.transferToIsStopped("Alice"),
 		                        "Transfer to Alice has not started. Choose Start Transfer to begin.")
-		let listening = FileTransferStrings.status(.isListeningAsSender, direction: .outgoing, peerNickname: "Alice")
-		let waiting = FileTransferStrings.status(
-			.waitingForReceiverToAccept,
+		let listening = FileTransferStatus.isListeningAsSender.notice(direction: .outgoing, peerNickname: "Alice")
+		let waiting = FileTransferStatus.waitingForReceiverToAccept.notice(
 			direction: .outgoing,
 			peerNickname: "Alice"
 		)
@@ -139,7 +138,7 @@ struct FeatureLocalizationTests {
 		for status in preparing {
 			for direction in [FileTransferDirection.incoming, .outgoing] {
 				try expectLocalizedCopy(
-					FileTransferStrings.status(status, direction: direction, peerNickname: "Alice"),
+					status.notice(direction: direction, peerNickname: "Alice"),
 					.FileTransfers.preparingTheTransfer,
 					"Preparing the transfer…"
 				)
@@ -149,13 +148,13 @@ struct FeatureLocalizationTests {
 
 	@Test("Transfer progress fills positional placeholders in the declared order")
 	func fileTransferProgressPreservesPositionalPlaceholderContracts() throws {
-		try expectLocalizedCopy(FileTransferStrings.progress(
-			direction: .incoming, processedSize: "1 MB", totalSize: "4 MB", speed: "2 MB",
+		try expectLocalizedCopy(FileTransferDirection.incoming.progressNotice(
+			processedSize: "1 MB", totalSize: "4 MB", speed: "2 MB",
 			peerNickname: "Alice", timeRemaining: "2 seconds"
 		), .FileTransfers.ofSReceivedFromRemaining("1 MB", "4 MB", "2 MB", "Alice", "2 seconds"),
 		"1 MB of 4 MB (2 MB/s) received from Alice — 2 seconds remaining")
-		try expectLocalizedCopy(FileTransferStrings.progress(
-			direction: .outgoing, processedSize: "1 MB", totalSize: "4 MB", speed: "2 MB",
+		try expectLocalizedCopy(FileTransferDirection.outgoing.progressNotice(
+			processedSize: "1 MB", totalSize: "4 MB", speed: "2 MB",
 			peerNickname: "Alice", timeRemaining: nil
 		), .FileTransfers.ofSSent("1 MB", "4 MB", "2 MB", "Alice"),
 		"1 MB of 4 MB (2 MB/s) sent to Alice")
@@ -163,13 +162,17 @@ struct FeatureLocalizationTests {
 
 	@Test("Settings copy is keyed by the typed pane and the sidebar row")
 	func preferencesStringsUseTypedPaneState() throws {
-		try expectLocalizedCopy(PreferencesPane.general.title, .Settings.titleOfTheGeneral, "General")
 		try expectLocalizedCopy(
-			PreferencesPane.fileTransfers.title,
+			String(localized: SettingsPane.general.title),
+			.Settings.titleOfTheGeneral,
+			"General"
+		)
+		try expectLocalizedCopy(
+			String(localized: SettingsPane.fileTransfers.title),
 			.Settings.fileTransfers,
 			"File Transfers"
 		)
-		let rows = PreferencesDestination.builtIn
+		let rows = SettingsDestination.builtIn
 		try expectLocalizedCopy(
 			rows.first { $0.selection == .rules }?.title,
 			.Settings.rules,

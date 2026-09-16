@@ -254,13 +254,9 @@ extension Client {
 			?? nsError.localizedDescription
 		let input = inputString.isEmpty ? String(localized: .Scripts.scriptNoInput) : inputString
 		printDebugInformation(
-			DiagnosticStrings.scriptFailure(
-				filename: URL(fileURLWithPath: path).lastPathComponent,
-				input: input,
-				description: description
-			)
+			String(localized: .IRC.scriptExecutionFailure(URL(fileURLWithPath: path).lastPathComponent, input, description))
 		)
-		scriptExecutionLogger.error("\(DiagnosticStrings.scriptFailure(description), privacy: .public)")
+		scriptExecutionLogger.error("\(String(localized: .IRC.scriptErrorsExecutionFailure(description)), privacy: .public)")
 	}
 
 	func scriptInvocationIsCurrent(_ invocation: ScriptInvocation) -> Bool {

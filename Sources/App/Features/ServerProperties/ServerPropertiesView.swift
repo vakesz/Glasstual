@@ -10,15 +10,15 @@ import SwiftUI
 /// names its icon-only buttons say out loud. Also what a row's context menu and
 /// the Delete key reach.
 struct ServerPropertiesSelectedEntryActions {
-	let editLabel: String
+	let editLabel: LocalizedStringResource
 	let edit: () -> Void
-	let removeLabel: String
+	let removeLabel: LocalizedStringResource
 	let remove: () -> Void
 }
 
 /// A list whose plus button adds the one kind of thing the list holds.
 struct ServerPropertiesListActions {
-	let addLabel: String
+	let addLabel: LocalizedStringResource
 	let add: () -> Void
 	let selected: ServerPropertiesSelectedEntryActions
 }
@@ -26,7 +26,7 @@ struct ServerPropertiesListActions {
 /// The Address Book list, whose plus button is a menu because an entry is
 /// either an ignore or a tracked user.
 struct ServerPropertiesAddressBookActions {
-	let addLabel: String
+	let addLabel: LocalizedStringResource
 	let addIgnore: () -> Void
 	let addTracking: () -> Void
 	let selected: ServerPropertiesSelectedEntryActions
@@ -104,36 +104,36 @@ struct ServerPropertiesView: View {
 		VStack(spacing: 0) {
 			NavigationSplitView {
 				List(selection: $model.selection) {
-					Section(ServerPropertiesStrings.Navigation.connection) {
-						navigationRow(.general, ServerPropertiesStrings.Navigation.general, "network")
-						navigationRow(.identity, ServerPropertiesStrings.Navigation.identity, "person.crop.circle")
-						navigationRow(.autojoin, ServerPropertiesStrings.Navigation.channelList, "number")
-						navigationRow(.highlights, ServerPropertiesStrings.Navigation.highlights, "highlighter")
-						navigationRow(.addressBook, ServerPropertiesStrings.Navigation.addressBook, "person.2")
-						navigationRow(.connectCommands, ServerPropertiesStrings.Navigation.connectCommands, "terminal")
-						navigationRow(.disconnectMessages, ServerPropertiesStrings.Navigation.messages, "text.bubble")
-						navigationRow(.encoding, ServerPropertiesStrings.Navigation.encoding, "character.book.closed")
+					Section(.ServerProperties.navigationSectionConnection) {
+						navigationRow(.general, .ServerProperties.serverPropertiesNavigationMenuGeneral, "network")
+						navigationRow(.identity, .ServerProperties.serverPropertiesNavigationMenuIdentity, "person.crop.circle")
+						navigationRow(.autojoin, .ServerProperties.channelList, "number")
+						navigationRow(.highlights, .ServerProperties.serverPropertiesNavigationMenuHighlights, "highlighter")
+						navigationRow(.addressBook, .ServerProperties.addressBook, "person.2")
+						navigationRow(.connectCommands, .ServerProperties.connectCommands, "terminal")
+						navigationRow(.disconnectMessages, .ServerProperties.serverPropertiesNavigationMenuMessages, "text.bubble")
+						navigationRow(.encoding, .ServerProperties.serverPropertiesNavigationMenuEncoding, "character.book.closed")
 					}
-					Section(ServerPropertiesStrings.Navigation.vendorSpecific) {
-						navigationRow(.zncBouncer, ServerPropertiesStrings.Navigation.zncBouncer, "server.rack")
+					Section(.ServerProperties.vendorSpecific) {
+						navigationRow(.zncBouncer, .ServerProperties.zncBouncer, "server.rack")
 					}
-					Section(ServerPropertiesStrings.Navigation.advanced) {
+					Section(.ServerProperties.serverPropertiesNavigationMenuAdvanced) {
 						navigationRow(
 							.clientCertificate,
-							ServerPropertiesStrings.Navigation.clientCertificate,
+							.ServerProperties.clientCertificate,
 							"checkmark.shield"
 						)
 						navigationRow(
 							.networkSocket,
-							ServerPropertiesStrings.Navigation.networkSocket,
+							.ServerProperties.networkSocket,
 							"cable.connector"
 						)
 						navigationRow(
 							.proxyServer,
-							ServerPropertiesStrings.Navigation.proxyServer,
+							.ServerProperties.proxyServer,
 							"arrow.triangle.branch"
 						)
-						navigationRow(.floodControl, ServerPropertiesStrings.Navigation.floodControl, "speedometer")
+						navigationRow(.floodControl, .ServerProperties.floodControl, "speedometer")
 					}
 				}
 				.listStyle(.sidebar)
@@ -183,7 +183,7 @@ struct ServerPropertiesView: View {
 
 	private func navigationRow(
 		_ selection: ServerPropertiesSelection,
-		_ title: String,
+		_ title: LocalizedStringResource,
 		_ symbol: String
 	) -> some View {
 		Label(title, systemImage: symbol).tag(selection)
@@ -194,11 +194,11 @@ struct ServerPropertiesView: View {
 
 private extension ServerPropertiesView {
 	var generalPane: some View {
-		pane(ServerPropertiesStrings.Navigation.general) {
+		pane(.ServerProperties.serverPropertiesNavigationMenuGeneral) {
 			Form {
 				Section {
-					TextField(ServerPropertiesStrings.General.connectionName, text: $model.config.connectionName)
-					TextField(ServerPropertiesStrings.General.serverAddress, text: $model.serverAddress)
+					TextField(.ServerProperties.connectionName, text: $model.config.connectionName)
+					TextField(.ServerProperties.serverAddress, text: $model.serverAddress)
 						/* The suggestion rows complete to a network's name, and the
 						 model turns that name into the network's address, port and
 						 TLS state. A sighted person sees the list drop down; the
@@ -207,27 +207,27 @@ private extension ServerPropertiesView {
 							Text(verbatim: network.networkName)
 								.textInputCompletion(network.networkName)
 						}
-						.accessibilityHint(ServerPropertiesStrings.General.serverAddressNetworkHint)
+						.accessibilityHint(.ServerProperties.serverAddressNetworkHint)
 						.onChange(of: model.serverAddress) { model.serverAddressTextDidChange() }
-					TextField(ServerPropertiesStrings.General.serverPort, text: $model.serverPort)
-					Toggle(ServerPropertiesStrings.General.connectSecurely, isOn: $model.primaryServerIsSecured)
-					SecureField(ServerPropertiesStrings.General.serverPassword, text: $model.serverPassword)
+					TextField(.ServerProperties.serverPort, text: $model.serverPort)
+					Toggle(.ServerProperties.connectSecurely, isOn: $model.primaryServerIsSecured)
+					SecureField(.ServerProperties.serverPassword, text: $model.serverPassword)
 				} footer: {
-					Text(verbatim: ServerPropertiesStrings.General.serverPasswordHelp)
+					Text(.ServerProperties.serverPasswordHelp)
 				}
 
 				Section {
-					Button(ServerPropertiesStrings.General.modifyAlternateServers, action: actions.editEndpoints)
+					Button(.ServerProperties.modifyAlternateServers, action: actions.editEndpoints)
 				}
 
 				Section {
-					Toggle(ServerPropertiesStrings.General.connectOnLaunch, isOn: $model.config.autoConnect)
+					Toggle(.ServerProperties.connectWhenGlasstualOpens, isOn: $model.config.autoConnect)
 					Toggle(
-						ServerPropertiesStrings.General.reconnectAfterDisconnect,
+						.ServerProperties.reconnectAfterDisconnect,
 						isOn: $model.config.autoReconnect
 					)
 					Toggle(
-						ServerPropertiesStrings.General.disconnectWhenComputerSleeps,
+						.ServerProperties.disconnectWhenComputerSleeps,
 						isOn: $model.config.autoSleepModeDisconnect
 					)
 				}
@@ -237,51 +237,51 @@ private extension ServerPropertiesView {
 	}
 
 	var identityPane: some View {
-		pane(ServerPropertiesStrings.Navigation.identity) {
+		pane(.ServerProperties.serverPropertiesNavigationMenuIdentity) {
 			Form {
 				Section {
-					TextField(ServerPropertiesStrings.Identity.nickname, text: $model.config.nickname)
+					TextField(.ServerProperties.nickname, text: $model.config.nickname)
 					TextField(
-						ServerPropertiesStrings.Identity.awayNickname,
+						.ServerProperties.awayNickname,
 						text: optionalBinding(\.awayNickname)
 					)
 					TextField(
-						ServerPropertiesStrings.Identity.alternativeNicknames,
+						.ServerProperties.alternativeNicknames,
 						text: $model.alternateNicknames
 					)
-					TextField(ServerPropertiesStrings.Identity.username, text: $model.config.username)
-					TextField(ServerPropertiesStrings.Identity.realName, text: $model.config.realName)
+					TextField(.ServerProperties.username, text: $model.config.username)
+					TextField(.ServerProperties.realName, text: $model.config.realName)
 					TextField(
-						ServerPropertiesStrings.Identity.ctcpVersionReply,
+						.ServerProperties.ctcpVersionReply,
 						text: optionalBinding(\.ctcpVersionReply)
 					)
 				}
 
 				Section {
 					SecureField(
-						ServerPropertiesStrings.Identity.nicknamePassword,
+						.ServerProperties.nickservOrSaslPassword,
 						text: $model.nicknamePassword
 					)
 					/* The onboarding network picker was the only place this
 					 could be chosen, so a connection made any other way was
 					 stuck with the default until someone hand-edited the
 					 stored configuration. */
-					Toggle(ServerPropertiesStrings.Identity.signInWithSASL, isOn: $model.config.usesSASL)
+					Toggle(.ServerProperties.signInWithSasl, isOn: $model.config.usesSASL)
 					Toggle(
-						ServerPropertiesStrings.Identity.disconnectOnSASLFailure,
+						.ServerProperties.disconnectOnSaslFailure,
 						isOn: $model.config.disconnectOnSASLFailure
 					)
 					Toggle(
-						ServerPropertiesStrings.Identity.autojoinWaitsForNickServ,
+						.ServerProperties.autojoinWaitsForNickserv,
 						isOn: $model.config.autojoinWaitsForNickServ
 					)
 				} footer: {
-					Text(verbatim: ServerPropertiesStrings.Identity.nicknamePasswordHelp)
+					Text(.ServerProperties.nicknamePasswordHelp)
 				}
 
 				Section {
 					Toggle(
-						ServerPropertiesStrings.Identity.warnWhenChannelsCannotBeJoined,
+						.ServerProperties.warnWhenChannelsCannotBeJoined,
 						isOn: warningBinding
 					)
 				}
@@ -291,19 +291,19 @@ private extension ServerPropertiesView {
 	}
 
 	var channelPane: some View {
-		pane(ServerPropertiesStrings.Navigation.channelList) {
+		pane(.ServerProperties.channelList) {
 			List(selection: $model.selectedChannelID) {
 				ForEach(model.displayedChannels, id: \.uniqueIdentifier) { channel in
 					HStack {
 						Toggle(
-							ChannelPropertiesStrings.joinOnConnect,
+							.ChannelProperties.joinOnConnect,
 							isOn: channelAutoJoinBinding(channel.uniqueIdentifier)
 						).labelsHidden()
 						Text(verbatim: channel.channelName)
 						Spacer()
 						if model.channelHasSecretKey(channel) {
 							Image(systemName: "key.fill")
-								.accessibilityLabel(ChannelPropertiesStrings.passwordLabel)
+								.accessibilityLabel(.ChannelProperties.passwordLabel)
 						}
 					}.tag(channel.uniqueIdentifier)
 				}
@@ -315,15 +315,13 @@ private extension ServerPropertiesView {
 	}
 
 	var highlightPane: some View {
-		pane(ServerPropertiesStrings.Navigation.highlights) {
+		pane(.ServerProperties.serverPropertiesNavigationMenuHighlights) {
 			List(selection: $model.selectedHighlightID) {
 				ForEach(model.config.highlightList, id: \.uniqueIdentifier) { entry in
 					VStack(alignment: .leading) {
 						Text(verbatim: entry.matchKeyword)
-						Text(verbatim: ServerPropertiesStrings.Highlight.matchType(
-							isExcluded: entry.matchIsExcluded
-						))
-						.font(.caption).foregroundStyle(.secondary)
+						Text(HighlightMatchBehavior(excludesMatches: entry.matchIsExcluded).title)
+							.font(.caption).foregroundStyle(.secondary)
 					}.tag(entry.uniqueIdentifier)
 				}
 			}
@@ -334,12 +332,12 @@ private extension ServerPropertiesView {
 	}
 
 	var addressBookPane: some View {
-		pane(ServerPropertiesStrings.Navigation.addressBook) {
+		pane(.ServerProperties.addressBook) {
 			List(selection: $model.selectedAddressBookEntryID) {
 				ForEach(model.config.ignoreList, id: \.uniqueIdentifier) { entry in
 					VStack(alignment: .leading) {
 						Text(verbatim: entry.hostmask)
-						Text(verbatim: ServerPropertiesStrings.AddressBook.entryType(entry.entryType))
+						Text(entry.entryType.listTitle)
 							.font(.caption).foregroundStyle(.secondary)
 					}.tag(entry.uniqueIdentifier)
 				}
@@ -353,8 +351,8 @@ private extension ServerPropertiesView {
 					Image(systemName: "plus")
 				}
 				.menuIndicator(.hidden)
-				.help(Text(verbatim: actions.addressBook.addLabel))
-				.accessibilityLabel(Text(verbatim: actions.addressBook.addLabel))
+				.help(actions.addressBook.addLabel)
+				.accessibilityLabel(actions.addressBook.addLabel)
 
 				editAndRemoveButtons(
 					actions.addressBook.selected,
@@ -369,36 +367,36 @@ private extension ServerPropertiesView {
 	@ViewBuilder
 	var addressBookAddButtons: some View {
 		Button(
-			ServerPropertiesStrings.AddressBookActions.addIgnoreEntry,
+			.ServerProperties.addUserIgnoreEntry,
 			action: actions.addressBook.addIgnore
 		)
 		Button(
-			ServerPropertiesStrings.AddressBookActions.addTrackingEntry,
+			.ServerProperties.addUserTrackingEntry,
 			action: actions.addressBook.addTracking
 		)
 	}
 
 	var commandsPane: some View {
-		pane(ServerPropertiesStrings.Navigation.connectCommands) {
+		pane(.ServerProperties.connectCommands) {
 			Form {
-				Section(ServerPropertiesStrings.ConnectCommands.heading) {
+				Section(.ServerProperties.performCommandsOnConnect) {
 					TextEditor(text: $model.connectCommands)
 						.font(.system(.body, design: .monospaced))
 						.frame(minHeight: 180)
-						.accessibilityLabel(ServerPropertiesStrings.ConnectCommands.heading)
+						.accessibilityLabel(.ServerProperties.performCommandsOnConnect)
 				}
 
 				Section {
 					Toggle(
-						ServerPropertiesStrings.ConnectCommands.setInvisibleMode,
+						.ServerProperties.setInvisibleModeOnConnect,
 						isOn: $model.config.setInvisibleModeOnConnect
 					)
 					Toggle(
-						ServerPropertiesStrings.ConnectCommands.runSilently,
+						.ServerProperties.runCommandsSilently,
 						isOn: $model.config.runConnectCommandsSilently
 					)
 					Toggle(
-						ServerPropertiesStrings.ConnectCommands.autojoinWaitsForConnectCommands,
+						.ServerProperties.autojoinWaitsForConnectCommands,
 						isOn: $model.config.autojoinWaitsForConnectCommands
 					)
 					Stepper(
@@ -406,13 +404,13 @@ private extension ServerPropertiesView {
 						in: 0 ... ClientConfigDefaults.maximumAutojoinConnectCommandDelay,
 						step: 1
 					) {
-						Text(verbatim: ServerPropertiesStrings.ConnectCommands.autojoinDelay(
-							seconds: Int(model.config.autojoinDelayAfterConnectCommands)
+						Text(.ServerProperties.autojoinDelayAfterConnectCommands(
+							Int(model.config.autojoinDelayAfterConnectCommands)
 						))
 					}
 					.disabled(model.config.autojoinWaitsForConnectCommands == false)
 				} footer: {
-					Text(verbatim: ServerPropertiesStrings.ConnectCommands.identificationExplanation)
+					Text(.ServerProperties.nickServConfirmationExplanation)
 				}
 			}
 			.formStyle(.grouped)
@@ -420,15 +418,15 @@ private extension ServerPropertiesView {
 	}
 
 	var messagesPane: some View {
-		pane(ServerPropertiesStrings.Navigation.messages) {
+		pane(.ServerProperties.serverPropertiesNavigationMenuMessages) {
 			Form {
 				Section {
 					TextField(
-						ServerPropertiesStrings.LeavingMessages.normal,
+						.ServerProperties.partAndQuitMessage,
 						text: $model.config.normalLeavingComment
 					)
 					TextField(
-						ServerPropertiesStrings.LeavingMessages.sleepMode,
+						.ServerProperties.computerSleepQuitMessage,
 						text: $model.config.sleepModeLeavingComment
 					)
 				}
@@ -438,13 +436,13 @@ private extension ServerPropertiesView {
 	}
 
 	var encodingPane: some View {
-		pane(ServerPropertiesStrings.Navigation.encoding) {
+		pane(.ServerProperties.serverPropertiesNavigationMenuEncoding) {
 			Form {
 				Section {
-					Picker(ServerPropertiesStrings.Encoding.primary, selection: $model.config.primaryEncoding) {
+					Picker(.ServerProperties.encodingPrimary, selection: $model.config.primaryEncoding) {
 						ForEach(Self.encodings, id: \.value) { Text(verbatim: $0.title).tag($0.value) }
 					}
-					Picker(ServerPropertiesStrings.Encoding.fallback, selection: $model.config.fallbackEncoding) {
+					Picker(.ServerProperties.encodingFallback, selection: $model.config.fallbackEncoding) {
 						ForEach(Self.encodings, id: \.value) { Text(verbatim: $0.title).tag($0.value) }
 					}
 				}
@@ -454,23 +452,23 @@ private extension ServerPropertiesView {
 	}
 
 	var zncPane: some View {
-		pane(ServerPropertiesStrings.Navigation.zncBouncer) {
+		pane(.ServerProperties.zncBouncer) {
 			Form {
 				Section {
 					Toggle(
-						ServerPropertiesStrings.ZNC.ignoreConfiguredAutojoin,
+						.ServerProperties.zncIgnoreConfiguredAutojoin,
 						isOn: $model.config.zncIgnoreConfiguredAutojoin
 					)
 					Toggle(
-						ServerPropertiesStrings.ZNC.ignorePlaybackNotifications,
+						.ServerProperties.zncIgnorePlaybackNotifications,
 						isOn: $model.config.zncIgnorePlaybackNotifications
 					)
 					Toggle(
-						ServerPropertiesStrings.ZNC.onlyPlaybackLatest,
+						.ServerProperties.zncOnlyPlaybackLatest,
 						isOn: $model.config.zncOnlyPlaybackLatest
 					)
 				} footer: {
-					Text(verbatim: ServerPropertiesStrings.ZNC.versionNote)
+					Text(.ServerProperties.zncVersionNote)
 				}
 			}
 			.formStyle(.grouped)
@@ -478,41 +476,41 @@ private extension ServerPropertiesView {
 	}
 
 	var certificatePane: some View {
-		pane(ServerPropertiesStrings.Navigation.clientCertificate) {
+		pane(.ServerProperties.clientCertificate) {
 			Form {
 				Section {
 					if let certificate = model.certificate {
 						LabeledContent(
-							ServerPropertiesStrings.Certificate.name,
+							.ServerProperties.certificateName,
 							value: certificate.commonName
 						)
 					} else {
-						Text(verbatim: ServerPropertiesStrings.Certificate.noneSelected)
+						Text(.ServerProperties.noCertificateSelected)
 							.foregroundStyle(.secondary)
 					}
 					HStack {
 						Button(
-							ServerPropertiesStrings.Certificate.select,
+							.ServerProperties.selectCertificate,
 							action: actions.certificate.choose
 						)
 						Button(
-							ServerPropertiesStrings.Certificate.reset,
+							.ServerProperties.resetCertificate,
 							role: .destructive,
 							action: actions.certificate.reset
 						)
 						.disabled(model.certificate == nil)
 					}
 				} footer: {
-					Text(verbatim: ServerPropertiesStrings.Certificate.chooseExplanation)
+					Text(.ServerProperties.selectACertificateToSendWhen)
 				}
 
 				if let certificate = model.certificate {
 					Section {
-						fingerprint(ServerPropertiesStrings.Certificate.fingerprintSHA512, certificate.sha512)
-						fingerprint(ServerPropertiesStrings.Certificate.fingerprintSHA256, certificate.sha256)
-						fingerprint(ServerPropertiesStrings.Certificate.fingerprintSHA1, certificate.sha1)
+						fingerprint(.ServerProperties.sha512Fingerprint, certificate.sha512)
+						fingerprint(.ServerProperties.sha256Fingerprint, certificate.sha256)
+						fingerprint(.ServerProperties.sha1Fingerprint, certificate.sha1)
 					} footer: {
-						Text(verbatim: ServerPropertiesStrings.Certificate.fingerprintHelp)
+						Text(.ServerProperties.certificateFingerprintHelp)
 					}
 				}
 			}
@@ -521,12 +519,12 @@ private extension ServerPropertiesView {
 	}
 
 	var socketPane: some View {
-		pane(ServerPropertiesStrings.Navigation.networkSocket) {
+		pane(.ServerProperties.networkSocket) {
 			Form {
 				Section {
-					Picker(ServerPropertiesStrings.Socket.connectUsing, selection: $model.config.addressType) {
+					Picker(.ServerProperties.connectUsing, selection: $model.config.addressType) {
 						ForEach(Self.addressTypes, id: \.self) { addressType in
-							Text(verbatim: ServerPropertiesStrings.Socket.addressType(addressType)).tag(addressType)
+							Text(addressType.title).tag(addressType)
 						}
 					}
 					.pickerStyle(.radioGroup)
@@ -534,25 +532,24 @@ private extension ServerPropertiesView {
 
 				Section {
 					Toggle(
-						ServerPropertiesStrings.Socket.validateCertificateChain,
+						.ServerProperties.validateServerCertificateChain,
 						isOn: $model.config.validateServerCertificateChain
 					)
-					Toggle(ServerPropertiesStrings.Socket.performPongTimer, isOn: $model.config.performPongTimer)
+					Toggle(.ServerProperties.periodicallyPingTheServer, isOn: $model.config.performPongTimer)
 					Toggle(
-						ServerPropertiesStrings.Socket.disconnectOnPongTimer,
+						.ServerProperties.disconnectOnPongTimer,
 						isOn: $model.config.performDisconnectOnPongTimer
 					)
 					Toggle(
-						ServerPropertiesStrings.Socket.disconnectOnReachabilityChange,
+						.ServerProperties.disconnectOnReachabilityChange,
 						isOn: $model.config.performDisconnectOnReachabilityChange
 					)
 				}
 
 				Section {
-					Picker(ServerPropertiesStrings.CipherSuites.label, selection: $model.config.cipherSuites) {
+					Picker(.ServerProperties.cipherSuitesLabel, selection: $model.config.cipherSuites) {
 						ForEach(Self.cipherSuiteCollections, id: \.self) { collection in
-							Text(verbatim: ServerPropertiesStrings.CipherSuites.collectionName(collection))
-								.tag(collection)
+							Text(collection.title).tag(collection)
 						}
 					}
 					if model.config.cipherSuites != .none {
@@ -560,9 +557,8 @@ private extension ServerPropertiesView {
 					}
 				} footer: {
 					if model.config.cipherSuites != .none {
-						Text(verbatim: ServerPropertiesStrings.CipherSuites.listExplanation(
-							collectionName: ServerPropertiesStrings.CipherSuites
-								.collectionName(model.config.cipherSuites)
+						Text(.ServerProperties.includesTheFollowingCipherSuites(
+							String(localized: model.config.cipherSuites.title)
 						))
 					}
 				}
@@ -574,7 +570,7 @@ private extension ServerPropertiesView {
 	/// The suites of the chosen collection, in the pane rather than in an alert
 	/// whose body was a hundred lines of proportional text.
 	var cipherSuiteList: some View {
-		DisclosureGroup(ServerPropertiesStrings.CipherSuites.suiteList) {
+		DisclosureGroup(.ServerProperties.viewCipherSuites) {
 			VStack(alignment: .leading, spacing: 2) {
 				ForEach(
 					SecureTransportSupport.descriptions(
@@ -593,32 +589,32 @@ private extension ServerPropertiesView {
 	}
 
 	var proxyPane: some View {
-		pane(ServerPropertiesStrings.Navigation.proxyServer) {
+		pane(.ServerProperties.proxyServer) {
 			Form {
 				Section {
-					Picker(ServerPropertiesStrings.Proxy.type, selection: $model.config.proxyType) {
+					Picker(.ServerProperties.proxyType, selection: $model.config.proxyType) {
 						ForEach(Self.proxyTypes, id: \.self) { proxyType in
-							Text(verbatim: ServerPropertiesStrings.Proxy.typeName(proxyType)).tag(proxyType)
+							Text(proxyType.title).tag(proxyType)
 						}
 					}
 				}
 
 				if ServerPropertiesModel.proxyTypeUsesAddress(model.config.proxyType) {
 					Section {
-						TextField(ServerPropertiesStrings.Proxy.address, text: $model.proxyAddress)
-						TextField(ServerPropertiesStrings.Proxy.port, text: $model.proxyPort)
+						TextField(.ServerProperties.proxyAddress, text: $model.proxyAddress)
+						TextField(.ServerProperties.proxyPort, text: $model.proxyPort)
 						if model.config.proxyType == .socks5 {
-							TextField(ServerPropertiesStrings.Proxy.username, text: $model.proxyUsername)
-							SecureField(ServerPropertiesStrings.Proxy.password, text: $model.proxyPassword)
+							TextField(.ServerProperties.proxyUsername, text: $model.proxyUsername)
+							SecureField(.ServerProperties.proxyPassword, text: $model.proxyPassword)
 						}
 					} footer: {
 						if model.config.proxyType == .socks5 {
-							Text(verbatim: ServerPropertiesStrings.Proxy.passwordHelp)
+							Text(.ServerProperties.proxyPasswordHelp)
 						}
 					}
 				} else if model.config.proxyType == .automatic {
 					Section {
-						Button(ServerPropertiesStrings.Proxy.openSystemSettings) {
+						Button(.ServerProperties.openSystemSettings) {
 							if let url = Self.networkProxySettingsURL {
 								openURL(url)
 							}
@@ -626,7 +622,7 @@ private extension ServerPropertiesView {
 					}
 				} else if model.config.proxyType == .tor {
 					Section {
-						Text(verbatim: ServerPropertiesStrings.Proxy.torBrowserNote)
+						Text(.ServerProperties.torBrowserNote)
 							.foregroundStyle(.secondary)
 					}
 				}
@@ -636,16 +632,16 @@ private extension ServerPropertiesView {
 	}
 
 	var floodPane: some View {
-		pane(ServerPropertiesStrings.Navigation.floodControl) {
+		pane(.ServerProperties.floodControl) {
 			Form {
 				Section {
 					slider(
-						ServerPropertiesStrings.FloodControl.messageCount,
+						.ServerProperties.floodControlMessageCount,
 						value: uintBinding(\.floodControlMaximumMessages),
 						current: Int(model.config.floodControlMaximumMessages)
 					)
 					slider(
-						ServerPropertiesStrings.FloodControl.interval,
+						.ServerProperties.floodControlInterval,
 						value: uintBinding(\.floodControlDelayTimerInterval),
 						current: Int(model.config.floodControlDelayTimerInterval)
 					)
@@ -657,9 +653,9 @@ private extension ServerPropertiesView {
 
 	// MARK: - Building blocks
 
-	func pane(_ title: String, @ViewBuilder content: () -> some View) -> some View {
+	func pane(_ title: LocalizedStringResource, @ViewBuilder content: () -> some View) -> some View {
 		VStack(alignment: .leading, spacing: 12) {
-			Text(verbatim: title)
+			Text(title)
 				.font(.title2)
 				.fontWeight(.semibold)
 				.padding([.horizontal, .top], 20)
@@ -674,8 +670,8 @@ private extension ServerPropertiesView {
 	func listButtons(_ actions: ServerPropertiesListActions, hasSelection: Bool) -> some View {
 		HStack {
 			Button(action: actions.add) { Image(systemName: "plus") }
-				.help(Text(verbatim: actions.addLabel))
-				.accessibilityLabel(Text(verbatim: actions.addLabel))
+				.help(actions.addLabel)
+				.accessibilityLabel(actions.addLabel)
 			editAndRemoveButtons(actions.selected, hasSelection: hasSelection)
 			Spacer()
 		}
@@ -691,15 +687,15 @@ private extension ServerPropertiesView {
 	) -> some View {
 		Button(action: actions.edit) { Image(systemName: "pencil") }
 			.disabled(hasSelection == false)
-			.help(Text(verbatim: actions.editLabel))
-			.accessibilityLabel(Text(verbatim: actions.editLabel))
+			.help(actions.editLabel)
+			.accessibilityLabel(actions.editLabel)
 		Button(role: .destructive, action: actions.remove) { Image(systemName: "minus") }
 			.disabled(hasSelection == false)
-			.help(Text(verbatim: actions.removeLabel))
-			.accessibilityLabel(Text(verbatim: actions.removeLabel))
+			.help(actions.removeLabel)
+			.accessibilityLabel(actions.removeLabel)
 	}
 
-	func fingerprint(_ label: String, _ value: String) -> some View {
+	func fingerprint(_ label: LocalizedStringResource, _ value: String) -> some View {
 		LabeledContent(label) {
 			HStack {
 				Text(verbatim: value)
@@ -707,18 +703,16 @@ private extension ServerPropertiesView {
 					.textSelection(.enabled)
 					.lineLimit(1)
 					.truncationMode(.middle)
-				Button(ServerPropertiesStrings.Certificate.copyNickServCommand) {
+				Button(.ServerProperties.copyNickservCommand) {
 					actions.certificate.copyNickServCommand(value)
 				}
-				.help(Text(verbatim: ServerPropertiesStrings.Certificate.copyNickServCommand(forDigest: label)))
-				.accessibilityLabel(
-					Text(verbatim: ServerPropertiesStrings.Certificate.copyNickServCommand(forDigest: label))
-				)
+				.help(.ServerProperties.copyNickservCommandFor(String(localized: label)))
+				.accessibilityLabel(.ServerProperties.copyNickservCommandFor(String(localized: label)))
 			}
 		}
 	}
 
-	func slider(_ label: String, value: Binding<Double>, current: Int) -> some View {
+	func slider(_ label: LocalizedStringResource, value: Binding<Double>, current: Int) -> some View {
 		LabeledContent(label) {
 			HStack {
 				Slider(value: value, in: 1 ... 60, step: 1)

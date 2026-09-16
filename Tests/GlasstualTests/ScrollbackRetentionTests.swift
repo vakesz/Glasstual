@@ -40,7 +40,7 @@ struct ScrollbackRetentionTests {
 		defer { try? FileManager.default.removeItem(at: directory) }
 		let passes = RetentionPassCounter()
 		let store = ScrollbackStore(
-			filenameStore: ScrollbackFilenameFixture(),
+			filenameStore: ScrollbackFilenameFixture().store,
 			resizeDelay: { .zero },
 			willPerform: { operation in
 				if case .resize = operation {
@@ -84,7 +84,7 @@ struct ScrollbackRetentionTests {
 		)
 		try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
 		defer { try? FileManager.default.removeItem(at: directory) }
-		let store = ScrollbackStore(filenameStore: ScrollbackFilenameFixture(), resizeDelay: { .seconds(1800) })
+		let store = ScrollbackStore(filenameStore: ScrollbackFilenameFixture().store, resizeDelay: { .seconds(1800) })
 		#expect(await store.openDatabase(inDirectory: directory.path).isOpen)
 		await store.setMaximumLineCount(3)
 		let rows: [(String, TimeInterval)] = [
@@ -125,7 +125,7 @@ struct ScrollbackRetentionTests {
 		let delay = Mutex<Duration>(.seconds(1800))
 		let passes = RetentionPassCounter()
 		let store = ScrollbackStore(
-			filenameStore: ScrollbackFilenameFixture(),
+			filenameStore: ScrollbackFilenameFixture().store,
 			resizeDelay: { delay.withLock { $0 } },
 			willPerform: { operation in
 				if case .resize = operation {

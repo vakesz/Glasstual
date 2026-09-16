@@ -28,7 +28,7 @@ struct ServerListReorderPolicyTests {
 		}
 		let list = ServerList()
 		list.clientSource = { world.clientList }
-		list.worldSource = { world }
+		list.clientDirectorySource = { world }
 
 		list.moveServers(fromOffsets: IndexSet(integer: from), toOffset: destination)
 		return world.clientList.map(\.config.connectionName)
@@ -88,7 +88,7 @@ struct ServerListReorderPolicyTests {
 		}
 		let list = ServerList()
 		list.clientSource = { world.clientList }
-		list.worldSource = { world }
+		list.clientDirectorySource = { world }
 		list.filterText = "beta"
 
 		#expect(list.moveServers(fromOffsets: IndexSet(integer: 0), toOffset: 2) == false)

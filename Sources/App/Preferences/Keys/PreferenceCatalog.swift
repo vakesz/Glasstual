@@ -42,24 +42,15 @@ import Foundation
  used by import, export, storage routing, and defaults registration derived
  directly from those declarations. */
 nonisolated extension Preferences { // nonisolated: value
-	static let allKeys: [any AnyPreferenceKey] =
-		Identity.all
-			+ Connection.all
-			+ Commands.all
-			+ Messages.all
-			+ Logging.all
-			+ Appearance.all
-			+ Theme.all
-			+ Badges.all
-			+ MainWindow.all
-			+ Notifications.all
-			+ Input.all
-			+ Highlights.all
-			+ Reactions.all
-			+ FileTransfers.all
-			+ Rules.all
-			+ Internals.all
-			+ LinkSchemes.all
+	/// The one list a new preference domain joins.
+	private static let allDomains: [[any AnyPreferenceKey]] = [
+		Identity.all, Connection.all, Commands.all, Messages.all, Logging.all,
+		Appearance.all, Theme.all, Badges.all, MainWindow.all, Notifications.all,
+		Input.all, Highlights.all, Reactions.all, FileTransfers.all, Rules.all,
+		Internals.all, LinkSchemes.all,
+	]
+
+	static let allKeys: [any AnyPreferenceKey] = allDomains.flatMap { $0 }
 
 	static let allFamilies: [PreferenceKeyFamily] = Families.all
 
@@ -106,7 +97,7 @@ nonisolated extension Preferences { // nonisolated: value
 	 holds. A payload with independent fields is repaired field by field first,
 	 so a rule loses one field instead of the whole rule. */
 	static func salvage(_ value: PropertyListValue, forKey name: String) -> PropertyListValue? {
-		let repaired = PreferencesPayloadValidation.repairs[name]?(value) ?? value
+		let repaired = PreferenceValueRepair.repairs[name]?(value) ?? value
 		let kept: PropertyListValue = switch repaired {
 		case let .array(elements):
 			.array(elements.filter { coerce(.array([$0]), forKey: name) != nil })

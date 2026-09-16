@@ -35,7 +35,7 @@ struct ConnectionAutojoinWaitTests {
 
 		#expect(client.startup.authentication == .waiting)
 		#expect(client.startup.authenticationTask != nil)
-		#expect(client.autojoinDelayedWarningTimer.isActive)
+		#expect(client.autojoin.delayedWarningTimer.isActive)
 	}
 
 	/// Every automatic join stops the warnings on its way in, because most of
@@ -48,7 +48,7 @@ struct ConnectionAutojoinWaitTests {
 		client.performAutoJoin()
 		client.performAutoJoin()
 
-		#expect(client.autojoinDelayedWarningTimer.isActive)
+		#expect(client.autojoin.delayedWarningTimer.isActive)
 		#expect(client.startup.authentication == .waiting)
 	}
 
@@ -62,14 +62,14 @@ struct ConnectionAutojoinWaitTests {
 			client.onAutojoinDelayedWarningTimer()
 		}
 
-		#expect(client.autojoinDelayedWarningCount == ClientAutojoinPolicy.maximumDelayedWarningCount)
-		#expect(client.autojoinDelayedWarningTimer.isActive == false)
+		#expect(client.autojoin.delayedWarningCount == ClientAutojoinPolicy.maximumDelayedWarningCount)
+		#expect(client.autojoin.delayedWarningTimer.isActive == false)
 
 		let bodies = (client.printedLines as NSArray).compactMap {
 			($0 as? [String: Any])?["messageBody"] as? String
 		}
 
-		#expect(bodies.contains(ConnectionStrings.autojoinDelayedForIdentification))
+		#expect(bodies.contains(String(localized: .IRC.joiningChannelsHasBeenDelayedBecause)))
 	}
 
 	/// The user asked not to have the warnings, which is not the same as asking
@@ -83,7 +83,7 @@ struct ConnectionAutojoinWaitTests {
 
 		client.onAutojoinDelayedWarningTimer()
 
-		#expect(client.autojoinDelayedWarningCount == 0)
+		#expect(client.autojoin.delayedWarningCount == 0)
 		#expect(client.startup.authenticationTask != nil)
 	}
 
@@ -137,6 +137,6 @@ struct ConnectionAutojoinWaitTests {
 		client.performAutoJoin()
 
 		#expect(client.startup.authentication == .waiting)
-		#expect(client.autojoinDelayedWarningTimer.isActive)
+		#expect(client.autojoin.delayedWarningTimer.isActive)
 	}
 }

@@ -37,7 +37,7 @@
 
 import Foundation
 
-final class ClientRequestedCommands: NSObject {
+final class ClientRequestedCommands {
 	private enum Command {
 		case ison
 		case who

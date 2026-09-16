@@ -81,7 +81,7 @@ struct IRCSpecCapabilityNegotiationTests {
 		let socket = Connection(config: ConnectionConfig(), onClient: client)
 		client.socket = socket
 		func receive(_ line: String) {
-			client.ircConnection(socket, didReceiveData: line)
+			client.connectionDidReceive(line)
 		}
 		receive(":server 005 me MONITOR=100 :supported")
 		receive("CAP * LS :sasl=PLAIN")
@@ -109,7 +109,7 @@ struct IRCSpecCapabilityNegotiationTests {
 		let socket = Connection(config: ConnectionConfig(), onClient: client)
 		client.socket = socket
 		func receive(_ line: String) {
-			client.ircConnection(socket, didReceiveData: line)
+			client.connectionDidReceive(line)
 		}
 		receive("CAP me ACK :multi-prefix userhost-in-names")
 		receive(":server 005 me NAMESX UHNAMES MONITOR=100 WATCH=100 :supported")
@@ -134,7 +134,7 @@ struct IRCSpecCapabilityNegotiationTests {
 		let socket = Connection(config: ConnectionConfig(), onClient: client)
 		client.socket = socket
 		func receive(_ line: String) {
-			client.ircConnection(socket, didReceiveData: line)
+			client.connectionDidReceive(line)
 		}
 		receive("CAP me NEW :message-tags")
 		// `labeled-response` needs an acknowledged `message-tags`, so it waits.
@@ -493,8 +493,8 @@ struct IRCSpecCapabilityNegotiationTests {
 		#expect(client.isCapabilityEnabled(.isIdentifiedWithSASL) == false)
 		#expect(client.isQuitting == disconnect)
 		#expect(capabilityCommands(of: client).contains("END") == !disconnect)
-		#expect(client.saslIncomingPayload == nil)
-		#expect(client.saslScramClient == nil)
+		#expect(client.sasl.incomingPayload == nil)
+		#expect(client.sasl.scramClient == nil)
 	}
 
 	@Test("SCRAM integrity failures use the same terminal policy", arguments: [900, 903, 907, 0], [true, false])
@@ -709,16 +709,16 @@ struct IRCSpecCapabilityNegotiationTests {
 		try receive("CAP * LS :sasl=SCRAM-SHA-256,PLAIN", on: client)
 		try receive("CAP me ACK :sasl", on: client)
 
-		#expect(client.saslMechanism == SCRAMClient.mechanismName)
+		#expect(client.sasl.mechanism == SCRAMClient.mechanismName)
 
 		let mechanisms = try #require(Message(line: ":irc.example.net 908 me PLAIN :Available mechanisms", on: client))
 		let failure = try #require(Message(line: ":irc.example.net 904 me :SASL authentication failed", on: client))
 		try handleAuthentication(mechanisms, on: client)
-		#expect(client.saslMechanism == SCRAMClient.mechanismName)
+		#expect(client.sasl.mechanism == SCRAMClient.mechanismName)
 		#expect(client.sentLines.contains("AUTHENTICATE PLAIN") == false)
 
 		try handleAuthentication(failure, on: client)
-		#expect(client.saslMechanism == "PLAIN")
+		#expect(client.sasl.mechanism == "PLAIN")
 		#expect(client.sentLines.contains("AUTHENTICATE PLAIN"))
 		#expect(client.isCapabilityEnabled(.isInSASLNegotiation))
 		#expect(capabilityCommands(of: client).contains("END") == false)

@@ -11,7 +11,7 @@
 - [ ] `make lint` and `make format-check` pass
 - [ ] `make test` passes
 - [ ] The app builds and launches in Debug
-- [ ] Changes to `project.yml` were followed by `make generate` and the regenerated project is included
+- [ ] Changes to `project.yml` were followed by `make generate`
 - [ ] New or migrated Swift is organized by domain or feature under `Sources/`
 - [ ] No Objective-C or C source or headers were added
 - [ ] AppKit is limited to a documented macOS capability adapter with no feature state
