@@ -1,11 +1,9 @@
 #!/bin/bash
 # Install and remove the Developer ID signing material on a hosted CI runner.
 #
-# The Quality workflow signs its Debug build and test host with it, because the
-# unit tests use the data-protection keychain and the app group, and both need
-# a Team ID in the signature. The Signed Release workflow signs its archive
-# with it. Nothing stays on the runner: `install` creates a throwaway keychain
-# and copies two provisioning profiles, and `remove` deletes both again.
+# The Signed Release workflow signs its archive with it. Nothing stays on the
+# runner: `install` creates a throwaway keychain and copies two provisioning
+# profiles, and `remove` deletes both again.
 #
 # Usage
 #   scripts/ci-signing.sh install   needs CERT_P12 (base64) and CERT_PASSWORD
