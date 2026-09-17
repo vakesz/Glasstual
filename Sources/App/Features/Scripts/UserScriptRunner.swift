@@ -1,33 +1,6 @@
-/* *********************************************************************
- * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- *  * Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *  * Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *  * Neither the name of Textual, "Codeux Software, LLC", nor the
- *    names of its contributors may be used to endorse or promote products
- *    derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
- *********************************************************************** */
+// Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import Darwin
 import Foundation
@@ -37,14 +10,14 @@ private let scriptExecutionLogger = Logger(
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 	category: "ScriptExecution"
 )
-private nonisolated let appleScriptSuite = AEEventClass(0x6173_6372) // nonisolated: let
-private nonisolated let appleScriptSubroutineEvent = AEEventID(0x7073_6272) // nonisolated: let
-private nonisolated let appleScriptSubroutineName = AEKeyword(0x736E_616D) // nonisolated: let
+private nonisolated let appleScriptSuite = AEEventClass(0x6173_6372)
+private nonisolated let appleScriptSubroutineEvent = AEEventID(0x7073_6272)
+private nonisolated let appleScriptSubroutineName = AEKeyword(0x736E_616D)
 
 /// Runs the `glasstualcmd` script bridge, kept free of `Client` so it can be
 /// exercised without a live client.
 enum UserScriptRunner {
-	nonisolated enum OutputError: LocalizedError, Equatable { // nonisolated: value
+	nonisolated enum OutputError: LocalizedError, Equatable {
 		case tooLarge
 		case invalidUTF8
 		case unavailableScript
@@ -59,11 +32,11 @@ enum UserScriptRunner {
 	}
 
 	/// The handler name Glasstual asks a script to run.
-	nonisolated static let handlerName = "glasstualcmd" // nonisolated: let
+	nonisolated static let handlerName = "glasstualcmd"
 
 	/// `errOSAGeneralError`: what a failure that reports no error number is
 	/// recorded as.
-	nonisolated static let unknownScriptError = -2700 // nonisolated: let
+	nonisolated static let unknownScriptError = -2700
 
 	/** How much of a script's output is kept.
 
@@ -72,7 +45,7 @@ enum UserScriptRunner {
 	 without bound. The same ceiling bounds the decoded text and the result a
 	 script hands back, because an AppleScript result never passes through the
 	 reader at all. */
-	nonisolated static let maximumOutputBytes = 1 << 20 // nonisolated: let
+	nonisolated static let maximumOutputBytes = 1 << 20
 
 	/** Reads `handle` to end of file, keeping at most ``maximumOutputBytes``.
 

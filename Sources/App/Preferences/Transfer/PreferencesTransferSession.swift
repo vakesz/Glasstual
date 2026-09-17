@@ -1,7 +1,5 @@
-/* *********************************************************************
- * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
- * Please see Acknowledgements.pdf for additional information.
- *********************************************************************** */
+// Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import CocoaExtensions
 import Foundation
@@ -66,7 +64,7 @@ private enum PreferencesTransferInput {
 	}
 }
 
-nonisolated struct PreferencesTransferResult: Sendable { // nonisolated: value
+nonisolated struct PreferencesTransferResult: Sendable {
 	let changedPreferences: Int
 	let addedClients: Int
 	let updatedClients: Int
@@ -568,7 +566,7 @@ final class PreferencesTransferSession {
 }
 
 /// CPU work leaves the calling actor without creating an independent task.
-private nonisolated enum PreferencesTransferPreparation { // nonisolated: value
+private nonisolated enum PreferencesTransferPreparation {
 	@concurrent
 	static func plans(archive: PreferencesArchive,
 	                  current: PreferencesArchive) async throws -> [PreferencesTransferMode: PreferencesTransferPlan]

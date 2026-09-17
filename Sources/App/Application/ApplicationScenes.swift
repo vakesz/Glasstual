@@ -1,7 +1,5 @@
-/* *********************************************************************
- * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
- * Please see Acknowledgements.pdf for additional information.
- *********************************************************************** */
+// Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import AppKit
 import SwiftUI
@@ -14,6 +12,15 @@ enum ApplicationSceneID {
 	static let onboarding = "onboarding"
 	static let serverChannelList = "server-channel-list"
 	static let serverHighlightList = "server-highlight-list"
+}
+
+/** Stable identity for a window group that presents one logical window.
+
+ `Window` scenes currently fail to open through an AppKit-hosted scene
+ representation. A value-keyed group keeps the working presentation path
+ without allowing repeated commands to create duplicate windows. */
+enum SingletonSceneValue: String, Codable, Hashable {
+	case instance
 }
 
 /** What one keyed scene has open, one session per window.
@@ -48,6 +55,22 @@ struct SceneSessions<Key: Hashable, Session> {
 	}
 }
 
+private struct ApplicationSceneGraph: Scene {
+	let scenes: ApplicationScenes
+	let settingsRequest: SettingsSceneRequest
+
+	var body: some Scene {
+		AboutScene()
+		ChannelBanListScene(scenes: scenes)
+		ChannelSpotlightScene(scenes: scenes)
+		FileTransferListScene(center: AppServices.fileTransfers)
+		OnboardingScene()
+		ServerChannelListScene(scenes: scenes)
+		ServerHighlightListScene(scenes: scenes)
+		SettingsScene(request: settingsRequest)
+	}
+}
+
 /// Installs SwiftUI scenes while the process lifecycle is still hosted by the
 /// existing application delegate. Scene registration is the migration seam:
 /// each window can move to SwiftUI without creating a second application root.
@@ -61,59 +84,27 @@ final class ApplicationScenes {
 	/// another channel's.
 	let channelBanListWindowState = ChannelBanListWindowState()
 
-	private lazy var aboutRepresentation = NSHostingSceneRepresentation {
-		AboutScene()
-	}
-
-	private lazy var onboardingRepresentation = NSHostingSceneRepresentation {
-		OnboardingScene()
-	}
-
-	private lazy var channelSpotlightRepresentation = NSHostingSceneRepresentation { [unowned self] in
-		ChannelSpotlightScene(scenes: self)
-	}
-
-	private lazy var fileTransferRepresentation = NSHostingSceneRepresentation {
-		FileTransferListScene(center: AppServices.fileTransfers)
-	}
-
-	private lazy var channelBanListRepresentation = NSHostingSceneRepresentation { [unowned self] in
-		ChannelBanListScene(scenes: self)
-	}
-
-	private lazy var serverChannelListRepresentation = NSHostingSceneRepresentation { [unowned self] in
-		ServerChannelListScene(scenes: self)
-	}
-
-	private lazy var serverHighlightListRepresentation = NSHostingSceneRepresentation { [unowned self] in
-		ServerHighlightListScene(scenes: self)
-	}
-
-	private lazy var settingsRepresentation = NSHostingSceneRepresentation { [unowned self] in
-		SettingsScene(request: settingsRequest)
-	}
+	/** One represented scene graph keeps registration and presentation in one
+	 environment instead of building the same AppKit bridge for every feature. */
+	private lazy var representation: NSHostingSceneRepresentation<ApplicationSceneGraph> =
+		.init { [unowned self] in
+			ApplicationSceneGraph(scenes: self, settingsRequest: settingsRequest)
+		}
 
 	private var isInstalled = false
 
 	func install(in application: NSApplication) {
 		guard isInstalled == false else { return }
 		isInstalled = true
-		application.addSceneRepresentation(aboutRepresentation)
-		application.addSceneRepresentation(channelBanListRepresentation)
-		application.addSceneRepresentation(channelSpotlightRepresentation)
-		application.addSceneRepresentation(fileTransferRepresentation)
-		application.addSceneRepresentation(onboardingRepresentation)
-		application.addSceneRepresentation(serverChannelListRepresentation)
-		application.addSceneRepresentation(serverHighlightListRepresentation)
-		application.addSceneRepresentation(settingsRepresentation)
+		application.addSceneRepresentation(representation)
 	}
 
 	func openAbout() {
-		aboutRepresentation.environment.openWindow(id: ApplicationSceneID.about)
+		representation.environment.openWindow(id: ApplicationSceneID.about)
 	}
 
 	func openOnboarding() {
-		onboardingRepresentation.environment.openWindow(id: ApplicationSceneID.onboarding)
+		representation.environment.openWindow(id: ApplicationSceneID.onboarding)
 	}
 
 	func openChannelSpotlight() {
@@ -122,15 +113,15 @@ final class ApplicationScenes {
 		} else {
 			channelSpotlightModel = ChannelSpotlightModel()
 		}
-		channelSpotlightRepresentation.environment.openWindow(id: ApplicationSceneID.channelSpotlight)
+		representation.environment.openWindow(id: ApplicationSceneID.channelSpotlight)
 	}
 
 	func openFileTransfers() {
-		fileTransferRepresentation.environment.openWindow(id: ApplicationSceneID.fileTransfers)
+		representation.environment.openWindow(id: ApplicationSceneID.fileTransfers)
 	}
 
 	func closeFileTransfers() {
-		fileTransferRepresentation.environment.dismissWindow(id: ApplicationSceneID.fileTransfers)
+		representation.environment.dismissWindow(id: ApplicationSceneID.fileTransfers)
 	}
 
 	func currentChannelSpotlightModel() -> ChannelSpotlightModel? {
@@ -145,7 +136,7 @@ final class ApplicationScenes {
 	func openServerChannelList(for client: Client) {
 		let clientIdentifier = client.uniqueIdentifier
 		serverChannelLists.open(clientIdentifier) { ServerChannelList(client: client) }.beginRefresh()
-		serverChannelListRepresentation.environment.openWindow(
+		representation.environment.openWindow(
 			id: ApplicationSceneID.serverChannelList,
 			value: clientIdentifier
 		)
@@ -163,7 +154,7 @@ final class ApplicationScenes {
 
 	func closeServerChannelList(for clientIdentifier: String) {
 		serverChannelLists.close(clientIdentifier)?.close()
-		serverChannelListRepresentation.environment.dismissWindow(
+		representation.environment.dismissWindow(
 			id: ApplicationSceneID.serverChannelList,
 			value: clientIdentifier
 		)
@@ -183,7 +174,7 @@ final class ApplicationScenes {
 	func openChannelBanList(entryType: ChannelBanListEntryType, in channel: Channel) {
 		guard let session = ChannelBanListSession(entryType: entryType, in: channel) else { return }
 		channelBanListWindowState.session = session
-		channelBanListRepresentation.environment.openWindow(id: ApplicationSceneID.channelBanList)
+		representation.environment.openWindow(id: ApplicationSceneID.channelBanList)
 	}
 
 	func currentChannelBanListSession() -> ChannelBanListSession? {
@@ -199,13 +190,13 @@ final class ApplicationScenes {
 	func closeChannelBanList(matching isStale: (ChannelBanListSession) -> Bool) {
 		guard let session = channelBanListWindowState.session, isStale(session) else { return }
 		channelBanListWindowState.session = nil
-		channelBanListRepresentation.environment.dismissWindow(id: ApplicationSceneID.channelBanList)
+		representation.environment.dismissWindow(id: ApplicationSceneID.channelBanList)
 	}
 
 	func openServerHighlightList(for client: Client) {
 		let clientIdentifier = client.uniqueIdentifier
 		_ = serverHighlightLists.open(clientIdentifier) { ServerHighlightList(client: client) }
-		serverHighlightListRepresentation.environment.openWindow(
+		representation.environment.openWindow(
 			id: ApplicationSceneID.serverHighlightList,
 			value: clientIdentifier
 		)
@@ -232,7 +223,7 @@ final class ApplicationScenes {
 	/// jump into, so the window goes with it.
 	func closeServerHighlightList(for clientIdentifier: String) {
 		guard serverHighlightLists.close(clientIdentifier) != nil else { return }
-		serverHighlightListRepresentation.environment.dismissWindow(
+		representation.environment.dismissWindow(
 			id: ApplicationSceneID.serverHighlightList,
 			value: clientIdentifier
 		)
@@ -244,6 +235,6 @@ final class ApplicationScenes {
 
 	func openSettings(_ selection: SettingsSceneSelection = .default) {
 		settingsRequest.open(selection)
-		settingsRepresentation.environment.openSettings()
+		representation.environment.openSettings()
 	}
 }

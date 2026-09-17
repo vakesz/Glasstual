@@ -1,15 +1,13 @@
-/* *********************************************************************
- * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- * Please see Acknowledgements.pdf for additional information.
- *********************************************************************** */
+// Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import Darwin
 import Foundation
 import os
 
-nonisolated struct FileLogDestination: Sendable, Equatable { // nonisolated: value
-	nonisolated enum Folder: Sendable, Equatable { // nonisolated: value
+nonisolated struct FileLogDestination: Sendable, Equatable {
+	nonisolated enum Folder: Sendable, Equatable {
 		case bookmark(Data)
 		case directory(URL)
 	}
@@ -18,7 +16,7 @@ nonisolated struct FileLogDestination: Sendable, Equatable { // nonisolated: val
 	let relativePath: String
 }
 
-nonisolated enum FileLogOperation: Sendable, Equatable { // nonisolated: value
+nonisolated enum FileLogOperation: Sendable, Equatable {
 	case write(UUID, FileLogDestination, Date, String)
 	case reopen(UUID, FileLogDestination?, Date)
 	case close(UUID)
@@ -27,7 +25,7 @@ nonisolated enum FileLogOperation: Sendable, Equatable { // nonisolated: value
 	case shutdown
 }
 
-nonisolated struct FileLogResult: Sendable { // nonisolated: value
+nonisolated struct FileLogResult: Sendable {
 	var succeeded = true
 	var outOfSpace = false
 
@@ -54,7 +52,7 @@ nonisolated struct FileLogResult: Sendable { // nonisolated: value
  A value holding one closure rather than a protocol: the only thing that varies
  is which actor is behind it, and the one production actor is
  ``FileLogSink``. */
-nonisolated struct FileLogSinkPort: Sendable { // nonisolated: value
+nonisolated struct FileLogSinkPort: Sendable {
 	let process: @Sendable (FileLogOperation) async -> FileLogResult
 
 	/// The real transcript files on disk.

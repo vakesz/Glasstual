@@ -1,20 +1,11 @@
-/* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- *********************************************************************** */
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import Foundation
 
 /** A zero or otherwise invalid scrollback preference restores the transcript's
  established defaults. */
-nonisolated struct TranscriptBufferPolicy: Equatable, Sendable { // nonisolated: value
+nonisolated struct TranscriptBufferPolicy: Equatable, Sendable {
 	static let defaultHardLimit = 1000
 	static let validLimits = 100 ... 50000
 
@@ -31,28 +22,28 @@ nonisolated struct TranscriptBufferPolicy: Equatable, Sendable { // nonisolated:
 	}
 }
 
-nonisolated enum TranscriptScrollbackMark: Equatable, Sendable { // nonisolated: value
+nonisolated enum TranscriptScrollbackMark: Equatable, Sendable {
 	case none
 	case latest
 	case line(String)
 	case after(Date)
 }
 
-nonisolated struct TranscriptDeliveryUpdate: Equatable, Sendable { // nonisolated: value
+nonisolated struct TranscriptDeliveryUpdate: Equatable, Sendable {
 	let lineNumber: String
 	let state: LogLineDeliveryState
 	let messageIdentifier: String?
 	let reason: String?
 }
 
-nonisolated struct TranscriptReplaySnapshot: Sendable { // nonisolated: value
+nonisolated struct TranscriptReplaySnapshot: Sendable {
 	let results: [TranscriptRenderResult]
 }
 
 /// Tracks the one visual boundary between restored scrollback and lines from
 /// this process. The boundary may be known during the initial replay or may
 /// have to wait for the first live line that arrives afterwards.
-nonisolated struct TranscriptSessionBoundaryState: Sendable { // nonisolated: value
+nonisolated struct TranscriptSessionBoundaryState: Sendable {
 	private(set) var newestPreviousSessionLineNumber: String?
 	private(set) var firstCurrentSessionLineNumber: String?
 	private var markerIsPending = false
@@ -99,7 +90,7 @@ nonisolated struct TranscriptSessionBoundaryState: Sendable { // nonisolated: va
  What it stores is the rendered rows: a ``TranscriptRow`` is already the
  semantic form a theme change re-renders from, so keeping the archives beside
  them was a second copy of the same conversation under a second ceiling. */
-nonisolated struct TranscriptProjectionState: Sendable { // nonisolated: value
+nonisolated struct TranscriptProjectionState: Sendable {
 	enum Phase: Equatable, Sendable {
 		case dormant
 		case loading

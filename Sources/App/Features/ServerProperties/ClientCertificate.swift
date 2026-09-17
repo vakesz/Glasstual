@@ -1,7 +1,5 @@
-/* *********************************************************************
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- * Please see Acknowledgements.pdf for additional information.
- *********************************************************************** */
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import CocoaExtensions
 import Foundation
@@ -17,7 +15,7 @@ struct ClientCertificateDetails: Equatable, Sendable {
 }
 
 /// Loads certificate choices and details for Server Properties.
-nonisolated enum ClientCertificateLoader { // nonisolated: value
+nonisolated enum ClientCertificateLoader {
 	/// Transfers newly created, non-Sendable identity handles exclusively to
 	/// the caller. The native picker becomes their only owner after this hop.
 	@concurrent

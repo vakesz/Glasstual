@@ -1,14 +1,5 @@
-/* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- *********************************************************************** */
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import CocoaExtensions
 import Foundation
@@ -320,7 +311,7 @@ final class ServerEndpointListModel {
 /// one message per kind of fault, which is all a caller ever did with the
 /// `NSError`s this used to throw: nobody read their domain, code, description
 /// or recovery suggestion.
-nonisolated enum ServerEndpointFault: Error, Hashable { // nonisolated: value
+nonisolated enum ServerEndpointFault: Error, Hashable {
 	case address
 	case port
 
@@ -332,7 +323,7 @@ nonisolated enum ServerEndpointFault: Error, Hashable { // nonisolated: value
 	}
 }
 
-nonisolated enum ServerEndpointValidation { // nonisolated: value
+nonisolated enum ServerEndpointValidation {
 	/// The address, or `nil` when it is not one. An empty address is not one
 	/// either: a row nobody typed a host into cannot be connected to.
 	static func validatedAddress(_ address: String) -> String? {

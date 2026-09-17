@@ -1,7 +1,5 @@
-/* *********************************************************************
- * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
- * Please see Acknowledgements.pdf for additional information.
- *********************************************************************** */
+// Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import AppKit
 import CoreData

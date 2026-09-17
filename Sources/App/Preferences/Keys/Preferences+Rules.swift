@@ -1,13 +1,11 @@
-/* *********************************************************************
- * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
- * Please see Acknowledgements.pdf for additional information.
- *********************************************************************** */
+// Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import Foundation
 
 // MARK: - Rules
 
-nonisolated extension Preferences { // nonisolated: value
+nonisolated extension Preferences {
 	/// The message rules the Rules pane edits and the rule engine runs.
 	enum Rules {
 		/** Every rule, as the property list the editor has always written.

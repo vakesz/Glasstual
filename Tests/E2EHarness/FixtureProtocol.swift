@@ -37,7 +37,13 @@ enum ScenarioKind: String, CaseIterable {
 	}
 
 	var finalChannel: String? {
-		self == .channelDenied ? "#retry" : (usesChannel ? "#e2e" : nil)
+		if self == .channelDenied {
+			return "#retry"
+		}
+		if dcc {
+			return "fixture"
+		}
+		return usesChannel ? "#e2e" : nil
 	}
 
 	var hasFixtureTest: Bool {
@@ -78,6 +84,11 @@ enum ScenarioKind: String, CaseIterable {
 
 /// Only synthetic values enter evidence. Unexpected wire content is never printed.
 struct FixtureProtocol {
+	private static let e2eQuitLines: Set<String> = ["QUIT E2E_QUIT", "QUIT :E2E_QUIT"]
+	private static let onboardingQuitLines: Set<String> = [
+		"QUIT :Glasstual IRC Client: https://github.com/vakesz/Glasstual",
+	]
+
 	static let registration = [
 		["CAP LS 302", "CAP LS :302"], ["NICK e2euser", "NICK :e2euser"],
 		["USER e2euser 0 * :Synthetic E2E User"], ["CAP END", "CAP :END"],
@@ -92,6 +103,21 @@ struct FixtureProtocol {
 	let messaging: Bool
 	var deniedJoin: DeniedJoinFixture?
 	var interaction: InteractiveFixture?
+	let acceptsOnboardingQuit: Bool
+
+	init(
+		reject: Bool,
+		messaging: Bool,
+		deniedJoin: DeniedJoinFixture? = nil,
+		interaction: InteractiveFixture? = nil,
+		acceptsOnboardingQuit: Bool = false
+	) {
+		self.reject = reject
+		self.messaging = messaging
+		self.deniedJoin = deniedJoin
+		self.interaction = interaction
+		self.acceptsOnboardingQuit = acceptsOnboardingQuit
+	}
 
 	mutating func receive(_ line: String) throws -> [String] {
 		guard !quitSeen else { throw HarnessFailure.assertion("Command after QUIT; payload withheld") }
@@ -149,6 +175,8 @@ struct FixtureProtocol {
 		case "PONG E2E_PING", "PONG :E2E_PING":
 			guard !pongSeen else { throw HarnessFailure.assertion("Duplicate PONG") }
 			pongSeen = true
+		case "ISON fixture":
+			return [":e2e.local 303 e2euser :fixture"]
 		case "MODE e2euser", "MODE :e2euser":
 			let modes = deniedJoin?.phase == .identified || deniedJoin?.phase == .joined ? "+r" : "+"
 			return [":e2e.local 221 e2euser :\(modes)"]
@@ -179,7 +207,8 @@ struct FixtureProtocol {
 			guard messageSeen, !replySeen else { throw HarnessFailure.assertion("Unexpected typed reply") }
 			replySeen = true
 			return [":fixture!fixture@localhost PRIVMSG #e2e :E2E_REPLY_ACK"]
-		case "QUIT E2E_QUIT", "QUIT :E2E_QUIT":
+		case let line where Self.e2eQuitLines.contains(line) ||
+			(acceptsOnboardingQuit && Self.onboardingQuitLines.contains(line)):
 			guard pongSeen, !messaging || replySeen else { throw HarnessFailure.assertion("Premature QUIT") }
 			guard deniedJoin == nil || deniedJoin?.phase == .joined else {
 				throw HarnessFailure.assertion("QUIT before denied-channel recovery")
@@ -188,9 +217,24 @@ struct FixtureProtocol {
 			else { throw HarnessFailure.assertion("QUIT before fixture interaction completed") }
 			quitSeen = true
 		default:
-			throw HarnessFailure.assertion("Unexpected command or arguments; payload withheld")
+			throw HarnessFailure.assertion("Unexpected \(Self.redactedShape(of: line)); payload withheld")
 		}
 		return []
+	}
+
+	private static func redactedShape(of line: String) -> String {
+		let fields = line.split(separator: " ", omittingEmptySubsequences: true)
+		let command = fields.first.map(String.init) ?? "empty command"
+		let parameterCount = max(fields.count - 1, 0)
+		let hasTrailingParameter = line.contains(" :")
+		let ctcpCommand: String
+		if let start = line.firstIndex(of: "\u{01}") {
+			let payload = line[line.index(after: start)...]
+			ctcpCommand = payload.split(separator: " ").prefix(2).joined(separator: " ")
+		} else {
+			ctcpCommand = "none"
+		}
+		return "command shape (verb \(command), parameters \(parameterCount), trailing \(hasTrailingParameter), CTCP \(ctcpCommand))"
 	}
 
 	func eof(pending: Data) throws {

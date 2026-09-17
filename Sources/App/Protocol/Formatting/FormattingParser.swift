@@ -1,15 +1,6 @@
-/* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- *********************************************************************** */
+// Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import Foundation
 
@@ -20,7 +11,7 @@ import Foundation
 /// Every other control character is settled in the same pass, the way
 /// ``TranscriptTextSanitizer`` says: a line separator is drawn as a space and
 /// the rest are dropped, so no formatted string can break out of its line.
-nonisolated enum FormattingParser { // nonisolated: value
+nonisolated enum FormattingParser {
 	static func parse(_ source: String) -> NSMutableAttributedString {
 		var parser = Parser(source: source)
 		return parser.parse()

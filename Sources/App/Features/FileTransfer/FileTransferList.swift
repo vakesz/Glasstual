@@ -1,15 +1,6 @@
-/* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- *********************************************************************** */
+// Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import CocoaExtensions
 import Foundation
@@ -42,6 +33,7 @@ enum FileTransferSelection: String, CaseIterable, Identifiable, Sendable {
 
 enum FileTransferAction: Sendable {
 	case start
+	case downloadTo
 	case stop
 	case remove
 	case open
@@ -140,6 +132,8 @@ final class FileTransferList {
 		switch action {
 		case .start:
 			return selected.contains(where: \.canStart)
+		case .downloadTo:
+			return selected.contains { $0.isSender == false && $0.canStart && $0.path == nil }
 		case .stop:
 			return selected.contains { $0.transferStatus.isRunning }
 		case .remove:

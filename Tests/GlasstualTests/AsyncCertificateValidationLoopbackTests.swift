@@ -1,14 +1,5 @@
-/* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- *********************************************************************** */
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import CocoaExtensions
 import Foundation
@@ -240,7 +231,7 @@ private final class HostClientShim: NSObject, RemoteConnectionClientProtocol {
  answers. "No" delivers zero bytes and closes; "yes" completes the handshake
  and delivers everything in order. */
 @Suite("Async certificate validation over loopback TLS", .serialized)
-nonisolated struct AsyncCertificateValidationLoopbackTests { // nonisolated: value
+nonisolated struct AsyncCertificateValidationLoopbackTests {
 	static let testLines = [
 		":loopback 001 tester :first",
 		":loopback 002 tester :second",

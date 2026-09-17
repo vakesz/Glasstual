@@ -1,7 +1,5 @@
-/* *********************************************************************
- * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
- * Please see Acknowledgements.pdf for additional information.
- *********************************************************************** */
+// Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import CocoaExtensions
 import Foundation
@@ -12,7 +10,7 @@ import Foundation
  The two payloads with fields of their own, nickname colour overrides and
  message rules, are checked and repaired here rather than at the readers, so a
  permissive reader cannot quietly drop an entry it did not understand. */
-nonisolated enum PreferenceValueRepair { // nonisolated: value
+nonisolated enum PreferenceValueRepair {
 	static func nicknameColors(_ value: PropertyListValue) -> Bool {
 		guard let overrides = value.dictionary else { return false }
 		return overrides.values.allSatisfy { value in

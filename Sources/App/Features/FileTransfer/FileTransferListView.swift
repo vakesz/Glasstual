@@ -1,15 +1,6 @@
-/* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- *********************************************************************** */
+// Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import AppKit
 import QuickLook
@@ -56,7 +47,8 @@ struct FileTransferListView: View {
 					row(for: transfer)
 				}
 			}
-			.listStyle(.inset(alternatesRowBackgrounds: true))
+			.listStyle(.inset)
+			.alternatingRowBackgrounds()
 			.overlay {
 				if model.visibleTransfers.isEmpty {
 					ContentUnavailableView {
@@ -89,6 +81,13 @@ struct FileTransferListView: View {
 					Label(model.startActionTitle(), systemImage: "play.fill")
 				}
 				.disabled(model.canPerform(.start) == false)
+
+				Button {
+					center.perform(.downloadTo, on: model.selection)
+				} label: {
+					Label(.FileTransfers.downloadTo, systemImage: "folder.badge.arrow.down")
+				}
+				.disabled(model.canPerform(.downloadTo) == false)
 
 				Button {
 					center.perform(.stop, on: model.selection)
@@ -153,6 +152,8 @@ struct FileTransferListView: View {
 	private func transferMenu(for identifiers: Set<String>) -> some View {
 		Button(model.startActionTitle(for: identifiers)) { center.perform(.start, on: identifiers) }
 			.disabled(model.canPerform(.start, on: identifiers) == false)
+		Button(.FileTransfers.downloadTo) { center.perform(.downloadTo, on: identifiers) }
+			.disabled(model.canPerform(.downloadTo, on: identifiers) == false)
 		Button(.FileTransfers.cancelTransfer) { center.perform(.stop, on: identifiers) }
 			.disabled(model.canPerform(.stop, on: identifiers) == false)
 
@@ -247,7 +248,11 @@ struct FileTransferListScene: Scene {
 	let center: FileTransferCenter
 
 	var body: some Scene {
-		Window(String(localized: .FileTransfers.fileTransfers), id: ApplicationSceneID.fileTransfers) {
+		WindowGroup(
+			String(localized: .FileTransfers.fileTransfers),
+			id: ApplicationSceneID.fileTransfers,
+			for: SingletonSceneValue.self
+		) { _ in
 			FileTransferListView(center: center)
 				.frame(
 					minWidth: 620,
@@ -255,10 +260,10 @@ struct FileTransferListScene: Scene {
 					minHeight: 360,
 					idealHeight: 440
 				)
-		}
-		.defaultSize(width: 680, height: 440)
-		/* `contentSize` pins the window to its ideal size every time it opens,
-		 which threw away whatever size the user had left it at. */
-		.windowResizability(.contentMinSize)
+		} defaultValue: { .instance }
+			.defaultSize(width: 680, height: 440)
+			/* `contentSize` pins the window to its ideal size every time it opens,
+			 which threw away whatever size the user had left it at. */
+			.windowResizability(.contentMinSize)
 	}
 }

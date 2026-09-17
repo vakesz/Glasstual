@@ -34,17 +34,20 @@ final class DCCFixturePeer {
 	}
 
 	let cancel: Bool
+	let filename: String
 	private var listener: NWListener?
 	private var connection: NWConnection?
 	private var acknowledgements = FixtureACKParser()
 	private(set) var complete = false
 	private(set) var failure: Error?
 
-	init(cancel: Bool) {
+	init(cancel: Bool, filename: String = "e2e-transfer-\(UUID().uuidString).bin") {
 		self.cancel = cancel
+		self.filename = filename
 	}
 
 	func start() async throws -> UInt16 {
+		try HarnessFiles.write(filename, to: "dcc-filename")
 		let parameters = NWParameters.tcp
 		parameters.requiredLocalEndpoint = .hostPort(host: "127.0.0.1", port: .any)
 		let listener = try NWListener(using: parameters)
@@ -67,6 +70,29 @@ final class DCCFixturePeer {
 		connection?.cancel(); listener?.cancel()
 	}
 
+	/// Passive DCC makes the application listen, so the synthetic peer dials
+	/// the port returned over IRC instead of asking the application to dial a
+	/// peer-supplied loopback address.
+	func connect(to port: UInt16) {
+		guard connection == nil, let port = NWEndpoint.Port(rawValue: port) else { return }
+		let peer = NWConnection(host: "127.0.0.1", port: port, using: .tcp)
+		connection = peer
+		peer.stateUpdateHandler = { [weak self] state in
+			Task { @MainActor in
+				guard let self, self.connection === peer else { return }
+				switch state {
+				case .ready:
+					self.sendPayload(on: peer)
+				case .failed:
+					self.failure = HarnessFailure.assertion("Passive DCC fixture connection failed")
+				default:
+					break
+				}
+			}
+		}
+		peer.start(queue: .global())
+	}
+
 	private func accept(_ peer: NWConnection) {
 		guard connection == nil else {
 			peer.cancel()
@@ -75,6 +101,10 @@ final class DCCFixturePeer {
 		}
 		connection = peer
 		peer.start(queue: .global())
+		sendPayload(on: peer)
+	}
+
+	private func sendPayload(on peer: NWConnection) {
 		let payload = Self.bytes.prefix(cancel ? Self.partialSize : Self.size)
 		peer.send(content: payload, completion: .contentProcessed { [weak self] error in
 			Task { @MainActor in

@@ -1,15 +1,6 @@
-/* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- *********************************************************************** */
+// Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import CocoaExtensions
 import Foundation
@@ -21,7 +12,7 @@ import Foundation
  the application works with the value. It used to be an untyped dictionary
  passed whole from the protocol layer to the delegate callback, with each
  reader guessing at the keys. */
-nonisolated struct NotificationPayload: Equatable, Sendable { // nonisolated: value
+nonisolated struct NotificationPayload: Equatable, Sendable {
 	static let clientIdentifierKey = "clientId"
 	static let channelIdentifierKey = "channelId"
 	static let queryNameKey = "queryName"

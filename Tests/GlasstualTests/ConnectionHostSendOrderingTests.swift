@@ -1,14 +1,5 @@
-/* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- *********************************************************************** */
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import CocoaExtensions
 import Foundation
@@ -224,7 +215,7 @@ private final class SendOrderingClientShim: NSObject, RemoteConnectionClientProt
  global executor to order the messages, and a write that collided with one
  already running was discarded without telling the sender. */
 @Suite("Connection host send ordering", .serialized)
-nonisolated struct ConnectionHostSendOrderingTests { // nonisolated: value
+nonisolated struct ConnectionHostSendOrderingTests {
 	static let lineCount = 64
 
 	@Test("Lines handed over one after another reach the wire in that order")

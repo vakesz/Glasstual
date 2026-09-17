@@ -1,7 +1,5 @@
-/* *********************************************************************
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- * Please see Acknowledgements.pdf for additional information.
- *********************************************************************** */
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import AppKit
 import SwiftUI
@@ -12,7 +10,7 @@ import SwiftUI
  defaults store three times over — once for the glyph, once for its tooltip and
  once for the accessibility label — and every ask builds its own handle on the
  suite, on every row, on each rebuild a busy channel provokes. */
-nonisolated struct MemberListPresentationStyle: Equatable, Sendable { // nonisolated: value
+nonisolated struct MemberListPresentationStyle: Equatable, Sendable {
 	/// Whether an IRC operator is drawn as one whatever the channel gave them.
 	let favorsServerStaff: Bool
 	/// "Use an x to indicate a user with no mode set", as the preference offers
@@ -67,7 +65,7 @@ nonisolated struct MemberListPresentationStyle: Equatable, Sendable { // nonisol
 /// The glyph, the badge colour preference, the privilege description and the
 /// section header were four separate `switch`es over `UserRank`; a rank added
 /// to one of them was easy to leave out of the other three.
-nonisolated struct MemberListRankStyle: Sendable { // nonisolated: value
+nonisolated struct MemberListRankStyle: Sendable {
 	/// The glyph the rank is drawn with. A member with no mode has none of its
 	/// own: whether one is drawn at all is a preference.
 	let symbolName: String?
@@ -78,7 +76,7 @@ nonisolated struct MemberListRankStyle: Sendable { // nonisolated: value
 	let sectionTitle: LocalizedStringResource
 }
 
-nonisolated enum MemberListRanks { // nonisolated: value
+nonisolated enum MemberListRanks {
 	/// What a member with no mode at all is called and grouped under.
 	static let unranked = MemberListRankStyle(
 		symbolName: nil,

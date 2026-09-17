@@ -1,13 +1,11 @@
-/* *********************************************************************
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- * Please see Acknowledgements.pdf for additional information.
- *********************************************************************** */
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import Foundation
 import ImageIO
 import UniformTypeIdentifiers
 
-nonisolated struct InlineImageLimits: Sendable { // nonisolated: value
+nonisolated struct InlineImageLimits: Sendable {
 	var maximumEncodedBytes = 16 * 1024 * 1024
 	var maximumDimension = 16384
 	var maximumPixels = 16 * 1024 * 1024
@@ -43,7 +41,7 @@ nonisolated struct InlineImageLimits: Sendable { // nonisolated: value
 	}
 }
 
-nonisolated enum InlineImageDecoder { // nonisolated: value
+nonisolated enum InlineImageDecoder {
 	struct Preview: Sendable {
 		let data: Data
 		let residentByteCount: Int
@@ -66,6 +64,9 @@ nonisolated enum InlineImageDecoder { // nonisolated: value
 			else { throw InlineImageError.unsupportedContent }
 			let count = CGImageSourceGetCount(source)
 			guard count > 0, count <= limits.maximumFrames else { throw InlineImageError.resourceLimit }
+			guard type != UTType.gif.identifier || data.last == 0x3B else {
+				throw InlineImageError.unsupportedContent
+			}
 			let animated = count > 1
 			guard !animated || type == UTType.gif.identifier || type == UTType.png.identifier else {
 				throw InlineImageError.unsupportedContent

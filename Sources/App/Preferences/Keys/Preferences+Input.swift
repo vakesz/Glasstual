@@ -1,39 +1,5 @@
-/* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- *  * Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *  * Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *  * Neither the name of Textual, "Codeux Software, LLC", nor the
- *    names of its contributors may be used to endorse or promote products
- *    derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
- *
- *********************************************************************** */
+// Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import CocoaExtensions
 import Foundation
@@ -44,13 +10,13 @@ import Foundation
  existing preferences file already holds — rather than an array of strings, so
  the record is spelled out here instead of being rebuilt from
  `["string": …]` literals at every use. */
-nonisolated struct HighlightKeyword: Hashable, Sendable { // nonisolated: value
+nonisolated struct HighlightKeyword: Hashable, Sendable {
 	static let field = "string"
 
 	var string: String
 }
 
-nonisolated extension HighlightKeyword: PreferenceValue { // nonisolated: value
+nonisolated extension HighlightKeyword: PreferenceValue {
 	static func preferenceValue(from object: Any) -> HighlightKeyword? {
 		guard let string = PropertyListValue(propertyList: object)?.dictionary?[field]?.string else {
 			return nil
@@ -66,7 +32,7 @@ nonisolated extension HighlightKeyword: PreferenceValue { // nonisolated: value
 
 // MARK: - Input
 
-nonisolated extension Preferences { // nonisolated: value
+nonisolated extension Preferences {
 	/// The input text field, the keyboard, and tab completion.
 	enum Input {
 		static let automaticSpellCheck = PreferenceKey("TextFieldAutomaticSpellCheck", default: true)
@@ -148,7 +114,7 @@ nonisolated extension Preferences { // nonisolated: value
 
 // MARK: - Highlights
 
-nonisolated extension Preferences { // nonisolated: value
+nonisolated extension Preferences {
 	/// Which incoming text counts as a highlight.
 	enum Highlights {
 		static let matchingMethod = PreferenceKey(

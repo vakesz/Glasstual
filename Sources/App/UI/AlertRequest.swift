@@ -1,45 +1,11 @@
-/* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- *  * Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *  * Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *  * Neither the name of Textual, "Codeux Software, LLC", nor the
- *    names of its contributors may be used to endorse or promote products
- *    derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
- *
- *********************************************************************** */
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import Foundation
 
 /// Which of an alert's up to three buttons the user chose. The names describe
 /// button position, which is what the nib-era API promised its callers.
-nonisolated enum AlertResponse: UInt, Sendable { // nonisolated: value
+nonisolated enum AlertResponse: UInt, Sendable {
 	case `default` = 1000
 	case alternate = 1001
 	case other = 1002
@@ -50,7 +16,7 @@ extension AlertResponse: PreferenceEnum {}
 
 /// How loudly an alert speaks. The two that warn are badged with the system
 /// caution mark.
-nonisolated enum AlertStyle: Sendable { // nonisolated: value
+nonisolated enum AlertStyle: Sendable {
 	case informational
 	case warning
 	case critical
@@ -59,7 +25,7 @@ nonisolated enum AlertStyle: Sendable { // nonisolated: value
 /// Which of an alert's buttons destroys something. That button carries the
 /// destructive role, which is what tints it and tells VoiceOver the action
 /// cannot be taken back.
-nonisolated enum AlertDestructiveButton: Sendable { // nonisolated: value
+nonisolated enum AlertDestructiveButton: Sendable {
 	case `default`
 	case alternate
 }
@@ -67,7 +33,7 @@ nonisolated enum AlertDestructiveButton: Sendable { // nonisolated: value
 /// Everything one alert needs. Building the request is separate from showing
 /// it, which is what lets the suppression policy be exercised without a window
 /// server.
-nonisolated struct AlertRequest: Sendable { // nonisolated: value
+nonisolated struct AlertRequest: Sendable {
 	var title: String
 	var body: String
 	var defaultButton: String
@@ -133,7 +99,7 @@ nonisolated struct AlertRequest: Sendable { // nonisolated: value
 }
 
 /// What an alert came back with.
-nonisolated struct AlertOutcome: Equatable, Sendable { // nonisolated: value
+nonisolated struct AlertOutcome: Equatable, Sendable {
 	let response: AlertResponse
 	/// Whether the alert will not be shown again — either because the user
 	/// ticked the checkbox now, or because a previous run recorded the choice
@@ -167,7 +133,7 @@ protocol AlertPresenter {
 	func presentModal(_ request: AlertRequest) -> AlertPresenterResult
 }
 
-nonisolated struct AlertPresenterResult: Equatable, Sendable { // nonisolated: value
+nonisolated struct AlertPresenterResult: Equatable, Sendable {
 	let response: AlertResponse
 	let suppressionChecked: Bool
 }

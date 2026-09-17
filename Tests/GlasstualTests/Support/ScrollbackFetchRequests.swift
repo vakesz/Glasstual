@@ -1,7 +1,5 @@
-/* *********************************************************************
- * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
- * Please see Acknowledgements.pdf for additional information.
- *********************************************************************** */
+// Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import CoreData
 import Foundation
@@ -9,7 +7,7 @@ import Foundation
 
 /// A test that holds a context beyond the store's lifetime closes its SQLite
 /// connection before deleting the scratch directory.
-nonisolated enum ScrollbackFixture { // nonisolated: value
+nonisolated enum ScrollbackFixture {
 	static func close(_ context: NSManagedObjectContext) async throws {
 		try await context.perform {
 			context.reset()

@@ -1,39 +1,5 @@
-/* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2010 - 2019 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- *  * Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *  * Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *  * Neither the name of Textual, "Codeux Software, LLC", nor the
- *    names of its contributors may be used to endorse or promote products
- *    derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
- *
- *********************************************************************** */
+// Copyright (c) 2010 - 2019 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import CocoaExtensions
 import Foundation
@@ -44,7 +10,7 @@ import Foundation
  the value is not a time at all. It matters because the tag is server-supplied
  text — a forty-digit one parses to a `Double` that no later narrowing can
  survive, and `Int64(_:)` traps on it rather than reporting the overflow. */
-private nonisolated let maximumServerTimeInterval: Double = 1e11 // nonisolated: let
+private nonisolated let maximumServerTimeInterval: Double = 1e11
 
 /*  A wire parameter carrying whole Unix seconds, read as a date.
 
@@ -59,7 +25,7 @@ private nonisolated let maximumServerTimeInterval: Double = 1e11 // nonisolated:
 
  A bouncer replays without a batch, so the only thing separating playback from
  a line that took a moment to reach the client is how old the server time is. */
-nonisolated let liveServerTimeTolerance: TimeInterval = 30 // nonisolated: let
+nonisolated let liveServerTimeTolerance: TimeInterval = 30
 
 /// Whether a line is replayed history rather than something happening now.
 nonisolated func messageIsHistoric( // nonisolated: pure
@@ -288,7 +254,7 @@ final class Message {
 	}
 }
 
-nonisolated struct ParsedLine: Sendable { // nonisolated: value
+nonisolated struct ParsedLine: Sendable {
 	let messageTagSection: String?
 	let senderSection: String?
 	let command: String
@@ -319,7 +285,7 @@ nonisolated struct ParsedLine: Sendable { // nonisolated: value
 	}
 }
 
-nonisolated enum LineParser { // nonisolated: value
+nonisolated enum LineParser {
 	/// RFC 1459/2812 and IRCv3 separate tokens on SPACE (0x20) only, never on
 	/// the wider Unicode whitespace set.
 	private static let space: Unicode.Scalar = " "
@@ -408,7 +374,7 @@ nonisolated enum LineParser { // nonisolated: value
 
 /// The message tags of one line, with the two the client reads by name pulled
 /// out of them.
-nonisolated struct ParsedMessageTags: Sendable, Equatable { // nonisolated: value
+nonisolated struct ParsedMessageTags: Sendable, Equatable {
 	let tags: [String: String]
 	let messageIdentifier: String?
 	let senderAccount: String?
@@ -420,7 +386,7 @@ nonisolated struct ParsedMessageTags: Sendable, Equatable { // nonisolated: valu
 	}
 }
 
-nonisolated enum MessageTagParser { // nonisolated: value
+nonisolated enum MessageTagParser {
 	/// IRCv3 message-tags caps the tag section at 8191 bytes, counting the
 	/// leading `@` and the space that ends it. Anything longer is a server
 	/// that is not playing by the rules, so its tags are dropped rather than

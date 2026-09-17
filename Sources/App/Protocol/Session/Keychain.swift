@@ -1,7 +1,5 @@
-/* *********************************************************************
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- * Please see Acknowledgements.pdf for additional information.
- *********************************************************************** */
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import CocoaExtensions
 import Foundation
@@ -208,7 +206,7 @@ extension ChannelConfig {
  Every `KeychainItem.password` is a synchronous `SecItemCopyMatching`.
  Connections and editors request their secrets together, off the main actor,
  and own the resulting snapshot for their session. */
-nonisolated enum KeychainSecretLoader { // nonisolated: value
+nonisolated enum KeychainSecretLoader {
 	@concurrent
 	static func passwords(for items: [KeychainItem]) async -> [KeychainItem: String] {
 		var passwords: [KeychainItem: String] = [:]

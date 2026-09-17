@@ -1,7 +1,5 @@
-/* *********************************************************************
- * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
- * Please see Acknowledgements.pdf for additional information.
- *********************************************************************** */
+// Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import CocoaExtensions
 import Foundation
@@ -392,14 +390,13 @@ struct PreferencesTransferTests {
 		let live = model.clientDirectory.createClient(with: client("Existing live query"))
 		let query = model.clientDirectory.createPrivateMessage("ExistingPeer", on: live)
 		#expect(!live.config.channelList.contains { $0.uniqueIdentifier == query.uniqueIdentifier })
-		let legacy: [String: PropertyListValue] = [Preferences.Appearance.rememberQueryStates.name: true]
-		let data = try PropertyListSerialization.data(
-			fromPropertyList: legacy.propertyListObject,
-			format: .xml,
-			options: 0
+		let archive = PreferencesArchive(
+			values: [Preferences.Appearance.rememberQueryStates.name: true],
+			unset: [],
+			clients: [live.config]
 		)
 		let session = fixture.session(world: model.clientDirectory)
-		try await session.prepareImport(from: fixture.write(data))
+		try await session.prepareImport(from: fixture.write(archive.encoded()))
 		await session.commitPreview()
 		#expect(session.errorMessage == nil)
 		#expect(live.config.channelList.contains { $0.uniqueIdentifier == query.uniqueIdentifier })

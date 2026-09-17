@@ -1,12 +1,10 @@
-/* *********************************************************************
- * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
- * Please see Acknowledgements.pdf for additional information.
- *********************************************************************** */
+// Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import Foundation
 
 /// One user script the application can run as a command.
-nonisolated struct UserScript: Equatable, Sendable { // nonisolated: value
+nonisolated struct UserScript: Equatable, Sendable {
 	enum Kind: Sendable {
 		case appleScript
 		case unixExecutable
@@ -38,7 +36,7 @@ nonisolated struct UserScript: Equatable, Sendable { // nonisolated: value
 	}
 }
 
-nonisolated struct ScriptCatalog: Sendable { // nonisolated: value
+nonisolated struct ScriptCatalog: Sendable {
 	var commandsByName: [String: UserScript] = [:]
 	var customScriptsURL: URL?
 

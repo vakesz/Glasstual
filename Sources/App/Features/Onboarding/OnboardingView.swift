@@ -1,21 +1,20 @@
-/* *********************************************************************
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- * Please see Acknowledgements.pdf for additional information.
- *********************************************************************** */
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import AppKit
 import SwiftUI
 
 struct OnboardingScene: Scene {
 	var body: some Scene {
-		Window(
+		WindowGroup(
 			String(localized: .Onboarding.windowChromeWelcomeToGlasstual),
-			id: ApplicationSceneID.onboarding
-		) {
+			id: ApplicationSceneID.onboarding,
+			for: SingletonSceneValue.self
+		) { _ in
 			OnboardingSceneRoot()
-		}
-		.windowResizability(.contentMinSize)
-		.windowStyle(.hiddenTitleBar)
+		} defaultValue: { .instance }
+			.windowResizability(.contentMinSize)
+			.windowStyle(.hiddenTitleBar)
 	}
 }
 
@@ -131,10 +130,10 @@ struct OnboardingView: View {
 			/* Onboarding has to be dismissible without answering it, and
 			 without it asking again at the next launch. */
 			Button(.Onboarding.windowChromeSetUpLater, action: setUpLater)
-				.buttonStyle(.link)
+				.buttonStyle(.borderless)
 
 			Button(.Onboarding.windowChromeSkip) { model.skip() }
-				.buttonStyle(.link)
+				.buttonStyle(.borderless)
 				.disabled(model.currentStep.isSkippable == false)
 				.opacity(model.currentStep.isSkippable ? 1 : 0)
 

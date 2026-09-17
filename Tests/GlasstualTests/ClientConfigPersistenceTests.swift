@@ -111,25 +111,4 @@ struct ClientConfigPersistenceTests {
 		#expect(unique.serverList.first?.uniqueIdentifier != serverCopy.uniqueIdentifier)
 		#expect(unique.channelList.first?.uniqueIdentifier != channelCopy.uniqueIdentifier)
 	}
-
-	@Test("Legacy keys migrate without overwriting an explicit modern cipher setting")
-	func legacyKeysMigrateWithoutOverwritingExplicitModernCipherSetting() throws {
-		let config = try decode([
-			"connectOnLaunch": true,
-			"connectOnDisconnect": true,
-			"disconnectOnSleepMode": false,
-			"identityNickname": "legacy-nick",
-			"identityUsername": "legacy-user",
-			"connectionPrefersModernCiphers": false,
-			"serverList": [["serverAddress": "irc.example.test"]],
-		])
-
-		#expect(config.autoConnect)
-		#expect(config.autoReconnect)
-		#expect(config.autoSleepModeDisconnect == false)
-		#expect(config.nickname == "legacy-nick")
-		#expect(config.username == "legacy-user")
-		#expect(config.cipherSuites == .none)
-		#expect(config.dictionaryValue["dictionaryVersion"]?.integer == 710)
-	}
 }

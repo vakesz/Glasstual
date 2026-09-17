@@ -1,7 +1,5 @@
-/* *********************************************************************
- * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
- * Please see Acknowledgements.pdf for additional information.
- *********************************************************************** */
+// Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import Foundation
 @testable import Glasstual
@@ -15,7 +13,7 @@ import Testing
 /// answer from a `let` instead of a box it would have to share with the test.
 /// Every history test wants a rename reported rather than followed, so the
 /// setter records an issue instead of storing.
-nonisolated struct ScrollbackFilenameFixture: Sendable { // nonisolated: value
+nonisolated struct ScrollbackFilenameFixture: Sendable {
 	let filename: String
 
 	init(_ filename: String = "history.sqlite") {

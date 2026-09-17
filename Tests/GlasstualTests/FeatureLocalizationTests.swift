@@ -1,7 +1,5 @@
-/* *********************************************************************
- * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
- * Please see Acknowledgements.pdf for additional information.
- *********************************************************************** */
+// Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import Foundation
 @testable import Glasstual
@@ -121,7 +119,7 @@ struct FeatureLocalizationTests {
 	func fileTransferStatusesPreserveDirectionAndCollapsePreparation() throws {
 		try expectLocalizedCopy(FileTransferStatus.stopped.notice(direction: .incoming, peerNickname: "Alice"),
 		                        .FileTransfers.transferFromIsStopped("Alice"),
-		                        "Transfer from Alice has not started. Choose Start Transfer to begin.")
+		                        "Transfer from Alice has not started. Choose Accept to begin.")
 		try expectLocalizedCopy(FileTransferStatus.stopped.notice(direction: .outgoing, peerNickname: "Alice"),
 		                        .FileTransfers.transferToIsStopped("Alice"),
 		                        "Transfer to Alice has not started. Choose Start Transfer to begin.")

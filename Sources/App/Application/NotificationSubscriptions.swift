@@ -1,14 +1,5 @@
-/* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- *********************************************************************** */
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import Combine
 import Foundation
@@ -54,17 +45,10 @@ final class NotificationSubscriptions {
 		center: NotificationCenter = .default,
 		using handler: @escaping @MainActor (Notification) -> Void
 	) {
-		/* The sequence registers when the task below first asks it for a value,
-		 not here: a notification posted between this call and that first turn is
-		 not delivered. Every caller sets its observations up before the state
-		 they watch can change.
-
-		 It is the buffered publisher rather than `center.notifications(named:)`
-		 because that sequence asks for one value at a time and keeps nothing it
-		 cannot deliver: a burst posted inside one main-actor turn arrived as a
-		 single notification. Callers that needed the whole burst had to write
-		 this loop out themselves. */
-		let task = Task { @MainActor in
+		/* An immediate task runs through iterator creation before returning, so
+		 upstream is subscribed before the watched state can change. It suspends at
+		 the first empty read and later resumes on the main actor. */
+		let task = Task.immediate { @MainActor in
 			for await notification in center.publisher(for: name).bufferedValues {
 				guard Task.isCancelled == false else { return }
 				if let object, notification.object as AnyObject? !== object {

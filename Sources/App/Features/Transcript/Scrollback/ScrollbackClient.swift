@@ -1,20 +1,11 @@
-/* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- *********************************************************************** */
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import CocoaExtensions
 import Foundation
 import os
 
-private nonisolated let scrollbackClientLogger = Logger( // nonisolated: let
+private nonisolated let scrollbackClientLogger = Logger(
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 	category: "Scrollback"
 )
@@ -26,19 +17,19 @@ actor ScrollbackRequestQueue {
 	typealias Service = @Sendable (ScrollbackFetchRequest) async -> ScrollbackFetchOutcome
 
 	/// A request waiting for its turn.
-	private nonisolated struct QueuedFetch: Sendable { // nonisolated: value
+	private nonisolated struct QueuedFetch: Sendable {
 		let identifier: UUID
 		let request: ScrollbackFetchRequest
 	}
 
 	/// The caller suspended on a request that has not answered yet.
-	private nonisolated struct PendingFetch: Sendable { // nonisolated: value
+	private nonisolated struct PendingFetch: Sendable {
 		let viewIdentifier: String
 		let continuation: CheckedContinuation<ScrollbackFetchOutcome, Never>
 	}
 
 	/// One view's serial stream and the task draining it.
-	private nonisolated struct ViewQueue: Sendable { // nonisolated: value
+	private nonisolated struct ViewQueue: Sendable {
 		let continuation: AsyncStream<QueuedFetch>.Continuation
 		let pump: Task<Void, Never>
 
@@ -144,7 +135,7 @@ actor ScrollbackRequestQueue {
  implements them, and a test that wants an open to fail supplies its own
  closures instead of a second conformer, so opening failures never touch the
  reader's database. */
-nonisolated struct ScrollbackStorage: Sendable { // nonisolated: value
+nonisolated struct ScrollbackStorage: Sendable {
 	var openDatabase: @Sendable (String) async -> ScrollbackOpenOutcome
 	var close: @Sendable () async -> ScrollbackSaveOutcome
 	var setMaximumLineCount: @Sendable (UInt) async -> Void
@@ -179,7 +170,7 @@ actor ScrollbackClient {
 	 Shutting down is an axis of its own rather than a case here: the close a
 	 termination performs can fail, and the caller is then free to retry it, so
 	 whatever the database was before has to survive the attempt. */
-	private nonisolated enum LoadState { // nonisolated: value
+	private nonisolated enum LoadState {
 		case unloaded
 		case loading(Task<Bool, Never>)
 		case loaded

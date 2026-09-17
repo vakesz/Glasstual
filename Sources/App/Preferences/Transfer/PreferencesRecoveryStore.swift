@@ -1,11 +1,9 @@
-/* *********************************************************************
- * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
- * Please see Acknowledgements.pdf for additional information.
- *********************************************************************** */
+// Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import Foundation
 
-nonisolated struct PreferencesRecoveryBackup: Identifiable, Equatable, Sendable { // nonisolated: value
+nonisolated struct PreferencesRecoveryBackup: Identifiable, Equatable, Sendable {
 	let url: URL
 	let created: Date
 	var id: URL {
@@ -17,7 +15,7 @@ nonisolated struct PreferencesRecoveryBackup: Identifiable, Equatable, Sendable 
 
  Every file lands whole or not at all: it is written to a hidden temporary
  file that is already private, flushed, and only then moved into place. */
-nonisolated struct PreferencesProtectedFolder: Sendable { // nonisolated: value
+nonisolated struct PreferencesProtectedFolder: Sendable {
 	let url: URL
 
 	func write(_ data: Data, named name: String) throws -> URL {
@@ -51,7 +49,7 @@ nonisolated struct PreferencesProtectedFolder: Sendable { // nonisolated: value
 /// Backups survive process exit. Only this directory's own archives are pruned.
 actor PreferencesRecoveryStore {
 	let directory: URL
-	nonisolated static let retentionCount = 5 // nonisolated: let
+	nonisolated static let retentionCount = 5
 
 	init(directory: URL) {
 		self.directory = directory

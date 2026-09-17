@@ -1,27 +1,18 @@
-/* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- *********************************************************************** */
+// Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import AppKit
 import CocoaExtensions
 import Foundation
 import OSLog
 
-private nonisolated let rendererLogger = Logger( // nonisolated: let
+private nonisolated let rendererLogger = Logger(
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 	category: "LogRenderer"
 )
 
-private nonisolated enum RendererPatterns { // nonisolated: value
+private nonisolated enum RendererPatterns {
 	static let combiningMarks = compile("[\\p{InCombining_Diacritical_Marks}]{3,}")
 	static let channelName = compile("#([a-zA-Z0-9\\#\\-]+)")
 
@@ -40,7 +31,7 @@ private nonisolated enum RendererPatterns { // nonisolated: value
  They live on a transient `NSMutableAttributedString` that never leaves this
  file's call chain: nothing persists them and the names carry no compatibility
  requirement. */
-nonisolated enum RendererFormatting { // nonisolated: value
+nonisolated enum RendererFormatting {
 	static let foregroundColor = NSAttributedString.Key("GlasstualRendererForegroundColor")
 	static let backgroundColor = NSAttributedString.Key("GlasstualRendererBackgroundColor")
 	static let bold = NSAttributedString.Key("GlasstualRendererBold")
@@ -56,7 +47,7 @@ nonisolated enum RendererFormatting { // nonisolated: value
 
 /// Parses IRC control codes and annotates semantic runs for the native
 /// transcript. It never produces markup or holds a reference to a view.
-nonisolated struct TranscriptRenderer { // nonisolated: value
+nonisolated struct TranscriptRenderer {
 	/* The attributed text the annotation steps mark up is a reference, so it is
 	 threaded through them as an argument rather than stored here: a renderer
 	 that held one could not honestly call itself a value. It never leaves this
@@ -448,7 +439,7 @@ struct TranscriptRendererConfiguration {
  Reading them from inside the renderer made a render a function of hidden global
  state: the same body and the same options could produce two different results
  and nothing in the signature said so. */
-nonisolated struct TranscriptTextPolicy: Sendable { // nonisolated: value
+nonisolated struct TranscriptTextPolicy: Sendable {
 	var filtersUnicodeTextSpam = false
 	var highlightMatchingMethod = NicknameHighlightMatchMode.exact
 	var detectsHighlightSpam = true
@@ -477,7 +468,7 @@ nonisolated struct TranscriptTextPolicy: Sendable { // nonisolated: value
 	}
 }
 
-nonisolated struct TranscriptRenderOptions: Sendable { // nonisolated: value
+nonisolated struct TranscriptRenderOptions: Sendable {
 	var renderLinks = false
 	var lineType = LogLineType.undefined
 	var memberType = LogLineMemberType.normal

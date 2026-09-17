@@ -1,14 +1,12 @@
-/* *********************************************************************
- * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
- * Please see Acknowledgements.pdf for additional information.
- *********************************************************************** */
+// Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import CocoaExtensions
 import Foundation
 
 /// Archive validation is stricter than launch-time migration, which deliberately
 /// falls back after malformed fields. No malformed field may silently become a default here.
-nonisolated enum PreferencesClientArchive { // nonisolated: value
+nonisolated enum PreferencesClientArchive {
 	/// A configuration stripped of everything that only means something in this
 	/// user account. Whether the connect commands travel is the dictionary's
 	/// decision, not this one: see ``portableDictionary(_:includeConnectCommands:)``.

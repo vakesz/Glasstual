@@ -97,6 +97,30 @@
         }
       }
     },
+    "download-to": {
+      "comment": "Action that accepts an incoming transfer into a folder chosen for this download only.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download To…"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Letöltés ide…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laden nach …"
+          }
+        }
+      }
+    },
     "file-transfers": {
       "comment": "Title and accessibility label for the file-transfer window.",
       "extractionState": "manual",
@@ -633,19 +657,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Transfer from %@ has not started. Choose Start Transfer to begin."
+            "value": "Transfer from %@ has not started. Choose Accept to begin."
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ fájljának fogadása még nem kezdődött el. Az indításhoz válaszd az Átvitel indítása lehetőséget."
+            "value": "%@ fájljának fogadása még nem kezdődött el. Az indításhoz válaszd az Elfogadás lehetőséget."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die Übertragung von %@ wurde noch nicht gestartet. Wähle Übertragung starten, um zu beginnen."
+            "value": "Die Übertragung von %@ wurde noch nicht gestartet. Wähle Annehmen, um zu beginnen."
           }
         }
       }

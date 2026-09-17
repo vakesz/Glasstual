@@ -1,19 +1,10 @@
-/* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- *********************************************************************** */
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import AppKit
 import SwiftUI
 
-nonisolated enum ReactionInput { // nonisolated: value
+nonisolated enum ReactionInput {
 	static func emoji(from input: String) -> String? {
 		let value = input.trimmingCharacters(in: .whitespacesAndNewlines)
 		guard value.isEmpty == false else { return nil }
@@ -29,7 +20,7 @@ nonisolated enum ReactionInput { // nonisolated: value
  the character palette is the way out for anything that is not on it. What the
  reader reaches for stays at the front of the row, and the common set fills what
  is left so the row never changes length. */
-nonisolated enum RecentReactions { // nonisolated: value
+nonisolated enum RecentReactions {
 	/// The reactions offered before the user has picked anything.
 	static let common = ["👍", "❤️", "😂", "😮", "😢", "🎉"]
 	/// How many of the user's own choices are remembered.

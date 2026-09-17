@@ -1,7 +1,5 @@
-/* *********************************************************************
- * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
- * Please see Acknowledgements.pdf for additional information.
- *********************************************************************** */
+// Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import AppKit
 import CoreGraphics
@@ -41,7 +39,7 @@ enum UIListMetrics {
  layout: the same numbers the views lay their text out with, without an
  `NSLayoutManager` -- whose answers are TextKit 1's, and which nothing here
  may hold, because a text view that is handed one leaves TextKit 2 for good. */
-nonisolated enum TextLineMetrics { // nonisolated: value
+nonisolated enum TextLineMetrics {
 	/// The height of one line set in `font`.
 	static func lineHeight(for font: NSFont) -> CGFloat {
 		let contentStorage = NSTextContentStorage()

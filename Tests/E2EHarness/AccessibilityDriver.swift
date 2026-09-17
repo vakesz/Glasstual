@@ -33,9 +33,9 @@ struct AccessibilityDriver {
 		var result: CFTypeRef?
 		let status = AXUIElementCopyAttributeValue(element, attribute as CFString, &result)
 		try HarnessFiles.check(deadline)
-		if status == .cannotComplete {
-			throw HarnessFailure.assertion("AX response exceeded messaging timeout")
-		}
+		/* A cold SwiftUI scene may spend this 500 ms slice constructing its
+		 window. Report no value so the enclosing bounded wait can retry instead
+		 of turning one transient timeout into a failed scenario. */
 		return status == .success ? result : nil
 	}
 
@@ -129,23 +129,7 @@ struct AccessibilityDriver {
 			}
 			return try value(input, kAXFocusedAttribute, deadline: deadline) as? Bool == true
 		}
-		guard message.utf8.allSatisfy({ $0 < 128 })
-		else { throw HarnessFailure.assertion("Expected ASCII fixture input") }
-		for character in message.utf16 {
-			guard let down = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: true),
-			      let up = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: false)
-			else {
-				throw HarnessFailure.assertion("Cannot create keyboard events")
-			}
-			[character].withUnsafeBufferPointer {
-				down.keyboardSetUnicodeString(stringLength: $0.count, unicodeString: $0.baseAddress)
-				up.keyboardSetUnicodeString(stringLength: $0.count, unicodeString: $0.baseAddress)
-			}
-			down.flags = []
-			up.flags = []
-			down.postToPid(application.processIdentifier)
-			up.postToPid(application.processIdentifier)
-		}
+		try type(message)
 		try await wait("typed fixture visible in native editor") { deadline in
 			guard let input = try messageInput(deadline: deadline) else { return false }
 			return try text(input, kAXValueAttribute, deadline: deadline) == message
@@ -243,7 +227,12 @@ struct AccessibilityDriver {
 		return pressedAt
 	}
 
-	func waitForConnectionStatus(connected: Bool, deadline: Double? = nil, channel: String? = nil) async throws {
+	func waitForConnectionStatus(
+		connected: Bool,
+		deadline: Double? = nil,
+		channel: String? = nil,
+		network: String = "E2E"
+	) async throws {
 		try await wait(
 			connected ? "exact connected title/subtitle" : "disconnected title/subtitle",
 			deadline: deadline
@@ -254,10 +243,12 @@ struct AccessibilityDriver {
 			let separator = " \u{00B7} "
 			if let channel {
 				let status = connected ? "" : "Disconnected" + separator
-				return title.hasPrefix(channel + ", " + status + "E2E" + separator + "e2euser" + separator)
+				return title.hasPrefix(
+					channel + ", " + status + network + " IRC Network"
+				)
 			}
 			if connected {
-				return title == "E2E, e2euser" + separator + "e2e.local"
+				return title == network + ", e2euser" + separator + "e2e.local"
 			}
 			// Teardown clears the selected endpoint and negotiated host, but keeps the configured nickname.
 			return title == "E2E, Disconnected" + separator + "e2euser"

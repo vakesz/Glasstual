@@ -1,14 +1,5 @@
-/* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- *********************************************************************** */
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import CocoaExtensions
 
@@ -28,7 +19,7 @@ enum TextFormatterEffectType: Int, Sendable {
 	case spoiler
 }
 
-nonisolated struct TextFormatterAttributeName: RawRepresentable, Hashable, Sendable { // nonisolated: value
+nonisolated struct TextFormatterAttributeName: RawRepresentable, Hashable, Sendable {
 	let rawValue: String
 
 	static let boldAttributeName = Self(rawValue: "IRCTextFormatterBoldAttributeName")
@@ -41,7 +32,7 @@ nonisolated struct TextFormatterAttributeName: RawRepresentable, Hashable, Senda
 	static let spoilerAttributeName = Self(rawValue: "IRCTextFormatterSpoilerAttributeName")
 }
 
-nonisolated enum TextFormatterControlCharacter { // nonisolated: value
+nonisolated enum TextFormatterControlCharacter {
 	static let colorDigit = 0x03
 	static let colorHex = 0x04
 	static let bold = 0x02
@@ -53,7 +44,7 @@ nonisolated enum TextFormatterControlCharacter { // nonisolated: value
 	static let terminator = 0x0F
 }
 
-nonisolated enum TextFormatterColor { // nonisolated: value
+nonisolated enum TextFormatterColor {
 	static let maximumPaletteIndex = 98
 }
 
@@ -666,7 +657,7 @@ private nonisolated func isBase10Numeric(_ character: unichar) -> Bool { // noni
 }
 
 /// The character separating a colour code's foreground from its background.
-private nonisolated let comma: unichar = 0x2C // nonisolated: let
+private nonisolated let comma: unichar = 0x2C
 
 private nonisolated func paletteSelection(forIndex index: Int) -> MircColorSelection { // nonisolated: pure
 	/* mIRC 99 is not a palette entry, it is the absence of one. */
@@ -682,7 +673,7 @@ private nonisolated func paletteSelection(forIndex index: Int) -> MircColorSelec
 /// A value rather than an `NSColor`: the enum below is a `Sendable` value that
 /// crosses isolation domains, and an `NSColor` payload made it hold a class.
 /// The colour is built where it is drawn.
-nonisolated struct MircColorChannels: Sendable, Equatable, Hashable { // nonisolated: value
+nonisolated struct MircColorChannels: Sendable, Equatable, Hashable {
 	let red: Double
 	let green: Double
 	let blue: Double
@@ -719,7 +710,7 @@ nonisolated struct MircColorChannels: Sendable, Equatable, Hashable { // nonisol
 }
 
 /// A colour named by an IRC colour control code.
-nonisolated enum MircColor: Sendable, Equatable { // nonisolated: value
+nonisolated enum MircColor: Sendable, Equatable {
 	/// An mIRC palette index.
 	case palette(Int)
 	/// A literal colour from a hexadecimal control code.
@@ -741,7 +732,7 @@ nonisolated enum MircColor: Sendable, Equatable { // nonisolated: value
  both as "no colour" is why `\u{3}04,99` painted red text on the background the
  previous code had set — 99 fell outside the palette and was dropped, so
  nothing cleared it. */
-nonisolated enum MircColorSelection: Sendable, Equatable { // nonisolated: value
+nonisolated enum MircColorSelection: Sendable, Equatable {
 	/// The code did not name this half.
 	case unchanged
 	/// The code asked for the view's own colour: mIRC 99, or a bare control
@@ -751,7 +742,7 @@ nonisolated enum MircColorSelection: Sendable, Equatable { // nonisolated: value
 }
 
 /// What one colour control code says.
-nonisolated struct MircColorComponents: Sendable { // nonisolated: value
+nonisolated struct MircColorComponents: Sendable {
 	let foreground: MircColorSelection
 	let background: MircColorSelection
 	/// How many characters of the control code were read.

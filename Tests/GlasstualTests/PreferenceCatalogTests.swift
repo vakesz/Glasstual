@@ -1,14 +1,5 @@
-/* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- *********************************************************************** */
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import AppKit
 import CocoaExtensions
@@ -240,7 +231,7 @@ struct PreferenceDeclarationListTests {
 			guard parts.count > 1,
 			      parts[1].hasPrefix("PreferenceKey(") || parts[1].hasPrefix("UntypedPreferenceKey(")
 			else { return nil }
-			return parts[0].nilIfEmpty
+			return parts[0].split(separator: ":", maxSplits: 1).first?.nilIfEmpty.map(String.init)
 		}
 	}
 
@@ -268,7 +259,7 @@ struct PreferenceDeclarationListTests {
 		)
 		for domain in try Self.domains() where domain.registration != nil {
 			#expect(
-				catalogue.contains("\(domain.name).self"),
+				catalogue.contains("\(domain.name).all"),
 				"Preferences.\(domain.name) is not in Preferences.allDomains"
 			)
 		}

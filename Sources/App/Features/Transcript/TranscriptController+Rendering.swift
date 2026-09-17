@@ -1,27 +1,18 @@
-/* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- *********************************************************************** */
+// Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import Foundation
 
 /// Initial replay keeps raw archives distinct from the native rows it rendered.
-nonisolated struct TranscriptHistoryRenderOutput: Sendable { // nonisolated: value
+nonisolated struct TranscriptHistoryRenderOutput: Sendable {
 	let historicEntries: [LogLine]
 	let results: [TranscriptRenderResult]
 	let fetchSucceeded: Bool
 	let failure: ScrollbackFetchFailure?
 }
 
-nonisolated struct RenderedMember: Sendable, Hashable { // nonisolated: value
+nonisolated struct RenderedMember: Sendable, Hashable {
 	var nickname: String
 	var mark: String
 
@@ -41,7 +32,7 @@ nonisolated struct RenderedMember: Sendable, Hashable { // nonisolated: value
  Built once per change to the member list and shared by every line rendered
  against it. A render asks it about each word of a message and about each
  line's sender, so both are lookups rather than walks of the whole channel. */
-nonisolated struct RenderedMemberDirectory: Equatable, Sendable, ExpressibleByArrayLiteral { // nonisolated: value
+nonisolated struct RenderedMemberDirectory: Equatable, Sendable, ExpressibleByArrayLiteral {
 	/// The members in the order the channel lists them.
 	let members: [RenderedMember]
 	let caseMapping: ISupportCaseMapping
@@ -86,7 +77,7 @@ nonisolated struct RenderedMemberDirectory: Equatable, Sendable, ExpressibleByAr
 	}
 }
 
-nonisolated struct TranscriptRenderContext: Sendable { // nonisolated: value
+nonisolated struct TranscriptRenderContext: Sendable {
 	var inlineMediaEnabled = false
 	var isChannel = false
 	/// Whether a day boundary is drawn between lines. It is read from the
@@ -123,7 +114,7 @@ nonisolated struct TranscriptRenderContext: Sendable { // nonisolated: value
 	}
 }
 
-nonisolated struct LogLineSnapshot: Sendable { // nonisolated: value
+nonisolated struct LogLineSnapshot: Sendable {
 	var uniqueIdentifier = ""
 	var messageBody = ""
 	var command = ""
@@ -181,12 +172,12 @@ nonisolated struct LogLineSnapshot: Sendable { // nonisolated: value
 	}
 }
 
-nonisolated struct TranscriptRenderRequest: Sendable { // nonisolated: value
+nonisolated struct TranscriptRenderRequest: Sendable {
 	var line: LogLineSnapshot
 	var context: TranscriptRenderContext
 }
 
-nonisolated struct TranscriptRenderResult: Sendable { // nonisolated: value
+nonisolated struct TranscriptRenderResult: Sendable {
 	var transcriptLine: TranscriptRow
 	var fromCurrentSession: Bool
 	var processesInlineMedia: Bool

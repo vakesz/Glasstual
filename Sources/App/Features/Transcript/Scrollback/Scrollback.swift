@@ -1,14 +1,5 @@
-/* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- *********************************************************************** */
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import CocoaExtensions
 import Foundation
@@ -25,7 +16,7 @@ import Foundation
 
  The index itself is a value with no reference-typed state; the facade below
  owns the only copies and keeps them on the main actor. */
-private nonisolated struct ScrollbackViewIndex: Sendable { // nonisolated: value
+private nonisolated struct ScrollbackViewIndex: Sendable {
 	/// What one indexed line contributed, so the contribution can be withdrawn
 	/// when the line goes. `nil` where the line carried no such value.
 	struct Contribution: Sendable {

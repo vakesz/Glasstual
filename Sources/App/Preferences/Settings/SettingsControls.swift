@@ -1,14 +1,5 @@
-/* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- *********************************************************************** */
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import AppKit
 import CoreText
@@ -176,8 +167,30 @@ struct SettingsFolderPicker: View {
 	let accessibilityLabel: LocalizedStringResource
 	let folder: URL?
 	let emptyTitle: LocalizedStringResource
+	let clearTitle: LocalizedStringResource
+	let canClear: Bool
 	let select: () -> Void
 	let clear: () -> Void
+
+	init(
+		label: LocalizedStringResource,
+		accessibilityLabel: LocalizedStringResource,
+		folder: URL?,
+		emptyTitle: LocalizedStringResource,
+		clearTitle: LocalizedStringResource = .Settings.logLocationClearDestination,
+		canClear: Bool? = nil,
+		select: @escaping () -> Void,
+		clear: @escaping () -> Void
+	) {
+		self.label = label
+		self.accessibilityLabel = accessibilityLabel
+		self.folder = folder
+		self.emptyTitle = emptyTitle
+		self.clearTitle = clearTitle
+		self.canClear = canClear ?? (folder != nil)
+		self.select = select
+		self.clear = clear
+	}
 
 	var body: some View {
 		LabeledContent {
@@ -186,9 +199,9 @@ struct SettingsFolderPicker: View {
 					Text(.Settings.logLocationSelectDestination)
 				}
 				Button(action: clear) {
-					Text(.Settings.logLocationClearDestination)
+					Text(clearTitle)
 				}
-				.disabled(folder == nil)
+				.disabled(canClear == false)
 			} label: {
 				HStack(spacing: 4) {
 					if let folder {

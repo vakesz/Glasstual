@@ -16,10 +16,16 @@ final class LoopbackPeer {
 	private var dcc: DCCFixturePeer?
 	private var dccPort: UInt16 = 0
 	private var burstTask: Task<Void, Never>?
+	private let usesPassiveDCC: Bool
 
 	init(kind: ScenarioKind) throws {
 		self.kind = kind
-		state = FixtureProtocol(reject: false, messaging: kind.messaging)
+		usesPassiveDCC = CommandLine.arguments.contains("passive-dcc")
+		state = FixtureProtocol(
+			reject: false,
+			messaging: kind.messaging,
+			acceptsOnboardingQuit: kind == .onboardingFinish
+		)
 		let tls: NWProtocolTLS.Options?
 		if kind.secured, kind != .tlsStall {
 			let options = NWProtocolTLS.Options()
@@ -96,9 +102,16 @@ final class LoopbackPeer {
 		attempt += 1
 		connection = peer
 		pending = Data()
+		let interaction = kind.interactive ? InteractiveFixture(
+			kind: kind,
+			dccPort: dccPort,
+			usesPassiveDCC: usesPassiveDCC,
+			dccFilename: dcc?.filename ?? "e2e-transfer.bin"
+		) : nil
 		state = FixtureProtocol(reject: attempt <= kind.rejectionCount, messaging: kind.messaging,
 		                        deniedJoin: kind == .channelDenied ? DeniedJoinFixture() : nil,
-		                        interaction: kind.interactive ? InteractiveFixture(kind: kind, dccPort: dccPort) : nil)
+		                        interaction: interaction,
+		                        acceptsOnboardingQuit: kind == .onboardingFinish)
 		do {
 			try HarnessFiles.write(String(attempt), to: "connection-count")
 		} catch { failure = error }
@@ -201,6 +214,9 @@ final class LoopbackPeer {
 			}
 			if let interaction = state.interaction {
 				try HarnessFiles.write(String(interaction.stage), to: "interaction-stage")
+				if let port = interaction.dccListeningPort {
+					dcc?.connect(to: port)
+				}
 			}
 		}
 	}
@@ -247,7 +263,10 @@ final class LoopbackPeer {
 			} else {
 				guard !transportFailure else { throw HarnessFailure.assertion("Transport failed instead of clean EOF") }
 				try state.eof(pending: pending)
-				try HarnessFiles.write("QUIT E2E_QUIT and EOF", to: "disconnect-wire")
+				let evidence = kind == .onboardingFinish
+					? "QUIT onboarding default and EOF"
+					: "QUIT E2E_QUIT and EOF"
+				try HarnessFiles.write(evidence, to: "disconnect-wire")
 				complete = true
 			}
 			connection = nil

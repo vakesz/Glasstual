@@ -1,7 +1,5 @@
-/* *********************************************************************
- * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
- * Please see Acknowledgements.pdf for additional information.
- *********************************************************************** */
+// Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import Foundation
 @testable import Glasstual
@@ -97,7 +95,7 @@ struct ClientMultiTargetSendTests {
 		#expect(client.sentLines.compactMap { $0 as? String } == (expected + ["after"]).map { "PRIVMSG #one :\($0)" })
 	}
 
-	private nonisolated enum DestinationChange: CaseIterable { // nonisolated: value
+	private nonisolated enum DestinationChange: CaseIterable {
 		case removed, renamed, reconnected
 	}
 

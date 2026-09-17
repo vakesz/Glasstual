@@ -186,7 +186,8 @@ enum FixtureSelfTests {
 			      Set(names).count == 10000 else { throw HarnessFailure.assertion("Burst NAMES count mismatch") }
 		} else if kind.dcc {
 			try await client.send("PRIVMSG fixture :E2E_DCC_OFFER\r\n")
-			try await wait { client.contains("DCC SEND e2e-transfer.bin 2130706433") }
+			let filename = try HarnessFiles.read("dcc-filename")
+			try await wait { client.contains("DCC SEND \(filename) 2130706433") }
 			guard let raw = try UInt16(HarnessFiles.read("dcc-port")),
 			      let port = NWEndpoint.Port(rawValue: raw)
 			else { throw HarnessFailure.assertion("DCC fixture port missing") }

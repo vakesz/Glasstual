@@ -1,7 +1,5 @@
-/* *********************************************************************
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- * Please see Acknowledgements.pdf for additional information.
- *********************************************************************** */
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import SwiftUI
 
@@ -9,13 +7,17 @@ struct ChannelBanListScene: Scene {
 	let scenes: ApplicationScenes
 
 	var body: some Scene {
-		Window(String(localized: .ChannelBanList.accessList), id: ApplicationSceneID.channelBanList) {
+		WindowGroup(
+			String(localized: .ChannelBanList.accessList),
+			id: ApplicationSceneID.channelBanList,
+			for: SingletonSceneValue.self
+		) { _ in
 			ChannelBanListSceneRoot(scenes: scenes)
-		}
-		/* A list of the channel's current bans, not a document: what it shows is
-		 whatever the server answers when it is opened, so there is nothing worth
-		 restoring into an empty table on the next launch. */
-		.restorationBehavior(.disabled)
+		} defaultValue: { .instance }
+			/* A list of the channel's current bans, not a document: what it shows is
+			 whatever the server answers when it is opened, so there is nothing worth
+			 restoring into an empty table on the next launch. */
+			.restorationBehavior(.disabled)
 	}
 }
 

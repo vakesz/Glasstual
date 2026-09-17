@@ -1,7 +1,5 @@
-/* *********************************************************************
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- * Please see Acknowledgements.pdf for additional information.
- *********************************************************************** */
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import SwiftUI
 
@@ -77,6 +75,7 @@ struct NetworkPickerListView: View {
 				}
 			}
 			.listStyle(.inset)
+			.accessibilityIdentifier("network-picker-list")
 			.accessibilityLabel(.Onboarding.networkPickerNetworks)
 			.searchable(text: $model.query, prompt: Text(.Onboarding.searchNetworks))
 		}
