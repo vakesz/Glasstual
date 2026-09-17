@@ -1,14 +1,5 @@
-/* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- *********************************************************************** */
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import AppKit
 import CocoaExtensions
@@ -24,7 +15,7 @@ extension Notification.Name {
 
 /// The immutable theme values message rendering may read away from the main
 /// actor. The controller republishes the whole value after each edit.
-nonisolated struct ThemeSnapshot: Sendable, Equatable { // nonisolated: value
+nonisolated struct ThemeSnapshot: Sendable, Equatable {
 	let transcript: TranscriptTheme
 	let isDarkAppearance: Bool
 	/// Whether the reader has asked the system for increased contrast, which
@@ -43,7 +34,7 @@ nonisolated struct ThemeSnapshot: Sendable, Equatable { // nonisolated: value
  because the controller is a main-actor class with main-actor state, and a
  `nonisolated` accessor on it says nothing true about that class. An `enum`
  around a `let Mutex` of a value is a value, which is all this is. */
-nonisolated enum ThemeSnapshotStore { // nonisolated: value
+nonisolated enum ThemeSnapshotStore {
 	private static let published = Mutex(ThemeSnapshot(
 		transcript: .lines,
 		isDarkAppearance: false,

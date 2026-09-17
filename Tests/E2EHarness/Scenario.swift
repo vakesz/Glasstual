@@ -66,7 +66,8 @@ enum Scenario {
 		guard let executable = bundle.executableURL else { throw HarnessFailure.setup("App executable missing") }
 		let binary = try Data(contentsOf: executable, options: .mappedIfSafe)
 		guard binary.range(of: Data("GLASSTUAL_UI_REVIEW_SUITE".utf8)) != nil,
-		      binary.range(of: Data("GLASSTUAL_UI_REVIEW_DIRECTORY".utf8)) != nil
+		      binary.range(of: Data("GLASSTUAL_UI_REVIEW_DIRECTORY".utf8)) != nil,
+		      binary.range(of: Data("GLASSTUAL_UI_REVIEW_PREFERENCES".utf8)) != nil
 		else { throw HarnessFailure.setup("Use a Debug app with the existing review suite/directory overrides") }
 		guard NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).isEmpty else {
 			throw HarnessFailure.setup("Quit existing instances of this app before E2E; they will not be touched")
@@ -76,7 +77,7 @@ enum Scenario {
 		if kind != .onboardingSkip {
 			let process = Process()
 			process.executableURL = URL(fileURLWithPath: CommandLine.arguments[0])
-			process.arguments = ["peer"]
+			process.arguments = kind.dcc ? ["peer", "passive-dcc"] : ["peer"]
 			try HarnessFiles.launch(process)
 			AppSession.track(process)
 			peer = process
@@ -91,14 +92,19 @@ enum Scenario {
 		}
 		let token = "e2e-" + UUID().uuidString.lowercased()
 		let suite = "com.vakesz.glasstual." + token
-		try seed(bundleID: bundleID, suite: suite, port: port, kind: kind)
+		let preferences = try startupPreferences(port: port, kind: kind)
+		try HarnessFiles.write(suite, to: "scratch-suite.txt")
 		let appProcess = Process()
 		appProcess.executableURL = executable
 		appProcess.arguments = ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
 		// Do not inherit test-runner DYLD/XCTest injection variables into the production executable.
 		appProcess.environment = ProcessInfo.processInfo.environment.filter {
 			["HOME", "USER", "LOGNAME", "PATH", "TMPDIR"].contains($0.key)
-		}.merging(["GLASSTUAL_UI_REVIEW_SUITE": suite, "GLASSTUAL_UI_REVIEW_DIRECTORY": token]) { _, value in value }
+		}.merging([
+			"GLASSTUAL_UI_REVIEW_SUITE": suite,
+			"GLASSTUAL_UI_REVIEW_DIRECTORY": token,
+			"GLASSTUAL_UI_REVIEW_PREFERENCES": preferences,
+		]) { _, value in value }
 		appProcess.standardOutput = FileHandle.nullDevice
 		appProcess.standardError = FileHandle.nullDevice
 		try HarnessFiles.launch(appProcess)
@@ -252,13 +258,7 @@ enum Scenario {
 			.write(to: HarnessFiles.root.appendingPathComponent("evidence.json"), options: .atomic)
 	}
 
-	private static func seed(bundleID: String, suite: String, port: Int, kind: ScenarioKind) throws {
-		let preferences = FileManager.default.homeDirectoryForCurrentUser
-			.appendingPathComponent("Library/Containers/\(bundleID)/Data/Library/Preferences", isDirectory: true)
-		guard FileManager.default.fileExists(atPath: preferences.path) else {
-			throw HarnessFailure
-				.setup("App sandbox container missing; provision the Debug app in the disposable login first")
-		}
+	private static func startupPreferences(port: Int, kind: ScenarioKind) throws -> String {
 		let fixtureURL = try URL(fileURLWithPath: HarnessFiles.required("E2E_FIXTURE"))
 		let data = try Data(contentsOf: fixtureURL)
 		guard var fixture = try PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any],
@@ -277,7 +277,6 @@ enum Scenario {
 			fixture["DefaultIdentity -> Username"] = "e2euser"
 		}
 		let encoded = try PropertyListSerialization.data(fromPropertyList: fixture, format: .xml, options: 0)
-		try encoded.write(to: preferences.appendingPathComponent(suite + ".plist"), options: .atomic)
-		try HarnessFiles.write(suite, to: "scratch-suite.txt")
+		return encoded.base64EncodedString()
 	}
 }

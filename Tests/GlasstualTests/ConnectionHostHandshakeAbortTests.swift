@@ -109,7 +109,7 @@ private final class AbortClientShim: NSObject, RemoteConnectionClientProtocol {
  timer fires, and the person sees "timed out" half a minute after the server
  already said no. */
 @Suite("Connection host handshake abort over loopback", .serialized)
-nonisolated struct ConnectionHostHandshakeAbortTests { // nonisolated: value
+nonisolated struct ConnectionHostHandshakeAbortTests {
 	@Test("A server that closes during the TLS handshake is reported promptly, not after the connect timer")
 	@concurrent
 	func handshakeAbortIsReportedPromptly() async throws {

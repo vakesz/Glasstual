@@ -1,14 +1,5 @@
-/* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- *********************************************************************** */
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import Foundation
 
@@ -121,7 +112,7 @@ actor TranscriptRenderPipeline {
 
 	/** The controller's end of the pipeline. Yielding is synchronous and
 	 thread-safe, which is what makes submission order the render order. */
-	nonisolated let submissions: AsyncStream<TranscriptRenderSubmission>.Continuation // nonisolated: let
+	nonisolated let submissions: AsyncStream<TranscriptRenderSubmission>.Continuation
 
 	private let stream: AsyncStream<TranscriptRenderSubmission>
 	private var isStopped = false

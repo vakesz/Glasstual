@@ -1,15 +1,6 @@
-/* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- *********************************************************************** */
+// Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import AppKit
 import CocoaExtensions
@@ -325,6 +316,7 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 	func applicationDidFinishLaunching(_: Notification) {
 		mainWindow.makeMain()
 		mainWindow.makeKeyAndOrderFront(nil)
+		presentOnboardingIfNeeded()
 	}
 
 	private func completeApplicationLaunch() {
@@ -333,8 +325,6 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 		if mainWindow.reloadLoadingScreen() {
 			clientDirectory.autoConnect(afterWakeup: false)
 		}
-
-		presentOnboardingIfNeeded()
 	}
 
 	/** First launch: no client has been configured and the setup flow has not

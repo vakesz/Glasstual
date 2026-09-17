@@ -1,39 +1,5 @@
-/* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- *  * Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *  * Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *  * Neither the name of Textual, "Codeux Software, LLC", nor the
- *    names of its contributors may be used to endorse or promote products
- *    derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
- *
- *********************************************************************** */
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import Foundation
 @testable import Glasstual
@@ -45,7 +11,7 @@ import Testing
 /// malformed-input and message-tag edge cases.
 @MainActor
 struct LineParserCorpusTests {
-	nonisolated struct LineCase: Sendable { // nonisolated: value
+	nonisolated struct LineCase: Sendable {
 		let line: String
 		let tagSection: String?
 		let sender: String?
@@ -70,7 +36,7 @@ struct LineParserCorpusTests {
 		}
 	}
 
-	nonisolated struct TagCase: Sendable { // nonisolated: value
+	nonisolated struct TagCase: Sendable {
 		let section: String
 		let name: String
 		let value: String?
@@ -84,7 +50,7 @@ struct LineParserCorpusTests {
 
 	// MARK: - Structure
 
-	nonisolated static let wellFormedLines: [LineCase] = [ // nonisolated: let
+	nonisolated static let wellFormedLines: [LineCase] = [
 		LineCase("PING :12345", command: "PING", parameters: ["12345"]),
 		LineCase("PING", command: "PING"),
 		LineCase(
@@ -170,7 +136,7 @@ struct LineParserCorpusTests {
 
 	/// Parameters are separated by `0x20` and by nothing else. Everything below
 	/// splits or merges tokens incorrectly today.
-	nonisolated static let splittingLines: [LineCase] = [ // nonisolated: let
+	nonisolated static let splittingLines: [LineCase] = [
 		/* U+00A0 NO-BREAK SPACE is a channel-name character, not a separator. */
 		LineCase(
 			":nick!user@host PRIVMSG #ch\u{00A0}an :hi",
@@ -201,7 +167,7 @@ struct LineParserCorpusTests {
 
 	// MARK: - Message tags
 
-	nonisolated static let tagCases: [TagCase] = [ // nonisolated: let
+	nonisolated static let tagCases: [TagCase] = [
 		TagCase("msgid=abc", "msgid", "abc"),
 		TagCase("account=alice", "account", "alice"),
 		/* A tag with no "=" is present with an empty value. */
@@ -312,7 +278,7 @@ struct MessageTagCorpusTests {
 		#expect(message.isHistoric == false)
 	}
 
-	nonisolated struct BatchCase: Sendable { // nonisolated: value
+	nonisolated struct BatchCase: Sendable {
 		let tagSection: String
 		let token: String?
 

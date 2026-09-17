@@ -1,39 +1,5 @@
-/* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- *  * Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *  * Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *  * Neither the name of Textual, "Codeux Software, LLC", nor the
- *    names of its contributors may be used to endorse or promote products
- *    derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
- *
- *********************************************************************** */
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import Foundation
 @testable import Glasstual
@@ -60,7 +26,7 @@ struct ClientTextEncodingCorpusTests {
 
 	// MARK: - Encoding
 
-	nonisolated struct EncodeCase: Sendable { // nonisolated: value
+	nonisolated struct EncodeCase: Sendable {
 		let primary: String.Encoding
 		let fallback: String.Encoding
 		let text: String
@@ -74,7 +40,7 @@ struct ClientTextEncodingCorpusTests {
 		}
 	}
 
-	nonisolated static let encodeCases: [EncodeCase] = [ // nonisolated: let
+	nonisolated static let encodeCases: [EncodeCase] = [
 		/* The primary encoding is used whenever it can represent the text. */
 		EncodeCase(primary: .utf8, fallback: .isoLatin1, "hello", [104, 101, 108, 108, 111]),
 		EncodeCase(primary: .utf8, fallback: .isoLatin1, "h\u{00E9}llo", [104, 195, 169, 108, 108, 111]),
@@ -111,7 +77,7 @@ struct ClientTextEncodingCorpusTests {
 
 	// MARK: - Decoding
 
-	nonisolated struct DecodeCase: Sendable { // nonisolated: value
+	nonisolated struct DecodeCase: Sendable {
 		let primary: String.Encoding
 		let fallback: String.Encoding
 		let bytes: [UInt8]
@@ -125,7 +91,7 @@ struct ClientTextEncodingCorpusTests {
 		}
 	}
 
-	nonisolated static let decodeCases: [DecodeCase] = [ // nonisolated: let
+	nonisolated static let decodeCases: [DecodeCase] = [
 		DecodeCase(primary: .utf8, fallback: .isoLatin1, [104, 105], "hi"),
 		/* Valid UTF-8 is decoded by the primary encoding. */
 		DecodeCase(primary: .utf8, fallback: .isoLatin1, [0xC3, 0xA9], "\u{00E9}"),
@@ -150,7 +116,7 @@ struct ClientTextEncodingCorpusTests {
 
 	// MARK: - UTF8ONLY
 
-	nonisolated struct EncodingPair: Sendable { // nonisolated: value
+	nonisolated struct EncodingPair: Sendable {
 		let primary: String.Encoding
 		let fallback: String.Encoding
 

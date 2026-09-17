@@ -1,16 +1,14 @@
-/* *********************************************************************
- * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
- * Please see Acknowledgements.pdf for additional information.
- *********************************************************************** */
+// Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import Darwin
 import Foundation
 
 /// The descriptor, not its display path, is the authority for transfer I/O.
 actor DCCTransferFile {
-	nonisolated let path: String // nonisolated: let
-	nonisolated let initialSize: UInt64 // nonisolated: let
-	nonisolated let accessURL: URL // nonisolated: let
+	nonisolated let path: String
+	nonisolated let initialSize: UInt64
+	nonisolated let accessURL: URL
 	private let handle: FileHandle
 	private let device: dev_t
 	private let inode: ino_t

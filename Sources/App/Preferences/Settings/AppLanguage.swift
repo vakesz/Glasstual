@@ -1,12 +1,10 @@
-/* *********************************************************************
- * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
- * Please see Acknowledgements.pdf for additional information.
- *********************************************************************** */
+// Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import Foundation
 
 /// Which language the application runs in, as the General pane offers it.
-nonisolated enum AppLanguage: String, CaseIterable, Sendable { // nonisolated: value
+nonisolated enum AppLanguage: String, CaseIterable, Sendable {
 	case system
 	case english = "en"
 	case hungarian = "hu"

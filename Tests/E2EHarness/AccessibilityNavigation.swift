@@ -35,6 +35,12 @@ extension AccessibilityDriver {
 	/// context actions belong to the native AXRow, so walk a bounded number of
 	/// parents to reach it.
 	func nativeRow(containing node: AXUIElement, deadline: Double) throws -> AXUIElement {
+		guard let row = try nativeRowAncestor(containing: node, deadline: deadline)
+		else { throw HarnessFailure.assertion("Control has no bounded native AXRow ancestor") }
+		return row
+	}
+
+	private func nativeRowAncestor(containing node: AXUIElement, deadline: Double) throws -> AXUIElement? {
 		var node = node
 		for _ in 0 ..< 8 {
 			if try text(node, kAXRoleAttribute, deadline: deadline) == kAXRowRole {
@@ -43,17 +49,114 @@ extension AccessibilityDriver {
 			guard let parent = try element(value(node, kAXParentAttribute, deadline: deadline)) else { break }
 			node = parent
 		}
-		throw HarnessFailure.assertion("Control has no bounded native AXRow ancestor")
+		return nil
+	}
+
+	/// SwiftUI list descendants do not consistently publish `AXParent`, so a
+	/// label-to-parent walk can lose the row. Carry the enclosing row while
+	/// traversing down from the native selection container instead.
+	private func matchingRow(
+		labeled label: String,
+		in container: AXUIElement,
+		deadline: Double
+	) throws -> AXUIElement? {
+		var pending: [(element: AXUIElement, row: AXUIElement?)] = [(container, nil)]
+		var visited = 0
+		while let current = pending.popLast() {
+			try HarnessFiles.check(deadline)
+			guard !application.isTerminated, visited < 1500 else {
+				throw HarnessFailure.assertion("App exited or AX row traversal exceeded node bound")
+			}
+			visited += 1
+			let role = try text(current.element, kAXRoleAttribute, deadline: deadline)
+			let enclosingRow = role == kAXRowRole ? current.element : current.row
+			let labels = try [
+				text(current.element, kAXTitleAttribute, deadline: deadline),
+				text(current.element, kAXDescriptionAttribute, deadline: deadline),
+				text(current.element, kAXValueAttribute, deadline: deadline),
+			]
+			if role == kAXStaticTextRole, labels.contains(label), let enclosingRow {
+				return enclosingRow
+			}
+			let children = try value(current.element, kAXChildrenAttribute, deadline: deadline) as? [AXUIElement] ?? []
+			pending.append(contentsOf: children.map { ($0, enclosingRow) })
+		}
+		return nil
 	}
 
 	func selectRow(_ label: String, from parent: AXUIElement) async throws {
+		var container: AXUIElement?
+		try await wait("fixture selection container") { deadline in
+			container = try find(from: parent, deadline: deadline) { node in
+				let role = try text(node, kAXRoleAttribute, deadline: deadline)
+				return [kAXOutlineRole, kAXListRole, kAXTableRole].contains(role)
+			}
+			return container != nil
+		}
+		guard let container else { throw HarnessFailure.assertion("Selectable container missing") }
+
+		var row: AXUIElement?
 		try await wait("select visible fixture row \(label)") { deadline in
-			guard let node = try named(label, role: kAXStaticTextRole, from: parent, deadline: deadline)
-			else { return false }
-			let row = try nativeRow(containing: node, deadline: deadline)
-			try set(row, attribute: kAXSelectedAttribute, value: kCFBooleanTrue, deadline: deadline)
+			row = try matchingRow(labeled: label, in: container, deadline: deadline)
+			guard let row else { return false }
+			try arm(row, deadline: deadline)
+			var actions: CFArray?
+			let copied = AXUIElementCopyActionNames(row, &actions)
+			try HarnessFiles.check(deadline)
+			if copied == .success, (actions as? [String])?.contains(kAXPressAction) == true {
+				try press(row, deadline: deadline)
+			} else {
+				try set(row, attribute: kAXSelectedAttribute, value: kCFBooleanTrue, deadline: deadline)
+			}
 			return try value(row, kAXSelectedAttribute, deadline: deadline) as? Bool == true
 		}
+	}
+
+	func clickRow(_ label: String, from parent: AXUIElement) async throws {
+		try await wait("click visible fixture row \(label)") { deadline in
+			guard let container = try find(from: parent, deadline: deadline, matching: { node in
+				let role = try text(node, kAXRoleAttribute, deadline: deadline)
+				return [kAXOutlineRole, kAXListRole, kAXTableRole].contains(role)
+			}) else { return false }
+			let row = try matchingRow(labeled: label, in: container, deadline: deadline)
+			guard let row else { return false }
+			try click(row, deadline: deadline)
+			return true
+		}
+	}
+
+	private func click(_ element: AXUIElement, deadline: Double) throws {
+		guard let origin = try point(element, attribute: kAXPositionAttribute, deadline: deadline),
+		      let size = try size(element, attribute: kAXSizeAttribute, deadline: deadline)
+		else { throw HarnessFailure.assertion("Clickable control has no native frame") }
+		let center = CGPoint(x: origin.x + size.width / 2, y: origin.y + size.height / 2)
+		guard let down = CGEvent(mouseEventSource: nil, mouseType: .leftMouseDown,
+		                         mouseCursorPosition: center, mouseButton: .left),
+			let up = CGEvent(mouseEventSource: nil, mouseType: .leftMouseUp,
+			                 mouseCursorPosition: center, mouseButton: .left)
+		else { throw HarnessFailure.assertion("Cannot create native pointer event") }
+		down.flags = []
+		up.flags = []
+		down.post(tap: .cghidEventTap)
+		up.post(tap: .cghidEventTap)
+	}
+
+	private func point(_ element: AXUIElement, attribute: String, deadline: Double) throws -> CGPoint? {
+		guard let raw = try value(element, attribute, deadline: deadline),
+		      CFGetTypeID(raw) == AXValueGetTypeID()
+		else { return nil }
+		let value = unsafeDowncast(raw, to: AXValue.self)
+		var result = CGPoint.zero
+		return AXValueGetValue(value, .cgPoint, &result) ? result : nil
+	}
+
+	private func size(_ element: AXUIElement, attribute: String, deadline: Double) throws -> CGSize? {
+		guard let raw = try value(element, attribute, deadline: deadline),
+		      CFGetTypeID(raw) == AXValueGetTypeID()
+		else { return nil }
+		let value = unsafeDowncast(raw, to: AXValue.self)
+		var result = CGSize.zero
+		return AXValueGetValue(value, .cgSize, &result) ? result : nil
 	}
 
 	func closeWindow(_ window: AXUIElement) async throws {
@@ -82,13 +185,36 @@ extension AccessibilityDriver {
 	}
 
 	func fill(_ identifier: String, with content: String, from parent: AXUIElement) async throws {
-		try await wait("fill identified public input \(identifier)") { deadline in
-			guard let field = try identified(identifier, from: parent, deadline: deadline) else { return false }
+		var field: AXUIElement?
+		try await wait("focus identified public input \(identifier)") { deadline in
+			field = try identified(identifier, from: parent, deadline: deadline)
+			guard let field else { return false }
 			try set(field, attribute: kAXFocusedAttribute, value: kCFBooleanTrue, deadline: deadline)
-			try set(field, attribute: kAXValueAttribute, value: content as CFString, deadline: deadline)
+			return try value(field, kAXFocusedAttribute, deadline: deadline) as? Bool == true
+		}
+		try key(0, flags: .maskCommand)
+		try type(content)
+		try await wait("typed identified public input \(identifier)") { deadline in
+			guard let field else { return false }
 			return try text(field, kAXValueAttribute, deadline: deadline) == content
 		}
 		try key(48)
+	}
+
+	func type(_ content: String) throws {
+		guard content.utf8.allSatisfy({ $0 < 128 })
+		else { throw HarnessFailure.assertion("Expected ASCII fixture input") }
+		for character in content.utf16 {
+			guard let down = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: true),
+			      let up = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: false)
+			else { throw HarnessFailure.assertion("Cannot create keyboard events") }
+			[character].withUnsafeBufferPointer {
+				down.keyboardSetUnicodeString(stringLength: $0.count, unicodeString: $0.baseAddress)
+				up.keyboardSetUnicodeString(stringLength: $0.count, unicodeString: $0.baseAddress)
+			}
+			down.postToPid(application.processIdentifier)
+			up.postToPid(application.processIdentifier)
+		}
 	}
 
 	/** The Settings sidebar is one level deep, so every page — the application's
@@ -123,6 +249,17 @@ extension AccessibilityDriver {
 			guard let button = try named(title, role: kAXButtonRole, from: parent, deadline: deadline),
 			      try value(button, kAXEnabledAttribute, deadline: deadline) as? Bool == true else { return false }
 			try press(button, deadline: deadline)
+			return true
+		}
+	}
+
+	/// A modal-opening AX press does not return until the modal session ends.
+	/// A native click lets the harness drive the panel that the button opens.
+	func clickButton(_ title: String, from parent: AXUIElement) async throws {
+		try await wait("enabled fixture UI button \(title)") { deadline in
+			guard let button = try named(title, role: kAXButtonRole, from: parent, deadline: deadline),
+			      try value(button, kAXEnabledAttribute, deadline: deadline) as? Bool == true else { return false }
+			try click(button, deadline: deadline)
 			return true
 		}
 	}

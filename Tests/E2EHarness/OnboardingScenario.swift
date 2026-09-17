@@ -47,7 +47,24 @@ enum OnboardingScenario {
 			}
 			try await verifyCompletedIdentity(driver)
 			try await AppSession.stopProbe(probe, driver: driver)
-			let quitSeconds = try await AppSession.quitAndVerify(app, driver: driver)
+			let quitSeconds: Double
+			if kind == .onboardingFinish, launch == 0 {
+				guard let peer else { throw HarnessFailure.assertion("Onboarding IRC peer missing") }
+				quitSeconds = try await AppSession.quitAndVerify(app, driver: driver) {
+					try HarnessFiles.exists("peer-complete") && !peer.isRunning
+				}
+				guard peer.terminationReason == .exit, peer.terminationStatus == 0 else {
+					throw HarnessFailure.assertion("Onboarding IRC peer failed")
+				}
+				try HarnessFiles.unregister(peer.processIdentifier)
+				AppSession.release(peer)
+				try HarnessFiles.write(
+					"custom loopback server registered; application QUIT observed",
+					to: "onboarding-network"
+				)
+			} else {
+				quitSeconds = try await AppSession.quitAndVerify(app, driver: driver)
+			}
 			evidence.append(["pid": app.processIdentifier, "exitReason": app.terminationReason.evidenceName,
 			                 "exitStatus": app.terminationStatus, "quitSeconds": quitSeconds])
 			if launch == 0 {
@@ -79,13 +96,19 @@ enum OnboardingScenario {
 			return
 		}
 		try await driver.button("Continue", from: window)
-		try await driver.wait("Notifications pre-denied by disposable-login operator") { deadline in
-			try driver.named(
+		try await driver.wait("Notifications permission is settled in the disposable login") { deadline in
+			for message in [
+				"Notifications are allowed for Glasstual.",
 				"Notifications are turned off for Glasstual in System Settings.",
+			] where try driver.named(
+				message,
 				role: kAXStaticTextRole,
 				from: window,
 				deadline: deadline
-			) != nil
+			) != nil {
+				return true
+			}
+			return false
 		}
 		try await driver.button("Continue", from: window)
 		try await driver.wait("network step has no external selection") { deadline in
@@ -110,7 +133,13 @@ enum OnboardingScenario {
 			)
 			return true
 		}
-		try await driver.selectRow("Custom Server", from: window)
+		var networkList: AXUIElement?
+		try await driver.wait("identified network picker list") { deadline in
+			networkList = try driver.identified("network-picker-list", from: window, deadline: deadline)
+			return networkList != nil
+		}
+		guard let networkList else { throw HarnessFailure.assertion("Network picker list missing") }
+		try await driver.selectRow("Custom Server", from: networkList)
 		try await driver.fill("network-address", with: "127.0.0.1", from: window)
 		try await driver.fill("network-port", with: HarnessFiles.read("port"), from: window)
 		try await driver.toggle("Use SSL/TLS", to: false, from: window)
@@ -133,21 +162,12 @@ enum OnboardingScenario {
 		}
 	}
 
-	private static func exerciseConnection(_ driver: AccessibilityDriver, peer: Process) async throws {
+	private static func exerciseConnection(_ driver: AccessibilityDriver, peer _: Process) async throws {
 		try await driver.menu("Connect", in: "Server")
 		try await driver.waitForTranscript("E2E_TRANSCRIPT_READY")
-		try await driver.waitForConnectionStatus(connected: true)
+		try await driver.waitForConnectionStatus(connected: true, network: "127.0.0.1")
 		try await driver
 			.wait("newly onboarded identity registered through XPC") { _ in try HarnessFiles.exists("pong-wire") }
-		try await driver.typeAndSend("/quit E2E_QUIT")
-		try await driver
-			.wait("new server closes exact QUIT and EOF") { _ in
-				try HarnessFiles.exists("peer-complete") && !peer.isRunning
-			}
-		guard peer.terminationReason == .exit,
-		      peer.terminationStatus == 0 else { throw HarnessFailure.assertion("Onboarding IRC peer failed") }
-		try HarnessFiles.unregister(peer.processIdentifier)
-		try HarnessFiles.write("custom loopback server registered; manual QUIT observed", to: "onboarding-network")
 	}
 
 	private static func welcomePresented(_ driver: AccessibilityDriver, deadline: Double) throws -> Bool {
@@ -172,7 +192,7 @@ enum OnboardingScenario {
 		try await driver.selectPreferencePage("Identity", in: settings)
 		try await driver.wait("synthetic onboarding identity persisted in Settings") { deadline in
 			guard let nickname = try driver.named(
-				"Nickname:",
+				"Nickname",
 				role: kAXTextFieldRole,
 				from: settings,
 				deadline: deadline

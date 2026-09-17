@@ -1,7 +1,5 @@
-/* *********************************************************************
- * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
- * Please see Acknowledgements.pdf for additional information.
- *********************************************************************** */
+// Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import Foundation
 
@@ -17,7 +15,7 @@ import Foundation
 
  The IRC formatting codes are not this type's business: the formatting parser
  consumes them first and hands every other control character here. */
-nonisolated enum TranscriptTextSanitizer { // nonisolated: value
+nonisolated enum TranscriptTextSanitizer {
 	/// U+2068 FIRST STRONG ISOLATE: opens the isolate a wire string is drawn in.
 	static let isolateStart = "\u{2068}"
 	/// U+2069 POP DIRECTIONAL ISOLATE: closes it.

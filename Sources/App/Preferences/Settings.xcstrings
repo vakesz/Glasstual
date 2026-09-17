@@ -2024,19 +2024,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "You will be asked where to save downloaded files each time you start a file transfer if a destination is not configured."
+            "value": "Accepted files are saved here. If you have not chosen another folder, Glasstual uses Downloads."
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ha nincs beállítva célmappa, minden fájlátvitel indításakor meg kell adnod, hová szeretnéd menteni a letöltött fájlt."
+            "value": "Az elfogadott fájlok ide kerülnek. Ha nem választasz másik mappát, a Glasstual a Letöltések mappát használja."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wenn kein Ziel festgelegt ist, wirst du bei jeder Dateiübertragung nach einem Speicherort gefragt."
+            "value": "Angenommene Dateien werden hier gespeichert. Wenn kein anderer Ordner gewählt ist, verwendet Glasstual den Downloads-Ordner."
           }
         }
       }
@@ -2493,6 +2493,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Passive Dateiübertragungsanfragen senden"
+          }
+        }
+      }
+    },
+    "file-transfers-use-downloads": {
+      "comment": "Menu item that resets the file-transfer destination to the user's Downloads folder.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use Downloads Folder"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Letöltések mappa használata"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloads-Ordner verwenden"
           }
         }
       }

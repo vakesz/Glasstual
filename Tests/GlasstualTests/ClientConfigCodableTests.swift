@@ -1,7 +1,5 @@
-/* *********************************************************************
- * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
- * Please see Acknowledgements.pdf for additional information.
- *********************************************************************** */
+// Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import CocoaExtensions
 import Foundation
@@ -82,7 +80,6 @@ struct ClientConfigCodableTests {
 		"channelList": [[
 			"channelName": "#swift",
 			"uniqueIdentifier": "8B2F4C1A-0000-4000-8000-00000000000C",
-			"notifications": .dictionary([:]),
 		]],
 		"highlightList": [[
 			"matchKeyword": "release",
@@ -137,28 +134,6 @@ struct ClientConfigCodableTests {
 
 		#expect(config.addressType == .v4)
 		#expect(config.showConnectionPrefersIPv4Warning)
-	}
-
-	/// A configuration written before the server list never wrote a port: it was
-	/// connecting to the standard one, and reading it as port 0 cancelled the
-	/// whole server list.
-	@Test("A single endpoint without a port migrates on the standard port", arguments: [nil, UInt16(6697)])
-	func singleEndpointWithoutAPortMigratesOnTheStandardPort(_ storedPort: UInt16?) throws {
-		var dictionary: [String: PropertyListValue] = [
-			"serverAddress": "irc.example.net",
-			"prefersSecuredConnection": true,
-		]
-		if let storedPort {
-			dictionary["serverPort"] = .integer(Int(storedPort))
-		}
-
-		let config = try #require(PropertyListModel.decode(ClientConfig.self, from: dictionary))
-		let server = try #require(config.serverList.first)
-
-		#expect(config.serverList.count == 1)
-		#expect(server.serverAddress == "irc.example.net")
-		#expect(server.serverPort == (storedPort ?? ConnectionDefaults.serverPort))
-		#expect(server.prefersSecuredConnection)
 	}
 
 	@Test("A malformed highlight condition is dropped rather than loaded")

@@ -1,27 +1,18 @@
-/* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- *********************************************************************** */
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import CocoaExtensions
 import Foundation
 import os
 import Synchronization
 
-nonisolated enum ResourceDocumentType { // nonisolated: value
+nonisolated enum ResourceDocumentType {
 	static let scriptFileExtension = ".scpt"
 	static let scriptFilenameExtension = "scpt"
 }
 
 /// The bundled property list of fixed word lists, and the keys read from it.
-nonisolated enum StaticStoreResource { // nonisolated: value
+nonisolated enum StaticStoreResource {
 	static let name = "StaticStore"
 	static let spellingIgnoresKey = "Spelling Ignores"
 	static let forbiddenScriptCommandsKey = "THOPluginManager List of Forbidden Commands"
@@ -29,7 +20,7 @@ nonisolated enum StaticStoreResource { // nonisolated: value
 	static let nickServIdentifiedTokensKey = "IRCClient List of NickServ Successfully Identified Tokens"
 }
 
-nonisolated enum BundleResources { // nonisolated: value
+nonisolated enum BundleResources {
 	private static let logger = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 		category: "ResourceManager"

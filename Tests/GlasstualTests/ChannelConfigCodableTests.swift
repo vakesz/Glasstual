@@ -1,7 +1,5 @@
-/* *********************************************************************
- * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
- * Please see Acknowledgements.pdf for additional information.
- *********************************************************************** */
+// Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import AppKit
 import CocoaExtensions
@@ -21,7 +19,6 @@ struct ChannelConfigCodableTests {
 		let fixture: [String: PropertyListValue] = [
 			"channelName": "#swift",
 			"uniqueIdentifier": "8B2F4C1A-0000-4000-8000-000000000006",
-			"notifications": .dictionary([:]),
 			"autoJoin": false,
 			"ignoreHighlights": true,
 			"defaultTopic": "Swift talk",

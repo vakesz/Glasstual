@@ -4,10 +4,25 @@ Notable changes to Glasstual. The GitHub release notes are generated from the
 commits of each release; this file carries the lines those notes should not
 lose, above all the changes a user notices without reading a commit.
 
-## Unreleased
+## 1.3.0 (2026-09-16)
 
 ### Changed
 
+- Chat Filters are now Rules, a native part of the app with the same matching
+  and action model instead of a bundled plug-in.
+- Notifications use one clear alert policy for mentions and private messages,
+  with per-conversation muting, sound, Dock badge and foreground-delivery
+  controls. The former speech-notification path is gone.
+- Transcript appearance is now the native Lines or Bubbles theme stored as a
+  versioned property list. CSS and JavaScript transcript themes are no longer
+  loaded.
+- ZNC commands, playback handling and the option to prevent sleep while
+  connected are built into the app instead of being delivered by plug-ins.
+- New server configurations leave TLS cipher selection to the platform's
+  maintained default group. The frozen compatibility groups remain available
+  for servers that require them.
+- Alerts now use the standard macOS alert panel and sheet behavior, including
+  system button ordering, destructive roles and suppression controls.
 - Autojoin sends every channel at once, in as many `JOIN` lines as the server
   allows, and lets the connection's flood control pace them. The two settings
   that throttled it — the delay between joins and the number of channels per
@@ -33,6 +48,12 @@ lose, above all the changes a user notices without reading a commit.
 - Server Properties › Connect Commands can hold the channel joins until a
   chosen number of seconds after the connect commands have been sent.
 - Server Properties, Channel Properties and the Settings window can be resized.
+
+### Removed
+
+- The legacy in-process plug-in system and its bundled Smiley Converter,
+  System Profiler and User Insights plug-ins. User command scripts remain
+  available through AppleScript and executable files.
 
 ### Fixed
 

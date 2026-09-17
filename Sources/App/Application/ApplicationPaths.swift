@@ -1,14 +1,5 @@
-/* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- *********************************************************************** */
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import AppKit
 import CocoaExtensions
@@ -17,7 +8,7 @@ import Synchronization
 
 /// Where the application keeps its files. Every accessor here creates the
 /// directory it names, so callers can write into it straight away.
-nonisolated enum ApplicationPaths { // nonisolated: value
+nonisolated enum ApplicationPaths {
 	private static let logger = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 		category: "ApplicationPaths"
@@ -195,8 +186,8 @@ nonisolated enum ApplicationPaths { // nonisolated: value
 		userHomeURL.appendingPathComponent("/Library/Logs/DiagnosticReports")
 	}
 
-	static var userDownloads: String? {
-		firstSearchPath(for: .downloadsDirectory)
+	static var userDownloadsURL: URL? {
+		firstSearchPath(for: .downloadsDirectory).map { URL(fileURLWithPath: $0, isDirectory: true) }
 	}
 
 	private static var userHomeURL: URL {

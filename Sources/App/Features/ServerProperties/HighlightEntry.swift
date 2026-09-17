@@ -1,15 +1,6 @@
-/* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- *********************************************************************** */
+// Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import Foundation
 import Observation
@@ -153,7 +144,7 @@ final class HighlightEntryModel {
  while that is Regular Expression has to compile. Nothing used to check: the
  renderer builds the expression with `try?` and an unusable pattern simply
  stopped highlighting, with nothing said anywhere. */
-nonisolated enum HighlightKeywordPattern { // nonisolated: value
+nonisolated enum HighlightKeywordPattern {
 	@MainActor
 	static var matchesByRegularExpression: Bool {
 		Preferences.Highlights.matchingMethod.value == .regularExpression

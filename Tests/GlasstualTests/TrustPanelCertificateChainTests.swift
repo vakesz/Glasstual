@@ -1,7 +1,5 @@
-/* *********************************************************************
- * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
- * Please see Acknowledgements.pdf for additional information.
- *********************************************************************** */
+// Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import CocoaExtensions
 import Foundation
@@ -13,7 +11,7 @@ import Testing
 /// service exports the chain, and the app rebuilds the trust object on the main
 /// actor so no Security.framework value crosses an isolation boundary.
 @Suite("Trust from an exported certificate chain")
-nonisolated struct TrustPanelCertificateChainTests { // nonisolated: value
+nonisolated struct TrustPanelCertificateChainTests {
 	@Test("A chain of one DER certificate rebuilds into a SecTrust for the named policy")
 	func chainRebuildsIntoTrust() throws {
 		let certificate = try Self.fixtureCertificate()

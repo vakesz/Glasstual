@@ -1,200 +1,133 @@
 # Repository guidance
 
-Glasstual is a macOS 26+ IRC client, arm64 only, written entirely in Swift 6
-with `SWIFT_STRICT_CONCURRENCY=complete`. The Objective-C port finished: there
-are no `.h`, `.m`, `.c` or `.mm` files left, and none should come back.
+Glasstual is an arm64 macOS 26+ IRC client written in Swift 6 with complete
+strict concurrency and main-actor default isolation. The source tree is
+Swift-only.
 
 ## Architecture
 
-- SwiftUI owns user-facing layout, navigation, forms and scene presentation.
-  AppKit is a capability adapter only: keep it narrow, stateless and owned by
-  the feature that needs it. Before removing an adapter, preserve keyboard
-  commands, focus, selection, drag-and-drop, accessibility and restoration.
-  The deliberate adapters are the main-window responder and
-  restoration shell, TextKit input/transcript editing, the transcript reaction
-  popover, dock-tile rendering and the pre-scene blocking alert path.
-- Layout is by feature: `Sources/App/{Application,Protocol,Preferences,
-  Features/<Feature>,UI,Localization,Resources}`. `Sources/App/README.md`
-  describes each directory's scope and the conventions; a feature owns its
-  controllers, views, models and strings together, and nothing goes back
-  under a former Objective-C class folder.
-- Model closed domain state with enums, option sets and value types. Persist
-  and archive with `Codable`; reach for `NSSecureCoding` only where an
-  `NSXPCInterface` allowlist requires it.
-- The app runs `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`. Parsers, wire
-  types, and anything an XPC service shares opt out with `nonisolated`. Do not
-  reach for `@unchecked Sendable`, `nonisolated(unsafe)` or
-  `MainActor.assumeIsolated` to settle an isolation error; move the boundary
-  instead. See "Isolation rules" below for what the gate enforces.
-- Preferences are typed `PreferenceKey` declarations under
-  `Sources/App/Preferences/Keys/`. The `PreferenceKey` type and the
-  `GlasstualUserDefaults` store live in `Sources/Shared/`, and only
-  the app compiles them; the XPC connection host reads no preferences. Read
-  and write through the key, never through a raw defaults string. Defaults
-  registration, storage routing, and import/export filtering are derived directly from those declarations;
-  do not add a generated plist mirror or a build phase for them.
-- The channel transcript is native. `TranscriptRenderer` produces semantic
-  `TranscriptRow` values and the transcript adapter draws them with TextKit;
-  no HTML, CSS, JavaScript, WebKit, template engine or script bridge belongs in
-  this path. `TranscriptTheme` is the single versioned `Codable` appearance
-  model. Store and import/export it as an XML property list, and add colours as
-  semantic light/dark roles instead of view-specific styling hooks. Inline
-  images are decoded natively and fetched only over HTTP(S) with bounded input.
-- `@objc` marks a runtime boundary and nothing else: a class or action a nib
-  binds, a KVO-observed property, or an XPC protocol member. A Swift-to-Swift
-  call never needs one.
-- Keep external wire, template and persistence strings at typed boundary
-  adapters rather than scattering literals through logic.
-- User-facing text lives in feature-namespaced String Catalogs, consumed
-  through the generated typed symbols. Preserve translations, placeholders,
-  translator comments and attribution; merge two keys only when their meaning
-  and formatting contract are identical.
+- SwiftUI owns layout, navigation, forms, sheets and scene presentation.
+  AppKit adapters provide only capabilities SwiftUI cannot provide. Keep them
+  narrow, stateless and inside their owning feature.
+- Preserve keyboard commands, focus, selection, drag and drop, accessibility
+  and restoration when changing an adapter. The deliberate adapters are the
+  main-window responder and restoration shell, programmatic `NSMenu` command
+  graph, TextKit input and transcript views, transcript reaction popover,
+  dock-tile renderer and pre-scene blocking alerts.
+- Organize app code by feature under `Sources/App`. A feature owns its views,
+  models, controllers, strings and capability adapters. Read
+  `Sources/App/README.md` when moving or adding app files.
+- Give a file the name of its primary type or concern. Keep closely coupled
+  behavior together; split only at a boundary that hides meaningful
+  complexity or changes independently.
+- Model closed state with enums, option sets and value types. Use `Codable`
+  for persistence. Use `NSSecureCoding` only at an XPC allowlist or an
+  existing archived runtime boundary.
+- Keep wire, persistence, notification and system identifiers at typed
+  boundary adapters. Avoid raw defaults keys and duplicated protocol strings.
+- `@objc` marks a nib, KVO, selector or XPC runtime boundary. Swift-to-Swift
+  calls stay native.
 
-## Targets
+## Isolation
 
-`project.yml` declares every target; the tree mirrors it.
+Every mutable value belongs to the main actor, a named actor, or a value that
+does not escape. Move state to its owner or pass a `Sendable` snapshot when
+the compiler cannot prove that boundary.
 
-| Target | Sources | Kind | Default isolation |
-| --- | --- | --- | --- |
-| `Glasstual` | `Sources/App/**`, `Sources/Shared/**` | app | `MainActor` |
-| `CocoaExtensions` | `Sources/CocoaExtensions/**` | framework (Foundation/AppKit helpers) | `nonisolated` |
-| `IRCConnectionHost` | `Sources/ConnectionHost/**` | capability-limited XPC network host; its exported shim forwards to `ConnectionHost`, which owns sockets and the `Sendable` client proxy | `nonisolated` |
-| `GlasstualTests` | `Tests/GlasstualTests/**`; the `IRCSpec` and `TLS` corpora ship as bundle resources, and the `History` fixture test reads its corpus from the source tree | Swift Testing bundle hosted by the app | `MainActor` |
-| `GlasstualE2ETests` | `Tests/GlasstualE2ETests/**` | Swift Testing bundle hosted by the test runner, not the app | `MainActor` |
-| `GlasstualE2EHarness` | `Tests/E2EHarness/**` | external Accessibility driver, watchdog and loopback peers | `MainActor` |
+- Keep `@unchecked Sendable`, `nonisolated(unsafe)`,
+  `MainActor.assumeIsolated`, `Thread.isMainThread` and
+  `DispatchQueue.main.sync` out of the tree.
+- Use actors for mutable asynchronous state. `Mutex<Value>` is the only
+  permitted lock, only around a value type, and never across I/O or `await`.
+  Keep `NSLock`, `NSRecursiveLock`, `objc_sync_enter`, private dispatch
+  queues, private operation queues and synchronous main-queue hops out.
+- When an Apple API forces a nonisolated callback, answer from a `Sendable`
+  snapshot maintained by the owning actor. Replace sink and KVO callbacks with
+  an owned `for await` task when an async sequence is available. Construct a
+  non-`Sendable` connection inside its owning actor.
+- A plain `nonisolated` class, actor, function or variable carries one
+  trailing reason marker. Value types and `Sendable` constants need no
+  restatement.
 
-`Sources/Shared/` holds the declarations the network host shares with the app
-(XPC protocols and connection envelopes) and the app's preference store. The
-app compiles all of it. The `IRCConnectionHost` target lists the few files it
-compiles, and only those cross the process boundary.
-
-## Isolation rules
-
-Every piece of mutable state belongs to exactly one isolation domain — the main
-actor, a named actor, or a value that never escapes — and the compiler has to
-be able to prove it. SwiftLint custom rules enforce the source-level bans below
-on every `make lint`.
-
-- **Never add** `nonisolated(unsafe)`, `@unchecked Sendable`,
-  `MainActor.assumeIsolated`, `Thread.isMainThread` or
-  `DispatchQueue.main.sync`. Each one asserts something the checker cannot see
-  and nothing re-checks. When one of them would settle an isolation error, the
-  boundary is in the wrong place: move the state into the domain that uses it,
-  or hand a `Sendable` snapshot across. None are left in the tree.
-- **Never add** an `NSLock`, `NSRecursiveLock`, `objc_sync_enter`, a private
-  `DispatchQueue(label:)`, an `OperationQueue()`, or a
-  `perform{A,}synchronouslyOnMainQueue` hop. `Mutex<Value>` is the only
-  permitted lock, and only around a value type — never around a reference, and
-  never held across I/O or an `await`. There is no exemption and no marker that
-  buys one: a new queue means the state it guards belongs in an actor, and an
-  Apple API that insists on a queue is answered by the bullet below.
-- **Where an Apple API forces a bridge, route around the API.** A nonisolated
-  AppKit callback is answered from a `Sendable` snapshot the main actor keeps
-  current; `sink` and KVO handlers become `for await` loops in a main-actor
-  `Task` the owner cancels; a non-`Sendable` connection is created inside the
-  actor that owns it so it never crosses a boundary at all.
-- **A plain `nonisolated` is a claim, so it has to say which claim.** Write the
-  reason as a trailing comment in a closed vocabulary:
-
-  | Marker | Means |
+  | Marker | Meaning |
   | --- | --- |
-  | `// nonisolated: pure` | a pure function of `Sendable` inputs |
-  | `// nonisolated: let` | a `let` of `Sendable` type |
-  | `// nonisolated: xpc-shim` | an XPC/`@objc` protocol requirement, or its one-line forwarding shim |
-  | `// nonisolated: value` | a `struct`/`enum` with no reference-typed state |
-  | `// nonisolated: immutable` | a `final class` with no stored state, or whose every stored property is a `let` of `Sendable` type, a `let Mutex<Value>` included |
-  | `// nonisolated: guarded` | a class a boundary pins outside every actor that also holds mutable state, and keeps it safe behind a `Mutex<Value>` or a store that synchronizes itself |
+  | `// nonisolated: pure` | Pure behavior over `Sendable` inputs or immutable state |
+  | `// nonisolated: xpc-shim` | XPC or `@objc` protocol requirement and its forwarding shim |
+  | `// nonisolated: immutable` | Final class with only `let Sendable` state, including a `let Mutex<Value>` |
+  | `// nonisolated: guarded` | Boundary class with mutable state protected by `Mutex<Value>` or a synchronizing store |
 
-  Nothing else counts as marked. `value` says the type is one, so it never
-  belongs on a `class`: a namespace of `static` members becomes an `enum`, and
-  a class that only holds `let`s is `immutable`. Owning a `Mutex` as a `let` is
-  still `immutable`, which is why `ConnectionInputBudget`,
-  `InlineImageTransfer` and `TranscriptHighlightExpressions` carry that
-  marker. What moves a class to `guarded` is a stored `var`, which is why
-  `GlasstualUserDefaults`, a handle on a suite Foundation synchronizes, is the
-  one `guarded` type. If a site fits none of the six, it is not a `nonisolated`
-  site: a nonisolated class with mutable state becomes an actor or a main-actor
-  class.
+The four isolation rules in `.swiftlint.yml` stay at zero. A finding means
+the boundary must move; it does not justify an exclusion or suppression.
 
-Four SwiftLint custom rules cover these categories over `Sources/` and `Tests/`
-alike, and fail when they find any: `isolation_escape_hatch`,
-`manual_lock_or_queue`, `unmarked_nonisolated` and `value_marker_on_class`. A
-test helper is a `nonisolated` site like any other and carries the same marker.
-All four are at zero and stay there: there is no ceiling to raise, no
-ratchet, and no exception to add. A change that trips the gate has put a
-boundary in the wrong place — move the state into the domain that uses it, or
-hand a `Sendable` snapshot across.
+## Preferences, transcript and localization
 
-Two runtime checks back the static ones, both local-only because they are far
-too slow for CI: `make tsan` runs the suite under ThreadSanitizer, and
-`make smoke` launches the Debug app against a copy of the real preferences
-with `autoConnect` cleared and a per-run scratch directory in place of the
-group container, probes the main thread from outside the process every ten
-seconds, and reads the unified log back. The probe is what catches a
-blocked main actor — the process stays alive and looks idle, but stops
-answering the accessibility API. Tests assert isolation with `expectMainActor()`
-and `IsolationProbe` from `Tests/GlasstualTests/Support/`.
+- Declare typed `PreferenceKey` values under
+  `Sources/App/Preferences/Keys`. Read and write through those declarations.
+  Registration, storage routing and import/export filtering derive from the
+  declarations, with no generated plist mirror.
+- `Sources/Shared` contains XPC declarations and the app preference store.
+  Only the explicitly listed shared files compile into the connection host,
+  which reads no preferences.
+- `TranscriptRenderer` produces semantic `TranscriptRow` values and the
+  TextKit adapter draws them. Keep HTML, CSS, JavaScript, WebKit and script
+  bridges out of the transcript.
+- `TranscriptTheme` is the versioned `Codable` appearance model. Store and
+  exchange it as an XML property list. Add colors as semantic light/dark roles.
+- Fetch inline images only over HTTP(S), with bounded download and decode
+  inputs.
+- Put user-facing text in feature-namespaced String Catalogs and use generated
+  typed symbols. Preserve translations, placeholders, translator comments and
+  attribution. Merge keys only when meaning and formatting contracts match.
 
-## Working in the tree
+## Repository work
 
-- `project.yml` is the source of truth for targets, schemes, build settings,
-  generated Info.plists, signing, capabilities and entitlements. Sources are
-  globbed from directories, so run `make generate` after adding or removing a
-  file. `Glasstual.xcodeproj` and `Generated/Xcode/` are generated, ignored by
-  git and never edited by hand.
-- Preserve every upstream copyright notice, license, acknowledgement and
-  provenance record when moving or rewriting code. Vendored source stays under
-  `Sources/CocoaExtensions/` with
-  `Sources/CocoaExtensions/PROVENANCE.md` current.
-- SwiftFormat and SwiftLint run over all of `Sources/` and `Tests/`. Fix
-  findings in the source, or tune a rule once in `.swiftlint.yml` /
-  `.swiftformat` with a repository-wide reason. Path exclusions, baselines,
-  inline disables and blanket suppressions stay out of the tree.
-- New tests use Swift Testing (`@Test`, `#expect`, `#require`) in
-  `Tests/GlasstualTests/`, named after their subject. Test what the code
-  decides, not what the compiler already guarantees: a runtime-name pin earns
-  its place only where a nib or a protocol constant depends on it.
-- A test that does not run is not a passing test. SwiftLint bans `.disabled(…)`
-  and `withKnownIssue` under `Tests/`; fix the code or delete the test.
-- Before handing off: `make generate`, `make build`, `make test`,
-  `make e2e-fixtures` and `make lint`, all green. Report any runtime, signing,
-  network or release boundary the change touched but the checks did not
-  exercise.
-- Commits carry no AI attribution: no `Co-Authored-By` trailer, no generated-by
-  note.
+- Treat `project.yml` as the source of truth. Run `make generate` after
+  adding or removing files or changing build metadata. Generated
+  `Glasstual.xcodeproj` and `Generated/Xcode` files stay untracked and
+  unedited.
+- Preserve copyright, license, acknowledgement and provenance records.
+  Vendored Cocoa Extensions stay under `Sources/CocoaExtensions`; keep their
+  full upstream headers and `PROVENANCE.md` current.
+- Fix formatting and lint findings in source. Repository-wide rule changes
+  need a repository-wide reason. Keep path exclusions, baselines, inline
+  disables and blanket suppressions out.
+- Keep unrelated working-tree changes intact. Do not create commits unless the
+  user asks for them. Commits contain no AI attribution.
 
-## Agent skills
+## Tests and completion
 
-Skills installed for this checkout live under `.agents/skills/` (read by
-Codex and OpenCode; `.claude/skills/` symlinks them for Claude Code), pinned in
-`skills-lock.json`. They are general Apple-platform guidance, and this file
-overrides them wherever the two disagree. The known disagreements:
+- Write new tests with Swift Testing in `Tests/GlasstualTests`, named after
+  their subject. Test decisions and runtime contracts, not compiler
+  guarantees. Runtime-name tests belong only where a nib, archive or protocol
+  constant depends on the name.
+- End-to-end coverage uses the Accessibility harness under
+  `Tests/E2EHarness`, not XCTest UI automation.
+- Every test runs. Fix or remove failures; `.disabled` and `withKnownIssue`
+  are lint errors under `Tests`.
+- Before handoff, run `make generate`, `make build`, `make test`,
+  `make e2e-fixtures` and `make lint`. Report any signing, network,
+  runtime or release boundary those checks did not exercise.
+- `make tsan` and `make smoke` are slow local isolation checks. Run them
+  when concurrency changes warrant the cost.
 
-- `@unchecked Sendable`, `nonisolated(unsafe)`, `MainActor.assumeIsolated`,
-  GCD queues and locks other than `Mutex<Value>` are offered as last resorts in
-  `write-swift` and `swift-concurrency-pro`. Here they are banned outright; see
-  "Isolation rules".
-- `#available` gating with fallbacks (`swiftui-expert-skill`) does not apply:
-  the deployment target is macOS 26, so an API from 26 or earlier is used
-  directly.
-- `withKnownIssue` and `.disabled(…)` (`write-swift`) are banned under `Tests/`.
-- XCTest for UI automation does not apply: end-to-end coverage goes through the
-  Accessibility harness in `Tests/E2EHarness/`.
-- WebKit, iOS-only patterns and cross-platform fallbacks do not belong in this
-  macOS-only, native-transcript app.
-- `xcode-build-fixer` and `xcode-project-analyzer` edit or read
-  `project.pbxproj` settings. Here a build setting changes in `project.yml`,
-  followed by `make generate`; never edit `Glasstual.xcodeproj` by hand.
-- `xcode-compilation-analyzer` injects slow-type-checking warnings, which
-  `SWIFT_TREAT_WARNINGS_AS_ERRORS` turns into build failures. Pass
-  `SWIFT_TREAT_WARNINGS_AS_ERRORS=NO` for that run only. Point the build
-  benchmark scripts at `build/` for output and DerivedData.
-- `axiom-performance`, `axiom-networking`, `axiom-security` and
-  `swift-security-expert` include GCD timers, atomics, `@unchecked Sendable`
-  mocks, XCUITest launch tests and API snippets that do not compile. Use them
-  for diagnosis and Apple facts, and check code against the SDK. The
-  "always use the data protection keychain" advice must not strand existing
-  keychain items: migrate them.
-- The Core Data history store keeps automatic migration off on purpose.
-- The web quality skills apply to `.github/website/`. GitHub Pages cannot set
-  response headers, so ignore header findings such as CSP and HSTS.
+## Local skills
+
+Repository skills provide general Apple guidance; this file wins on conflict.
+In particular:
+
+- Concurrency skills may suggest unsafe isolation, GCD queues or locks as last
+  resorts. Use the isolation rules above.
+- SwiftUI guidance may suggest availability fallbacks. The deployment target
+  is macOS 26, so use APIs available in 26 directly.
+- Testing guidance may suggest disabled tests, known issues or XCUITest. Use
+  the test rules above.
+- Xcode optimization skills may edit generated project files. Change
+  `project.yml`, then regenerate. Run slow-type-check diagnostics with
+  `SWIFT_TREAT_WARNINGS_AS_ERRORS=NO` for that diagnostic run only.
+- Networking, performance and security snippets may contain unsupported
+  synchronization or unverified APIs. Use them for diagnosis, then check code
+  against the SDK and this repository's isolation rules.
+- The Core Data history store deliberately keeps automatic migration off.
+- Web quality checks apply only to `.github/website`. GitHub Pages cannot set
+  response headers, so header-only findings such as CSP and HSTS are out of
+  scope.

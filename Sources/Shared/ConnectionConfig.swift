@@ -1,51 +1,17 @@
-/* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- *  * Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *  * Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *  * Neither the name of Textual, "Codeux Software, LLC", nor the
- *    names of its contributors may be used to endorse or promote products
- *    derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
- *
- *********************************************************************** */
+// Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import CocoaExtensions
 import Foundation
 import os
 
-private nonisolated let connectionConfigLogger = Logger( // nonisolated: let
+private nonisolated let connectionConfigLogger = Logger(
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 	category: "Connection"
 )
 
 /// Raw values are persisted. Values 4 and 7 are retired and must not be reused.
-nonisolated enum ConnectionProxyType: UInt, Codable, Sendable { // nonisolated: value
+nonisolated enum ConnectionProxyType: UInt, Codable, Sendable {
 	case none = 0
 	case automatic = 1
 	case socks5 = 5
@@ -54,13 +20,13 @@ nonisolated enum ConnectionProxyType: UInt, Codable, Sendable { // nonisolated: 
 }
 
 /// Controls which IP address families Network.framework may use.
-nonisolated enum ConnectionAddressType: UInt, Codable, Sendable { // nonisolated: value
+nonisolated enum ConnectionAddressType: UInt, Codable, Sendable {
 	case `default` = 0
 	case v4 = 1
 	case v6 = 2
 }
 
-nonisolated enum ConnectionDefaults { // nonisolated: value
+nonisolated enum ConnectionDefaults {
 	static let serverPort: UInt16 = 6667
 	static let serverPortSecure: UInt16 = 6697
 	static let proxyPort: UInt16 = 1080
@@ -74,7 +40,7 @@ nonisolated enum ConnectionDefaults { // nonisolated: value
  value: the host cannot reach back into the application's copy. The proxy
  password travels with it by design — the host is the process that has to
  present it — and it goes no further than that XPC connection. */
-nonisolated struct ConnectionConfig: Codable, Sendable, Equatable { // nonisolated: value
+nonisolated struct ConnectionConfig: Codable, Sendable, Equatable {
 	var diagnostics: ConnectionDiagnostics?
 	var serverAddress = ""
 	var serverPort = ConnectionDefaults.serverPort
@@ -325,7 +291,7 @@ final nonisolated class ConnectionConfigEnvelope: NSObject, NSSecureCoding { // 
 
 /// A shared monotonic origin correlates app and XPC milestones without recording
 /// server names, account names, credentials, or IRC message contents.
-nonisolated struct ConnectionDiagnostics: Codable, Sendable, Equatable { // nonisolated: value
+nonisolated struct ConnectionDiagnostics: Codable, Sendable, Equatable {
 	let identifier: UUID
 	let requestedAt: TimeInterval
 

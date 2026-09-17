@@ -1,33 +1,6 @@
-/* *********************************************************************
- * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- * Please see Acknowledgements.pdf for additional information.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- *  * Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *  * Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *  * Neither the name of Textual, "Codeux Software, LLC", nor the
- *    names of its contributors may be used to endorse or promote products
- *    derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
- *********************************************************************** */
+// Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import CocoaExtensions
 import Foundation
@@ -40,7 +13,7 @@ enum ISupportListType: UInt, Sendable {
 	case quiet = 3
 }
 
-nonisolated enum ISupportCaseMapping: UInt, Sendable { // nonisolated: value
+nonisolated enum ISupportCaseMapping: UInt, Sendable {
 	case rfc1459 = 0
 	case strictRFC1459 = 1
 	case ascii = 2
@@ -50,7 +23,7 @@ nonisolated enum ISupportCaseMapping: UInt, Sendable { // nonisolated: value
 	case rfc7613 = 3
 }
 
-nonisolated enum ISupportUserModes { // nonisolated: value
+nonisolated enum ISupportUserModes {
 	static let highestPrefixRank: UInt = 100
 }
 
@@ -70,7 +43,7 @@ enum ISupportValue: Sendable, Equatable {
  token with a case here is read at all, and every one of them is cleared by
  `reset`, so a case added below is a token the client both reads and forgets.
  */
-nonisolated enum ISupportToken: String, CaseIterable, Sendable { // nonisolated: value
+nonisolated enum ISupportToken: String, CaseIterable, Sendable {
 	case awaylen = "AWAYLEN"
 	case bot = "BOT"
 	case callerid = "CALLERID"
@@ -138,18 +111,18 @@ nonisolated enum ISupportToken: String, CaseIterable, Sendable { // nonisolated:
 
 /// The two prefix modes every server is assumed to have until it says
 /// otherwise.
-private nonisolated let defaultUserModePrefixPairs: [(modeSymbol: String, character: String)] = [ // nonisolated: let
+private nonisolated let defaultUserModePrefixPairs: [(modeSymbol: String, character: String)] = [
 	(modeSymbol: "o", character: "@"), (modeSymbol: "v", character: "+"),
 ]
 
-private nonisolated let defaultChannelModeKinds: [Character: ChannelModeKind] = [ // nonisolated: let
+private nonisolated let defaultChannelModeKinds: [Character: ChannelModeKind] = [
 	"o": .userPrefix, "v": .userPrefix,
 ]
 
 /** The ISUPPORT values a channel member needs in order to rank and mark itself.
  Members are ranked, compared and rendered off the main actor, so the client
  republishes these as a value rather than exposing the live table. */
-nonisolated struct UserPrefixTable: Sendable { // nonisolated: value
+nonisolated struct UserPrefixTable: Sendable {
 	/// Mode symbols in the order the server ranked them, highest first.
 	var modeSymbols = ["o", "v"]
 	/// The prefix character for the mode symbol at the same index.

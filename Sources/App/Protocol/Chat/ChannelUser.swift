@@ -1,20 +1,11 @@
-/* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- *********************************************************************** */
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import CocoaExtensions
 import Foundation
 
 /// Which side of a conversation a member took part in.
-nonisolated enum ChannelConversationDirection: Sendable { // nonisolated: value
+nonisolated enum ChannelConversationDirection: Sendable {
 	/// The local user spoke to them.
 	case outgoing
 	/// They spoke to the local user.
@@ -27,7 +18,7 @@ nonisolated enum ChannelConversationDirection: Sendable { // nonisolated: value
 
  The raw values are persisted in stored member state and read back by the
  member list's sorting, so a bit keeps the position it was given. */
-nonisolated struct UserRank: OptionSet, Hashable, Sendable { // nonisolated: value
+nonisolated struct UserRank: OptionSet, Hashable, Sendable {
 	let rawValue: UInt
 
 	/// No rank at all. An option set already spells that as the empty set, so
@@ -52,7 +43,7 @@ nonisolated struct UserRank: OptionSet, Hashable, Sendable { // nonisolated: val
  last stamped the member. Ranking and marks read it rather than the live client,
  because a member no longer knows one; `ChannelMemberList.sortMembers()`
  restamps, which is what picks up a `PREFIX` that arrived after the member did. */
-nonisolated struct ChannelUser: Identifiable, Hashable, Sendable { // nonisolated: value
+nonisolated struct ChannelUser: Identifiable, Hashable, Sendable {
 	/// The member is the person: one entry per user in a channel.
 	var id: User.ID {
 		user.id

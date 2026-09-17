@@ -1,7 +1,5 @@
-/* *********************************************************************
- * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
- * Please see Acknowledgements.pdf for additional information.
- *********************************************************************** */
+// Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import Foundation
 @testable import Glasstual
@@ -41,6 +39,20 @@ struct UserCommandTests {
 		#expect(client.isConnecting == false)
 		#expect(client.isConnected == false)
 		#expect(connection.isConnected == false)
+	}
+
+	@Test("Typed QUIT from the selected server transcript reaches the wire")
+	func quitFromSelectedServerTranscript() {
+		let client = TestClient()
+		client.recordedOutput.selectedItem = client
+		client.isConnected = true
+		client.markAsLoggedIn()
+
+		client.inputText("/quit E2E_QUIT", as: .privmsg, destination: client)
+
+		#expect(client.sentLines as? [String] == ["QUIT :E2E_QUIT"])
+		#expect(client.isQuitting)
+		client.cancelPendingSessionTasks()
 	}
 
 	private func parsed(_ input: String) throws -> ParsedUserCommand {

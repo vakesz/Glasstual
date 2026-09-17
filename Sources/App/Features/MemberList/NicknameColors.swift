@@ -1,15 +1,6 @@
-/* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- *********************************************************************** */
+// Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import AppKit
 import CocoaExtensions
@@ -18,7 +9,7 @@ import os
 
 /// A pinned nickname colour, as it is written to the defaults store: sRGB
 /// components a plist editor can read, rather than an `NSKeyedArchiver` blob.
-nonisolated struct NicknameColorComponents: Codable, Equatable, Sendable { // nonisolated: value
+nonisolated struct NicknameColorComponents: Codable, Equatable, Sendable {
 	var red: Double
 	var green: Double
 	var blue: Double
@@ -90,11 +81,11 @@ nonisolated struct NicknameColorComponents: Codable, Equatable, Sendable { // no
  that colours a hundred nicknames paid for a hundred handles. The table cannot
  change part-way through a batch, so it is a value a caller reads once and hands
  to every name it has to colour. */
-nonisolated struct NicknameColorOverrides: Sendable { // nonisolated: value
+nonisolated struct NicknameColorOverrides: Sendable {
 	fileprivate let stored: [String: PropertyListValue]
 }
 
-nonisolated enum NicknameColors { // nonisolated: value
+nonisolated enum NicknameColors {
 	private static let logger = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 		category: "NicknameColorStyle"

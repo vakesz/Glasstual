@@ -1,40 +1,6 @@
-/* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- *  * Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *  * Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *  * Neither the name of Textual, "Codeux Software, LLC", nor the
- *    names of its contributors may be used to endorse or promote products
- *    derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
- *
- *********************************************************************** */
+// Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import CocoaExtensions
 import Foundation
@@ -59,7 +25,8 @@ final class FileTransferCenter {
 	}
 
 	var senderPreparations: [UUID: Task<Void, Never>] = [:]
-	var downloadDestinationURLPrivate: URL?
+	var customDownloadDestinationURL: URL?
+	let defaultDownloadDestinationURL: URL?
 	/// The lookup every transfer waiting on an address shares, so two concurrent
 	/// DCC offers ask the address service once between them.
 	var ipAddressLookup: Task<String?, Never>?
@@ -71,8 +38,12 @@ final class FileTransferCenter {
 	let workspace = FileTransferWorkspace()
 	private lazy var notifications = NotificationSubscriptions()
 
-	init(addressSource: @escaping @MainActor () async -> String? = { await InternetAddressLookup.address() }) {
+	init(
+		addressSource: @escaping @MainActor () async -> String? = { await InternetAddressLookup.address() },
+		defaultDownloadDestinationURL: URL? = ApplicationPaths.userDownloadsURL
+	) {
 		self.addressSource = addressSource
+		self.defaultDownloadDestinationURL = defaultDownloadDestinationURL
 		notifications.observe(.clientDirectoryWillDestroyClient) { [weak self] notification in
 			self?.clientWillBeDestroyed(notification)
 		}
@@ -92,7 +63,7 @@ final class FileTransferCenter {
 		senderPreparations.values.forEach { $0.cancel() }
 		networkChanges?.cancel()
 		ipAddressLookup?.cancel()
-		downloadDestinationURLPrivate?.stopAccessingSecurityScopedResource()
+		customDownloadDestinationURL?.stopAccessingSecurityScopedResource()
 	}
 }
 
@@ -198,8 +169,8 @@ extension FileTransferCenter {
 			transfer.prepareForPermanentDestruction()
 		}
 		clearIPAddress()
-		downloadDestinationURLPrivate?.stopAccessingSecurityScopedResource()
-		downloadDestinationURLPrivate = nil
+		customDownloadDestinationURL?.stopAccessingSecurityScopedResource()
+		customDownloadDestinationURL = nil
 		dismiss()
 	}
 
@@ -261,7 +232,7 @@ extension FileTransferCenter {
 			peerIsKnown: peerIsKnown,
 			filesize: totalFilesize
 		) {
-			let destinationPath = downloadDestinationURLPrivate?.path ?? ApplicationPaths.userDownloads
+			let destinationPath = downloadDestinationURL?.path
 
 			/* Reserving the file first and finding out on the last block that the
 			 volume was full leaves a part-written download and a peer that spent
@@ -276,7 +247,7 @@ extension FileTransferCenter {
 				return controller.uniqueIdentifier
 			}
 
-			controller.destinationAccessURL = downloadDestinationURLPrivate
+			controller.destinationAccessURL = customDownloadDestinationURL
 			controller.open(withPath: destinationPath)
 		}
 
@@ -345,6 +316,8 @@ extension FileTransferCenter {
 		switch action {
 		case .start:
 			startTransfers(transfers)
+		case .downloadTo:
+			chooseDestination(for: transfers)
 		case .stop:
 			transfers.forEach { $0.closeAndPostNotification(false) }
 		case .remove:
@@ -422,7 +395,7 @@ extension FileTransferCenter {
 	}
 
 	private func startTransfers(_ transfers: [FileTransfer]) {
-		let savePath = downloadDestinationURLPrivate?.path
+		let destination = downloadDestinationURL
 		var pending: [FileTransfer] = []
 
 		for transfer in transfers where transfer.canStart {
@@ -431,17 +404,21 @@ extension FileTransferCenter {
 			} else if let path = transfer.path {
 				guard claimRoom(for: transfer, at: path) else { continue }
 				transfer.open()
-			} else if let savePath {
-				guard claimRoom(for: transfer, at: savePath) else { continue }
-				transfer.destinationAccessURL = downloadDestinationURLPrivate
-				transfer.open(withPath: savePath)
+			} else if let destination {
+				guard claimRoom(for: transfer, at: destination.path) else { continue }
+				transfer.destinationAccessURL = customDownloadDestinationURL
+				transfer.open(withPath: destination.path)
 			} else {
 				pending.append(transfer)
 			}
 		}
 
-		guard !pending.isEmpty else { return }
+		chooseDestination(for: pending)
+	}
 
+	private func chooseDestination(for transfers: [FileTransfer]) {
+		let pending = transfers.filter { $0.isSender == false && $0.canStart && $0.path == nil }
+		guard pending.isEmpty == false else { return }
 		pendingDestinationTransferIDs.formUnion(pending.map(\.uniqueIdentifier))
 		model.isChoosingDestination = true
 	}
@@ -460,6 +437,7 @@ extension FileTransferCenter {
 		case let .success(chosen):
 			url = chosen
 		case let .failure(error):
+			guard (error as? CocoaError)?.code != .userCancelled else { return }
 			fileTransferLogger.error(
 				"Could not choose a download folder: \(error.localizedDescription, privacy: .public)"
 			)

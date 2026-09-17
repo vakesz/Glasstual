@@ -1,7 +1,5 @@
-/* *********************************************************************
- * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
- * Please see Acknowledgements.pdf for additional information.
- *********************************************************************** */
+// Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import CocoaExtensions
 import Foundation
@@ -166,7 +164,7 @@ struct ApplicationSupportTests {
 	@Test("Writing without a transcript folder opens no file")
 	func fileLoggerWriteWithoutTranscriptFolderDoesNotOpenFile() async {
 		let sink = RecordingFileLogSink()
-		let commands = FileLogCommands(sink: sink)
+		let commands = FileLogCommands(sink: FileLogSinkPort { await sink.process($0) })
 		let client = TestClient()
 		let logger = FileLogger(client: client, commands: commands)
 

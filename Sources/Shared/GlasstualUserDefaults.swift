@@ -1,44 +1,10 @@
-/* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- *  * Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *  * Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *  * Neither the name of Textual, "Codeux Software, LLC", nor the
- *    names of its contributors may be used to endorse or promote products
- *    derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
- *
- *********************************************************************** */
+// Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import CocoaExtensions
 import Foundation
 
-nonisolated extension Notification.Name { // nonisolated: value
+nonisolated extension Notification.Name {
 	/** Posted when a preference is written through ``GlasstualUserDefaults``,
 	 which includes a configuration import.
 
@@ -54,7 +20,7 @@ nonisolated extension Notification.Name { // nonisolated: value
 
  Declared beside the store that posts it so an observer matches the spelling the
  poster writes rather than repeating a literal that nothing checks. */
-nonisolated enum PreferenceChangeNotification { // nonisolated: value
+nonisolated enum PreferenceChangeNotification {
 	/// The name of the preference that changed.
 	static let changedKeyUserInfoKey = "changedKey"
 }
@@ -81,6 +47,23 @@ final nonisolated class GlasstualUserDefaults: UserDefaults { // nonisolated: gu
 		return ApplicationGroup.identifier
 	}()
 
+	#if DEBUG
+		/** Installs an E2E fixture from inside the app sandbox before any handle
+		 to its isolated review suite is opened. The harness cannot write another
+		 sandbox's preferences container on current macOS releases. */
+		private static let prepareReviewPreferences: Void = {
+			guard
+				let encoded = ProcessInfo.processInfo.environment["GLASSTUAL_UI_REVIEW_PREFERENCES"],
+				let data = Data(base64Encoded: encoded),
+				let propertyList = try? PropertyListSerialization.propertyList(from: data, format: nil),
+				let domain = propertyList as? [String: Any],
+				let defaults = UserDefaults(suiteName: storageSuiteName)
+			else { return }
+
+			defaults.setPersistentDomain(domain, forName: storageSuiteName)
+		}()
+	#endif
+
 	/** The handle the main actor keeps for the lifetime of the process, so the
 	 preference reads on every render path do not build one per access.
 
@@ -89,7 +72,13 @@ final nonisolated class GlasstualUserDefaults: UserDefaults { // nonisolated: gu
 	 second `UserDefaults` over the same suite reads and writes the same values.
 	 Code outside the main actor takes its own handle from ``suite()``. */
 	@MainActor
-	static let container = GlasstualUserDefaults(storageSuiteName: storageSuiteName)
+	static let container: GlasstualUserDefaults = {
+		#if DEBUG
+			_ = prepareReviewPreferences
+		#endif
+
+		return GlasstualUserDefaults(storageSuiteName: storageSuiteName)
+	}()
 
 	/// The suite this instance is bound to, kept because `UserDefaults` does not
 	/// expose it and the persisted-value reads need it.
@@ -112,7 +101,11 @@ final nonisolated class GlasstualUserDefaults: UserDefaults { // nonisolated: gu
 	 outside the main actor looks at. A caller that reads in a loop should hold
 	 the handle rather than ask for one per read. */
 	static func suite() -> GlasstualUserDefaults {
-		GlasstualUserDefaults(storageSuiteName: storageSuiteName)
+		#if DEBUG
+			_ = prepareReviewPreferences
+		#endif
+
+		return GlasstualUserDefaults(storageSuiteName: storageSuiteName)
 	}
 
 	func setObjectWithoutNotification(_ value: Any?, forKey defaultName: String) {

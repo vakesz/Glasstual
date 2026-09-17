@@ -1,14 +1,5 @@
-/* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- *********************************************************************** */
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import AppKit
 
@@ -18,7 +9,7 @@ import AppKit
  `Decodable` schema, a colour grammar and a loader. Each file held exactly one
  appearance and every value in it was a constant, so the whole path answered a
  question nobody asked: the window has one set of metrics, and this is it. */
-nonisolated enum MainWindowAppearance { // nonisolated: value
+nonisolated enum MainWindowAppearance {
 	/// The size Reset Window gives back, before the window's own minimum
 	/// content size is applied.
 	static let defaultWindowSize = NSSize(width: 800, height: 474)

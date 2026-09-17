@@ -1,14 +1,5 @@
-/* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- *********************************************************************** */
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import Foundation
 import Testing
@@ -24,7 +15,7 @@ import Testing
 @Suite("XPC service privacy manifests")
 struct PrivacyManifestTests {
 	/// One required-reason API category and the spellings that reach it.
-	nonisolated struct Category: Sendable { // nonisolated: value
+	nonisolated struct Category: Sendable {
 		let name: String
 		let tokens: [String]
 
@@ -62,7 +53,7 @@ struct PrivacyManifestTests {
 	 The source list mirrors the target's `sources:` in `project.yml`. It scans
 	 all of `Sources/Shared`; this is deliberately stricter than the target's
 	 individual shared-file list. */
-	nonisolated struct Service: Sendable, CustomStringConvertible { // nonisolated: value
+	nonisolated struct Service: Sendable, CustomStringConvertible {
 		let bundleName: String
 		let sourceDirectories: [String]
 

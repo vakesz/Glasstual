@@ -1,39 +1,5 @@
-/* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- *  * Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *  * Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *  * Neither the name of Textual, "Codeux Software, LLC", nor the
- *    names of its contributors may be used to endorse or promote products
- *    derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
- *
- *********************************************************************** */
+// Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import CocoaExtensions
 import Foundation
@@ -149,7 +115,7 @@ private nonisolated func preferenceInteger<Value: FixedWidthInteger>( // nonisol
 	return Value(String(sign) + digits, radix: radix)
 }
 
-nonisolated extension Bool: PreferenceValue { // nonisolated: value
+nonisolated extension Bool: PreferenceValue {
 	static func preferenceValue(from object: Any) -> Bool? {
 		if let number = object as? NSNumber {
 			return number.boolValue
@@ -167,7 +133,7 @@ nonisolated extension Bool: PreferenceValue { // nonisolated: value
 	}
 }
 
-nonisolated extension Int: PreferenceValue { // nonisolated: value
+nonisolated extension Int: PreferenceValue {
 	static func preferenceValue(from object: Any) -> Int? {
 		if let string = object as? String {
 			return preferenceInteger(from: string, as: Self.self)
@@ -180,7 +146,7 @@ nonisolated extension Int: PreferenceValue { // nonisolated: value
 	}
 }
 
-nonisolated extension UInt: PreferenceValue { // nonisolated: value
+nonisolated extension UInt: PreferenceValue {
 	static func preferenceValue(from object: Any) -> UInt? {
 		if let string = object as? String {
 			return preferenceInteger(from: string, as: Self.self)
@@ -193,7 +159,7 @@ nonisolated extension UInt: PreferenceValue { // nonisolated: value
 	}
 }
 
-nonisolated extension UInt16: PreferenceValue { // nonisolated: value
+nonisolated extension UInt16: PreferenceValue {
 	static func preferenceValue(from object: Any) -> UInt16? {
 		if let string = object as? String {
 			return preferenceInteger(from: string, as: Self.self)
@@ -206,7 +172,7 @@ nonisolated extension UInt16: PreferenceValue { // nonisolated: value
 	}
 }
 
-nonisolated extension Double: PreferenceValue { // nonisolated: value
+nonisolated extension Double: PreferenceValue {
 	static func preferenceValue(from object: Any) -> Double? {
 		guard let value = preferenceNumber(from: object)?.doubleValue, value.isFinite else { return nil }
 		return value
@@ -217,7 +183,7 @@ nonisolated extension Double: PreferenceValue { // nonisolated: value
 	}
 }
 
-nonisolated extension String: PreferenceValue { // nonisolated: value
+nonisolated extension String: PreferenceValue {
 	static func preferenceValue(from object: Any) -> String? {
 		object as? String
 	}
@@ -227,7 +193,7 @@ nonisolated extension String: PreferenceValue { // nonisolated: value
 	}
 }
 
-nonisolated extension Data: PreferenceValue { // nonisolated: value
+nonisolated extension Data: PreferenceValue {
 	static func preferenceValue(from object: Any) -> Data? {
 		object as? Data
 	}
@@ -237,7 +203,7 @@ nonisolated extension Data: PreferenceValue { // nonisolated: value
 	}
 }
 
-nonisolated extension Array: PreferenceValue where Element: PreferenceValue { // nonisolated: value
+nonisolated extension Array: PreferenceValue where Element: PreferenceValue {
 	static func preferenceValue(from object: Any) -> [Element]? {
 		guard let objects = object as? [Any] else {
 			return nil
@@ -280,7 +246,7 @@ nonisolated extension Array: PreferenceValue where Element: PreferenceValue { //
 // MARK: - Keys
 
 /// Which defaults database a preference lives in.
-nonisolated enum PreferenceStorage: CaseIterable, Sendable { // nonisolated: value
+nonisolated enum PreferenceStorage: CaseIterable, Sendable {
 	/// The application-group container shared with the XPC connection host.
 	case container
 	/// `UserDefaults.standard`, for keys AppKit or a vendored library reads out
@@ -288,7 +254,7 @@ nonisolated enum PreferenceStorage: CaseIterable, Sendable { // nonisolated: val
 	case standard
 }
 
-nonisolated struct PreferenceTraits: OptionSet, Sendable { // nonisolated: value
+nonisolated struct PreferenceTraits: OptionSet, Sendable {
 	let rawValue: UInt
 
 	/// Never written to an exported preference file, and ignored on import.
@@ -334,7 +300,7 @@ extension AnyPreferenceKey {
  declarations, so a key cannot exist in the code without existing in the
  registration domain — which is what removes the force-unwrapped reads that used
  to depend on a plist staying in sync by hand. */
-nonisolated struct PreferenceKey<Value: PreferenceValue>: AnyPreferenceKey { // nonisolated: value
+nonisolated struct PreferenceKey<Value: PreferenceValue>: AnyPreferenceKey {
 	let name: String
 	let defaultValue: Value
 	let storage: PreferenceStorage
@@ -402,7 +368,7 @@ nonisolated struct PreferenceKey<Value: PreferenceValue>: AnyPreferenceKey { // 
  writes it — a client list, a policy dictionary. It is declared here so the key
  is catalogued and registered like any other; decoding stays with that
  subsystem. */
-nonisolated struct UntypedPreferenceKey: AnyPreferenceKey { // nonisolated: value
+nonisolated struct UntypedPreferenceKey: AnyPreferenceKey {
 	enum RegisteredDefault: Sendable {
 		case none
 		case emptyDictionary
@@ -460,7 +426,7 @@ nonisolated struct UntypedPreferenceKey: AnyPreferenceKey { // nonisolated: valu
  what shape a name in the family may hold, so an imported file cannot write an
  arbitrary property list under a name nothing declares one by one. The default
  refuses every container, which is what a family of scalar settings wants. */
-nonisolated struct PreferenceKeyFamily: Sendable { // nonisolated: value
+nonisolated struct PreferenceKeyFamily: Sendable {
 	enum Match: UInt, Sendable {
 		case exact = 0
 		case prefix = 1
@@ -516,7 +482,7 @@ nonisolated struct PreferenceKeyFamily: Sendable { // nonisolated: value
 }
 
 /// Namespace for the preference declarations, grouped by area.
-nonisolated enum Preferences {} // nonisolated: value
+nonisolated enum Preferences {}
 
 // MARK: - Typed access
 
@@ -632,7 +598,7 @@ extension PreferenceKey {
  here goes through `GlasstualUserDefaults`, a handle on a suite Foundation
  synchronizes. `UntypedPreferenceKey` carries the same pair below for the same
  reason. */
-nonisolated extension PreferenceKey { // nonisolated: value
+nonisolated extension PreferenceKey {
 	var detachedValue: Value {
 		get { GlasstualUserDefaults.suite()[self] }
 		nonmutating set { GlasstualUserDefaults.suite()[self] = newValue }
@@ -669,7 +635,7 @@ extension AnyPreferenceKey {
  a value type whose extension is nonisolated as a whole — as the typed key's
  detached pair is. Every access goes through `GlasstualUserDefaults`, a handle on
  a suite Foundation synchronizes. */
-nonisolated extension UntypedPreferenceKey { // nonisolated: value
+nonisolated extension UntypedPreferenceKey {
 	var detachedPropertyListValue: PropertyListValue? {
 		get { GlasstualUserDefaults.suite().propertyListValue(for: self) }
 		nonmutating set { GlasstualUserDefaults.suite().setPropertyListValue(newValue, for: self) }

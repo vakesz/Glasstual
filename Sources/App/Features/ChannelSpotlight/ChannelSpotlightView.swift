@@ -1,7 +1,5 @@
-/* *********************************************************************
- * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
- * Please see Acknowledgements.pdf for additional information.
- *********************************************************************** */
+// Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import SwiftUI
 
@@ -9,18 +7,22 @@ struct ChannelSpotlightScene: Scene {
 	let scenes: ApplicationScenes
 
 	var body: some Scene {
-		Window(String(localized: .ChannelSpotlight.windowTitle), id: ApplicationSceneID.channelSpotlight) {
+		WindowGroup(
+			String(localized: .ChannelSpotlight.windowTitle),
+			id: ApplicationSceneID.channelSpotlight,
+			for: SingletonSceneValue.self
+		) { _ in
 			ChannelSpotlightSceneRoot(scenes: scenes)
-		}
-		.windowResizability(.contentSize)
-		/* A spotlight panel, not a document window: it floats over what it
-		 searches, opens in the middle of the screen, carries no chrome of its
-		 own so the glass effect is not drawn on an opaque square, and is never
-		 restored -- a search nobody asked to resume. */
-		.windowStyle(.plain)
-		.windowLevel(.floating)
-		.defaultPosition(.center)
-		.restorationBehavior(.disabled)
+		} defaultValue: { .instance }
+			.windowResizability(.contentSize)
+			/* A spotlight panel, not a document window: it floats over what it
+			 searches, opens in the middle of the screen, carries no chrome of its
+			 own so the glass effect is not drawn on an opaque square, and is never
+			 restored -- a search nobody asked to resume. */
+			.windowStyle(.plain)
+			.windowLevel(.floating)
+			.defaultPosition(.center)
+			.restorationBehavior(.disabled)
 	}
 }
 

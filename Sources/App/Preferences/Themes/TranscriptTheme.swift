@@ -1,21 +1,12 @@
-/* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- *********************************************************************** */
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import AppKit
 import Foundation
 
 /// A portable sRGB colour. Theme files use components rather than archived
 /// `NSColor` objects so they remain readable and stable across macOS releases.
-nonisolated struct TranscriptThemeColor: Codable, Equatable, Sendable { // nonisolated: value
+nonisolated struct TranscriptThemeColor: Codable, Equatable, Sendable {
 	var red: Double
 	var green: Double
 	var blue: Double
@@ -57,7 +48,7 @@ nonisolated struct TranscriptThemeColor: Codable, Equatable, Sendable { // nonis
  somebody chose: the shipped palette has one for every role, and a colour the
  reader picked themselves speaks for itself in both settings, which is why
  editing `light` or `dark` drops the variant beside it. */
-nonisolated struct AdaptiveTranscriptColor: Codable, Equatable, Sendable { // nonisolated: value
+nonisolated struct AdaptiveTranscriptColor: Codable, Equatable, Sendable {
 	var light: TranscriptThemeColor {
 		didSet { highContrastLight = nil }
 	}
@@ -103,14 +94,14 @@ nonisolated struct AdaptiveTranscriptColor: Codable, Equatable, Sendable { // no
 	}
 }
 
-nonisolated enum TranscriptThemeLayout: String, Codable, CaseIterable, Sendable { // nonisolated: value
+nonisolated enum TranscriptThemeLayout: String, Codable, CaseIterable, Sendable {
 	case lines
 	case bubbles
 }
 
 /// Every colour the native transcript draws, named by purpose rather than by
 /// where a former stylesheet happened to use it.
-nonisolated struct TranscriptThemePalette: Codable, Equatable, Sendable { // nonisolated: value
+nonisolated struct TranscriptThemePalette: Codable, Equatable, Sendable {
 	var background: AdaptiveTranscriptColor
 	var primaryText: AdaptiveTranscriptColor
 	var secondaryText: AdaptiveTranscriptColor
@@ -213,7 +204,7 @@ nonisolated struct TranscriptThemePalette: Codable, Equatable, Sendable { // non
 /// The one native transcript theme format. It is both the runtime model and
 /// the payload written by Export Theme, avoiding adapters between preference,
 /// file, and rendering representations.
-nonisolated struct TranscriptTheme: Codable, Equatable, Sendable { // nonisolated: value
+nonisolated struct TranscriptTheme: Codable, Equatable, Sendable {
 	/// Version 2 replaced the `<>` around nicknames in the default format with
 	/// a trailing colon; version 3 gave every colour role a variant for the
 	/// system's increased-contrast setting. An older document is read and
@@ -360,7 +351,7 @@ nonisolated struct TranscriptTheme: Codable, Equatable, Sendable { // nonisolate
 	 They differ exactly when `migrated()` moved the document forward, which is
 	 what tells a caller to write the upgraded document back instead of
 	 migrating the same file again at every launch. */
-	nonisolated struct Document: Equatable, Sendable { // nonisolated: value
+	nonisolated struct Document: Equatable, Sendable {
 		let theme: TranscriptTheme
 		let formatVersion: Int
 
@@ -417,7 +408,7 @@ nonisolated struct TranscriptTheme: Codable, Equatable, Sendable { // nonisolate
 
 /// Why a stored or imported theme document was refused, in the words the theme
 /// sheet shows.
-nonisolated enum TranscriptThemeCodingError: LocalizedError, Equatable, Sendable { // nonisolated: value
+nonisolated enum TranscriptThemeCodingError: LocalizedError, Equatable, Sendable {
 	case invalidDocument
 	case unsupportedVersion(Int)
 

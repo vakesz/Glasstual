@@ -1,14 +1,5 @@
-/* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- *********************************************************************** */
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import AppKit
 import SwiftUI
@@ -18,16 +9,21 @@ struct AboutScene: Scene {
 		/* An About box is a panel: it belongs above the windows it describes, it
 		 is not something the Window menu lists or the system restores at the
 		 next launch, and it holds nothing worth restoring. */
-		UtilityWindow(ApplicationInfo.applicationName(), id: ApplicationSceneID.about) {
+		WindowGroup(
+			ApplicationInfo.applicationName(),
+			id: ApplicationSceneID.about,
+			for: SingletonSceneValue.self
+		) { _ in
 			AboutView(
 				applicationIcon: Image(nsImage: NSApp.applicationIconImage),
 				openAcknowledgements: {
 					AppServices.delegate.menuController?.openAcknowledgements(nil)
 				}
 			)
-		}
-		.windowResizability(.contentSize)
-		.restorationBehavior(.disabled)
+		} defaultValue: { .instance }
+			.windowResizability(.contentSize)
+			.windowLevel(.floating)
+			.restorationBehavior(.disabled)
 	}
 }
 

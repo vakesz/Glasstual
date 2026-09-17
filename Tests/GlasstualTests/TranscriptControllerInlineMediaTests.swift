@@ -1,13 +1,11 @@
-/* *********************************************************************
- * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
- * Please see Acknowledgements.pdf for additional information.
- *********************************************************************** */
+// Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import AppKit
 @testable import Glasstual
 import Testing
 
-nonisolated enum TranscriptMediaRetirement: CaseIterable, Sendable { // nonisolated: value
+nonisolated enum TranscriptMediaRetirement: CaseIterable, Sendable {
 	case trim, clear, replacement
 }
 

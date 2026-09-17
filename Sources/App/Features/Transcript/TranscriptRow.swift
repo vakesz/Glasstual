@@ -1,18 +1,9 @@
-/* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- *********************************************************************** */
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import Foundation
 
-nonisolated struct TranscriptTextTraits: OptionSet, Equatable, Sendable { // nonisolated: value
+nonisolated struct TranscriptTextTraits: OptionSet, Equatable, Sendable {
 	let rawValue: UInt8
 
 	static let bold = Self(rawValue: 1 << 0)
@@ -23,18 +14,18 @@ nonisolated struct TranscriptTextTraits: OptionSet, Equatable, Sendable { // non
 	static let highlighted = Self(rawValue: 1 << 5)
 }
 
-nonisolated enum TranscriptRunColor: Equatable, Sendable { // nonisolated: value
+nonisolated enum TranscriptRunColor: Equatable, Sendable {
 	case palette(Int)
 	case rgb(TranscriptThemeColor)
 }
 
-nonisolated enum TranscriptRunAction: Equatable, Sendable { // nonisolated: value
+nonisolated enum TranscriptRunAction: Equatable, Sendable {
 	case link(URL)
 	case channel(String)
 	case nickname(String)
 }
 
-nonisolated struct TranscriptTextRun: Equatable, Sendable { // nonisolated: value
+nonisolated struct TranscriptTextRun: Equatable, Sendable {
 	var text: String
 	var traits: TranscriptTextTraits = []
 	var foreground: TranscriptRunColor?
@@ -42,7 +33,7 @@ nonisolated struct TranscriptTextRun: Equatable, Sendable { // nonisolated: valu
 	var action: TranscriptRunAction?
 }
 
-nonisolated struct TranscriptBody: Equatable, Sendable { // nonisolated: value
+nonisolated struct TranscriptBody: Equatable, Sendable {
 	var plainText = ""
 	var runs: [TranscriptTextRun] = []
 	var links: [LinkParserResult] = []
@@ -50,7 +41,7 @@ nonisolated struct TranscriptBody: Equatable, Sendable { // nonisolated: value
 	var isHighlight = false
 }
 
-nonisolated enum TranscriptMarker: Equatable, Sendable { // nonisolated: value
+nonisolated enum TranscriptMarker: Equatable, Sendable {
 	case date(String)
 	case currentSession(String)
 	case unread(String)
@@ -59,7 +50,7 @@ nonisolated enum TranscriptMarker: Equatable, Sendable { // nonisolated: value
 /// One complete native transcript row. It is independent of AppKit so render
 /// jobs can build it concurrently and the view can restyle it without parsing
 /// source text or markup again.
-nonisolated struct TranscriptRow: Equatable, Sendable { // nonisolated: value
+nonisolated struct TranscriptRow: Equatable, Sendable {
 	var lineNumber: String
 	var receivedAt: Date
 	var nickname: String?
@@ -130,7 +121,7 @@ nonisolated struct TranscriptRow: Equatable, Sendable { // nonisolated: value
 	}
 }
 
-nonisolated struct TranscriptInlineImage: Equatable, Sendable { // nonisolated: value
+nonisolated struct TranscriptInlineImage: Equatable, Sendable {
 	var lineNumber: String
 	var linkIdentifier: String
 	var sourceURL: URL

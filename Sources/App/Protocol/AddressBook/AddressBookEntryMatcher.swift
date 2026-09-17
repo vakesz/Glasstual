@@ -1,19 +1,10 @@
-/* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- *********************************************************************** */
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import Foundation
 
 /// One element of a compiled hostmask glob.
-nonisolated enum HostmaskGlobToken: Equatable, Sendable { // nonisolated: value
+nonisolated enum HostmaskGlobToken: Equatable, Sendable {
 	case literal(Unicode.Scalar)
 	/// `?`
 	case anyCharacter
@@ -27,7 +18,7 @@ nonisolated enum HostmaskGlobToken: Equatable, Sendable { // nonisolated: value
 /// exponentially backtrackable: six wildcards against a 70 character
 /// hostmask took seconds, nine took minutes, on the main thread, against a
 /// server-controlled subject. This matcher is linear in the worst case.
-nonisolated enum HostmaskGlob { // nonisolated: value
+nonisolated enum HostmaskGlob {
 	/// `\` escapes the character that follows it, so a mask can contain a
 	/// literal `*` or `?`; anywhere else it is an ordinary character.
 	static func compile(_ hostmask: String) -> [HostmaskGlobToken] {
@@ -165,7 +156,7 @@ nonisolated enum HostmaskGlob { // nonisolated: value
  A value rather than a class: everything it holds is one, and an
  `AddressBookEntry` stores it, so a reference here made a struct that claims to
  be a value type hold a reference after all. */
-nonisolated struct AddressBookEntryMatcher: Sendable { // nonisolated: value
+nonisolated struct AddressBookEntryMatcher: Sendable {
 	let regularExpressionPattern: String
 	let trackingNickname: String?
 

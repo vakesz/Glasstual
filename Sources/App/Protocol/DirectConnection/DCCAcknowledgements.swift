@@ -1,12 +1,10 @@
-/* *********************************************************************
- * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
- * Please see Acknowledgements.pdf for additional information.
- *********************************************************************** */
+// Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import Foundation
 
 /// DCC SEND uses cumulative network-order UInt32 ACKs, modulo 4 GiB.
-nonisolated struct DCCAcknowledgements { // nonisolated: value
+nonisolated struct DCCAcknowledgements {
 	private var pending: [UInt8] = []
 	private(set) var hasBytes = false
 	private(set) var acknowledged: UInt64

@@ -1,7 +1,5 @@
-/* *********************************************************************
- * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
- * Please see Acknowledgements.pdf for additional information.
- *********************************************************************** */
+// Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import CocoaExtensions
 import Foundation
@@ -50,10 +48,8 @@ struct PreferencesTransferBoundsTests {
 			== PreferencesStoredValueRepair())
 
 		let session = fixture.session()
-		let sparse = try PropertyListSerialization.data(
-			fromPropertyList: [joins.name: false] as [String: Any], format: .xml, options: 0
-		)
-		let sparseURL = try fixture.write(sparse)
+		let sparse = PreferencesArchive(values: [joins.name: false], unset: [], clients: [])
+		let sparseURL = try fixture.write(sparse.encoded())
 		await session.prepareImport(from: sparseURL)
 		#expect(session.errorMessage == nil)
 		await session.commitPreview()
@@ -62,10 +58,8 @@ struct PreferencesTransferBoundsTests {
 		#expect(fixture.stores[stored: joins] == false)
 		session.acknowledge()
 
-		let carrying = try PropertyListSerialization.data(
-			fromPropertyList: [limit.name: 50] as [String: Any], format: .xml, options: 0
-		)
-		let carryingURL = try fixture.write(carrying)
+		let carrying = PreferencesArchive(values: [limit.name: 50], unset: [], clients: [])
+		let carryingURL = try fixture.write(carrying.encoded())
 		await session.prepareImport(from: carryingURL)
 		#expect(session.preview == nil)
 		#expect(session.errorMessage != nil)

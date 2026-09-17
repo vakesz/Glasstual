@@ -1,44 +1,10 @@
-/* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- *  * Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *  * Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *  * Neither the name of Textual, "Codeux Software, LLC", nor the
- *    names of its contributors may be used to endorse or promote products
- *    derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
- *
- *********************************************************************** */
+// Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import CoreData
 import Foundation
 
-nonisolated enum ScrollbackAttribute: String { // nonisolated: value
+nonisolated enum ScrollbackAttribute: String {
 	case entryCreationDate
 	case entryIdentifier
 	case logLineData
@@ -49,7 +15,7 @@ nonisolated enum ScrollbackAttribute: String { // nonisolated: value
 
 /// The value stored in Core Data between the archive and application models.
 /// It is a native `Sendable` value because history no longer crosses XPC.
-nonisolated struct ScrollbackEntry: Sendable { // nonisolated: value
+nonisolated struct ScrollbackEntry: Sendable {
 	let data: Data
 	let uniqueIdentifier: String
 	let viewIdentifier: String
@@ -106,7 +72,7 @@ nonisolated struct ScrollbackEntry: Sendable { // nonisolated: value
 	}
 }
 
-nonisolated struct ScrollbackFetchRequest: Sendable { // nonisolated: value
+nonisolated struct ScrollbackFetchRequest: Sendable {
 	enum Kind: Sendable {
 		case newest(ascending: Bool, fetchLimit: UInt, limitToDate: Date?)
 		case before(uniqueIdentifier: String, fetchLimit: UInt, limitToDate: Date?)
@@ -117,41 +83,41 @@ nonisolated struct ScrollbackFetchRequest: Sendable { // nonisolated: value
 	let kind: Kind
 }
 
-nonisolated enum ScrollbackFetchFailure: Equatable, Sendable { // nonisolated: value
+nonisolated enum ScrollbackFetchFailure: Equatable, Sendable {
 	case unavailable, invalidRequest, missingCursor, ambiguousCursor, invalidEntry
 	case read(String)
 }
 
-nonisolated enum ScrollbackFetchOutcome: Sendable { // nonisolated: value
+nonisolated enum ScrollbackFetchOutcome: Sendable {
 	/// Only a successful empty page proves exhaustion at the requested cursor.
 	case page([ScrollbackEntry])
 	case failed(ScrollbackFetchFailure)
 	case cancelled
 }
 
-nonisolated enum ScrollbackStoreOperation: Sendable { // nonisolated: value
+nonisolated enum ScrollbackStoreOperation: Sendable {
 	case write, reset, forget, close, save, resize
 }
 
-nonisolated enum ScrollbackSaveOutcome: Equatable, Sendable { // nonisolated: value
+nonisolated enum ScrollbackSaveOutcome: Equatable, Sendable {
 	case saved
 	case failed(String)
 }
 
-nonisolated enum ScrollbackWriteOutcome: Equatable, Sendable { // nonisolated: value
+nonisolated enum ScrollbackWriteOutcome: Equatable, Sendable {
 	case accepted
 	case unavailable
 	case failed(String)
 }
 
-nonisolated enum ScrollbackDeletionOutcome: Sendable { // nonisolated: value
+nonisolated enum ScrollbackDeletionOutcome: Sendable {
 	case deleted(ScrollbackDatabase.DeletionResult)
 	case unavailable
 	case failed(String)
 }
 
 /// A database position, never an archive key or a transcript display identifier.
-nonisolated struct ScrollbackRowCursor: Codable, Equatable, Sendable { // nonisolated: value
+nonisolated struct ScrollbackRowCursor: Codable, Equatable, Sendable {
 	let timestamp: TimeInterval
 	let insertionIdentifier: Int64
 	let lineIdentifier: String

@@ -1,15 +1,6 @@
-/* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- *********************************************************************** */
+// Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import AppKit
 
@@ -167,7 +158,7 @@ private struct CompletionRequest {
  beginning with `/` was read as starting at the field's start and completed as
  a command, and a nickname on the previous line was offered as the word being
  typed. */
-nonisolated enum NicknameCompletionDelimiters { // nonisolated: value
+nonisolated enum NicknameCompletionDelimiters {
 	/// U+002C COMMA, which separates nicknames the user is addressing.
 	private static let comma: UniChar = 0x2C
 	/// U+003A COLON, the customary suffix after an addressed nickname.

@@ -1,40 +1,6 @@
-/* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- *  * Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *  * Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *  * Neither the name of Textual, "Codeux Software, LLC", nor the
- *    names of its contributors may be used to endorse or promote products
- *    derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
- *
- *********************************************************************** */
+// Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 @testable import Glasstual
 import Testing
@@ -45,7 +11,7 @@ struct ClientWireUtilitiesTests {
 	@Test("Mode changes are split into batches no larger than the server's limit")
 	func modeChangesAreBatchedAtServerLimit() {
 		#expect(
-			ClientWireUtilities.compileModeChanges(
+			ModeParser.compileModeChanges(
 				symbol: "b",
 				isSet: true,
 				parameters: ["one", "", "two", "three", "four"],
@@ -57,7 +23,7 @@ struct ClientWireUtilitiesTests {
 		)
 
 		#expect(
-			ClientWireUtilities.compileModeChanges(
+			ModeParser.compileModeChanges(
 				symbol: "o",
 				isSet: false,
 				parameters: ["alice", "bob"],
@@ -72,7 +38,7 @@ struct ClientWireUtilitiesTests {
 	 have survived. The mode string and its parameters stay apart. */
 	@Test("A parameter containing a space stays one parameter")
 	func parametersWithSpacesSurviveCompilation() throws {
-		let groups = ClientWireUtilities.compileModeChanges(
+		let groups = ModeParser.compileModeChanges(
 			symbol: "b",
 			isSet: true,
 			parameters: ["$r:real name", "*!*@example.org"],
@@ -95,7 +61,7 @@ struct ClientWireUtilitiesTests {
 	)
 	func aSymbolThatIsNotOneModeLetterCompilesToNothing(_ symbol: String) {
 		#expect(
-			ClientWireUtilities.compileModeChanges(
+			ModeParser.compileModeChanges(
 				symbol: symbol,
 				isSet: false,
 				parameters: ["one", "two"],
@@ -127,14 +93,14 @@ struct ClientWireUtilitiesTests {
 	@Test("Nickname formatting keeps the mode marker and pads in UTF-16 units")
 	func nicknameFormattingPreservesMarkersAndUTF16Padding() {
 		#expect(
-			ClientWireUtilities.formatNickname("alice", modeSymbol: "@", format: "[%@%8n] %%")
+			formattedNickname("alice", modeSymbol: "@", format: "[%@%8n] %%")
 				== "[@alice   ] %"
 		)
 		#expect(
-			ClientWireUtilities.formatNickname("🦊", modeSymbol: "", format: "%3n") == "🦊 "
+			formattedNickname("🦊", modeSymbol: "", format: "%3n") == "🦊 "
 		)
 		#expect(
-			ClientWireUtilities.formatNickname("bob", modeSymbol: "+", format: "%-5n%@") == "  bob+"
+			formattedNickname("bob", modeSymbol: "+", format: "%-5n%@") == "  bob+"
 		)
 	}
 
@@ -145,7 +111,7 @@ struct ClientWireUtilitiesTests {
 	func chatHistoryRequestsAreTaggedByTheTransport() throws {
 		#expect(
 			try SendingMessage.string(
-				command: ClientWireUtilities.chatHistoryCommand,
+				command: chatHistoryCommand,
 				arguments: ["BEFORE", "#swift", "timestamp=2026-08-26T12:00:00.000Z", "50"],
 				tags: ["label": "history-1"]
 			) == "@label=history-1 CHATHISTORY BEFORE #swift timestamp=2026-08-26T12:00:00.000Z 50"
@@ -155,7 +121,7 @@ struct ClientWireUtilitiesTests {
 	@Test("A netsplit nickname list under the limit keeps its order")
 	func shortNetsplitNicknameListsRetainOrder() {
 		#expect(
-			ClientWireUtilities.netsplitNicknameList(["alice", "bob", "carol"], limit: 10)
+			netsplitNicknameList(["alice", "bob", "carol"], limit: 10)
 				== "alice, bob, carol"
 		)
 	}
@@ -166,7 +132,7 @@ struct ClientNicknameFormatPaddingTests {
 	/// `scanInt()` yields Int.min for this format, and `abs(Int.min)` traps.
 	@Test
 	func extremeNegativePaddingDoesNotTrap() {
-		let formatted = ClientWireUtilities.formatNickname(
+		let formatted = formattedNickname(
 			"nick",
 			modeSymbol: "@",
 			format: "%-9223372036854775808n"

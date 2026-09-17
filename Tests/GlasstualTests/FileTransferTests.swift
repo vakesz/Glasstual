@@ -1,7 +1,5 @@
-/* *********************************************************************
- * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
- * Please see Acknowledgements.pdf for additional information.
- *********************************************************************** */
+// Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import CocoaExtensions
 import Darwin
@@ -509,9 +507,11 @@ struct FileTransferTests {
 		receiver.prepareForPermanentDestruction()
 	}
 
-	@Test("Notification Accept asks for the normal destination and body click only selects")
+	@Test("Accept uses the default destination and Download To asks for a one-off folder")
 	func notificationUsesNormalDestination() throws {
-		let center = FileTransferCenter()
+		let destination = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
+			.appendingPathComponent(UUID().uuidString, isDirectory: true)
+		let center = FileTransferCenter(defaultDownloadDestinationURL: destination)
 		let transfer = try receiver(on: TestClient())
 		center.model.add(transfer)
 		center.model.filter = .sending
@@ -520,19 +520,24 @@ struct FileTransferTests {
 			clientIdentifier: transfer.clientId,
 			accept: false
 		))
-		#expect(center.model.filter == .all)
-		#expect(center.model.selection == [transfer.uniqueIdentifier])
+		#expect(center.model.filter == .all && center.model.selection == [transfer.uniqueIdentifier])
 		#expect(!center.model.isChoosingDestination)
 		#expect(center.respondToNotification(
 			for: transfer.uniqueIdentifier,
 			clientIdentifier: transfer.clientId,
 			accept: true
 		))
-		#expect(center.model.isChoosingDestination)
-		#expect(center.pendingDestinationTransferIDs == [transfer.uniqueIdentifier])
-		#expect(transfer.path == nil)
+		#expect(!center.model.isChoosingDestination && center.pendingDestinationTransferIDs.isEmpty)
+		#expect(transfer.path == destination.path)
 		#expect(!center.respondToNotification(for: "stale", clientIdentifier: nil, accept: true))
 		#expect(!center.respondToNotification(for: transfer.uniqueIdentifier, clientIdentifier: "other", accept: true))
+
+		let oneOff = try receiver(on: TestClient())
+		center.model.add(oneOff)
+		center.perform(.downloadTo, on: [oneOff.uniqueIdentifier])
+		#expect(center.model.isChoosingDestination)
+		#expect(center.pendingDestinationTransferIDs == [oneOff.uniqueIdentifier])
+		#expect(oneOff.path == nil)
 	}
 
 	@Test("Reverse ACCEPT lookup matches a receiver, token, peer, client and wire filename")

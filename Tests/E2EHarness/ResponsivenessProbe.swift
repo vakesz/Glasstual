@@ -18,15 +18,27 @@ enum ResponsivenessProbe {
 				throw HarnessFailure.assertion("App exited while responsiveness probe was active")
 			}
 			let start = HarnessFiles.now
-			try HarnessFiles.write(String(start + 2), to: prefix + "probe-deadline")
-			guard let windows = try driver
-				.value(driver.root, kAXWindowsAttribute, deadline: start + 2) as? [AXUIElement],
-				let window = windows.first,
-				try driver.value(window, kAXTitleAttribute, deadline: start + 2) is String
-			else {
+			let deadline = start + 2
+			try HarnessFiles.write(String(deadline), to: prefix + "probe-deadline")
+			var answered = false
+			repeat {
+				if let windows = try driver.value(
+					driver.root,
+					kAXWindowsAttribute,
+					deadline: deadline
+				) as? [AXUIElement],
+					let window = windows.first,
+					try driver.value(window, kAXTitleAttribute, deadline: deadline) is String
+				{
+					answered = true
+					break
+				}
+				try await Task.sleep(for: .milliseconds(50))
+			} while HarnessFiles.now < deadline
+			guard answered else {
 				throw HarnessFailure.assertion("Independent AX responsiveness probe failed")
 			}
-			try HarnessFiles.check(start + 2)
+			try HarnessFiles.check(deadline)
 			count += 1
 			try HarnessFiles.write("\(count) \(HarnessFiles.now - start)", to: prefix + "probe-evidence")
 			// Keep a deadline armed even while sleeping or if the probe process dies.

@@ -1,14 +1,5 @@
-/* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- *********************************************************************** */
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import Foundation
 import Synchronization
@@ -19,7 +10,7 @@ import Synchronization
  and the reason goes to the unified log. ``logDescription`` is therefore a
  diagnostic and stays untranslated — a `LocalizedError` here would put four
  English literals where the catalogs are the only source of user-facing text. */
-nonisolated enum InlineImageError: Error, Sendable { // nonisolated: value
+nonisolated enum InlineImageError: Error, Sendable {
 	case invalidResponse
 	case unsupportedContent
 	case bodyTooLarge

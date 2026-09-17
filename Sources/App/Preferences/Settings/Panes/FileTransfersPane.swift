@@ -1,7 +1,5 @@
-/* *********************************************************************
- * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
- * Please see Acknowledgements.pdf for additional information.
- *********************************************************************** */
+// Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import SwiftUI
 
@@ -25,6 +23,8 @@ struct FileTransfersPane: View {
 				accessibilityLabel: .Settings.downloadDestination,
 				folder: model.downloadFolder,
 				emptyTitle: .Settings.noLocationSelected,
+				clearTitle: .Settings.fileTransfersUseDownloads,
+				canClear: model.usesCustomDownloadFolder,
 				select: { model.selectDownloadFolder() },
 				clear: { model.clearDownloadFolder() }
 			)

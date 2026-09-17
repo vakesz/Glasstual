@@ -128,6 +128,7 @@ enum AppSession {
 		app.executableURL = previous.executableURL
 		app.arguments = previous.arguments
 		app.environment = previous.environment
+		app.environment?.removeValue(forKey: "GLASSTUAL_UI_REVIEW_PREFERENCES")
 		app.standardOutput = FileHandle.nullDevice
 		app.standardError = FileHandle.nullDevice
 		try HarnessFiles.launch(app)

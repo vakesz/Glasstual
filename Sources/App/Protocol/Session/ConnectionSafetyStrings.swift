@@ -1,14 +1,5 @@
-/* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- *********************************************************************** */
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import Foundation
 
@@ -20,7 +11,7 @@ import Foundation
  SASL exchange the server never answered. They are grouped by the refusal
  rather than by the feature because each of them has to say plainly what was
  refused and why; a bare failure reads as the client being broken. */
-nonisolated enum ConnectionSafetyStrings { // nonisolated: value
+nonisolated enum ConnectionSafetyStrings {
 	enum DirectChat {
 		static func refusedAddress(sender: String, address: String) -> String {
 			String(localized: .ConnectionSafety.directChatOfferRefusedAddress(sender, address))

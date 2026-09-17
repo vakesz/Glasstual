@@ -1,13 +1,11 @@
-/* *********************************************************************
- * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
- * Please see Acknowledgements.pdf for additional information.
- *********************************************************************** */
+// Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import CocoaExtensions
 import Foundation
 import os
 
-nonisolated enum PreferencesTransferError: LocalizedError { // nonisolated: value
+nonisolated enum PreferencesTransferError: LocalizedError {
 	case invalidDocument
 	case unsupportedVersion
 	case tooLarge
@@ -34,7 +32,7 @@ nonisolated enum PreferencesTransferError: LocalizedError { // nonisolated: valu
  An effective value and a deliberately unset key are two different things, so
  the archive records both: `values` is what the source had, `unset` is what it
  had deliberately removed. */
-nonisolated struct PreferencesArchive: Equatable, Sendable { // nonisolated: value
+nonisolated struct PreferencesArchive: Equatable, Sendable {
 	enum Source: Sendable {
 		case portable, localRecovery
 	}
@@ -203,14 +201,14 @@ nonisolated struct PreferencesArchive: Equatable, Sendable { // nonisolated: val
 	}
 }
 
-nonisolated enum PreferencesTransferMode: String, CaseIterable, Sendable { // nonisolated: value
+nonisolated enum PreferencesTransferMode: String, CaseIterable, Sendable {
 	case merge
 	case restore
 }
 
 /** A change an imported file makes that can run a command or widen what
  Glasstual trusts, which the preview spells out rather than counts. */
-nonisolated enum PreferencesRiskyChange: Hashable, Sendable { // nonisolated: value
+nonisolated enum PreferencesRiskyChange: Hashable, Sendable {
 	/// A chat filter the file adds or changes whose action sends commands.
 	case messageRuleAction(title: String, action: String)
 	/// Link schemes the transcript would start treating as links.
@@ -222,7 +220,7 @@ nonisolated enum PreferencesRiskyChange: Hashable, Sendable { // nonisolated: va
 	case connectCommands(server: String, commands: [String])
 }
 
-nonisolated struct PreferencesTransferPlan: Sendable { // nonisolated: value
+nonisolated struct PreferencesTransferPlan: Sendable {
 	let before: PreferencesArchive
 	let result: PreferencesArchive
 	let changedKeys: [String]

@@ -4,7 +4,7 @@ import Testing
 
 @Suite(.serialized)
 struct ConnectionLifecycleE2ETests {
-	nonisolated static let scenarios = [ // nonisolated: let
+	nonisolated static let scenarios = [
 		"onboardingSkip", "onboardingFinish", "dccSuccess", "dccCancel", "burstResponsiveness",
 		"rejectionRetry",
 		"repeatedRejection",
@@ -20,7 +20,7 @@ struct ConnectionLifecycleE2ETests {
 	/// The scenarios `ScenarioKind.hasFixtureTest` excludes. This bundle cannot
 	/// link the harness, so the supervisor's completion check is what proves the
 	/// two lists still agree: it rejects a missing or unexpected case.
-	nonisolated static let withoutFixtureTest = ["settingsSnapshot", "onboardingSkip"] // nonisolated: let
+	nonisolated static let withoutFixtureTest = ["settingsSnapshot", "onboardingSkip"]
 
 	@Test(arguments: scenarios + scenarios.filter { !withoutFixtureTest.contains($0) }.map { "fixture." + $0 })
 	func connectionMatrix(kind: String) async throws {
@@ -144,10 +144,10 @@ struct ConnectionLifecycleE2ETests {
 				try #require(!FileManager.default.fileExists(atPath: root.appendingPathComponent("port").path))
 			} else {
 				try #require(try read("onboarding-network", in: root) ==
-					"custom loopback server registered; manual QUIT observed")
+					"custom loopback server registered; application QUIT observed")
 				try #require(try read("registration-1", in: root) ==
 					"CAP LS 302; NICK e2euser; USER e2euser 0 * :Synthetic E2E User; CAP END")
-				try #require(try read("disconnect-wire", in: root) == "QUIT E2E_QUIT and EOF")
+				try #require(try read("disconnect-wire", in: root) == "QUIT onboarding default and EOF")
 			}
 			return
 		}

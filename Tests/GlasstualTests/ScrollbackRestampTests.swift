@@ -1,7 +1,5 @@
-/* *********************************************************************
- * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
- * Please see Acknowledgements.pdf for additional information.
- *********************************************************************** */
+// Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import CoreData
 import Foundation
@@ -13,7 +11,7 @@ import Testing
 /// a different clock. These cover the one-off pass that corrects them.
 @Suite("Historic log re-stamp", .serialized)
 struct ScrollbackRestampTests {
-	private nonisolated static let view = "restamp-view" // nonisolated: let
+	private nonisolated static let view = "restamp-view"
 
 	private func makeDirectory() throws -> URL {
 		let directory = URL(fileURLWithPath: NSTemporaryDirectory())

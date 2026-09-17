@@ -1,14 +1,5 @@
-/* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- *********************************************************************** */
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import AppKit
 import CocoaExtensions
@@ -16,7 +7,7 @@ import CocoaExtensions
 /// Where an insertion landed once it has replaced a selection. The replaced
 /// range describes storage that no longer exists, so nothing may be measured
 /// against it afterwards.
-nonisolated enum MenuInsertionRangePolicy { // nonisolated: value
+nonisolated enum MenuInsertionRangePolicy {
 	static func insertedRange(replacing replaced: NSRange, with insertion: String) -> NSRange {
 		NSRange(location: replaced.location, length: insertion.utf16.count)
 	}
@@ -40,7 +31,7 @@ struct MenuServerActionPolicy {
 
 /// What a duplicated connection is called. A trailing underscore read as a
 /// truncated name; "copy" is the word the Finder uses for the same idea.
-nonisolated enum MenuServerNamePolicy { // nonisolated: value
+nonisolated enum MenuServerNamePolicy {
 	static func duplicateName(of name: String) -> String {
 		ApplicationStrings.duplicatedName(name)
 	}
@@ -95,7 +86,7 @@ enum MenuSearchProvider {
 }
 
 /// Where a Paste command puts what it is carrying.
-nonisolated enum MenuPasteTarget: Sendable { // nonisolated: value
+nonisolated enum MenuPasteTarget: Sendable {
 	/// Whatever holds the keyboard.
 	case firstResponder
 	/// The chat input, which is where the main window sends a paste that has no

@@ -1,7 +1,5 @@
-/* *********************************************************************
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- * Please see Acknowledgements.pdf for additional information.
- *********************************************************************** */
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
 
 import Foundation
 @testable import Glasstual
@@ -45,24 +43,26 @@ struct InlineImageLoaderTests {
 		#expect(inputPlayCount == expectedPlayCount)
 		let preview = try await InlineImageDecoder.prepare(data, limits: .init())
 		#expect(preview.data == data)
-		let source = try #require(CGImageSourceCreateWithData(preview.data as CFData, nil))
-		#expect(CGImageSourceGetCount(source) == 2)
-		let properties = try #require(CGImageSourceCopyProperties(source, nil) as? [CFString: Any])
+		let decodedSource = try #require(CGImageSourceCreateWithData(preview.data as CFData, nil))
+		#expect(CGImageSourceGetCount(decodedSource) == 2)
+		let properties = try #require(CGImageSourceCopyProperties(decodedSource, nil) as? [CFString: Any])
 		let gif = try #require(properties[kCGImagePropertyGIFDictionary] as? [CFString: Any])
 		#expect((gif[kCGImagePropertyGIFLoopCount] as? NSNumber)?.intValue == inputPlayCount)
 		for index in 0 ..< 2 {
-			let frame = try #require(CGImageSourceCopyPropertiesAtIndex(source, index, nil) as? [CFString: Any])
+			let frame = try #require(CGImageSourceCopyPropertiesAtIndex(decodedSource, index, nil) as? [CFString: Any])
 			let timing = try #require(frame[kCGImagePropertyGIFDictionary] as? [CFString: Any])
 			#expect((timing[kCGImagePropertyGIFUnclampedDelayTime] as? NSNumber)?
 				.doubleValue == (index == 0 ? 0.02 : 0.07))
 		}
 	}
 
-	@Test("A one-frame GIF retains its animation container")
-	func singleFrameGIF() async throws {
+	@Test("A one-frame GIF follows the bounded static-image path")
+	func singleFrameGIFBecomesAStaticPreview() async throws {
 		let data = Self.gif(frames: 1)
 		let preview = try await InlineImageDecoder.prepare(data, limits: .init())
-		#expect(preview.data == data)
+		let source = try #require(CGImageSourceCreateWithData(preview.data as CFData, nil))
+		#expect(CGImageSourceGetType(source) as String? == UTType.png.identifier)
+		#expect(CGImageSourceGetCount(source) == 1)
 	}
 
 	@Test("APNG preserves its original animation controls")
@@ -91,8 +91,8 @@ struct InlineImageLoaderTests {
 		try #require(CGImageDestinationFinalize(destination))
 		let preview = try await InlineImageDecoder.prepare(data as Data, limits: .init())
 		#expect(preview.data == data as Data)
-		let source = try #require(CGImageSourceCreateWithData(preview.data as CFData, nil))
-		#expect(CGImageSourceGetCount(source) == 2)
+		let animatedSource = try #require(CGImageSourceCreateWithData(preview.data as CFData, nil))
+		#expect(CGImageSourceGetCount(animatedSource) == 2)
 	}
 
 	@Test("Enormous compressed canvases and excess frames reject before pixel decoding")
