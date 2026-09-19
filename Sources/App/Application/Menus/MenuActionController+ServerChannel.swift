@@ -220,8 +220,8 @@ extension MenuActionController {
 	}
 
 	private func sendMode(_ symbol: String, set: Bool) {
-		guard let session = context.selectedSession, let channel = context.selectedConversation,
-		      session.isLoggedIn, channel.isChannel
+		guard isRunning, let session = context.selectedSession, let channel = context.selectedConversation,
+		      ChannelActionPermissions(channel: channel, session: session).canChangeModes
 		else { return }
 		session.sendModes("\(set ? "+" : "-")\(symbol)", withParametersString: nil, inChannelNamed: channel.name)
 	}

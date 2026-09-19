@@ -238,13 +238,10 @@ final class TranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 	/// Whether the channel lets this reader set the topic: either it is not
 	/// restricted to operators, or they are one.
 	var canModifyTopic: Bool {
-		guard let channel = viewController?.associatedConversation, channel.isChannel else { return false }
-		guard channel.modeInfo?.modes.modeInfo(for: ChannelMode.operatorTopic.rawValue)?.modeIsSet == true
-		else { return true }
-		guard let nickname = viewController?.associatedSession?.userNickname,
-		      let member = channel.findMember(nickname)
-		else { return false }
-		return member.isOp || member.isHalfOp
+		ChannelActionPermissions(
+			channel: viewController?.associatedConversation,
+			session: viewController?.associatedSession
+		).canModifyTopic
 	}
 
 	/// Names the transcript for an assistive reader. Without it the text view

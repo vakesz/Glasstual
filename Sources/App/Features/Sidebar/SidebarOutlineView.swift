@@ -93,26 +93,33 @@ final class SidebarOutlineView: NSOutlineView, NSOutlineViewDataSource, NSOutlin
 	func apply(_ next: SidebarOutlineSnapshot) {
 		guard snapshot != next else { return }
 		let previousSelection = snapshot?.selectedIdentifier
+		let contentChanged = snapshot?.rows != next.rows
+			|| snapshot?.knownIdentifiers != next.knownIdentifiers
+			|| snapshot?.isFiltering != next.isFiltering
 		let viewport = viewportAnchor()
 		isApplyingSnapshot = true
 		defer { isApplyingSnapshot = false }
-		let structureChanged = tree.apply(next)
+		let structureChanged = contentChanged && tree.apply(next)
 		snapshot = next
 		if structureChanged {
 			reloadData()
 		}
-		for root in tree.roots {
-			guard case let .server(server) = root.content else { continue }
-			if server.isExpanded {
-				expandItem(root)
-			} else {
-				collapseItem(root)
+		if contentChanged {
+			for root in tree.roots {
+				guard case let .server(server) = root.content else { continue }
+				if server.isExpanded {
+					expandItem(root)
+				} else {
+					collapseItem(root)
+				}
 			}
 		}
 		let selected = next.selectedIdentifier.flatMap(tree.node(withItemIdentifier:))
 		let selectedIndex = selected.map { row(forItem: $0) } ?? -1
 		selectRowIndexes(selectedIndex >= 0 ? IndexSet(integer: selectedIndex) : [], byExtendingSelection: false)
-		refreshVisibleRows()
+		if contentChanged {
+			refreshVisibleRows()
+		}
 		if structureChanged, let viewport,
 		   let node = tree.nodes[viewport.identity], row(forItem: node) >= 0,
 		   let scrollView = enclosingScrollView
@@ -139,9 +146,8 @@ final class SidebarOutlineView: NSOutlineView, NSOutlineViewDataSource, NSOutlin
 		guard visible.location != NSNotFound, visible.length > 0 else { return }
 		for index in visible.location ..< min(NSMaxRange(visible), numberOfRows) {
 			guard let node = node(at: index) else { continue }
-			(view(atColumn: 0, row: index, makeIfNecessary: false) as? SidebarCellView)?.configure(with: node)
-			if let rowView = rowView(atRow: index, makeIfNecessary: false) as? SidebarRowView {
-				configure(rowView, with: node)
+			if let cell = view(atColumn: 0, row: index, makeIfNecessary: false) as? SidebarCellView {
+				configure(cell, with: node)
 			}
 		}
 	}
@@ -169,23 +175,20 @@ final class SidebarOutlineView: NSOutlineView, NSOutlineViewDataSource, NSOutlin
 		guard let node = item as? SidebarOutlineNode else { return nil }
 		let cell = makeView(withIdentifier: SidebarCellView.reuseIdentifier, owner: self) as? SidebarCellView
 			?? SidebarCellView(frame: .zero)
-		cell.configure(with: node)
+		configure(cell, with: node)
 		return cell
 	}
 
-	func outlineView(_: NSOutlineView, rowViewForItem item: Any) -> NSTableRowView? {
-		guard let node = item as? SidebarOutlineNode else { return nil }
-		let row = makeView(withIdentifier: SidebarRowView.reuseIdentifier, owner: self) as? SidebarRowView
-			?? SidebarRowView(frame: .zero)
-		configure(row, with: node)
-		return row
-	}
-
-	private func configure(_ row: SidebarRowView, with node: SidebarOutlineNode) {
+	private func configure(_ cell: SidebarCellView, with node: SidebarOutlineNode) {
 		let identity = node.identity
-		row.configure(with: node, canMoveUp: canMove(identity, upward: true), canMoveDown: canMove(identity, upward: false))
-		row.showMenu = { [weak self] in self?.showMenu(for: identity) ?? false }
-		row.move = { [weak self] upward in self?.move(identity, upward: upward) ?? false }
+		cell.configure(with: node)
+		cell.configureAccessibilityActions(
+			with: node,
+			canMoveUp: canMove(identity, upward: true),
+			canMoveDown: canMove(identity, upward: false)
+		)
+		cell.showMenu = { [weak self] in self?.showMenu(for: identity) ?? false }
+		cell.move = { [weak self] upward in self?.move(identity, upward: upward) ?? false }
 	}
 
 	func outlineView(_: NSOutlineView, selectionIndexesForProposedSelection proposed: IndexSet) -> IndexSet {

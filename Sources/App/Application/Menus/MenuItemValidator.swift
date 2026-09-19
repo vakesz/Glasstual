@@ -177,15 +177,8 @@ struct MenuItemValidator {
 	}
 
 	private func validateChannelCommand(_ item: NSMenuItem) -> Bool {
-		/* The mirror of `ServerSession.canJoin`, for a channel that is already
-		 joined: the same connection, the same conversation list, and a channel
-		 the session has not finished with. */
-		let isJoined = conversation.map { candidate in
-			session?.canJoinChannels == true
-				&& candidate.associatedSession === session
-				&& session?.conversationList.contains(where: { $0 === candidate }) == true
-				&& candidate.isChannel && candidate.isActive
-		} == true
+		let permissions = ChannelActionPermissions(channel: conversation, session: session)
+		let isJoined = permissions.isJoined
 
 		switch item.command {
 		case .joinChannel:
@@ -198,14 +191,18 @@ struct MenuItemValidator {
 			return session != nil
 		case .viewChannelLogs:
 			return conversation != nil && ApplicationPaths.isWritingTranscripts
-		case .modifyTopic, .modes, .channelModeManageAll, .bans:
+		case .modifyTopic:
+			return permissions.canModifyTopic
+		case .modes, .channelModeManageAll:
+			return permissions.canChangeModes
+		case .bans:
 			return isJoined
 		case .channelModeModerated:
 			item.state = context.channelModeIsSet("m") ? .on : .off
-			return isJoined
+			return permissions.canChangeModes
 		case .channelModeInviteOnly:
 			item.state = context.channelModeIsSet("i") ? .on : .off
-			return isJoined
+			return permissions.canChangeModes
 		case .banExceptions:
 			return isJoined && session?.supportInfo.isListSupported(.banException) == true
 		case .inviteExceptions:

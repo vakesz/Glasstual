@@ -28,7 +28,6 @@ struct HighlightsPane: View {
 			} label: {
 				Text(.Settings.highlightsMatchTypeLabel)
 			}
-			.labelsHidden()
 			.accessibilityLabel(Text(.Settings.highlightsMatchTypeLabel))
 
 			SettingsToggle(

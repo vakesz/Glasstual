@@ -5857,6 +5857,30 @@
         }
       }
     },
+    "style-font-system": {
+      "comment": "The default macOS system font, shown in the transcript font setting and font chooser.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rendszer"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System"
+          }
+        }
+      }
+    },
     "style-font-size-label": {
       "comment": "Label of the point-size field in the font sheet.",
       "extractionState": "manual",
@@ -6080,19 +6104,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The maximum number of messages, per-channel, that are accessible through the scrollback.\n\nMessages are not saved between app launches unless “Restore scrollback from previous session” in the Behavior section of Settings is enabled."
+            "value": "The maximum number of messages, per-channel, that are accessible through the scrollback.\n\nMessages are not saved between app launches unless “Restore scrollback from previous session” in the General section of Settings is enabled."
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "A beszélgetési előzményekben csatornánként elérhető üzenetek maximális száma.\n\nAz üzenetek csak akkor maradnak meg az alkalmazás újraindításakor, ha a Beállítások Viselkedés részében engedélyezed az \"Előző munkamenet előzményeinek visszaállítása\" lehetőséget."
+            "value": "A beszélgetési előzményekben csatornánként elérhető üzenetek maximális száma.\n\nAz üzenetek csak akkor maradnak meg az alkalmazás újraindításakor, ha a Beállítások Általános részében engedélyezed az \"Előző munkamenet előzményeinek visszaállítása\" lehetőséget."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Maximale Anzahl der pro Kanal im Verlauf verfügbaren Nachrichten.\n\nNachrichten bleiben zwischen App-Starts nur erhalten, wenn unter Einstellungen › Verhalten die Option \"Verlauf der vorherigen Sitzung wiederherstellen\" aktiviert ist."
+            "value": "Maximale Anzahl der pro Kanal im Verlauf verfügbaren Nachrichten.\n\nNachrichten bleiben zwischen App-Starts nur erhalten, wenn unter Einstellungen › Allgemein die Option \"Verlauf der vorherigen Sitzung wiederherstellen\" aktiviert ist."
           }
         }
       }

@@ -42,8 +42,10 @@ final class MemberListTableController: NSObject, NSTableViewDataSource, NSTableV
 	let tableView = MemberListNativeTable()
 	private(set) var rows: [MemberListTableRow] = []
 	private(set) var updateCount = 0
+	private(set) var replacementCount = 0
 	private var indexes: [MemberListTableRow.Identity: Int] = [:]
 	private var renderedRevision: Int?
+	private var renderedSourceIdentifier: String?
 	private var isUpdating = false
 	private var previousScrollOrigin = NSPoint.zero
 	private let notifications = NotificationSubscriptions()
@@ -62,6 +64,7 @@ final class MemberListTableController: NSObject, NSTableViewDataSource, NSTableV
 		tableView.addTableColumn(column)
 		tableView.headerView = nil
 		tableView.style = .inset
+		tableView.floatsGroupRows = false
 		tableView.backgroundColor = .clear
 		tableView.autoresizingMask = [.width]
 		tableView.allowsMultipleSelection = true
@@ -96,15 +99,37 @@ final class MemberListTableController: NSObject, NSTableViewDataSource, NSTableV
 	func update(revision: Int, selection: Set<User.ID>) {
 		isUpdating = true
 		defer { isUpdating = false }
-		if renderedRevision != revision {
-			applyRows(MemberListTableRow.rows(in: model.groups))
+		if renderedRevision != revision || renderedSourceIdentifier != model.sourceIdentifier {
+			let updated = MemberListTableRow.rows(in: model.groups)
+			if renderedRevision == nil || renderedSourceIdentifier != model.sourceIdentifier {
+				replaceRows(updated)
+			} else {
+				applyRows(updated)
+			}
 			renderedRevision = revision
+			renderedSourceIdentifier = model.sourceIdentifier
 			updateCount += 1
 		}
 		let selectedIndexes = IndexSet(selection.compactMap { indexes[.member($0)] })
 		if selectedIndexes != tableView.selectedRowIndexes {
 			tableView.selectRowIndexes(selectedIndexes, byExtendingSelection: false)
 		}
+	}
+
+	/// Switching channels is a replacement, not a sequence of joins and parts.
+	/// Diffing unrelated large member lists delays the entire selection frame.
+	private func replaceRows(_ updated: [MemberListTableRow]) {
+		storeRows(updated)
+		tableView.reloadData()
+		scrollView.contentView.scroll(to: .zero)
+		scrollView.reflectScrolledClipView(scrollView.contentView)
+		previousScrollOrigin = scrollView.contentView.bounds.origin
+		replacementCount += 1
+	}
+
+	private func storeRows(_ updated: [MemberListTableRow]) {
+		rows = updated
+		indexes = Dictionary(uniqueKeysWithValues: rows.enumerated().map { ($0.element.id, $0.offset) })
 	}
 
 	/// Inserts and removes identities without rebuilding the whole native list.
@@ -123,17 +148,15 @@ final class MemberListTableController: NSObject, NSTableViewDataSource, NSTableV
 			case let .insert(index, _, _): inserted.insert(index)
 			}
 		}
-		rows = updated
-		indexes = Dictionary(uniqueKeysWithValues: rows.enumerated().map { ($0.element.id, $0.offset) })
+		storeRows(updated)
 		if difference.isEmpty == false {
 			tableView.beginUpdates()
 			tableView.removeRows(at: removed, withAnimation: [])
 			tableView.insertRows(at: inserted, withAnimation: [])
 			tableView.endUpdates()
 		}
-		tableView.enumerateAvailableRowViews { [self] rowView, index in
+		tableView.enumerateAvailableRowViews { [self] _, index in
 			guard rows.indices.contains(index) else { return }
-			configure(rowView, at: index)
 			if let cell = tableView.view(atColumn: 0, row: index, makeIfNecessary: false) as? MemberListTableCell {
 				configure(cell, at: index)
 			}
@@ -170,24 +193,10 @@ final class MemberListTableController: NSObject, NSTableViewDataSource, NSTableV
 		return cell
 	}
 
-	func tableView(_ tableView: NSTableView, rowViewForRow row: Int) -> NSTableRowView? {
-		let identifier = NSUserInterfaceItemIdentifier("member-row")
-		let view = tableView.makeView(withIdentifier: identifier, owner: self) as? MemberListTableRowView
-			?? MemberListTableRowView(frame: .zero)
-		view.identifier = identifier
-		configure(view, at: row)
-		return view
-	}
-
 	private func configure(_ cell: MemberListTableCell, at index: Int) {
 		guard rows.indices.contains(index) else { return }
-		cell.configure(row: rows[index], style: model.presentationStyle, overrides: model.nicknameColorOverrides)
-	}
-
-	private func configure(_ view: NSTableRowView, at index: Int) {
-		guard rows.indices.contains(index), let view = view as? MemberListTableRowView else { return }
 		let row = rows[index]
-		view.configure(row: row, style: model.presentationStyle) { [weak model] in
+		cell.configure(row: row, style: model.presentationStyle, overrides: model.nicknameColorOverrides) { [weak model] in
 			guard let member = row.member else { return }
 			model?.showProfile(for: member.id)
 		}

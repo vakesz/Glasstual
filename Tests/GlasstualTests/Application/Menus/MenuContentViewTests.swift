@@ -369,7 +369,7 @@ struct MenuContentViewTests {
 		menu.items.flatMap { [$0] + ($0.submenu.map(items(of:)) ?? []) }
 	}
 
-	private func withChannelMenu(
+	func withChannelMenu(
 		_ body: (MenuActionController, MainWindow, TestServerSession, TestServerSession) throws -> Void
 	) async throws {
 		let app = try #require(AppServices.delegate)

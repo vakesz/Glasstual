@@ -607,18 +607,18 @@ struct TranscriptControllerApplicationTests {
 		controller.historyPageFetcher = { _ in .page([]) }
 		let view = controller.ensureBackingView()
 		await controller.drainRenderJobs()
-		controller.print(line("hello alice"))
+		controller.print(line("hello @alice"))
 		await controller.drainRenderJobs()
 		#expect(view.displayedLines.last?.body.mentionedNicknames == ["alice"])
 		var ranked = try #require(channel.findMember("alice"))
 		ranked.modes = "o"
 		channel.memberInfo?.replaceMember(member, with: ranked)
-		controller.print(line("ranked alice"))
+		controller.print(line("ranked @alice"))
 		await controller.drainRenderJobs()
 		#expect(view.displayedLines.last?.modeSymbol == ranked.mark)
 		#expect(view.displayedLines.first?.modeSymbol == member.mark)
 		channel.removeMember(withNickname: "alice")
-		controller.print(line("departed alice"))
+		controller.print(line("departed @alice"))
 		await controller.drainRenderJobs()
 		#expect(view.displayedLines.last?.body.mentionedNicknames.isEmpty == true)
 	}

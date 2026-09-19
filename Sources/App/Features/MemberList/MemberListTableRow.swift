@@ -72,6 +72,7 @@ enum MemberListTableRow: Identifiable, Equatable {
 final class MemberListTableCell: NSTableCellView {
 	private var hostingView: NSHostingView<MemberListTableRowContent>?
 	private var content: MemberListTableRowContent?
+	private var showProfile: (() -> Void)?
 
 	override var backgroundStyle: NSView.BackgroundStyle {
 		didSet {
@@ -81,7 +82,24 @@ final class MemberListTableCell: NSTableCellView {
 		}
 	}
 
-	func configure(row: MemberListTableRow, style: MemberListPresentationStyle, overrides: NicknameColorOverrides) {
+	func configure(
+		row: MemberListTableRow,
+		style: MemberListPresentationStyle,
+		overrides: NicknameColorOverrides,
+		showProfile: @escaping () -> Void
+	) {
+		// The table exports proxy rows, whose children come from these cells.
+		// Row-view metadata is not part of that exported accessibility tree.
+		setAccessibilityElement(true)
+		setAccessibilityRole(.staticText)
+		setAccessibilityLabel(row.accessibilityDescription(style: style))
+		setAccessibilityChildren([])
+		self.showProfile = row.member == nil ? nil : showProfile
+		setAccessibilityCustomActions(row.member == nil ? [] : [
+			NSAccessibilityCustomAction(
+				name: String(localized: .MemberList.showProfileAction), target: self, selector: #selector(openProfile)
+			),
+		])
 		let content = MemberListTableRowContent(
 			row: row, style: style, overrides: overrides, isSelected: backgroundStyle == .emphasized
 		)
@@ -103,6 +121,12 @@ final class MemberListTableCell: NSTableCellView {
 			])
 			hostingView = host
 		}
+	}
+
+	@objc private func openProfile() -> Bool {
+		guard let showProfile else { return false }
+		showProfile()
+		return true
 	}
 }
 
@@ -156,27 +180,5 @@ private struct MemberListTableRowContent: View {
 					.help(MemberListRanks.style(for: rank).privilegeDescription)
 			}
 		}
-	}
-}
-
-/// Native rows expose one understandable entry and an explicit profile action.
-final class MemberListTableRowView: NSTableRowView {
-	var showProfile: (() -> Void)?
-
-	func configure(row: MemberListTableRow, style: MemberListPresentationStyle, showProfile: @escaping () -> Void) {
-		setAccessibilityLabel(row.accessibilityDescription(style: style))
-		setAccessibilityChildren([])
-		self.showProfile = row.member == nil ? nil : showProfile
-		setAccessibilityCustomActions(row.member == nil ? [] : [
-			NSAccessibilityCustomAction(
-				name: String(localized: .MemberList.showProfileAction), target: self, selector: #selector(openProfile)
-			),
-		])
-	}
-
-	@objc private func openProfile() -> Bool {
-		guard let showProfile else { return false }
-		showProfile()
-		return true
 	}
 }

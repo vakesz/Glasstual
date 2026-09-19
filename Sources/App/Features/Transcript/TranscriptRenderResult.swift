@@ -70,7 +70,7 @@ extension TranscriptController {
 		let body = TranscriptRenderer.renderNativeBody(
 			line.messageBody,
 			withAttributes: attributes,
-			members: request.context.members.members
+			members: request.context.members
 		)
 		let markers = markers(for: request)
 		let transcriptLine = TranscriptRow(

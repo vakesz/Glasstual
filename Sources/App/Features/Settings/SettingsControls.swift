@@ -61,6 +61,8 @@ struct SettingsToggle: View {
 			}
 		}
 		.toggleStyle(.switch)
+		.accessibilityLabel(Text(title))
+		.accessibilityHint(note.map { Text($0) } ?? Text(""))
 		.disabled(isEnabled == false)
 	}
 }
@@ -123,5 +125,6 @@ struct SettingsFolderPicker: View {
 		} label: {
 			Text(label)
 		}
+		.accessibilityElement(children: .contain)
 	}
 }

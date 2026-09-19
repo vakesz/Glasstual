@@ -41,7 +41,12 @@ final class ServerPropertiesSheet: SheetSession, SessionScoped, ServerProperties
 			model = ServerPropertiesModel(config: session.config)
 		} else {
 			// A new connection starts from the network list rather than a blank form.
-			model = ServerPropertiesModel(config: ServerConfig(), offersTemplates: true)
+			var config = ServerConfig()
+			config.serverList = [ServerEndpoint(
+				serverPort: UInt16(ConnectionDefaults.serverPortSecure),
+				prefersSecuredConnection: true
+			)]
+			model = ServerPropertiesModel(config: config, offersTemplates: true)
 		}
 		super.init(window: nil)
 		installSheet()

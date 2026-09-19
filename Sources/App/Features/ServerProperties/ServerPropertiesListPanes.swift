@@ -32,6 +32,11 @@ struct ServerPropertiesChannelListPane: View {
 				}
 			}
 			.listCommands(.channels, commands: commands, selection: $model.selectedChannelID)
+			.overlay {
+				if model.displayedChannels.isEmpty {
+					ServerPropertiesEmptyList(kind: .channels)
+				}
+			}
 
 			ServerPropertiesListButtons(
 				kind: .channels,
@@ -69,6 +74,11 @@ struct ServerPropertiesHighlightsPane: View {
 				}
 			}
 			.listCommands(.highlights, commands: commands, selection: $model.selectedHighlightID)
+			.overlay {
+				if model.config.highlightList.isEmpty {
+					ServerPropertiesEmptyList(kind: .highlights)
+				}
+			}
 
 			ServerPropertiesListButtons(
 				kind: .highlights,
@@ -95,6 +105,11 @@ struct ServerPropertiesAddressBookPane: View {
 				}
 			}
 			.listCommands(.addressBook, commands: commands, selection: $model.selectedAddressBookEntryID)
+			.overlay {
+				if model.config.ignoreList.isEmpty {
+					ServerPropertiesEmptyList(kind: .addressBook)
+				}
+			}
 
 			HStack {
 				/* A menu rather than a button, because an entry is either an
@@ -120,6 +135,18 @@ struct ServerPropertiesAddressBookPane: View {
 			.padding(.horizontal, SheetMetrics.margin)
 			.padding(.bottom, UISpacing.wide)
 		}
+	}
+}
+
+private struct ServerPropertiesEmptyList: View {
+	let kind: ServerPropertiesListKind
+
+	var body: some View {
+		ContentUnavailableView(
+			String(localized: kind.emptyTitle),
+			systemImage: kind.pane.symbol,
+			description: Text(kind.emptyDescription)
+		)
 	}
 }
 

@@ -38,10 +38,8 @@ struct ChannelPropertiesView: View {
 			case .defaults: defaultsPane
 			}
 
-			/* The channel is written back into the connection that owns it,
-			 which is what saves it; the confirmation says the editor is done. */
 			SheetActions(
-				confirmTitle: .sheetConfirmation,
+				confirmTitle: Text(PromptStrings.Action.save),
 				confirmIsDisabled: model.channelNameValidationMessage != nil,
 				confirm: submit,
 				cancel: cancel

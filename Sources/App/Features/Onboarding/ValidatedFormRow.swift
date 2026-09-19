@@ -14,11 +14,13 @@ struct ValidatedFormRow<Content: View>: View {
 		LabeledContent(label) {
 			VStack(alignment: .leading, spacing: UISpacing.tight) {
 				content
+					.labelsHidden()
 				if let problem {
 					ValidationMessageLabel(problem)
 						.fixedSize(horizontal: false, vertical: true)
 				}
 			}
 		}
+		.accessibilityElement(children: .contain)
 	}
 }
