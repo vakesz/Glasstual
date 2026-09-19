@@ -31,58 +31,29 @@
  *
  *********************************************************************** */
 
-import AppKit
-import CoreFoundation
 import Foundation
 
 /// `CharacterSet` is a `Sendable` value type, so these need no isolation
 /// annotation and no `NSCharacterSet` bridging at the point of use.
 public extension CharacterSet {
-	static let textualHexadecimal = CharacterSet(charactersIn: "abcdefABCDEF0123456789")
+	static let hexadecimalDigits = CharacterSet(charactersIn: "abcdefABCDEF0123456789")
 
-	static let textualPercentEncoded = CharacterSet(
+	static let unreservedURICharacters = CharacterSet(
 		charactersIn: "-.0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~"
 	)
 
-	static let textualAlphanumericDashPeriod = CharacterSet(
+	static let hostNameCharacters = CharacterSet(
 		charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-."
 	)
 
-	static let textualLetter = CharacterSet(
+	static let asciiLetters = CharacterSet(
 		charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	)
 }
 
-public extension NSCoder {
-	func textual_decodeString(forKey key: String) -> NSString? {
-		decodeObject(of: NSString.self, forKey: key)
-	}
-}
-
-public extension Int64 {
-	/// A file-style byte count with a zero-padded fraction, e.g. "1.20 MB".
-	var textualPaddedByteCountDescription: String {
-		formatted(.byteCount(style: .file))
-	}
-}
-
 public extension NSNumber {
-	var textualIntegerStringValueWithLeadingZero: String {
+	var twoDigitString: String {
 		int64Value.formatted(.number.precision(.integerLength(2...)).grouping(.never))
-	}
-}
-
-public extension NSWorkspace {
-	func textual_nameOfApplication(toOpen url: URL) -> String? {
-		guard
-			let applicationURL = urlForApplication(toOpen: url),
-			let applicationBundle = Bundle(url: applicationURL)
-		else {
-			return nil
-		}
-
-		return applicationBundle.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String
-			?? applicationBundle.object(forInfoDictionaryKey: kCFBundleNameKey as String) as? String
 	}
 }
 
@@ -116,19 +87,25 @@ public extension Error {
 	}
 }
 
+public extension ComparisonResult {
+	/// This ascending result as `order` asks for it. Every `SortComparator` a
+	/// table column is built from needs the same flip, and each one used to
+	/// carry its own copy of it.
+	func ordered(by order: SortOrder) -> ComparisonResult {
+		guard order == .reverse else { return self }
+
+		return switch self {
+		case .orderedAscending: .orderedDescending
+		case .orderedDescending: .orderedAscending
+		case .orderedSame: .orderedSame
+		}
+	}
+}
+
 public extension Int {
 	@inlinable
 	var isValidInternetPort: Bool {
 		self > 0 && self <= 65535
-	}
-}
-
-public extension Numeric {
-	@inlinable
-	var data: Data {
-		var pointer = self
-
-		return withUnsafeBytes(of: &pointer) { Data($0) }
 	}
 }
 

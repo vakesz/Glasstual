@@ -5,14 +5,14 @@ import Foundation
 
 /// `PREFIX`: the membership mode symbols the server ranks, highest first, and
 /// the prefix character each one is written with.
-nonisolated struct ISupportPrefixConfiguration: Sendable, Equatable {
+nonisolated struct ISupportPrefixConfig: Sendable, Equatable {
 	let modeSymbols: [String]
 	let characters: [String]
 }
 
 /// `EXTBAN`: the character an extended ban mask starts with, if any, and the
 /// types the server accepts after it.
-nonisolated struct ISupportExtendedBanConfiguration: Sendable, Equatable {
+nonisolated struct ISupportExtendedBanConfig: Sendable, Equatable {
 	let prefix: String?
 	let types: [String]
 }
@@ -113,21 +113,21 @@ nonisolated enum ISupportTokenParser {
 		UInt(value) ?? 0
 	}
 
-	static func extendedBanConfiguration(from token: String) -> ISupportExtendedBanConfiguration {
+	static func extendedBanConfiguration(from token: String) -> ISupportExtendedBanConfig {
 		guard let comma = token.firstIndex(of: ",") else {
-			return ISupportExtendedBanConfiguration(prefix: nil, types: characters(in: token))
+			return ISupportExtendedBanConfig(prefix: nil, types: characters(in: token))
 		}
 
 		let prefix = String(token[..<comma])
 		let types = String(token[token.index(after: comma)...])
 
-		return ISupportExtendedBanConfiguration(
+		return ISupportExtendedBanConfig(
 			prefix: prefix.isEmpty ? nil : prefix,
 			types: characters(in: types)
 		)
 	}
 
-	static func userPrefixConfiguration(from token: String) -> ISupportPrefixConfiguration? {
+	static func userPrefixConfiguration(from token: String) -> ISupportPrefixConfig? {
 		let token = token as NSString
 		let openingParenthesis = token.range(of: "(").location
 		let closingParenthesis = token.range(of: ")").location
@@ -151,7 +151,7 @@ nonisolated enum ISupportTokenParser {
 			return nil
 		}
 
-		return ISupportPrefixConfiguration(
+		return ISupportPrefixConfig(
 			modeSymbols: modeSymbolCharacters,
 			characters: prefixCharacters
 		)
@@ -177,68 +177,6 @@ nonisolated enum ISupportTokenParser {
 		}
 
 		return channelModes
-	}
-
-	static func casefold(_ string: String, caseMapping: ISupportCaseMapping) -> String {
-		guard string.isEmpty == false else {
-			return string
-		}
-
-		guard caseMapping != .rfc7613 else {
-			/* RFC 7613 §3.3 (UsernameCaseMapped): lowercase the whole string
-			 under Unicode's rules, then normalise to NFC, so two spellings of
-			 the same name compare equal. None of the RFC 1459 punctuation
-			 equivalences apply — "[Alice]" and "{alice}" are different people. */
-			return string.lowercased().precomposedStringWithCanonicalMapping
-		}
-
-		let scalars = string.unicodeScalars.map { scalar -> UnicodeScalar in
-			let value = scalar.value
-
-			if value >= 65, value <= 90, let lowercase = UnicodeScalar(value + 32) {
-				return lowercase
-			}
-
-			guard caseMapping != .ascii else {
-				return scalar
-			}
-
-			switch scalar {
-			case "[": return "{"
-			case "]": return "}"
-			case "\\": return "|"
-			case "~" where caseMapping == .rfc1459: return "^"
-			default: return scalar
-			}
-		}
-
-		return String(String.UnicodeScalarView(scalars))
-	}
-
-	static func isClientTag(_ tagName: String, deniedBy entries: [String]) -> Bool {
-		var denied = false
-
-		for entry in entries {
-			if entry == "*" {
-				denied = true
-			} else if entry.hasPrefix("-") {
-				if entry.dropFirst().caseInsensitiveCompare(tagName) == .orderedSame {
-					return false
-				}
-			} else if entry.caseInsensitiveCompare(tagName) == .orderedSame {
-				denied = true
-			}
-		}
-
-		return denied
-	}
-
-	/// Splits `targets` into lists of at most `limit` entries, in order.
-	///
-	/// Zero is a server that advertised no limit, and it chunks the same way as
-	/// one: a target list the server never said it accepts is not sent.
-	static func chunkTargets(_ targets: [String], limit: UInt) -> [[String]] {
-		WireBatching.pack(targets, maximumCount: max(Int(min(limit, UInt(targets.count))), 1))
 	}
 
 	private static func colonSeparatedEntries(in token: String) -> [(String, String)] {

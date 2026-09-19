@@ -6,18 +6,18 @@ import Foundation
 import os
 
 private let outboundTransportLogger = Logger(
-	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
-	category: "IRCOutboundTransport"
+	subsystem: LogSubsystem.current,
+	category: "OutboundTransport"
 )
 
-extension Client {
-	func send(_ command: String, arguments: [String]) {
+extension ServerSession {
+	func send(_ command: RemoteCommand, arguments: [String]) {
 		sendCommand(command, arguments: arguments, tags: nil)
 	}
 
 	/// Sends `command` with whichever of `tags` the server takes: none without
 	/// `message-tags`, and no client-only tag its `CLIENTTAGDENY` refuses.
-	func sendCommand(_ command: String, arguments: [String], tags: [String: String]?) {
+	func sendCommand(_ command: RemoteCommand, arguments: [String], tags: [String: String]?) {
 		let negotiatedTags = isCapabilityEnabled(.messageTags) ? tags?.filter { isClientTagPermitted($0.key) } : nil
 		do {
 			let line = try SendingMessage.string(command: command, arguments: arguments, tags: negotiatedTags)
@@ -25,7 +25,8 @@ extension Client {
 		} catch {
 			/* The arguments came from somewhere a user can type into, and the
 			 line they make is not the command they meant. Nothing goes out. */
-			outboundTransportLogger.error("Refused to send \(command, privacy: .public): \(String(describing: error), privacy: .public)")
+			outboundTransportLogger
+				.error("Refused to send \(command.wireName, privacy: .public): \(String(describing: error), privacy: .public)")
 			printDebugInformation(toConsole: String(localized: .IRC.oneOrMoreArgumentsAreNot))
 		}
 	}
@@ -44,7 +45,7 @@ extension Client {
 			return false
 		}
 
-		sendCommand("TAGMSG", arguments: [target], tags: tags)
+		sendCommand(.tagmsg, arguments: [target], tags: tags)
 		return true
 	}
 

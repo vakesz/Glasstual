@@ -50,30 +50,6 @@
         }
       }
     },
-    "all-networks" : {
-      "comment" : "Network picker. Legacy key: np1-ga.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "All Networks"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Összes hálózat"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Alle Netzwerke"
-          }
-        }
-      }
-    },
     "alternate-nickname" : {
       "comment" : "Step: Welcome and identity. Legacy key: id1-an.",
       "extractionState" : "manual",
@@ -242,30 +218,6 @@
         }
       }
     },
-    "connect-to-any-irc-server" : {
-      "comment" : "Network picker. Legacy key: np1-cd.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Connect to any IRC server by address"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kapcsolódás bármely IRC-kiszolgálóhoz a címe alapján"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Über die Adresse mit einem beliebigen IRC-Server verbinden"
-          }
-        }
-      }
-    },
     "connect-when-finished" : {
       "comment" : "Step: First network. Legacy key: nw1-cn.",
       "extractionState" : "manual",
@@ -336,30 +288,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Versuche es erneut oder gehe zurück und fahre ohne Netzwerk fort."
-          }
-        }
-      }
-    },
-    "custom-server" : {
-      "comment" : "Network picker. Legacy key: np1-cs.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Custom Server"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Egyéni kiszolgáló"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Eigener Server"
           }
         }
       }
@@ -605,30 +533,6 @@
         }
       }
     },
-    "network-picker-networks" : {
-      "comment" : "Network picker. Legacy key: np1-ax.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Networks"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hálózatok"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Netzwerke"
-          }
-        }
-      }
-    },
     "network-picker-password" : {
       "comment" : "Network picker. Legacy key: np1-pw.",
       "extractionState" : "manual",
@@ -649,30 +553,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Passwort"
-          }
-        }
-      }
-    },
-    "network-picker-popular" : {
-      "comment" : "Network picker. Legacy key: np1-gp.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Popular"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Népszerű"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Beliebt"
           }
         }
       }
@@ -769,6 +649,31 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Benachrichtigungen für Glasstual sind in den Systemeinstellungen deaktiviert."
+          }
+        }
+      }
+    },
+    "notify-about-mentions-and-private-messages" : {
+      "comment" : "Combined notification preference for mentions and private messages, matching the Notifications settings pane.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notify me about mentions and private messages"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Értesíts az említésekről és a privát üzenetekről"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bei Erwähnungen und privaten Nachrichten benachrichtigen"
           }
         }
       }
@@ -913,54 +818,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Registrierung erforderlich"
-          }
-        }
-      }
-    },
-    "search-networks" : {
-      "comment" : "Network picker. Legacy key: np1-sp.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Search networks"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hálózatok keresése"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Netzwerke suchen"
-          }
-        }
-      }
-    },
-    "secure-connection" : {
-      "comment" : "Network picker. Legacy key: np1-lk.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Secure connection"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Biztonságos kapcsolat"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sichere Verbindung"
           }
         }
       }

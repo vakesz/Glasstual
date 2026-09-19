@@ -26,34 +26,30 @@ enum ChannelPropertiesSection: Int, CaseIterable, Identifiable {
 @Observable
 final class ChannelPropertiesModel {
 	var isSaving = false
-	var config: ChannelConfig
+	var config: ConversationConfig
 	var selection: ChannelPropertiesSection = .general
 	let channelNameIsEditable: Bool
 
 	/// Whether the name in the field is one the server would accept.
 	var channelNameIsValid: Bool {
-		isChannelName(channelName.firstToken)
+		isChannelName(config.name.firstToken)
 	}
 
-	/** Why the name cannot be saved, once saving has been tried.
-
-	 A sheet for a channel that does not exist yet opens on an empty field, and
-	 the message used to be there — with a red border around the field — before
-	 anything had been typed into it. */
+	/// Why the name cannot be saved, once saving has been tried.
 	var channelNameValidationMessage: String? {
-		submissionWasAttempted && channelNameIsValid == false
-			? String(localized: .ChannelProperties.pleaseEnterAProperlyFormattedChannel)
-			: nil
+		submission.shown(channelNameIsValid
+			? nil
+			: String(localized: .ChannelProperties.pleaseEnterAProperlyFormattedChannel))
 	}
 
-	private var submissionWasAttempted = false
+	private var submission = SubmissionGate()
 
 	/** The connection whose ISUPPORT decides what a channel name looks like.
 
-	 Weak because the sheet outlives nothing and the client outlives the sheet;
-	 a client that goes away mid-edit simply leaves the syntactic check behind,
+	 Weak because the sheet outlives nothing and the session outlives the sheet;
+	 a session that goes away mid-edit simply leaves the syntactic check behind,
 	 which is what a sheet opened without one uses anyway. */
-	private weak var client: Client?
+	private weak var session: ServerSession?
 
 	/** The key field's text.
 
@@ -78,31 +74,11 @@ final class ChannelPropertiesModel {
 	/// keys its loading task on.
 	private(set) var secretKeyLoadGeneration = 0
 
-	init(config: ChannelConfig, client: Client? = nil) {
+	init(config: ConversationConfig, session: ServerSession? = nil) {
 		self.config = config
-		self.client = client
-		channelNameIsEditable = config.channelName.isEmpty
+		self.session = session
+		channelNameIsEditable = config.name.isEmpty
 		secretKeyText = config.pendingSecretKey.value(orStored: nil) ?? ""
-	}
-
-	var channelName: String {
-		get { config.channelName }
-		set { config.channelName = newValue }
-	}
-
-	var label: String {
-		get { config.label ?? "" }
-		set { config.label = newValue }
-	}
-
-	var defaultModes: String {
-		get { config.defaultModes ?? "" }
-		set { config.defaultModes = newValue }
-	}
-
-	var defaultTopic: String {
-		get { config.defaultTopic ?? "" }
-		set { config.defaultTopic = newValue }
 	}
 
 	/** Whether this conversation is silenced.
@@ -118,14 +94,14 @@ final class ChannelPropertiesModel {
 
 	/** The channel's inline-media override, which is one switch and not two.
 
-	 `inlineMediaDisabled` and `inlineMediaEnabled` are the two halves of a
-	 single override migrated from one boolean, and
+	 `inlineMediaDisabled` and `inlineMediaEnabled` are the two halves of one
+	 override, and
 	 `TranscriptController.inlineMediaEnabledForView` consults exactly one of them
-	 depending on the application-wide preference. Editing both leaves whichever
-	 does not match the preference inert, and lets the channel end up asking for
+	 depending on the application-wide setting. Editing both leaves whichever
+	 does not match the setting inert, and lets the channel end up asking for
 	 media to be hidden and shown at the same time. */
 	var overridesInlineMediaByDisabling: Bool {
-		Preferences.Messages.showInlineMedia.value
+		SettingsKeys.Messages.showInlineMedia.value
 	}
 
 	var inlineMediaOverrideTitle: LocalizedStringResource {
@@ -147,7 +123,7 @@ final class ChannelPropertiesModel {
 
 	@discardableResult
 	func validateForSubmission() -> Bool {
-		submissionWasAttempted = true
+		submission.attempt()
 		guard channelNameIsValid else {
 			selection = .general
 			return false
@@ -155,21 +131,21 @@ final class ChannelPropertiesModel {
 		return true
 	}
 
-	var submittedConfig: ChannelConfig {
+	var submittedConfig: ConversationConfig {
 		var result = config
-		result.channelName = channelName.firstToken
-		result.label = Self.nilIfEmpty(label.trimmingCharacters(in: .whitespacesAndNewlines))
-		result.defaultModes = Self.nilIfEmpty(defaultModes.trimmingCharacters(in: .whitespacesAndNewlines))
-		result.defaultTopic = Self.nilIfEmpty(defaultTopic.trimmingCharacters(in: .whitespacesAndNewlines))
+		result.name = config.name.firstToken
+		result.label = Self.trimmedOrNil(config.label)
+		result.defaultModes = Self.trimmedOrNil(config.defaultModes)
+		result.defaultTopic = Self.trimmedOrNil(config.defaultTopic)
 		result.pendingSecretKey = secretKeyWasEdited
 			? .edited(secretKey.firstToken)
 			: config.pendingSecretKey
 		return result
 	}
 
-	func replace(with config: ChannelConfig) {
+	func replace(with config: ConversationConfig) {
 		self.config = config
-		submissionWasAttempted = false
+		submission.reset()
 		/* The replacement is what the channel now stores, and saving it may have
 		 rewritten the keychain item, so the field starts over and reads it
 		 again rather than trusting the last read. */
@@ -201,27 +177,13 @@ final class ChannelPropertiesModel {
 		secretKeyText = stored ?? ""
 	}
 
-	/// What a connection says about how long a channel key may be, and how much
-	/// of that the field holds.
-	private struct SecretKeyLimit {
-		let used: Int
-		let maximum: Int
-		let networkName: String
+	/** The server's limit on a channel key against what is used of it. `nil`
+	 when no connection has advertised one, because a limit nobody named would
+	 be a guess. */
+	private var secretKeyLimit: ServerLengthLimit? {
+		guard let session else { return nil }
 
-		var isExceeded: Bool {
-			used > maximum
-		}
-	}
-
-	/** The server's limit on a channel key, what is used of it, and who said
-	 so. `nil` when no connection has advertised one, because a limit nobody
-	 named would be a guess. */
-	private var secretKeyLimit: SecretKeyLimit? {
-		guard let client else { return nil }
-		let maximum = Int(clamping: client.supportInfo.maximumKeyLength)
-		guard maximum > 0 else { return nil }
-
-		return SecretKeyLimit(used: secretKey.firstToken.utf8.count, maximum: maximum, networkName: client.networkNameAlt)
+		return ServerLengthLimit(using: secretKey.firstToken, maximum: session.supportInfo.maximumKeyLength)
 	}
 
 	/** What to say under the password field about the server's key length.
@@ -231,12 +193,12 @@ final class ChannelPropertiesModel {
 	 the whole time the field is, and becomes the warning as soon as the key is
 	 longer than the server accepts. */
 	var secretKeyLengthCaption: String? {
-		guard let limit = secretKeyLimit else { return nil }
+		guard let session, let limit = secretKeyLimit else { return nil }
 		guard limit.isExceeded else {
 			return String(localized: .ChannelProperties.secretKeyLength(limit.used, limit.maximum))
 		}
 
-		return String(localized: .ChannelProperties.secretKeyTooLong(limit.networkName, limit.maximum))
+		return String(localized: .ChannelProperties.secretKeyTooLong(session.networkNameAlt, limit.maximum))
 	}
 
 	var secretKeyIsTooLong: Bool {
@@ -250,20 +212,23 @@ final class ChannelPropertiesModel {
 	 use, which is both too wide and too narrow: it accepts a `~channel` on a
 	 server that has no such type, and refuses a name under any `CHANTYPES` the
 	 list does not happen to include, so the name could never be saved. When
-	 there is a client to ask, its ISUPPORT is the answer. */
+	 there is a session to ask, its ISUPPORT is the answer. */
 	private func isChannelName(_ candidate: String) -> Bool {
 		guard candidate.isEmpty == false else {
 			return false
 		}
 
-		guard let client else {
-			return (candidate as NSString).isChannelName
+		guard let session else {
+			return candidate.isChannelName
 		}
 
-		return (candidate as NSString).isChannelName(on: client)
+		return candidate.isChannelName(on: session)
 	}
 
-	private static func nilIfEmpty(_ value: String) -> String? {
-		value.isEmpty ? nil : value
+	/// What an edited optional field is worth once it is saved: its text without
+	/// the whitespace around it, or nothing at all when that leaves it empty.
+	private static func trimmedOrNil(_ value: String?) -> String? {
+		let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+		return trimmed.isEmpty ? nil : trimmed
 	}
 }

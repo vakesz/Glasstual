@@ -6,17 +6,17 @@ import CocoaExtensions
 import SwiftUI
 
 struct ServerChannelListScene: Scene {
-	let scenes: ApplicationScenes
+	let windows: ServerChannelListWindowSessions
 
 	var body: some Scene {
 		WindowGroup(
 			String(localized: .ServerChannelList.windowGroupTitle),
 			id: ApplicationSceneID.serverChannelList,
 			for: String.self
-		) { clientIdentifier in
+		) { sessionIdentifier in
 			ServerChannelListSceneRoot(
-				clientIdentifier: clientIdentifier.wrappedValue,
-				scenes: scenes
+				sessionIdentifier: sessionIdentifier.wrappedValue,
+				windows: windows
 			)
 		}
 		.defaultSize(width: 720, height: 420)
@@ -27,12 +27,12 @@ struct ServerChannelListScene: Scene {
 }
 
 private struct ServerChannelListSceneRoot: View {
-	let clientIdentifier: String?
-	let scenes: ApplicationScenes
+	let sessionIdentifier: String?
+	let windows: ServerChannelListWindowSessions
 
 	var body: some View {
-		if let clientIdentifier,
-		   let list = scenes.serverChannelList(for: clientIdentifier)
+		if let sessionIdentifier,
+		   let list = windows.list(for: sessionIdentifier)
 		{
 			ServerChannelListView(
 				model: list.model,
@@ -49,7 +49,7 @@ private struct ServerChannelListSceneRoot: View {
 				String(localized: .ServerChannelList.publicChannelCount(list.model.keptEntryCount))
 			)
 			.onDisappear {
-				scenes.serverChannelListDidClose(for: clientIdentifier)
+				windows.didClose(for: sessionIdentifier)
 			}
 		} else {
 			ContentUnavailableView(

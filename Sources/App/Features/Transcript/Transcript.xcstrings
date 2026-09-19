@@ -51,6 +51,56 @@
         }
       }
     },
+    "current-session" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "comment" : "Current-session marker. Legacy key: 4yo-mk.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Current Session"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jelenlegi munkamenet"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktuelle Sitzung"
+          }
+        }
+      }
+    },
+    "custom-reaction" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "comment" : "Accessibility label and tooltip for the reaction picker's field, where a pasted or palette-chosen emoji lands.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Custom Reaction"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Egyéni reakció"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eigene Reaktion"
+          }
+        }
+      }
+    },
     "deletion-not-repeated" : {
       "extractionState" : "manual",
       "generatesSymbol" : true,
@@ -72,6 +122,56 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Der Verlauf konnte nicht gelöscht werden. Leere das Gespräch erneut, um es noch einmal zu versuchen."
+          }
+        }
+      }
+    },
+    "delivered" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "comment" : "Message delivery state.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delivered"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kézbesítve"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zugestellt"
+          }
+        }
+      }
+    },
+    "failed" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "comment" : "Message delivery state.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sikertelen"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fehlgeschlagen"
           }
         }
       }
@@ -122,6 +222,81 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Der lokale Verlauf erfordert Aufmerksamkeit"
+          }
+        }
+      }
+    },
+    "menu-channel-modify-topic" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "comment" : "Channel menu item title.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modify Topic…"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Téma módosítása…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thema ändern…"
+          }
+        }
+      }
+    },
+    "menu-navigation-jump-to-present" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "comment" : "Navigation menu item title.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jump to Present"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ugrás a legújabb üzenethez"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zur Gegenwart springen"
+          }
+        }
+      }
+    },
+    "more-emoji" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "comment" : "Reaction picker button that opens the system character palette.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More Emoji…"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "További emojik…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weitere Emojis…"
           }
         }
       }
@@ -197,6 +372,56 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Diesen Link in einer anderen App öffnen?"
+          }
+        }
+      }
+    },
+    "pending" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "comment" : "Message delivery state.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pending"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Függőben"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausstehend"
+          }
+        }
+      }
+    },
+    "react-with-emoji" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "comment" : "Accessibility label and tooltip for one button in the reaction picker's row. The placeholder is the emoji itself.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "React with %@"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reagálás ezzel: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit %@ reagieren"
           }
         }
       }
@@ -438,6 +663,31 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Gesprächsverlauf"
+          }
+        }
+      }
+    },
+    "unread-messages" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "comment" : "Caption of the scrollback mark. Styles may show it next to the mark. Legacy key: hin-um.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unread messages"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Olvasatlan üzenetek"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ungelesene Nachrichten"
           }
         }
       }

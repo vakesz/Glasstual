@@ -6,11 +6,6 @@ import CocoaExtensions
 import os
 import UniformTypeIdentifiers
 
-/// What `ResourceFileImporter` can install.
-enum ResourceFileKind: Equatable, Sendable {
-	case script
-}
-
 /// Installs a user script the user opened from the Finder.
 ///
 /// This was an `NSDocument` subclass named as the `NSDocumentClass` of two
@@ -37,44 +32,42 @@ final class ResourceFileImporter {
 				url.stopAccessingSecurityScopedResource()
 			}
 		}
-		switch Self.kind(of: url) {
-		case .script:
-			await performImportOfScriptFile(url)
-		case nil:
+		guard Self.isInstallableScript(url) else {
 			Self.logger.error(
 				"Opened file '\(url.lastPathComponent, privacy: .public)' is not a script"
 			)
 			await presentImportError(CocoaError(.fileReadUnknown))
+
+			return
 		}
+
+		await performImportOfScriptFile(url)
 	}
 
-	/// What kind of installable `url` names, or nil for anything else.
+	/// Whether `url` names a script this importer can install.
 	///
 	/// Separated from the import itself because the import puts alerts and a
 	/// save panel on screen: this is the part with an answer worth testing.
-	static func kind(of url: URL) -> ResourceFileKind? {
-		guard url.isFileURL else { return nil }
+	static func isInstallableScript(_ url: URL) -> Bool {
+		guard url.isFileURL else { return false }
 		var contentType = try? url.resourceValues(forKeys: [.contentTypeKey]).contentType
 
 		if contentType == nil {
 			contentType = UTType(filenameExtension: url.pathExtension.lowercased())
 		}
 
-		guard let contentType else {
-			return nil
+		guard
+			let contentType,
+			let scriptType = UTType(filenameExtension: ResourceDocumentKind.scriptFilenameExtension)
+		else {
+			return false
 		}
 
-		if let scriptType = UTType(filenameExtension: ResourceDocumentType.scriptFilenameExtension),
-		   contentType.conforms(to: scriptType)
-		{
-			return .script
-		}
-
-		return nil
+		return contentType.conforms(to: scriptType)
 	}
 
 	private static let logger = Logger(
-		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
+		subsystem: LogSubsystem.current,
 		category: "ResourceFileImporter"
 	)
 

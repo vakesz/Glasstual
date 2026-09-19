@@ -21,13 +21,12 @@ final class ServerNicknameChangeModel {
 		validator(normalizedNickname)
 	}
 
-	/// The refusal, once changing the nickname has been tried. Nothing is said
-	/// before that: the field opens on the nickname already in use.
+	/// The refusal, once changing the nickname has been tried.
 	var validationMessage: String? {
-		submissionWasAttempted ? validationError : nil
+		submission.shown(validationError)
 	}
 
-	private var submissionWasAttempted = false
+	private var submission = SubmissionGate()
 	private let validator: Validator
 
 	init(currentNickname: String, validator: @escaping Validator) {
@@ -42,51 +41,51 @@ final class ServerNicknameChangeModel {
 
 	@discardableResult
 	func validateForSubmission() -> Bool {
-		submissionWasAttempted = true
+		submission.attempt()
 
 		return validationError == nil
 	}
 }
 
 @MainActor
-final class ServerNicknameChangeSheet: SheetSession, ClientScoped {
-	private(set) var client: Client?
-	private(set) var clientId: String?
+final class ServerNicknameChangeSheet: SheetSession, SessionScoped {
+	private(set) var session: ServerSession?
+	private(set) var sessionId: String?
 
 	private let model: ServerNicknameChangeModel
 	/// The nickname the person asked for.
 	private let onSubmitNickname: (String) -> Void
 
-	init(client: Client, onSubmitNickname: @escaping (String) -> Void) {
-		let currentNickname = client.userNickname
+	init(session: ServerSession, onSubmitNickname: @escaping (String) -> Void) {
+		let currentNickname = session.userNickname
 
 		self.onSubmitNickname = onSubmitNickname
-		self.client = client
-		clientId = client.uniqueIdentifier
+		self.session = session
+		sessionId = session.uniqueIdentifier
 		model = ServerNicknameChangeModel(
 			currentNickname: currentNickname,
-			validator: Self.nicknameValidator(for: client)
+			validator: Self.nicknameValidator(for: session)
 		)
 
 		super.init(window: nil)
 		installSheet()
 	}
 
-	/** Checks a proposed nickname against what `client`'s server accepts.
+	/** Checks a proposed nickname against what `session`'s server accepts.
 
-	 The closure holds the client weakly, so the sheet's model is never what
-	 keeps a connection alive. Once the client is gone the check falls back to
+	 The closure holds the session weakly, so the sheet's model is never what
+	 keeps a connection alive. Once the session is gone the check falls back to
 	 the syntax every server accepts. */
-	static func nicknameValidator(for client: Client) -> ServerNicknameChangeModel.Validator {
-		{ [weak client] candidate in
+	static func nicknameValidator(for session: ServerSession) -> ServerNicknameChangeModel.Validator {
+		{ [weak session] candidate in
 			if candidate.isEmpty {
 				return ApplicationStrings.requiredField
 			}
 
-			let isNickname = if let client {
-				(candidate as NSString).isHostmaskNickname(on: client)
+			let isNickname = if let session {
+				candidate.isHostmaskNickname(on: session)
 			} else {
-				(candidate as NSString).isHostmaskNickname
+				candidate.isHostmaskNickname
 			}
 
 			return isNickname ? nil : CommonValidationStrings.invalidNickname
@@ -104,10 +103,6 @@ final class ServerNicknameChangeSheet: SheetSession, ClientScoped {
 			}
 		)
 		setContent(rootView)
-	}
-
-	func start() {
-		startSheet()
 	}
 
 	override func submit() {
@@ -132,16 +127,10 @@ struct ServerNicknameChangeView: View {
 
 	var body: some View {
 		VStack(spacing: 0) {
-			VStack(alignment: .leading, spacing: 6) {
-				Text(.ServerProperties.changeButton)
-					.font(.title2.weight(.semibold))
-				Text(.ServerProperties.nicknameChangeDescription)
-					.foregroundStyle(.secondary)
-					.fixedSize(horizontal: false, vertical: true)
-			}
-			.frame(maxWidth: .infinity, alignment: .leading)
-			.padding([.horizontal, .top], 20)
-			.padding(.bottom, 12)
+			SheetHeading(
+				.ServerProperties.changeButton,
+				subtitle: Text(.ServerProperties.nicknameChangeDescription)
+			)
 
 			Form {
 				Section {
@@ -163,16 +152,12 @@ struct ServerNicknameChangeView: View {
 			}
 			.formStyle(.grouped)
 
-			Divider()
-			HStack(spacing: 8) {
-				Spacer()
-				Button(PromptStrings.Action.cancel, action: cancel)
-					.keyboardShortcut(.cancelAction)
-				Button(.ServerProperties.changeButton, action: submit)
-					.keyboardShortcut(.defaultAction)
-					.disabled(model.validationMessage != nil)
-			}
-			.padding(12)
+			SheetActions(
+				confirmTitle: Text(.ServerProperties.changeButton),
+				confirmIsDisabled: model.validationMessage != nil,
+				confirm: submit,
+				cancel: cancel
+			)
 		}
 		.frame(minWidth: 400, idealWidth: 440, maxWidth: .infinity)
 		.onAppear {

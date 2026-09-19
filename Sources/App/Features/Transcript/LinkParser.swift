@@ -1,9 +1,7 @@
 // Copyright (c) 2018 Codeux Software, LLC & respective contributors.
 // SPDX-License-Identifier: BSD-3-Clause
 
-import AppKit
 import Foundation
-import os
 
 /// A hyperlink located inside a string by `LinkParser`.
 ///
@@ -73,16 +71,16 @@ private final nonisolated class LinkParserExpressions: Sendable { // nonisolated
 
  The declarations keep the key names the AutoHyperlinks framework that preceded
  this parser used, so a user customization carries over. */
-nonisolated struct LinkSchemePolicy: Sendable {
+nonisolated struct LinkSchemeRules: Sendable {
 	var permitsAnyScheme = false
 	var permittedSchemes: Set<String> = []
 
-	/// The allowlist the reader's preferences describe right now.
-	@MainActor static func current() -> LinkSchemePolicy {
-		LinkSchemePolicy(
-			permitsAnyScheme: Preferences.LinkSchemes.permitAny.value,
-			permittedSchemes: Set(Preferences.LinkSchemes.permittedDefault.value)
-				.union(Preferences.LinkSchemes.permitted.value)
+	/// The allowlist the reader's settings describe right now.
+	@MainActor static func current() -> LinkSchemeRules {
+		LinkSchemeRules(
+			permitsAnyScheme: SettingsKeys.LinkSchemes.permitAny.value,
+			permittedSchemes: Set(SettingsKeys.LinkSchemes.permittedDefault.value)
+				.union(SettingsKeys.LinkSchemes.permitted.value)
 		)
 	}
 }
@@ -95,7 +93,7 @@ nonisolated enum LinkParser {
 	/// - Parameters:
 	///   - string: The text to scan.
 	///   - policy: The reader's scheme customization, taken on the main actor.
-	static func locateLinks(in string: String, allowing policy: LinkSchemePolicy) -> [LinkParserResult] {
+	static func locateLinks(in string: String, allowing policy: LinkSchemeRules) -> [LinkParserResult] {
 		let scanString = string as NSString
 
 		let fullRange = NSRange(location: 0, length: scanString.length)
@@ -183,10 +181,10 @@ nonisolated enum LinkParser {
 
 	static let bannedLineTypes =
 		[
-			LogLine.string(for: .mode),
-			LogLine.string(for: .join),
-			LogLine.string(for: .nick),
-			LogLine.string(for: .invite),
+			ChatLine.string(for: .mode),
+			ChatLine.string(for: .join),
+			ChatLine.string(for: .nick),
+			ChatLine.string(for: .invite),
 		].compactMap(\.self)
 
 	// MARK: - Configuration
@@ -201,10 +199,10 @@ nonisolated enum LinkParser {
 	/// The two schemes a link the app opens itself is written in.
 	static let webSchemes: Set<String> = ["http", "https"]
 
-	/// The app's own schemes, which a link may carry back into the app.
-	static let appSchemes: Set<String> = ["glasstual", "textual"]
+	/// The app's own scheme, which a link may carry back into the app.
+	static let appSchemes: Set<String> = ["glasstual"]
 
-	/// Schemes that are always linked, regardless of user preferences.
+	/// Schemes that are always linked, regardless of user settings.
 	private static let builtInSchemes: Set<String> = webSchemes.union([
 		"xmpp",
 		"rdar", "radr", "radar", "x-radar",
@@ -240,7 +238,7 @@ nonisolated enum LinkParser {
 	/// - Parameters:
 	///   - scheme: A URL scheme, without the trailing colon.
 	///   - policy: The reader's scheme customization, taken on the main actor.
-	static func isPermittedScheme(_ scheme: String, allowing policy: LinkSchemePolicy) -> Bool {
+	static func isPermittedScheme(_ scheme: String, allowing policy: LinkSchemeRules) -> Bool {
 		let scheme = scheme.lowercased()
 
 		if deniedSchemes.contains(scheme) {
@@ -255,7 +253,7 @@ nonisolated enum LinkParser {
 	}
 
 	/** The same answer for a caller that is already on the main actor and so can
-	 read the live preferences itself — opening a clicked link, drawing a topic. */
+	 read the live settings itself — opening a clicked link, drawing a topic. */
 	@MainActor
 	static func isPermittedScheme(_ scheme: String) -> Bool {
 		isPermittedScheme(scheme, allowing: .current())
@@ -263,7 +261,7 @@ nonisolated enum LinkParser {
 
 	/// The same answer for a whole address, which is what a rendered run and a
 	/// drawn topic carry.
-	static func isPermittedLink(_ location: String, allowing policy: LinkSchemePolicy) -> Bool {
+	static func isPermittedLink(_ location: String, allowing policy: LinkSchemeRules) -> Bool {
 		guard let url = URL(string: location), let scheme = url.scheme else { return false }
 		return isPermittedScheme(scheme, allowing: policy)
 	}
@@ -322,64 +320,5 @@ nonisolated enum LinkParser {
 		}
 
 		return depth >= 0
-	}
-}
-
-private let openLinkLogger = Logger(
-	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
-	category: "OpenLink"
-)
-
-enum OpenLink {
-	/** Hands a URL the allowlist has already cleared to the system.
-
-	 `NSWorkspace` launches whatever app has registered the scheme, so this is
-	 the last step of a launch a remote peer asked for. It is a stored value
-	 rather than a call so that ``opener`` can stand somewhere else in a test. */
-	static let workspaceOpener: @MainActor (URL, Bool) -> Void = { url, inBackground in
-		guard inBackground else {
-			NSWorkspace.shared.open(url)
-
-			return
-		}
-
-		/* User should not be clicking links frequently enough that
-		 we need to worry about making the configuration static. */
-		let configuration = NSWorkspace.OpenConfiguration()
-		configuration.activates = false
-
-		NSWorkspace.shared.open(url, configuration: configuration)
-	}
-
-	/** Where a URL goes once ``open(url:inBackground:)`` has cleared it.
-
-	 The guard in front of this is the only thing between a string a stranger
-	 typed in a channel and an app launch on this machine, so a test has to be
-	 able to prove that the guard refuses what it should and passes what it
-	 should -- without asking the real workspace to open `file:///etc/passwd` to
-	 find out. Tests substitute their own opener and restore
-	 ``workspaceOpener``; nothing in the app replaces it. */
-	static var opener = workspaceOpener
-
-	static func open(url: URL, inBackground: Bool = Preferences.Messages.openBrowserInBackground.value) {
-		/* Links come from other people. `NSWorkspace` launches whatever app has
-		 registered the scheme, so the same allowlist that decides what becomes
-		 clickable also decides what may be opened: no caller is trusted to have
-		 filtered already. */
-		guard let scheme = url.scheme, LinkParser.isPermittedScheme(scheme) else {
-			openLinkLogger.info("Refused to open URL with scheme '\(url.scheme ?? "(none)", privacy: .public)'")
-
-			return
-		}
-
-		opener(url, inBackground)
-	}
-
-	static func open(string: String, inBackground: Bool = Preferences.Messages.openBrowserInBackground.value) {
-		guard let urlToOpen = URL(string: string) else {
-			return
-		}
-
-		open(url: urlToOpen, inBackground: inBackground)
 	}
 }

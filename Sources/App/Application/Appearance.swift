@@ -5,9 +5,9 @@ import AppKit
 import Combine
 import os
 
-private let appearanceTerminationLogger = Logger(
-	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
-	category: "Termination"
+private let appearanceLogger = Logger(
+	subsystem: LogSubsystem.current,
+	category: "Appearance"
 )
 
 extension Notification.Name {
@@ -16,7 +16,7 @@ extension Notification.Name {
 }
 
 /// Which of the two appearances the application draws in.
-enum AppearanceType: UInt, Sendable {
+enum AppearanceMode: UInt, Sendable {
 	case light
 	case dark
 }
@@ -24,12 +24,15 @@ enum AppearanceType: UInt, Sendable {
 /// An immutable snapshot of the appearance the application is currently
 /// drawing in. It is built once per appearance change and only ever read
 /// afterwards, so it is a value.
-struct AppearancePropertyCollection: Equatable, Sendable {
-	var appearanceType: AppearanceType = .light
-	var isDarkAppearance = false
+struct ResolvedAppearance: Equatable, Sendable {
+	var mode: AppearanceMode = .light
 	/// Whether the appearance is the application's own choice rather than the
 	/// system's. Only then does a window carry an `NSAppearance`.
 	var overridesAppKitAppearance = false
+
+	var isDarkAppearance: Bool {
+		mode == .dark
+	}
 
 	var appKitAppearance: NSAppearance? {
 		guard overridesAppKitAppearance else {
@@ -54,7 +57,7 @@ struct AppearancePropertyCollection: Equatable, Sendable {
 
 @MainActor
 final class Appearance: NSObject {
-	private(set) var properties = AppearancePropertyCollection()
+	private(set) var properties = ResolvedAppearance()
 
 	/// `properties` starts at its default value, so "has the appearance ever
 	/// been resolved" needs its own flag rather than a nil check.
@@ -113,7 +116,7 @@ final class Appearance: NSObject {
 	}
 
 	func prepareForApplicationTermination() {
-		appearanceTerminationLogger.debug("Removing appearance change observers")
+		appearanceLogger.debug("Removing appearance change observers")
 		removeObservers()
 	}
 
@@ -139,8 +142,8 @@ final class Appearance: NSObject {
 	}
 
 	private func updateAppearanceBySystemChange(_ systemChanged: Bool) {
-		var appearanceType: AppearanceType = .light
-		let preferredAppearance = Preferences.Appearance.preferredAppearance.value
+		var mode: AppearanceMode = .light
+		let preferredAppearance = SettingsKeys.Appearance.preferredAppearance.value
 
 		switch preferredAppearance {
 		case .inherited:
@@ -148,23 +151,23 @@ final class Appearance: NSObject {
 			 appearance of the application's own would answer instead. */
 			applyAppKitAppearance(nil)
 
-			if AppearancePropertyCollection.systemWideDarkModeEnabled() {
-				appearanceType = .dark
+			if ResolvedAppearance.systemWideDarkModeEnabled() {
+				mode = .dark
 			}
 		case .dark:
-			appearanceType = .dark
+			mode = .dark
 		default:
 			break
 		}
 
-		let isAppearanceDark = appearanceType == .dark
+		let isAppearanceDark = mode == .dark
 
 		let overridesAppKitAppearance = preferredAppearance != .inherited
 
 		let oldProperties = properties
 		let changeAppearance =
 			hasResolvedAppearance == false
-				|| oldProperties.appearanceType != appearanceType
+				|| oldProperties.mode != mode
 				|| oldProperties.overridesAppKitAppearance != overridesAppKitAppearance
 
 		var systemChanged = systemChanged
@@ -177,9 +180,8 @@ final class Appearance: NSObject {
 			systemChanged = false
 		}
 
-		properties = AppearancePropertyCollection(
-			appearanceType: appearanceType,
-			isDarkAppearance: isAppearanceDark,
+		properties = ResolvedAppearance(
+			mode: mode,
 			overridesAppKitAppearance: overridesAppKitAppearance
 		)
 		hasResolvedAppearance = true
@@ -187,8 +189,8 @@ final class Appearance: NSObject {
 		if preferredAppearance != .inherited {
 			applyAppKitAppearance(
 				isAppearanceDark
-					? AppearancePropertyCollection.appKitDarkAppearance()
-					: AppearancePropertyCollection.appKitLightAppearance()
+					? ResolvedAppearance.appKitDarkAppearance()
+					: ResolvedAppearance.appKitLightAppearance()
 			)
 		}
 

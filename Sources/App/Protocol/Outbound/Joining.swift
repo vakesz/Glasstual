@@ -6,85 +6,23 @@ import Foundation
 import os
 
 private nonisolated let joinLogger = Logger(
-	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
-	category: "IRCJoin"
+	subsystem: LogSubsystem.current,
+	category: "Joining"
 )
 
-/** What `JOIN` accepts for a channel name and a key.
-
- `JOIN` takes two comma-separated lists that line up with each other, and every
- entry of both is one wire token. A key with a space in it cannot be sent at
- all — as the trailing parameter it would swallow whatever followed, and
- without the colon the server would read only its first word — so it is cut at
- the space rather than colonised. A key with a comma in it cannot be sent
- either: the server would read it as two keys, and hand the second to the next
- channel. */
-nonisolated enum OutboundJoinPolicy {
-	/// `key` as `JOIN` can carry it, or `nil` when nothing is left of it.
-	///
-	/// Everything from the first space on is dropped: the protocol has no way
-	/// to spell a key with a space in it, and `KEYLEN` bounds what is left. A
-	/// key with a comma in it is refused outright, because cutting it would
-	/// send a different key.
-	static func sanitizedKey(_ key: String?, maximumLength: UInt) -> String? {
-		guard let firstToken = key?.split(separator: " ", maxSplits: 1).first,
-		      firstToken.contains(",") == false
-		else {
-			return nil
-		}
-
-		let bounded = ProtocolLimits.truncated(
-			String(firstToken),
-			toByteCount: Int(min(maximumLength, UInt(firstToken.utf8.count)))
-		)
-
-		return bounded.isEmpty ? nil : bounded
-	}
-
-	/// `channelNames` paired with the keys the user typed for them.
-	///
-	/// The user types keys separated by spaces, commas, or both, and the *n*th
-	/// key belongs to the *n*th channel. Space-separated on the wire they became
-	/// one trailing parameter, which is one key for the first channel and
-	/// nothing for the rest.
-	static func targets(
-		channelNames: [String],
-		keyText: String,
-		maximumKeyLength: UInt
-	) -> [JoinBatching.Target] {
-		let keys = keyText.split(whereSeparator: { $0 == " " || $0 == "," || $0 == "\t" })
-
-		return channelNames.enumerated().map { index, name in
-			JoinBatching.Target(
-				name: name,
-				key: index < keys.count ? sanitizedKey(String(keys[index]), maximumLength: maximumKeyLength) : nil
-			)
-		}
-	}
-
-	/// Whether `channelName` fits the server's `CHANNELLEN`.
-	///
-	/// A name over the limit is refused rather than cut: a truncated channel
-	/// name is a different channel, so joining it would put the user somewhere
-	/// they never asked to be. Zero is the server naming no limit.
-	static func channelNameFits(_ channelName: String, maximumLength: UInt) -> Bool {
-		maximumLength == 0 || UInt(channelName.utf8.count) <= maximumLength
-	}
-}
-
 @MainActor
-extension Client {
+extension ServerSession {
 	var canJoinChannels: Bool {
 		isLoggedIn && !isQuitting && !isDisconnecting && !isTerminating
 	}
 
-	func canJoin(_ channel: Channel) -> Bool {
-		canJoinChannels && channel.associatedClient === self
-			&& channelList.contains { $0 === channel }
+	func canJoin(_ channel: Conversation) -> Bool {
+		canJoinChannels && channel.associatedSession === self
+			&& conversationList.contains { $0 === channel }
 			&& channel.isChannel && !channel.isActive && channel.status != .terminated
 	}
 
-	func join(_ channel: Channel, password: String? = nil) {
+	func join(_ channel: Conversation, password: String? = nil) {
 		guard canJoin(channel) else { return }
 		markJoining(channel)
 		forceJoinChannel(channel.name, password: password ?? channel.secretKey)
@@ -97,7 +35,7 @@ extension Client {
 			}
 			return
 		}
-		if let channel = findChannel(channelName) {
+		if let channel = findConversation(channelName) {
 			join(channel, password: password)
 		} else {
 			forceJoinChannel(channelName, password: password)
@@ -105,7 +43,7 @@ extension Client {
 	}
 
 	/// Shows `channel` as on its way in until the server answers the JOIN.
-	private func markJoining(_ channel: Channel) {
+	private func markJoining(_ channel: Conversation) {
 		channel.errorOnLastJoinAttempt = false
 		channel.status = .joining
 		output?.reloadChatItem(channel)
@@ -120,13 +58,13 @@ extension Client {
 		if let key = OutboundJoinPolicy.sanitizedKey(password, maximumLength: supportInfo.maximumKeyLength) {
 			arguments.append(key)
 		}
-		send("JOIN", arguments: arguments)
+		send(.join, arguments: arguments)
 	}
 
 	/// `channelNames` less the ones the server would refuse for their length.
 	///
 	/// `CHANNELLEN` was parsed and never applied, so an over-long name went out
-	/// and came back as an error numeric against a name the client had already
+	/// and came back as an error numeric against a name the session had already
 	/// put in the sidebar.
 	func channelNamesWithinServerLimit(_ channelNames: [String]) -> [String] {
 		let maximumLength = supportInfo.maximumChannelNameLength
@@ -155,7 +93,7 @@ extension Client {
 		return accepted
 	}
 
-	func joinChannels(_ channels: [Channel]) {
+	func joinChannels(_ channels: [Conversation]) {
 		guard canJoinChannels, channels.isEmpty == false else { return }
 		let acceptedNames = Set(channelNamesWithinServerLimit(channels.map(\.name)))
 		let pending = channels.filter { canJoin($0) && acceptedNames.contains($0.name) }
@@ -185,7 +123,7 @@ extension Client {
 			if batch.keys.isEmpty == false {
 				arguments.append(batch.keys.joined(separator: ","))
 			}
-			send("JOIN", arguments: arguments)
+			send(.join, arguments: arguments)
 		}
 	}
 
@@ -193,14 +131,14 @@ extension Client {
 		guard supportInfo.channelLimits.isEmpty == false else { return }
 
 		var joinedCountByPrefix: [Character: UInt] = [:]
-		for channel in channelList where channel.isChannel && channel.isActive {
+		for channel in conversationList where channel.isChannel && channel.isActive {
 			guard let prefix = channel.name.first else { continue }
 			joinedCountByPrefix[prefix, default: 0] += 1
 		}
 
 		var warnedPrefixes: Set<Character> = []
 		for channelName in channelNames where stringIsChannelName(channelName) {
-			if findChannel(channelName)?.isActive == true {
+			if findConversation(channelName)?.isActive == true {
 				continue
 			}
 			guard let prefix = channelName.first else { continue }
@@ -229,7 +167,7 @@ extension Client {
 
 		let selection = channelNames.lazy
 			.filter { self.stringIsChannelName($0) }
-			.compactMap { self.findChannelOrCreate($0) }
+			.compactMap { self.findConversationOrCreate($0) }
 			.first
 		let shouldJoin = (selection.map { $0.isActive == false } ?? true) || channelNames.count > 1
 		/* Keys pair with the names as typed, before any name is refused: a
@@ -246,7 +184,7 @@ extension Client {
 			/* A channel the sidebar already lists shows it is on its way in, as
 			 it does when it is joined from the sidebar. */
 			for target in targets {
-				guard let channel = findChannel(target.name), canJoin(channel) else { continue }
+				guard let channel = findConversation(target.name), canJoin(channel) else { continue }
 				markJoining(channel)
 			}
 			sendJoins(for: targets)

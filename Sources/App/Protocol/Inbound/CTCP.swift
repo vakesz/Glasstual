@@ -2,6 +2,7 @@
 // Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
 // SPDX-License-Identifier: BSD-3-Clause
 
+import CocoaExtensions
 import Foundation
 import os
 
@@ -28,8 +29,8 @@ enum CTCPLagRating: Sendable {
 		}
 	}
 
-	/// How this rating reads in the `/lagcheck` reply the user sends back to
-	/// the channel.
+	/// How this rating reads in the `/mylag` reply the user sends back to the
+	/// conversation.
 	var ratingText: String {
 		switch self {
 		case .excellent: String(localized: .IRC.yeahOkay)
@@ -44,14 +45,39 @@ enum CTCPLagRating: Sendable {
 	}
 }
 
+/** The CTCP extended messages this session names.
+
+ A verb is an ASCII token the sender may spell in any case, so the raw values
+ are the upper-cased wire spelling and ``init(wireName:)`` folds to it. A verb
+ with no case here is still carried by name, because a query this session does
+ not implement is printed and answered by the person, not by the catalogue. */
+nonisolated enum CTCPVerb: String, Sendable, CaseIterable {
+	case action = "ACTION"
+	case clientInfo = "CLIENTINFO"
+	case dcc = "DCC"
+	case finger = "FINGER"
+	case lagCheck = "LAGCHECK"
+	case ping = "PING"
+	case time = "TIME"
+	case userInfo = "USERINFO"
+	case version = "VERSION"
+
+	init?(wireName: String) {
+		self.init(rawValue: wireName.uppercased())
+	}
+
+	/// The verb as it goes out inside the frame.
+	var wireName: String {
+		rawValue
+	}
+}
+
 /// CTCP wraps an extended message between two `0x01` bytes. ACTION is the one
 /// extended message Glasstual both writes and reads, on the IRC connection and
 /// on a direct chat alike, so its framing is spelled out once here instead of
 /// at each of those sites.
 enum CTCPPayload {
 	static let delimiter = "\u{01}"
-
-	private static let actionCommand = "ACTION"
 
 	static func framed(command: String, text: String?, sanitizingLineBreaks: Bool) -> String {
 		var payload = text.map { "\(command) \($0)" } ?? command
@@ -69,14 +95,14 @@ enum CTCPPayload {
 	}
 
 	static func action(_ message: String) -> String {
-		framed(command: actionCommand, text: message, sanitizingLineBreaks: false)
+		framed(command: CTCPVerb.action.wireName, text: message, sanitizingLineBreaks: false)
 	}
 
 	/// The message inside an ACTION frame, or `nil` when the line is not one.
 	/// A frame missing its closing delimiter still parses: some clients omit
 	/// it.
 	static func actionText(in line: String) -> String? {
-		let prefix = "\(delimiter)\(actionCommand) "
+		let prefix = "\(delimiter)\(CTCPVerb.action.wireName) "
 		guard line.hasPrefix(prefix) else { return nil }
 		var body = line.dropFirst(prefix.count)
 		if body.hasSuffix(delimiter) {
@@ -86,12 +112,30 @@ enum CTCPPayload {
 	}
 }
 
+/** One extended message read out of a CTCP frame: the verb it names and the
+ text behind it.
+
+ `rawCommand` is the verb as it was sent, upper-cased; `verb` is `nil` when this
+ session has no case for it, which is how an unknown query keeps being printed
+ and answered by the name the sender used. */
+nonisolated struct CTCPMessage: Sendable, Equatable {
+	let verb: CTCPVerb?
+	let rawCommand: String
+	let arguments: String
+}
+
 enum CTCPPolicy {
-	static func commandAndArguments(from text: String) -> (command: String, arguments: String)? {
+	/// The extended message `text` carries, or `nil` when it names no verb.
+	static func commandAndArguments(from text: String) -> CTCPMessage? {
 		// CTCP tokens are separated by SPACE (0x20), not by Unicode whitespace.
 		let parts = text.unicodeScalars.split(separator: " ", maxSplits: 1, omittingEmptySubsequences: false)
 		guard let command = parts.first, command.isEmpty == false else { return nil }
-		return (String(command).uppercased(), parts.count > 1 ? String(parts[1]) : "")
+		let rawCommand = String(command).uppercased()
+		return CTCPMessage(
+			verb: CTCPVerb(rawValue: rawCommand),
+			rawCommand: rawCommand,
+			arguments: parts.count > 1 ? String(parts[1]) : ""
+		)
 	}
 
 	/// The characters a form field keeps as they are. `&`, `=` and `+` are the
@@ -132,13 +176,13 @@ enum CTCPPolicy {
 }
 
 private let ctcpLogger = Logger(
-	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
-	category: "IRCCTCP"
+	subsystem: LogSubsystem.current,
+	category: "CTCP"
 )
 
 /** How many CTCP queries get an answer, and how quickly.
 
- A reply is a `NOTICE` the client sends on its own, so a channel full of
+ A reply is a `NOTICE` the session sends on its own, so a channel full of
  `VERSION` queries — or one scripted sender — turns into as many outgoing lines
  as the flood-control queue will hold, and the server kills the connection for
  excess flood. The per-sender ceiling stops one person doing it; the overall
@@ -212,17 +256,17 @@ nonisolated struct CTCPReplyThrottle: Sendable {
 }
 
 @MainActor
-extension Client {
+extension ServerSession {
 	func receiveCTCPQuery(_ message: Message, text: String) {
 		let sender = message.senderNickname ?? ""
 		let isLocalUser = nicknameIsMyself(sender)
 		let ignore = isLocalUser ? nil : message.senderHostmask.flatMap(findAddressBookEntry(forHostmask:))
 		guard let parsed = CTCPPolicy.commandAndArguments(from: text) else { return }
 
-		/* A lag check is a query the client sends itself, so with echo-message
+		/* A lag check is a query the session sends itself, so with echo-message
 		 the copy that comes back is the only one there is. It has to be read
 		 before echoes of queries sent to other people are set aside. */
-		if parsed.command == "LAGCHECK" {
+		if parsed.verb == .lagCheck {
 			receiveCTCPLagCheckQuery(message, text: parsed.arguments)
 			return
 		}
@@ -232,56 +276,56 @@ extension Client {
 		if ignore?.ignoreClientToClientProtocol == true {
 			return
 		}
-		guard environment.preferences.replyToCTCPRequests else {
-			printDebugInformation(toConsole: String(localized: .IRC.ctcpFromWasIgnored(parsed.command, sender)))
+		guard environment.settings.replyToCTCPRequests else {
+			printDebugInformation(toConsole: String(localized: .IRC.ctcpFromWasIgnored(parsed.rawCommand, sender)))
 			return
 		}
-		if parsed.command == "DCC" {
+		if parsed.verb == .dcc {
 			receivedDCCQuery(message, text: parsed.arguments, ignoreInfo: ignore)
 			return
 		}
 
 		let printTarget = noticePrintTarget()
-		print(String(localized: .IRC.miscellaneousMessagesRelatedCtcp(parsed.command, sender)), by: nil, in: printTarget, as: .ctcpQuery,
+		print(String(localized: .IRC.miscellaneousMessagesRelatedCtcp(parsed.rawCommand, sender)), by: nil, in: printTarget, as: .ctcpQuery,
 		      command: message.command, receivedAt: message.receivedAt)
 
-		guard let replyText = ctcpReplyText(for: parsed.command, arguments: parsed.arguments) else {
+		guard let replyText = ctcpReplyText(for: parsed.verb, arguments: parsed.arguments) else {
 			return
 		}
 
 		/* The query is still printed — it is the user's record of the flood —
 		 but answering every one of them is what gets the connection killed for
 		 excess flood. The throttle is consulted only once there is an answer to
-		 send, so a burst of commands this client does not implement cannot spend
+		 send, so a burst of commands this session does not implement cannot spend
 		 the allowance a real query needs. */
 		guard allowsCTCPReply(to: sender) else {
 			ctcpLogger.notice("Throttled a CTCP reply")
 			return
 		}
 
-		sendCTCPReply(sender, command: parsed.command, text: replyText)
+		sendCTCPReply(sender, command: parsed.rawCommand, text: replyText)
 	}
 
-	/// What this client answers `command` with, or `nil` when it answers nothing.
-	private func ctcpReplyText(for command: String, arguments: String) -> String? {
+	/// What this session answers `command` with, or `nil` when it answers nothing.
+	private func ctcpReplyText(for command: CTCPVerb?, arguments: String) -> String? {
 		switch command {
-		case "CLIENTINFO":
+		case .clientInfo:
 			return String(localized: .IRC.clientinfoDccFingerPingTimeUserinfo)
-		case "FINGER":
+		case .finger:
 			return String(localized: .IRC.stopFingeringMePervert)
-		case "PING":
+		case .ping:
 			guard arguments.utf8.count <= 50 else {
 				ctcpLogger.fault("Ignoring PING query that exceeds 50 bytes")
 				return nil
 			}
 
 			return arguments
-		case "TIME":
+		case .time:
 			return DateFormatting.iso8601String(from: Date())
-		case "USERINFO":
+		case .userInfo:
 			return config.realName
-		case "VERSION":
-			let masquerade = config.ctcpVersionReply?.nonEmpty ?? environment.preferences.masqueradeCTCPVersion?
+		case .version:
+			let masquerade = config.ctcpVersionReply?.nonEmpty ?? environment.settings.masqueradeCTCPVersion?
 				.nonEmpty
 
 			return masquerade ?? String(localized: .IRC.ircClientV(
@@ -307,8 +351,10 @@ extension Client {
 		let delta = (Date().timeIntervalSince1970 - time) * 1000
 		let rating = CTCPLagRating(milliseconds: delta).ratingText
 		let response = String(localized: .IRC.receivedLagCheckReplyFromTime(serverAddress ?? "", Float(delta), rating))
-		if let channelName = context["channel"], let channel = findChannel(channelName) {
-			sendPrivmsg(response, to: channel)
+		// "channel" is the field name the lag-check CTCP payload carries; what it
+		// holds is whichever conversation `/mylag` was run in.
+		if let conversationName = context["channel"], let conversation = findConversation(conversationName) {
+			sendPrivmsg(response, to: conversation)
 		} else {
 			printDebugInformation(response)
 		}
@@ -325,19 +371,19 @@ extension Client {
 		let output: String
 		/* Only a PING whose echo comes back as the number that was sent can be
 		 timed. An unparsable one used to read as zero — the epoch — and the
-		 client reported a lag of fifty-six years rather than saying nothing. */
-		if parsed.command == "PING", let echoedTime = Double(parsed.arguments), echoedTime.isFinite {
+		 session reported a lag of fifty-six years rather than saying nothing. */
+		if parsed.verb == .ping, let echoedTime = Double(parsed.arguments), echoedTime.isFinite {
 			let delta = Date().timeIntervalSince1970 - echoedTime
-			output = String(localized: .IRC.ctcpSec(sender, parsed.command, Float(delta)))
+			output = String(localized: .IRC.ctcpSec(sender, parsed.rawCommand, Float(delta)))
 		} else {
-			output = String(localized: .IRC.ctcp(sender, parsed.command, parsed.arguments))
+			output = String(localized: .IRC.ctcp(sender, parsed.rawCommand, parsed.arguments))
 		}
 		print(output, by: nil, in: noticePrintTarget(), as: .ctcpReply,
 		      command: message.command, receivedAt: message.receivedAt)
 	}
 
-	private func noticePrintTarget() -> Channel? {
-		guard environment.preferences.locationToSendNotices == .selectedChannel else { return nil }
-		return output?.selectedChannel(on: self)
+	private func noticePrintTarget() -> Conversation? {
+		guard environment.settings.locationToSendNotices == .selectedConversation else { return nil }
+		return output?.selectedConversation(on: self)
 	}
 }

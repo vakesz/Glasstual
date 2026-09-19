@@ -48,28 +48,26 @@ enum ChannelMode: String, CaseIterable, Sendable {
 final class ChannelModesModel {
 	static let maximumUserLimit = 99999
 
-	private let workingModes: ChannelModeContainer
+	/// The sheet's own copy of the channel's modes, edited in place and handed
+	/// back on submission. Not observed: nothing reads it until then.
+	@ObservationIgnored private var workingModes: ChannelModeContainer
 	private var enabledModes: Set<ChannelMode>
 
 	private(set) var secretKey: String
 	private(set) var userLimit: String
 
-	let maximumKeyLength: Int
+	private let maximumKeyLength: UInt
 
 	init(copying modes: ChannelModeContainer, maximumKeyLength: UInt) {
-		guard let copiedModes = modes.copy() as? ChannelModeContainer else {
-			preconditionFailure("Channel mode copies must preserve their model type")
-		}
-
-		workingModes = copiedModes
-		self.maximumKeyLength = Int(clamping: maximumKeyLength)
+		workingModes = modes
+		self.maximumKeyLength = maximumKeyLength
 		enabledModes = Set(
 			ChannelMode.allCases.filter { mode in
-				copiedModes.modeInfo(for: mode.rawValue)?.modeIsSet == true
+				modes.modeInfo(for: mode.rawValue)?.modeIsSet == true
 			}
 		)
-		secretKey = copiedModes.modeInfo(for: ChannelMode.key.rawValue)?.modeParameter ?? ""
-		userLimit = copiedModes.modeInfo(for: ChannelMode.userLimit.rawValue)?.modeParameter ?? ""
+		secretKey = modes.modeInfo(for: ChannelMode.key.rawValue)?.modeParameter ?? ""
+		userLimit = modes.modeInfo(for: ChannelMode.userLimit.rawValue)?.modeParameter ?? ""
 	}
 
 	func isEnabled(_ mode: ChannelMode) -> Bool {
@@ -80,9 +78,9 @@ final class ChannelModesModel {
 		if enabled {
 			enabledModes.insert(mode)
 
-			// A server can report both historic visibility modes at once, so
-			// initialization preserves that state. The first user interaction
-			// with either mode restores the mutually exclusive editing policy.
+			// A server can report both visibility modes at once, so initialization
+			// preserves that state. The first user interaction with either mode
+			// restores the mutually exclusive editing policy.
 			switch mode {
 			case .secretChannel:
 				enabledModes.remove(.privateChannel)
@@ -100,16 +98,22 @@ final class ChannelModesModel {
 		self.secretKey = secretKey
 	}
 
-	/// How many octets of key the server still has room for, or `nil` where it
-	/// named no limit. KEYLEN is an octet count, so the key is measured in
-	/// UTF-8 bytes. Negative once the key no longer fits, which is what
-	/// disables the button and turns the footer into a warning.
-	var remainingKeyLength: Int? {
-		maximumKeyLength > 0 ? maximumKeyLength - secretKey.utf8.count : nil
+	/// The server's KEYLEN against the key in the field, or `nil` where it named
+	/// no limit.
+	var keyLengthLimit: ServerLengthLimit? {
+		ServerLengthLimit(using: secretKey, maximum: maximumKeyLength)
 	}
 
-	var fitsMaximumKeyLength: Bool {
-		(remainingKeyLength ?? 0) >= 0
+	var fitsKeyLengthLimit: Bool {
+		isEnabled(.key) == false || keyLengthLimit?.isExceeded != true
+	}
+
+	/// The footer under the channel key field, which says how far past the
+	/// server's limit the key is; below the limit there is nothing to say.
+	var keyLengthCaption: String? {
+		guard isEnabled(.key), let limit = keyLengthLimit, limit.isExceeded else { return nil }
+
+		return String(localized: .ChannelProperties.channelKeyCharactersOverLimit(arg1: -limit.remaining))
 	}
 
 	func updateUserLimit(_ userLimit: String) {
@@ -155,9 +159,9 @@ final class ChannelModesModel {
 
 @MainActor
 final class ChannelModesSheet: SheetSession, ChannelScoped {
-	private(set) var client: Client?
-	private(set) var channel: Channel?
-	private(set) var clientId: String?
+	private(set) var session: ServerSession?
+	private(set) var channel: Conversation?
+	private(set) var sessionId: String?
 	private(set) var channelId: String?
 
 	let model: ChannelModesModel
@@ -165,21 +169,21 @@ final class ChannelModesSheet: SheetSession, ChannelScoped {
 	/// The modes the person chose to set.
 	private let onSubmitModes: (ChannelModeContainer) -> Void
 
-	init(channel: Channel, onSubmitModes: @escaping (ChannelModeContainer) -> Void) {
+	init(channel: Conversation, onSubmitModes: @escaping (ChannelModeContainer) -> Void) {
 		self.onSubmitModes = onSubmitModes
-		guard let client = channel.associatedClient else {
-			preconditionFailure("ChannelModesSheet requires an associated client")
+		guard let session = channel.associatedSession else {
+			preconditionFailure("ChannelModesSheet requires an associated session")
 		}
 
-		self.client = client
+		self.session = session
 		self.channel = channel
-		clientId = client.uniqueIdentifier
+		sessionId = session.uniqueIdentifier
 		channelId = channel.uniqueIdentifier
 
-		let sourceModes = channel.modeInfo?.modes ?? ChannelModeContainer(client: client)
+		let sourceModes = channel.modeInfo?.modes ?? ChannelModeContainer(session: session)
 		model = ChannelModesModel(
 			copying: sourceModes,
-			maximumKeyLength: client.supportInfo.maximumKeyLength
+			maximumKeyLength: session.supportInfo.maximumKeyLength
 		)
 
 		super.init(window: nil)
@@ -191,24 +195,10 @@ final class ChannelModesSheet: SheetSession, ChannelScoped {
 		))
 	}
 
-	func start() {
-		startSheet()
-	}
-
 	override func submit() {
-		guard model.fitsMaximumKeyLength else { return }
+		guard model.fitsKeyLengthLimit else { return }
 		onSubmitModes(model.modesForSubmission())
 
 		super.submit()
-	}
-}
-
-/// The footer under the channel key field, which says how far past the
-/// server's limit the key is; below the limit there is nothing to say.
-extension ChannelModesModel {
-	static func keyLengthWarning(remaining: Int) -> String? {
-		remaining < 0
-			? String(localized: .ChannelProperties.channelKeyCharactersOverLimit(arg1: -remaining))
-			: nil
 	}
 }

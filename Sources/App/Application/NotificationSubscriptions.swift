@@ -74,8 +74,17 @@ final class NotificationSubscriptions {
 		center: NotificationCenter = .default,
 		using handler: @escaping @MainActor () -> Void
 	) where Message.Subject: AnyObject {
-		let token = center.addObserver(for: messageType) { _ in
-			handler()
+		observeSynchronously(messageType, center: center) { _ in handler() }
+	}
+
+	/// The same, for a message that carries what the observer has to act on.
+	func observeSynchronously<Message: NotificationCenter.MainActorMessage>(
+		_ messageType: Message.Type,
+		center: NotificationCenter = .default,
+		using handler: @escaping @MainActor (Message) -> Void
+	) where Message.Subject: AnyObject {
+		let token = center.addObserver(for: messageType) { message in
+			handler(message)
 		}
 
 		observerTokens.append((center, token))

@@ -16,7 +16,7 @@ import Network
 /// into each target, so without one the class is `Glasstual.…` on one side of
 /// the connection and `IRC_Connection_Host.…` on the other, and the decode
 /// fails.
-@objc(RCMSecureConnectionInformation)
+@objc(RemoteConnectionSecureConnectionInformation)
 final nonisolated class SecureConnectionInformation: // nonisolated: immutable
 	NSObject, NSSecureCoding, Sendable
 {

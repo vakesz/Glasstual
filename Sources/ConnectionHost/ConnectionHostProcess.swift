@@ -3,7 +3,6 @@
 
 import CocoaExtensions
 import Foundation
-import os
 
 /// One thing the application asked the host to do.
 ///
@@ -85,68 +84,5 @@ final class ConnectionHostProcess: NSObject, RemoteConnectionServerProtocol {
 
 	func disableSuddenTermination() {
 		commands.yield { await $0.disableSuddenTermination() }
-	}
-}
-
-private let listenerDelegateLogger = Logger(
-	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
-	category: "ConnectionHostListenerDelegate"
-)
-
-final class ConnectionHostListenerDelegate: NSObject, NSXPCListenerDelegate {
-	/** What a connecting peer has to be: the application this service is
-	 embedded in, signed with the same certificate.
-
-	 The service bundle sits at `Contents/XPCServices/` inside that application,
-	 which is where its identifier is read from rather than repeated here. */
-	private let peerRequirement: String? = {
-		let applicationURL = Bundle.main.bundleURL
-			.deletingLastPathComponent()
-			.deletingLastPathComponent()
-			.deletingLastPathComponent()
-		guard let applicationIdentifier = Bundle(url: applicationURL)?.bundleIdentifier else {
-			return nil
-		}
-		return RemoteConnectionPeerRequirement.requirement(forCurrentProcessAnd: applicationIdentifier)
-	}()
-
-	func listener(_: NSXPCListener, shouldAcceptNewConnection connection: NSXPCConnection) -> Bool {
-		if let peerRequirement {
-			/* Enforced by NSXPC on every message: a peer that does not satisfy
-			 it never reaches the exported object. */
-			connection.setCodeSigningRequirement(peerRequirement)
-		} else {
-			listenerDelegateLogger.error("The connection host is not signed; accepting its peer unverified")
-		}
-
-		connection.exportedInterface = RemoteConnectionInterface.server()
-		connection.remoteObjectInterface = RemoteConnectionInterface.client()
-
-		/* The host owns every piece of mutable state. The connection stays out
-		 here — it is not Sendable — and only the client proxy, which is, crosses
-		 into the actor. */
-		guard let client = connection.remoteObjectProxy as? any RemoteConnectionClientProtocol else {
-			listenerDelegateLogger.error("Client does not conform to the remote connection client protocol")
-
-			return false
-		}
-
-		let host = ConnectionHost(client: client)
-		connection.exportedObject = ConnectionHostProcess(host: host)
-
-		connection.interruptionHandler = {
-			listenerDelegateLogger.debug("Client connection interrupted")
-
-			Task { await host.detach() }
-		}
-		connection.invalidationHandler = {
-			listenerDelegateLogger.debug("Client connection invalidated")
-
-			Task { await host.detach() }
-		}
-
-		connection.resume()
-
-		return true
 	}
 }

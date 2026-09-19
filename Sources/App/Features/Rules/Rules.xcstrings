@@ -1,6 +1,81 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "all-channels-selected": {
+      "comment": "VoiceOver value for the server selection button in the rule editor.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All channels selected"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minden csatorna kiválasztva"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle Kanäle ausgewählt"
+          }
+        }
+      }
+    },
+    "some-channels-selected": {
+      "comment": "VoiceOver value for the server selection button in the rule editor.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some channels selected"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Néhány csatorna kiválasztva"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einige Kanäle ausgewählt"
+          }
+        }
+      }
+    },
+    "no-channels-selected": {
+      "comment": "VoiceOver value for the server selection button in the rule editor.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No channels selected"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincs kiválasztott csatorna"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Kanäle ausgewählt"
+          }
+        }
+      }
+    },
     "action-log-user": {
       "comment": "Log message for a filter action without a channel. Arguments are the filter title and user nickname. Migrated from legacy key yla-he.",
       "extractionState": "manual",
@@ -74,7 +149,7 @@
       }
     },
     "cancel-button": {
-      "comment": "Button that cancels deleting a chat filter.",
+      "comment": "Button that cancels deleting or editing a chat filter.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -597,6 +672,1782 @@
           "stringUnit": {
             "state": "translated",
             "value": "Chatfilter"
+          }
+        }
+      }
+    },
+    "action-message-event": {
+      "comment": "Event option for IRC action messages.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Action Message"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cselekvésüzenet"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktionsnachricht"
+          }
+        }
+      }
+    },
+    "additional-commands-explanation": {
+      "comment": "Explanation of the additional IRC command field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add comma-separated named commands or numerics from 1 through 999 that are not listed above."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adj meg vesszővel elválasztott parancsneveket vagy 1 és 999 közötti numerikus parancsokat, amelyek nem szerepelnek fent."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gib durch Kommas getrennte Befehlsnamen oder numerische Antworten von 1 bis 999 ein, die oben nicht aufgeführt sind."
+          }
+        }
+      }
+    },
+    "additional-commands-placeholder": {
+      "comment": "Placeholder for additional IRC commands and numerics.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Additional commands and numerics"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "További parancsok és numerikus válaszok"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weitere Befehle und numerische Antworten"
+          }
+        }
+      }
+    },
+    "additional-commands-section": {
+      "comment": "Section containing additional IRC commands and numerics.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Additional Commands"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "További parancsok"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weitere Befehle"
+          }
+        }
+      }
+    },
+    "advanced-tab": {
+      "comment": "Title of the advanced filter settings tab.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Advanced"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Haladó"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erweitert"
+          }
+        }
+      }
+    },
+    "age-comparator-label": {
+      "comment": "Label for comparing a channel member's age.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compare Membership Age"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tagság időtartamának összehasonlítása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dauer der Mitgliedschaft vergleichen"
+          }
+        }
+      }
+    },
+    "age-seconds-label": {
+      "comment": "Label for a channel membership age in seconds.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Age in Seconds"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Időtartam másodpercben"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dauer in Sekunden"
+          }
+        }
+      }
+    },
+    "channel-mode-changed-event": {
+      "comment": "Event option for a changed channel mode.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Channel Mode Changed"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csatornamód megváltozott"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kanalmodus geändert"
+          }
+        }
+      }
+    },
+    "channel-mode-received-event": {
+      "comment": "Event option for a received channel mode.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Channel Mode Received"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csatornamód érkezett"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kanalmodus empfangen"
+          }
+        }
+      }
+    },
+    "channel-topic-changed-event": {
+      "comment": "Event option for a changed channel topic.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Channel Topic Changed"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csatornatéma megváltozott"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kanalthema geändert"
+          }
+        }
+      }
+    },
+    "channel-topic-received-event": {
+      "comment": "Event option for a received channel topic.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Channel Topic Received"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csatornatéma érkezett"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kanalthema empfangen"
+          }
+        }
+      }
+    },
+    "channels-destination": {
+      "comment": "Destination option that limits a filter to channels.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Channels Only"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csak csatornák"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur Kanäle"
+          }
+        }
+      }
+    },
+    "channels-tab": {
+      "comment": "Title of the channel destination tab.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Channels"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csatornák"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kanäle"
+          }
+        }
+      }
+    },
+    "events-tab": {
+      "comment": "Title of the filter events tab.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Events"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Események"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ereignisse"
+          }
+        }
+      }
+    },
+    "filter-action-section": {
+      "comment": "Section containing the command run for a filter match.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter Action"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Szűrőművelet"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filteraktion"
+          }
+        }
+      }
+    },
+    "filter-match-label": {
+      "comment": "Label for the regular expression matched against message text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter Match"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Üzenetillesztés"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nachrichtenmuster"
+          }
+        }
+      }
+    },
+    "filter-tab": {
+      "comment": "Title of the general filter tab.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Szűrő"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter"
+          }
+        }
+      }
+    },
+    "filter-title-label": {
+      "comment": "Label for the chat filter title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter Title"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Szűrő neve"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filtername"
+          }
+        }
+      }
+    },
+    "flood-control-section": {
+      "comment": "Section containing filter-action flood control.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flood Control"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elárasztás elleni védelem"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flood-Schutz"
+          }
+        }
+      }
+    },
+    "flood-control-seconds-label": {
+      "comment": "Label for the minimum seconds between filter actions.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flood Control in Seconds"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Műveletek közötti minimális idő másodpercben"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mindestabstand zwischen Aktionen in Sekunden"
+          }
+        }
+      }
+    },
+    "forward-destination-label": {
+      "comment": "Label for the query receiving forwarded matches.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forward Destination"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Továbbítás célja"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weiterleitungsziel"
+          }
+        }
+      }
+    },
+    "forward-destination-section": {
+      "comment": "Section containing the forward destination.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forward Destination"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Továbbítás célja"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weiterleitungsziel"
+          }
+        }
+      }
+    },
+    "greater-than-option": {
+      "comment": "Membership-age comparison option.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Greater Than"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nagyobb, mint"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Größer als"
+          }
+        }
+      }
+    },
+    "hide-original-message-toggle": {
+      "comment": "Toggle that hides the original message after a match.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide Original Message"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eredeti üzenet elrejtése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Originalnachricht ausblenden"
+          }
+        }
+      }
+    },
+    "ignore-operators-toggle": {
+      "comment": "Toggle that excludes channel operators from a filter.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ignore Channel Operators"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csatornaoperátorok figyelmen kívül hagyása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kanaloperatoren ignorieren"
+          }
+        }
+      }
+    },
+    "insert-placeholder-button": {
+      "comment": "Menu that inserts an action placeholder.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Insert Placeholder"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Helyőrző beszúrása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Platzhalter einfügen"
+          }
+        }
+      }
+    },
+    "less-than-option": {
+      "comment": "Membership-age comparison option.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Less Than"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kisebb, mint"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kleiner als"
+          }
+        }
+      }
+    },
+    "limit-filter-label": {
+      "comment": "Label for filter destination limits.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Limit Filter To"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Szűrő korlátozása erre"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter beschränken auf"
+          }
+        }
+      }
+    },
+    "log-filter-match-toggle": {
+      "comment": "Toggle that logs a filter match and performed action.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log Filter Match and Action"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Szűrőegyezés és művelet naplózása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filtertreffer und Aktion protokollieren"
+          }
+        }
+      }
+    },
+    "membership-age-section": {
+      "comment": "Section for limiting matches by membership age.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Membership Age"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tagság időtartama"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dauer der Mitgliedschaft"
+          }
+        }
+      }
+    },
+    "no-connected-servers-title": {
+      "comment": "Empty state shown when no servers are available to select.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Connected Servers"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincsenek csatlakoztatott kiszolgálók"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine verbundenen Server"
+          }
+        }
+      }
+    },
+    "notes-section": {
+      "comment": "Section containing private notes about a filter.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notes"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Megjegyzések"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notizen"
+          }
+        }
+      }
+    },
+    "notes-tab": {
+      "comment": "Title of the filter notes tab.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notes"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Megjegyzések"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notizen"
+          }
+        }
+      }
+    },
+    "notice-message-event": {
+      "comment": "Event option for IRC notice messages.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notice Message"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Értesítési üzenet"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hinweismeldung"
+          }
+        }
+      }
+    },
+    "only-my-messages-toggle": {
+      "comment": "Toggle that restricts a filter to messages sent by the local user.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only My Messages"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csak a saját üzeneteim"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur meine Nachrichten"
+          }
+        }
+      }
+    },
+    "plain-text-message-event": {
+      "comment": "Event option for plain-text IRC messages.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plain Text Message"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Egyszerű szöveges üzenet"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einfache Textnachricht"
+          }
+        }
+      }
+    },
+    "private-messages-destination": {
+      "comment": "Destination option that limits a filter to private messages.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Private Messages Only"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csak privát üzenetek"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur private Nachrichten"
+          }
+        }
+      }
+    },
+    "save-button": {
+      "comment": "Button that saves an edited chat filter.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mentés"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sichern"
+          }
+        }
+      }
+    },
+    "sender-match-label": {
+      "comment": "Label for the regular expression matched against a sender.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sender Match"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Küldőillesztés"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Absendermuster"
+          }
+        }
+      }
+    },
+    "sender-tab": {
+      "comment": "Title of the filter sender tab.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sender"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Küldő"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Absender"
+          }
+        }
+      }
+    },
+    "specific-items-destination": {
+      "comment": "Destination option that limits a filter to selected items.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Specific Items"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Megadott elemek"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bestimmte Einträge"
+          }
+        }
+      }
+    },
+    "specific-items-section": {
+      "comment": "Section containing specific server and channel choices.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Specific Servers and Channels"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Megadott kiszolgálók és csatornák"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bestimmte Server und Kanäle"
+          }
+        }
+      }
+    },
+    "standard-events-section": {
+      "comment": "Section containing standard IRC event choices.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Standard Events"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Szokásos események"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Standardereignisse"
+          }
+        }
+      }
+    },
+    "unrestricted-destination": {
+      "comment": "Destination option that does not limit a filter.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unrestricted"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Korlátozás nélkül"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unbeschränkt"
+          }
+        }
+      }
+    },
+    "user-changed-nickname-event": {
+      "comment": "Event option for a user changing nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "User Changed Nickname"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Felhasználó becenevet váltott"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Benutzer hat Nicknamen geändert"
+          }
+        }
+      }
+    },
+    "user-disconnected-event": {
+      "comment": "Event option for a user disconnecting.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "User Disconnected"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Felhasználó kapcsolata bontva"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Benutzer getrennt"
+          }
+        }
+      }
+    },
+    "user-joined-channel-event": {
+      "comment": "Event option for a user joining a channel.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "User Joined Channel"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Felhasználó csatlakozott a csatornához"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Benutzer ist dem Kanal beigetreten"
+          }
+        }
+      }
+    },
+    "user-kicked-from-channel-event": {
+      "comment": "Event option for a user being kicked from a channel.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "User Kicked from Channel"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Felhasználót kirúgták a csatornáról"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Benutzer wurde aus dem Kanal geworfen"
+          }
+        }
+      }
+    },
+    "user-left-channel-event": {
+      "comment": "Event option for a user leaving a channel.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "User Left Channel"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Felhasználó elhagyta a csatornát"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Benutzer hat den Kanal verlassen"
+          }
+        }
+      }
+    },
+    "zero-disables-explanation": {
+      "comment": "Explanation that a zero numeric limit disables the limit.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zero disables this limit."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A nulla kikapcsolja ezt a korlátot."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Null deaktiviert dieses Limit."
+          }
+        }
+      }
+    },
+    "commands-invalid": {
+      "comment": "Validation message for an invalid command list. Migrated from legacy key 9ri-sd. Next unused legacy key was 1014.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please enter a properly formatted list of commands.\n\n• Commands must be a comma (,) separated list.\n• Commands must only contain the characters: a-z, A-Z, 0-9\n• Numerics must be whole numbers that are greater than zero (0) and less than or equal to 999."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adj meg megfelelő formátumú parancslistát.\n\n• A parancsokat vesszővel (,) válaszd el.\n• A parancsok csak a következő karaktereket tartalmazhatják: a-z, A-Z, 0-9\n• A numerikus válaszok 0-nál nagyobb és legfeljebb 999 értékű egész számok lehetnek."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gib eine korrekt formatierte Befehlsliste ein.\n\n• Trenne Befehle durch Kommas (,).\n• Befehle dürfen nur a-z, A-Z und 0-9 enthalten.\n• Numerische Antworten müssen ganze Zahlen größer als null (0) und höchstens 999 sein."
+          }
+        }
+      }
+    },
+    "destination-invalid": {
+      "comment": "Validation message for an improperly formatted filter destination. Migrated from legacy key 5kd-jt.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please enter a properly formatted destination.\n\nAccepted characters: a-z, A-Z, 0-9, dashes (-), underscores (_), and spaces."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adj meg megfelelő formátumú célt.\n\nElfogadott karakterek: a-z, A-Z, 0-9, kötőjel (-), aláhúzásjel (_) és szóköz."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gib ein korrekt formatiertes Ziel ein.\n\nErlaubte Zeichen: a-z, A-Z, 0-9, Bindestriche (-), Unterstriche (_) und Leerzeichen."
+          }
+        }
+      }
+    },
+    "destination-too-long": {
+      "comment": "Validation message for a filter destination longer than the supported limit. Migrated from legacy key m0u-tw.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please enter a shorter destination"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adj meg rövidebb célt"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gib ein kürzeres Ziel ein"
+          }
+        }
+      }
+    },
+    "regular-expression-invalid": {
+      "comment": "Validation message for a filter match field that is not a valid regular expression. The argument is the reason compilation failed.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please enter a valid regular expression.\n\n%@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adj meg érvényes reguláris kifejezést.\n\n%@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gib einen gültigen regulären Ausdruck ein.\n\n%@"
+          }
+        }
+      }
+    },
+    "regular-expression-limits-explanation": {
+      "comment": "Explanation of the limits placed on filter match patterns. The argument is the number of bytes of a message a pattern is matched against.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Patterns are matched against at most the first %@ bytes of a message. A pattern that can take a very long time to match cannot be saved, and one that runs too long while matching is skipped until the filters change."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A mintákat legfeljebb az üzenet első %@ bájtjával vetjük össze. A túl hosszú illesztési időt igénylő minta nem menthető. Ha futás közben tart túl sokáig az illesztés, a mintát a szűrők módosításáig kihagyjuk."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Muster werden mit höchstens den ersten %@ Byte einer Nachricht verglichen. Muster, deren Auswertung sehr lange dauern kann, können nicht gesichert werden. Dauert eine Auswertung zu lange, wird das Muster bis zur Änderung der Filter übersprungen."
+          }
+        }
+      }
+    },
+    "regular-expression-nested-quantifier": {
+      "comment": "Validation message shown beside a filter match field whose pattern repeats a group that already repeats without bound, or repeats alternatives that match the same text. The filter cannot be saved until the pattern is rewritten.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This pattern repeats a group that can match the same text in more than one way, such as (a+)+ or (.|\\s)*. A pattern of that shape can take a very long time to match, so it cannot be saved. Rewrite it without the nested repetition or the overlapping alternatives."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ez a minta olyan csoportot ismétel, amely ugyanarra a szövegre többféleképpen illeszkedhet, például (a+)+ vagy (.|\\s)*. Az ilyen minta illesztése túl sokáig tarthat, ezért nem menthető. Írd át egymásba ágyazott ismétlések és átfedő alternatívák nélkül."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieses Muster wiederholt eine Gruppe, die auf mehrere Arten auf denselben Text passen kann, etwa (a+)+ oder (.|\\s)*. Die Auswertung kann sehr lange dauern, daher kann es nicht gesichert werden. Schreibe es ohne verschachtelte Wiederholungen oder überlappende Alternativen um."
+          }
+        }
+      }
+    },
+    "token-channel-name": {
+      "comment": "Title of the action token representing a channel name. Migrated from legacy key 90e-tj.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Channel Name"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csatornanév"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kanalname"
+          }
+        }
+      }
+    },
+    "token-local-nickname": {
+      "comment": "Title of the action token representing the local nickname. Migrated from legacy key tbc-wc.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My Nickname"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saját becenév"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mein Nickname"
+          }
+        }
+      }
+    },
+    "token-network-name": {
+      "comment": "Title of the action token representing a network name. Migrated from legacy key 840-f9.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Network Name"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hálózat neve"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Netzwerkname"
+          }
+        }
+      }
+    },
+    "token-original-message": {
+      "comment": "Title of the action token representing the original message. Migrated from legacy key sch-hi.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original Message"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eredeti üzenet"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Originalnachricht"
+          }
+        }
+      }
+    },
+    "token-parameter-1": {
+      "comment": "Title of the action token representing message parameter 1. Migrated from legacy key kph-dc.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parameter #1"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1. paraméter"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parameter Nr. 1"
+          }
+        }
+      }
+    },
+    "token-parameter-2": {
+      "comment": "Title of the action token representing message parameter 2. Migrated from legacy key 8bd-nt.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parameter #2"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2. paraméter"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parameter Nr. 2"
+          }
+        }
+      }
+    },
+    "token-parameter-3": {
+      "comment": "Title of the action token representing message parameter 3. Migrated from legacy key 4vk-v8.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parameter #3"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3. paraméter"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parameter Nr. 3"
+          }
+        }
+      }
+    },
+    "token-parameter-4": {
+      "comment": "Title of the action token representing message parameter 4. Migrated from legacy key kvz-ej.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parameter #4"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "4. paraméter"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parameter Nr. 4"
+          }
+        }
+      }
+    },
+    "token-parameter-5": {
+      "comment": "Title of the action token representing message parameter 5. Migrated from legacy key 2pa-ju.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parameter #5"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "5. paraméter"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parameter Nr. 5"
+          }
+        }
+      }
+    },
+    "token-parameter-6": {
+      "comment": "Title of the action token representing message parameter 6. Migrated from legacy key jen-7o.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parameter #6"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "6. paraméter"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parameter Nr. 6"
+          }
+        }
+      }
+    },
+    "token-parameter-7": {
+      "comment": "Title of the action token representing message parameter 7. Migrated from legacy key t5v-4o.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parameter #7"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7. paraméter"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parameter Nr. 7"
+          }
+        }
+      }
+    },
+    "token-parameter-8": {
+      "comment": "Title of the action token representing message parameter 8. Migrated from legacy key vyf-el.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parameter #8"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "8. paraméter"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parameter Nr. 8"
+          }
+        }
+      }
+    },
+    "token-parameter-9": {
+      "comment": "Title of the action token representing message parameter 9. Migrated from legacy key 0x4-ib.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parameter #9"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "9. paraméter"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parameter Nr. 9"
+          }
+        }
+      }
+    },
+    "token-sender-address": {
+      "comment": "Title of the action token representing the sender address. Migrated from legacy key xt2-bv.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sender Address"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Küldő címe"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Absenderadresse"
+          }
+        }
+      }
+    },
+    "token-sender-hostmask": {
+      "comment": "Title of the action token representing the sender hostmask. Migrated from legacy key je5-u2.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sender Hostmask"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Küldő címmaszkja"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hostmaske des Absenders"
+          }
+        }
+      }
+    },
+    "token-sender-nickname": {
+      "comment": "Title of the action token representing the sender nickname. Migrated from legacy key k82-6i.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sender Nickname"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Küldő beceneve"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nickname des Absenders"
+          }
+        }
+      }
+    },
+    "token-sender-username": {
+      "comment": "Title of the action token representing the sender username. Migrated from legacy key 2sk-ui.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sender Username"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Küldő felhasználóneve"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Benutzername des Absenders"
+          }
+        }
+      }
+    },
+    "token-server-address": {
+      "comment": "Title of the action token representing the server address. Migrated from legacy key 9xy-vf.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server Address"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kiszolgáló címe"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serveradresse"
           }
         }
       }

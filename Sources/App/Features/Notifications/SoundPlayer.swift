@@ -12,7 +12,7 @@ import UniformTypeIdentifiers
 @MainActor
 enum SoundPlayer {
 	private static let logger = Logger(
-		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
+		subsystem: LogSubsystem.current,
 		category: "SoundPlayer"
 	)
 

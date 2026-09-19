@@ -21,21 +21,17 @@ enum IdentityPolicy {
 }
 
 private let inboundIdentityLogger = Logger(
-	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
-	category: "IRCInboundIdentity"
+	subsystem: LogSubsystem.current,
+	category: "Identity"
 )
 
-extension Client {
-	class func account(fromWireValue value: String?) -> String? {
-		IdentityPolicy.account(fromWireValue: value)
-	}
-
+extension ServerSession {
 	/// IRCv3 `account-notify`. A server only sends this once the capability is
 	/// negotiated, so an unnegotiated one is not evidence of anything.
 	func receiveAccountNotify(_ message: Message) {
 		guard isCapabilityEnabled(.accountNotify) else { return }
 		guard let wireAccount = message.params.first, let nickname = message.senderNickname else { return }
-		let account = Self.account(fromWireValue: wireAccount)
+		let account = IdentityPolicy.account(fromWireValue: wireAccount)
 		modifyUser(withNickname: nickname) { $0.account = account }
 	}
 
@@ -90,14 +86,14 @@ extension Client {
 
 		/* Folded the way the server folds nicknames: comparing the raw strings
 		 read our own TAGMSG echoed back under a different casing as somebody
-		 else's and filed it in a query with ourselves. */
+		 else's and filed it in a direct conversation with ourselves. */
 		let senderIsMyself = sender.isEmpty == false && nicknameIsMyself(sender)
-		let channel: Channel? = if stringIsChannelName(target) {
-			findChannel(target)
+		let conversation: Conversation? = if stringIsChannelName(target) {
+			findConversation(target)
 		} else if !sender.isEmpty, !senderIsMyself {
-			findChannel(sender)
+			findConversation(sender)
 		} else if !target.isEmpty {
-			findChannel(target)
+			findConversation(target)
 		} else {
 			nil
 		}
@@ -108,23 +104,24 @@ extension Client {
 		// instantly or linger forever. Replayed history must not resurrect a
 		// typing indicator at all.
 		if let typing = clientTags["typing"],
-		   let channel,
+		   let conversation,
 		   !senderIsMyself,
-		   environment.preferences.displayTypingNotifications,
-		   message.isHistoric == false
+		   environment.settings.displayTypingNotifications,
+		   message.isReplayed == false
 		{
 			typingTracker.noteTypingState(
 				TypingTracker.state(forTagValue: typing),
 				fromNickname: sender,
-				in: channel,
+				in: conversation,
 				at: Date()
 			)
 		}
 
-		// A TAGMSG has no presentation destination until its channel or query
-		// exists. In particular, typing tags must not create UI implicitly.
-		guard let channel else { return }
-		deliverTags(clientTags, fromSender: sender, in: channel)
+		/* A TAGMSG has no presentation destination until the conversation it is
+		 addressed to exists. In particular, typing tags must not create UI
+		 implicitly. */
+		guard let conversation else { return }
+		deliverTags(clientTags, fromSender: sender, in: conversation)
 		_ = shouldPrintReceivedMessage(message)
 	}
 

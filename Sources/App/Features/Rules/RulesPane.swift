@@ -6,11 +6,11 @@ import UniformTypeIdentifiers
 
 private struct RuleEditorPresentation: Identifiable {
 	let id = UUID()
-	let filter: MessageRule
+	let rule: MessageRule
 	let replacingIdentifier: MessageRule.ID?
 }
 
-/** A filter command that stopped, with the sentence that says what to do next.
+/** A rule command that stopped, with the sentence that says what to do next.
 
  One title per operation: an export that could not be written is not a file
  that could not be read, and saying so is the difference between a message
@@ -57,7 +57,7 @@ private struct RuleEditorFailure: Identifiable {
 struct RulesPane: View {
 	private static let listHeight = 240.0
 
-	@Bindable private var store = AppServices.messageRules.store
+	@Bindable private var controller = AppServices.messageRules
 
 	@State private var editor: RuleEditorPresentation?
 	@State private var showsDeleteConfirmation = false
@@ -68,23 +68,23 @@ struct RulesPane: View {
 
 	var body: some View {
 		Section {
-			List(selection: $store.selection) {
-				ForEach(store.rules) { filter in
-					Text(filter.description)
-						.tag(filter.id)
+			List(selection: $controller.selection) {
+				ForEach(controller.rules) { rule in
+					Text(rule.description)
+						.tag(rule.id)
 						.contentShape(.rect)
 						.onTapGesture(count: 2) {
 							editor = RuleEditorPresentation(
-								filter: filter,
-								replacingIdentifier: filter.id
+								rule: rule,
+								replacingIdentifier: rule.id
 							)
 						}
 				}
-				.onMove(perform: store.move)
+				.onMove(perform: controller.move)
 			}
 			.frame(height: Self.listHeight)
 			.overlay {
-				if store.rules.isEmpty {
+				if controller.rules.isEmpty {
 					ContentUnavailableView(
 						String(localized: .Rules.noFiltersTitle),
 						systemImage: "line.3.horizontal.decrease.circle",
@@ -96,8 +96,8 @@ struct RulesPane: View {
 			commands
 		}
 		.sheet(item: $editor) { presentation in
-			RuleEditorView(filter: presentation.filter, clients: MessageRuleClientOption.current()) { filter in
-				if store.save(filter, replacing: presentation.replacingIdentifier) == false {
+			RuleEditorView(rule: presentation.rule, sessions: MessageRuleSessionOption.current()) { rule in
+				if controller.save(rule, replacing: presentation.replacingIdentifier) == false {
 					failure = RuleEditorFailure(
 						operation: .saving,
 						reason: String(localized: .Rules.editedFilterRemoved)
@@ -112,7 +112,7 @@ struct RulesPane: View {
 			isPresented: $showsImporter,
 			allowedContentTypes: [.propertyList],
 			allowsMultipleSelection: false,
-			onCompletion: importFilter
+			onCompletion: importRule
 		)
 		.fileExporter(
 			isPresented: $showsExporter,
@@ -141,7 +141,7 @@ struct RulesPane: View {
 			isPresented: $showsDeleteConfirmation
 		) {
 			Button(String(localized: .Rules.deleteFilterButton), role: .destructive) {
-				store.removeSelection()
+				controller.removeSelection()
 			}
 			Button(String(localized: .Rules.cancelButton), role: .cancel) {}
 		} message: {
@@ -161,9 +161,9 @@ struct RulesPane: View {
 	}
 
 	private var commands: some View {
-		HStack(spacing: 8) {
+		HStack(spacing: UISpacing.regular) {
 			Button {
-				editor = RuleEditorPresentation(filter: MessageRule(), replacingIdentifier: nil)
+				editor = RuleEditorPresentation(rule: MessageRule(), replacingIdentifier: nil)
 			} label: {
 				Label(String(localized: .Rules.addFilterButton), systemImage: "plus")
 			}
@@ -173,14 +173,14 @@ struct RulesPane: View {
 			} label: {
 				Label(String(localized: .Rules.deleteFilterButton), systemImage: "minus")
 			}
-			.disabled(store.selectedRule == nil)
+			.disabled(controller.selectedRule == nil)
 
 			Button {
 				editSelection()
 			} label: {
 				Label(String(localized: .Rules.editFilterButton), systemImage: "pencil")
 			}
-			.disabled(store.selectedRule == nil)
+			.disabled(controller.selectedRule == nil)
 
 			Spacer()
 
@@ -188,7 +188,7 @@ struct RulesPane: View {
 				Button(String(localized: .Rules.duplicateFilterButton)) {
 					duplicateSelection()
 				}
-				.disabled(store.selectedRule == nil)
+				.disabled(controller.selectedRule == nil)
 
 				Divider()
 
@@ -198,7 +198,7 @@ struct RulesPane: View {
 				Button(String(localized: .Rules.exportFilterButton)) {
 					exportSelection()
 				}
-				.disabled(store.selectedRule == nil)
+				.disabled(controller.selectedRule == nil)
 			} label: {
 				Label(String(localized: .Rules.moreActionsButton), systemImage: "ellipsis.circle")
 			}
@@ -208,28 +208,28 @@ struct RulesPane: View {
 	}
 
 	private func editSelection() {
-		guard let filter = store.selectedRule else { return }
-		editor = RuleEditorPresentation(filter: filter, replacingIdentifier: filter.id)
+		guard let rule = controller.selectedRule else { return }
+		editor = RuleEditorPresentation(rule: rule, replacingIdentifier: rule.id)
 	}
 
 	private func duplicateSelection() {
-		guard var filter = store.selectedRule else { return }
-		filter.id = UUID().uuidString
-		filter.title = String(localized: .Rules.duplicateFilterTitle(filter.title))
-		editor = RuleEditorPresentation(filter: filter, replacingIdentifier: nil)
+		guard var rule = controller.selectedRule else { return }
+		rule.id = UUID().uuidString
+		rule.title = String(localized: .Rules.duplicateFilterTitle(rule.title))
+		editor = RuleEditorPresentation(rule: rule, replacingIdentifier: nil)
 	}
 
 	private func exportSelection() {
-		guard let filter = store.selectedRule else { return }
+		guard let rule = controller.selectedRule else { return }
 		do {
-			exportData = try filter.propertyListData()
+			exportData = try rule.propertyListData()
 			showsExporter = true
 		} catch {
 			failure = RuleEditorFailure(operation: .exporting, reason: error.localizedDescription)
 		}
 	}
 
-	private func importFilter(_ result: Result<[URL], any Error>) {
+	private func importRule(_ result: Result<[URL], any Error>) {
 		do {
 			guard let url = try result.get().first else { return }
 			let canAccess = url.startAccessingSecurityScopedResource()
@@ -238,9 +238,9 @@ struct RulesPane: View {
 					url.stopAccessingSecurityScopedResource()
 				}
 			}
-			var filter = try MessageRule(contentsOf: url)
-			filter.id = UUID().uuidString
-			editor = RuleEditorPresentation(filter: filter, replacingIdentifier: nil)
+			var rule = try MessageRule(contentsOf: url)
+			rule.id = UUID().uuidString
+			editor = RuleEditorPresentation(rule: rule, replacingIdentifier: nil)
 		} catch {
 			failure = RuleEditorFailure(operation: .importing, reason: error.localizedDescription)
 		}

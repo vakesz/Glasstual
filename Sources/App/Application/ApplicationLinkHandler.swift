@@ -6,7 +6,7 @@ import Foundation
 import os
 
 private nonisolated let applicationLinkLogger = Logger(
-	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
+	subsystem: LogSubsystem.current,
 	category: "ApplicationLink"
 )
 
@@ -28,8 +28,7 @@ nonisolated enum ApplicationLink: Equatable {
 			switch name.lowercased() {
 			case "acknowledgements", "contributors": self = .acknowledgements
 			case "application-support-folder": self = .applicationSupportFolder
-			case "custom-scripts-folder", "unsupervised-script-folder", "unsupervised-scripts-folder":
-				self = .customScriptsFolder
+			case "custom-scripts-folder": self = .customScriptsFolder
 			case "diagnostic-reports-folder": self = .diagnosticReportsFolder
 			case "goto": self = .goto
 			case "support-channel": self = .supportChannel
@@ -39,8 +38,8 @@ nonisolated enum ApplicationLink: Equatable {
 		}
 	}
 
-	/// Parses the application-owned `glasstual:`, `textual:`, `irc:` and
-	/// `ircs:` schemes. All four are registered in the application's URL types.
+	/// Parses the application-owned `glasstual:`, `irc:` and `ircs:` schemes.
+	/// All three are registered in the application's URL types.
 	static func parse(_ location: String) -> Self? { // nonisolated: pure
 		guard location.isEmpty == false,
 		      location.rangeOfCharacter(from: .whitespacesAndNewlines.union(.controlCharacters)) == nil,
@@ -54,7 +53,7 @@ nonisolated enum ApplicationLink: Equatable {
 			return nil
 		}
 
-		if scheme == "glasstual" || scheme == "textual" {
+		if scheme == "glasstual" {
 			guard let url = components.url else { return nil }
 			return .applicationAction(Action(name: host), source: url)
 		}
@@ -62,7 +61,7 @@ nonisolated enum ApplicationLink: Equatable {
 		if host.hasPrefix("["), host.hasSuffix("]") {
 			host = String(host.dropFirst().dropLast())
 		}
-		guard (host as NSString).isValidInternetAddress,
+		guard host.isValidInternetAddress,
 		      host.rangeOfCharacter(from: .whitespacesAndNewlines.union(.controlCharacters)) == nil
 		else { return nil }
 
@@ -120,7 +119,7 @@ enum ApplicationLinkHandler {
 		case let .applicationAction(action, source):
 			perform(action, source: source)
 		case let .connect(intent):
-			ServerConnectionController.connect(using: intent)
+			ServerConnection.connect(using: intent)
 		case nil:
 			/* A link the application was handed and could not read. It is not
 			 the reader's mistake to answer for, but dropping it without a
@@ -130,7 +129,7 @@ enum ApplicationLinkHandler {
 	}
 
 	private static func perform(_ action: ApplicationLink.Action, source: URL) {
-		let menu = ClientEnvironment.shared.menu
+		let menu = ChatServices.shared.menu
 
 		switch action {
 		case .acknowledgements:
@@ -143,11 +142,11 @@ enum ApplicationLinkHandler {
 			reveal(ApplicationPaths.userDiagnosticReportsURL, with: menu)
 			reveal(ApplicationPaths.systemDiagnosticReportsURL, with: menu)
 		case .goto:
-			menu?.navigateToTreeItem(at: source)
+			menu?.navigate(to: source)
 		case .supportChannel:
-			ServerConnectionController.connect(to: .help)
+			ServerConnection.connect(to: .help)
 		case .testingChannel:
-			ServerConnectionController.connect(to: .testing)
+			ServerConnection.connect(to: .testing)
 		case let .unknown(name):
 			/* A link naming something this build does not have. Say which,
 			 rather than dropping it silently. */
@@ -155,7 +154,7 @@ enum ApplicationLinkHandler {
 		}
 	}
 
-	private static func reveal(_ url: URL?, with menu: (any ClientMenuPresenting)?) {
+	private static func reveal(_ url: URL?, with menu: (any MenuPresenting)?) {
 		guard let url else { return }
 		menu?.revealInFinder(url)
 	}

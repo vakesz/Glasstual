@@ -5,74 +5,63 @@
 import CocoaExtensions
 import Foundation
 
-private struct OutboundTextCommand {
-	let wireCommand: String
-	let lineType: LogLineType
-
-	init?(_ command: RemoteCommand) {
-		switch command {
-		case .privmsg:
-			wireCommand = "PRIVMSG"
-			lineType = .privateMessage
-		case .privmsgAction:
-			wireCommand = "PRIVMSG"
-			lineType = .action
-		case .notice:
-			wireCommand = "NOTICE"
-			lineType = .notice
-		default:
-			return nil
-		}
-	}
-}
-
 private enum OutboundTextSuppressionKey: String {
-	case potentialFlood = "input_text_possible_flood_warning"
+	case potentialFlood = "Input Text Possible Flood Warning"
 }
 
-struct OutboundMessageCommandPolicy {
+/** One outbound text send, decided once.
+
+ The three commands that carry a person's text are `PRIVMSG`, a `PRIVMSG`
+ whose body is an `ACTION`, and `NOTICE`; a failed initializer is how "that is
+ not a text command" is said. Everything else the send path needs — the wire
+ name, the line type it prints as, and the two things the `/o…` and `/s…`
+ spellings change — is read off the one remote command, so the value cannot
+ disagree with itself. */
+struct OutboundMessageOptions {
 	let remoteCommand: RemoteCommand
 	let isOperatorMessage: Bool
 	let isSecretMessage: Bool
 
+	/// How the line prints locally.
+	var lineType: ChatLineKind {
+		switch remoteCommand {
+		case .privmsgAction: .action
+		case .notice: .notice
+		default: .privateMessage
+		}
+	}
+
+	init?(remoteCommand: RemoteCommand, isOperatorMessage: Bool = false, isSecretMessage: Bool = false) {
+		switch remoteCommand {
+		case .privmsg, .privmsgAction, .notice:
+			self.remoteCommand = remoteCommand
+		default:
+			return nil
+		}
+
+		self.isOperatorMessage = isOperatorMessage
+		self.isSecretMessage = isSecretMessage
+	}
+
 	init?(command: LocalCommand?, silentlyConnecting: Bool) {
 		switch command {
 		case .msg, .omsg, .smsg, .umsg:
-			remoteCommand = .privmsg
-			isOperatorMessage = command == .omsg
-			isSecretMessage = command == .smsg || silentlyConnecting
+			self.init(
+				remoteCommand: .privmsg,
+				isOperatorMessage: command == .omsg,
+				isSecretMessage: command == .smsg || silentlyConnecting
+			)
 		case .me, .sme, .ume:
-			remoteCommand = .privmsgAction
-			isOperatorMessage = false
-			isSecretMessage = command == .sme
+			self.init(remoteCommand: .privmsgAction, isSecretMessage: command == .sme)
 		case .notice, .onotice, .unotice:
-			remoteCommand = .notice
-			isOperatorMessage = command == .onotice
-			isSecretMessage = false
+			self.init(remoteCommand: .notice, isOperatorMessage: command == .onotice)
 		default:
 			return nil
 		}
 	}
 }
 
-private struct OutboundMessageInvocation {
-	let outbound: OutboundTextCommand
-	let isOperatorMessage: Bool
-	let isSecretMessage: Bool
-
-	init?(command: LocalCommand?, silentlyConnecting: Bool) {
-		guard let policy = OutboundMessageCommandPolicy(
-			command: command,
-			silentlyConnecting: silentlyConnecting
-		), let outbound = OutboundTextCommand(policy.remoteCommand)
-		else { return nil }
-		self.outbound = outbound
-		isOperatorMessage = policy.isOperatorMessage
-		isSecretMessage = policy.isSecretMessage
-	}
-}
-
-extension Client {
+extension ServerSession {
 	/// An empty ACTION would be dropped by most servers, so it goes out with a
 	/// single space instead.
 	private static func actionBody(_ body: NSAttributedString) -> NSAttributedString {
@@ -80,9 +69,9 @@ extension Client {
 	}
 
 	@MainActor
-	func dispatchMessageCommand(_ parsed: ParsedUserCommand, targetChannel: Channel?) {
+	func dispatchMessageCommand(_ parsed: ParsedUserCommand, targetConversation: Conversation?) {
 		let silentlyConnecting = isPerformingConnectCommands && config.runConnectCommandsSilently
-		guard let invocation = OutboundMessageInvocation(
+		guard let policy = OutboundMessageOptions(
 			command: parsed.localCommand,
 			silentlyConnecting: silentlyConnecting
 		) else { return }
@@ -93,7 +82,7 @@ extension Client {
 
 		var cursor = parsed.arguments
 		let operatorPrefix: String?
-		if invocation.isOperatorMessage {
+		if policy.isOperatorMessage {
 			guard let prefix = supportInfo.statusMessagePrefix(forModeSymbol: "o") else {
 				printDebugInformation(String(localized: .IRC.cannotSendOperatorMessageBecause))
 				return
@@ -104,62 +93,62 @@ extension Client {
 		}
 
 		let targetName: String
-		if invocation.isSecretMessage == false, invocation.outbound.lineType == .action,
-		   let targetChannel
+		if policy.isSecretMessage == false, policy.lineType == .action,
+		   let targetConversation
 		{
-			guard targetChannel.isUtility == false else {
+			guard targetConversation.isConsole == false else {
 				printDebugInformation(String(localized: .IRC.thisCommandCannotBeUsedWithin))
 				return
 			}
-			if targetChannel.isDirectChat {
+			if targetConversation.isDirectChat {
 				// An empty action still has to carry a body onto the wire.
-				sendDirectChatText(Self.actionBody(cursor.attributedRest), as: .privmsgAction, to: targetChannel)
+				sendDirectChatText(Self.actionBody(cursor.attributedRest), as: .privmsgAction, to: targetConversation)
 				return
 			}
-			targetName = targetChannel.name
-		} else if invocation.isOperatorMessage,
+			targetName = targetConversation.name
+		} else if policy.isOperatorMessage,
 		          stringIsChannelName(cursor.rest) == false,
-		          targetChannel?.isChannel == true,
-		          let targetChannel
+		          targetConversation?.isChannel == true,
+		          let targetConversation
 		{
-			targetName = targetChannel.name
+			targetName = targetConversation.name
 		} else {
 			targetName = cursor.next()
 		}
 		guard requireArguments(targetName, for: parsed.command) else { return }
 
 		let body = cursor.attributedRest
-		if body.length == 0, invocation.outbound.lineType != .action {
+		if body.length == 0, policy.lineType != .action {
 			return
 		}
 		let arguments = Self.actionBody(body)
 
 		var destinations = targetName.components(separatedBy: ",")
-		var destinationToSelect: Channel?
-		if invocation.isSecretMessage == false, silentlyConnecting == false,
+		var destinationToSelect: Conversation?
+		if policy.isSecretMessage == false, silentlyConnecting == false,
 		   operatorPrefix == nil,
-		   supportInfo.groupsMultipleTargets(forCommand: invocation.outbound.wireCommand)
+		   supportInfo.groupsMultipleTargets(forCommand: policy.remoteCommand.wireName)
 		{
 			/* Channels are found under the server's casemapping, so `#Chat` and
 			 `#chat` are one channel: it is grouped once, and every spelling of it
 			 is taken out of the per-destination loop below. Matching the typed
 			 names against the channels' own spelling left `#Chat` behind and sent
 			 the message a second time. */
-			var groupedChannels: [Channel] = []
+			var groupedChannels: [Conversation] = []
 			var groupedIdentities: Set<ObjectIdentifier> = []
 			for destinationName in destinations {
-				guard let channel = findChannel(destinationName), channel.isChannel, channel.isActive,
+				guard let channel = findConversation(destinationName), channel.isChannel, channel.isActive,
 				      groupedIdentities.insert(ObjectIdentifier(channel)).inserted
 				else { continue }
 				groupedChannels.append(channel)
 			}
 			if groupedChannels.count > 1 {
-				sendText(arguments, as: remoteCommand(for: invocation.outbound), toChannels: groupedChannels)
-				if environment.preferences.giveFocusOnMessageCommand {
+				sendText(arguments, as: policy.remoteCommand, toConversations: groupedChannels)
+				if environment.settings.giveFocusOnMessageCommand {
 					destinationToSelect = groupedChannels.first
 				}
 				destinations.removeAll { destinationName in
-					findChannel(destinationName).map { groupedIdentities.contains(ObjectIdentifier($0)) } ?? false
+					findConversation(destinationName).map { groupedIdentities.contains(ObjectIdentifier($0)) } ?? false
 				}
 			}
 		}
@@ -169,11 +158,11 @@ extension Client {
 				arguments,
 				to: destination,
 				operatorPrefix: operatorPrefix,
-				invocation: invocation,
+				policy: policy,
 				localCommand: parsed.command,
 				silentlyConnecting: silentlyConnecting
 			)
-			if destinationToSelect == nil, environment.preferences.giveFocusOnMessageCommand {
+			if destinationToSelect == nil, environment.settings.giveFocusOnMessageCommand {
 				destinationToSelect = selected
 			}
 		}
@@ -188,7 +177,7 @@ extension Client {
 	@MainActor
 	func inputText(_ input: Any, as command: RemoteCommand, destination: ChatItem) {
 		guard isTerminating == false, let text = attributedInput(input), text.length > 0 else { return }
-		guard OutboundTextCommand(command) != nil else {
+		guard OutboundMessageOptions(remoteCommand: command) != nil else {
 			assertionFailure("Unsupported outbound text command")
 			return
 		}
@@ -204,11 +193,11 @@ extension Client {
 		let shouldWarn = lineCount > 4 || source.length > 2040
 		if shouldWarn {
 			let destinationName = destination.name
-			requestConfirmation(Self.potentialFloodAlert, isCurrent: { client in
-				destination === client || (destination.name == destinationName &&
-					client.channelList.contains { $0 === destination })
-			}, perform: { client in
-				client.sendInputLines(source, as: command, destination: destination, replyIdentifier: replyIdentifier)
+			requestConfirmation(Self.potentialFloodAlert, isCurrent: { session in
+				destination === session || (destination.name == destinationName &&
+					session.conversationList.contains { $0 === destination })
+			}, perform: { session in
+				session.sendInputLines(source, as: command, destination: destination, replyIdentifier: replyIdentifier)
 			})
 			return
 		}
@@ -220,57 +209,57 @@ extension Client {
 	{
 		var remaining = OutboundInputCursor(text)
 		var pendingReply = replyIdentifier
-		enqueueOutboundText(channels: (destination as? Channel).map { [$0] } ?? []) { [weak destination] client in
+		enqueueOutboundText(conversations: (destination as? Conversation).map { [$0] } ?? []) { [weak destination] session in
 			guard let destination, let originalLine = remaining.next() else { return false }
-			let laterReply = client.nextMessageReplyIdentifier
-			client.nextMessageReplyIdentifier = pendingReply
+			let laterReply = session.nextMessageReplyIdentifier
+			session.nextMessageReplyIdentifier = pendingReply
 			defer {
-				pendingReply = client.nextMessageReplyIdentifier
-				client.nextMessageReplyIdentifier = laterReply
+				pendingReply = session.nextMessageReplyIdentifier
+				session.nextMessageReplyIdentifier = laterReply
 			}
 			var line = originalLine
 			let source = line.string
 			let isPrefixed = source.hasPrefix("/")
 
-			if destination.isClient {
+			if destination.isSession {
 				if isPrefixed {
 					line = line.attributedSubstring(fromIndex: 1)
 				}
-				client.sendCommand(line, completeTarget: false)
+				session.sendCommand(line, completeTarget: false)
 				return true
 			}
 
-			guard let channel = (destination as AnyObject) as? Channel else {
-				assertionFailure("Non-client IRC tree destinations must be channels")
+			guard let conversation = (destination as AnyObject) as? Conversation else {
+				assertionFailure("A sidebar destination is either the session itself or a conversation")
 				return false
 			}
 
 			if isPrefixed, source.hasPrefix("//") == false, line.length > 1 {
-				client.sendCommand(line.attributedSubstring(fromIndex: 1), target: channel.name)
+				session.sendCommand(line.attributedSubstring(fromIndex: 1), target: conversation.name)
 			} else {
 				if isPrefixed, line.length > 1 {
 					line = line.attributedSubstring(fromIndex: 1)
 				}
-				client.sendText(line, as: command, to: channel)
+				session.sendText(line, as: command, to: conversation)
 			}
 			return true
 		}
 	}
 
 	@MainActor
-	func sendText(_ text: NSAttributedString, as command: RemoteCommand, to channel: Channel) {
+	func sendText(_ text: NSAttributedString, as command: RemoteCommand, to conversation: Conversation) {
 		guard text.length > 0 else { return }
-		guard channel.isUtility == false else {
-			printDebugInformation(String(localized: .IRC.messagesCannotBeSent), in: channel)
+		guard conversation.isConsole == false else {
+			printDebugInformation(String(localized: .IRC.messagesCannotBeSent), in: conversation)
 			return
 		}
-		guard channel.isDirectChat == false else {
-			sendDirectChatText(text, as: command, to: channel)
+		guard conversation.isDirectChat == false else {
+			sendDirectChatText(text, as: command, to: conversation)
 			return
 		}
-		guard let outbound = OutboundTextCommand(command) else { return }
+		guard let policy = OutboundMessageOptions(remoteCommand: command) else { return }
 
-		localUserSentMessage(in: channel)
+		localUserSentMessage(in: conversation)
 		var replyIdentifier = nextMessageReplyIdentifier
 		nextMessageReplyIdentifier = nil
 		if isCapabilityEnabled(.messageTags) == false {
@@ -278,18 +267,18 @@ extension Client {
 		}
 
 		var cursor = OutboundTextCursor(text)
-		enqueueOutboundText(channels: [channel]) { client in
-			guard let message = cursor.next(for: channel.name, on: client, as: outbound.lineType) else {
+		enqueueOutboundText(conversations: [conversation]) { session in
+			guard let message = cursor.next(for: conversation.name, on: session, as: policy.lineType) else {
 				return false
 			}
 			let lineReplyIdentifier = replyIdentifier
 			replyIdentifier = nil
-			client.nextLineReplyToMessageIdentifier = lineReplyIdentifier
+			session.nextLineReplyToMessageIdentifier = lineReplyIdentifier
 
-			let redactedMessage = WireRedaction.redactedServiceMessage(message, sentTo: channel.name)
-			let deliveryLabel = client.printLocallyIfNeeded(redactedMessage, channel: channel, outbound: outbound)
-			let wireMessage = outbound.lineType == .action ? CTCPPayload.action(message) : message
-			client.nextLineReplyToMessageIdentifier = nil
+			let redactedMessage = WireRedaction.redactedServiceMessage(message, sentTo: conversation.name)
+			let deliveryLabel = session.printLocallyIfNeeded(redactedMessage, in: conversation, policy: policy)
+			let wireMessage = policy.lineType == .action ? CTCPPayload.action(message) : message
+			session.nextLineReplyToMessageIdentifier = nil
 
 			var tags: [String: String] = [:]
 			if let deliveryLabel {
@@ -299,53 +288,54 @@ extension Client {
 				tags["+draft/reply"] = lineReplyIdentifier
 			}
 			if tags.isEmpty {
-				client.send(outbound.wireCommand, arguments: [channel.name, wireMessage])
+				session.send(policy.remoteCommand, arguments: [conversation.name, wireMessage])
 			} else {
-				client.sendCommand(outbound.wireCommand, arguments: [channel.name, wireMessage], tags: tags)
+				session.sendCommand(policy.remoteCommand, arguments: [conversation.name, wireMessage], tags: tags)
 			}
 			return true
 		}
 	}
 
 	@MainActor
-	func sendText(_ text: NSAttributedString, as command: RemoteCommand, toChannels channels: [Channel]) {
-		guard text.length > 0, channels.isEmpty == false, let outbound = OutboundTextCommand(command) else { return }
+	func sendText(_ text: NSAttributedString, as command: RemoteCommand, toConversations conversations: [Conversation]) {
+		guard text.length > 0, conversations.isEmpty == false,
+		      let policy = OutboundMessageOptions(remoteCommand: command) else { return }
 		/* Grouping needs the server's word for it: without an advertised limit
-		 above one, every channel gets its own line. A query is never grouped
-		 even where the server would take the targets, because the transcript
-		 the user reads is per-conversation. */
-		let groupsTargets = supportInfo.groupsMultipleTargets(forCommand: outbound.wireCommand)
-		let targetLimit = supportInfo.maximumTargets(forCommand: outbound.wireCommand)
-		var groupedChannels: [Channel] = []
-		for channel in channels {
-			if groupsTargets, channel.isChannel {
-				groupedChannels.append(channel)
+		 above one, every channel gets its own line. A direct conversation is
+		 never grouped even where the server would take the targets, because the
+		 transcript the user reads is per-conversation. */
+		let groupsTargets = supportInfo.groupsMultipleTargets(forCommand: policy.remoteCommand.wireName)
+		let targetLimit = supportInfo.maximumTargets(forCommand: policy.remoteCommand.wireName)
+		var groupedChannels: [Conversation] = []
+		for conversation in conversations {
+			if groupsTargets, conversation.isChannel {
+				groupedChannels.append(conversation)
 			} else {
-				sendText(text, as: command, to: channel)
+				sendText(text, as: command, to: conversation)
 			}
 		}
 		guard groupedChannels.isEmpty == false else { return }
-		let targetGroups = ISupportTokenParser.chunkTargets(groupedChannels.map(\.name), limit: targetLimit)
+		let targetGroups = WireBatching.chunkTargets(groupedChannels.map(\.name), limit: targetLimit)
 		var groupOffset = 0
 		var groupIndex = 0
 		let source = NSAttributedString(attributedString: text)
 		var cursor = OutboundTextCursor(source)
-		enqueueOutboundText(channels: groupedChannels) { client in
+		enqueueOutboundText(conversations: groupedChannels) { session in
 			while groupIndex < targetGroups.count {
 				let targetGroup = targetGroups[groupIndex]
 				let groupChannels = Array(groupedChannels[groupOffset ..< groupOffset + targetGroup.count])
 				let targetList = targetGroup.joined(separator: ",")
-				if let message = cursor.next(for: targetList, on: client, as: outbound.lineType) {
+				if let message = cursor.next(for: targetList, on: session, as: policy.lineType) {
 					/* One command carries one label, so only the first channel in
 					 the group registers a delivery; the rest print untracked. The
 					 label used to be discarded here, which left every grouped
 					 message uncorrelated. */
 					var deliveryLabel: String?
 					for (index, channel) in groupChannels.enumerated() {
-						let label = client.printLocallyIfNeeded(
+						let label = session.printLocallyIfNeeded(
 							WireRedaction.redactedServiceMessage(message, sentTo: channel.name),
-							channel: channel,
-							outbound: outbound,
+							in: channel,
+							policy: policy,
 							registeringDelivery: index == 0
 						)
 
@@ -353,17 +343,17 @@ extension Client {
 							deliveryLabel = label
 						}
 					}
-					let wireMessage = outbound.lineType == .action
+					let wireMessage = policy.lineType == .action
 						? CTCPPayload.action(message)
 						: message
 					if let deliveryLabel {
-						client.sendCommand(
-							outbound.wireCommand,
+						session.sendCommand(
+							policy.remoteCommand,
 							arguments: [targetList, wireMessage],
 							tags: ["label": deliveryLabel]
 						)
 					} else {
-						client.send(outbound.wireCommand, arguments: [targetList, wireMessage])
+						session.send(policy.remoteCommand, arguments: [targetList, wireMessage])
 					}
 					return true
 				}
@@ -404,8 +394,8 @@ extension Client {
 
 	private func printLocallyIfNeeded(
 		_ message: String,
-		channel: Channel,
-		outbound: OutboundTextCommand,
+		in conversation: Conversation,
+		policy: OutboundMessageOptions,
 		localCommand: String? = nil,
 		registeringDelivery: Bool = true
 	) -> String? {
@@ -416,7 +406,7 @@ extension Client {
 			return nil
 		}
 
-		let label = registeringDelivery ? registerPendingDelivery(for: channel) : nil
+		let label = registeringDelivery ? registerPendingDelivery(for: conversation) : nil
 
 		if label != nil {
 			nextLineDeliveryState = .pending
@@ -425,9 +415,9 @@ extension Client {
 		print(
 			message,
 			by: userNickname,
-			in: channel,
-			as: outbound.lineType,
-			command: localCommand ?? outbound.wireCommand,
+			in: conversation,
+			as: policy.lineType,
+			command: localCommand ?? policy.remoteCommand.wireName,
 			receivedAt: Date(),
 			isEncrypted: false,
 			referenceMessage: nil
@@ -444,128 +434,117 @@ extension Client {
 		_ text: NSAttributedString,
 		to rawDestination: String,
 		operatorPrefix: String?,
-		invocation: OutboundMessageInvocation,
+		policy: OutboundMessageOptions,
 		localCommand: String,
 		silentlyConnecting: Bool
-	) -> Channel? {
-		let explicitPrefix = supportInfo.extractStatusMessagePrefix(fromChannelNamed: rawDestination)
+	) -> Conversation? {
+		let explicitPrefix = supportInfo.extractStatusMessagePrefix(fromTargetNamed: rawDestination)
 		let prefix = explicitPrefix.isEmpty ? operatorPrefix : explicitPrefix
 		let destinationName = explicitPrefix.isEmpty ? rawDestination : String(rawDestination.dropFirst())
-		var channel = findChannel(destinationName)
-		if invocation.isSecretMessage == false, channel == nil, stringIsNickname(destinationName) {
-			channel = clientDirectory?.createPrivateMessage(destinationName, on: self)
+		var conversation = findConversation(destinationName)
+		if policy.isSecretMessage == false, conversation == nil, stringIsNickname(destinationName) {
+			conversation = chatSession?.createDirectConversation(destinationName, on: self)
 		}
 
-		let destinationIsChannel = channel?.isChannel == true ||
-			(channel == nil && stringIsChannelName(destinationName))
+		let destinationIsChannel = conversation?.isChannel == true ||
+			(conversation == nil && stringIsChannelName(destinationName))
 		let wireTarget = prefix.flatMap { destinationIsChannel ? "\($0)\(destinationName)" : nil }
 			?? destinationName
 		var cursor = LineCursor(text)
-		enqueueOutboundText(channels: channel.map { [$0] } ?? []) { client in
-			guard let message = cursor.nextLine(forChannel: wireTarget, on: client, with: invocation.outbound.lineType)
+		enqueueOutboundText(conversations: conversation.map { [$0] } ?? []) { session in
+			guard let message = cursor.nextLine(forTarget: wireTarget, on: session, with: policy.lineType)
 			else { return false }
 			let redactedMessage = WireRedaction.redactedServiceMessage(message, sentTo: wireTarget)
 			let deliveryLabel: String?
 			if silentlyConnecting {
-				client.printDebugInformation(
+				session.printDebugInformation(
 					toConsole: String(localized: .IRC.connectCommandSent(wireTarget, redactedMessage))
 				)
 				deliveryLabel = nil
-			} else if let channel, invocation.isSecretMessage == false {
-				deliveryLabel = client.printLocallyIfNeeded(
+			} else if let conversation, policy.isSecretMessage == false {
+				deliveryLabel = session.printLocallyIfNeeded(
 					redactedMessage,
-					channel: channel,
-					outbound: invocation.outbound,
+					in: conversation,
+					policy: policy,
 					localCommand: localCommand
 				)
 			} else {
 				deliveryLabel = nil
 			}
 
-			let wireMessage = invocation.outbound.lineType == .action
+			let wireMessage = policy.lineType == .action
 				? CTCPPayload.action(message)
 				: message
 			if let deliveryLabel {
-				client.sendCommand(
-					invocation.outbound.wireCommand,
+				session.sendCommand(
+					policy.remoteCommand,
 					arguments: [wireTarget, wireMessage],
 					tags: ["label": deliveryLabel]
 				)
 			} else {
-				client.send(invocation.outbound.wireCommand, arguments: [wireTarget, wireMessage])
+				session.send(policy.remoteCommand, arguments: [wireTarget, wireMessage])
 			}
 			return true
 		}
-		return invocation.isSecretMessage ? nil : channel
-	}
-
-	private func remoteCommand(for outbound: OutboundTextCommand) -> RemoteCommand {
-		switch outbound.lineType {
-		case .action: .privmsgAction
-		case .notice: .notice
-		default: .privmsg
-		}
+		return policy.isSecretMessage ? nil : conversation
 	}
 
 	@MainActor
-	private func selectCommandDestination(_ channel: Channel?) {
-		guard let channel else { return }
-		output?.select(channel)
+	private func selectCommandDestination(_ conversation: Conversation?) {
+		guard let conversation else { return }
+		output?.select(conversation)
 	}
 }
 
-extension Client {
+extension ServerSession {
 	@MainActor
 	@discardableResult
-	func sendReaction(_ emoji: String, toMessageIdentifier messageIdentifier: String, in channel: Channel) -> Bool {
-		guard emoji.isEmpty == false, messageIdentifier.isEmpty == false, channel.isUtility == false else {
+	func sendReaction(
+		_ emoji: String,
+		toMessageIdentifier messageIdentifier: String,
+		in conversation: Conversation
+	) -> Bool {
+		guard emoji.isEmpty == false, messageIdentifier.isEmpty == false, conversation.isConsole == false else {
 			return false
 		}
 
 		let tags = ["+draft/react": emoji, "+draft/reply": messageIdentifier]
-		guard sendTagMessage(tags, toTarget: channel.name) else { return false }
+		guard sendTagMessage(tags, toTarget: conversation.name) else { return false }
 
 		deliverTags(
 			["draft/react": emoji, "draft/reply": messageIdentifier],
 			fromSender: userNickname,
-			in: channel
+			in: conversation
 		)
 		return true
 	}
 
-	func sendPrivmsg(_ message: String, to channel: Channel) {
-		sendText(NSAttributedString(string: message), as: .privmsg, to: channel)
+	func sendPrivmsg(_ message: String, to conversation: Conversation) {
+		sendText(NSAttributedString(string: message), as: .privmsg, to: conversation)
 	}
 
-	func sendAction(_ message: String, to channel: Channel) {
-		sendText(NSAttributedString(string: message), as: .privmsgAction, to: channel)
-	}
-
-	func sendNotice(_ message: String, to channel: Channel) {
-		sendText(NSAttributedString(string: message), as: .notice, to: channel)
-	}
-
-	@MainActor
-	func sendPrivmsgToSelectedChannel(_ message: String) {
-		guard let channel = output?.selectedChannel(on: self) else { return }
-		sendPrivmsg(message, to: channel)
-	}
-
+	/// The `String` spelling is for the verb a person typed after `/ctcp`, which
+	/// this session is free to know nothing about. Everything it sends on its own
+	/// goes out through the ``CTCPVerb`` overload.
 	func sendCTCPQuery(_ nickname: String, command: String, text: String?) {
 		send(
-			"PRIVMSG",
+			.privmsg,
 			arguments: [nickname, CTCPPayload.framed(command: command, text: text, sanitizingLineBreaks: false)]
 		)
 	}
 
+	func sendCTCPQuery(_ nickname: String, command: CTCPVerb, text: String?) {
+		sendCTCPQuery(nickname, command: command.wireName, text: text)
+	}
+
 	func sendCTCPReply(_ nickname: String, command: String, text: String?) {
 		send(
-			"NOTICE",
+			.notice,
 			arguments: [nickname, CTCPPayload.framed(command: command, text: text, sanitizingLineBreaks: true)]
 		)
 	}
 
 	func sendCTCPPing(_ nickname: String) {
-		sendCTCPQuery(nickname, command: "PING", text: String(Date().timeIntervalSince1970))
+		sendCTCPQuery(nickname, command: .ping, text: String(Date().timeIntervalSince1970))
 	}
 }

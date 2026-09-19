@@ -6,12 +6,12 @@ import Foundation
 import os
 
 private nonisolated let connectionConfigLogger = Logger(
-	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
-	category: "Connection"
+	subsystem: LogSubsystem.current,
+	category: "ConnectionConfig"
 )
 
 /// Raw values are persisted. Values 4 and 7 are retired and must not be reused.
-nonisolated enum ConnectionProxyType: UInt, Codable, Sendable {
+nonisolated enum ConnectionProxyKind: UInt, Codable, Sendable {
 	case none = 0
 	case automatic = 1
 	case socks5 = 5
@@ -20,7 +20,7 @@ nonisolated enum ConnectionProxyType: UInt, Codable, Sendable {
 }
 
 /// Controls which IP address families Network.framework may use.
-nonisolated enum ConnectionAddressType: UInt, Codable, Sendable {
+nonisolated enum ConnectionAddressKind: UInt, Codable, Sendable {
 	case `default` = 0
 	case v4 = 1
 	case v6 = 2
@@ -44,30 +44,37 @@ nonisolated struct ConnectionConfig: Codable, Sendable, Equatable {
 	var diagnostics: ConnectionDiagnostics?
 	var serverAddress = ""
 	var serverPort = ConnectionDefaults.serverPort
-	var addressType = ConnectionAddressType.default
+	var addressType = ConnectionAddressKind.default
 
 	var connectionPrefersSecuredConnection = false
-	var connectionPrefersModernCiphersOnly = false
 	var connectionShouldValidateCertificateChain = false
-	var cipherSuites = CipherSuiteCollection.default
+	var cipherSuites = CipherSuiteCollection.system
 	var identityClientSideCertificate: Data?
 
-	var proxyType = ConnectionProxyType.none
+	var proxyType = ConnectionProxyKind.none
 	var proxyAddress: String?
 	var proxyPort = ConnectionDefaults.proxyPort
 	var proxyUsername: String?
 	/// Sent to the connection host so it can authenticate to the proxy.
 	var proxyPassword: String?
 
-	var floodControlDelayInterval = ConnectionDefaults.floodControlDelayInterval {
-		didSet { floodControlDelayInterval = Self.clampedFloodValue(floodControlDelayInterval, oldValue) }
-	}
-
-	var floodControlMaximumMessages = ConnectionDefaults.floodControlMaximumMessages {
-		didSet { floodControlMaximumMessages = Self.clampedFloodValue(floodControlMaximumMessages, oldValue) }
-	}
+	/// Set together through ``setFloodControl(delayInterval:maximumMessages:)``,
+	/// which is where the supported range is applied.
+	private(set) var floodControlDelayInterval = ConnectionDefaults.floodControlDelayInterval
+	private(set) var floodControlMaximumMessages = ConnectionDefaults.floodControlMaximumMessages
 
 	init() {}
+
+	/** The pacing the connection host writes at.
+
+	 One way in, so that the range is applied in one place rather than by a
+	 `didSet` that only fires outside an initializer. A value outside the range
+	 leaves that setting as it was: it used to trip a `precondition`, and an XPC
+	 peer can reach this. */
+	mutating func setFloodControl(delayInterval: UInt, maximumMessages: UInt) {
+		floodControlDelayInterval = Self.clampedFloodValue(delayInterval, floodControlDelayInterval)
+		floodControlMaximumMessages = Self.clampedFloodValue(maximumMessages, floodControlMaximumMessages)
+	}
 
 	private enum CodingKeys: String, CodingKey {
 		case diagnostics
@@ -75,7 +82,6 @@ nonisolated struct ConnectionConfig: Codable, Sendable, Equatable {
 		case serverPort
 		case addressType
 		case connectionPrefersSecuredConnection
-		case connectionPrefersModernCiphersOnly
 		case connectionShouldValidateCertificateChain
 		case cipherSuites
 		case identityClientSideCertificate
@@ -100,7 +106,7 @@ nonisolated struct ConnectionConfig: Codable, Sendable, Equatable {
 			forKey: .serverPort,
 			default: ConnectionDefaults.serverPort
 		)
-		addressType = ConnectionAddressType(
+		addressType = ConnectionAddressKind(
 			rawValue: container.decode(UInt.self, forKey: .addressType, default: 0)
 		) ?? .default
 
@@ -127,11 +133,6 @@ nonisolated struct ConnectionConfig: Codable, Sendable, Equatable {
 			forKey: .connectionPrefersSecuredConnection,
 			default: false
 		)
-		connectionPrefersModernCiphersOnly = container.decode(
-			Bool.self,
-			forKey: .connectionPrefersModernCiphersOnly,
-			default: false
-		)
 		connectionShouldValidateCertificateChain = container.decode(
 			Bool.self,
 			forKey: .connectionShouldValidateCertificateChain,
@@ -141,9 +142,9 @@ nonisolated struct ConnectionConfig: Codable, Sendable, Equatable {
 			rawValue: container.decode(
 				UInt.self,
 				forKey: .cipherSuites,
-				default: CipherSuiteCollection.default.rawValue
+				default: CipherSuiteCollection.system.rawValue
 			)
-		) ?? .default
+		) ?? .system
 		identityClientSideCertificate = container.decodeOptional(
 			Data.self,
 			forKey: .identityClientSideCertificate
@@ -171,7 +172,6 @@ nonisolated struct ConnectionConfig: Codable, Sendable, Equatable {
 		try container.encode(serverPort, forKey: .serverPort)
 		try container.encode(addressType.rawValue, forKey: .addressType)
 		try container.encode(connectionPrefersSecuredConnection, forKey: .connectionPrefersSecuredConnection)
-		try container.encode(connectionPrefersModernCiphersOnly, forKey: .connectionPrefersModernCiphersOnly)
 		try container.encode(
 			connectionShouldValidateCertificateChain,
 			forKey: .connectionShouldValidateCertificateChain
@@ -191,11 +191,10 @@ nonisolated struct ConnectionConfig: Codable, Sendable, Equatable {
 	 assumes it is in.
 
 	 A zero port means the sender left it out, not that it wanted a port of
-	 zero. The flood-control range is the larger point: `init(from:)` assigns
-	 inside an initializer, where the `didSet` observers that clamp these two do
-	 not run, so whatever the envelope carried survives — and the host narrows
-	 the message count to an `Int` on every write, which traps on a `UInt` above
-	 `Int.max`. Clamping here is what the observers would have done. */
+	 zero. The flood-control range is the larger point: decoding writes the two
+	 settings directly, so whatever the envelope carried survives — and the host
+	 narrows the message count to an `Int` on every write, which traps on a
+	 `UInt` above `Int.max`. The range is applied here for that reason. */
 	private mutating func repairDecodedValues() {
 		if proxyPort == 0 {
 			proxyPort = ConnectionDefaults.proxyPort
@@ -218,8 +217,8 @@ nonisolated struct ConnectionConfig: Codable, Sendable, Equatable {
 	/** A value outside the supported set means a configuration written by a
 	 build that offered a proxy this one does not; refusing the proxy is safer
 	 than guessing at one. */
-	private static func sanitizedProxyType(_ rawValue: UInt) -> ConnectionProxyType {
-		guard let value = ConnectionProxyType(rawValue: rawValue) else {
+	private static func sanitizedProxyType(_ rawValue: UInt) -> ConnectionProxyKind {
+		guard let value = ConnectionProxyKind(rawValue: rawValue) else {
 			connectionConfigLogger.error(
 				"Unsupported proxy type \(rawValue, privacy: .public) in stored configuration; using no proxy"
 			)
@@ -244,8 +243,12 @@ nonisolated struct ConnectionConfig: Codable, Sendable, Equatable {
 
  `NSXPCConnection` speaks `NSSecureCoding`, which a value type cannot conform
  to, so the encoded configuration travels as one `Data` blob inside this
- envelope rather than as a class with a property per setting. */
-@objc(RCMConnectionConfigEnvelope)
+ envelope rather than as a class with a property per setting.
+
+ The explicit Objective-C name is the archive's, for the reason
+ `SecureConnectionInformation` spells out: this file compiles into both targets,
+ so without one the class is named after whichever of them encoded it. */
+@objc(RemoteConnectionConfigEnvelope)
 final nonisolated class ConnectionConfigEnvelope: NSObject, NSSecureCoding { // nonisolated: immutable
 	private static let configurationCodingKey = "config"
 
@@ -286,42 +289,5 @@ final nonisolated class ConnectionConfigEnvelope: NSObject, NSSecureCoding { // 
 		}
 
 		coder.encode(data, forKey: Self.configurationCodingKey)
-	}
-}
-
-/// A shared monotonic origin correlates app and XPC milestones without recording
-/// server names, account names, credentials, or IRC message contents.
-nonisolated struct ConnectionDiagnostics: Codable, Sendable, Equatable {
-	let identifier: UUID
-	let requestedAt: TimeInterval
-
-	init() {
-		identifier = UUID()
-		requestedAt = ProcessInfo.processInfo.systemUptime
-	}
-
-	enum Event: String, Codable, Sendable {
-		case requested, serviceRequested, hostStarted, transportStarted
-		case certificateEvaluationStarted, certificateEvaluationCompleted, certificateAccepted
-		case transportReady, transportFailed, capabilitiesCompleted, registered, identificationWritten, authenticated
-		case firstJoin, disconnected
-	}
-
-	/** One `Logger`, and `debug` rather than `info`.
-
-	 Every milestone here is a timing trace: a dozen of them per connection
-	 attempt, useful only when someone is measuring where a connection spends
-	 its time. `debug` is the level the unified log keeps out of the persisted
-	 store and out of `log show` unless it is asked for, which is what makes the
-	 trace free to emit on every attempt. The state a developer or a user acts
-	 on — connected, secured, disconnected, failed — is logged by the paths that
-	 decide it, at the level that decision deserves. */
-	private static let logger = Logger(subsystem: "com.vakesz.glasstual", category: "IRCStartup")
-
-	func record(_ event: Event) {
-		let elapsed = ProcessInfo.processInfo.systemUptime - requestedAt
-		Self.logger.debug(
-			"Attempt \(identifier.uuidString, privacy: .public) \(event.rawValue, privacy: .public) elapsed=\(elapsed, privacy: .public)s"
-		)
 	}
 }

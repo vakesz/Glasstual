@@ -16,11 +16,11 @@ nonisolated enum WireRedaction {
 
 	/** The mechanism names an `AUTHENTICATE` may carry instead of a payload.
 
-	 The first `AUTHENTICATE` of an exchange names the mechanism the client is
+	 The first `AUTHENTICATE` of an exchange names the mechanism the session is
 	 about to try, and that is the one parameter of the exchange that is not a
 	 secret — masking it left a traffic log unable to say which mechanism the
 	 login failed under, which is the first thing anyone reading one wants. Only
-	 the names this client can send are spared; anything else is a payload. */
+	 the names this session can send are spared; anything else is a payload. */
 	private static let saslMechanismNames: Set<String> = [
 		"EXTERNAL", "PLAIN", SCRAMClient.mechanismName,
 	]
@@ -30,7 +30,7 @@ nonisolated enum WireRedaction {
 	]
 
 	/// The outgoing line as the raw traffic log may show it.
-	static func redactedRawLogLine(_ line: String) -> String {
+	static func redactedRawChatLine(_ line: String) -> String {
 		let body = line.trimmingCharacters(in: .whitespacesAndNewlines)
 		let (prefix, remainder) = splitWirePrefix(Substring(body))
 		var (parameters, hasTrailing) = wireParameters(remainder)

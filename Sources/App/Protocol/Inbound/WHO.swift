@@ -48,8 +48,8 @@ struct WHOReply {
 }
 
 @MainActor
-extension Client {
-	func receiveWhoReply(in channel: Channel, reply: WHOReply) {
+extension ServerSession {
+	func receiveWhoReply(in channel: Conversation, reply: WHOReply) {
 		let parsedFlags = WHOFlags.parse(
 			reply.flags,
 			monitorAwayStatus: monitorAwayStatus,
@@ -95,7 +95,7 @@ extension Client {
 			)
 
 			let staffStatusChanged = existingUser.isIRCop != finalUser.isIRCop
-			let favorsServerStaff = environment.preferences.memberListSortFavorsServerStaff
+			let favorsServerStaff = environment.settings.memberListSortFavorsServerStaff
 			/* A WHO sweep answers for every member of the channel, and a
 			 re-sort per line sorted a two-thousand-member list two thousand
 			 times over for a reply that usually changes nothing a sort reads.
@@ -111,7 +111,7 @@ extension Client {
 				replaceInAllChannels: staffStatusChanged && favorsServerStaff
 			)
 		} else {
-			var member = ChannelUser(user: finalUser, prefixes: currentUserPrefixes)
+			var member = Member(user: finalUser, prefixes: currentUserPrefixes)
 			member.modes = ChannelModeSymbolSet(letters: parsedFlags.userModes)
 			channel.memberInfo?.addMember(member)
 		}
@@ -124,7 +124,7 @@ extension Client {
 	/** The membership modes a WHO reply leaves a member holding.
 
 	 A WHO reply's flag field carries the person's channel status, and it used to
-	 reach a member only on the way in: someone opped or devoiced while the client
+	 reach a member only on the way in: someone opped or devoiced while the session
 	 was already in the channel kept whatever mark they had when they joined,
 	 because the reply that says otherwise arrives for a member that already
 	 exists.
@@ -135,9 +135,9 @@ extension Client {
 	 — the highest — so a reply that says `@` says nothing about the `+` the
 	 member also holds, and the modes are merged instead of replaced. It does say
 	 the person holds nothing above `@`, though, so a higher mode the member was
-	 still marked with — one lost while the client missed the MODE — is dropped;
+	 still marked with — one lost while the session missed the MODE — is dropped;
 	 a reply with no prefix at all says the person holds none. */
-	private func membershipModes(reportedBy reported: String, heldBy member: ChannelUser) -> ChannelModeSymbolSet {
+	private func membershipModes(reportedBy reported: String, heldBy member: Member) -> ChannelModeSymbolSet {
 		let reportedModes = ChannelModeSymbolSet(letters: reported)
 
 		guard isCapabilityEnabled(.multiPrefix) == false else {

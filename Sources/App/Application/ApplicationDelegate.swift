@@ -24,7 +24,7 @@ private struct WorkspaceWillPowerOffMessage: NotificationCenter.MainActorMessage
 	}
 }
 
-/// What a network path update means for the clients that watch it.
+/// What a network path update means for the sessions that watch it.
 enum ReachabilityPathEvent {
 	/// Nothing to report: the first path, or one that repeats the last.
 	case none
@@ -35,13 +35,8 @@ enum ReachabilityPathEvent {
 @MainActor
 final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 	private static let logger = Logger(
-		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
-		category: "General"
-	)
-
-	static let terminationLogger = Logger(
-		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
-		category: "Termination"
+		subsystem: LogSubsystem.current,
+		category: "ApplicationDelegate"
 	)
 
 	private var hasInstalledMainWindow = false
@@ -49,27 +44,13 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 	private(set) var ghostModeIsOn = false
 	private(set) var applicationIsLaunched = false
 
+	/// The shutdown sequence and every piece of state only it reads.
+	private(set) lazy var termination = ApplicationTermination(delegate: self)
+
 	/// Shutdown has begun; accepted Settings saves finish before teardown.
 	var applicationIsTerminating: Bool {
-		terminationStage >= .finishingSettings
+		termination.isTerminating
 	}
-
-	/* The shutdown sequence itself is in ApplicationTermination.swift. Stored
-	 properties cannot live in an extension, so its state is declared here and
-	 nothing else reads it. */
-
-	var terminationStage: ApplicationTerminationStage = .running
-	/// The two log drains still running. Step three waits for both, or for the
-	/// deadline, whichever comes first.
-	var pendingLogDrains = 0
-	/// Bounds both scrollback persistence and the independent transcript-file drain.
-	var scrollbackSaveDeadline: ClientTimer?
-	var skipTerminateConfirmation = false
-	/// The quit confirmation while it is on screen. Cancelling it takes the
-	/// sheet down without its answer being acted on.
-	var terminationConfirmation: Task<Void, Never>?
-	var settingsTerminationTask: Task<Void, Never>?
-	var credentialTerminationTask: Task<Void, Never>?
 
 	private var reachabilityTask: Task<Void, Never>?
 	private var isNetworkReachable = false
@@ -85,19 +66,7 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 	/// IUO preserves the established launch-time contract while allowing nil in tests.
 	var mainWindow: MainWindow!
 	weak var menuController: MenuActionController?
-	var clientDirectory: ClientDirectory!
-
-	var terminatingClientCount: UInt = 0 {
-		didSet {
-			if terminatingClientCount != 0 || applicationIsTerminating == false {
-				return
-			}
-
-			Task { [weak self] in
-				self?.terminatingClientsDidFinish()
-			}
-		}
-	}
+	var chatSession: ChatSession!
 
 	// MARK: - Initialization
 
@@ -133,7 +102,7 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 
 		hasInstalledMainWindow = true
 
-		PreferenceRegistration.prepareForLaunch()
+		SettingsRegistration.prepareForLaunch()
 
 		_ = AppServices.appearance
 
@@ -144,7 +113,7 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 			defer: false
 		)
 		window.title = ApplicationInfo.applicationName()
-		window.identifier = NSUserInterfaceItemIdentifier("TVCMainWindow")
+		window.identifier = NSUserInterfaceItemIdentifier("GlasstualMainWindow")
 		window.contentMinSize = MainWindowConstants.minimumContentSize
 		window.setFrameAutosaveName("Main Window")
 		window.tabbingMode = .disallowed
@@ -152,36 +121,42 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 		window.isReleasedWhenClosed = false
 		window.setAccessibilityLabel(AccessibilityStrings.mainWindow)
 		mainWindow = window
-		SheetPresentation.host = window
+		SheetPresentation.install(window)
 		window.configure()
 	}
 
 	func applicationWakeStepOne() {
-		clientDirectory = ClientDirectory()
+		chatSession = ChatSession()
 	}
 
 	/** Hands the IRC layer the window, the menus and this controller, and makes
-	 both of the first two observers of the client directory. Everything the connection code
+	 both of the first two observers of the chat session. Everything the connection code
 	 used to reach for through `AppServices.delegate` arrives this way. */
-	func installClientServices() {
-		let services = ClientEnvironment.shared.services
+	func installSessionServices() {
+		let services = ChatServices.shared
 		services.output = mainWindow
 		services.menu = menuController
-		services.channelList = AppServices.scenes
+		services.channelList = AppServices.serverChannelLists
 		services.applicationState = self
-		services.clientDirectory = clientDirectory
+		services.notifications = AppServices.notifications
+		services.fileTransfers = AppServices.fileTransfers
+		services.messageRules = AppServices.messageRules.engine
+		services.scripts = AppServices.scripts
+		services.chatSession = chatSession
+		services.themeNicknameFormat = { AppServices.theme.theme.nicknameFormat }
+		services.updateDockBadge = { DockIcon.updateDockIcon() }
 
 		if let mainWindow {
-			clientDirectory?.addObserver(mainWindow)
+			chatSession?.addObserver(mainWindow)
 		}
 
 		if let menuController {
-			clientDirectory?.addObserver(menuController)
+			chatSession?.addObserver(menuController)
 		}
 	}
 
 	func applicationWakeStepTwo() {
-		SystemInformation.beginObservingSleepState()
+		SystemSleepState.beginObserving()
 
 		startWatchingNetworkPath()
 
@@ -228,7 +203,7 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 		])
 
 		Task {
-			await BundleResources.copyResourcesToApplicationSupportFolder()
+			await ScriptCatalogStore.linkCustomScriptsIntoGroupContainer()
 		}
 
 		// The script scan reads directories, so it runs off the main actor and
@@ -239,8 +214,8 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 
 	// MARK: - Network reachability
 
-	/** Watches the default network path and tells the clients when it comes and
-	 goes. `ClientDirectory` lives on the main actor, so the loop does too: no
+	/** Watches the default network path and tells the sessions when it comes and
+	 goes. `ChatSession` lives on the main actor, so the loop does too: no
 	 lock, no queue hop, no opting out of the checker. */
 	private func startWatchingNetworkPath() {
 		/* A path monitor is single use: once cancelled it never delivers another
@@ -259,8 +234,8 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 
 				switch event {
 				case .none: break
-				case .becameReachable: clientDirectory?.noteReachabilityChanged(true)
-				case .becameUnreachable: clientDirectory?.noteReachabilityChanged(false)
+				case .becameReachable: chatSession?.noteReachabilityChanged(true)
+				case .becameUnreachable: chatSession?.noteReachabilityChanged(false)
 				}
 			}
 		}
@@ -300,7 +275,7 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 
 	func applicationWillFinishLaunching(_: Notification) {
 		/* A second copy used to be met with a modal warning that the
-		 preferences "may become corrupted". `LSMultipleInstancesProhibited`
+		 settings "may become corrupted". `LSMultipleInstancesProhibited`
 		 means there is never a second copy to warn about: Launch Services
 		 activates the one that is already running. */
 		AppServices.scenes.install(in: NSApp)
@@ -323,11 +298,11 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 		applicationIsLaunched = true
 
 		if mainWindow.reloadLoadingScreen() {
-			clientDirectory.autoConnect(afterWakeup: false)
+			chatSession.autoConnect(afterWakeup: false)
 		}
 	}
 
-	/** First launch: no client has been configured and the setup flow has not
+	/** First launch: no session has been configured and the setup flow has not
 	 been completed or skipped before. The flow is shown on top of the main
 	 window's "add a server" placeholder. */
 	private func presentOnboardingIfNeeded() {
@@ -335,7 +310,7 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 			return
 		}
 
-		AppServices.scenes.openOnboarding()
+		AppServices.scenes.open(ApplicationSceneID.onboarding)
 	}
 
 	/* The delegate stays attached until the process exits. The callbacks below
@@ -387,18 +362,18 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 
 	private func computerScreenWillSleep(_: Notification) {
 		Self.logger.log("Preparing for screen sleep")
-		clientDirectory.prepareForScreenSleep()
+		chatSession.prepareForScreenSleep()
 	}
 
 	private func computerScreenDidWake(_: Notification) {
 		Self.logger.log("Waking from screen sleep")
-		clientDirectory.wakeFromScreenSleep()
+		chatSession.wakeFromScreenSleep()
 	}
 
 	private func computerWillSleep() {
 		Self.logger.log("Preparing for sleep")
 
-		clientDirectory.prepareForSleep()
+		chatSession.prepareForSleep()
 
 		stopWatchingNetworkPath()
 	}
@@ -408,7 +383,7 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 
 		startWatchingNetworkPath()
 
-		clientDirectory.autoConnect(afterWakeup: true)
+		chatSession.autoConnect(afterWakeup: true)
 	}
 
 	private func computerWillPowerOff() {

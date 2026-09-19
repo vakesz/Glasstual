@@ -20,7 +20,7 @@ nonisolated struct MemberListSection: Hashable, Sendable {
 
 struct MemberListGroup: Identifiable {
 	let section: MemberListSection
-	let members: [ChannelUser]
+	let members: [Member]
 
 	var id: MemberListSectionIdentifier {
 		section.identifier
@@ -29,15 +29,15 @@ struct MemberListGroup: Identifiable {
 
 /// Observable state for the SwiftUI member list.
 ///
-/// Rows are derived from the channel's ordered members. Selection is held
+/// Rows are derived from the conversation's ordered members. Selection is held
 /// by stable user identity rather than row number, so joins, parts and rank
 /// changes cannot move the selection onto a different person.
 @MainActor
 @Observable
-final class MemberList: ChannelMemberListPresentation {
+final class MemberList: ConversationMembersPresenting {
 	var selectedMemberIDs: Set<User.ID> = []
 	private(set) var groups: [MemberListGroup] = []
-	/** The badge colours and rank preferences every row draws from.
+	/** The badge colours and rank settings every row draws from.
 
 	 Read once per invalidation and handed down. A row used to ask the defaults
 	 store three times over — once for its glyph, once for the tooltip and once
@@ -62,17 +62,17 @@ final class MemberList: ChannelMemberListPresentation {
 	 own flag could not know that. */
 	private(set) var memberShowingProfile: User.ID?
 
-	@ObservationIgnored private weak var memberList: ChannelMemberList?
-	/// The channel's ordering as the protocol layer last published it. The rows
-	/// come from ``groups``; this is what the next rebuild reads.
-	@ObservationIgnored private var members: [ChannelUser] = []
+	@ObservationIgnored private weak var memberList: ConversationMembers?
+	/// The conversation's ordering as the protocol layer last published it. The
+	/// rows come from ``groups``; this is what the next rebuild reads.
+	@ObservationIgnored private var members: [Member] = []
 	private var lastInteractedMemberID: User.ID?
 
 	init() {}
 
-	func assign(to channel: Channel?) {
+	func assign(to conversation: Conversation?) {
 		memberList?.assign(nil)
-		memberList = channel?.memberInfo
+		memberList = conversation?.memberInfo
 		if let memberList {
 			memberList.assign(self)
 		} else {
@@ -80,18 +80,18 @@ final class MemberList: ChannelMemberListPresentation {
 		}
 	}
 
-	func membersDidChange(_ members: [ChannelUser]) {
+	func membersDidChange(_ members: [Member]) {
 		self.members = members
 		rebuildRows()
 	}
 
 	/** The members the reader has selected, in the order the list draws them.
 
-	 Each one is read back out of the channel rather than returned from the
+	 Each one is read back out of the conversation rather than returned from the
 	 published ordering: a protocol message still assembling an ordering has
 	 already left, renamed or re-ranked people the list is still drawing, and
 	 the caller acts on who they are now. */
-	var selectedMembers: [ChannelUser] {
+	var selectedMembers: [Member] {
 		members.compactMap { member in
 			guard selectedMemberIDs.contains(member.id) else {
 				return nil
@@ -116,7 +116,7 @@ final class MemberList: ChannelMemberListPresentation {
 		var builtGroups: [MemberListGroup] = []
 		var admitted: Set<User.ID> = []
 		var currentRank: UserRank?
-		var currentMembers: [ChannelUser] = []
+		var currentMembers: [Member] = []
 
 		func appendCurrentGroup() {
 			guard let rank = currentRank else { return }
@@ -149,12 +149,12 @@ final class MemberList: ChannelMemberListPresentation {
 		dismissProfileIfMemberLeft(admitted)
 	}
 
-	func deselectAll(_: Any?) {
+	func deselectAll() {
 		selectedMemberIDs.removeAll()
 		lastInteractedMemberID = nil
 	}
 
-	func notePrimaryInteraction(with member: ChannelUser) {
+	private func notePrimaryInteraction(with member: Member) {
 		lastInteractedMemberID = member.id
 		if selectedMemberIDs.contains(member.id) == false {
 			selectedMemberIDs = [member.id]
@@ -166,7 +166,7 @@ final class MemberList: ChannelMemberListPresentation {
 		notePrimaryInteraction(with: member)
 	}
 
-	var primaryInteractedMember: ChannelUser? {
+	var primaryInteractedMember: Member? {
 		guard let lastInteractedMemberID else { return nil }
 		if let memberList {
 			return memberList.findMember(withUserID: lastInteractedMemberID)
@@ -212,18 +212,5 @@ final class MemberList: ChannelMemberListPresentation {
 		nicknameColorOverrides = NicknameColors.overridesSnapshot()
 		presentationStyle = .current()
 		presentationRevision &+= 1
-	}
-
-	func refreshDrawing(forChangesToPreference preferenceKey: String) {
-		guard UserListModeBadge.badge(forPreferenceKeyNamed: preferenceKey) != nil else { return }
-		invalidatePresentation()
-	}
-
-	func applicationAppearanceChanged() {
-		invalidatePresentation()
-	}
-
-	func systemAppearanceChanged() {
-		invalidatePresentation()
 	}
 }

@@ -219,7 +219,7 @@ extension AccessibilityDriver {
 
 	/** The Settings sidebar is one level deep, so every page — the application's
 	 own — is a row in the list this identifier names. */
-	func selectPreferencePage(_ title: String, in window: AXUIElement) async throws {
+	func selectSettingsPage(_ title: String, in window: AXUIElement) async throws {
 		var sidebar: AXUIElement?
 		try await wait("Settings sidebar list") { deadline in
 			sidebar = try identified(Self.settingsSidebar, from: window, deadline: deadline)
@@ -285,7 +285,7 @@ extension AccessibilityDriver {
 
 	func channelRow(_ channel: String, joined: Bool, deadline: Double) throws -> AXUIElement? {
 		guard let window = try identified("main-window", from: root, deadline: deadline) else { return nil }
-		guard let sidebar = try identified("server-list", from: window, deadline: deadline) else { return nil }
+		guard let sidebar = try identified("sidebar", from: window, deadline: deadline) else { return nil }
 		let label = "Channel \(channel), Channel " + (joined ? "Joined" : "Not Joined")
 		guard let node = try find(from: sidebar, deadline: deadline, matching: {
 			let description = try text($0, kAXDescriptionAttribute, deadline: deadline)

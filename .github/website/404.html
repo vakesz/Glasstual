@@ -3,8 +3,29 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta http-equiv="refresh" content="0; url=./">
-    <title>Glasstual</title>
+    <!-- No meta refresh: a timed client-side redirect moves assistive
+         technology users mid-announcement (WCAG 2.2 SC 2.2.1) and makes every
+         missing path look to a crawler like the home page. noindex keeps this
+         page out of the index; the link below lets the reader choose. -->
+    <meta name="robots" content="noindex">
+    <meta name="theme-color" content="#eef3ff" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0a0b10" media="(prefers-color-scheme: dark)">
+    <title>Page not found — Glasstual</title>
+    <!-- Deliberately not styles.css: that sheet strips link underlines for a
+         page that carries its own navigation chrome. Default link styling is
+         what this page wants. -->
+    <style>
+      :root { color-scheme: light dark; }
+      body { margin: 0; padding: 12vh 24px; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif; line-height: 1.5; }
+      main { width: min(52ch, 100%); margin-inline: auto; }
+      h1 { margin: 0 0 12px; font-size: clamp(28px, 5vw, 40px); letter-spacing: -0.03em; }
+    </style>
   </head>
-  <body><p><a href="./">Return to Glasstual</a></p></body>
+  <body>
+    <main>
+      <h1>Page not found</h1>
+      <p>That address does not exist on this site.</p>
+      <p><a href="./">Return to Glasstual</a></p>
+    </main>
+  </body>
 </html>

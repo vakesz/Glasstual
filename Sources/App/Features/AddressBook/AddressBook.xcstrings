@@ -696,6 +696,54 @@
           }
         }
       }
+    },
+    "user-ignore" : {
+      "comment" : "Server properties Address Book entry types. Legacy key: f7o-x4.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User Ignore"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Felhasználók mellőzése"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Benutzer ignorieren"
+          }
+        }
+      }
+    },
+    "user-tracking" : {
+      "comment" : "Server properties Address Book entry types. Legacy key: b0g-0x.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User Tracking"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Felhasználók követése"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Benutzer beobachten"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

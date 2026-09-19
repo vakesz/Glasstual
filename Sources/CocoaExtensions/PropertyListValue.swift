@@ -14,7 +14,7 @@ import Foundation
 
 /** One value a property list can hold.
 
- A preferences file, a theme's `design.plist`, a network catalogue and an
+ A settings file, a theme's `design.plist`, a network catalogue and an
  exported configuration are all property lists, and the framework hands them
  over as `[String: Any]`. `Any` is neither `Sendable` nor checkable, so it stops
  at the boundary: `init(propertyList:)` narrows what the framework returns into
@@ -23,7 +23,7 @@ import Foundation
 
  The `boolean` and `integer` cases stay apart because a property list keeps them
  apart. `<true/>` and `<integer>1</integer>` are different on disk, and a build
- that collapsed them would rewrite every flag in the user's preferences the
+ that collapsed them would rewrite every flag in the user's settings the
  first time it saved. */
 public enum PropertyListValue: Hashable, Sendable {
 	case string(String)
@@ -50,8 +50,9 @@ public extension PropertyListValue {
 	var boolean: Bool? {
 		switch self {
 		case let .boolean(value): value
-		/* A flag written by an older build, or by a plist editor, arrives as a
-		 number; reading it as one is what keeps that file working. */
+		/* A flag a plist editor wrote arrives as a number rather than as
+		 `<true/>`; reading it as one is what keeps that file working. A string
+		 spelling is not read: a switch is stored as a switch. */
 		case let .integer(value): value != 0
 		default: nil
 		}

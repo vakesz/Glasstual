@@ -1,30 +1,6 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "action-note" : {
-      "comment" : "Explains the bullet prefix used for IRC action messages in the highlight list. Migrated from the legacy interface file.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Messages beginning with a bullet (•) are actions."
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A ponttal (•) kezdődő üzenetek cselekvések."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nachrichten, die mit einem Punkt (•) beginnen, sind Aktionen."
-          }
-        }
-      }
-    },
     "add-address-book-entry-button" : {
       "comment" : "Help tag and accessibility label for the menu button that adds an Address Book entry.",
       "extractionState" : "manual",
@@ -493,30 +469,6 @@
         }
       }
     },
-    "channel" : {
-      "comment" : "Column title for the channel that contains a highlighted message. Migrated from the legacy interface file.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Channel"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Csatorna"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kanal"
-          }
-        }
-      }
-    },
     "channel-list" : {
       "comment" : "Server properties navigation menu. Legacy key: 5oz-07.",
       "extractionState" : "manual",
@@ -613,6 +565,30 @@
         }
       }
     },
+    "cipher-suites-intermediate" : {
+      "comment" : "Cipher suite collection option: the ECDHE suites including the SHA-1 ones, for an older server. Shown in the connection sheet's picker.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Intermediate (for older servers)"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Közepes (régebbi kiszolgálókhoz)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mittel (für ältere Server)"
+          }
+        }
+      }
+    },
     "cipher-suites-label" : {
       "comment" : "Picker label for the TLS cipher suite collection.",
       "extractionState" : "manual",
@@ -633,6 +609,54 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cipher-Suites"
+          }
+        }
+      }
+    },
+    "cipher-suites-modern" : {
+      "comment" : "Cipher suite collection option: only the modern forward-secret cipher suites. Shown in the connection sheet's picker.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modern suites only"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Csak modern csomagok"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nur moderne Suites"
+          }
+        }
+      }
+    },
+    "cipher-suites-system" : {
+      "comment" : "Cipher suite collection option that leaves the choice of cipher suites to the operating system's own default group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System default"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rendszer szerinti"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Systemstandard"
           }
         }
       }
@@ -705,78 +729,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Keine bestimmten Suites bevorzugen"
-          }
-        }
-      }
-    },
-    "clear-list" : {
-      "comment" : "Button that removes all cached highlights for the selected server. Migrated from the legacy interface file.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Clear List"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lista törlése"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Liste leeren"
-          }
-        }
-      }
-    },
-    "clear-list-confirmation-message" : {
-      "comment" : "Body of the confirmation shown before the cached highlights of a connection are discarded.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The highlights logged for this connection are removed. This cannot be undone."
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A kapcsolathoz naplózott említések törlődnek. Ez nem vonható vissza."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Die protokollierten Hervorhebungen für diese Verbindung werden entfernt. Dies kann nicht rückgängig gemacht werden."
-          }
-        }
-      }
-    },
-    "clear-list-confirmation-title" : {
-      "comment" : "Title of the confirmation shown before the cached highlights of a connection are discarded.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Clear the highlight list?"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Törlöd az említések listáját?"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hervorhebungsliste leeren?"
           }
         }
       }
@@ -1213,54 +1165,6 @@
         }
       }
     },
-    "empty-description" : {
-      "comment" : "Description shown when a server has no cached highlighted messages.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "New highlighted messages will appear here while Glasstual is running."
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A Glasstual futása alatt az új kiemelt üzenetek itt jelennek meg."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Neue hervorgehobene Nachrichten erscheinen hier, während Glasstual läuft."
-          }
-        }
-      }
-    },
-    "empty-title" : {
-      "comment" : "Title shown when a server has no cached highlighted messages.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No Highlights"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nincsenek említések"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Keine Hervorhebungen"
-          }
-        }
-      }
-    },
     "encoding-fallback" : {
       "comment" : "Picker label for the encoding used when the primary one cannot decode a message.",
       "extractionState" : "manual",
@@ -1381,54 +1285,6 @@
         }
       }
     },
-    "go-to-message" : {
-      "comment" : "Context menu item and primary action that selects the channel a highlight was logged in and scrolls to the line.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Go to Message"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ugrás az üzenethez"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zur Nachricht gehen"
-          }
-        }
-      }
-    },
-    "highlight-list" : {
-      "comment" : "Accessibility label for the table of cached highlighted messages. Migrated from the legacy interface file.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Highlight List"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Említések listája"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hervorhebungsliste"
-          }
-        }
-      }
-    },
     "includes-the-following-cipher-suites" : {
       "comment" : "Explanation under the cipher suite list. The placeholder is the name of the selected collection. Legacy key: yko-5g.",
       "extractionState" : "manual",
@@ -1449,30 +1305,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "\"%@\" bevorzugt diese Cipher-Suites in absteigender Reihenfolge."
-          }
-        }
-      }
-    },
-    "message" : {
-      "comment" : "Column title for the highlighted message. Migrated from the legacy interface file.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Message"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Üzenet"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nachricht"
           }
         }
       }
@@ -2462,7 +2294,7 @@
       }
     },
     "server-address" : {
-      "comment" : "Field label for the primary server's host name on the server properties General pane.",
+      "comment" : "Field label for the primary server's host name on the server properties General pane, and the column heading and placeholder for an address in the alternate-server list.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -2510,7 +2342,7 @@
       }
     },
     "server-password" : {
-      "comment" : "Field label for the password sent to the server on connect.",
+      "comment" : "Field label for the password sent to the server on connect, and the column heading and placeholder for it in the alternate-server list.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -3109,30 +2941,6 @@
         }
       }
     },
-    "time" : {
-      "comment" : "Column title for the time a highlighted message was received. Migrated from the legacy interface file.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Time"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Időpont"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zeit"
-          }
-        }
-      }
-    },
     "tor-browser-note" : {
       "comment" : "Note explaining that Tor Browser provides the local proxy.",
       "extractionState" : "manual",
@@ -3153,54 +2961,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tor Browser muss vor dem Verbinden gestartet sein."
-          }
-        }
-      }
-    },
-    "user-ignore" : {
-      "comment" : "Server properties Address Book entry types. Legacy key: f7o-x4.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "User Ignore"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Felhasználók mellőzése"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Benutzer ignorieren"
-          }
-        }
-      }
-    },
-    "user-tracking" : {
-      "comment" : "Server properties Address Book entry types. Legacy key: b0g-0x.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "User Tracking"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Felhasználók követése"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Benutzer beobachten"
           }
         }
       }
@@ -3321,30 +3081,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Warnen, wenn Kanälen nicht beigetreten werden kann"
-          }
-        }
-      }
-    },
-    "window-title" : {
-      "comment" : "Window title for a server's highlight list. The placeholder is the network name.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Highlights for %@"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ említései"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hervorhebungen für %@"
           }
         }
       }
@@ -3489,6 +3225,486 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Diese Optionen gelten für ZNC 1.2 und neuer."
+          }
+        }
+      }
+    },
+    "channel-help" : {
+      "comment" : "Explanation under the channel picker in a server highlight rule. Legacy key: channel-accessibility-hint.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose All Channels to apply this rule everywhere."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Válaszd az Összes csatorna lehetőséget, hogy a szabály mindenhol érvényes legyen."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wähle Alle Kanäle, um diese Regel überall anzuwenden."
+          }
+        }
+      }
+    },
+    "channel-label" : {
+      "comment" : "Label for the channel picker in a server highlight rule. Legacy key: channel-accessibility-label.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Channel"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Csatorna"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kanal"
+          }
+        }
+      }
+    },
+    "keyword-help" : {
+      "comment" : "Explanation under the keyword field in a server highlight rule. Legacy key: keyword-accessibility-hint.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The word or phrase this rule matches."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A szabály által keresett szó vagy kifejezés."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Wort oder die Wortgruppe, nach der diese Regel sucht."
+          }
+        }
+      }
+    },
+    "keyword-label" : {
+      "comment" : "Label for the keyword field in a server highlight rule. Legacy key: keyword-accessibility-label.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keyword"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kulcsszó"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schlüsselwort"
+          }
+        }
+      }
+    },
+    "match-type-label" : {
+      "comment" : "Label for the Match or Exclude picker in a server highlight rule. Legacy key: match-type-accessibility-label.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Match Type"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Egyezés típusa"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Übereinstimmungstyp"
+          }
+        }
+      }
+    },
+    "highlight-rule-window-title" : {
+      "comment" : "Title of the sheet used to add or edit a server highlight rule, shown as its heading.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Highlight Rule"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kiemelési szabály"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hervorhebungsregel"
+          }
+        }
+      }
+    },
+    "rule-description" : {
+      "comment" : "Explanation under the heading of the server highlight rule sheet.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Highlight or ignore a keyword on this connection alone."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kulcsszó kiemelése vagy mellőzése csak ezen a kapcsolaton."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Schlüsselwort nur für diese Verbindung hervorheben oder ignorieren."
+          }
+        }
+      }
+    },
+    "keyword-placeholder" : {
+      "comment" : "Placeholder for the keyword field in a server highlight rule.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Word or phrase"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Szó vagy kifejezés"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wort oder Wortgruppe"
+          }
+        }
+      }
+    },
+    "add-server" : {
+      "comment" : "Accessibility label and help for the button that adds an alternate server endpoint.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Server"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kiszolgáló hozzáadása"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server hinzufügen"
+          }
+        }
+      }
+    },
+    "endpoint-list-secure-column" : {
+      "comment" : "Column heading and accessibility label for the TLS toggle in the alternate-server list.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Secure"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Titkosított"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verschlüsselt"
+          }
+        }
+      }
+    },
+    "enter-a-whole-number-between-1" : {
+      "comment" : "Validation message shown under the list when a row has no properly formatted server port. Legacy key: ox2-od.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter a whole number between 1 and 65,535."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adj meg egy 1 és 65 535 közötti egész számot."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gib eine ganze Zahl zwischen 1 und 65.535 ein."
+          }
+        }
+      }
+    },
+    "explanation" : {
+      "comment" : "Explains that alternate servers are tried in the displayed order.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glasstual tries these servers from top to bottom. Use the arrow buttons to change their order; the first server is primary."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A Glasstual fentről lefelé próbálja a kiszolgálókat. A nyílgombokkal módosíthatod a sorrendet; az első az elsődleges kiszolgáló."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glasstual versucht die Server von oben nach unten. Ändere die Reihenfolge mit den Pfeiltasten; der erste Server ist der primäre."
+          }
+        }
+      }
+    },
+    "move-down" : {
+      "comment" : "Accessibility label and help for moving the selected server endpoint down.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move Down"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lefelé"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nach unten"
+          }
+        }
+      }
+    },
+    "move-up" : {
+      "comment" : "Accessibility label and help for moving the selected server endpoint up.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move Up"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Felfelé"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nach oben"
+          }
+        }
+      }
+    },
+    "port" : {
+      "comment" : "Column heading and placeholder for an IRC server port.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Port"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Port"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Port"
+          }
+        }
+      }
+    },
+    "remove-server" : {
+      "comment" : "Accessibility label and help for the button that removes the selected alternate server endpoint.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove Server"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kiszolgáló eltávolítása"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server entfernen"
+          }
+        }
+      }
+    },
+    "server-list" : {
+      "comment" : "Accessibility label for the list of alternate IRC servers.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server List"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kiszolgálólista"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serverliste"
+          }
+        }
+      }
+    },
+    "endpoint-list-server-password-help" : {
+      "comment" : "Explanation under the endpoint list, saying what the server password is and where it is kept.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sent with the PASS command when connecting, and stored in your keychain. This is not your NickServ password."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kapcsolódáskor a PASS paranccsal küldjük el, és a kulcskarikában tároljuk. Ez nem a NickServ-jelszavad."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wird beim Verbinden mit PASS gesendet und in deinem Schlüsselbund gespeichert. Dies ist nicht dein NickServ-Passwort."
+          }
+        }
+      }
+    },
+    "value-you-entered-is-not" : {
+      "comment" : "Validation message shown under the list when a row has no properly formatted server address. Legacy key: iis-gr.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter a server address, such as irc.example.com."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adj meg egy kiszolgálócímet, például irc.example.com."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gib eine Serveradresse wie irc.example.com ein."
+          }
+        }
+      }
+    },
+    "endpoint-list-window-title" : {
+      "comment" : "Title of the sheet for editing alternate IRC server endpoints, shown as its heading.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alternate Servers"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alternatív kiszolgálók"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alternative Server"
           }
         }
       }

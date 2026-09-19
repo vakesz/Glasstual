@@ -6,6 +6,85 @@ import CocoaExtensions
 import Foundation
 import os
 
+/** What the negotiation a transfer is in the middle of has in flight.
+
+ Every field is the negotiation's own: the run its tasks belong to, the tasks
+ themselves, the router mapping it opened, the actor moving the bytes and the
+ factory it reserves descriptors through. None of it is anything the row, the
+ list or the center has business in, so it travels as one value rather than as
+ eleven properties on an observed class — and what one negotiation started is
+ dropped in one call instead of by a list of cancels kept in step by hand in
+ two places. */
+struct FileTransferNegotiation {
+	/** The run the tasks below belong to.
+
+	 A transfer that was stopped and started again is a new run, and the timeouts
+	 and steps the old one left behind must not report into it. */
+	var sessionID = UUID()
+	/// Reserving the destination file, before any negotiation can name it.
+	var filePreparationTask: Task<Void, Never>?
+	/// The step the negotiation is waiting on: an offset commit, or the size of
+	/// the partial a RESUME would continue from.
+	var negotiationTask: Task<Void, Never>?
+	/// Gives up on an unanswered RESUME without truncating the partial file.
+	var resumeRequestTimeout: Task<Void, Never>?
+	/// Gives up on a reverse offer the peer never answered, which would
+	/// otherwise hold a listening port open for good.
+	var offerTimeout: Task<Void, Never>?
+	/// Follows the ``DCCTransfer`` actor's events back onto the main actor.
+	var transferEvents: Task<Void, Never>?
+	/// Set when resuming failed, so the next start begins the file again in a
+	/// new reservation instead of asking the peer to resume once more.
+	var restartsFromBeginning = false
+	/// The actor moving the bytes, while there is one.
+	var transfer: DCCTransfer?
+	var portMapping: PortMapper?
+	let portMapperNotifications = NotificationSubscriptions()
+	/// How a descriptor is opened. The real thing, except in tests.
+	var fileFactory: @Sendable (URL, Bool, URL?) async throws -> DCCTransferFile = { url, receiving, accessURL in
+		try await DCCTransferFile.open(url: url, receiving: receiving, accessURL: accessURL)
+	}
+
+	/// Drops the steps and deadlines this negotiation has in flight, so nothing
+	/// it started can report into a transfer that has stopped.
+	mutating func cancelPendingWork() {
+		filePreparationTask?.cancel()
+		filePreparationTask = nil
+		negotiationTask?.cancel()
+		negotiationTask = nil
+		resumeRequestTimeout?.cancel()
+		resumeRequestTimeout = nil
+		offerTimeout?.cancel()
+		offerTimeout = nil
+	}
+
+	/** Gives the router mapping back.
+
+	 An open NAT-PMP mapping keeps its mapper alive so that mDNSResponder's
+	 callback context stays valid, so dropping the transfer does not release the
+	 mapping: it has to be closed. */
+	mutating func closePortMapping() {
+		guard let portMapping else { return }
+
+		portMapperNotifications.cancelAll()
+		self.portMapping = nil
+		portMapping.close()
+	}
+
+	/// Everything the negotiation holds, for a transfer that is going away. The
+	/// actor is handed back because cancelling it is a suspension the caller has
+	/// to order against the rest of its teardown.
+	mutating func tearDown() -> DCCTransfer? {
+		cancelPendingWork()
+		transferEvents?.cancel()
+		transferEvents = nil
+		portMapperNotifications.cancelAll()
+		closePortMapping()
+		defer { transfer = nil }
+		return transfer
+	}
+}
+
 // MARK: - Starting
 
 extension FileTransfer {
@@ -19,8 +98,8 @@ extension FileTransfer {
 			self.path = path
 		}
 
-		guard client?.isLoggedIn == true else {
-			closeWithClientDisconnectedErrorImmediately()
+		guard session?.isLoggedIn == true else {
+			closeWithSessionDisconnectedErrorImmediately()
 			return
 		}
 
@@ -31,23 +110,23 @@ extension FileTransfer {
 			processedFilesize = 0
 			openTransfer()
 		} else {
-			let restart = restartsFromBeginning
-			restartsFromBeginning = false
+			let restart = negotiation.restartsFromBeginning
+			negotiation.restartsFromBeginning = false
 			if restart {
 				isResume = false
 				processedFilesize = 0
 			}
 			transferStatus = .initializing
-			let session = sessionID
-			filePreparationTask = Task { [weak self] in
+			let run = negotiation.sessionID
+			negotiation.filePreparationTask = Task { [weak self] in
 				guard let self else { return }
 				await claimDestinationFilename()
-				guard isCurrent(session), ownedFile != nil else { return }
-				filePreparationTask = nil
+				guard isCurrent(run), ownedFile != nil else { return }
+				negotiation.filePreparationTask = nil
 				if restart {
 					openTransfer()
 				} else {
-					sendTransferResumeRequestToClient()
+					sendTransferResumeRequestToSession()
 				}
 			}
 		}
@@ -59,7 +138,7 @@ extension FileTransfer {
 	 not write into it, and that attempt starts the file over. */
 	func closeForRestart(with failure: FileTransferFailure) {
 		releaseOwnedFile()
-		restartsFromBeginning = true
+		negotiation.restartsFromBeginning = true
 		close(with: failure)
 	}
 
@@ -67,18 +146,20 @@ extension FileTransfer {
 	/// the local suffix never changes the filename used in DCC negotiation.
 	func claimDestinationFilename() async {
 		guard ownedFile == nil, let path else { return }
-		let session = sessionID
+		let run = negotiation.sessionID
 		do {
 			let url = URL(fileURLWithPath: path).appendingPathComponent(wireFilename)
-			let file = try await fileFactory(url, true, destinationAccessURL ?? url.deletingLastPathComponent())
-			guard isCurrent(session), ownedFile == nil else {
+			let file = try await negotiation.fileFactory(
+				url, true, destinationAccessURL ?? url.deletingLastPathComponent()
+			)
+			guard isCurrent(run), ownedFile == nil else {
 				await file.close()
 				return
 			}
 			takeOwnership(of: file)
 			filename = (file.path as NSString).lastPathComponent
 		} catch {
-			guard isCurrent(session) else { return }
+			guard isCurrent(run) else { return }
 			/* The folder is forgotten with the failure. Keeping it made every
 			 Try Again write into the same unwritable folder instead of asking
 			 for another one. */
@@ -114,11 +195,11 @@ extension FileTransfer {
 
 		guard let file = prepareTransferFile() else { return }
 
-		startTransfer(with: transferConfiguration(
+		startTransfer(with: transferConfig(
 			endpoint: .connect(
 				host: hostAddress,
 				port: hostPort,
-				interfaceName: Preferences.FileTransfers.ipAddressInterfaceName.storedValue,
+				interfaceName: SettingsKeys.FileTransfers.ipAddressInterfaceName.storedValue,
 				timeout: .seconds(FileTransferLimits.connectTimeout)
 			),
 			file: file
@@ -131,8 +212,8 @@ extension FileTransfer {
 		resetProperties(keepingOffset: isResume)
 		transferStatus = .initializing
 
-		let portRangeStart = Preferences.FileTransfers.portRangeStart.value
-		let portRangeEnd = Preferences.FileTransfers.portRangeEnd.value
+		let portRangeStart = SettingsKeys.FileTransfers.portRangeStart.value
+		let portRangeEnd = SettingsKeys.FileTransfers.portRangeEnd.value
 		guard portRangeStart != 0, portRangeStart <= portRangeEnd else {
 			close(with: .noListeningPort)
 			return
@@ -140,18 +221,18 @@ extension FileTransfer {
 
 		guard let file = prepareTransferFile() else { return }
 
-		startTransfer(with: transferConfiguration(
+		startTransfer(with: transferConfig(
 			endpoint: .listen(portRange: portRangeStart ... portRangeEnd),
 			file: file
 		))
 		disableSystemSleep()
 	}
 
-	private func transferConfiguration(
-		endpoint: DCCTransfer.Endpoint,
+	private func transferConfig(
+		endpoint: DCCEndpoint,
 		file: DCCTransferFile
-	) -> DCCTransfer.Configuration {
-		DCCTransfer.Configuration(
+	) -> DCCTransfer.Config {
+		DCCTransfer.Config(
 			role: isSender ? .sender : .receiver,
 			endpoint: endpoint,
 			file: file,
@@ -204,134 +285,23 @@ extension FileTransfer {
 	}
 }
 
-// MARK: - Listening, port mapping and this Mac's address
-
-extension FileTransfer {
-	func listeningServerDidStart(on port: UInt16) {
-		guard transferStatus == .initializing else {
-			assertionFailure("Listener started in an invalid transfer state")
-			return
-		}
-
-		hostPort = port
-		let mapper = PortMapper(port: port)
-		mapper.mapTCP = true
-		mapper.mapUDP = false
-		mapper.desiredPublicPort = port
-		portMapping = mapper
-
-		portMapperNotifications.cancelAll()
-		portMapperNotifications.observe(.portMapperDidChange, object: mapper) { [weak self] notification in
-			self?.portMapperDidFinishWork(notification)
-		}
-		transferStatus = .mappingListeningPort
-
-		if !mapper.open() {
-			portMapperDidFinishWork(nil)
-		}
-	}
-
-	func closePortMapping() {
-		guard let portMapping else { return }
-
-		portMapperNotifications.cancelAll()
-		self.portMapping = nil
-		portMapping.close()
-	}
-
-	func noteIPAddressLookupSucceeded() {
-		guard transferStatus.isAwaitingAddress else { return }
-		if isSender {
-			transferStatus = isReversed ? .waitingForReceiverToAccept : .isListeningAsSender
-		} else if isReversed {
-			transferStatus = .isListeningAsReceiver
-		} else {
-			return
-		}
-		sendTransferRequestToClient()
-		guard isSender, isReversed else { return }
-
-		/* A reverse offer the peer never answers leaves a listening port open and
-		 a row that says it is waiting, with nothing left to wait for. */
-		let session = sessionID
-		offerTimeout?.cancel()
-		offerTimeout = Task { [weak self] in
-			do { try await Task.sleep(for: FileTransferLimits.reverseOfferTimeout) } catch { return }
-			guard let self, isCurrent(session), transferStatus == .waitingForReceiverToAccept else { return }
-			close(with: .connectTimeout)
-		}
-	}
-
-	func noteIPAddressLookupFailed() {
-		guard transferStatus.isAwaitingAddress else { return }
-		close(with: .sourceIPAddressUnknown)
-	}
-
-	/** `PortMapper` reports on every mDNSResponder callback, and a NAT-PMP
-	 mapping is renewed for as long as it is held — so this fires again long
-	 after the first result moved the transfer on. Only the first one has
-	 anything to do. */
-	private func portMapperDidFinishWork(_: Notification?) {
-		guard transferStatus == .mappingListeningPort, let portMapping else { return }
-
-		if portMapping.isMapped, portMapping.publicPort != 0 {
-			/* The router picks the public port, and it need not be the one asked
-			 for. The offer names it, and the peer's RESUME echoes it back, so it
-			 is the port this transfer is known by from here on. */
-			hostPort = portMapping.publicPort
-			/* Bound to a local because the log message is an autoclosure, where
-			 `self.` would be required and SwiftFormat would strip it. */
-			let mappedPort = hostPort
-			fileTransferLogger.info("Mapped DCC port \(mappedPort, privacy: .public)")
-			updateIPAddress()
-			return
-		}
-
-		fileTransferLogger.error(
-			"DCC port mapping failed with code \(portMapping.error, privacy: .public)"
-		)
-		/* A listener can still be reachable directly or through a manually
-		 forwarded port. That is equally true when a reverse-DCC receiver is
-		 the listener, so a failed automatic mapping does not decide whether
-		 either direction can continue. */
-		updateIPAddress()
-	}
-
-	/** Works out the address the offer names, and moves the transfer on.
-
-	 The transfer waits for it in `waitingForLocalIPAddress`, which is what the
-	 center settles when the address is known, known to be unavailable, or
-	 looked up — whichever comes first. */
-	private func updateIPAddress() {
-		transferStatus = .waitingForLocalIPAddress
-		switch transferCenter.resolveIPAddress(routerAddress: portMapping?.publicAddress) {
-		case .known:
-			noteIPAddressLookupSucceeded()
-		case .unavailable:
-			noteIPAddressLookupFailed()
-		case .pending:
-			break
-		}
-	}
-}
-
 // MARK: - The DCC negotiation this transfer answers
 
 extension FileTransfer {
 	func didReceiveResumeRequest(_ proposedPosition: UInt64) {
 		guard isSender, proposedPosition > 0, totalFilesize >= proposedPosition,
 		      [.waitingForReceiverToAccept, .isListeningAsSender].contains(transferStatus) else { return }
-		let session = sessionID
-		let transfer = transfer
-		negotiationTask?.cancel()
-		negotiationTask = Task { [weak self] in
+		let run = negotiation.sessionID
+		let transfer = negotiation.transfer
+		negotiation.negotiationTask?.cancel()
+		negotiation.negotiationTask = Task { [weak self] in
 			if let transfer, await transfer.commitResumeOffset(proposedPosition) == false {
 				return
 			}
-			guard let self, isCurrent(session) else { return }
+			guard let self, isCurrent(run) else { return }
 			isResume = true
 			processedFilesize = proposedPosition
-			sendTransferResumeAcceptToClient()
+			sendTransferResumeAcceptToSession()
 		}
 	}
 
@@ -341,8 +311,8 @@ extension FileTransfer {
 		 nothing has claimed. */
 		guard !isSender, transferStatus == .waitingForResumeAccept else { return }
 
-		resumeRequestTimeout?.cancel()
-		resumeRequestTimeout = nil
+		negotiation.resumeRequestTimeout?.cancel()
+		negotiation.resumeRequestTimeout = nil
 
 		guard proposedPosition > 0, proposedPosition <= totalFilesize, processedFilesize == proposedPosition else {
 			closeForRestart(with: .invalidResumePosition)
@@ -358,17 +328,17 @@ extension FileTransfer {
 		self.hostAddress = hostAddress
 		self.hostPort = hostPort
 		transferStatus = .connecting
-		let negotiation = negotiationTask
-		let session = sessionID
+		let step = negotiation.negotiationTask
+		let run = negotiation.sessionID
 		Task { [weak self] in
-			await negotiation?.value
-			guard let self, isCurrent(session), transferStatus == .connecting else { return }
+			await step?.value
+			guard let self, isCurrent(run), transferStatus == .connecting else { return }
 			openConnectionToHost()
 		}
 	}
 
-	func sendTransferRequestToClient() {
-		guard let client else { return }
+	func sendTransferRequestToSession() {
+		guard let session else { return }
 
 		if isSender {
 			if isReversed {
@@ -380,7 +350,7 @@ extension FileTransfer {
 					return
 				}
 
-				client.sendFile(
+				session.sendFile(
 					peerNickname,
 					port: 0,
 					filename: wireFilename,
@@ -388,7 +358,7 @@ extension FileTransfer {
 					token: transferToken
 				)
 			} else {
-				client.sendFile(
+				session.sendFile(
 					peerNickname,
 					port: hostPort,
 					filename: wireFilename,
@@ -397,7 +367,7 @@ extension FileTransfer {
 				)
 			}
 		} else if isReversed {
-			client.sendFile(
+			session.sendFile(
 				peerNickname,
 				port: hostPort,
 				filename: wireFilename,
@@ -423,11 +393,11 @@ extension FileTransfer {
 	 - Returns: Whether the timeout closed the transfer. */
 	@discardableResult
 	func resumeTimeoutExpired(for sessionID: UUID) -> Bool {
-		guard self.sessionID == sessionID, transferStatus == .waitingForResumeAccept else {
+		guard negotiation.sessionID == sessionID, transferStatus == .waitingForResumeAccept else {
 			return false
 		}
 
-		resumeRequestTimeout = nil
+		negotiation.resumeRequestTimeout = nil
 		// A refused resume must not truncate the partial download.
 		closeForRestart(with: .resumeNotAnswered)
 
@@ -443,7 +413,7 @@ extension FileTransfer {
 	private func buildTransferToken() -> Bool {
 		for _ in 0 ..< 300 {
 			let candidate = String(UInt64.random(in: 1 ... UInt64.max))
-			if !transferCenter.fileTransferExists(withToken: candidate) {
+			if center?.fileTransferExists(withToken: candidate) != true {
 				transferToken = candidate
 				return true
 			}
@@ -453,16 +423,16 @@ extension FileTransfer {
 		return false
 	}
 
-	private func sendTransferResumeRequestToClient() {
+	private func sendTransferResumeRequestToSession() {
 		guard let ownedFile else { return }
 		transferStatus = .initializing
-		let session = sessionID
+		let run = negotiation.sessionID
 		let stopping = stopTask
-		negotiationTask = Task { [weak self] in
+		negotiation.negotiationTask = Task { [weak self] in
 			await stopping?.value
 			do {
 				let size = try await ownedFile.size()
-				guard let self, isCurrent(session) else { return }
+				guard let self, isCurrent(run) else { return }
 				guard size <= totalFilesize else {
 					closeForRestart(with: .invalidResumePosition)
 					return
@@ -477,16 +447,16 @@ extension FileTransfer {
 			} catch {
 				/* The partial was moved, deleted or replaced since it was
 				 claimed, so there is nothing left to resume into. */
-				guard let self, isCurrent(session) else { return }
+				guard let self, isCurrent(run) else { return }
 				closeForRestart(with: .invalidResumePosition)
 			}
 		}
 	}
 
 	private func requestResume(position: UInt64) {
-		resumeRequestTimeout?.cancel()
-		let session = sessionID
-		resumeRequestTimeout = Task { [weak self] in
+		negotiation.resumeRequestTimeout?.cancel()
+		let run = negotiation.sessionID
+		negotiation.resumeRequestTimeout = Task { [weak self] in
 			do {
 				try await Task.sleep(for: .seconds(FileTransferLimits.resumeAcceptTimeout))
 			} catch {
@@ -494,10 +464,10 @@ extension FileTransfer {
 			}
 
 			guard Task.isCancelled == false, let self else { return }
-			resumeTimeoutExpired(for: session)
+			resumeTimeoutExpired(for: run)
 		}
 		transferStatus = .waitingForResumeAccept
-		client?.sendFileResume(
+		session?.sendFileResume(
 			peerNickname,
 			port: isReversed ? 0 : hostPort,
 			filename: wireFilename,
@@ -506,93 +476,13 @@ extension FileTransfer {
 		)
 	}
 
-	private func sendTransferResumeAcceptToClient() {
-		client?.sendFileResumeAccept(
+	private func sendTransferResumeAcceptToSession() {
+		session?.sendFileResumeAccept(
 			peerNickname,
 			port: isReversed ? 0 : hostPort,
 			filename: wireFilename,
 			filesize: processedFilesize,
 			token: isReversed ? transferToken : nil
 		)
-	}
-}
-
-// MARK: - Following the transfer actor
-
-extension FileTransfer {
-	/// Hands the transfer to a ``DCCTransfer`` actor and follows it.
-	///
-	/// Every event arrives back here on the main actor, which is where the
-	/// status, the progress and the dialog all live, so nothing the actor
-	/// reports has to cross isolation a second time.
-	func startTransfer(with configuration: DCCTransfer.Configuration) {
-		let transfer = DCCTransfer(configuration: configuration)
-		self.transfer = transfer
-
-		let stopping = stopTask
-
-		transferEvents = Task { [weak self] in
-			await stopping?.value
-			guard Task.isCancelled == false else { await transfer.cancel(); return }
-			await transfer.start()
-
-			for await event in transfer.events {
-				guard Task.isCancelled == false else { return }
-				self?.transferDidReport(event, from: transfer)
-			}
-		}
-	}
-
-	/// Stops the running transfer, if there is one.
-	func stopTransfer() {
-		sessionID = UUID()
-		transferEvents?.cancel()
-		transferEvents = nil
-
-		guard let transfer else {
-			return
-		}
-
-		self.transfer = nil
-		enqueueStop { await transfer.cancel() }
-	}
-
-	func transferDidReport(_ event: DCCTransferEvent, from transfer: DCCTransfer) {
-		guard self.transfer === transfer else { return }
-		switch event {
-		case let .listening(port):
-			listeningServerDidStart(on: port)
-		case .connected:
-			transferStatus = isSender ? .sending : .receiving
-			transferCenter.updateMaintenanceTimer()
-		case let .progress(processedBytes):
-			transferDidProgress(to: processedBytes)
-		case let .completion(completion):
-			self.completion = completion
-		case .finished:
-			transferStatus = .complete
-			close()
-		case let .failed(error):
-			transferDidFail(with: error)
-		}
-	}
-
-	private func transferDidProgress(to processedBytes: UInt64) {
-		/* `currentRecord` is the byte count the maintenance timer turns into a
-		 transfer rate once a second, so it takes the delta, not the total. */
-		if processedBytes > processedFilesize {
-			currentRecord += processedBytes - processedFilesize
-		}
-
-		processedFilesize = processedBytes
-	}
-
-	private func transferDidFail(with error: DCCTransferError) {
-		guard transferStatus.isFinished == false else {
-			return
-		}
-
-		fileTransferLogger.error("DCC transfer failed: \(String(describing: error), privacy: .public)")
-		close(with: FileTransferFailure(error))
 	}
 }

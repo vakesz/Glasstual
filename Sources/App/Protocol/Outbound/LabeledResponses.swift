@@ -7,7 +7,7 @@ import Foundation
 /** The messages whose labelled answer has not arrived yet.
 
  IRCv3 `labeled-response` correlates a reply with the line that caused it, so
- the client hands out labels and keeps what each one is waiting for until the
+ the session hands out labels and keeps what each one is waiting for until the
  answer lands or its deadline passes. */
 struct LabeledResponseRegistry {
 	/// What each outstanding label is waiting for.
@@ -24,24 +24,16 @@ enum LabeledResponsePolicy {
 
 	/** How a labelled response answers the command that carried the label.
 
-	 The verb is all there is to go on. A numeric was compared with
-	 `RemoteCommand` here too, but `commandNumeric` is a three-digit reply
-	 code and those raw values start at a thousand, so no numeric could ever
-	 match one and the three clauses decided nothing. */
-	static func responseKind(command: String) -> ResponseKind {
-		if command.caseInsensitiveCompare("FAIL") == .orderedSame {
-			return .failure
+	 The verb is all there is to go on. A numeric carries no `RemoteCommand`
+	 at all, so it answers `.unrelated` with the rest of what this does not
+	 recognise. */
+	static func responseKind(command: RemoteCommand?) -> ResponseKind {
+		switch command {
+		case .fail: .failure
+		case .ack: .acknowledgement
+		case .privmsg, .notice, .tagmsg: .echo
+		default: .unrelated
 		}
-		if command.caseInsensitiveCompare("ACK") == .orderedSame {
-			return .acknowledgement
-		}
-		if command.caseInsensitiveCompare("PRIVMSG") == .orderedSame ||
-			command.caseInsensitiveCompare("NOTICE") == .orderedSame ||
-			command.caseInsensitiveCompare("TAGMSG") == .orderedSame
-		{
-			return .echo
-		}
-		return .unrelated
 	}
 
 	enum ResponseKind {
@@ -52,17 +44,33 @@ enum LabeledResponsePolicy {
 	}
 }
 
+/** What a labelled command's answers have said so far, kept on the batch that
+ carries the label.
+
+ A batch is the wire's unit of "these lines belong together"; the label, the
+ state and the identifier are this subsystem's reading of it, which is why they
+ travel as one value it declares rather than as four fields the batch model
+ happens to hold. */
+struct BatchDeliveryState {
+	/// The label this batch answers, or `nil` when it carries none. It is
+	/// cleared once the delivery has been resolved.
+	var label: String?
+	var state: ChatLineDeliveryState = .delivered
+	var messageIdentifier: String?
+	var failureReason: String?
+}
+
 final class LabeledDelivery {
 	var label = ""
-	weak var channel: Channel?
+	weak var conversation: Conversation?
 	var lineNumber: String?
 	var resolved = false
-	var state: LogLineDeliveryState = .none
+	var state: ChatLineDeliveryState = .none
 	/// When the delivery fails if nothing has answered its label.
 	var deadline: ContinuousClock.Instant = .now
 }
 
-extension Client {
+extension ServerSession {
 	/// Whether an outgoing command can be labelled and its answer correlated.
 	///
 	/// IRCv3 `labeled-response` needs `message-tags` to carry the label, and
@@ -79,13 +87,13 @@ extension Client {
 		return "g\(labeledResponses.counter)"
 	}
 
-	func registerPendingDelivery(for channel: Channel?) -> String? {
+	func registerPendingDelivery(for conversation: Conversation?) -> String? {
 		guard labeledResponseTrackingEnabled(),
 		      labeledResponses.pending.count < LabeledResponsePolicy.maximumPendingDeliveries else { return nil }
 		let label = nextMessageLabel()
 		let delivery = LabeledDelivery()
 		delivery.label = label
-		delivery.channel = channel
+		delivery.conversation = conversation
 		delivery.state = .pending
 		delivery.deadline = .now + LabeledResponsePolicy.timeout
 		labeledResponses.pending[label] = delivery
@@ -161,7 +169,7 @@ extension Client {
 
 	func resolveDelivery(
 		withLabel label: String,
-		state: LogLineDeliveryState,
+		state: ChatLineDeliveryState,
 		messageIdentifier: String?,
 		reason: String?
 	) {
@@ -175,12 +183,12 @@ extension Client {
 			labeledResponses.deadlineTask?.cancel()
 			labeledResponses.deadlineTask = nil
 		}
-		for batch in batchMessages.queuedEntries.values where batch.responseLabel == label {
-			batch.responseLabel = nil
+		for batch in batchMessages.queuedEntries.values where batch.labeledDelivery.label == label {
+			batch.labeledDelivery.label = nil
 		}
 		guard let lineNumber = delivery.lineNumber else { return }
 
-		delivery.channel?.presentation?.updateDeliveryState(
+		delivery.conversation?.presentation?.updateDeliveryState(
 			forLineNumber: lineNumber,
 			state: state,
 			messageIdentifier: messageIdentifier,
@@ -190,16 +198,15 @@ extension Client {
 
 	func resolveLabeledResponse(for message: Message) -> Bool {
 		guard isCapabilityEnabled(.labeledResponse) else { return false }
-		let command = message.command
 
-		if command.caseInsensitiveCompare("BATCH") == .orderedSame {
+		if message.remoteCommand == .batch {
 			return false
 		}
 
 		var label = message.messageTags?["label"]
 		let batch = message.parentBatchMessage?.labeledResponseBatch
 		if label?.isEmpty ?? true {
-			label = batch?.responseLabel
+			label = batch?.labeledDelivery.label
 		}
 		guard
 			let label,
@@ -212,14 +219,14 @@ extension Client {
 			return false
 		}
 
-		let kind = LabeledResponsePolicy.responseKind(command: command)
-		if let batch, batch.responseLabel == label {
+		let kind = LabeledResponsePolicy.responseKind(command: message.remoteCommand)
+		if let batch, batch.labeledDelivery.label == label {
 			switch kind {
 			case .failure:
-				batch.deliveryState = .failed
-				batch.deliveryFailureReason = message.params.last
+				batch.labeledDelivery.state = .failed
+				batch.labeledDelivery.failureReason = message.params.last
 			case .echo:
-				batch.deliveryMessageIdentifier = message.messageIdentifier
+				batch.labeledDelivery.messageIdentifier = message.messageIdentifier
 			case .acknowledgement:
 				break
 			case .unrelated:
@@ -250,7 +257,10 @@ extension Client {
 
 	/// The state of a delivery still awaiting a response. Resolved deliveries are
 	/// removed, so a resolved or unknown label reports `.none`.
-	func deliveryState(forLabel label: String) -> LogLineDeliveryState {
+	///
+	/// For tests: the send path keeps the pending table private, and this is the
+	/// only way to observe what it holds.
+	func deliveryState(forLabel label: String) -> ChatLineDeliveryState {
 		labeledResponses.pending[label]?.state ?? .none
 	}
 }

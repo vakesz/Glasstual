@@ -7,7 +7,7 @@ import SwiftUI
 
 /// The transcript, with the input bar floating over its foot.
 struct MainWindowConversation: View {
-	@Bindable var model: MainWindowPresentationModel
+	let columns: MainWindowColumnModel
 	let inputContentView: InputFieldContentView
 
 	@Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -26,7 +26,7 @@ struct MainWindowConversation: View {
 	 `safeAreaInset` is the same loop through a different door. */
 	var body: some View {
 		VStack(spacing: 0) {
-			TranscriptHistoryRecoveryView(controller: model.transcript?.viewController)
+			TranscriptHistoryRecoveryView(controller: columns.transcript?.viewController)
 			ZStack(alignment: .bottom) {
 				/* No `.scrollEdgeEffectStyle` beside the member list's, and it is
 				 not an oversight. The transcript is an AppKit `NSScrollView`
@@ -48,19 +48,19 @@ struct MainWindowConversation: View {
 				 remaining difference is what the comment above rules out: it
 				 makes the column's insets depend on the column's own layout. */
 				TranscriptViewRepresentable(
-					transcriptView: model.transcript,
+					transcriptView: columns.transcript,
 					inputField: inputContentView,
 					accessoryHeight: InputBarLayout.accessoryHeight(
 						for: inputContentView.textView.accessoryModel
 					),
-					isObscured: model.isConversationObscured
+					isObscured: columns.isConversationObscured
 				)
-				.id(model.appearanceRevision)
+				.id(columns.appearanceRevision)
 
 				inputBar
 			}
 		}
-		.background(model.conversationBackground)
+		.background(columns.conversationBackground)
 	}
 
 	/** The reply banner and the field are two glass shapes over the same ground,

@@ -6,21 +6,6 @@ import CocoaExtensions
 import Foundation
 import SwiftUI
 
-/// What the member list draws that nothing else does. The spacings and the row
-/// metrics it shares with the rest of the window are `UISpacing` and
-/// `UIListMetrics`; only the avatar and the profile popover are its own.
-enum MemberListLayout {
-	static let avatarSize: CGFloat = 24
-	static let profileAvatarSize: CGFloat = 64
-	static let profileLabelWidth: CGFloat = 72
-	static let profileMinimumWidth: CGFloat = 280
-	static let profileIdealWidth: CGFloat = 340
-	static let profileMaximumWidth: CGFloat = 420
-	/// How many lines an address or a real name may wrap onto before it is cut.
-	/// A hostmask is routinely longer than the popover is wide.
-	static let profileValueLineLimit = 3
-}
-
 struct MemberListView: View {
 	@Bindable var model: MemberList
 	let redirectTyping: (String) -> Void
@@ -52,7 +37,7 @@ struct MemberListView: View {
 			guard let identifier = identities.first else { return }
 			model.selectedMemberIDs = identities
 			model.notePrimaryInteraction(withID: identifier)
-			AppServices.delegate.menuController?.memberInMemberListDoubleClicked(model)
+			AppServices.delegate.menuController?.memberInMemberListDoubleClicked()
 		}
 		.redirectsPrintableInput(to: redirectTyping)
 	}
@@ -73,7 +58,7 @@ struct MemberListView: View {
 		}
 	}
 
-	private func memberRows(_ members: [ChannelUser]) -> some View {
+	private func memberRows(_ members: [Member]) -> some View {
 		ForEach(members, id: \.id) { member in
 			MemberListRowView(
 				model: model,
@@ -89,20 +74,20 @@ struct MemberListView: View {
 
 private struct MemberListRowView: View {
 	let model: MemberList
-	let member: ChannelUser
+	let member: Member
 	/// Read once for the whole list; see `MemberList.nicknameColorOverrides`.
 	let overrides: NicknameColorOverrides?
-	/// ChannelUser equality omits user details. Keep the full user as a view input
+	/// Member equality omits user details. Keep the full user as a view input
 	/// so rename, account and host changes refresh the row and its open popover too.
 	let user: User
-	/// The badge colours and the rank preferences behind them, read once for the
+	/// The badge colours and the rank settings behind them, read once for the
 	/// whole list. A row that did not take them as an input would keep the glyph
 	/// it first drew.
 	let style: MemberListPresentationStyle
 
 	init(
 		model: MemberList,
-		member: ChannelUser,
+		member: Member,
 		overrides: NicknameColorOverrides?,
 		style: MemberListPresentationStyle
 	) {
@@ -244,9 +229,9 @@ private struct MemberListContextMenu: View {
 
 	var body: some View {
 		if let menu, let coordinator = AppServices.delegate.menuController {
-			AppMenuContent(
+			MenuContentView(
 				menu: menu,
-				context: AppMenuContext(coordinator: coordinator, members: clickedMembers)
+				context: MenuTargetContext(coordinator: coordinator, members: clickedMembers)
 			) {
 				model.selectedMemberIDs = identities
 			}
@@ -256,20 +241,7 @@ private struct MemberListContextMenu: View {
 	/// The rows the menu was opened on, so that validation and the command
 	/// that follows both answer for what was clicked rather than for the
 	/// selection the click is about to replace.
-	private var clickedMembers: [ChannelUser] {
+	private var clickedMembers: [Member] {
 		model.groups.flatMap(\.members).filter { identities.contains($0.id) }
-	}
-}
-
-/// What a member is called outside the list, where there is one member to draw
-/// rather than a column of them and no snapshot in hand.
-enum MemberListPresentation {
-	static func displayRank(for member: ChannelUser) -> UserRank {
-		MemberListPresentationStyle.current()
-			.displayRank(isIRCOperator: member.user.isIRCop, channelRank: member.rank)
-	}
-
-	static func privilegesDescription(for member: ChannelUser) -> String {
-		MemberListRanks.privilegeDescription(for: displayRank(for: member))
 	}
 }

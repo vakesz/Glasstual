@@ -54,12 +54,12 @@ nonisolated struct TranscriptRow: Equatable, Sendable {
 	var lineNumber: String
 	var receivedAt: Date
 	var nickname: String?
-	var memberType: LogLineMemberType
-	var lineType: LogLineType
+	var memberType: ChatLineMemberKind
+	var lineType: ChatLineKind
 	var command: String
 	var messageIdentifier: String?
 	var replyToMessageIdentifier: String?
-	var deliveryState: LogLineDeliveryState
+	var deliveryState: ChatLineDeliveryState
 	var deliveryFailureReason: String?
 	var reactions: [String: [String]]
 	var markers: [TranscriptMarker]
@@ -101,10 +101,10 @@ nonisolated struct TranscriptRow: Equatable, Sendable {
 		 same way. */
 		let nickname = TranscriptTextSanitizer.singleLine(wireNickname)
 		let formattedNickname: String = switch lineType {
-		case .action: String(format: LogLineFormat.actionNickname, nickname)
-		case .notice: String(format: LogLineFormat.noticeNickname, nickname)
+		case .action: String(format: ChatLineFormat.actionNickname, nickname)
+		case .notice: String(format: ChatLineFormat.noticeNickname, nickname)
 		default:
-			formattedNickname(
+			NicknameFormat.apply(
 				nickname, modeSymbol: modeSymbol,
 				format: theme.nicknameFormat.isEmpty ? TranscriptTheme.lines.nicknameFormat : theme.nicknameFormat
 			)
@@ -112,12 +112,8 @@ nonisolated struct TranscriptRow: Equatable, Sendable {
 		return (timestamp, formattedNickname.trimmingCharacters(in: .whitespacesAndNewlines))
 	}
 
-	var isMessage: Bool {
-		lineType == .privateMessage || lineType == .action || lineType == .notice
-	}
-
 	var lineTypeString: String {
-		LogLine.string(for: lineType) ?? ""
+		ChatLine.string(for: lineType) ?? ""
 	}
 }
 

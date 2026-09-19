@@ -11,9 +11,9 @@ final class ServerEndpointListSheet: SheetSession {
 	let model = ServerEndpointListModel()
 
 	/// The endpoints the person accepted.
-	private let onSave: ([Server]) -> Void
+	private let onSave: ([ServerEndpoint]) -> Void
 
-	init(window: MainWindow?, onSave: @escaping ([Server]) -> Void) {
+	init(window: MainWindow?, onSave: @escaping ([ServerEndpoint]) -> Void) {
 		self.onSave = onSave
 		super.init(window: window)
 		installSheet()
@@ -28,7 +28,7 @@ final class ServerEndpointListSheet: SheetSession {
 		setContent(rootView)
 	}
 
-	func start(with serverList: [Server]) {
+	func start(with serverList: [ServerEndpoint]) {
 		model.replace(with: serverList)
 		startSheet()
 	}
@@ -68,7 +68,7 @@ struct ServerEndpointDraft: Identifiable, Equatable {
 
 	private let storedPassword: PendingKeychainSecret
 
-	init(server: Server) {
+	init(server: ServerEndpoint) {
 		id = server.uniqueIdentifier
 		address = server.serverAddress
 		port = String(server.serverPort)
@@ -87,7 +87,7 @@ struct ServerEndpointDraft: Identifiable, Equatable {
 		passwordWasEdited = false
 	}
 
-	func validatedServer() -> Result<Server, ServerEndpointFault> {
+	func validatedServer() -> Result<ServerEndpoint, ServerEndpointFault> {
 		guard let address = ServerEndpointValidation.validatedAddress(address) else {
 			return .failure(.address)
 		}
@@ -95,7 +95,7 @@ struct ServerEndpointDraft: Identifiable, Equatable {
 			return .failure(.port)
 		}
 
-		return .success(Server(
+		return .success(ServerEndpoint(
 			uniqueIdentifier: id,
 			serverAddress: address,
 			serverPort: port,
@@ -128,7 +128,7 @@ final class ServerEndpointListModel {
 		return entries.firstIndex { $0.id == selectedID }
 	}
 
-	func replace(with servers: [Server]) {
+	func replace(with servers: [ServerEndpoint]) {
 		entries = servers.map(ServerEndpointDraft.init)
 		selectedID = nil
 		clearValidation()
@@ -137,7 +137,7 @@ final class ServerEndpointListModel {
 
 	/// One keychain read for the whole list, off the main actor, instead of one
 	/// synchronous read per endpoint while the sheet is being built.
-	private func loadPasswords(for servers: [Server]) {
+	private func loadPasswords(for servers: [ServerEndpoint]) {
 		passwordsTask?.cancel()
 		passwordsTask = Task { [weak self] in
 			let passwords = await KeychainSecretLoader.passwords(for: servers.map(\.keychainItem))
@@ -145,7 +145,7 @@ final class ServerEndpointListModel {
 		}
 	}
 
-	private func applyLoadedPasswords(_ passwords: [KeychainItem: String], for servers: [Server]) {
+	private func applyLoadedPasswords(_ passwords: [KeychainItem: String], for servers: [ServerEndpoint]) {
 		guard Task.isCancelled == false else { return }
 
 		for server in servers {
@@ -164,7 +164,7 @@ final class ServerEndpointListModel {
 	}
 
 	func addEntry() {
-		let entry = ServerEndpointDraft(server: Server())
+		let entry = ServerEndpointDraft(server: ServerEndpoint())
 		entries.append(entry)
 		selectedID = entry.id
 	}
@@ -177,18 +177,19 @@ final class ServerEndpointListModel {
 		self.selectedID = nil
 	}
 
-	func removeEntries(at offsets: IndexSet) {
-		let removedIDs = offsets.compactMap { entries.indices.contains($0) ? entries[$0].id : nil }
-		entries.remove(atOffsets: offsets)
-		invalidAddressIDs.subtract(removedIDs)
-		invalidPortIDs.subtract(removedIDs)
-		if let selectedID, removedIDs.contains(selectedID) {
-			self.selectedID = nil
-		}
-	}
-
 	func moveEntries(from offsets: IndexSet, to destination: Int) {
 		entries.move(fromOffsets: offsets, toOffset: destination)
+	}
+
+	/// The rows a drag carried, put back down at `destination`. A drop that
+	/// names nothing this list holds — text dragged in from elsewhere — moves
+	/// nothing.
+	func moveEntries(identifiedBy identifiers: [String], to destination: Int) {
+		let offsets = IndexSet(identifiers.compactMap { identifier in
+			entries.firstIndex { $0.id == identifier }
+		})
+		guard offsets.isEmpty == false else { return }
+		moveEntries(from: offsets, to: destination)
 	}
 
 	/// The address of one endpoint, by identity: a table column hands back the
@@ -239,7 +240,7 @@ final class ServerEndpointListModel {
 	func setSecured(_ secured: Bool, for entryID: String) {
 		guard let index = entries.firstIndex(where: { $0.id == entryID }) else { return }
 		// Only the port and the flag come back out, so the secret plays no part.
-		var server = Server(
+		var server = ServerEndpoint(
 			uniqueIdentifier: entries[index].id,
 			serverAddress: entries[index].address,
 			serverPort: UInt16(entries[index].port) ?? ConnectionDefaults.serverPort,
@@ -275,9 +276,9 @@ final class ServerEndpointListModel {
 		return faults
 	}
 
-	func validatedServers() -> [Server]? {
+	func validatedServers() -> [ServerEndpoint]? {
 		clearValidation()
-		var servers: [Server] = []
+		var servers: [ServerEndpoint] = []
 
 		/* An empty address is an invalid address, not a row to drop: silently
 		 discarding it loses whatever else the user typed into it. */
@@ -307,7 +308,7 @@ final class ServerEndpointListModel {
 	}
 }
 
-/// Why an endpoint the person typed cannot become a `Server`. The sheet shows
+/// Why an endpoint the person typed cannot become a `ServerEndpoint`. The sheet shows
 /// one message per kind of fault, which is all a caller ever did with the
 /// `NSError`s this used to throw: nobody read their domain, code, description
 /// or recovery suggestion.
@@ -317,8 +318,8 @@ nonisolated enum ServerEndpointFault: Error, Hashable {
 
 	var message: LocalizedStringResource {
 		switch self {
-		case .address: .ServerEndpointList.valueYouEnteredIsNot
-		case .port: .ServerEndpointList.enterAWholeNumberBetween1
+		case .address: .ServerProperties.valueYouEnteredIsNot
+		case .port: .ServerProperties.enterAWholeNumberBetween1
 		}
 	}
 }
@@ -327,18 +328,18 @@ nonisolated enum ServerEndpointValidation {
 	/// The address, or `nil` when it is not one. An empty address is not one
 	/// either: a row nobody typed a host into cannot be connected to.
 	static func validatedAddress(_ address: String) -> String? {
-		(address as NSString).isValidInternetAddress ? address : nil
+		address.isValidInternetAddress ? address : nil
 	}
 
 	static func validatedPort(_ port: String) -> UInt16? {
-		guard (port as NSString).isValidInternetPort else { return nil }
+		guard port.isValidInternetPort else { return nil }
 
 		return UInt16(port)
 	}
 
 	/** Moves the port with the switch, but only where it is still the default
 	 for the other kind: a port the person chose is theirs to keep. */
-	static func server(_ server: Server, preferringSecuredConnection prefers: Bool) -> Server {
+	static func server(_ server: ServerEndpoint, preferringSecuredConnection prefers: Bool) -> ServerEndpoint {
 		var updated = server
 		updated.prefersSecuredConnection = prefers
 

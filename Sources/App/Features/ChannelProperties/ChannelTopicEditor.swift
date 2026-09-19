@@ -27,7 +27,7 @@ struct ChannelTopicEditor: NSViewRepresentable {
 
 	func makeNSView(context: Context) -> NSScrollView {
 		let scrollView = TopicEditorScrollView()
-		let textView = IRCFormattedTextView(frame: .zero)
+		let textView = FormattedTextView(frame: .zero)
 
 		scrollView.autohidesScrollers = true
 		scrollView.borderType = .bezelBorder
@@ -66,7 +66,7 @@ struct ChannelTopicEditor: NSViewRepresentable {
 	func updateNSView(_ scrollView: NSScrollView, context: Context) {
 		context.coordinator.parent = self
 
-		guard let textView = scrollView.documentView as? IRCFormattedTextView else {
+		guard let textView = scrollView.documentView as? FormattedTextView else {
 			return
 		}
 
@@ -81,7 +81,7 @@ struct ChannelTopicEditor: NSViewRepresentable {
 	}
 
 	static func dismantleNSView(_ scrollView: NSScrollView, coordinator _: Coordinator) {
-		(scrollView.documentView as? IRCFormattedTextView)?.delegate = nil
+		(scrollView.documentView as? FormattedTextView)?.delegate = nil
 	}
 
 	@MainActor
@@ -94,7 +94,7 @@ struct ChannelTopicEditor: NSViewRepresentable {
 		}
 
 		func textDidChange(_ notification: Notification) {
-			guard let textView = notification.object as? IRCFormattedTextView else {
+			guard let textView = notification.object as? FormattedTextView else {
 				return
 			}
 

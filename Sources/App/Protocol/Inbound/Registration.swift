@@ -8,7 +8,7 @@ import Foundation
 /** Where registration is in working through the alternate nicknames.
 
  A server that refuses a nickname is answered with the next candidate, so the
- client has to remember which one it is on and what it last sent: the refusal
+ session has to remember which one it is on and what it last sent: the refusal
  names the nickname the server saw, not the one the user configured. */
 struct NicknameRetry {
 	/// How many alternates have been tried, zero before the first refusal.
@@ -20,11 +20,11 @@ struct NicknameRetry {
 enum NicknameRetryPolicy {
 	static let fallbackNickname = "0"
 
-	/** How many nicknames the client tries before it stops asking.
+	/** How many nicknames the session tries before it stops asking.
 
 	 Ten is a full alternate list and several rounds of padding behind it, which
 	 is more than a server refusing one name in use needs. What it stops is the
-	 server that refuses every name — a `NICKLEN` the client cannot satisfy, a
+	 server that refuses every name — a `NICKLEN` the session cannot satisfy, a
 	 ban on the whole family of names, or services holding them — where each
 	 432/433 produced another NICK and the exchange only ended when one side gave
 	 up on the connection. */
@@ -37,7 +37,7 @@ enum NicknameRetryPolicy {
 
 	static func padded(_ nickname: String?, maximumLength: UInt) -> String {
 		guard let nickname,
-		      let padded = (nickname as NSString).padNickname(
+		      let padded = nickname.padNickname(
 		      	withCharacter: 95,
 		      	maximumLength: maximumLength
 		      )
@@ -47,16 +47,16 @@ enum NicknameRetryPolicy {
 }
 
 @MainActor
-extension Client {
+extension ServerSession {
 	func resetCapabilityNegotiation() {
 		capabilityNegotiation.reset()
 		sasl.mechanism = nil
 		sasl.offeredMechanisms = nil
-		sasl.scramClient = nil
+		sasl.scramSession = nil
 		sasl.incomingPayload = nil
 		sasl.triedMechanisms.removeAll()
 		failPendingDeliveriesForDisconnect()
-		NotificationCenter.default.post(name: .clientCapabilitiesDidChange, object: self)
+		NotificationCenter.default.post(name: .sessionCapabilitiesDidChange, object: self)
 	}
 
 	func receivePing(_ message: Message) {
@@ -97,9 +97,10 @@ extension Client {
 
 		let output = output
 		/* Presumed present until a MONITOR reply or the ISON poll says otherwise;
-		 activating now is what asks the server for each query's history. */
-		for channel in channelList where channel.isPrivateMessage {
-			applyPresence(true, to: channel)
+		 activating now is what asks the server for each direct conversation's
+		 history. */
+		for directConversation in conversationList where directConversation.isDirect {
+			applyPresence(true, to: directConversation)
 		}
 		output?.reloadChatItem(self)
 		output?.updateTitle(for: self)
@@ -122,7 +123,7 @@ extension Client {
 			toConsole: String(localized: .IRC.cannotUseNicknameTryingAnother(nicknameRetry.sentNickname ?? ""))
 		)
 
-		/* Past the ceiling the client says so once and waits: the count is reset
+		/* Past the ceiling the session says so once and waits: the count is reset
 		 when the user's own /nick lands, so asking again is what starts it over. */
 		guard nicknameRetry.attempt < NicknameRetryPolicy.maximumAttempts else {
 			if nicknameRetry.attempt == NicknameRetryPolicy.maximumAttempts {

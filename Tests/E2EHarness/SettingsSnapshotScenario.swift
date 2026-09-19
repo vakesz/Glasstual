@@ -99,7 +99,14 @@ enum SettingsSnapshotScenario {
 				deadline: deadline
 			) != nil &&
 				driver
-				.named("ConfirmApplicationQuit", role: kAXStaticTextRole, from: settings, deadline: deadline) != nil
+				/* The preview names a setting by its Settings label when it has
+				 one, and by its raw key only when it does not. */
+				.named(
+					"Request confirmation before quitting Glasstual",
+					role: kAXStaticTextRole,
+					from: settings,
+					deadline: deadline
+				) != nil
 		}
 	}
 
@@ -130,8 +137,8 @@ enum ConfigurationSnapshotFixture {
 		      let root = try PropertyListSerialization.propertyList(from: data, format: &format) as? [String: Any],
 		      format == .xml,
 		      root["format"] as? String == "GlasstualConfiguration", root["version"] as? Int == 1,
-		      let preferences = root["preferences"] as? [String: Any],
-		      preferences["ConfirmApplicationQuit"] as? Bool == true,
+		      let settings = root["preferences"] as? [String: Any],
+		      settings["Connection -> Confirm Quit"] as? Bool == true,
 		      root["unset"] is [String], let clients = root["clients"] as? [[String: Any]], clients.count == 1,
 		      clients[0]["connectionName"] as? String == "E2E", clients[0]["nickname"] as? String == "e2euser",
 		      clients[0]["loginCommands"] == nil,

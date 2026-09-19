@@ -10,7 +10,7 @@ final class AddressBookEntrySheet: SheetSession {
 
 	private let onSave: (AddressBookEntry) -> Void
 
-	convenience init(entryType: AddressBookEntryType, onSave: @escaping (AddressBookEntry) -> Void) {
+	convenience init(entryType: AddressBookEntryKind, onSave: @escaping (AddressBookEntry) -> Void) {
 		self.init(model: AddressBookEntryModel(entryType: entryType), onSave: onSave)
 	}
 
@@ -27,10 +27,6 @@ final class AddressBookEntrySheet: SheetSession {
 			submit: { [weak self] in self?.submit() },
 			cancel: { [weak self] in self?.cancel() }
 		))
-	}
-
-	func start() {
-		startSheet()
 	}
 
 	override func submit() {
@@ -50,16 +46,10 @@ struct AddressBookEntryView: View {
 
 	var body: some View {
 		VStack(spacing: 0) {
-			VStack(alignment: .leading, spacing: 6) {
-				Text(model.entryType.sheetTitle)
-					.font(.title2.weight(.semibold))
-				Text(model.entryType.sheetDescription)
-					.foregroundStyle(.secondary)
-					.fixedSize(horizontal: false, vertical: true)
-			}
-			.frame(maxWidth: .infinity, alignment: .leading)
-			.padding([.horizontal, .top], 20)
-			.padding(.bottom, 12)
+			SheetHeading(
+				model.entryType.sheetTitle,
+				subtitle: Text(model.entryType.sheetDescription)
+			)
 
 			Form {
 				identitySection
@@ -76,19 +66,15 @@ struct AddressBookEntryView: View {
 			}
 			.formStyle(.grouped)
 
-			Divider()
-			HStack {
-				Spacer()
-				Button(PromptStrings.Action.cancel, action: cancel)
-					.keyboardShortcut(.cancelAction)
-				/* The entry is only written back into the connection the sheet
-				 belongs to, which is what saves it; this one says the editor is
-				 done with it. */
-				Button(PromptStrings.Action.confirmation, action: submit)
-					.keyboardShortcut(.defaultAction)
-					.disabled(model.validationMessage != nil)
-			}
-			.padding(12)
+			/* The entry is only written back into the connection the sheet
+			 belongs to, which is what saves it; the confirmation says the
+			 editor is done with it. */
+			SheetActions(
+				confirmTitle: .sheetConfirmation,
+				confirmIsDisabled: model.validationMessage != nil,
+				confirm: submit,
+				cancel: cancel
+			)
 		}
 		.frame(
 			minWidth: 480,
@@ -104,7 +90,7 @@ struct AddressBookEntryView: View {
 	private var identitySection: some View {
 		Section {
 			LabeledContent(model.entryType.identityLabel) {
-				TextField(model.entryType.identityPlaceholder, text: $model.hostmask)
+				TextField(model.entryType.identityPlaceholder, text: $model.entry.hostmask)
 					.textFieldStyle(.roundedBorder)
 					.focused($hostmaskFieldIsFocused)
 					.accessibilityLabel(model.entryType.identityLabel)
@@ -118,7 +104,7 @@ struct AddressBookEntryView: View {
 
 	private var trackingSection: some View {
 		Section {
-			Toggle(.AddressBook.displayMessageWhenUserBecomesAvailable, isOn: $model.trackUserActivity)
+			Toggle(.AddressBook.displayMessageWhenUserBecomesAvailable, isOn: $model.entry.trackUserActivity)
 		} footer: {
 			Text(.AddressBook.trackingMethodDescription)
 		}
@@ -128,23 +114,23 @@ struct AddressBookEntryView: View {
 		Section(.AddressBook.ignoredMessages) {
 			Grid(alignment: .leading, horizontalSpacing: 28, verticalSpacing: 10) {
 				GridRow {
-					Toggle(.AddressBook.publicMessages, isOn: $model.ignorePublicMessages)
-					Toggle(.AddressBook.privateMessages, isOn: $model.ignorePrivateMessages)
+					Toggle(.AddressBook.publicMessages, isOn: $model.entry.ignorePublicMessages)
+					Toggle(.AddressBook.privateMessages, isOn: $model.entry.ignorePrivateMessages)
 				}
 				GridRow {
-					Toggle(.AddressBook.noticeMessages, isOn: $model.ignoreNoticeMessages)
-					Toggle(.AddressBook.clientToClientCtcp, isOn: $model.ignoreClientToClientProtocol)
+					Toggle(.AddressBook.noticeMessages, isOn: $model.entry.ignoreNoticeMessages)
+					Toggle(.AddressBook.clientToClientCtcp, isOn: $model.entry.ignoreClientToClientProtocol)
 				}
 				GridRow {
-					Toggle(.AddressBook.publicHighlights, isOn: $model.ignorePublicMessageHighlights)
-					Toggle(.AddressBook.privateHighlights, isOn: $model.ignorePrivateMessageHighlights)
+					Toggle(.AddressBook.publicHighlights, isOn: $model.entry.ignorePublicMessageHighlights)
+					Toggle(.AddressBook.privateHighlights, isOn: $model.entry.ignorePrivateMessageHighlights)
 				}
 				GridRow {
-					Toggle(.AddressBook.generalEventMessages, isOn: $model.ignoreGeneralEventMessages)
-					Toggle(.AddressBook.fileTransferRequests, isOn: $model.ignoreFileTransferRequests)
+					Toggle(.AddressBook.generalEventMessages, isOn: $model.entry.ignoreGeneralEventMessages)
+					Toggle(.AddressBook.fileTransferRequests, isOn: $model.entry.ignoreFileTransferRequests)
 				}
 				GridRow {
-					Toggle(.AddressBook.inlineMedia, isOn: $model.ignoreInlineMedia)
+					Toggle(.AddressBook.inlineMedia, isOn: $model.entry.ignoreInlineMedia)
 				}
 			}
 			.toggleStyle(.checkbox)
@@ -173,7 +159,7 @@ struct AddressBookEntryView: View {
 				}
 				.font(.caption)
 				.foregroundStyle(.secondary)
-				.padding(.top, 4)
+				.padding(.top, UISpacing.tight)
 			}
 		}
 	}

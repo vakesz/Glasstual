@@ -17,7 +17,7 @@ extension TranscriptView {
 		 find bar moving the reader, not the reader selecting text, so it must
 		 not overwrite the pasteboard. */
 		guard scrollView.isFindBarVisible == false else { return }
-		if Preferences.Messages.copyOnSelect.value, hasSelection {
+		if SettingsKeys.Messages.copyOnSelect.value, hasSelection {
 			copySelection()
 		}
 	}
@@ -81,7 +81,13 @@ extension TranscriptView {
 		 zero stretches the selection to the top of the document, and
 		 copy-on-select would then put text the reader never selected on the
 		 pasteboard; a selection whose text is gone is simply gone. */
-		guard let start = position(anchor.start), let end = position(anchor.end) else { return }
+		guard let start = position(anchor.start), let end = position(anchor.end) else {
+			isAdjustingSelection = true
+			textView.setSelectedRange(NSRange(location: 0, length: 0))
+			isAdjustingSelection = false
+			selection = nil
+			return
+		}
 		let restored = NSRange(location: min(start, end), length: max(0, end - start))
 		isAdjustingSelection = true
 		textView.setSelectedRange(restored)
@@ -93,13 +99,14 @@ extension TranscriptView {
 
 	private func position(_ endpoint: SelectionAnchor.Endpoint) -> Int? {
 		guard let range = range(ofLine: endpoint.lineNumber), let storage = textView.textStorage else { return nil }
-		var resolved = range.location + min(endpoint.offset, range.length)
-		if let segment = endpoint.segment {
-			storage.enumerateAttribute(.transcriptSelectionSegment, in: range) { value, segmentRange, stop in
-				guard value as? String == segment else { return }
-				resolved = segmentRange.location + min(endpoint.offset, segmentRange.length)
-				stop.pointee = true
-			}
+		guard let segment = endpoint.segment else {
+			return range.location + min(endpoint.offset, range.length)
+		}
+		var resolved: Int?
+		storage.enumerateAttribute(.transcriptSelectionSegment, in: range) { value, segmentRange, stop in
+			guard value as? String == segment else { return }
+			resolved = segmentRange.location + min(endpoint.offset, segmentRange.length)
+			stop.pointee = true
 		}
 		return resolved
 	}
@@ -188,23 +195,4 @@ extension TranscriptView {
 		}
 		textView.updateBottomAlignment()
 	}
-}
-
-/// Both UTF-16 endpoints are relative to a semantic segment within a stable row.
-struct SelectionAnchor: Equatable {
-	struct Endpoint: Equatable {
-		let lineNumber: String
-		let segment: String?
-		let offset: Int
-	}
-
-	let start: Endpoint
-	let end: Endpoint
-}
-
-struct TranscriptDisplayedBounds: Equatable {
-	let oldest: String?
-	let newest: String?
-	let count: Int
-	let remainingCapacity: Int
 }

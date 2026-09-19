@@ -82,10 +82,16 @@ private let spaceLikeScalars: CharacterSet = {
 }()
 
 public extension String {
+	/// The string, or `nil` when it is empty: an absent wire parameter and an
+	/// empty one say the same thing to everything that reads one.
+	var nonEmpty: String? {
+		isEmpty ? nil : self
+	}
+
 	/// The receiver reduced to something safe to use as a single path component.
 	///
-	/// Filenames arrive from remote peers over DCC and from user-set client and
-	/// channel names. Anything that could redirect the write (path separators,
+	/// Filenames arrive from remote peers over DCC and from user-set server and
+	/// conversation names. Anything that could redirect the write (path separators,
 	/// `.`, `..`, a leading dot) or that the file system cannot hold (control
 	/// and format characters, more than `NAME_MAX` bytes) is substituted or cut
 	/// rather than passed through.
@@ -151,7 +157,7 @@ public extension String {
 
 	/// Percent encoding that keeps only the unreserved URI characters.
 	var percentEncoded: String? {
-		addingPercentEncoding(withAllowedCharacters: .textualPercentEncoded)
+		addingPercentEncoding(withAllowedCharacters: .unreservedURICharacters)
 	}
 
 	func onlyContainsCharacters(from characterSet: CharacterSet) -> Bool {

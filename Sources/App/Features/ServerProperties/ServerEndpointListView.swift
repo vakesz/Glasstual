@@ -10,45 +10,42 @@ struct ServerEndpointListView: View {
 
 	var body: some View {
 		VStack(spacing: 0) {
-			VStack(alignment: .leading, spacing: 6) {
-				Text(.ServerEndpointList.windowTitle)
-					.font(.title2.weight(.semibold))
-				Text(.ServerEndpointList.explanation)
-					.foregroundStyle(.secondary)
-					.fixedSize(horizontal: false, vertical: true)
-			}
-			.frame(maxWidth: .infinity, alignment: .leading)
-			.padding([.horizontal, .top], 20)
-			.padding(.bottom, 12)
+			SheetHeading(.ServerProperties.endpointListWindowTitle, subtitle: Text(.ServerProperties.explanation))
 
 			endpointTable
 
-			VStack(alignment: .leading, spacing: 4) {
+			VStack(alignment: .leading, spacing: UISpacing.tight) {
 				ForEach(model.faults, id: \.self) { fault in
 					ValidationMessageLabel(String(localized: fault.message))
 				}
-				Text(.ServerEndpointList.serverPasswordHelp)
+				Text(.ServerProperties.endpointListServerPasswordHelp)
 					.font(.caption)
 					.foregroundStyle(.secondary)
 			}
 			.frame(maxWidth: .infinity, alignment: .leading)
-			.padding(.horizontal, 20)
-			.padding(.vertical, 8)
+			.padding(.horizontal, SheetMetrics.margin)
+			.padding(.vertical, UISpacing.regular)
 
-			Divider()
-			HStack(spacing: 8) {
+			/* The list is handed back to the connection sheet, which is what
+			 saves it. */
+			SheetActions(
+				confirmTitle: .sheetConfirmation,
+				confirmIsDisabled: model.faults.isEmpty == false,
+				confirm: submit,
+				cancel: cancel
+			) {
 				Button(action: model.addEntry) {
 					Image(systemName: "plus")
 				}
-				.help(.ServerEndpointList.addServer)
-				.accessibilityLabel(.ServerEndpointList.addServer)
+				.help(.ServerProperties.addServer)
+				.accessibilityLabel(.ServerProperties.addServer)
 
 				Button(role: .destructive, action: model.removeSelection) {
 					Image(systemName: "minus")
 				}
 				.disabled(model.selectedID == nil)
-				.help(.ServerEndpointList.removeServer)
-				.accessibilityLabel(.ServerEndpointList.removeServer)
+				.help(.ServerProperties.removeServer)
+				.accessibilityLabel(.ServerProperties.removeServer)
 
 				Divider().frame(height: 18)
 
@@ -56,26 +53,16 @@ struct ServerEndpointListView: View {
 					Image(systemName: "arrow.up")
 				}
 				.disabled(model.canMoveSelectionUp == false)
-				.help(.ServerEndpointList.moveUp)
-				.accessibilityLabel(.ServerEndpointList.moveUp)
+				.help(.ServerProperties.moveUp)
+				.accessibilityLabel(.ServerProperties.moveUp)
 
 				Button { model.moveSelection(by: 1) } label: {
 					Image(systemName: "arrow.down")
 				}
 				.disabled(model.canMoveSelectionDown == false)
-				.help(.ServerEndpointList.moveDown)
-				.accessibilityLabel(.ServerEndpointList.moveDown)
-
-				Spacer()
-				Button(PromptStrings.Action.cancel, action: cancel)
-					.keyboardShortcut(.cancelAction)
-				/* The list is handed back to the connection sheet, which is
-				 what saves it. */
-				Button(PromptStrings.Action.confirmation, action: submit)
-					.keyboardShortcut(.defaultAction)
-					.disabled(model.faults.isEmpty == false)
+				.help(.ServerProperties.moveDown)
+				.accessibilityLabel(.ServerProperties.moveDown)
 			}
-			.padding(12)
 		}
 		.frame(
 			minWidth: 620,
@@ -95,50 +82,58 @@ struct ServerEndpointListView: View {
 	 columns hand back the row's value rather than a binding into the list, so
 	 the editors take theirs from the model by identity. */
 	private var endpointTable: some View {
-		Table(model.entries, selection: $model.selectedID) {
-			TableColumn(String(localized: .ServerEndpointList.serverAddress)) { entry in
-				TextField(.ServerEndpointList.serverAddress, text: model.address(for: entry.id))
+		Table(of: ServerEndpointDraft.self, selection: $model.selectedID) {
+			TableColumn(String(localized: .ServerProperties.serverAddress)) { entry in
+				TextField(.ServerProperties.serverAddress, text: model.address(for: entry.id))
 					.labelsHidden()
-					.accessibilityLabel(.ServerEndpointList.serverAddress)
+					.accessibilityLabel(.ServerProperties.serverAddress)
 			}
 			.width(min: 160, ideal: 240)
 
-			TableColumn(String(localized: .ServerEndpointList.port)) { entry in
-				TextField(.ServerEndpointList.port, text: model.port(for: entry.id))
+			TableColumn(String(localized: .ServerProperties.port)) { entry in
+				TextField(.ServerProperties.port, text: model.port(for: entry.id))
 					.labelsHidden()
-					.accessibilityLabel(.ServerEndpointList.port)
+					.accessibilityLabel(.ServerProperties.port)
 			}
 			.width(min: 60, ideal: 80)
 
-			TableColumn(String(localized: .ServerEndpointList.connectSecurely)) { entry in
-				Toggle(.ServerEndpointList.connectSecurely, isOn: model.isSecured(for: entry.id))
+			TableColumn(String(localized: .ServerProperties.endpointListSecureColumn)) { entry in
+				Toggle(.ServerProperties.endpointListSecureColumn, isOn: model.isSecured(for: entry.id))
 					.labelsHidden()
-					.accessibilityLabel(.ServerEndpointList.connectSecurely)
+					.accessibilityLabel(.ServerProperties.endpointListSecureColumn)
 			}
 			.width(min: 52, ideal: 64)
 
-			TableColumn(String(localized: .ServerEndpointList.serverPassword)) { entry in
-				SecureField(.ServerEndpointList.serverPassword, text: model.password(for: entry.id))
+			TableColumn(String(localized: .ServerProperties.serverPassword)) { entry in
+				SecureField(.ServerProperties.serverPassword, text: model.password(for: entry.id))
 					.labelsHidden()
-					.accessibilityLabel(.ServerEndpointList.serverPassword)
+					.accessibilityLabel(.ServerProperties.serverPassword)
 			}
 			.width(min: 120, ideal: 200)
+		} rows: {
+			ForEach(model.entries) { entry in
+				TableRow(entry)
+					.draggable(entry.id)
+			}
+			.dropDestination(for: String.self) { destination, identifiers in
+				model.moveEntries(identifiedBy: identifiers, to: destination)
+			}
 		}
 		.onDeleteCommand(perform: model.removeSelection)
 		.contextMenu(forSelectionType: ServerEndpointDraft.ID.self) { selection in
-			Button(.ServerEndpointList.moveUp) { move(selection, by: -1) }
+			Button(.ServerProperties.moveUp) { move(selection, by: -1) }
 				.disabled(selection.count != 1)
-			Button(.ServerEndpointList.moveDown) { move(selection, by: 1) }
+			Button(.ServerProperties.moveDown) { move(selection, by: 1) }
 				.disabled(selection.count != 1)
 			Divider()
-			Button(.ServerEndpointList.removeServer, role: .destructive) {
+			Button(.ServerProperties.removeServer, role: .destructive) {
 				guard let id = selection.first else { return }
 				model.selectedID = id
 				model.removeSelection()
 			}
 			.disabled(selection.isEmpty)
 		}
-		.accessibilityLabel(.ServerEndpointList.serverList)
+		.accessibilityLabel(.ServerProperties.serverList)
 	}
 
 	private func move(_ selection: Set<ServerEndpointDraft.ID>, by offset: Int) {

@@ -8,8 +8,8 @@ import Foundation
 import OSLog
 
 private nonisolated let rendererLogger = Logger(
-	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
-	category: "LogRenderer"
+	subsystem: LogSubsystem.current,
+	category: "TranscriptRenderer"
 )
 
 private nonisolated enum RendererPatterns {
@@ -66,15 +66,15 @@ nonisolated struct TranscriptRenderer {
 		self.members = members
 	}
 
-	private var lineType: LogLineType {
+	private var lineType: ChatLineKind {
 		configuration.lineType
 	}
 
-	private var memberType: LogLineMemberType {
+	private var memberType: ChatLineMemberKind {
 		configuration.memberType
 	}
 
-	private var policy: TranscriptTextPolicy {
+	private var policy: TranscriptTextRules {
 		configuration.textPolicy
 	}
 
@@ -97,7 +97,7 @@ nonisolated struct TranscriptRenderer {
 
 	private mutating func filterUnicodeSpam() {
 		guard policy.filtersUnicodeTextSpam else { return }
-		let filteredTypes: Set<LogLineType> = [
+		let filteredTypes: Set<ChatLineKind> = [
 			.action, .ctcp, .ctcpQuery, .ctcpReply, .dccFileTransfer, .notice, .privateMessage, .topic,
 		]
 		guard filteredTypes.contains(lineType) else { return }
@@ -352,104 +352,25 @@ extension TranscriptRenderer {
 
 		return renderer.result(from: attributedBody)
 	}
-
-	@MainActor
-	static func renderBody(
-		asAttributedString body: String,
-		withAttributes configuration: TranscriptRendererConfiguration
-	) -> NSAttributedString {
-		let parsed = FormattingParser.parse(body)
-		let result = NSMutableAttributedString(attributedString: parsed)
-		parsed.enumerateAttributes(in: NSRange(location: 0, length: parsed.length)) { attributes, range, _ in
-			result.addAttributes(appKitAttributes(from: attributes, configuration: configuration), range: range)
-		}
-		return result
-	}
-
-	@MainActor
-	private static func appKitAttributes(
-		from attributes: [NSAttributedString.Key: Any],
-		configuration: TranscriptRendererConfiguration
-	) -> [NSAttributedString.Key: Any] {
-		var result: [NSAttributedString.Key: Any] = [:]
-		let defaultFont = configuration.preferredFont
-		let defaultColor = configuration.preferredFontColor
-		var font = defaultFont
-		if attributes[RendererFormatting.monospace] != nil, let current = font {
-			font = NSFontManager.shared.convert(current, toFamily: "Menlo")
-			result[NSAttributedString.Key(TextFormatterAttributeName.monospaceAttributeName.rawValue)] = true
-		}
-		if attributes[RendererFormatting.bold] != nil, let current = font {
-			font = NSFontManager.shared.convert(current, toHaveTrait: .boldFontMask)
-			result[NSAttributedString.Key(TextFormatterAttributeName.boldAttributeName.rawValue)] = true
-		}
-		if attributes[RendererFormatting.italic] != nil, let current = font {
-			font = NSFontManager.shared.convert(current, toHaveTrait: .italicFontMask)
-			result[NSAttributedString.Key(TextFormatterAttributeName.italicAttributeName.rawValue)] = true
-		}
-		result[.font] = font
-		if attributes[RendererFormatting.strikethrough] != nil {
-			result[.strikethroughStyle] = NSUnderlineStyle.single.rawValue
-			result[NSAttributedString.Key(TextFormatterAttributeName.strikethroughAttributeName.rawValue)] = true
-		}
-		if attributes[RendererFormatting.underline] != nil {
-			result[.underlineStyle] = NSUnderlineStyle.single.rawValue
-			result[NSAttributedString.Key(TextFormatterAttributeName.underlineAttributeName.rawValue)] = true
-		}
-		if let foreground = attributes[RendererFormatting.foregroundColor] {
-			result[.foregroundColor] = mapColor(foreground)
-			result[NSAttributedString.Key(TextFormatterAttributeName.foregroundColorAttributeName.rawValue)] =
-				foreground
-		} else if let defaultColor {
-			result[.foregroundColor] = defaultColor
-		}
-		if let background = attributes[RendererFormatting.backgroundColor] {
-			result[.backgroundColor] = mapColor(background)
-			result[NSAttributedString.Key(TextFormatterAttributeName.backgroundColorAttributeName.rawValue)] =
-				background
-		}
-		return result.compactMapValues { $0 }
-	}
-
-	nonisolated static func mapColor(_ color: Any) -> NSColor? { // nonisolated: pure
-		if let color = color as? NSColor {
-			return color
-		}
-		if let color = color as? NSNumber {
-			return mapColorCode(color.uintValue)
-		}
-		return nil
-	}
-
-	nonisolated static func mapColorCode(_ colorCode: UInt) -> NSColor { // nonisolated: pure
-		precondition(colorCode <= TextFormatterColor.maximumPaletteIndex)
-		return NSColor.formatterColors[Int(colorCode)]
-	}
 }
 
-/// Editor presentation stays on the main actor and never enters a render job.
-struct TranscriptRendererConfiguration {
-	var preferredFont: NSFont?
-	var preferredFontColor: NSColor?
-}
-
-/** The preference values the renderer branches on, read once on the main actor
+/** The setting values the renderer branches on, read once on the main actor
  and carried into the render with the line.
 
  Reading them from inside the renderer made a render a function of hidden global
  state: the same body and the same options could produce two different results
  and nothing in the signature said so. */
-nonisolated struct TranscriptTextPolicy: Sendable {
+nonisolated struct TranscriptTextRules: Sendable {
 	var filtersUnicodeTextSpam = false
 	var highlightMatchingMethod = NicknameHighlightMatchMode.exact
 	var detectsHighlightSpam = true
-	var linkSchemes = LinkSchemePolicy()
+	var linkSchemes = LinkSchemeRules()
 
 	init(
 		filtersUnicodeTextSpam: Bool = false,
 		highlightMatchingMethod: NicknameHighlightMatchMode = .exact,
 		detectsHighlightSpam: Bool = true,
-		linkSchemes: LinkSchemePolicy = LinkSchemePolicy()
+		linkSchemes: LinkSchemeRules = LinkSchemeRules()
 	) {
 		self.filtersUnicodeTextSpam = filtersUnicodeTextSpam
 		self.highlightMatchingMethod = highlightMatchingMethod
@@ -457,12 +378,12 @@ nonisolated struct TranscriptTextPolicy: Sendable {
 		self.linkSchemes = linkSchemes
 	}
 
-	/// The policy the reader's preferences describe right now.
-	@MainActor static func current() -> TranscriptTextPolicy {
-		TranscriptTextPolicy(
-			filtersUnicodeTextSpam: Preferences.Messages.filterUnicodeTextSpam.value,
-			highlightMatchingMethod: Preferences.Highlights.matchingMethod.value,
-			detectsHighlightSpam: Preferences.Messages.detectHighlightSpam.value,
+	/// The policy the reader's settings describe right now.
+	@MainActor static func current() -> TranscriptTextRules {
+		TranscriptTextRules(
+			filtersUnicodeTextSpam: SettingsKeys.Messages.filterUnicodeTextSpam.value,
+			highlightMatchingMethod: SettingsKeys.Highlights.matchingMethod.value,
+			detectsHighlightSpam: SettingsKeys.Messages.detectHighlightSpam.value,
 			linkSchemes: .current()
 		)
 	}
@@ -470,12 +391,12 @@ nonisolated struct TranscriptTextPolicy: Sendable {
 
 nonisolated struct TranscriptRenderOptions: Sendable {
 	var renderLinks = false
-	var lineType = LogLineType.undefined
-	var memberType = LogLineMemberType.normal
+	var lineType = ChatLineKind.undefined
+	var memberType = ChatLineMemberKind.normal
 	var highlightKeywords: [String] = []
 	var excludedKeywords: [String] = []
-	/// The preference facts the render needs, taken on the main actor.
-	var textPolicy = TranscriptTextPolicy()
+	/// The setting facts the render needs, taken on the main actor.
+	var textPolicy = TranscriptTextRules()
 	/// The server's casemapping, under which a keyword that is somebody's name
 	/// matches every spelling of it.
 	var caseMapping = ISupportCaseMapping.rfc1459

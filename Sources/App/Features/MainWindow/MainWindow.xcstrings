@@ -193,54 +193,6 @@
         }
       }
     },
-    "current-session" : {
-      "comment" : "Current-session marker. Legacy key: 4yo-mk.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Current Session"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Jelenlegi munkamenet"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aktuelle Sitzung"
-          }
-        }
-      }
-    },
-    "custom-reaction" : {
-      "comment" : "Accessibility label and tooltip for the reaction picker's field, where a pasted or palette-chosen emoji lands.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Custom Reaction"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Egyéni reakció"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Eigene Reaktion"
-          }
-        }
-      }
-    },
     "direct-chat" : {
       "comment" : "Direct-chat channel description. Legacy key: dcc-ch.",
       "extractionState" : "manual",
@@ -4987,30 +4939,6 @@
         }
       }
     },
-    "more-emoji" : {
-      "comment" : "Reaction picker button that opens the system character palette.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "More Emoji…"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "További emojik…"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Weitere Emojis…"
-          }
-        }
-      }
-    },
     "no-servers" : {
       "comment" : "Title of the main window's empty state, shown before the first server is configured.",
       "extractionState" : "manual",
@@ -5079,30 +5007,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Regenbogen"
-          }
-        }
-      }
-    },
-    "react-with-emoji" : {
-      "comment" : "Accessibility label and tooltip for one button in the reaction picker's row. The placeholder is the emoji itself.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "React with %@"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reagálás ezzel: %@"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mit %@ reagieren"
           }
         }
       }
@@ -5403,30 +5307,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Unterstrichen"
-          }
-        }
-      }
-    },
-    "unread-messages" : {
-      "comment" : "Caption of the scrollback mark. Styles may show it next to the mark. Legacy key: hin-um.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unread messages"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Olvasatlan üzenetek"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ungelesene Nachrichten"
           }
         }
       }

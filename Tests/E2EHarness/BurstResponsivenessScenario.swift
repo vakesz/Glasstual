@@ -10,7 +10,7 @@ enum BurstResponsivenessScenario {
 			guard try !HarnessFiles.exists("burst-complete")
 			else { throw HarnessFailure.assertion("Burst ended before UI switching") }
 			let settings = try await driver.settingsWindow()
-			try await driver.selectPreferencePage("General", in: settings)
+			try await driver.selectSettingsPage("General", in: settings)
 			try await driver.wait("Settings remains responsive during burst") { deadline in
 				try driver.named(
 					"Request confirmation before quitting Glasstual",

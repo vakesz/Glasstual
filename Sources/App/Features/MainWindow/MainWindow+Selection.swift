@@ -7,28 +7,32 @@ import CocoaExtensions
 import Foundation
 import SwiftUI
 
-// MARK: - Selection and transcript view
+/** What the window has selected, and everything that moves the selection.
 
+ One file for the whole of it: which row is selected, what that row means to
+ the rest of the window, and what happens when a row is chosen, closed or taken
+ away. Reading and writing the selection used to be two files, so following a
+ closed conversation to the row that replaced it meant reading both. */
 extension MainWindow {
 	var previouslySelectedItem: ChatItem? {
 		guard let previousSelectedItemId else { return nil }
-		return clientDirectory?.findItem(withId: previousSelectedItemId)
+		return chatSession?.findItem(withId: previousSelectedItemId)
 	}
 
-	var selectedClient: Client? {
-		selectedItem?.associatedClient
+	var selectedSession: ServerSession? {
+		selectedItem?.associatedSession
 	}
 
-	var selectedChannel: Channel? {
-		guard let selectedItem, selectedItem.isClient == false else { return nil }
-		return selectedItem as? Channel
+	var selectedConversation: Conversation? {
+		guard let selectedItem, selectedItem.isSession == false else { return nil }
+		return selectedItem as? Conversation
 	}
 
 	var selectedViewController: TranscriptController? {
-		if let controller = selectedChannel?.transcriptController {
+		if let controller = selectedConversation?.transcriptController {
 			return controller
 		}
-		return selectedClient?.transcriptController
+		return selectedSession?.transcriptController
 	}
 
 	func isItemVisible(_ item: ChatItem) -> Bool {
@@ -45,16 +49,81 @@ extension MainWindow {
 	}
 
 	/// Remembers which conversation the selected connection was last showing.
-	func storeLastSelectedChannel() {
-		selectedClient?.lastSelectedChannel = selectedChannel
+	func storeLastSelectedConversation() {
+		selectedSession?.lastSelectedConversation = selectedConversation
 	}
 
+	// MARK: - Moving the selection
+
+	func adjustSelection() {
+		guard let selectedItem, sidebar.row(forItem: selectedItem) >= 0 else {
+			selectReplacement(excluding: [])
+			return
+		}
+		select(selectedItem)
+	}
+
+	func selectPreviousItem() {
+		guard let previous = previouslySelectedItem else { return }
+		select(previous)
+	}
+
+	func select(_ item: ChatItem?) {
+		guard let item else {
+			selectReplacement(excluding: [])
+			return
+		}
+		if item.isSession == false {
+			sidebar.expandItem(item.associatedSession)
+		}
+		guard sidebar.row(forItem: item) >= 0 else { return }
+		sidebar.select(item)
+		selectionDidChange()
+	}
+
+	func deselect(_ item: ChatItem) {
+		guard selectedItem === item else { return }
+		selectReplacement(excluding: [ObjectIdentifier(item)])
+	}
+
+	func deselectGroup(_ item: ChatItem) {
+		guard item.isSession, let session = item.associatedSession,
+		      selectedItem?.associatedSession === session
+		else { return }
+		selectReplacement(excluding: Set(([session] as [ChatItem] + session.conversationList).map(ObjectIdentifier.init)))
+	}
+
+	/** Moves the selection off the rows that are going away.
+
+	 The nearest row at or after the one that was selected, or the last row
+	 before it; the rows are compared by identity rather than by index, so a
+	 group that is being closed takes its own conversations out of the running
+	 without the caller having to turn them into row numbers first. */
+	private func selectReplacement(excluding excluded: Set<ObjectIdentifier>) {
+		let currentRow = max(sidebar.selectedRow, 0)
+		let candidates = sidebar.selectableItems.enumerated()
+			.filter { excluded.contains(ObjectIdentifier($0.element)) == false }
+		guard let replacement = candidates.first(where: { $0.offset >= currentRow })?.element
+			?? candidates.last?.element
+		else {
+			storePreviousSelection()
+			selectedItem = nil
+			columnModel.transcript = nil
+			selectionDidChangePostflight()
+			return
+		}
+		sidebar.select(replacement)
+		selectionDidChange()
+	}
+
+	// MARK: - What a changed selection changes
+
 	func selectionDidChange() {
-		let newItem = serverList.selectedItem
+		let newItem = sidebar.selectedItem
 		guard selectedItem !== newItem else { return }
 		storePreviousSelection()
 		selectedItem = newItem
-		presentationModel.transcript = newItem?.transcriptController?.ensureBackingView()
+		columnModel.transcript = newItem?.transcriptController?.ensureBackingView()
 		newItem?.transcriptController?.notifyDidBecomeVisible()
 		selectionDidChangePostflight()
 	}
@@ -63,7 +132,7 @@ extension MainWindow {
 		/* The old conversation hears that typing stopped before the field is
 		 refilled for the new one, in the same turn. A later notification found
 		 the new conversation already recorded as the one being typed in. */
-		inputTextField.finishTypingNotice(unlessIn: selectedChannel)
+		inputTextField.typingNotice.finish(unlessIn: selectedConversation)
 		let changedTo = selectedItem
 		let changedFrom = previouslySelectedItem
 		guard changedTo !== changedFrom else { return }
@@ -80,8 +149,8 @@ extension MainWindow {
 			return
 		}
 
-		memberList.assign(to: changedTo.isChannel ? changedTo as? Channel : nil)
-		if Preferences.Input.focusTextViewOnSelectionChange.value,
+		memberList.assign(to: changedTo.isChannel ? changedTo as? Conversation : nil)
+		if SettingsKeys.Input.focusTextViewOnSelectionChange.value,
 		   NSWorkspace.shared.isVoiceOverEnabled == false
 		{
 			inputTextField.focus()
@@ -89,131 +158,9 @@ extension MainWindow {
 		inputHistory.moveFocus(to: changedTo)
 		inputTextField.resetSpellingIgnores()
 		updateMemberListVisibilityForSelection()
-		storeLastSelectedChannel()
+		storeLastSelectedConversation()
 		NotificationCenter.default.post(name: .mainWindowSelectionChanged, object: self)
 		DockIcon.updateDockIcon()
 		updateTitle()
-	}
-
-	func saveContentSplitViewState() {
-		MainWindowStateStore().saveLayout(presentationModel.columnState)
-	}
-
-	func restoreSavedContentSplitViewState() {
-		presentationModel.restoreColumns(MainWindowStateStore().loadLayout())
-	}
-
-	/** Moves a column, animated unless the system says not to.
-
-	 A pane sweeping across the window is exactly the motion Reduce Motion asks
-	 an interface to drop. The state change itself is the same either way, so
-	 the pane simply appears. */
-	private func changeColumnVisibility(_ change: () -> Void) {
-		withAnimation(ReduceMotion.animation(.default)) {
-			change()
-		}
-	}
-
-	func expandServerList() {
-		changeColumnVisibility { presentationModel.isServerListVisible = true }
-	}
-
-	func collapseServerList() {
-		changeColumnVisibility { presentationModel.isServerListVisible = false }
-	}
-
-	func toggleServerListVisibility() {
-		changeColumnVisibility { presentationModel.isServerListVisible.toggle() }
-	}
-
-	/// The member list belongs beside a channel the connection has joined; the
-	/// model derives the column's own visibility from that and from whether the
-	/// reader has closed it.
-	func updateMemberListVisibilityForSelection() {
-		changeColumnVisibility {
-			presentationModel.applyMemberListAvailability(
-				selectedItem?.isChannel == true && selectedItem?.associatedClient?.isLoggedIn == true
-			)
-		}
-	}
-
-	func toggleMemberListVisibility() {
-		changeColumnVisibility { presentationModel.toggleMemberList() }
-	}
-
-	var isMemberListVisible: Bool {
-		presentationModel.isMemberListVisible
-	}
-
-	var isServerListVisible: Bool {
-		presentationModel.isServerListVisible
-	}
-
-	/** Hides the AppKit views under the loading overlay, or shows them again.
-
-	 SwiftUI's `disabled` and `accessibilityHidden` stop at the representables,
-	 so the message field and the transcript stayed in the key view loop and in
-	 the accessibility tree under an overlay that covered them. A hidden view
-	 is in neither. Nothing under the overlay may keep the keyboard either, so
-	 a view that holds it gives it back to the window. */
-	func setConversationObscured(_ isObscured: Bool) {
-		if isObscured, firstResponder is NSView {
-			makeFirstResponder(nil)
-		}
-		inputContentView.isHidden = isObscured
-		presentationModel.isConversationObscured = isObscured
-	}
-
-	/** Puts the loading screen into the state the directory is in: waiting for the
-	 configuration, offering to add the first server, or out of the way.
-
-	 The answer is whether the window is showing conversations, which is what
-	 decides whether the application may start connecting. */
-	@discardableResult
-	func reloadLoadingScreen() -> Bool {
-		guard let clientDirectory else {
-			loadingScreen.showProgressView(withReason: String(localized: .MainWindow.loadingConfiguration))
-			return false
-		}
-		/* An import is replacing the clientDirectory underneath: whatever the screen is
-		 showing is what it keeps showing until that finishes. */
-		guard clientDirectory.isImportingConfiguration == false else { return false }
-		guard AppServices.delegate.applicationIsLaunched else {
-			loadingScreen.showProgressView(withReason: String(localized: .MainWindow.loadingConfiguration))
-			return false
-		}
-		guard clientDirectory.clientCount > 0 else {
-			loadingScreen.showNoServersView()
-			return false
-		}
-		loadingScreen.hide()
-		return true
-	}
-}
-
-// MARK: - Window title
-
-extension MainWindow {
-	func updateTitle(for item: ChatItem) {
-		/* The topic bar carries the channel's modes as a caption, and the same
-		 events that retitle the window are what change them. Nothing in the IRC
-		 layer addresses one transcript when a mode lands, so the redraw rides
-		 along here. */
-		item.transcriptController?.refreshTopicBar()
-		if isItemSelected(item) || (item.isClient && selectedClient === item) {
-			updateTitle()
-		}
-	}
-
-	func updateTitle() {
-		let content = MainWindowTitleContent(client: selectedClient, channel: selectedChannel)
-		title = content.title
-		subtitle = content.subtitle
-		setAccessibilityTitle([content.title, content.subtitle].filter { $0.isEmpty == false }.joined(separator: ", "))
-	}
-
-	func updateDrawingForUserInUserList(_ user: User) {
-		guard selectedChannel?.findMember(user.nickname) != nil else { return }
-		memberList.invalidatePresentation()
 	}
 }

@@ -28,13 +28,6 @@ struct MemberAvatar: View {
 	 under white initials. */
 	private static let fillLightness = 0.45
 
-	/** Where black overtakes white against a fill.
-
-	 WCAG's ratio is `(lighter + 0.05) / (darker + 0.05)`, so the two candidates
-	 meet where `(Y + 0.05)² = 1.05 × 0.05`. Either side of it, the better of
-	 the two clears 4.5:1 on any fill at all, a pinned colour included. */
-	private static let blackOnFillLuminance = 0.1791
-
 	var body: some View {
 		let fill = Self.fill(for: nickname, overrides: overrides)
 		Circle()
@@ -42,7 +35,7 @@ struct MemberAvatar: View {
 			.overlay {
 				Text(Self.initial(for: nickname))
 					.font(.system(size: round(size * 0.48), weight: .semibold))
-					.foregroundStyle(Color(nsColor: Self.initialColor(on: fill)))
+					.foregroundStyle(Color(nsColor: fill.legibleForeground))
 			}
 			.frame(width: size, height: size)
 	}
@@ -59,10 +52,6 @@ struct MemberAvatar: View {
 			chroma: NicknameColors.chroma,
 			hue: NicknameColors.hue(for: nickname)
 		).nsColor
-	}
-
-	static func initialColor(on fill: NSColor) -> NSColor {
-		fill.relativeLuminance > blackOnFillLuminance ? .black : .white
 	}
 
 	/** The first letter or digit of the nickname. Leading punctuation such

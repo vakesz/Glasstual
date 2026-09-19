@@ -6,10 +6,9 @@ import Foundation
 
 private let inputHistoryMaximumCount = 100
 
-/// Which history buffer the input field is typing into. The global scope used
-/// to be the magic key "TLOInputHistoryDefaultObject" in the same dictionary as
-/// the per-item buffers, where a tree item with that identifier would have
-/// collided with it.
+/// Which history buffer the input field is typing into. The global buffer is a
+/// case of its own rather than a reserved key in the per-item dictionary, which
+/// a sidebar item could have collided with.
 enum InputHistoryScope: Hashable, Sendable {
 	case global
 	case item(String)
@@ -103,55 +102,48 @@ private final class InputHistoryObject {
 /** The input history follows the focused view, so it lives where the text field
  does: on the main actor. That is what makes the plain stored state safe. */
 @MainActor
-final class InputHistory: NSObject {
+final class InputHistory {
 	private weak var window: MainWindow?
 	private var historyObjects: [InputHistoryScope: InputHistoryObject] = [:]
-	private var currentTreeItem: String?
-
-	@available(*, unavailable)
-	override convenience init() {
-		fatalError("Use init(window:)")
-	}
+	private var currentSidebarItem: String?
 
 	init(window: MainWindow) {
 		self.window = window
-
-		super.init()
 	}
 
-	func destroy(_ treeItem: ChatItem) {
-		guard Preferences.Input.historyIsChannelSpecific.value else {
+	func destroy(_ sidebarItem: ChatItem) {
+		guard SettingsKeys.Input.historyIsPerSelection.value else {
 			return
 		}
 
-		if let client = treeItem as? Client {
-			for channel in client.channelList {
-				destroy(channel)
+		if let session = sidebarItem as? ServerSession {
+			for conversation in session.conversationList {
+				destroy(conversation)
 			}
 		}
 
-		let itemIdentifier = treeItem.uniqueIdentifier
+		let itemIdentifier = sidebarItem.uniqueIdentifier
 		historyObjects.removeValue(forKey: .item(itemIdentifier))
 
-		if currentTreeItem == itemIdentifier {
-			currentTreeItem = nil
+		if currentSidebarItem == itemIdentifier {
+			currentSidebarItem = nil
 		}
 	}
 
-	func moveFocus(to treeItem: ChatItem) {
-		guard Preferences.Input.historyIsChannelSpecific.value,
+	func moveFocus(to sidebarItem: ChatItem) {
+		guard SettingsKeys.Input.historyIsPerSelection.value,
 		      let textView = window?.inputTextField
 		else {
 			return
 		}
 
-		if let oldObject = currentObjectForFocusedTreeView() {
+		if let oldObject = currentObjectForFocusedSidebarItem() {
 			oldObject.lastHistoryItem = NSAttributedString(attributedString: textView.attributedStringValue)
 		}
 
-		currentTreeItem = treeItem.uniqueIdentifier
+		currentSidebarItem = sidebarItem.uniqueIdentifier
 
-		if let lastHistoryItem = currentObjectForFocusedTreeView()?.lastHistoryItem {
+		if let lastHistoryItem = currentObjectForFocusedSidebarItem()?.lastHistoryItem {
 			textView.attributedStringValue = lastHistoryItem
 		} else {
 			textView.stringValue = ""
@@ -159,32 +151,32 @@ final class InputHistory: NSObject {
 	}
 
 	func noteInputHistoryObjectScopeDidChange() {
-		if Preferences.Input.historyIsChannelSpecific.value {
-			for client in AppServices.clientDirectory.clientList {
-				applyGlobalHistory(to: client.uniqueIdentifier)
+		if SettingsKeys.Input.historyIsPerSelection.value {
+			for session in AppServices.chatSession.sessions {
+				applyGlobalHistory(to: session.uniqueIdentifier)
 
-				for channel in client.channelList {
-					applyGlobalHistory(to: channel.uniqueIdentifier)
+				for conversation in session.conversationList {
+					applyGlobalHistory(to: conversation.uniqueIdentifier)
 				}
 			}
 
 			historyObjects.removeValue(forKey: .global)
 		} else {
 			historyObjects.removeAll()
-			currentTreeItem = nil
+			currentSidebarItem = nil
 		}
 	}
 
 	func add(_ string: NSAttributedString) {
-		currentObjectForFocusedTreeView()?.add(string)
+		currentObjectForFocusedSidebarItem()?.add(string)
 	}
 
 	func up(_ string: NSAttributedString) -> NSAttributedString? {
-		currentObjectForFocusedTreeView()?.up(string)
+		currentObjectForFocusedSidebarItem()?.up(string)
 	}
 
 	func down(_ string: NSAttributedString) -> NSAttributedString? {
-		currentObjectForFocusedTreeView()?.down(string)
+		currentObjectForFocusedSidebarItem()?.down(string)
 	}
 
 	private func applyGlobalHistory(to itemIdentifier: String) {
@@ -197,16 +189,16 @@ final class InputHistory: NSObject {
 		historyObjects[.item(itemIdentifier)] = newObject
 	}
 
-	/// `nil` when history is channel-specific and nothing is focused.
+	/// `nil` when history is kept per selection and nothing is focused.
 	var currentScope: InputHistoryScope? {
-		guard Preferences.Input.historyIsChannelSpecific.value else {
+		guard SettingsKeys.Input.historyIsPerSelection.value else {
 			return .global
 		}
 
-		return currentTreeItem.map(InputHistoryScope.item)
+		return currentSidebarItem.map(InputHistoryScope.item)
 	}
 
-	private func currentObjectForFocusedTreeView() -> InputHistoryObject? {
+	private func currentObjectForFocusedSidebarItem() -> InputHistoryObject? {
 		guard let scope = currentScope else {
 			return nil
 		}

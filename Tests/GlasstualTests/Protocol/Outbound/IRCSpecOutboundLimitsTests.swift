@@ -1,0 +1,391 @@
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
+
+import Foundation
+@testable import Glasstual
+import Testing
+
+/// RFC 2812 §2.3: "IRC messages are always lines of characters terminated with
+/// a CR-LF pair, and these messages SHALL NOT exceed 512 characters in length,
+/// counting all characters including the trailing CR-LF. Thus, there are 510
+/// characters maximum allowed for the command and its parameters."
+///
+/// The server relays a session's PRIVMSG with the sender's prefix in front of
+/// it, so an outgoing message has to leave room for a prefix it never writes
+/// itself.
+@Suite("Outbound line limits")
+@MainActor
+struct IRCSpecOutboundLimitsTests {
+	private static let hostmask = "me!user@example.org"
+
+	private func session(lineLength: UInt = 0) -> TestServerSession {
+		let session = TestServerSession(configDictionary: ["nickname": "me", "username": "user"])
+
+		session.userHostmask = Self.hostmask
+
+		if lineLength > 0 {
+			session.supportInfo.processConfigurationData("LINELEN=\(lineLength)")
+		}
+
+		return session
+	}
+
+	/// The line the server would relay for a message this session sends.
+	private func relayedLine(_ body: String, target: String, command: String) -> String {
+		":\(Self.hostmask) \(command) \(target) :\(body)\r\n"
+	}
+
+	private func split(
+		_ text: String,
+		target: String,
+		on session: TestServerSession,
+		as lineType: ChatLineKind
+	) -> [String] {
+		var cursor = LineCursor(NSAttributedString(string: text))
+		var pieces: [String] = []
+
+		while pieces.count < 200,
+		      let piece = cursor.nextLine(forTarget: target, on: session, with: lineType)
+		{
+			pieces.append(piece)
+		}
+
+		return pieces
+	}
+
+	/// Every piece a long PRIVMSG is split into has to fit in 512 bytes once
+	/// the server has put the sender's prefix and the CR-LF back on.
+	@Test(
+		"RFC 2812 §2.3: no relayed PRIVMSG exceeds 512 bytes",
+		arguments: [200, 510, 512, 1000, 5000]
+	)
+	func splitPrivateMessagesFitTheLineLimit(_ length: Int) {
+		let session = session()
+		let pieces = split(
+			String(repeating: "a", count: length),
+			target: "#channel",
+			on: session,
+			as: .privateMessage
+		)
+
+		#expect(pieces.isEmpty == false)
+
+		for piece in pieces {
+			#expect(relayedLine(piece, target: "#channel", command: "PRIVMSG").utf8.count <= 512)
+		}
+	}
+
+	/// The same budget applies to a NOTICE and to an ACTION, which carries its
+	/// CTCP framing inside the message body.
+	@Test("RFC 2812 §2.3: notices and actions share the budget")
+	func noticesAndActionsShareTheBudget() {
+		let session = session()
+		let text = String(repeating: "b", count: 2000)
+
+		for piece in split(text, target: "#channel", on: session, as: .notice) {
+			#expect(relayedLine(piece, target: "#channel", command: "NOTICE").utf8.count <= 512)
+		}
+
+		for piece in split(text, target: "#channel", on: session, as: .action) {
+			let framed = CTCPPayload.action(piece)
+
+			#expect(relayedLine(framed, target: "#channel", command: "PRIVMSG").utf8.count <= 512)
+		}
+	}
+
+	/// The limit is a byte budget, not a character count: multi-byte text has
+	/// to be measured as it will be encoded.
+	@Test("RFC 2812 §2.3: the budget counts bytes, not characters")
+	func theBudgetCountsBytes() {
+		let session = session()
+		let pieces = split(
+			String(repeating: "é", count: 600),
+			target: "#channel",
+			on: session,
+			as: .privateMessage
+		)
+
+		#expect(pieces.count > 1)
+
+		for piece in pieces {
+			#expect(relayedLine(piece, target: "#channel", command: "PRIVMSG").utf8.count <= 512)
+		}
+	}
+
+	/// Splitting never cuts a character in half: half of a multi-byte
+	/// character is not text the receiver can decode.
+	@Test("Splitting never cuts a character in half")
+	func splittingNeverCutsACharacter() {
+		let session = session()
+		let pieces = split(
+			String(repeating: "🎉", count: 400),
+			target: "#channel",
+			on: session,
+			as: .privateMessage
+		)
+
+		#expect(pieces.isEmpty == false)
+		#expect(pieces.joined() == String(repeating: "🎉", count: 400))
+	}
+
+	/// The budget has to leave room for a prefix the session never sends, so a
+	/// long hostmask leaves less room for the message.
+	@Test("A longer hostmask leaves less room for the message")
+	func aLongerHostmaskLeavesLessRoom() throws {
+		let shortHostmask = session()
+		let longHostmask = session()
+
+		longHostmask.userHostmask = "me!" + String(repeating: "u", count: 60) + "@example.org"
+
+		let text = String(repeating: "c", count: 2000)
+		let shortPieces = split(text, target: "#channel", on: shortHostmask, as: .privateMessage)
+		let longPieces = split(text, target: "#channel", on: longHostmask, as: .privateMessage)
+
+		let shortFirst = try #require(shortPieces.first)
+		let longFirst = try #require(longPieces.first)
+
+		#expect(shortFirst.count > longFirst.count)
+	}
+
+	/// modern.ircdocs.horse `LINELEN`: a server may raise the line limit, and
+	/// the session is allowed to use the extra room.
+	@Test("ISUPPORT LINELEN raises the budget")
+	func lineLengthTokenRaisesTheBudget() {
+		let defaultBudget = session()
+		let raisedBudget = session(lineLength: 1024)
+		let text = String(repeating: "d", count: 3000)
+
+		let defaultPieces = split(text, target: "#channel", on: defaultBudget, as: .privateMessage)
+		let raisedPieces = split(text, target: "#channel", on: raisedBudget, as: .privateMessage)
+
+		#expect(raisedPieces.count < defaultPieces.count)
+	}
+
+	// MARK: - JOIN batching
+
+	/// RFC 2812 §3.2.1: `JOIN <channel>{,<channel>} [<key>{,<key>}]`. The whole
+	/// command still has to fit one line, so a long autojoin list becomes
+	/// several JOINs rather than one truncated one.
+	@Test("A long JOIN list is split into lines that fit")
+	func longJoinListsAreSplit() {
+		let targets = (0 ..< 200).map { JoinBatching.Target(name: "#channel-\($0)") }
+		let batches = JoinBatching.batches(for: targets)
+
+		#expect(batches.count > 1)
+		#expect(batches.flatMap(\.channels).count == targets.count)
+
+		for batch in batches {
+			let line = "JOIN " + batch.channels.joined(separator: ",")
+
+			#expect(line.utf8.count <= ProtocolLimits.maximumBodyLength)
+		}
+	}
+
+	/// Keys are positional, so a keyed channel may not be batched with a
+	/// keyless one: the server would hand the key to the wrong channel.
+	@Test("Keyed and keyless channels are never batched together")
+	func keyedChannelsAreBatchedSeparately() {
+		let targets = [
+			JoinBatching.Target(name: "#open"),
+			JoinBatching.Target(name: "#secret", key: "hunter2"),
+			JoinBatching.Target(name: "#alsoopen"),
+		]
+		let batches = JoinBatching.batches(for: targets)
+
+		for batch in batches {
+			#expect(batch.keys.isEmpty || batch.keys.count == batch.channels.count)
+		}
+
+		#expect(batches.contains { $0.channels == ["#open", "#alsoopen"] && $0.keys.isEmpty })
+		#expect(batches.contains { $0.channels == ["#secret"] && $0.keys == ["hunter2"] })
+	}
+
+	/** `TARGMAX=JOIN:n` caps how many channels one JOIN may name. No limit at
+	 all leaves the batch bounded only by the line budget, because a channel
+	 list is core JOIN syntax rather than something a server has to advertise —
+	 which is why zero here means "as many as fit" while the same zero for
+	 PRIVMSG means "one target per line". */
+	@Test("TARGMAX caps the channels in one JOIN")
+	func targetMaximumCapsOneJoin() {
+		let targets = (0 ..< 10).map { JoinBatching.Target(name: "#c\($0)") }
+
+		#expect(JoinBatching.batches(for: targets, maximumTargets: 4).allSatisfy { $0.channels.count <= 4 })
+		#expect(JoinBatching.batches(for: targets, maximumTargets: 0).count == 1)
+	}
+
+	// MARK: - The serialiser
+
+	/// RFC 1459 §2.3.1: only the last parameter may carry spaces, and it needs
+	/// the `:` that says so. A parameter with no space needs no colon.
+	@Test("Only a parameter that needs the colon gets one")
+	func onlyTheTrailingParameterGetsAColon() throws {
+		#expect(try SendingMessage.string(command: .join, arguments: ["#chan"]) == "JOIN #chan")
+		#expect(
+			try SendingMessage.string(command: .privmsg, arguments: ["#chan", "hello world"])
+				== "PRIVMSG #chan :hello world"
+		)
+		#expect(
+			try SendingMessage.string(command: .privmsg, arguments: ["#chan", ":-)"])
+				== "PRIVMSG #chan ::-)"
+		)
+	}
+
+	/// The command a session sends is upper case on the wire, which RFC 1459
+	/// §2.3 allows for and every server expects.
+	@Test("RFC 1459 §2.3: outgoing commands are upper-cased")
+	func outgoingCommandsAreUpperCased() throws {
+		#expect(try SendingMessage.string(command: .privmsg, arguments: ["#chan", "hi"]) == "PRIVMSG #chan :hi")
+		/* A verb the session's vocabulary has no case for declares no trailing
+		 position either, so a last parameter that does not need the colon to
+		 survive the wire does not get one. */
+		#expect(try SendingMessage.string(wireCommand: "privmsg", arguments: ["#chan", "hi"]) == "PRIVMSG #chan hi")
+	}
+
+	// MARK: - The assembled line
+
+	/** RFC 1459 §2.3: a line is at most 512 bytes with its CR LF, so 510 for
+	 the rest. Nothing measured the finished line, so a long enough command left
+	 the session over the limit and the server cut it wherever it landed. */
+	@Test("An over-long line is cut to the protocol's body length")
+	func assembledLinesAreCutToTheBodyLength() {
+		let line = "PRIVMSG #chan :" + String(repeating: "a", count: 600)
+		let enforced = ProtocolLimits.enforcedWireLine(line)
+
+		#expect(enforced.utf8.count == ProtocolLimits.maximumBodyLength)
+		#expect(line.hasPrefix(enforced))
+	}
+
+	/** The enforcement used to pin 510 while everything that sized the text
+	 going into the line — the message splitter, the JOIN batcher, the parameter
+	 budget — read `LINELEN`. On a server carrying 1024 the last stop before the
+	 socket therefore cut text the server would have taken. */
+	@Test("The cut follows the length the server advertised")
+	func theCutFollowsTheAdvertisedLineLength() {
+		let line = "PRIVMSG #chan :" + String(repeating: "a", count: 2000)
+		let raised = ProtocolLimits.bodyLimit(forAdvertisedLineLength: 1024)
+
+		#expect(raised == 1022)
+		#expect(ProtocolLimits.enforcedWireLine(line, bodyLimit: raised).utf8.count == raised)
+		// A server that advertised nothing, or nonsense, keeps the RFC's budget.
+		#expect(ProtocolLimits.bodyLimit(forAdvertisedLineLength: 0) == ProtocolLimits.maximumBodyLength)
+		#expect(ProtocolLimits.bodyLimit(forAdvertisedLineLength: 1) == ProtocolLimits.maximumBodyLength)
+		// And one that advertises more than is believable is clamped, not trusted.
+		#expect(
+			ProtocolLimits.bodyLimit(forAdvertisedLineLength: 1_000_000)
+				== ProtocolLimits.maximumServerLineLength - ProtocolLimits.lineTerminatorLength
+		)
+	}
+
+	/// The disconnect that follows a QUIT clears the send queue, so a QUIT that
+	/// waited behind flood control was never sent.
+	@Test("PONG and QUIT go out ahead of flood control; everything else waits its turn", arguments: [
+		(line: "PONG :irc.example.net\r\n", bypasses: true),
+		(line: "QUIT :Leaving\r\n", bypasses: true),
+		(line: "QUIT\r\n", bypasses: true),
+		(line: "PRIVMSG #chat :QUIT\r\n", bypasses: false),
+		(line: "PING :irc.example.net\r\n", bypasses: false),
+	])
+	func pongAndQuitBypassFloodControl(line: String, bypasses: Bool) {
+		#expect(Connection.bypassesFloodControl(line) == bypasses)
+	}
+
+	/// The socket starts on the RFC's 512 and takes the server's `LINELEN` from
+	/// 005, and a reconnect goes back to the default because the next server has
+	/// said nothing yet.
+	@Test("The connection's line length follows ISUPPORT and resets with it")
+	func connectionLineLengthFollowsISupport() throws {
+		let session = TestServerSession(configDictionary: ["nickname": "me", "username": "user"])
+		let connection = Connection(config: ConnectionConfig(), onSession: session)
+		session.socket = connection
+
+		#expect(connection.maximumLineLength == 512)
+
+		let message = try #require(Message(line: ":irc.example.net 005 me LINELEN=1024 :are supported", on: session))
+		session.receiveNumericReply(message)
+
+		#expect(connection.maximumLineLength == 1024)
+
+		connection.resetState()
+
+		#expect(connection.maximumLineLength == 512)
+	}
+
+	/** The log is not where the user is looking. Text they typed is gone from
+	 what the server saw, and only the unified log ever said so. */
+	@Test("A cut line is reported where the user can see it")
+	func aCutLineIsReportedInTheTranscript() {
+		let session = TestServerSession(configDictionary: ["nickname": "me", "username": "user"])
+		let connection = Connection(config: ConnectionConfig(), onSession: session)
+		session.socket = connection
+
+		connection.sendLine("PRIVMSG #chan :" + String(repeating: "a", count: 600))
+
+		let bodies = session.printedLines.compactMap {
+			($0 as? [String: Any])?["messageBody"] as? String
+		}
+
+		#expect(bodies.contains {
+			$0 == ConnectionSafetyStrings.Wire.lineTruncated(
+				sentByteCount: 615,
+				limit: ProtocolLimits.maximumBodyLength
+			)
+		})
+	}
+
+	/// A line that fits says nothing at all: every line would otherwise be
+	/// reported as having been trimmed to itself.
+	@Test("A line that fits is not reported")
+	func aLineThatFitsIsNotReported() {
+		let session = TestServerSession(configDictionary: ["nickname": "me", "username": "user"])
+		let connection = Connection(config: ConnectionConfig(), onSession: session)
+		session.socket = connection
+
+		connection.sendLine("PRIVMSG #chan :hello")
+
+		#expect(session.printedLines.count == 0)
+	}
+
+	@Test("A line that already fits is left alone")
+	func linesWithinTheBudgetAreUnchanged() {
+		let line = "PRIVMSG #chan :hello"
+
+		#expect(ProtocolLimits.enforcedWireLine(line) == line)
+	}
+
+	/// The cut lands on a character boundary: half a UTF-8 sequence is not text
+	/// on any server, and the encoder would refuse it or the peer would draw a
+	/// replacement character.
+	@Test("The cut never splits a character")
+	func truncationLandsOnACharacterBoundary() {
+		let line = "PRIVMSG #chan :" + String(repeating: "\u{1F4AC}", count: 200)
+		let enforced = ProtocolLimits.enforcedWireLine(line)
+
+		#expect(enforced.utf8.count <= ProtocolLimits.maximumBodyLength)
+		#expect(enforced.utf8.count > ProtocolLimits.maximumBodyLength - 4)
+		#expect(enforced.hasSuffix("\u{1F4AC}"))
+	}
+
+	/// IRCv3 budgets the tag section separately, so a tagged line gets its own
+	/// 510 bytes for the command that follows the tags.
+	@Test("Tags are budgeted apart from the body")
+	func tagsAreBudgetedApartFromTheBody() {
+		let tags = "@time=2026-08-26T12:00:00.000Z "
+		let enforced = ProtocolLimits.enforcedWireLine(tags + String(repeating: "a", count: 600))
+
+		#expect(enforced.hasPrefix(tags))
+		#expect(enforced.utf8.count == tags.utf8.count + ProtocolLimits.maximumBodyLength)
+	}
+
+	/// Half a tag is not a tag, so an oversized tag section loses whole ones.
+	@Test("An oversized tag section drops whole tags")
+	func oversizedTagSectionsDropWholeTags() {
+		let tags = (0 ..< 300).map { "t\($0)=" + String(repeating: "v", count: 20) }
+		let enforced = ProtocolLimits.enforcedWireLine("@" + tags.joined(separator: ";") + " PING token")
+		let tagSection = String(enforced.prefix(while: { $0 != " " }))
+
+		#expect(enforced.hasSuffix(" PING token"))
+		#expect(tagSection.utf8.count < ProtocolLimits.maximumClientTagLength)
+		#expect(tagSection.hasPrefix("@t0=vvv"))
+		#expect(tagSection.components(separatedBy: ";").allSatisfy { $0.hasSuffix("vvvvv") })
+	}
+}

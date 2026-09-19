@@ -6,20 +6,20 @@ import Foundation
 import SwiftUI
 
 @MainActor
-final class ChannelInviteSheet: SheetSession, ClientScoped {
-	private(set) var client: Client?
-	private(set) var clientId: String?
+final class ChannelInviteSheet: SheetSession, SessionScoped {
+	private(set) var session: ServerSession?
+	private(set) var sessionId: String?
 	private(set) var nicknames: [String] = []
 
 	/// The channel the person chose to invite the nicknames to.
 	private let onSelectChannel: (String) -> Void
 
-	init(nicknames: [String], on client: Client, onSelectChannel: @escaping (String) -> Void) {
+	init(nicknames: [String], on session: ServerSession, onSelectChannel: @escaping (String) -> Void) {
 		self.onSelectChannel = onSelectChannel
 		super.init(window: nil)
 		self.nicknames = nicknames
-		self.client = client
-		clientId = client.uniqueIdentifier
+		self.session = session
+		sessionId = session.uniqueIdentifier
 	}
 
 	func start(withChannels channels: [String]) {
@@ -99,17 +99,8 @@ struct ChannelInviteView: View {
 
 	var body: some View {
 		VStack(spacing: 0) {
-			VStack(alignment: .leading, spacing: 6) {
-				Text(.ChannelProperties.windowTitle)
-					.font(.title2.weight(.semibold))
-				Text(verbatim: headline)
-					.foregroundStyle(.secondary)
-					.textSelection(.enabled)
-					.fixedSize(horizontal: false, vertical: true)
-			}
-			.frame(maxWidth: .infinity, alignment: .leading)
-			.padding([.horizontal, .top], 20)
-			.padding(.bottom, 12)
+			SheetHeading(.ChannelProperties.windowTitle, subtitle: Text(verbatim: headline))
+				.textSelection(.enabled)
 
 			Form {
 				Section {
@@ -123,18 +114,12 @@ struct ChannelInviteView: View {
 			}
 			.formStyle(.grouped)
 
-			Divider()
-			HStack(spacing: 8) {
-				Spacer()
-				Button(PromptStrings.Action.cancel, action: cancel)
-					.keyboardShortcut(.cancelAction)
-				Button(.ChannelProperties.inviteButton) {
-					invite(selectedChannel)
-				}
-				.keyboardShortcut(.defaultAction)
-				.disabled(selectedChannel.isEmpty)
-			}
-			.padding(12)
+			SheetActions(
+				confirmTitle: Text(.ChannelProperties.inviteButton),
+				confirmIsDisabled: selectedChannel.isEmpty,
+				confirm: { invite(selectedChannel) },
+				cancel: cancel
+			)
 		}
 		.frame(minWidth: 380, idealWidth: 420, maxWidth: .infinity)
 	}

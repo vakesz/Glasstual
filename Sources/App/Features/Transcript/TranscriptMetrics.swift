@@ -5,7 +5,7 @@ import CoreGraphics
 
 /** What the transcript is spaced and sized by.
 
- The window's own scale (`UISpacing`, `UIListMetrics`) answers most of it, and
+ The window's own scale (`UISpacing`) answers most of it, and
  the few numbers that belong to this view alone are named here rather than
  written into a constraint where nobody can tell a deliberate value from a
  number somebody typed. */
@@ -26,6 +26,11 @@ enum TranscriptMetrics {
 	/// a sidebar glyph's width; the target around it is what a pointer has to
 	/// be able to hit.
 	static let topicDisclosureHitTarget: CGFloat = 24
+
+	/// The circle the reader is taken back to the newest line by, sized to a
+	/// sidebar row's natural height so that it reads as part of the window's
+	/// scale rather than as a number chosen for this one control.
+	static let jumpToLatestButtonSize: CGFloat = 28
 
 	/// How close to the top of the document the reader has to scroll before
 	/// the next page of history is fetched.

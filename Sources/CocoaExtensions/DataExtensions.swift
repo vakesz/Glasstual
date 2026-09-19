@@ -68,7 +68,7 @@ private let hexadecimalDigits = Array("0123456789abcdef")
 
 /// Lowercase hex for a digest, in two allocations rather than one `String` per
 /// byte, on a path that runs for every certificate fingerprint.
-private func textual_hexadecimalString(for digest: some Sequence<UInt8>) -> String {
+private func hexadecimalString(for digest: some Sequence<UInt8>) -> String {
 	var characters: [Character] = []
 	characters.reserveCapacity(64)
 
@@ -81,20 +81,16 @@ private func textual_hexadecimalString(for digest: some Sequence<UInt8>) -> Stri
 }
 
 public extension NSData {
-	private var textualData: Data {
-		self as Data
+	var sha1Hex: String {
+		hexadecimalString(for: Insecure.SHA1.hash(data: self as Data))
 	}
 
-	var textualSha1: String {
-		textual_hexadecimalString(for: Insecure.SHA1.hash(data: textualData))
+	var sha256Hex: String {
+		hexadecimalString(for: SHA256.hash(data: self as Data))
 	}
 
-	var textualSha256: String {
-		textual_hexadecimalString(for: SHA256.hash(data: textualData))
-	}
-
-	var textualSha512: String {
-		textual_hexadecimalString(for: SHA512.hash(data: textualData))
+	var sha512Hex: String {
+		hexadecimalString(for: SHA512.hash(data: self as Data))
 	}
 }
 

@@ -7,25 +7,36 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct MainWindowRootView: View {
-	@Bindable var model: MainWindowPresentationModel
+	@Bindable var columns: MainWindowColumnModel
+	@Bindable var sheets: MainWindowSheetModel
+	let chrome: MainWindowChrome
 	@Bindable var loadingScreen: MainWindowLoadingScreen
 
-	@Bindable var serverList: ServerList
+	@Bindable var sidebar: Sidebar
 	let memberList: MemberList
 	let inputContentView: InputFieldContentView
+	/// Passed on to the sidebar's footer, which is the only part of the window
+	/// that issues menu commands from SwiftUI.
+	let commands: MenuActionController?
 
 	@FocusState private var isSearchFieldFocused: Bool
-	@State private var memberListWidth = CGFloat(Preferences.MainWindow.memberListWidth.value)
+	@State private var memberListWidth = CGFloat(SettingsKeys.MainWindow.memberListWidth.value)
 
 	var body: some View {
 		ZStack {
-			NavigationSplitView(columnVisibility: serverListVisibility) {
-				MainWindowSidebar(model: model, serverList: serverList, redirectTyping: redirectTyping)
-					.navigationSplitViewColumnWidth(
-						min: MainWindowConstants.serverListMinimumWidth,
-						ideal: MainWindowConstants.serverListIdealWidth,
-						max: MainWindowConstants.serverListMaximumWidth
-					)
+			NavigationSplitView(columnVisibility: sidebarVisibility) {
+				MainWindowSidebar(
+					columns: columns,
+					chrome: chrome,
+					sidebar: sidebar,
+					commands: commands,
+					redirectTyping: redirectTyping
+				)
+				.navigationSplitViewColumnWidth(
+					min: MainWindowConstants.sidebarMinimumWidth,
+					ideal: MainWindowConstants.sidebarIdealWidth,
+					max: MainWindowConstants.sidebarMaximumWidth
+				)
 			} detail: {
 				/* Beside the conversation, not in a split of its own, and not an
 				 `.inspector` either.
@@ -42,13 +53,13 @@ struct MainWindowRootView: View {
 				 so the divider carries its own drag -- with the pointer, keyboard
 				 and reset behaviour an inspector's divider would have given it. */
 				HStack(spacing: 0) {
-					MainWindowConversation(model: model, inputContentView: inputContentView)
+					MainWindowConversation(columns: columns, inputContentView: inputContentView)
 						.frame(
 							minWidth: MainWindowConstants.conversationMinimumWidth,
 							maxWidth: .infinity,
 							maxHeight: .infinity
 						)
-					if model.isMemberListAvailable, model.isMemberListVisible {
+					if columns.isMemberListAvailable, columns.isMemberListVisible {
 						MemberListResizeHandle(width: $memberListWidth)
 						/* The rows scroll up into the titlebar's safe area and
 						 the system's soft edge effect is what keeps the toolbar
@@ -74,13 +85,13 @@ struct MainWindowRootView: View {
 				 `conversation` describes; insetting the list to match the
 				 transcript, or lifting the transcript out of the safe area, would
 				 both put a column's own layout back into the column's insets. */
-				.background(model.conversationBackground.ignoresSafeArea(.container, edges: .top))
+				.background(columns.conversationBackground.ignoresSafeArea(.container, edges: .top))
 			}
 			/* On the split view rather than on the sidebar: `.sidebar` placement
-			 draws the field above the server list, and the window's toolbar is
+			 draws the field above the sidebar, and the window's toolbar is
 			 where the user looks for it. */
 			.searchable(
-				text: $serverList.filterText,
+				text: $sidebar.filterText,
 				placement: .toolbar,
 				prompt: Text(String(localized: .MainWindow.filterSidebar))
 			)
@@ -111,47 +122,47 @@ struct MainWindowRootView: View {
 				 the symbol says which state the window is in, the way Mail's
 				 sidebar toggle does: filled while the pane is showing. */
 				Button(
-					MenuCommand.memberListTitle(isVisible: model.isMemberListVisible),
-					systemImage: model.isMemberListVisible ? "sidebar.squares.trailing" : "sidebar.trailing"
+					MenuCommand.memberListTitle(isVisible: columns.isMemberListVisible),
+					systemImage: columns.isMemberListVisible ? "sidebar.squares.trailing" : "sidebar.trailing"
 				) {
-					toggleMemberList()
+					animatingColumnChange { columns.toggleMemberList() }
 				}
-				.disabled(model.isMemberListAvailable == false)
-				.help(MenuCommand.memberListTitle(isVisible: model.isMemberListVisible))
+				.disabled(columns.isMemberListAvailable == false)
+				.help(MenuCommand.memberListTitle(isVisible: columns.isMemberListVisible))
 			}
 		}
 		/* Two directions: the menu command sets the model's flag to move the
 		 keyboard into the field, and the field reports back so the flag still
 		 reads true when the user focused it themselves. */
-		.onChange(of: model.isSearchFieldFocused, adoptRequestedSearchFocus)
+		.onChange(of: chrome.isSearchFieldFocused, adoptRequestedSearchFocus)
 		.onChange(of: isSearchFieldFocused, reportSearchFocus)
 		.fileImporter(
-			isPresented: $model.isChoosingTransferFiles,
+			isPresented: $sheets.isChoosingTransferFiles,
 			allowedContentTypes: [.item],
 			allowsMultipleSelection: true,
-			onCompletion: model.completeTransferFileSelection
+			onCompletion: sheets.completeTransferFileSelection
 		)
-		.preferencesTransfer(model.preferencesTransfer)
-		.sheet(item: $model.inputPrompt, onDismiss: model.inputPromptDidDismiss) { prompt in
+		.settingsTransfer(sheets.settingsTransfer)
+		.sheet(item: $sheets.inputPrompt, onDismiss: sheets.inputPromptDidDismiss) { prompt in
 			InputPromptView(
 				presentation: prompt,
 				submit: {
-					model.completeInputPrompt(.submitted(prompt.value))
+					sheets.completeInputPrompt(.submitted(prompt.value))
 				},
 				cancel: {
-					model.completeInputPrompt(.cancelled)
+					sheets.completeInputPrompt(.cancelled)
 				}
 			)
 		}
 		.sheet(item: presentedSheet) { presentation in
-			MainWindowSheetHost(model: model, presentation: presentation)
+			MainWindowSheetHost(model: sheets, presentation: presentation)
 		}
 	}
 
-	private var serverListVisibility: Binding<NavigationSplitViewVisibility> {
+	private var sidebarVisibility: Binding<NavigationSplitViewVisibility> {
 		Binding(
-			get: { model.isServerListVisible ? .doubleColumn : .detailOnly },
-			set: { model.isServerListVisible = $0 != .detailOnly }
+			get: { columns.isSidebarVisible ? .doubleColumn : .detailOnly },
+			set: { columns.isSidebarVisible = $0 != .detailOnly }
 		)
 	}
 
@@ -159,28 +170,19 @@ struct MainWindowRootView: View {
 	/// binding's write goes through the model rather than clearing the item.
 	private var presentedSheet: Binding<MainWindowSheet?> {
 		Binding(
-			get: { model.presentedSheet },
+			get: { sheets.presentedSheet },
 			set: { presentation in
 				if presentation == nil {
-					model.dismissPresentedSheet()
+					sheets.dismissPresentedSheet()
 				}
 			}
 		)
 	}
 
-	/** A pane sweeping across the window is exactly the motion Reduce Motion
-	 asks an interface to drop, so the column simply appears instead. The state
-	 change is the view's to animate: the model only records it. */
-	private func toggleMemberList() {
-		withAnimation(ReduceMotion.animation(.default)) {
-			model.toggleMemberList()
-		}
-	}
-
 	/// The loading screen covers the window, so the views under it give the
 	/// keyboard back rather than staying reachable behind it.
 	private func conversationVisibilityChanged(_: Bool, _ isVisible: Bool) {
-		model.window?.setConversationObscured(isVisible)
+		columns.window?.setConversationObscured(isVisible)
 	}
 
 	/** Two directions: the menu command sets the model's flag to move the
@@ -191,7 +193,7 @@ struct MainWindowRootView: View {
 	}
 
 	private func reportSearchFocus(_: Bool, _ isFocused: Bool) {
-		model.isSearchFieldFocused = isFocused
+		chrome.isSearchFieldFocused = isFocused
 	}
 
 	private func redirectTyping(_ text: String) {

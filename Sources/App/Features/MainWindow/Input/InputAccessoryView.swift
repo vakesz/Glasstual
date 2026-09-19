@@ -1,66 +1,7 @@
 // Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
 // SPDX-License-Identifier: BSD-3-Clause
 
-import Observation
 import SwiftUI
-
-@MainActor
-@Observable
-final class InputAccessoryModel {
-	private(set) var replyMessageIdentifier: String?
-	private(set) var replyNickname: String?
-	private(set) var replyExcerpt: String?
-	private(set) var typingNicknames: [String] = []
-
-	var hasContent: Bool {
-		replyMessageIdentifier != nil || typingNicknames.isEmpty == false
-	}
-
-	func showReply(
-		toMessageIdentifier messageIdentifier: String,
-		nickname: String?,
-		excerpt: String?
-	) {
-		replyMessageIdentifier = messageIdentifier
-		replyNickname = nickname
-		replyExcerpt = excerpt
-	}
-
-	func hideReply() {
-		replyMessageIdentifier = nil
-		replyNickname = nil
-		replyExcerpt = nil
-	}
-
-	func setTypingNicknames(_ nicknames: [String]) {
-		typingNicknames = nicknames
-	}
-}
-
-/** Whether the message field holds the keyboard.
-
- The field is an AppKit view, so SwiftUI's `@FocusState` never sees it; the
- field reports its own first-responder transitions here and the capsule drawn
- around it observes them.
-
- First-responder status alone is not the answer. A window keeps its first
- responder while it is inactive, and `resignFirstResponder` is not sent when
- the window stops being key -- so a ring driven by that transition alone stayed
- lit on every background window in the space. Key-window status is the second
- half of the question, and both have to hold. */
-@MainActor
-@Observable
-final class InputFocusModel {
-	/// Whether the field is its window's first responder.
-	var isFirstResponder = false
-	/// Whether that window is the one the keyboard is going to.
-	var windowIsKey = false
-
-	/// What the capsule draws its ring from.
-	var isFocused: Bool {
-		isFirstResponder && windowIsKey
-	}
-}
 
 struct InputAccessoryView: View {
 	@Bindable var model: InputAccessoryModel
@@ -72,7 +13,7 @@ struct InputAccessoryView: View {
 		VStack(alignment: .leading, spacing: UISpacing.tight) {
 			if model.replyMessageIdentifier != nil {
 				replyBanner
-					.transition(.move(edge: .bottom).combined(with: .opacity))
+					.transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
 			}
 
 			if model.typingNicknames.isEmpty == false {
@@ -148,7 +89,8 @@ struct InputAccessoryView: View {
 				.font(.footnote.bold())
 				.symbolEffect(
 					.variableColor.cumulative.reversing,
-					options: reduceMotion ? .nonRepeating : .repeating
+					options: .repeating,
+					isActive: reduceMotion == false
 				)
 				.accessibilityHidden(true)
 			Text(InputAccessoryView.typingCaption(for: model.typingNicknames))

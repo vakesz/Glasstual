@@ -52,11 +52,15 @@ settings:
     CODE_SIGN_IDENTITY: Apple Development
     DEVELOPMENT_TEAM: H8W5DK3FN2
     PROVISIONING_PROFILE_SPECIFIER: ""
+    # The signed targets name these instead of a profile, so both configurations
+    # sign the same way wherever they are built: empty unless CI names a profile.
     GLASSTUAL_MAIN_PROVISIONING_PROFILE: ""
     GLASSTUAL_IRC_PROVISIONING_PROFILE: ""
 
     # ---- Platform ---------------------------------------------------------
-    MACOSX_DEPLOYMENT_TARGET: "26.0"
+    # MACOSX_DEPLOYMENT_TARGET is not declared here: XcodeGen writes it from
+    # options.deploymentTarget above, and a second copy is only a way for the
+    # two to drift.
     # Releases support Apple Silicon only. Keep this explicit rather than
     # accepting Xcode's recommendation to build a universal product.
     ARCHS: arm64
@@ -97,7 +101,6 @@ settings:
   configs:
     Debug:
       SWIFT_COMPILATION_MODE: singlefile
-      DEPLOYMENT_POSTPROCESSING: NO
       VALIDATE_PRODUCT: NO
       # Hardened runtime blocks attaching the debugger to XPC services.
       ENABLE_HARDENED_RUNTIME: NO
@@ -113,10 +116,18 @@ settings:
       ENABLE_HARDENED_RUNTIME: YES
       CODE_SIGN_INJECT_BASE_ENTITLEMENTS: NO
 
+# Navigator-only entries, so that everything the repository is governed and
+# checked by can be opened from Xcode. No build-phase effect.
 fileGroups:
   - project.yml
   - Makefile
   - README.md
+  - AGENTS.md
+  - CHANGELOG.md
+  - .swiftlint.yml
+  - .swiftformat
+  - .editorconfig
+  - scripts
 
 # ---------------------------------------------------------------------------
 # Reusable fragments
@@ -131,6 +142,15 @@ targetTemplates:
       properties:
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+
+  # The app and everything loaded into or written against it: AppKit UI and app
+  # state, so main actor by default. Helpers, parsers and value types opt out
+  # with an explicit `nonisolated`.
+  GlasstualMainActorTarget:
+    templates: [GlasstualTarget]
+    settings:
+      base:
+        SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
 
   # Services in Glasstual.app/Contents/XPCServices.
   GlasstualXPCService:
@@ -216,8 +236,6 @@ targets:
       base:
         PRODUCT_NAME: IRC Connection Host
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.IRCConnectionHost
-        # Empty unless CI names a profile, so both configurations sign the
-        # same way wherever they are built.
         PROVISIONING_PROFILE_SPECIFIER: $(GLASSTUAL_IRC_PROVISIONING_PROFILE)
     info:
       properties:
@@ -240,10 +258,9 @@ targets:
           - PrivacyInfo.xcprivacy
       - path: Sources/ConnectionHost/PrivacyInfo.xcprivacy
         buildPhase: resources
-      - path: Sources/Shared/ConnectionConfig.swift
-      - path: Sources/Shared/ConnectionErrorCode.swift
-      - path: Sources/Shared/RemoteConnectionProtocols.swift
-      - path: Sources/Shared/SecureConnectionInformation.swift
+      # Sources/Shared holds only what both targets compile, so the folder is
+      # globbed rather than listed file by file.
+      - path: Sources/Shared
     dependencies:
       - sdk: Security.framework
       - sdk: SecurityInterface.framework
@@ -252,18 +269,13 @@ targets:
   # ---- Application --------------------------------------------------------
 
   Glasstual:
-    templates: [GlasstualTarget]
+    templates: [GlasstualMainActorTarget]
     type: application
     settings:
       base:
-        # The app is AppKit UI and app state; main actor by default. Helpers,
-        # parsers and value types opt out with an explicit `nonisolated`.
-        SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
         REGISTER_APP_GROUPS: YES
         PRODUCT_BUNDLE_IDENTIFIER: $(GLASSTUAL_BUNDLE_IDENTIFIER)
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-        # Empty unless CI names a profile, so both configurations sign the
-        # same way wherever they are built.
         PROVISIONING_PROFILE_SPECIFIER: $(GLASSTUAL_MAIN_PROVISIONING_PROFILE)
     info:
       properties:
@@ -293,8 +305,6 @@ targets:
             CFBundleURLName: Glasstual Application Link
             CFBundleURLSchemes:
               - glasstual
-              # ApplicationLink still answers the name the app was forked from.
-              - textual
         GlasstualApplicationGroupIdentifier: $(GLASSTUAL_GROUP_CONTAINER_IDENTIFIER)
         ITSAppUsesNonExemptEncryption: false
         LSApplicationCategoryType: public.app-category.social-networking
@@ -318,10 +328,11 @@ targets:
         com.apple.security.files.bookmarks.app-scope: true
         com.apple.security.files.downloads.read-write: true
         com.apple.security.files.user-selected.read-write: true
-        # KeychainStore writes every secret to the first group, which no other
-        # target lists. The second is where builds before it stored secrets;
-        # they are moved into the first as they are read, so it stays for as
-        # long as a user may still have items there.
+        # KeychainStore names the first group on every call — it writes, reads
+        # and deletes there and nowhere else — and no other target lists it.
+        # The second is where builds before it stored secrets. Nothing reads or
+        # writes it any more and nothing moves what is in it: an item left
+        # there stays, unread, until the user removes it in Keychain Access.
         keychain-access-groups:
           - "$(AppIdentifierPrefix)$(PRODUCT_BUNDLE_IDENTIFIER).secrets"
           - "$(AppIdentifierPrefix)$(PRODUCT_BUNDLE_IDENTIFIER)"
@@ -330,17 +341,18 @@ targets:
         com.apple.security.print: true
     sources:
       - path: Sources/App/Application
+      - path: Sources/App/Chat
+      - path: Sources/App/Controls
       - path: Sources/App/Features
       - path: Sources/App/Localization
         excludes:
           # Notes for whoever edits the catalogues; not a shipped resource.
           - LocalizationCatalogNotices.md
-      - path: Sources/App/Preferences
       - path: Sources/App/Protocol
-      - path: Sources/App/UI
-      # Sources/Shared holds the app-side preference store and the declarations
-      # the connection host shares; only the files the IRCConnectionHost target
-      # lists actually cross that process boundary.
+      - path: Sources/App/Services
+      - path: Sources/App/SettingsKeys
+      # Sources/Shared holds the declarations the connection host shares, and
+      # only those; the IRCConnectionHost target globs the same folder.
       - path: Sources/Shared
       # Resources -----------------------------------------------------------
       - path: Sources/App/Resources/AppIcon.icon
@@ -381,14 +393,10 @@ targets:
   # Unit tests run inside Glasstual.app so that they can use the app's
   # classes directly. Network fixtures use loopback listeners.
   GlasstualTests:
-    templates: [GlasstualTarget]
+    templates: [GlasstualMainActorTarget]
     type: bundle.unit-test
     settings:
       base:
-        # Matches the app: the bundle is loaded into the host process and most
-        # of what it exercises is main-actor. A suite that tests a nonisolated
-        # type says so, the same way the app's own value types do.
-        SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.tests
     # No entitlements: a unit-test bundle is loaded into the host process and
     # runs under the host's sandbox. A sandbox/inherit pair on its own
@@ -416,7 +424,7 @@ targets:
 
   # Public AX/NSWorkspace driver and scripted loopback peer, outside the app sandbox.
   GlasstualE2EHarness:
-    templates: [GlasstualTarget]
+    templates: [GlasstualMainActorTarget]
     type: tool
     sources:
       - path: Tests/E2EHarness
@@ -424,7 +432,6 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.e2e-harness
         CREATE_INFOPLIST_SECTION_IN_BINARY: YES
-        SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
         ENABLE_APP_SANDBOX: NO
     dependencies:
       - sdk: AppKit.framework
@@ -435,14 +442,13 @@ targets:
 
   # A Swift Testing bundle loaded by the test runner, not Glasstual.app.
   GlasstualE2ETests:
-    templates: [GlasstualTarget]
+    templates: [GlasstualMainActorTarget]
     type: bundle.unit-test
     sources:
       - path: Tests/GlasstualE2ETests
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.e2e-tests
-        SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
         TEST_HOST: ""
         BUNDLE_LOADER: ""
         ENABLE_APP_SANDBOX: NO

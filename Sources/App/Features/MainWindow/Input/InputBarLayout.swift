@@ -1,7 +1,7 @@
 // Copyright (c) 2026 Codeux Software, LLC & respective contributors.
 // SPDX-License-Identifier: BSD-3-Clause
 
-import CoreGraphics
+import AppKit
 
 /** The fixed distances the input bar is built from. The transcript's inset
  is the field's frame -- which already includes `bottomPadding` and the padding
@@ -36,6 +36,28 @@ enum InputBarLayout {
 	static let scrollViewVerticalInset: CGFloat = 3
 	/// The shortest the text view itself may be: one line.
 	static let minimumTextHeight: CGFloat = 19
+
+	/// The field's text container inset.
+	static let fieldInset = NSSize(width: 1, height: 2)
+	/// The vertical room the bar's background adds around one line of text,
+	/// which is what sets the bar's minimum height.
+	static let fieldBorderPadding: CGFloat = 23
+
+	/// The field's font for a text-size setting. The sizes track the system
+	/// text styles so they follow the reader's text size settings rather
+	/// than fixed point values.
+	static func font(for size: MainWindowTextFontSize) -> NSFont {
+		switch size {
+		case .large:
+			NSFont.preferredFont(forTextStyle: .title3, options: [:])
+		case .extraLarge:
+			NSFont.preferredFont(forTextStyle: .title2, options: [:])
+		case .humongous:
+			NSFont.preferredFont(forTextStyle: .title1, options: [:])
+		default:
+			NSFont.preferredFont(forTextStyle: .body, options: [:])
+		}
+	}
 
 	static func accessoryHeight(replyVisible: Bool, typingVisible: Bool) -> CGFloat {
 		var height: CGFloat = 0

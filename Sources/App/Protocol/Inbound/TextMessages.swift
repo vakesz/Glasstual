@@ -8,11 +8,11 @@ import Foundation
 enum InboundTextPolicy {
 	struct Classification {
 		let text: String
-		let lineType: LogLineType
+		let lineType: ChatLineKind
 	}
 
-	static func classify(command: String, payload: String) -> Classification {
-		let isPrivmsg = command == "PRIVMSG"
+	static func classify(command: RemoteCommand?, payload: String) -> Classification {
+		let isPrivmsg = command == .privmsg
 		guard payload.hasPrefix("\u{1}") else {
 			return Classification(text: payload, lineType: isPrivmsg ? .privateMessage : .notice)
 		}
@@ -58,7 +58,7 @@ enum InboundTextPolicy {
 		return true
 	}
 
-	static func lineType(_ lineType: LogLineType, suppressingHighlights: Bool) -> LogLineType {
+	static func lineType(_ lineType: ChatLineKind, suppressingHighlights: Bool) -> ChatLineKind {
 		guard suppressingHighlights else { return lineType }
 		switch lineType {
 		case .action: return .actionNoHighlight
@@ -88,7 +88,7 @@ enum ServiceNoticePolicy {
 		/// answer would be a second copy of the password for nothing.
 		let isIdentifiedWithSASL: Bool
 		/// Whether the connection may carry the password; see
-		/// `Client.permitsCredentialsInClear`.
+		/// `ServerSession.permitsCredentialsInClear`.
 		let permitsCredentialsInClear: Bool
 		let password: String?
 		let nickname: String
@@ -108,7 +108,7 @@ enum ServiceNoticePolicy {
 	 The host alone cannot say so. A reverse DNS name is whatever the owner of
 	 the address publishes, so `services.attacker.example` is one record away
 	 for anyone; what an ordinary user cannot have is a host inside the domain
-	 of the server the client connected to. Services therefore count when they
+	 of the server the session connected to. Services therefore count when they
 	 are the server itself, when their host is under the network's own domain
 	 (`NickServ!service@dal.net` against `irc.dal.net`), or when a `services`
 	 label sits directly on that domain (`services.libera.chat` against
@@ -170,7 +170,7 @@ enum ServiceNoticePolicy {
 	}
 
 	static func nickServAction(for text: String, context: NickServContext) -> NickServAction? {
-		/* Whether or not this client is the one that asked: a connect command
+		/* Whether or not this session is the one that asked: a connect command
 		 may have sent the identification, and the service confirms it the
 		 same way. */
 		if context.successfulIdentificationTokens.contains(where: text.localizedCaseInsensitiveContains) {
@@ -203,14 +203,14 @@ enum ServiceNoticePolicy {
 }
 
 @MainActor
-extension Client {
+extension ServerSession {
 	func receiveWallops(_ message: Message) {
 		guard let payload = message.params.first else { return }
-		let rewritten = message.duplicate()
-		rewritten.command = "NOTICE"
+		var rewritten = message
+		rewritten.rewrite(as: .notice)
 		rewritten.params = [
 			userNickname,
-			String(format: LogLineFormat.specialNoticeMessage, message.command, payload),
+			String(format: ChatLineFormat.specialNoticeMessage, message.command, payload),
 		]
 		receivePrivmsgAndNotice(rewritten)
 	}
@@ -218,7 +218,7 @@ extension Client {
 	func receivePrivmsgAndNotice(_ message: Message) {
 		guard message.params.count > 1 else { return }
 		updateUserIdentity(fromMessageTags: message)
-		let result = InboundTextPolicy.classify(command: message.command, payload: message.params[1])
+		let result = InboundTextPolicy.classify(command: message.remoteCommand, payload: message.params[1])
 		switch result.lineType {
 		case .action, .privateMessage, .notice:
 			receiveText(message, lineType: result.lineType, text: result.text)
@@ -231,7 +231,7 @@ extension Client {
 		}
 	}
 
-	func receiveText(_ message: Message, lineType originalLineType: LogLineType, text originalText: String) {
+	func receiveText(_ message: Message, lineType originalLineType: ChatLineKind, text originalText: String) {
 		guard message.params.count > 1 else { return }
 		var text = originalText
 		if text.isEmpty {
@@ -240,7 +240,7 @@ extension Client {
 		}
 		var target = message.params[0]
 		guard !target.isEmpty else { return }
-		if supportInfo.extractStatusMessagePrefix(fromChannelNamed: target).count == 1 {
+		if supportInfo.extractStatusMessagePrefix(fromTargetNamed: target).count == 1 {
 			target.removeFirst()
 		}
 
@@ -264,9 +264,9 @@ extension Client {
 	}
 
 	private func receivePublicText(
-		_ message: Message, lineType: LogLineType, target: String, text: String
+		_ message: Message, lineType: ChatLineKind, target: String, text: String
 	) {
-		guard let channel = findChannel(target) else { return }
+		guard let channel = findConversation(target) else { return }
 		let sender = message.senderNickname ?? ""
 		let isSelfMessage = nicknameIsMyself(sender)
 		let isNotice = lineType == .notice
@@ -276,7 +276,7 @@ extension Client {
 		let connectionIdentifier = socket?.uniqueIdentifier
 		let completion: PrintedLineCompletion = { [weak self, weak channel] context in
 			guard let self, let channel, !isSelfMessage, !alreadySeen, !context.isDuplicate, !isTerminating,
-			      socket?.uniqueIdentifier == connectionIdentifier, channel.associatedClient === self,
+			      socket?.uniqueIdentifier == connectionIdentifier, channel.associatedSession === self,
 			      channel.readStateGeneration == readGeneration else { return }
 			if isNotice {
 				return
@@ -307,12 +307,15 @@ extension Client {
 	}
 
 	private func receivePrivateText(
-		_ message: Message, lineType: LogLineType, target: String, text: String
+		_ message: Message, lineType: ChatLineKind, target: String, text: String
 	) {
 		let sender = message.senderNickname ?? ""
 		let isNotice = lineType == .notice
 		let isSelfMessage = nicknameIsMyself(sender)
-		var query = findChannel(isSelfMessage ? target : sender)
+		/* Usually the direct conversation with the sender, but a ChanServ notice
+		 is filed into the channel it names and the notice setting can send any
+		 notice to whatever conversation is selected. */
+		var destination = findConversation(isSelfMessage ? target : sender)
 		var deliveredText = text
 		var newPrivateMessage = false
 
@@ -320,65 +323,67 @@ extension Client {
 			if sender.caseInsensitiveCompare(ServerQuirks.Services.chanServ) == .orderedSame,
 			   noticeIsFromServices(message)
 			{
-				(query, deliveredText) = channelServiceNoticeDestination(current: query, text: text)
+				(destination, deliveredText) = channelServiceNoticeDestination(current: destination, text: text)
 			} else if sender.caseInsensitiveCompare(ServerQuirks.Services.nickServ) == .orderedSame {
 				processNickServNotice(text, from: message)
 			}
-			if environment.preferences.locationToSendNotices == .selectedChannel {
-				query = output?.selectedChannel(on: self)
+			if environment.settings.locationToSendNotices == .selectedConversation {
+				destination = output?.selectedConversation(on: self)
 			}
-			if query == nil, environment.preferences.locationToSendNotices == .query {
-				query = findChannelOrCreate(isSelfMessage ? target : sender, as: .privateMessage)
+			if destination == nil, environment.settings.locationToSendNotices == .directConversation {
+				destination = findConversationOrCreate(isSelfMessage ? target : sender, as: .direct)
 			}
-		} else if query == nil {
+		} else if destination == nil {
 			newPrivateMessage = true
-			query = findChannelOrCreate(isSelfMessage ? target : sender, as: .privateMessage)
+			destination = findConversationOrCreate(isSelfMessage ? target : sender, as: .direct)
 		}
 		let textToDeliver = deliveredText
 		// Capture the read state before asynchronous rendering.
-		let alreadySeen = lineArrivedAlreadySeen(message, in: query)
-		let readGeneration = query?.readStateGeneration
+		let alreadySeen = lineArrivedAlreadySeen(message, in: destination)
+		let readGeneration = destination?.readStateGeneration
 		let connectionIdentifier = socket?.uniqueIdentifier
 
-		let completion: PrintedLineCompletion = { [weak self, weak query] context in
-			guard let self, let query, !isSelfMessage, !alreadySeen, !context.isDuplicate, !isTerminating,
-			      socket?.uniqueIdentifier == connectionIdentifier, query.associatedClient === self,
-			      query.readStateGeneration == readGeneration else { return }
+		let completion: PrintedLineCompletion = { [weak self, weak destination] context in
+			guard let self, let destination, !isSelfMessage, !alreadySeen, !context.isDuplicate, !isTerminating,
+			      socket?.uniqueIdentifier == connectionIdentifier, destination.associatedSession === self,
+			      destination.readStateGeneration == readGeneration else { return }
 			let highlight = context.isHighlight
-			if isSafeToPostNotification(for: message, in: query) {
-				let event: NotificationEvent = isNotice ? .privateNotice
+			if isSafeToPostNotification(for: message, in: destination) {
+				let event: UserNotificationEvent = isNotice ? .privateNotice
 					: (highlight ? .highlight : (newPrivateMessage ? .newPrivateMessage : .privateMessage))
 				notifyEvent(
 					event,
 					lineType: lineType,
-					target: query,
+					target: destination,
 					nickname: sender,
 					text: textToDeliver
 				)
 			}
 			if highlight {
-				setHighlightState(for: query)
+				setHighlightState(for: destination)
 			}
-			setUnreadState(for: query, isHighlight: highlight)
+			setUnreadState(for: destination, isHighlight: highlight)
 		}
 
-		if shouldPrintReceivedText(textToDeliver, message: message, destination: query, lineType: lineType) {
-			print(textToDeliver, by: sender, in: query, as: lineType, command: message.command,
+		if shouldPrintReceivedText(textToDeliver, message: message, destination: destination, lineType: lineType) {
+			print(textToDeliver, by: sender, in: destination, as: lineType, command: message.command,
 			      receivedAt: message.receivedAt, isEncrypted: false, referenceMessage: message,
 			      completionBlock: completion)
 		}
-		if !isNotice, let query {
-			applyPresence(true, to: query)
+		if !isNotice, let destination {
+			applyPresence(true, to: destination)
 		}
 	}
 
 	private func receiveServerText(
-		_ message: Message, lineType: LogLineType, target _: String, text: String
+		_ message: Message, lineType: ChatLineKind, target _: String, text: String
 	) {
 		let sender = message.senderNickname ?? ""
-		let query = lineType == .notice ? findChannel(sender) : findChannelOrCreate(sender, as: .privateMessage)
-		if shouldPrintReceivedText(text, message: message, destination: query, lineType: lineType) {
-			print(text, by: sender, in: query, as: lineType, command: message.command,
+		let directConversation = lineType == .notice
+			? findConversation(sender)
+			: findConversationOrCreate(sender, as: .direct)
+		if shouldPrintReceivedText(text, message: message, destination: directConversation, lineType: lineType) {
+			print(text, by: sender, in: directConversation, as: lineType, command: message.command,
 			      receivedAt: message.receivedAt, isEncrypted: false, referenceMessage: message)
 		}
 		if sender.hasSuffix(ServerQuirks.Proxy.nicknameSuffix),
@@ -393,11 +398,11 @@ extension Client {
 	}
 
 	private func channelServiceNoticeDestination(
-		current: Channel?, text: String
-	) -> (Channel?, String) {
+		current: Conversation?, text: String
+	) -> (Conversation?, String) {
 		guard let notice = ServiceNoticePolicy.channelNotice(from: text),
 		      stringIsChannelName(notice.channelName),
-		      let channel = findChannel(notice.channelName)
+		      let channel = findConversation(notice.channelName)
 		else { return (current, text) }
 		return (channel, notice.text)
 	}
@@ -411,15 +416,14 @@ extension Client {
 	}
 
 	private func processNickServNotice(_ text: String, from message: Message) {
-		guard !message.isHistoric, message.params.first.map(nicknameIsMyself) == true else { return }
+		guard !message.isReplayed, message.params.first.map(nicknameIsMyself) == true else { return }
 		guard noticeIsFromServices(message) else { return }
 
-		serverHasNickServ = true
 		let isIdentifiedWithSASL = isCapabilityEnabled(.isIdentifiedWithSASL)
 		let action = ServiceNoticePolicy.nickServAction(
 			for: (text as NSString).stripIRCEffects,
 			context: .init(
-				isWaiting: isWaitingForNickServ,
+				isWaiting: nickServ.isWaiting,
 				isIdentifiedWithSASL: isIdentifiedWithSASL,
 				permitsCredentialsInClear: permitsCredentialsInClear,
 				// Read only where it could be sent: a session SASL authenticated
@@ -428,18 +432,18 @@ extension Client {
 				nickname: config.nickname,
 				serverAddress: serverAddress,
 				sendsAuthenticationToUserServ: config.sendAuthenticationRequestsToUserServ,
-				needsIdentificationTokens: nickServNeedIdentificationTokens,
-				successfulIdentificationTokens: nickServSuccessfulIdentificationTokens
+				needsIdentificationTokens: NickServTokens.needsIdentification,
+				successfulIdentificationTokens: NickServTokens.identified
 			)
 		)
 		switch action {
 		case let .sendIdentification(target, text):
-			send("PRIVMSG", arguments: [target, text])
-			isWaitingForNickServ = true
-			userIsIdentifiedWithNickServ = false
+			send(.privmsg, arguments: [target, text])
+			nickServ.isWaiting = true
+			nickServ.isConfirmed = false
 		case .identificationSucceeded:
-			isWaitingForNickServ = false
-			userIsIdentifiedWithNickServ = true
+			nickServ.isWaiting = false
+			nickServ.isConfirmed = true
 			noteAccountAuthenticated()
 		case .identificationWithheld:
 			reportWithheldCredentials()
@@ -449,18 +453,17 @@ extension Client {
 	}
 }
 
-extension Client {
-	var nickServNeedIdentificationTokens: [String] {
-		BundleResources.array(
-			fromResources: "StaticStore",
-			key: "IRCClient List of NickServ Needs Identification Tokens"
-		)?.compactMap(\.string) ?? []
-	}
+/** The NickServ phrase lists, read from the bundled property list once.
 
-	var nickServSuccessfulIdentificationTokens: [String] {
-		BundleResources.array(
-			fromResources: "StaticStore",
-			key: "IRCClient List of NickServ Successfully Identified Tokens"
-		)?.compactMap(\.string) ?? []
+ Both lists are consulted for every notice a service sends, and the file they
+ come from cannot change while the process runs, so reading them per notice
+ parsed the same property list over and over. */
+private nonisolated enum NickServTokens {
+	static let needsIdentification = tokens(forKey: StaticStoreResource.nickServNeedsIdentificationTokensKey)
+	static let identified = tokens(forKey: StaticStoreResource.nickServIdentifiedTokensKey)
+
+	private static func tokens(forKey key: String) -> [String] {
+		BundleResources.array(fromResources: StaticStoreResource.name, key: key)?
+			.compactMap(\.string) ?? []
 	}
 }

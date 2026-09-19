@@ -42,7 +42,7 @@ extension TranscriptView {
 
 	 Nothing is dropped from the end: the newest lines are the ones the reader
 	 comes back to, and the controller still names them. The window's top edge
-	 grows instead, up to the largest scrollback the preference allows, which is
+	 grows instead, up to the largest scrollback the setting allows, which is
 	 what keeps a reader who holds the scroll wheel from growing the document
 	 without bound. */
 	@discardableResult
@@ -65,18 +65,13 @@ extension TranscriptView {
 		}
 	}
 
-	/// The index of the line `identifier` names, under either identifier a
-	/// restored row answers to.
-	func index(ofLine identifier: String) -> Int? {
-		document.index(ofLine: identifier)
-	}
-
 	func clearLines() {
 		performEditingBatch { clear() }
 	}
 
 	private func clear() {
 		closeMemberInformation()
+		closeReactionPicker()
 		document.removeAll()
 		beginNicknameColorBatch()
 		textView.textStorage?.setAttributedString(NSAttributedString())
@@ -99,9 +94,9 @@ extension TranscriptView {
 		}
 	}
 
-	func setUnreadMarker(_ mark: TranscriptScrollbackMark) {
+	func setUnreadMarker(_ mark: UnreadMarker) {
 		performEditingBatch {
-			let caption = String(localized: .MainWindow.unreadMessages)
+			let caption = String(localized: .Transcript.unreadMessages)
 			for index in document.setUnreadMarker(mark, caption: caption) {
 				refresh(at: index)
 			}
@@ -177,12 +172,19 @@ extension TranscriptView {
 		/* The profile popover is anchored to characters; a line appended under
 		 the name leaves them where they are, but a trim or a clear moves or
 		 removes them, and a popover pointing at whatever took their place is
-		 worse than none. */
+		 worse than none. The reaction picker is anchored the same way, and the
+		 message it answers can be one of the rows leaving here. */
 		closeMemberInformation()
+		closeReactionPicker()
 		let retirement = document.remove(indices)
 		storage.deleteCharacters(in: retirement.characterRange)
 		if retirement.messageIdentifiers.isEmpty == false {
 			viewController?.transcriptDidRetireMessages(retirement.messageIdentifiers)
+		}
+		/* The reader's highlight cursor names a line that was on screen, so the
+		 rows leaving the document here are the only ones that can retire it. */
+		if retirement.lineNumbers.isEmpty == false {
+			viewController?.notifyLinesWereRemoved(retirement.lineNumbers)
 		}
 		for identifier in retirement.lineNumbers {
 			inlineImageLoader.cancelLoads(forView: viewIdentifier, lineNumber: identifier)
@@ -212,7 +214,7 @@ extension TranscriptView {
 
 	 Only a change that alters how every line draws needs one: the theme and the
 	 text scale. Ordinary traffic edits the storage in place, which is what keeps
-	 a busy channel from re-rendering its whole scrollback per message. */
+	 a busy conversation from re-rendering its whole scrollback per message. */
 	func rebuild(preservingScrollPosition: Bool = true) {
 		let oldOrigin = scrollView.contentView.bounds.origin
 		let viewport = viewportAnchor()

@@ -32,7 +32,7 @@ extension TranscriptView {
 
 	/** A transcript that was following the end when it was hidden shows the end
 	 again when it comes back: the lines that arrived meanwhile are what the
-	 reader opened the channel for. The scroll waits for the first layout in
+	 reader opened the conversation for. The scroll waits for the first layout in
 	 the window, where the clip view has its real height. */
 	override func viewDidMoveToWindow() {
 		super.viewDidMoveToWindow()
@@ -40,6 +40,7 @@ extension TranscriptView {
 		 view that comes back is showing a conversation it is no longer about. */
 		if window == nil {
 			closeMemberInformation()
+			closeReactionPicker()
 		}
 		guard window != nil, followsBottom else { return }
 		scrollsToBottomOnLayout = true

@@ -4,41 +4,36 @@
 
 import Foundation
 
-enum CapabilityPreference: Sendable, Equatable {
+enum CapabilityGate: Sendable, Equatable {
 	case always
 	case echoMessage
 	case chatHistory
 	case readMarker
 
-	func isEnabled(in preferences: ClientPreferences) -> Bool {
+	func isEnabled(in settings: ChatSettings) -> Bool {
 		switch self {
 		case .always: true
-		case .echoMessage: preferences.enableEchoMessageCapability
-		case .chatHistory: preferences.requestChatHistory
-		case .readMarker: preferences.synchronizeReadMarkers
+		case .echoMessage: settings.enableEchoMessageCapability
+		case .chatHistory: settings.requestChatHistory
+		case .readMarker: settings.synchronizeReadMarkers
 		}
 	}
-}
-
-enum CapabilityNegotiation: Sendable, Equatable {
-	case automatic
-	case sasl
 }
 
 struct Capability: Sendable {
 	let name: String
 	let identifier: CapabilitySet
 	let requestedByDefault: Bool
-	let preference: CapabilityPreference
+	let gate: CapabilityGate
 	let dependencies: [String]
-	let negotiation: CapabilityNegotiation
+	let negotiation: CapabilityNegotiationKind
 
 	/** Where the capability is defined: an IRCv3 extension page, or the ZNC
 	 documentation for a bouncer capability.
 
 	 It is a protocol-level constant rather than something a view holds, so the
 	 declaration that names a capability is also what says where it comes from.
-	 A capability the client requests without a published document has none. */
+	 A capability the session requests without a published document has none. */
 	let specification: URL?
 
 	static func capability(
@@ -51,7 +46,7 @@ struct Capability: Sendable {
 			name: name,
 			identifier: identifier,
 			requestedByDefault: requestedByDefault,
-			preference: .always,
+			gate: .always,
 			dependencies: [],
 			negotiation: .automatic,
 			specification: specification
@@ -62,9 +57,9 @@ struct Capability: Sendable {
 		name: String,
 		identifier: CapabilitySet,
 		requestedByDefault: Bool,
-		preference: CapabilityPreference = .always,
+		gate: CapabilityGate = .always,
 		dependencies: [String] = [],
-		negotiation: CapabilityNegotiation = .automatic,
+		negotiation: CapabilityNegotiationKind = .automatic,
 		specification: URL? = nil
 	) {
 		precondition(name.isEmpty == false)
@@ -75,7 +70,7 @@ struct Capability: Sendable {
 		self.name = name
 		self.identifier = identifier
 		self.requestedByDefault = requestedByDefault
-		self.preference = preference
+		self.gate = gate
 		self.dependencies = dependencies
 		self.negotiation = negotiation
 		self.specification = specification
@@ -108,21 +103,21 @@ struct CapabilityRegistry: Sendable {
 		}
 	}
 
-	func isCapabilitySupported(_ name: String, preferences: ClientPreferences) -> Bool {
+	func isCapabilitySupported(_ name: String, settings: ChatSettings) -> Bool {
 		guard let capability = capability(named: name) else {
 			return false
 		}
 
-		return isEnabled(capability, preferences: preferences)
+		return isEnabled(capability, settings: settings)
 	}
 
-	/** Whether the user leaves the capability available at all: the preference
+	/** Whether the user leaves the capability available at all: the setting
 	 that gates it is on, and its name is not one of the capabilities switched
 	 off in Settings. Both are read here so that a request and a support check
 	 can never disagree about what the user asked for. */
-	private func isEnabled(_ capability: Capability, preferences: ClientPreferences) -> Bool {
-		capability.preference.isEnabled(in: preferences)
-			&& preferences.disabledCapabilities.contains(capability.name) == false
+	private func isEnabled(_ capability: Capability, settings: ChatSettings) -> Bool {
+		capability.gate.isEnabled(in: settings)
+			&& settings.disabledCapabilities.contains(capability.name) == false
 	}
 
 	/** The capabilities a `CAP LS`/`NEW` line offers, keyed by name.
@@ -167,14 +162,14 @@ struct CapabilityRegistry: Sendable {
 
 	func capabilitiesToRequest(
 		fromOffered offered: [String: [String]],
-		preferences: ClientPreferences,
+		settings: ChatSettings,
 		enabledCapabilities: CapabilitySet = []
 	) -> [Capability] {
 		capabilities.filter {
 			isRequestable(
 				$0,
 				fromOffered: offered,
-				preferences: preferences,
+				settings: settings,
 				enabledCapabilities: enabledCapabilities,
 				depth: 0
 			)
@@ -212,13 +207,13 @@ struct CapabilityRegistry: Sendable {
 	private func isRequestable(
 		_ capability: Capability,
 		fromOffered offered: [String: [String]],
-		preferences: ClientPreferences,
+		settings: ChatSettings,
 		enabledCapabilities: CapabilitySet,
 		depth: Int
 	) -> Bool {
 		guard depth <= 8,
 		      capability.requestedByDefault,
-		      isEnabled(capability, preferences: preferences),
+		      isEnabled(capability, settings: settings),
 		      offered[capability.name] != nil
 		else {
 			return false
@@ -234,7 +229,7 @@ struct CapabilityRegistry: Sendable {
 			guard isRequestable(
 				dependency,
 				fromOffered: offered,
-				preferences: preferences,
+				settings: settings,
 				enabledCapabilities: enabledCapabilities,
 				depth: depth + 1
 			) else {
@@ -246,7 +241,7 @@ struct CapabilityRegistry: Sendable {
 	}
 }
 
-/// Opaque capability identifiers used by the client's negotiated-capability registry.
+/// Opaque capability identifiers used by the session's negotiated-capability registry.
 nonisolated struct CapabilitySet: OptionSet, Hashable, Sendable {
 	let rawValue: UInt
 
@@ -284,31 +279,31 @@ nonisolated struct CapabilitySet: OptionSet, Hashable, Sendable {
 	static let preAway = Self(rawValue: 1 << 34)
 }
 
-/// What the negotiated session lets the client do, read by everything past
+/// What the negotiated capabilities let the session do, read by everything past
 /// registration. The negotiation that produces these answers lives in
-/// `ClientNegotiation`.
-extension Client {
+/// ``CapabilityNegotiationState``.
+extension ServerSession {
 	func isCapabilityEnabled(_ capability: CapabilitySet) -> Bool {
 		capabilities.contains(capability)
 	}
 
 	func isCapabilitySupported(_ capability: String) -> Bool {
-		CapabilityRegistry.defaultRegistry.isCapabilitySupported(capability, preferences: environment.preferences)
+		CapabilityRegistry.defaultRegistry.isCapabilitySupported(capability, settings: environment.settings)
 	}
 
 	var enabledCapabilitiesStringValue: String {
 		capabilityNegotiation.enabledCapabilitiesStringValue
 	}
 
-	/// Whether the server tracks presence for the client, through `MONITOR`
+	/// Whether the server tracks presence for the session, through `MONITOR`
 	/// or `WATCH`.
 	var supportsAdvancedTracking: Bool {
 		isCapabilityEnabled(.monitorCommand) || isCapabilityEnabled(.watchCommand)
 	}
 
 	/// Whether member away state is kept current, by `away-notify` or by the
-	/// user's own polling preference.
+	/// user's own polling setting.
 	var monitorAwayStatus: Bool {
-		isCapabilityEnabled(.awayNotify) || environment.preferences.trackUserAwayStatusMaximumChannelSize > 0
+		isCapabilityEnabled(.awayNotify) || environment.settings.trackUserAwayStatusMaximumChannelSize > 0
 	}
 }

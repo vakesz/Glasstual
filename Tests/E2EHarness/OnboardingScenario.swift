@@ -189,7 +189,7 @@ enum OnboardingScenario {
 			try await Task.sleep(for: .milliseconds(150))
 		} while HarnessFiles.now < end
 		let settings = try await driver.settingsWindow()
-		try await driver.selectPreferencePage("Identity", in: settings)
+		try await driver.selectSettingsPage("Identity", in: settings)
 		try await driver.wait("synthetic onboarding identity persisted in Settings") { deadline in
 			guard let nickname = try driver.named(
 				"Nickname",

@@ -3,77 +3,14 @@
 
 import Foundation
 
-/// Counts submitted work until its transcript application completes. Network
-/// readers wait here before admitting another wire line, carrying the host's
-/// acknowledgement boundary through rendering and TextKit application.
-@MainActor
-final class TranscriptRenderAdmission {
-	private let capacity: Int
-	private var pending: [UUID: String] = [:]
-	private var waiters: [UUID: CheckedContinuation<Void, Never>] = [:]
-
-	init(capacity: Int = 256) {
-		precondition(capacity > 0)
-		self.capacity = capacity
-	}
-
-	var pendingCount: Int {
-		pending.count
-	}
-
-	var hasCapacity: Bool {
-		pending.count < capacity
-	}
-
-	var waitingProducerCount: Int {
-		waiters.count
-	}
-
-	func submit(for view: String) -> UUID {
-		let identifier = UUID()
-		pending[identifier] = view
-		return identifier
-	}
-
-	func finish(_ identifier: UUID) {
-		pending.removeValue(forKey: identifier)
-		resumeProducersIfReady()
-	}
-
-	func retire(view: String) {
-		pending = pending.filter { $0.value != view }
-		resumeProducersIfReady()
-	}
-
-	func waitForCapacity() async {
-		let identifier = UUID()
-		await withTaskCancellationHandler {
-			while pending.count >= capacity, !Task.isCancelled {
-				await withCheckedContinuation { waiters[identifier] = $0 }
-			}
-		} onCancel: {
-			Task { @MainActor in self.waiters.removeValue(forKey: identifier)?.resume() }
-		}
-	}
-
-	private func resumeProducersIfReady() {
-		guard pending.count < capacity else { return }
-		let ready = waiters.values
-		waiters.removeAll()
-		for waiter in ready {
-			waiter.resume()
-		}
-	}
-}
-
-/** One unit of work for a log view's render pipeline.
+/** One unit of work for a transcript's render pipeline.
 
  The closure runs off the main actor and returns the main-actor half of the job
  — the part that touches the transcript view — or `nil` when there is nothing to
  apply.
  A closure isolated to the main actor may capture values that are not `Sendable`
  because it can only ever run there, which is what lets a job carry an
- `NSAttributedString`, a `LogLine` or a caller's completion block home.
+ `NSAttributedString`, a `ChatLine` or a caller's completion block home.
 
  `@concurrent` rather than the project's `nonisolated(nonsending)` default: a
  job that inherited its caller's isolation would render on the pipeline actor
@@ -92,14 +29,14 @@ struct TranscriptRenderSubmission: Sendable {
 	var job: TranscriptRenderJob
 }
 
-/** Ordered rendering for one log view.
+/** Ordered rendering for one transcript.
 
  The controller yields into ``submissions`` from the main actor, and that is
  what fixes the order: a synchronous yield cannot be reordered the way two
  `Task`s racing to reach an actor can. The pipeline renders the jobs
  concurrently on the cooperative pool and applies their results on the main
  actor in the order they arrived, so a burst of lines still reaches the document
- in the order the client printed them.
+ in the order the session printed them.
 
  Nothing here is a lock or a queue: the ordering is the delivery chain, the
  render concurrency is the task group's width, and cancellation is ``stop()``, which
@@ -122,7 +59,7 @@ actor TranscriptRenderPipeline {
 	private var drainWaiters: [UUID: CheckedContinuation<Void, Never>] = [:]
 
 	init() {
-		/* Submission preserves synchronous print order. The client's admission
+		/* Submission preserves synchronous print order. The session's admission
 		 budget makes network producers suspend before another wire line, and
 		 counts this work through transcript application. A single wire event
 		 can fan out to several views; none of those lines may be dropped. */

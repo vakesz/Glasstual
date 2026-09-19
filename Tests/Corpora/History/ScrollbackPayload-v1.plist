@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>line</key>
+	<dict>
+		<key>command</key>
+		<string>PRIVMSG</string>
+		<key>deliveryState</key>
+		<integer>2</integer>
+		<key>excludeKeywords</key>
+		<array>
+			<string>ignore me</string>
+		</array>
+		<key>highlightKeywords</key>
+		<array>
+			<string>fixture</string>
+		</array>
+		<key>isEncrypted</key>
+		<true/>
+		<key>isFirstForDay</key>
+		<true/>
+		<key>lineType</key>
+		<integer>17</integer>
+		<key>memberType</key>
+		<integer>1</integer>
+		<key>messageBody</key>
+		<string>hello from the fixture</string>
+		<key>messageIdentifier</key>
+		<string>fixture-message</string>
+		<key>nickname</key>
+		<string>alice</string>
+		<key>reactions</key>
+		<dict>
+			<key>👍</key>
+			<array>
+				<string>bob</string>
+				<string>carol</string>
+			</array>
+		</dict>
+		<key>receivedAt</key>
+		<date>2024-08-30T06:40:00Z</date>
+		<key>replyToMessageIdentifier</key>
+		<string>fixture-parent</string>
+		<key>sessionIdentifier</key>
+		<integer>77</integer>
+		<key>uniqueIdentifier</key>
+		<string>fixture-line</string>
+	</dict>
+	<key>version</key>
+	<integer>1</integer>
+</dict>
+</plist>

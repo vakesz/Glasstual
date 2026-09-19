@@ -44,11 +44,44 @@ struct MessageRuleEvent: OptionSet {
 	static let defaultMessages: Self = [.plainTextMessage, .actionMessage]
 }
 
-/// One complete, independently editable message rule.
-///
-/// Persistence keeps the property-list spelling the rules were stored under
-/// when they belonged to a bundled extension, so a user's rules and exported
-/// files still read; everything above it works with typed Swift state.
+/** The name each field of a stored message rule is written under.
+
+ Declared once: the reader, the writer, the repair that salvages a stored rule
+ list and the import preview all reach a field through this and nowhere else, so
+ a rename is a compiler error rather than a silently dropped setting. */
+nonisolated enum RuleField: String {
+	case uniqueIdentifier
+	case title
+	case match
+	case senderMatch
+	case notes
+	case action
+	case forwardDestination
+	case additionalCommands
+	case limitedChannelIDs
+	case limitedSessionIDs
+	case ignoresContent
+	case ignoresOperators
+	case limitedToMyself
+	case logsMatch
+	case destination
+	case ageComparator
+	case ageLimit
+	case actionFloodControlInterval
+	case events
+}
+
+nonisolated extension [String: PropertyListValue] {
+	/// A stored rule's field, named by ``RuleField`` rather than by a string.
+	subscript(field: RuleField) -> PropertyListValue? {
+		get { self[field.rawValue] }
+		set { self[field.rawValue] = newValue }
+	}
+}
+
+/// One complete, independently editable message rule. The stored property list
+/// names every field after the property it sets; everything above it works with
+/// typed Swift state.
 struct MessageRule: Identifiable {
 	var ignoresContent = false
 	var ignoresOperators = true
@@ -60,7 +93,7 @@ struct MessageRule: Identifiable {
 	var ageLimit: UInt = 0
 	var actionFloodControlInterval: UInt = 0
 	var limitedChannelIDs: [String] = []
-	var limitedClientIDs: [String] = []
+	var limitedSessionIDs: [String] = []
 	var additionalCommands: [String] = []
 	var action = ""
 	var forwardDestination = ""
@@ -73,31 +106,29 @@ struct MessageRule: Identifiable {
 	init() {}
 
 	init(dictionary: [String: PropertyListValue]) {
-		ignoresContent = dictionary["filterIgnoreContent"]?.boolean ?? false
-		ignoresOperators = dictionary["filterIgnoresOperators"]?.boolean ?? true
-		isLimitedToMyself = dictionary["filterLimitedToMyself"]?.boolean ?? false
-		logsMatch = dictionary["filterLogMatch"]?.boolean ?? false
-		limitedChannelIDs = dictionary["filterLimitedToChannelsIDs"]?.stringArray ?? []
-		limitedClientIDs = dictionary["filterLimitedToClientsIDs"]?.stringArray ?? []
-		additionalCommands = dictionary["filterEventsNumerics"]?.stringArray ?? []
-		action = dictionary["filterAction"]?.string ?? ""
-		forwardDestination = dictionary["filterForwardToDestination"]?.string ?? ""
-		match = dictionary["filterMatch"]?.string ?? ""
-		notes = dictionary["filterNotes"]?.string ?? ""
-		senderMatch = dictionary["filterSenderMatch"]?.string ?? ""
-		title = dictionary["filterTitle"]?.string ?? ""
-		id = dictionary["uniqueIdentifier"]?.string ?? ""
-		actionFloodControlInterval = Self.uint(dictionary["filterActionFloodControlInterval"])
-		destination = MessageRuleDestination(rawValue: Self.uint(dictionary["filterLimitedToValue"])) ?? .unrestricted
-		if let comparator = dictionary["filterAgeComparator"] {
+		ignoresContent = dictionary[.ignoresContent]?.boolean ?? false
+		ignoresOperators = dictionary[.ignoresOperators]?.boolean ?? true
+		isLimitedToMyself = dictionary[.limitedToMyself]?.boolean ?? false
+		logsMatch = dictionary[.logsMatch]?.boolean ?? false
+		limitedChannelIDs = dictionary[.limitedChannelIDs]?.stringArray ?? []
+		limitedSessionIDs = dictionary[.limitedSessionIDs]?.stringArray ?? []
+		additionalCommands = dictionary[.additionalCommands]?.stringArray ?? []
+		action = dictionary[.action]?.string ?? ""
+		forwardDestination = dictionary[.forwardDestination]?.string ?? ""
+		match = dictionary[.match]?.string ?? ""
+		notes = dictionary[.notes]?.string ?? ""
+		senderMatch = dictionary[.senderMatch]?.string ?? ""
+		title = dictionary[.title]?.string ?? ""
+		id = dictionary[.uniqueIdentifier]?.string ?? ""
+		actionFloodControlInterval = Self.uint(dictionary[.actionFloodControlInterval])
+		destination = MessageRuleDestination(rawValue: Self.uint(dictionary[.destination])) ?? .unrestricted
+		if let comparator = dictionary[.ageComparator] {
 			ageComparator = MessageRuleAgeComparator(rawValue: Self.uint(comparator)) ?? .greaterThan
 		}
-		ageLimit = Self.uint(dictionary["filterAgeLimit"])
+		ageLimit = Self.uint(dictionary[.ageLimit])
 
-		if let rawEvents = dictionary["filterEvents"]?.integer {
+		if let rawEvents = dictionary[.events]?.integer {
 			events = MessageRuleEvent(rawValue: UInt(clamping: rawEvents))
-		} else {
-			migrateLegacyEvents(from: dictionary)
 		}
 
 		if id.isEmpty {
@@ -118,41 +149,43 @@ struct MessageRule: Identifiable {
 		String(localized: .Rules.filterDescription(title))
 	}
 
+	/// A field sitting on its default is left out, so a stored rule re-encodes to
+	/// exactly the dictionary it was read from.
 	var dictionaryValue: [String: PropertyListValue] {
-		let values: [String: PropertyListValue] = [
-			"filterCommandPRIVMSG": .boolean(isEventEnabled(.plainTextMessage)),
-			"filterCommandPRIVMSG_ACTION": .boolean(isEventEnabled(.actionMessage)),
-			"filterCommandNOTICE": .boolean(isEventEnabled(.noticeMessage)),
-			"filterLimitedToChannelsIDs": PropertyListValue(limitedChannelIDs),
-			"filterLimitedToClientsIDs": PropertyListValue(limitedClientIDs),
-			"filterEventsNumerics": PropertyListValue(additionalCommands),
-			"filterAction": .string(action),
-			"filterForwardToDestination": .string(forwardDestination),
-			"filterMatch": .string(match),
-			"filterNotes": .string(notes),
-			"filterSenderMatch": .string(senderMatch),
-			"filterTitle": .string(title),
-			"uniqueIdentifier": .string(id),
-			"filterIgnoreContent": .boolean(ignoresContent),
-			"filterIgnoresOperators": .boolean(ignoresOperators),
-			"filterLimitedToMyself": .boolean(isLimitedToMyself),
-			"filterLogMatch": .boolean(logsMatch),
-			"filterActionFloodControlInterval": .integer(Int(actionFloodControlInterval)),
-			"filterEvents": .integer(Int(events.rawValue)),
-			"filterLimitedToValue": .integer(Int(destination.rawValue)),
-			"filterAgeComparator": .integer(Int(ageComparator.rawValue)),
-			"filterAgeLimit": .integer(Int(ageLimit)),
+		let values: [RuleField: PropertyListValue] = [
+			.uniqueIdentifier: .string(id),
+			.title: .string(title),
+			.match: .string(match),
+			.senderMatch: .string(senderMatch),
+			.notes: .string(notes),
+			.action: .string(action),
+			.forwardDestination: .string(forwardDestination),
+			.additionalCommands: PropertyListValue(additionalCommands),
+			.limitedChannelIDs: PropertyListValue(limitedChannelIDs),
+			.limitedSessionIDs: PropertyListValue(limitedSessionIDs),
+			.ignoresContent: .boolean(ignoresContent),
+			.ignoresOperators: .boolean(ignoresOperators),
+			.limitedToMyself: .boolean(isLimitedToMyself),
+			.logsMatch: .boolean(logsMatch),
+			.destination: .integer(Int(destination.rawValue)),
+			.ageComparator: .integer(Int(ageComparator.rawValue)),
+			.ageLimit: .integer(Int(ageLimit)),
+			.actionFloodControlInterval: .integer(Int(actionFloodControlInterval)),
+			.events: .integer(Int(events.rawValue)),
 		]
-		let defaults: [String: PropertyListValue] = [
-			"filterEvents": .integer(Int(MessageRuleEvent.defaultMessages.rawValue)),
-			"filterIgnoreContent": false,
-			"filterIgnoresOperators": true,
-			"filterLimitedToMyself": false,
-			"filterLogMatch": false,
-			"filterLimitedToValue": .integer(Int(MessageRuleDestination.unrestricted.rawValue)),
-			"filterAgeComparator": .integer(Int(MessageRuleAgeComparator.greaterThan.rawValue)),
+		let defaults: [RuleField: PropertyListValue] = [
+			.events: .integer(Int(MessageRuleEvent.defaultMessages.rawValue)),
+			.ignoresContent: false,
+			.ignoresOperators: true,
+			.limitedToMyself: false,
+			.logsMatch: false,
+			.destination: .integer(Int(MessageRuleDestination.unrestricted.rawValue)),
+			.ageComparator: .integer(Int(MessageRuleAgeComparator.greaterThan.rawValue)),
 		]
-		return values.filter { key, value in defaults[key] != value }
+		return values.reduce(into: [:]) { stored, entry in
+			guard defaults[entry.key] != entry.value else { return }
+			stored[entry.key.rawValue] = entry.value
+		}
 	}
 
 	func isEventEnabled(_ event: MessageRuleEvent) -> Bool {
@@ -169,16 +202,7 @@ struct MessageRule: Identifiable {
 		if let event = mappedEvents[command] {
 			return isEventEnabled(event)
 		}
-		if additionalCommands.contains(command) {
-			return true
-		}
-
-		/* The former editor stored 001 as "1". Accept that legacy spelling
-		 while new edits use the three-digit command IRC sends on the wire. */
-		guard command.count == 3, command.allSatisfy(\.isNumber), let numeric = Int(command) else {
-			return false
-		}
-		return additionalCommands.contains(String(numeric))
+		return additionalCommands.contains(command)
 	}
 
 	func write(to url: URL) throws {
@@ -191,20 +215,6 @@ struct MessageRule: Identifiable {
 			format: .binary,
 			options: 0
 		)
-	}
-
-	private mutating func migrateLegacyEvents(from dictionary: [String: PropertyListValue]) {
-		var migratedEvents = MessageRuleEvent.defaultMessages
-		if dictionary["filterCommandPRIVMSG"]?.boolean == false {
-			migratedEvents.remove(.plainTextMessage)
-		}
-		if dictionary["filterCommandPRIVMSG_ACTION"]?.boolean == false {
-			migratedEvents.remove(.actionMessage)
-		}
-		if dictionary["filterCommandNOTICE"]?.boolean == true {
-			migratedEvents.insert(.noticeMessage)
-		}
-		events = migratedEvents
 	}
 
 	private static func uint(_ value: PropertyListValue?) -> UInt {

@@ -7,120 +7,45 @@ import Foundation
 import os
 
 extension Notification.Name {
-	static let clientCapabilitiesDidChange = Notification.Name("IRCClientCapabilitiesDidChange")
+	static let sessionCapabilitiesDidChange = Notification.Name("Glasstual.sessionCapabilitiesDidChange")
 }
 
 private let negotiationLogger = Logger(
-	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
-	category: "IRCCapabilityNegotiation"
+	subsystem: LogSubsystem.current,
+	category: "CapabilityNegotiation"
 )
 
-enum ClientNegotiationUtilities {
-	/// Ceiling on the reassembled `AUTHENTICATE` payload. Every mechanism the
-	/// client supports fits in a fraction of this; without it a server can
-	/// grow the buffer 400 characters at a time forever.
-	static let maximumSASLPayloadLength = 16384
+/// How a capability is negotiated: on its own, or as part of a SASL exchange
+/// the negotiation waits for.
+enum CapabilityNegotiationKind: Sendable, Equatable {
+	case automatic
+	case sasl
+}
 
-	/// Ceiling on what a multi-line `CAP LS` may offer. The names are arbitrary
-	/// server-controlled tokens and only a final, non-`*` line clears the
-	/// table, so a server sending nothing but continuations grows it forever.
-	/// The largest advertisement any real network sends is a few dozen.
-	static let maximumOfferedCapabilities = 256
+/// How the requested names are split across `CAP REQ` lines. Registration uses
+/// the base IRC line limit, including CRLF and the trailing-parameter prefix.
+nonisolated enum CapabilityRequestBatching {
+	static func groups(_ names: [String], maximumLineBytes: Int = 512) -> [[String]] {
+		let budget = maximumLineBytes - "CAP REQ :\r\n".utf8.count
+		// A name that cannot fit a line of its own has no request to go in.
+		let requestable = names.filter { $0.isEmpty == false && $0.utf8.count <= budget }
 
-	/** The mechanisms the client can speak, in the order it tries them.
-
-	 - Parameter sendsPasswordInClear: Whether the connection may carry the
-	   password itself. `PLAIN` sends it as typed, so it is left out where the
-	   answer is no; SCRAM proves knowledge of the password without sending it
-	   and stays available. */
-	static func supportedSASLMechanisms(
-		hasClientCertificate: Bool,
-		externalMechanismDisabled: Bool,
-		hasPassword: Bool,
-		sendsPasswordInClear: Bool = true,
-		preferredMechanism: String?
-	) -> [String] {
-		var mechanisms: [String] = []
-
-		if hasClientCertificate, externalMechanismDisabled == false {
-			mechanisms.append("EXTERNAL")
-		}
-
-		if hasPassword {
-			mechanisms.append(SCRAMClient.mechanismName)
-			if sendsPasswordInClear {
-				mechanisms.append("PLAIN")
-			}
-		}
-
-		guard let preferredMechanism,
-		      let preferredIndex = mechanisms.firstIndex(where: {
-		      	$0.caseInsensitiveCompare(preferredMechanism) == .orderedSame
-		      })
-		else {
-			return mechanisms
-		}
-
-		let preferred = mechanisms.remove(at: preferredIndex)
-		mechanisms.insert(preferred, at: 0)
-
-		return mechanisms
-	}
-
-	static func nextSASLMechanism(
-		from supported: [String],
-		offered: [String],
-		tried: [String]
-	) -> String? {
-		supported.first { mechanism in
-			let wasTried = tried.contains {
-				$0.caseInsensitiveCompare(mechanism) == .orderedSame
-			}
-			let wasOffered = offered.isEmpty || offered.contains {
-				$0.caseInsensitiveCompare(mechanism) == .orderedSame
-			}
-
-			return wasTried == false && wasOffered
-		}
-	}
-
-	/// How long the client waits for the server's half of a SASL exchange.
-	static let saslTimeout: TimeInterval = 30
-
-	static func saslWireChunks(for payload: String) -> [String] {
-		let encoded = Data(payload.utf8).base64EncodedString()
-
-		guard encoded.isEmpty == false else {
-			return ["+"]
-		}
-
-		var chunks: [String] = []
-		var start = encoded.startIndex
-
-		while start < encoded.endIndex {
-			let end = encoded.index(start, offsetBy: 400, limitedBy: encoded.endIndex) ?? encoded.endIndex
-			chunks.append(String(encoded[start ..< end]))
-			start = end
-		}
-
-		if chunks.last?.count == 400 {
-			chunks.append("+")
-		}
-
-		return chunks
+		return WireBatching.pack(requestable, budget: budget, cost: { name, group in
+			(group.isEmpty ? 0 : 1) + name.utf8.count
+		})
 	}
 }
 
-extension Client {
+extension ServerSession {
 	func enableCapability(_ capability: CapabilitySet) {
 		let couldTrackPresence = supportsAdvancedTracking
 		capabilityNegotiation.enable(capability)
-		/* ISUPPORT lands after login has already marked every query active. The
-		 moment the server offers MONITOR or WATCH, ask about the peers; it
-		 answers at once with who is really there, well before the tracked-user
-		 list is built ten seconds in. */
+		/* ISUPPORT lands after login has already marked every direct conversation
+		 active. The moment the server offers MONITOR or WATCH, ask about the
+		 peers; it answers at once with who is really there, well before the
+		 tracked-user list is built ten seconds in. */
 		if couldTrackPresence == false, supportsAdvancedTracking {
-			modifyWatchList(byAdding: true, nicknames: queryPeerNicknames)
+			modifyWatchList(byAdding: true, nicknames: directPeerNicknames)
 		}
 	}
 
@@ -146,14 +71,34 @@ extension Client {
 		capabilityNegotiation.removeFacts(capability)
 	}
 
-	/// What the server has offered that can be asked for right now: the client
+	/** Applies what an ISUPPORT line asked for.
+
+	 ``ISupport`` only reads tokens, so this is the one place a token reaches
+	 the capability state or the wire. A legacy `PROTOCTL` line goes out once:
+	 the fact the session records is what stops the next 005 repeating it. */
+	func apply(_ effects: ISupportEffects) {
+		if effects.withdrawnCapabilities.isEmpty == false {
+			removeCapabilityFacts(effects.withdrawnCapabilities)
+		}
+
+		for legacy in effects.legacyCapabilities where capabilityFacts.contains(legacy.capability) == false {
+			sendLine(legacy.command)
+			addCapabilityFacts(legacy.capability)
+		}
+
+		if effects.enabledCapabilities.isEmpty == false {
+			enableCapability(effects.enabledCapabilities)
+		}
+	}
+
+	/// What the server has offered that can be asked for right now: the session
 	/// implements it, the user leaves it on, the server has not refused or
 	/// withdrawn it, and every dependency it names is already acknowledged.
-	@MainActor private func eligibleCapabilityRequests() -> [String] {
+	private func eligibleCapabilityRequests() -> [String] {
 		let offer = capabilityNegotiation.requestableOffer
 		let requestable = CapabilityRegistry.defaultRegistry.capabilitiesToRequest(
 			fromOffered: offer,
-			preferences: environment.preferences,
+			settings: environment.settings,
 			enabledCapabilities: capabilities
 		)
 
@@ -192,8 +137,8 @@ extension Client {
 	 An upgrade closes the unencrypted socket and reconnects over TLS. Whatever
 	 negotiation that socket still had to do is abandoned with it: a `CAP REQ`
 	 or `CAP END` written after the upgrade was decided goes to a server the
-	 client has just resolved not to talk to in clear. */
-	@MainActor private func handleSTSCapability(from offered: [String: [String]]) -> Bool {
+	 session has just resolved not to talk to in clear. */
+	private func handleSTSCapability(from offered: [String: [String]]) -> Bool {
 		guard let values = offered["sts"],
 		      let parsed = STSCapabilityValues.values(fromCapabilityValues: values)
 		else {
@@ -207,7 +152,7 @@ extension Client {
 		}
 
 		let connectedPort = socket?.config.serverPort ?? 0
-		let action = STSPolicyStore.shared.applyCapabilityValues(
+		let action = environment.services.stsPolicies.applyCapabilityValues(
 			parsed,
 			forHost: host,
 			connectedPort: connectedPort,
@@ -261,7 +206,7 @@ extension Client {
 	 answers are matched back by name as they arrive. `CAP END` follows once
 	 nothing is outstanding and nothing else is eligible, which is also what a
 	 `NAK` or a `CAP DEL` of the last outstanding request brings about. */
-	@MainActor func advanceCapabilityNegotiation() {
+	func advanceCapabilityNegotiation() {
 		guard capabilityNegotiation.isPaused == false,
 		      capabilityNegotiation.isCollectingList == false
 		else {
@@ -301,27 +246,27 @@ extension Client {
 			return nil
 		}
 
-		return lastAwayMessage
+		return away.message
 	}
 
-	@MainActor private func sendPreAwayIfNeeded() {
+	private func sendPreAwayIfNeeded() {
 		guard isCapabilityEnabled(.preAway), let awayMessageForRegistration else {
 			return
 		}
 
-		send("AWAY", arguments: [awayMessageForRegistration])
+		send(.away, arguments: [awayMessageForRegistration])
 	}
 
 	private func pauseCapabilityNegotiation() {
 		capabilityNegotiation.isPaused = true
 	}
 
-	@MainActor func resumeCapabilityNegotiation() {
+	func resumeCapabilityNegotiation() {
 		capabilityNegotiation.isPaused = false
 		advanceCapabilityNegotiation()
 	}
 
-	@MainActor private func toggleCapability(_ capabilityString: String, enabled initialValue: Bool) {
+	private func toggleCapability(_ capabilityString: String, enabled initialValue: Bool) {
 		var enabled = initialValue
 		var capabilityString = capabilityString
 
@@ -354,7 +299,7 @@ extension Client {
 			pauseCapabilityNegotiation()
 		}
 
-		NotificationCenter.default.post(name: .clientCapabilitiesDidChange, object: self)
+		NotificationCenter.default.post(name: .sessionCapabilitiesDidChange, object: self)
 	}
 
 	/** Matches an `ACK` or `NAK` back to the outstanding requests it names.
@@ -363,7 +308,6 @@ extension Client {
 	 will not grant any one name on it. A refused line of several names says
 	 nothing about which of them was the problem, so each is asked for again on
 	 a line of its own, and only a name refused alone is taken as refused. */
-	@MainActor
 	private func receiveCapabilityAnswer(_ actions: String, accepted: Bool) {
 		let tokens = LineParser.wireTokens(in: actions)
 		let refusesAGroup = accepted == false && tokens.count > 1
@@ -386,24 +330,24 @@ extension Client {
 		}
 	}
 
-	@MainActor
 	func handleCapabilityOrAuthenticationRequest(_ message: Message) {
-		guard message.paramsCount > 0 else {
+		guard message.params.isEmpty == false else {
 			return
 		}
 
-		let command = message.command
-
-		if command.caseInsensitiveCompare("CAP") == .orderedSame {
+		switch message.remoteCommand {
+		case .cap:
 			handleCapabilitySubcommand(message)
-		} else if command.caseInsensitiveCompare("AUTHENTICATE") == .orderedSame {
+		case .authenticate:
 			receiveSASLAuthenticatePayload(message.param(at: 0))
+		default:
+			break
 		}
 
 		_ = shouldPrintReceivedMessage(message)
 	}
 
-	@MainActor private func handleCapabilitySubcommand(_ message: Message) {
+	private func handleCapabilitySubcommand(_ message: Message) {
 		let actions = message.sequence(2)
 
 		switch message.param(at: 1).uppercased() {
@@ -432,7 +376,7 @@ extension Client {
 	 ceiling is dropped whole and negotiation ends, which is also a complete
 	 listing as far as the caller is concerned. A complete listing that upgrades
 	 to TLS abandons this connection, and nothing more is negotiated on it. */
-	@MainActor private func receiveCapabilityListing(_ message: Message) -> Bool {
+	private func receiveCapabilityListing(_ message: Message) -> Bool {
 		capabilityNegotiation.beginListing()
 
 		let moreToCome = message.param(at: 2) == "*"
@@ -444,7 +388,7 @@ extension Client {
 
 		let offeredCount = capabilityNegotiation.offeredCapabilities.count
 
-		guard offeredCount <= ClientNegotiationUtilities.maximumOfferedCapabilities else {
+		guard offeredCount <= CapabilityNegotiationState.maximumOfferedCapabilities else {
 			negotiationLogger.error("Ended negotiation: CAP LS offered more capabilities than the limit")
 			capabilityNegotiation.discardListing()
 			return true
@@ -462,7 +406,7 @@ extension Client {
 	/// `CAP DEL`: the capability stops being available at once, and a request
 	/// still waiting for its answer will never get one, so the withdrawal
 	/// stands in for the refusal.
-	@MainActor private func receiveCapabilityWithdrawal(_ actions: String) {
+	private func receiveCapabilityWithdrawal(_ actions: String) {
 		for name in CapabilityRegistry.parseCapabilityList(actions).keys {
 			capabilityNegotiation.withdraw(name)
 			toggleCapability(name, enabled: false)
@@ -472,9 +416,9 @@ extension Client {
 	/// `CAP NEW`: an advertisement made after the initial listing. It is
 	/// requested the same way, but without reopening registration. Reports
 	/// whether negotiation may advance, which an upgrade to TLS forbids.
-	@MainActor private func receiveCapabilityAdvertisement(_ actions: String) -> Bool {
+	private func receiveCapabilityAdvertisement(_ actions: String) -> Bool {
 		let offered = CapabilityRegistry.parseCapabilityList(actions)
-		let ceiling = ClientNegotiationUtilities.maximumOfferedCapabilities
+		let ceiling = CapabilityNegotiationState.maximumOfferedCapabilities
 
 		for (name, values) in offered {
 			let alreadyOffered = capabilityNegotiation.offeredCapabilities[name] != nil
@@ -485,18 +429,5 @@ extension Client {
 		}
 
 		return handleSTSCapability(from: offered) == false
-	}
-}
-
-/// Registration uses the base IRC line limit, including CRLF and the trailing-parameter prefix.
-nonisolated enum CapabilityRequestBatching {
-	static func groups(_ names: [String], maximumLineBytes: Int = 512) -> [[String]] {
-		let budget = maximumLineBytes - "CAP REQ :\r\n".utf8.count
-		// A name that cannot fit a line of its own has no request to go in.
-		let requestable = names.filter { $0.isEmpty == false && $0.utf8.count <= budget }
-
-		return WireBatching.pack(requestable, budget: budget, cost: { name, group in
-			(group.isEmpty ? 0 : 1) + name.utf8.count
-		})
 	}
 }

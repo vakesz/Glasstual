@@ -11,7 +11,7 @@ nonisolated enum ProtocolLimits {
 	/** The largest `LINELEN` worth believing.
 
 	 IRCv3 raises the RFC 1459 line length, but only to a few times it. A larger
-	 advertised value stops the client splitting outgoing lines at all, so it is
+	 advertised value stops the session splitting outgoing lines at all, so it is
 	 clamped rather than trusted. */
 	static let maximumServerLineLength = maximumBodyLength * 4
 	/// The CR LF every line ends with. `LINELEN` counts it; ``maximumBodyLength``
@@ -19,22 +19,22 @@ nonisolated enum ProtocolLimits {
 	static let lineTerminatorLength = 2
 	/// RFC 1459 2.3 caps a command at fifteen parameters, and a server that
 	/// reads a sixteenth folds the rest into the fifteenth. This is the cap the
-	/// client writes to; see ``maximumInboundParameterCount`` for what it reads.
+	/// session writes to; see ``maximumInboundParameterCount`` for what it reads.
 	static let maximumParameterCount = 15
 	/** How many parameters one inbound line is split into.
 
-	 Deliberately looser than ``maximumParameterCount``: what the client sends
+	 Deliberately looser than ``maximumParameterCount``: what the session sends
 	 has to be a line every server will accept, but what it reads only has to be
 	 bounded. Servers do exceed the RFC — a long `RPL_ISUPPORT` or a vendor
 	 numeric counts parameters its own way — and dropping the tail of one would
-	 lose information the client was told. Sixty-four leaves room for those
+	 lose information the session was told. Sixty-four leaves room for those
 	 while still bounding what a hostile line can allocate; anything past the cap
 	 is handed to the last parameter as one string rather than dropped. */
 	static let maximumInboundParameterCount = 64
 	/** How many bytes the message-tag section of a client-to-server line gets.
 
 	 IRCv3 budgets tags separately from the rest of the line, so a tagged line
-	 is measured as two budgets, not one. A client may send 4094 bytes of tag
+	 is measured as two budgets, not one. A session may send 4094 bytes of tag
 	 data; with the leading `@` and the space that ends the section, which is
 	 what this measures, that is 4096. */
 	static let maximumClientTagLength = 4096

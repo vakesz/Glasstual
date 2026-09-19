@@ -19,7 +19,7 @@ extension MainWindow {
 		let next = bigger ? textSizeMultiplier * TextZoomPolicy.step : textSizeMultiplier / TextZoomPolicy.step
 		guard TextZoomPolicy.allowedRange.contains(next) else { return }
 		textSizeMultiplier = next
-		for controller in transcriptControllersInDirectory {
+		for controller in allTranscriptControllers {
 			controller.changeTextSize(bigger)
 		}
 	}
@@ -45,47 +45,47 @@ extension MainWindow {
 		textSizeMultiplier = 1.0
 	}
 
-	private var transcriptControllersInDirectory: [TranscriptController] {
-		guard let clientDirectory else { return [] }
-		return clientDirectory.clientList.flatMap { client in
-			[client.transcriptController].compactMap(\.self) + client.channelList.compactMap(\.transcriptController)
+	private var allTranscriptControllers: [TranscriptController] {
+		guard let chatSession else { return [] }
+		return chatSession.sessions.flatMap { session in
+			[session.transcriptController].compactMap(\.self) + session.conversationList.compactMap(\.transcriptController)
 		}
 	}
 
 	func markAllAsRead() {
-		guard let clientDirectory else { return }
-		let markScrollback = Preferences.Messages.autoAddScrollbackMark.value
-		for client in clientDirectory.clientList {
-			if markScrollback {
-				client.transcriptController?.mark()
+		guard let chatSession else { return }
+		let setUnreadMarker = SettingsKeys.Messages.autoAddUnreadMarker.value
+		for session in chatSession.sessions {
+			if setUnreadMarker {
+				session.transcriptController?.mark()
 			}
-			for channel in client.channelList {
-				if markScrollback {
-					channel.transcriptController?.mark()
+			for conversation in session.conversationList {
+				if setUnreadMarker {
+					conversation.transcriptController?.mark()
 				}
-				channel.resetState()
+				conversation.resetState()
 			}
 		}
 		DockIcon.updateDockIcon()
-		reloadTree()
+		reloadSidebar()
 	}
 
 	func reloadTheme() {
-		for controller in transcriptControllersInDirectory {
+		for controller in allTranscriptControllers {
 			controller.reloadTheme()
 		}
 	}
 
-	func clearContents(of client: Client) {
-		client.resetState()
-		client.transcriptController?.clear()
-		reloadChatItem(client)
+	func clearContents(of session: ServerSession) {
+		session.resetState()
+		session.transcriptController?.clear()
+		reloadChatItem(session)
 	}
 
-	func clearContents(of channel: Channel) {
-		channel.resetState()
-		channel.transcriptController?.clear()
-		reloadChatItem(channel)
+	func clearContents(of conversation: Conversation) {
+		conversation.resetState()
+		conversation.transcriptController?.clear()
+		reloadChatItem(conversation)
 	}
 
 	private func completeNickname(_ movingForward: Bool) {
@@ -103,11 +103,11 @@ extension MainWindow {
 	}
 
 	private func performTabKeyAction(movingForward: Bool) -> Bool {
-		switch Preferences.Input.tabKeyAction.value {
+		switch SettingsKeys.Input.tabKeyAction.value {
 		case .nicknameComplete:
 			completeNickname(movingForward)
-		case .unreadChannel:
-			navigateChannelEntries(movingForward, withNavigationType: .unread)
+		case .unreadConversation:
+			navigateConversationEntries(movingForward, withNavigationType: .unread)
 		case .none:
 			// The window declines the key, and the field moves the keyboard on.
 			return false
@@ -116,7 +116,7 @@ extension MainWindow {
 	}
 
 	func sendControlEnterMessageMaybe(_ event: NSEvent) {
-		if Preferences.Input.controlEnterSendsMessage.value {
+		if SettingsKeys.Input.controlEnterSendsMessage.value {
 			textEntered()
 		} else {
 			inputTextField.keyDownToSuper(event)
@@ -124,7 +124,7 @@ extension MainWindow {
 	}
 
 	func sendMessageAsAction(_: NSEvent) {
-		if Preferences.Input.commandReturnSendsAction.value {
+		if SettingsKeys.Input.commandReturnSendsAction.value {
 			inputTextAsCommand(.privmsgAction)
 		} else {
 			textEntered()
@@ -215,17 +215,17 @@ extension MainWindow {
 	private func inputTextAsCommand(_ command: RemoteCommand) {
 		nicknameCompletionStatus.clear()
 		/* NSTextView returns its live mutable text storage. Snapshot it before
-		 clearing the editor, or the value handed to the client becomes empty too. */
+		 clearing the editor, or the value handed to the session becomes empty too. */
 		let value = NSAttributedString(attributedString: inputTextField.attributedStringValue)
 		guard value.length > 0 else { return }
 		inputTextField.attributedStringValue = NSAttributedString(string: "")
 		inputHistory.add(value)
-		inputTextField.consumeReply(into: selectedClient)
+		inputTextField.consumeReply(into: selectedSession)
 		inputText(value, asCommand: command)
 	}
 
 	func inputText(_ string: Any, asCommand command: RemoteCommand) {
-		guard let destination = selectedItem, let client = destination.associatedClient else { return }
-		client.inputText(string, as: command, destination: destination)
+		guard let destination = selectedItem, let session = destination.associatedSession else { return }
+		session.inputText(string, as: command, destination: destination)
 	}
 }

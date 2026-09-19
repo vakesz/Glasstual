@@ -1,0 +1,294 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "action-note" : {
+      "comment" : "Explains the bullet prefix used for IRC action messages in the highlight list. Migrated from the legacy interface file.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Messages beginning with a bullet (•) are actions."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A ponttal (•) kezdődő üzenetek cselekvések."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nachrichten, die mit einem Punkt (•) beginnen, sind Aktionen."
+          }
+        }
+      }
+    },
+    "channel" : {
+      "comment" : "Column title for the channel that contains a highlighted message. Migrated from the legacy interface file.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Channel"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Csatorna"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kanal"
+          }
+        }
+      }
+    },
+    "clear-list" : {
+      "comment" : "Button that removes all cached highlights for the selected server. Migrated from the legacy interface file.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear List"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lista törlése"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Liste leeren"
+          }
+        }
+      }
+    },
+    "clear-list-confirmation-message" : {
+      "comment" : "Body of the confirmation shown before the cached highlights of a connection are discarded.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The highlights logged for this connection are removed. This cannot be undone."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A kapcsolathoz naplózott említések törlődnek. Ez nem vonható vissza."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die protokollierten Hervorhebungen für diese Verbindung werden entfernt. Dies kann nicht rückgängig gemacht werden."
+          }
+        }
+      }
+    },
+    "clear-list-confirmation-title" : {
+      "comment" : "Title of the confirmation shown before the cached highlights of a connection are discarded.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear the highlight list?"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Törlöd az említések listáját?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hervorhebungsliste leeren?"
+          }
+        }
+      }
+    },
+    "empty-description" : {
+      "comment" : "Description shown when a server has no cached highlighted messages.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New highlighted messages will appear here while Glasstual is running."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A Glasstual futása alatt az új kiemelt üzenetek itt jelennek meg."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neue hervorgehobene Nachrichten erscheinen hier, während Glasstual läuft."
+          }
+        }
+      }
+    },
+    "empty-title" : {
+      "comment" : "Title shown when a server has no cached highlighted messages.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Highlights"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nincsenek említések"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Hervorhebungen"
+          }
+        }
+      }
+    },
+    "go-to-message" : {
+      "comment" : "Context menu item and primary action that selects the channel a highlight was logged in and scrolls to the line.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Go to Message"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ugrás az üzenethez"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zur Nachricht gehen"
+          }
+        }
+      }
+    },
+    "highlight-list" : {
+      "comment" : "Accessibility label for the table of cached highlighted messages. Migrated from the legacy interface file.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Highlight List"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Említések listája"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hervorhebungsliste"
+          }
+        }
+      }
+    },
+    "message" : {
+      "comment" : "Column title for the highlighted message. Migrated from the legacy interface file.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Message"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Üzenet"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nachricht"
+          }
+        }
+      }
+    },
+    "time" : {
+      "comment" : "Column title for the time a highlighted message was received. Migrated from the legacy interface file.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Időpont"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeit"
+          }
+        }
+      }
+    },
+    "window-title" : {
+      "comment" : "Window title for a server's highlight list. The placeholder is the network name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Highlights for %@"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ említései"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hervorhebungen für %@"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

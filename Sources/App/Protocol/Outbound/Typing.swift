@@ -4,7 +4,7 @@
 
 import Foundation
 
-/// The `+typing` states the client tells the server about.
+/// The `+typing` states the session tells the server about.
 nonisolated enum TypingState: String, Sendable {
 	case active
 	case paused
@@ -28,45 +28,45 @@ enum OutboundTypingPolicy {
 	}
 }
 
-extension Client {
-	func typingNotificationsAvailable(for channel: Channel?) -> Bool {
-		guard let channel, channel.isUtility == false else { return false }
-		guard channel.isChannel || channel.isPrivateMessage else { return false }
+extension ServerSession {
+	func typingNotificationsAvailable(for conversation: Conversation?) -> Bool {
+		guard let conversation, conversation.isConsole == false else { return false }
+		guard conversation.isChannel || conversation.isDirect else { return false }
 		return isLoggedIn && isCapabilityEnabled(.messageTags) && isClientTagPermitted(typingTagName)
 	}
 
-	func noteLocalUserTyping(_ text: String, in channel: Channel?) {
-		noteLocalUserTyping(text, in: channel, at: Date())
+	func noteLocalUserTyping(_ text: String, in conversation: Conversation?) {
+		noteLocalUserTyping(text, in: conversation, at: Date())
 	}
 
-	func noteLocalUserTyping(_ text: String, in channel: Channel?, at date: Date) {
-		guard typingNotificationsAvailable(for: channel), let channel else { return }
+	func noteLocalUserTyping(_ text: String, in conversation: Conversation?, at date: Date) {
+		guard typingNotificationsAvailable(for: conversation), let conversation else { return }
 
 		if OutboundTypingPolicy.shouldFinish(
 			text: text,
-			notificationsEnabled: environment.preferences.sendTypingNotifications
+			notificationsEnabled: environment.settings.sendTypingNotifications
 		) {
-			sendTypingDone(in: channel)
+			sendTypingDone(in: conversation)
 			return
 		}
 
-		let key = channel.uniqueIdentifier
+		let key = conversation.uniqueIdentifier
 
 		if OutboundTypingPolicy.shouldSendActive(
 			previousState: typingStateSent[key],
 			lastSentAt: typingActiveSentAt[key],
 			now: date
-		), sendTagMessage([typingTagName: TypingState.active.rawValue], toTarget: channel.name) {
+		), sendTagMessage([typingTagName: TypingState.active.rawValue], toTarget: conversation.name) {
 			typingActiveSentAt[key] = date
 			typingStateSent[key] = .active
 		}
 
-		scheduleTypingPause(for: channel)
+		scheduleTypingPause(for: conversation)
 	}
 
-	/// Replaces the pending "paused" notification for `channel`.
-	private func scheduleTypingPause(for channel: Channel) {
-		let key = channel.uniqueIdentifier
+	/// Replaces the pending "paused" notification for `conversation`.
+	private func scheduleTypingPause(for conversation: Conversation) {
+		let key = conversation.uniqueIdentifier
 		cancelTypingPause(forKey: key)
 
 		typingPauseTasks[key] = Task { [weak self] in
@@ -75,7 +75,7 @@ extension Client {
 			guard Task.isCancelled == false, let self else { return }
 
 			typingPauseTasks.removeValue(forKey: key)
-			typingPauseTimerFired(channel)
+			typingPauseTimerFired(conversation)
 		}
 	}
 
@@ -83,23 +83,23 @@ extension Client {
 		typingPauseTasks.removeValue(forKey: key)?.cancel()
 	}
 
-	func typingPauseTimerFired(_ channel: Channel) {
-		let key = channel.uniqueIdentifier
+	func typingPauseTimerFired(_ conversation: Conversation) {
+		let key = conversation.uniqueIdentifier
 		guard typingStateSent[key] == .active else { return }
 
-		guard typingNotificationsAvailable(for: channel) else {
+		guard typingNotificationsAvailable(for: conversation) else {
 			typingStateSent.removeValue(forKey: key)
 			return
 		}
 
-		if sendTagMessage([typingTagName: TypingState.paused.rawValue], toTarget: channel.name) {
+		if sendTagMessage([typingTagName: TypingState.paused.rawValue], toTarget: conversation.name) {
 			typingStateSent[key] = .paused
 		}
 	}
 
-	func sendTypingDone(in channel: Channel?) {
-		guard let channel else { return }
-		let key = channel.uniqueIdentifier
+	func sendTypingDone(in conversation: Conversation?) {
+		guard let conversation else { return }
+		let key = conversation.uniqueIdentifier
 
 		cancelTypingPause(forKey: key)
 
@@ -107,16 +107,16 @@ extension Client {
 		typingStateSent.removeValue(forKey: key)
 		typingActiveSentAt.removeValue(forKey: key)
 
-		if typingNotificationsAvailable(for: channel) {
-			_ = sendTagMessage([typingTagName: TypingState.done.rawValue], toTarget: channel.name)
+		if typingNotificationsAvailable(for: conversation) {
+			_ = sendTagMessage([typingTagName: TypingState.done.rawValue], toTarget: conversation.name)
 		}
 	}
 
-	func localUserSentMessage(in channel: Channel?) {
-		sendTypingDone(in: channel)
+	func localUserSentMessage(in conversation: Conversation?) {
+		sendTypingDone(in: conversation)
 	}
 
-	func localUserClearedText(in channel: Channel?) {
-		sendTypingDone(in: channel)
+	func localUserClearedText(in conversation: Conversation?) {
+		sendTypingDone(in: conversation)
 	}
 }

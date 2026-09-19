@@ -71,7 +71,7 @@ struct AccessibilityDriver {
 	}
 
 	func identified(_ identifier: String, from parent: AXUIElement, deadline: Double) throws -> AXUIElement? {
-		let containers: Set = ["main-window", "channel-transcript", "message-input", "server-list"].contains(identifier)
+		let containers: Set = ["main-window", "channel-transcript", "message-input", "sidebar"].contains(identifier)
 			? [kAXTableRole, kAXOutlineRole, kAXListRole] : []
 		return try find(from: parent, deadline: deadline, excludingContainers: containers) {
 			try text($0, kAXIdentifierAttribute, deadline: deadline) == identifier
@@ -266,7 +266,7 @@ struct AccessibilityDriver {
 		]) { node in
 			let role = try text(node, kAXRoleAttribute, deadline: deadline)
 			let identifier = try text(node, kAXIdentifierAttribute, deadline: deadline)
-			let known = ["main-window", "channel-transcript", "message-input", "server-list"]
+			let known = ["main-window", "channel-transcript", "message-input", "sidebar"]
 				.contains(identifier) ? identifier : "other"
 			lines.append("\(role) identifier=\(known)")
 			return false

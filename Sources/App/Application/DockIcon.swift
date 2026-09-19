@@ -11,23 +11,23 @@ enum DockIcon {
 	@MainActor private static var cachedMessageCount = -1
 
 	@MainActor static func updateDockIcon() {
-		/* Turning the preference off has to clear whatever is already drawn:
-		 this is the only thing the preference-change path calls. */
-		guard Preferences.Notifications.displayDockBadge.value else {
+		/* Turning the setting off has to clear whatever is already drawn:
+		 this is the only thing the setting-change path calls. */
+		guard SettingsKeys.Notifications.displayDockBadge.value else {
 			drawWithoutCount()
 			return
 		}
 
-		guard let clientDirectory = AppServices.clientDirectory else { return }
+		guard let chatSession = AppServices.chatSession else { return }
 
 		var highlightCount: UInt = 0
 		var messageCount: UInt = 0
-		for client in clientDirectory.clientList {
-			for channel in client.channelList {
-				if channel.config.pushNotifications {
-					messageCount += UInt(channel.dockUnreadCount)
+		for session in chatSession.sessions {
+			for conversation in session.conversationList {
+				if conversation.config.pushNotifications {
+					messageCount += UInt(conversation.dockUnreadCount)
 				}
-				highlightCount += UInt(channel.nicknameHighlightCount)
+				highlightCount += UInt(conversation.nicknameHighlightCount)
 			}
 		}
 

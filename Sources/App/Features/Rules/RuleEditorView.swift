@@ -9,19 +9,19 @@ struct MessageRuleChannelOption: Identifiable {
 	let name: String
 }
 
-struct MessageRuleClientOption: Identifiable {
+struct MessageRuleSessionOption: Identifiable {
 	let id: String
 	let name: String
 	let channels: [MessageRuleChannelOption]
 
 	/// The connections and their channels, as the editor lists them for a rule
 	/// limited to specific conversations.
-	static func current() -> [MessageRuleClientOption] {
-		(AppServices.clientDirectory?.clientList ?? []).map { client in
-			MessageRuleClientOption(
-				id: client.uniqueIdentifier,
-				name: client.networkName ?? client.serverAddress ?? client.userNickname,
-				channels: client.channelList.filter(\.isChannel).map {
+	static func current() -> [MessageRuleSessionOption] {
+		(AppServices.chatSession?.sessions ?? []).map { session in
+			MessageRuleSessionOption(
+				id: session.uniqueIdentifier,
+				name: session.networkName ?? session.serverAddress ?? session.userNickname,
+				channels: session.conversationList.filter(\.isChannel).map {
 					MessageRuleChannelOption(id: $0.uniqueIdentifier, name: $0.name)
 				}
 			)
@@ -30,7 +30,7 @@ struct MessageRuleClientOption: Identifiable {
 }
 
 private enum RuleEditorTab: Hashable {
-	case filter
+	case rule
 	case channels
 	case events
 	case sender
@@ -47,18 +47,18 @@ private struct RuleEventOption: Identifiable {
 	}
 
 	static let all: [Self] = [
-		Self(event: .plainTextMessage, title: .RuleEditor.plainTextMessageEvent),
-		Self(event: .actionMessage, title: .RuleEditor.actionMessageEvent),
-		Self(event: .noticeMessage, title: .RuleEditor.noticeMessageEvent),
-		Self(event: .userJoinedChannel, title: .RuleEditor.userJoinedChannelEvent),
-		Self(event: .userLeftChannel, title: .RuleEditor.userLeftChannelEvent),
-		Self(event: .userKickedFromChannel, title: .RuleEditor.userKickedFromChannelEvent),
-		Self(event: .userDisconnected, title: .RuleEditor.userDisconnectedEvent),
-		Self(event: .userChangedNickname, title: .RuleEditor.userChangedNicknameEvent),
-		Self(event: .channelTopicReceived, title: .RuleEditor.channelTopicReceivedEvent),
-		Self(event: .channelTopicChanged, title: .RuleEditor.channelTopicChangedEvent),
-		Self(event: .channelModeReceived, title: .RuleEditor.channelModeReceivedEvent),
-		Self(event: .channelModeChanged, title: .RuleEditor.channelModeChangedEvent),
+		Self(event: .plainTextMessage, title: .Rules.plainTextMessageEvent),
+		Self(event: .actionMessage, title: .Rules.actionMessageEvent),
+		Self(event: .noticeMessage, title: .Rules.noticeMessageEvent),
+		Self(event: .userJoinedChannel, title: .Rules.userJoinedChannelEvent),
+		Self(event: .userLeftChannel, title: .Rules.userLeftChannelEvent),
+		Self(event: .userKickedFromChannel, title: .Rules.userKickedFromChannelEvent),
+		Self(event: .userDisconnected, title: .Rules.userDisconnectedEvent),
+		Self(event: .userChangedNickname, title: .Rules.userChangedNicknameEvent),
+		Self(event: .channelTopicReceived, title: .Rules.channelTopicReceivedEvent),
+		Self(event: .channelTopicChanged, title: .Rules.channelTopicChangedEvent),
+		Self(event: .channelModeReceived, title: .Rules.channelModeReceivedEvent),
+		Self(event: .channelModeChanged, title: .Rules.channelModeChangedEvent),
 	]
 }
 
@@ -67,67 +67,43 @@ private struct RuleActionPlaceholder: Identifiable {
 	let title: LocalizedStringResource
 
 	static let all: [Self] = [
-		Self(id: "%_channelName_%", title: .RuleEditor.tokenChannelName),
-		Self(id: "%_localNickname_%", title: .RuleEditor.tokenLocalNickname),
-		Self(id: "%_networkName_%", title: .RuleEditor.tokenNetworkName),
-		Self(id: "%_originalMessage_%", title: .RuleEditor.tokenOriginalMessage),
-		Self(id: "%_senderNickname_%", title: .RuleEditor.tokenSenderNickname),
-		Self(id: "%_senderUsername_%", title: .RuleEditor.tokenSenderUsername),
-		Self(id: "%_senderAddress_%", title: .RuleEditor.tokenSenderAddress),
-		Self(id: "%_senderHostmask_%", title: .RuleEditor.tokenSenderHostmask),
-		Self(id: "%_serverAddress_%", title: .RuleEditor.tokenServerAddress),
-		Self(id: "%_Parameter_0_%", title: .RuleEditor.tokenParameter1),
-		Self(id: "%_Parameter_1_%", title: .RuleEditor.tokenParameter2),
-		Self(id: "%_Parameter_2_%", title: .RuleEditor.tokenParameter3),
-		Self(id: "%_Parameter_3_%", title: .RuleEditor.tokenParameter4),
-		Self(id: "%_Parameter_4_%", title: .RuleEditor.tokenParameter5),
-		Self(id: "%_Parameter_5_%", title: .RuleEditor.tokenParameter6),
-		Self(id: "%_Parameter_6_%", title: .RuleEditor.tokenParameter7),
-		Self(id: "%_Parameter_7_%", title: .RuleEditor.tokenParameter8),
-		Self(id: "%_Parameter_8_%", title: .RuleEditor.tokenParameter9),
+		Self(id: "%_channelName_%", title: .Rules.tokenChannelName),
+		Self(id: "%_localNickname_%", title: .Rules.tokenLocalNickname),
+		Self(id: "%_networkName_%", title: .Rules.tokenNetworkName),
+		Self(id: "%_originalMessage_%", title: .Rules.tokenOriginalMessage),
+		Self(id: "%_senderNickname_%", title: .Rules.tokenSenderNickname),
+		Self(id: "%_senderUsername_%", title: .Rules.tokenSenderUsername),
+		Self(id: "%_senderAddress_%", title: .Rules.tokenSenderAddress),
+		Self(id: "%_senderHostmask_%", title: .Rules.tokenSenderHostmask),
+		Self(id: "%_serverAddress_%", title: .Rules.tokenServerAddress),
+		Self(id: "%_Parameter_0_%", title: .Rules.tokenParameter1),
+		Self(id: "%_Parameter_1_%", title: .Rules.tokenParameter2),
+		Self(id: "%_Parameter_2_%", title: .Rules.tokenParameter3),
+		Self(id: "%_Parameter_3_%", title: .Rules.tokenParameter4),
+		Self(id: "%_Parameter_4_%", title: .Rules.tokenParameter5),
+		Self(id: "%_Parameter_5_%", title: .Rules.tokenParameter6),
+		Self(id: "%_Parameter_6_%", title: .Rules.tokenParameter7),
+		Self(id: "%_Parameter_7_%", title: .Rules.tokenParameter8),
+		Self(id: "%_Parameter_8_%", title: .Rules.tokenParameter9),
 	]
 }
 
-/** Whether a match pattern compiles.
-
- Compiling is expensive and a `body` pass asks about two patterns, so this is
- computed when a pattern changes rather than each time the sheet is drawn. How
- long a pattern takes to run is bounded at match time by
- `RegularExpression.matchBudget` instead. */
-private struct RulePatternValidation: Equatable {
-	var error: String?
-
-	init(pattern: String = "") {
-		guard pattern.isEmpty == false else { return }
-
-		do {
-			_ = try NSRegularExpression(pattern: pattern)
-		} catch let failure {
-			error = String(
-				localized: .RuleEditor.regularExpressionInvalid(failure.localizedDescription)
-			)
-		}
-	}
-}
-
 struct RuleEditorView: View {
-	@State private var filter: MessageRule
-	@State private var selectedTab: RuleEditorTab = .filter
-	@State private var matchValidation = RulePatternValidation()
-	@State private var senderValidation = RulePatternValidation()
+	@State private var model: RuleEditorModel
+	@State private var selectedTab: RuleEditorTab = .rule
 
-	let clients: [MessageRuleClientOption]
+	let sessions: [MessageRuleSessionOption]
 	let onSave: (MessageRule) -> Void
 	let onCancel: () -> Void
 
 	init(
-		filter: MessageRule,
-		clients: [MessageRuleClientOption],
+		rule: MessageRule,
+		sessions: [MessageRuleSessionOption],
 		onSave: @escaping (MessageRule) -> Void,
 		onCancel: @escaping () -> Void
 	) {
-		_filter = State(initialValue: filter)
-		self.clients = clients
+		_model = State(initialValue: RuleEditorModel(rule: rule))
+		self.sessions = sessions
 		self.onSave = onSave
 		self.onCancel = onCancel
 	}
@@ -136,66 +112,64 @@ struct RuleEditorView: View {
 		VStack(spacing: 0) {
 			TabView(selection: $selectedTab) {
 				generalForm
-					.tabItem { Text(String(localized: .RuleEditor.filterTab)) }
-					.tag(RuleEditorTab.filter)
+					.tabItem { Text(String(localized: .Rules.filterTab)) }
+					.tag(RuleEditorTab.rule)
 				channelsForm
-					.tabItem { Text(String(localized: .RuleEditor.channelsTab)) }
+					.tabItem { Text(String(localized: .Rules.channelsTab)) }
 					.tag(RuleEditorTab.channels)
 				eventsForm
-					.tabItem { Text(String(localized: .RuleEditor.eventsTab)) }
+					.tabItem { Text(String(localized: .Rules.eventsTab)) }
 					.tag(RuleEditorTab.events)
 				senderForm
-					.tabItem { Text(String(localized: .RuleEditor.senderTab)) }
+					.tabItem { Text(String(localized: .Rules.senderTab)) }
 					.tag(RuleEditorTab.sender)
 				notesForm
-					.tabItem { Text(String(localized: .RuleEditor.notesTab)) }
+					.tabItem { Text(String(localized: .Rules.notesTab)) }
 					.tag(RuleEditorTab.notes)
 				advancedForm
-					.tabItem { Text(String(localized: .RuleEditor.advancedTab)) }
+					.tabItem { Text(String(localized: .Rules.advancedTab)) }
 					.tag(RuleEditorTab.advanced)
 			}
-			.padding(20)
+			.padding(SheetMetrics.margin)
 
 			Divider()
 
 			HStack {
 				Spacer()
-				Button(String(localized: .RuleEditor.cancelButton), action: onCancel)
+				Button(String(localized: .Rules.cancelButton), action: onCancel)
 					.keyboardShortcut(.cancelAction)
-				Button(String(localized: .RuleEditor.saveButton)) {
-					save()
-				}
-				.keyboardShortcut(.defaultAction)
-				.disabled(canSave == false)
+				Button(String(localized: .Rules.saveButton), action: save)
+					.keyboardShortcut(.defaultAction)
+					.disabled(model.canSave == false)
 			}
-			.padding(16)
+			.padding(UISpacing.loose)
 		}
 		.frame(width: 680, height: 560)
-		.onChange(of: filter.match, initial: true) { _, pattern in
-			matchValidation = RulePatternValidation(pattern: pattern)
-		}
-		.onChange(of: filter.senderMatch, initial: true) { _, pattern in
-			senderValidation = RulePatternValidation(pattern: pattern)
-		}
+	}
+
+	private func save() {
+		guard let submitted = model.ruleForSubmission() else { return }
+		onSave(submitted)
 	}
 
 	private var generalForm: some View {
 		Form {
-			TextField(String(localized: .RuleEditor.filterTitleLabel), text: $filter.title)
-			TextField(String(localized: .RuleEditor.filterMatchLabel), text: $filter.match)
-			validationMessage(matchError)
+			TextField(String(localized: .Rules.filterTitleLabel), text: $model.rule.title)
+			TextField(String(localized: .Rules.filterMatchLabel), text: $model.rule.match)
+			validationMessage(model.matchError)
 			Text(Self.patternLimitsExplanation)
 				.font(.caption)
 				.foregroundStyle(.secondary)
 
-			Section(String(localized: .RuleEditor.filterActionSection)) {
-				TextEditor(text: $filter.action)
+			Section(String(localized: .Rules.filterActionSection)) {
+				TextEditor(text: $model.rule.action)
 					.font(.body.monospaced())
 					.frame(minHeight: 110)
-				Menu(String(localized: .RuleEditor.insertPlaceholderButton)) {
+					.accessibilityLabel(.Rules.filterActionSection)
+				Menu(String(localized: .Rules.insertPlaceholderButton)) {
 					ForEach(RuleActionPlaceholder.all) { placeholder in
 						Button(String(localized: placeholder.title)) {
-							filter.action.append(placeholder.id)
+							model.rule.action.append(placeholder.id)
 						}
 					}
 				}
@@ -206,28 +180,28 @@ struct RuleEditorView: View {
 
 	private var channelsForm: some View {
 		Form {
-			Picker(String(localized: .RuleEditor.limitFilterLabel), selection: $filter.destination) {
+			Picker(String(localized: .Rules.limitFilterLabel), selection: $model.rule.destination) {
 				ForEach(MessageRuleDestination.allCases) { destination in
 					Text(destinationTitle(destination)).tag(destination)
 				}
 			}
 			.pickerStyle(.radioGroup)
 
-			if filter.destination == .specificItems {
-				Section(String(localized: .RuleEditor.specificItemsSection)) {
-					if clients.isEmpty {
+			if model.rule.destination == .specificItems {
+				Section(String(localized: .Rules.specificItemsSection)) {
+					if sessions.isEmpty {
 						ContentUnavailableView(
-							String(localized: .RuleEditor.noConnectedServersTitle),
+							String(localized: .Rules.noConnectedServersTitle),
 							systemImage: "network.slash"
 						)
 						.frame(minHeight: 180)
 					} else {
-						List(clients) { client in
-							clientSelection(client)
-							ForEach(client.channels) { channel in
-								Toggle(channel.name, isOn: channelSelection(channel, in: client))
+						List(sessions) { session in
+							sessionSelection(session)
+							ForEach(session.channels) { channel in
+								Toggle(channel.name, isOn: channelSelection(channel, in: session))
 									.toggleStyle(.checkbox)
-									.disabled(filter.limitedClientIDs.contains(client.id))
+									.disabled(model.rule.limitedSessionIDs.contains(session.id))
 									.padding(.leading, 22)
 							}
 						}
@@ -242,23 +216,23 @@ struct RuleEditorView: View {
 
 	private var eventsForm: some View {
 		Form {
-			Section(String(localized: .RuleEditor.standardEventsSection)) {
+			Section(String(localized: .Rules.standardEventsSection)) {
 				LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], alignment: .leading) {
 					ForEach(RuleEventOption.all) { option in
 						Toggle(String(localized: option.title), isOn: eventBinding(option.event))
 							.toggleStyle(.checkbox)
-							.disabled(eventIsAvailable(option.event) == false)
+							.disabled(model.eventIsAvailable(option.event) == false)
 					}
 				}
 			}
 
-			Section(String(localized: .RuleEditor.additionalCommandsSection)) {
+			Section(String(localized: .Rules.additionalCommandsSection)) {
 				TextField(
-					String(localized: .RuleEditor.additionalCommandsPlaceholder),
+					String(localized: .Rules.additionalCommandsPlaceholder),
 					text: additionalCommands
 				)
-				validationMessage(commandsError)
-				Text(String(localized: .RuleEditor.additionalCommandsExplanation))
+				validationMessage(model.commandsError)
+				Text(String(localized: .Rules.additionalCommandsExplanation))
 					.font(.caption)
 					.foregroundStyle(.secondary)
 			}
@@ -270,39 +244,39 @@ struct RuleEditorView: View {
 		Form {
 			Section {
 				Toggle(
-					String(localized: .RuleEditor.ignoreOperatorsToggle),
-					isOn: $filter.ignoresOperators
+					String(localized: .Rules.ignoreOperatorsToggle),
+					isOn: $model.rule.ignoresOperators
 				)
-				.disabled(hasMessageEvent == false)
+				.disabled(model.hasMessageEvent == false)
 				Toggle(
-					String(localized: .RuleEditor.onlyMyMessagesToggle),
-					isOn: $filter.isLimitedToMyself
+					String(localized: .Rules.onlyMyMessagesToggle),
+					isOn: $model.rule.isLimitedToMyself
 				)
 			}
 
-			TextField(String(localized: .RuleEditor.senderMatchLabel), text: $filter.senderMatch)
-				.disabled(filter.isLimitedToMyself)
-			validationMessage(senderMatchError)
+			TextField(String(localized: .Rules.senderMatchLabel), text: $model.rule.senderMatch)
+				.disabled(model.rule.isLimitedToMyself)
+			validationMessage(model.senderMatchError)
 			Text(Self.patternLimitsExplanation)
 				.font(.caption)
 				.foregroundStyle(.secondary)
 
-			Section(String(localized: .RuleEditor.membershipAgeSection)) {
+			Section(String(localized: .Rules.membershipAgeSection)) {
 				Picker(
-					String(localized: .RuleEditor.ageComparatorLabel),
-					selection: $filter.ageComparator
+					String(localized: .Rules.ageComparatorLabel),
+					selection: $model.rule.ageComparator
 				) {
-					Text(String(localized: .RuleEditor.lessThanOption))
+					Text(String(localized: .Rules.lessThanOption))
 						.tag(MessageRuleAgeComparator.lessThan)
-					Text(String(localized: .RuleEditor.greaterThanOption))
+					Text(String(localized: .Rules.greaterThanOption))
 						.tag(MessageRuleAgeComparator.greaterThan)
 				}
 				TextField(
-					String(localized: .RuleEditor.ageSecondsLabel),
-					value: $filter.ageLimit,
+					String(localized: .Rules.ageSecondsLabel),
+					value: $model.rule.ageLimit,
 					format: .number
 				)
-				Text(String(localized: .RuleEditor.zeroDisablesExplanation))
+				Text(String(localized: .Rules.zeroDisablesExplanation))
 					.font(.caption)
 					.foregroundStyle(.secondary)
 			}
@@ -312,9 +286,10 @@ struct RuleEditorView: View {
 
 	private var notesForm: some View {
 		Form {
-			Section(String(localized: .RuleEditor.notesSection)) {
-				TextEditor(text: $filter.notes)
+			Section(String(localized: .Rules.notesSection)) {
+				TextEditor(text: $model.rule.notes)
 					.frame(minHeight: 300)
+					.accessibilityLabel(.Rules.notesSection)
 			}
 		}
 		.formStyle(.grouped)
@@ -324,29 +299,29 @@ struct RuleEditorView: View {
 		Form {
 			Section {
 				Toggle(
-					String(localized: .RuleEditor.hideOriginalMessageToggle),
-					isOn: $filter.ignoresContent
+					String(localized: .Rules.hideOriginalMessageToggle),
+					isOn: $model.rule.ignoresContent
 				)
 				.toggleStyle(.checkbox)
-				Toggle(String(localized: .RuleEditor.logFilterMatchToggle), isOn: $filter.logsMatch)
+				Toggle(String(localized: .Rules.logFilterMatchToggle), isOn: $model.rule.logsMatch)
 					.toggleStyle(.checkbox)
 			}
 
-			Section(String(localized: .RuleEditor.forwardDestinationSection)) {
+			Section(String(localized: .Rules.forwardDestinationSection)) {
 				TextField(
-					String(localized: .RuleEditor.forwardDestinationLabel),
-					text: $filter.forwardDestination
+					String(localized: .Rules.forwardDestinationLabel),
+					text: $model.rule.forwardDestination
 				)
-				validationMessage(forwardDestinationError)
+				validationMessage(model.forwardDestinationError)
 			}
 
-			Section(String(localized: .RuleEditor.floodControlSection)) {
+			Section(String(localized: .Rules.floodControlSection)) {
 				TextField(
-					String(localized: .RuleEditor.floodControlSecondsLabel),
-					value: $filter.actionFloodControlInterval,
+					String(localized: .Rules.floodControlSecondsLabel),
+					value: $model.rule.actionFloodControlInterval,
 					format: .number
 				)
-				Text(String(localized: .RuleEditor.zeroDisablesExplanation))
+				Text(String(localized: .Rules.zeroDisablesExplanation))
 					.font(.caption)
 					.foregroundStyle(.secondary)
 			}
@@ -354,107 +329,63 @@ struct RuleEditorView: View {
 		.formStyle(.grouped)
 	}
 
-	private var canSave: Bool {
-		let title = filter.title.trimmingCharacters(in: .whitespacesAndNewlines)
-		let action = filter.action.trimmingCharacters(in: .whitespacesAndNewlines)
-		let destination = filter.forwardDestination.trimmingCharacters(in: .whitespacesAndNewlines)
-
-		return title.isEmpty == false &&
-			(filter.ignoresContent || action.isEmpty == false || destination.isEmpty == false) &&
-			matchError == nil && senderMatchError == nil && commandsError == nil && forwardDestinationError == nil
-	}
-
-	private var hasMessageEvent: Bool {
-		filter.events.isDisjoint(with: [.plainTextMessage, .actionMessage, .noticeMessage]) == false
-	}
-
-	private var matchError: String? {
-		matchValidation.error
-	}
-
-	private var senderMatchError: String? {
-		filter.isLimitedToMyself ? nil : senderValidation.error
-	}
-
-	private var commandsError: String? {
-		normalizedCommands(from: filter.additionalCommands.joined(separator: ", ")) == nil
-			? String(localized: .RuleEditor.commandsInvalid)
-			: nil
-	}
-
-	private var forwardDestinationError: String? {
-		let destination = filter.forwardDestination.trimmingCharacters(in: .whitespacesAndNewlines)
-		guard destination.isEmpty == false else { return nil }
-		if destination.count > 125 {
-			return String(localized: .RuleEditor.destinationTooLong)
-		}
-		let isValid = destination.allSatisfy { $0.isLetter || $0.isNumber || "-_ ".contains($0) }
-		return isValid ? nil : String(localized: .RuleEditor.destinationInvalid)
-	}
-
 	private var additionalCommands: Binding<String> {
 		Binding(
-			get: { filter.additionalCommands.joined(separator: ", ") },
-			set: { filter.additionalCommands = $0.components(separatedBy: ",") }
+			get: { model.rule.additionalCommands.joined(separator: ", ") },
+			set: { model.rule.additionalCommands = $0.components(separatedBy: ",") }
 		)
-	}
-
-	private func save() {
-		guard canSave else { return }
-		filter.title = filter.title.trimmingCharacters(in: .whitespacesAndNewlines)
-		filter.action = filter.action.trimmingCharacters(in: .whitespacesAndNewlines)
-		filter.forwardDestination = filter.forwardDestination.trimmingCharacters(in: .whitespacesAndNewlines)
-		filter.additionalCommands = normalizedCommands(from: filter.additionalCommands.joined(separator: ", ")) ?? []
-		if hasMessageEvent == false {
-			filter.ignoresOperators = false
-		}
-		onSave(filter)
 	}
 
 	private func eventBinding(_ event: MessageRuleEvent) -> Binding<Bool> {
 		Binding(
-			get: { filter.events.contains(event) },
+			get: { model.rule.events.contains(event) },
 			set: { isEnabled in
 				if isEnabled {
-					filter.events.insert(event)
+					model.rule.events.insert(event)
 				} else {
-					filter.events.remove(event)
+					model.rule.events.remove(event)
 				}
 			}
 		)
 	}
 
-	private func eventIsAvailable(_ event: MessageRuleEvent) -> Bool {
-		filter.destination != .privateMessages ||
-			[MessageRuleEvent.plainTextMessage, .actionMessage, .noticeMessage].contains(event)
-	}
-
-	private func clientSelection(_ client: MessageRuleClientOption) -> some View {
+	private func sessionSelection(_ session: MessageRuleSessionOption) -> some View {
 		Button {
-			if let index = filter.limitedClientIDs.firstIndex(of: client.id) {
-				filter.limitedClientIDs.remove(at: index)
+			if let index = model.rule.limitedSessionIDs.firstIndex(of: session.id) {
+				model.rule.limitedSessionIDs.remove(at: index)
 			} else {
-				filter.limitedClientIDs.append(client.id)
-				let channelIDs = Set(client.channels.map(\.id))
-				filter.limitedChannelIDs.removeAll { channelIDs.contains($0) }
+				model.rule.limitedSessionIDs.append(session.id)
+				let channelIDs = Set(session.channels.map(\.id))
+				model.rule.limitedChannelIDs.removeAll { channelIDs.contains($0) }
 			}
 		} label: {
 			HStack(spacing: 6) {
-				Image(systemName: clientSelectionSymbol(client))
+				Image(systemName: sessionSelectionSymbol(session))
 					.accessibilityHidden(true)
-				Text(client.name)
+				Text(session.name)
 					.fontWeight(.semibold)
 			}
 			.frame(maxWidth: .infinity, alignment: .leading)
 		}
 		.buttonStyle(.plain)
+		.accessibilityValue(sessionSelectionDescription(session))
 	}
 
-	private func clientSelectionSymbol(_ client: MessageRuleClientOption) -> String {
-		if filter.limitedClientIDs.contains(client.id) {
+	private func sessionSelectionDescription(_ session: MessageRuleSessionOption) -> LocalizedStringResource {
+		if model.rule.limitedSessionIDs.contains(session.id) {
+			return .Rules.allChannelsSelected
+		}
+		if session.channels.contains(where: { model.rule.limitedChannelIDs.contains($0.id) }) {
+			return .Rules.someChannelsSelected
+		}
+		return .Rules.noChannelsSelected
+	}
+
+	private func sessionSelectionSymbol(_ session: MessageRuleSessionOption) -> String {
+		if model.rule.limitedSessionIDs.contains(session.id) {
 			return "checkmark.square"
 		}
-		if client.channels.contains(where: { filter.limitedChannelIDs.contains($0.id) }) {
+		if session.channels.contains(where: { model.rule.limitedChannelIDs.contains($0.id) }) {
 			return "minus.square"
 		}
 		return "square"
@@ -462,20 +393,20 @@ struct RuleEditorView: View {
 
 	private func channelSelection(
 		_ channel: MessageRuleChannelOption,
-		in client: MessageRuleClientOption
+		in session: MessageRuleSessionOption
 	) -> Binding<Bool> {
 		Binding(
 			get: {
-				filter.limitedClientIDs.contains(client.id) || filter.limitedChannelIDs.contains(channel.id)
+				model.rule.limitedSessionIDs.contains(session.id) || model.rule.limitedChannelIDs.contains(channel.id)
 			},
 			set: { selected in
-				guard filter.limitedClientIDs.contains(client.id) == false else { return }
+				guard model.rule.limitedSessionIDs.contains(session.id) == false else { return }
 				if selected {
-					if filter.limitedChannelIDs.contains(channel.id) == false {
-						filter.limitedChannelIDs.append(channel.id)
+					if model.rule.limitedChannelIDs.contains(channel.id) == false {
+						model.rule.limitedChannelIDs.append(channel.id)
 					}
 				} else {
-					filter.limitedChannelIDs.removeAll { $0 == channel.id }
+					model.rule.limitedChannelIDs.removeAll { $0 == channel.id }
 				}
 			}
 		)
@@ -483,10 +414,10 @@ struct RuleEditorView: View {
 
 	private func destinationTitle(_ destination: MessageRuleDestination) -> String {
 		let resource: LocalizedStringResource = switch destination {
-		case .unrestricted: .RuleEditor.unrestrictedDestination
-		case .channels: .RuleEditor.channelsDestination
-		case .privateMessages: .RuleEditor.privateMessagesDestination
-		case .specificItems: .RuleEditor.specificItemsDestination
+		case .unrestricted: .Rules.unrestrictedDestination
+		case .channels: .Rules.channelsDestination
+		case .privateMessages: .Rules.privateMessagesDestination
+		case .specificItems: .Rules.specificItemsDestination
 		}
 		return String(localized: resource)
 	}
@@ -505,31 +436,8 @@ struct RuleEditorView: View {
 	/// and that a pattern which can backtrack without bound is refused here
 	/// rather than discovered when a peer sends the line that triggers it.
 	private static let patternLimitsExplanation = String(
-		localized: .RuleEditor.regularExpressionLimitsExplanation(
-			MessageRuleEngine.subjectByteLimit.formatted(.number)
+		localized: .Rules.regularExpressionLimitsExplanation(
+			MessageRuleMatcher.subjectByteLimit.formatted(.number)
 		)
 	)
-
-	private func normalizedCommands(from value: String) -> [String]? {
-		var result: [String] = []
-		for rawValue in value.components(separatedBy: ",") {
-			let command = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
-			guard command.isEmpty == false else { continue }
-			let normalized: String
-			if command.allSatisfy(\.isNumber) {
-				guard command.count <= 3, let numeric = Int(command), numeric > 0 else {
-					return nil
-				}
-				normalized = String(format: "%03d", numeric)
-			} else if command.allSatisfy({ $0.isLetter || $0.isNumber }), command.count <= 20 {
-				normalized = command.uppercased()
-			} else {
-				return nil
-			}
-			if result.contains(normalized) == false {
-				result.append(normalized)
-			}
-		}
-		return result
-	}
 }

@@ -14,7 +14,7 @@ enum ServerNumeric: UInt, CaseIterable, Sendable {
 	case redir = 10
 	case umodeis = 221
 	case statsconn = 250
-	case luserclient = 251
+	case lusersession = 251
 	case luserhop = 252
 	case luserunknown = 253
 	case luserchannels = 254
@@ -148,7 +148,7 @@ enum ServerNumeric: UInt, CaseIterable, Sendable {
 	var group: Group? {
 		switch self {
 		case .welcome, .yourhost, .created, .myinfo, .isupport, .redir, .umodeis, .statsconn,
-		     .luserclient, .luserhop, .luserunknown, .luserchannels, .luserme, .localusers, .globalusers,
+		     .lusersession, .luserhop, .luserunknown, .luserchannels, .luserme, .localusers, .globalusers,
 		     .silelist, .endofsilelist, .away, .unaway, .nowaway, .motd, .motdstart, .endofmotd, .nomotd:
 			.connection
 		case .whoisregnick, .whoishelpop, .whoisuser, .whoisserver, .whoisoperator, .whowasuser,
@@ -193,6 +193,31 @@ enum ServerNumeric: UInt, CaseIterable, Sendable {
 		rawValue >= 400 && rawValue < 597 && rawValue != ServerNumeric.nomotd.rawValue
 	}
 
+	/** What kind of failure an error numeric reports.
+
+	 The inbound error path answers a whole kind the same way whichever numeric
+	 carried it, and this is the one place that says which numerics make up a
+	 kind. The kinds do not overlap. */
+	var errorKind: ErrorKind? {
+		switch self {
+		case .nosuchserver, .nosuchchannel:
+			.missingTarget
+		case .nicknameinuse, .erroneusnickname:
+			.nicknameCollision
+		case .admonly, .badchanmask, .badchanname, .badchannel, .badchannelkey, .bannedfromchan,
+		     .channelisfull, .delayrejoin, .forbiddenchannel, .inviteonlychan, .linkchannel,
+		     .needreggednick, .nohiding, .operonly, .operspverify, .secureonlychan, .throttle,
+		     .toomanychannels, .toomanyjoins:
+			.joinFailure
+		case .whosyntax, .wholimexceed:
+			.whoFailure
+		case .disabled, .unknowncommand, .needmoreparams:
+			.commandFailure
+		default:
+			nil
+		}
+	}
+
 	/// The handler a numeric belongs to.
 	enum Group: Sendable {
 		case connection
@@ -200,5 +225,14 @@ enum ServerNumeric: UInt, CaseIterable, Sendable {
 		case channel
 		case presence
 		case authentication
+	}
+
+	/// The kind of failure an error numeric reports.
+	enum ErrorKind: Sendable {
+		case missingTarget
+		case nicknameCollision
+		case joinFailure
+		case whoFailure
+		case commandFailure
 	}
 }

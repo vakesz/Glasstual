@@ -1278,6 +1278,726 @@
           }
         }
       }
+    },
+    "cancel-button" : {
+      "comment" : "Title of the button that dismisses the channel topic sheet without changing the topic.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mégse"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abbrechen"
+          }
+        }
+      }
+    },
+    "change-topic-button" : {
+      "comment" : "Title of the button that submits the edited channel topic.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change Topic"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Téma módosítása"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thema ändern"
+          }
+        }
+      }
+    },
+    "editor-accessibility-hint" : {
+      "comment" : "Accessibility hint for the channel topic editor.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit the topic. IRC text formatting is preserved."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Szerkeszd a témát. Az IRC-szövegformázás megmarad."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bearbeite das Thema. Die IRC-Textformatierung bleibt erhalten."
+          }
+        }
+      }
+    },
+    "topic-editor-heading" : {
+      "comment" : "Heading above the topic editor. The argument is the IRC channel name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Topic for %@"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ témája"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thema für %@"
+          }
+        }
+      }
+    },
+    "characters-remaining" : {
+      "comment" : "Footer below the topic editor counting the UTF-8 bytes remaining before the server's topic limit. Replaces the warning alert that used to interrupt typing. Migrated from the legacy keys zm4-cr and 27l-qx.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "substitutions" : {
+            "arg1" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg byte remaining"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg bytes remaining"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@arg1@"
+          }
+        },
+        "hu" : {
+          "substitutions" : {
+            "arg1" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg bájt maradt"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg bájt maradt"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@arg1@"
+          }
+        },
+        "de" : {
+          "substitutions" : {
+            "arg1" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg Byte übrig"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg Byte übrig"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@arg1@"
+          }
+        }
+      }
+    },
+    "characters-over-limit" : {
+      "comment" : "Footer below the topic editor once the topic is longer than the server accepts, counting the UTF-8 bytes over the limit. The Change Topic button stays disabled until the topic fits.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "substitutions" : {
+            "arg1" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg byte too many"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg bytes too many"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@arg1@"
+          }
+        },
+        "hu" : {
+          "substitutions" : {
+            "arg1" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg bájttal több"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg bájttal több"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@arg1@"
+          }
+        },
+        "de" : {
+          "substitutions" : {
+            "arg1" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg Byte zu viel"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg Byte zu viel"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@arg1@"
+          }
+        }
+      }
+    },
+    "access-list" : {
+      "comment" : "Accessibility label for a channel access-list table.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Channel Access List"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Csatorna-hozzáférési lista"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kanalzugriffsliste"
+          }
+        }
+      }
+    },
+    "added-by" : {
+      "comment" : "Column title for the user who added a channel access-list entry. Migrated from the legacy interface file.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Added By"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hozzáadta"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hinzugefügt von"
+          }
+        }
+      }
+    },
+    "ban-exceptions" : {
+      "comment" : "Heading for the ban-exception list. The argument is the channel name. Legacy key: gbi-wn.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ban Exceptions in %@"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kitiltási kivételek itt: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bann-Ausnahmen in %@"
+          }
+        }
+      }
+    },
+    "entry-count-truncated" : {
+      "comment" : "Replaces the ‘%1$ld of %2$ld entries’ count above a channel access list when the server sent more entries than the window keeps, so the count must not read as the whole list. The argument is how many entries are shown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "First %ld entries"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Első %ld bejegyzés"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erste %ld Einträge"
+          }
+        }
+      }
+    },
+    "entry-count" : {
+      "comment" : "Number of entries in a channel access list. The argument is the number of entries. Legacy key: n0f-cn.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%ld entry"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%ld entries"
+                }
+              }
+            }
+          }
+        },
+        "hu" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%ld bejegyzés"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%ld bejegyzés"
+                }
+              }
+            }
+          }
+        },
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%ld Eintrag"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%ld Einträge"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "created" : {
+      "comment" : "Column title for the date a channel access-list entry was created. Migrated from the legacy interface file.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Created"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Létrehozva"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erstellt"
+          }
+        }
+      }
+    },
+    "empty-description" : {
+      "comment" : "Description shown when the current channel access list has no entries.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The server reported no entries for this list."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A kiszolgáló nem küldött bejegyzést ehhez a listához."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Server hat keine Einträge für diese Liste gemeldet."
+          }
+        }
+      }
+    },
+    "empty-title" : {
+      "comment" : "Title shown when the current channel access list has no entries.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Entries"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nincsenek bejegyzések"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Einträge"
+          }
+        }
+      }
+    },
+    "heading-for-the-ban-bans" : {
+      "comment" : "Heading for the ban list. The argument is the channel name. Legacy key: rhc-ke.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bans in %@"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kitiltások itt: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Banns in %@"
+          }
+        }
+      }
+    },
+    "heading-for-the-quiet-quiets" : {
+      "comment" : "Heading for the quiet list. The argument is the channel name. Legacy key: g4r-t6.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quiets in %@"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Némítások itt: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stummschaltungen in %@"
+          }
+        }
+      }
+    },
+    "invite-exceptions" : {
+      "comment" : "Heading for the invite-exception list. The argument is the channel name. Legacy key: ylc-6e.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invite Exceptions in %@"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meghívási kivételek itt: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einladungs-Ausnahmen in %@"
+          }
+        }
+      }
+    },
+    "hostmask" : {
+      "comment" : "Column title for a channel access-list mask. Migrated from the legacy interface file.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hostmask"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Címmaszk"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hostmaske"
+          }
+        }
+      }
+    },
+    "list-truncated-notice" : {
+      "comment" : "Notice shown under a channel access list the window had to cut short.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The server sent more entries than this window keeps."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A kiszolgáló több bejegyzést küldött, mint amennyit ez az ablak megőriz."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Server hat mehr Einträge gesendet, als dieses Fenster speichert."
+          }
+        }
+      }
+    },
+    "loading-list" : {
+      "comment" : "Accessibility label for the progress indicator shown while a channel access list is loading.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loading List"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lista betöltése"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Liste wird geladen"
+          }
+        }
+      }
+    },
+    "of-entries" : {
+      "comment" : "Count above a channel access list whose server advertised a MAXLIST limit. The first argument is how many entries are shown and the second is the limit. Legacy key: n0f-mx.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$ld of %2$ld entries"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$ld / %2$ld bejegyzés"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$ld von %2$ld Einträgen"
+          }
+        }
+      }
+    },
+    "remove-selected" : {
+      "comment" : "Button that removes the selected channel access-list entries. Migrated from the legacy interface file.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove Selected"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kijelöltek eltávolítása"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausgewählte entfernen"
+          }
+        }
+      }
+    },
+    "update-list" : {
+      "comment" : "Button that requests the current channel access list from the IRC server. Migrated from the legacy interface file.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update List"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lista frissítése"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Liste aktualisieren"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

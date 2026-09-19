@@ -721,6 +721,30 @@
         }
       }
     },
+    "connection-is-not-forward-secret" : {
+      "comment" : "Console warning printed on every connection whose negotiated cipher suite has no forward secrecy, which is what the transport's automatic fallback to the legacy suites produces. Control characters are mIRC formatting: 0x03 04 is red, 0x02 is bold.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\u000304\u0002Warning:\u0002\u0003 This connection is not forward secret. The server offers only legacy cipher suites, so anyone who later obtains its private key can decrypt a recording of this session."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\u000304\u0002Figyelmeztetés:\u0002\u0003 Ez a kapcsolat nem forward secret. A kiszolgáló csak örökölt titkosítási csomagokat kínál, így aki később megszerzi a privát kulcsát, visszafejtheti a munkamenet rögzített forgalmát."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\u000304\u0002Warnung:\u0002\u0003 Diese Verbindung ist nicht forward secret. Der Server bietet nur veraltete Cipher-Suites an, sodass jeder, der später seinen privaten Schlüssel erlangt, eine Aufzeichnung dieser Sitzung entschlüsseln kann."
+          }
+        }
+      }
+    },
     "connection-secured-using" : {
       "comment" : "Miscellaneous messages related to IRC events. Legacy key: ex4-f8.",
       "extractionState" : "manual",

@@ -9,54 +9,33 @@ import SwiftUI
 
 @Observable
 final class AddressBookEntryModel {
-	let entryType: AddressBookEntryType
+	let entryType: AddressBookEntryKind
 
-	var hostmask: String
+	/** The entry as it is being edited.
 
-	var ignoreClientToClientProtocol: Bool
-	var ignoreFileTransferRequests: Bool
-	var ignoreGeneralEventMessages: Bool
-	var ignoreInlineMedia: Bool
-	var ignoreNoticeMessages: Bool
-	var ignorePrivateMessageHighlights: Bool
-	var ignorePrivateMessages: Bool
-	var ignorePublicMessageHighlights: Bool
-	var ignorePublicMessages: Bool
-	var trackUserActivity: Bool
+	 The sheet binds into this value, so a field added to `AddressBookEntry`
+	 reaches the form without a copy step, and a half of the entry the sheet
+	 does not show keeps whatever the entry arrived with. */
+	var entry: AddressBookEntry
 
-	/** Why the hostmask cannot be saved, once saving has been tried.
-
-	 Nothing is said before that: a new entry opens on an empty field, and an
-	 error beside it tells the person they got something wrong before they have
-	 typed anything at all. After a refused save it follows what is in the
-	 field, so it goes as soon as the mask is one. */
+	/// Why the hostmask cannot be saved, once saving has been tried. After a
+	/// refused save it follows what is in the field, so it goes as soon as the
+	/// mask is one.
 	var validationMessage: String? {
-		submissionWasAttempted ? validationError(for: hostmask.firstToken) : nil
+		submission.shown(validationError(for: entry.hostmask.firstToken))
 	}
 
-	private var submissionWasAttempted = false
-	private let source: AddressBookEntry
+	private var submission = SubmissionGate()
 
-	convenience init(entryType: AddressBookEntryType) {
+	convenience init(entryType: AddressBookEntryKind) {
 		self.init(entry: entryType == .userTracking
 			? .newUserTrackingEntry()
 			: .newIgnoreEntry())
 	}
 
 	init(entry: AddressBookEntry) {
-		source = entry
+		self.entry = entry
 		entryType = entry.entryType
-		hostmask = entry.hostmask
-		ignoreClientToClientProtocol = entry.ignoreClientToClientProtocol
-		ignoreFileTransferRequests = entry.ignoreFileTransferRequests
-		ignoreGeneralEventMessages = entry.ignoreGeneralEventMessages
-		ignoreInlineMedia = entry.ignoreInlineMedia
-		ignoreNoticeMessages = entry.ignoreNoticeMessages
-		ignorePrivateMessageHighlights = entry.ignorePrivateMessageHighlights
-		ignorePrivateMessages = entry.ignorePrivateMessages
-		ignorePublicMessageHighlights = entry.ignorePublicMessageHighlights
-		ignorePublicMessages = entry.ignorePublicMessages
-		trackUserActivity = entry.trackUserActivity
 	}
 
 	/// Whether the sheet edits what the entry ignores. A mixed entry, which
@@ -72,52 +51,50 @@ final class AddressBookEntryModel {
 	}
 
 	func validatedEntry() -> AddressBookEntry? {
-		submissionWasAttempted = true
+		submission.attempt()
 
-		let value = hostmask.firstToken
+		let value = entry.hostmask.firstToken
 		/* An empty hostmask is neither a mask nor a nickname, so the validator
 		 already refuses it with a message of its own. */
 		guard validationError(for: value) == nil else { return nil }
 
-		var entry = source
-		entry.hostmask = value
-
-		if editsIgnoreSettings {
-			entry.ignoreClientToClientProtocol = ignoreClientToClientProtocol
-			entry.ignoreFileTransferRequests = ignoreFileTransferRequests
-			entry.ignoreGeneralEventMessages = ignoreGeneralEventMessages
-			entry.ignoreInlineMedia = ignoreInlineMedia
-			entry.ignoreNoticeMessages = ignoreNoticeMessages
-			entry.ignorePrivateMessageHighlights = ignorePrivateMessageHighlights
-			entry.ignorePrivateMessages = ignorePrivateMessages
-			entry.ignorePublicMessageHighlights = ignorePublicMessageHighlights
-			entry.ignorePublicMessages = ignorePublicMessages
-		}
-
-		if editsTracking {
-			entry.trackUserActivity = trackUserActivity
-		}
-
-		return entry
+		var submitted = entry
+		submitted.hostmask = value
+		return submitted
 	}
 
 	private func validationError(for value: String) -> String? {
 		switch entryType {
 		case .ignore, .mixed:
 			let valueWithoutWildcard = value.replacingOccurrences(of: "*", with: "-")
-			return (valueWithoutWildcard as NSString).isHostmask
+			return valueWithoutWildcard.isHostmask
 				? nil
 				: String(localized: .AddressBook.pleaseEnterAProperlyFormattedIgnore)
 		case .userTracking:
-			return (value as NSString).isHostmaskNickname
+			return value.isHostmaskNickname
 				? nil
 				: CommonValidationStrings.invalidNickname
 		}
 	}
 }
 
-/// The copy that changes with the kind of entry the sheet edits.
-extension AddressBookEntryType {
+/** The copy that changes with the kind of entry the sheet edits.
+
+ The connection sheet lists the same entries, so its wording for them is here
+ too: one feature owns what this enum is called, wherever it is drawn. The list
+ row and the sheet title are worded differently on purpose -- a row names the
+ kind of entry, a title names what the sheet is about to do -- so they keep a
+ key each. */
+extension AddressBookEntryKind {
+	/// What the connection sheet's Address Book list calls this kind of entry.
+	var listTitle: LocalizedStringResource {
+		switch self {
+		case .ignore, .mixed: .AddressBook.userIgnore
+		case .userTracking: .AddressBook.userTracking
+		@unknown default: .AddressBook.userIgnore
+		}
+	}
+
 	var sheetTitle: LocalizedStringResource {
 		switch self {
 		case .ignore, .mixed: .AddressBook.ignoreUser

@@ -2,15 +2,16 @@
 // Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
 // SPDX-License-Identifier: BSD-3-Clause
 
+import CocoaExtensions
 import Combine
 import Foundation
 import Observation
 
 /// Owns one server's public-channel list and connects its SwiftUI scene to the
-/// IRC client. Window lifecycle and restoration belong to SwiftUI.
+/// IRC session. Window lifecycle and restoration belong to SwiftUI.
 @MainActor
 final class ServerChannelList {
-	let client: Client
+	let session: ServerSession
 	let model = ServerChannelListModel()
 
 	/** How long a listing may go without a reply before the window stops
@@ -22,14 +23,14 @@ final class ServerChannelList {
 	 limit counts from the last reply, so a network streaming a very long
 	 listing is never cut off. */
 	private let replyTimeout: TimeInterval
-	private lazy var replyWatchdog = ClientTimer { [weak self] _ in
+	private lazy var replyWatchdog = SessionTimer { [weak self] _ in
 		self?.finishRefresh()
 	}
 
 	private var connectionObservation: Task<Void, Never>?
 
-	init(client: Client, replyTimeout: TimeInterval = 60) {
-		self.client = client
+	init(session: ServerSession, replyTimeout: TimeInterval = 60) {
+		self.session = session
 		self.replyTimeout = replyTimeout
 		observeConnection()
 	}
@@ -39,31 +40,31 @@ final class ServerChannelList {
 		connectionObservation?.cancel()
 	}
 
-	var clientIdentifier: String {
-		client.uniqueIdentifier
+	var sessionIdentifier: String {
+		session.uniqueIdentifier
 	}
 
 	var networkName: String {
-		client.networkNameAlt
+		session.networkNameAlt
 	}
 
 	var supportsMinimumUserCount: Bool {
-		client.supportInfo.extendedListSupportsToken("U")
+		session.supportInfo.extendedListSupportsToken("U")
 	}
 
 	var serverSideListArguments: String? {
-		model.listArguments(supportedTokens: client.supportInfo.extendedListTokens)
+		model.listArguments(supportedTokens: session.supportInfo.extendedListTokens)
 	}
 
-	/// Asks the server for a fresh listing. A client that is not logged in has
+	/// Asks the server for a fresh listing. A session that is not logged in has
 	/// nobody to ask, so the list does not wait for an answer.
 	func beginRefresh() {
 		model.beginRefresh()
-		guard client.isLoggedIn else {
+		guard session.isLoggedIn else {
 			finishRefresh()
 			return
 		}
-		client.requestChannelList(withArguments: serverSideListArguments)
+		session.requestChannelList(withArguments: serverSideListArguments)
 		noteReply()
 	}
 
@@ -91,7 +92,7 @@ final class ServerChannelList {
 	func joinSelectedChannels() {
 		let channelNames = model.selectedChannelNames
 		guard channelNames.isEmpty == false else { return }
-		client.joinUnlistedChannelsAndSelectBestMatch(channelNames)
+		session.joinUnlistedChannelsAndSelectBestMatch(channelNames)
 		model.clearSelection()
 	}
 
@@ -115,9 +116,9 @@ final class ServerChannelList {
 	 runs, which can be after a logout that happened in the same turn as the
 	 refresh; the value it starts from is what still catches that one. */
 	private func observeConnection() {
-		let client = client
+		let observedSession = session
 		connectionObservation = Task { [weak self] in
-			for await isLoggedIn in client.publisher(for: \.isLoggedIn, options: [.initial, .new]).bufferedValues {
+			for await isLoggedIn in observedSession.publisher(for: \.isLoggedIn, options: [.initial, .new]).bufferedValues {
 				guard let self, !Task.isCancelled else { return }
 				if isLoggedIn == false, model.isRefreshing {
 					finishRefresh()
@@ -182,12 +183,7 @@ nonisolated struct ServerChannelListComparator: SortComparator {
 			lhs.unformattedTopic.localizedCaseInsensitiveCompare(rhs.unformattedTopic)
 		}
 
-		guard order == .reverse else { return result }
-		return switch result {
-		case .orderedAscending: .orderedDescending
-		case .orderedDescending: .orderedAscending
-		case .orderedSame: .orderedSame
-		}
+		return result.ordered(by: order)
 	}
 }
 
@@ -231,7 +227,7 @@ final class ServerChannelListModel {
 	/// Writes the rows that arrived since the last flush, a second after the
 	/// first of them landed. A reply arrives one line at a time, and a table
 	/// rebuilt per line is a table nobody can read while it is filling.
-	@ObservationIgnored private lazy var queuedWriteTimer = ClientTimer { [weak self] _ in
+	@ObservationIgnored private lazy var queuedWriteTimer = SessionTimer { [weak self] _ in
 		self?.flushQueuedEntries()
 	}
 
@@ -317,14 +313,6 @@ final class ServerChannelListModel {
 		filterTask = nil
 		isFiltering = false
 		queuedEntries.removeAll()
-	}
-
-	func replace(with entries: [ServerChannelListEntry]) {
-		cancelPendingWrites()
-		allEntries = Array(entries.prefix(Self.maximumEntryCount))
-		discardedEntryCount = entries.count - allEntries.count
-		selection.removeAll()
-		applyFilterAndSort()
 	}
 
 	func clearSelection() {
@@ -426,30 +414,57 @@ private nonisolated struct ServerChannelListSnapshot: Sendable {
 	}
 }
 
-/** The channel-list window, as the protocol layer reports to it.
+/** The channel-list windows that are open, one per connection, and the session's
+ report into them.
 
- `Protocol/` must not depend on feature presentation, so it speaks to
- ``ClientChannelListPresenting`` and the application's scenes answer. A reply
- only ever reaches a list that is already open: opening one is the single path
- that makes a session and asks the server for a listing. */
-extension ApplicationScenes: ClientChannelListPresenting {
-	func openChannelList(for client: Client) {
-		openServerChannelList(for: client)
+ `Chat/` must not depend on feature presentation, so it speaks to
+ ``ChannelListPresenting`` and this answers. A reply only ever reaches a
+ list that is already open: opening one is the single path that makes a session
+ and asks the server for a listing. */
+@MainActor
+final class ServerChannelListWindowSessions: ChannelListPresenting {
+	private let scenes: ApplicationScenes
+	private var sessions = SceneSessions<String, ServerChannelList>()
+
+	init(scenes: ApplicationScenes = AppServices.scenes) {
+		self.scenes = scenes
 	}
 
-	func closeChannelList(for client: Client) {
-		closeServerChannelList(for: client.uniqueIdentifier)
+	/** The channel list open for a session, if there is one.
+
+	 Only a lookup. Protocol replies and the scene body both ask here, and a
+	 lookup that made a missing list sent the server another `LIST` for every row
+	 still arriving after the window closed. */
+	func list(for sessionIdentifier: String) -> ServerChannelList? {
+		sessions[sessionIdentifier]
 	}
 
-	func channelListDidStart(for client: Client) {
-		serverChannelList(for: client.uniqueIdentifier)?.receiveListStart()
+	/// The window has gone, so the session it was showing goes with it.
+	func didClose(for sessionIdentifier: String) {
+		sessions.close(sessionIdentifier)?.close()
 	}
 
-	func channelListDidReceive(channelNamed name: String, memberCount: UInt, topic: String?, for client: Client) {
-		serverChannelList(for: client.uniqueIdentifier)?.addChannel(name, count: memberCount, topic: topic)
+	func openChannelList(for session: ServerSession) {
+		let sessionIdentifier = session.uniqueIdentifier
+		sessions.open(sessionIdentifier) { ServerChannelList(session: session) }.beginRefresh()
+		scenes.open(ApplicationSceneID.serverChannelList, value: sessionIdentifier)
 	}
 
-	func channelListDidFinish(for client: Client) {
-		serverChannelList(for: client.uniqueIdentifier)?.finishRefresh()
+	func closeChannelList(for session: ServerSession) {
+		let sessionIdentifier = session.uniqueIdentifier
+		didClose(for: sessionIdentifier)
+		scenes.dismiss(ApplicationSceneID.serverChannelList, value: sessionIdentifier)
+	}
+
+	func channelListDidStart(for session: ServerSession) {
+		list(for: session.uniqueIdentifier)?.receiveListStart()
+	}
+
+	func channelListDidReceive(channelNamed name: String, memberCount: UInt, topic: String?, for session: ServerSession) {
+		list(for: session.uniqueIdentifier)?.addChannel(name, count: memberCount, topic: topic)
+	}
+
+	func channelListDidFinish(for session: ServerSession) {
+		list(for: session.uniqueIdentifier)?.finishRefresh()
 	}
 }

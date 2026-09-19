@@ -2,75 +2,79 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 import CocoaExtensions
-import CryptoKit
 import Foundation
 import Security
 
 typealias SecureConnectionInformationReceiver = @Sendable (SecureConnectionInformation) -> Void
 
-/// Commands the application sends to the isolated connection host.
-///
-/// `Sendable` because both ends already are: what the application holds is an
-/// NSXPC proxy, and what the service exports is a forwarding shim whose only
-/// state is the queue it hands the commands to. Saying so lets a caller pass
-/// the connection between tasks without the compiler having to take it on
-/// trust.
-@objc(RCMConnectionManagerServerProtocol)
+/** Commands the application sends to the isolated connection host.
+
+ `Sendable` because both ends already are: what the application holds is an
+ NSXPC proxy, and what the service exports is a forwarding shim whose only
+ state is the queue it hands the commands to. Saying so lets a caller pass
+ the connection between tasks without the compiler having to take it on
+ trust.
+
+ Every selector here and on ``RemoteConnectionClientProtocol`` is spelled out,
+ and every one is prefixed `remoteConnection`: Objective-C selectors share one
+ namespace, and `close`, `sendData:` or `didSendData` on a conformer that is
+ also an `NSObject` are names something else can plausibly answer to already. */
+@objc(RemoteConnectionServerProtocol)
 nonisolated protocol RemoteConnectionServerProtocol: AnyObject, Sendable { // nonisolated: xpc-shim
-	@objc(openWithConfig:)
+	@objc(remoteConnectionOpenWithConfig:)
 	func open(with config: ConnectionConfigEnvelope)
 
-	@objc(close)
+	@objc(remoteConnectionClose)
 	func close()
 
 	/// The caller includes the IRC line terminator in `data`.
-	@objc(sendData:)
+	@objc(remoteConnectionSendData:)
 	func send(_ data: Data)
 
-	@objc(sendData:bypassQueue:)
+	@objc(remoteConnectionSendData:bypassQueue:)
 	func send(_ data: Data, bypassQueue: Bool)
 
 	/// The receiver is an XPC reply block: the service answers it once, and it
 	/// may answer after this call has returned.
-	@objc(exportSecureConnectionInformation:)
+	@objc(remoteConnectionExportSecureConnectionInformation:)
 	func exportSecureConnectionInformation(_ receiver: @escaping SecureConnectionInformationReceiver)
 
-	@objc(enforceFloodControl)
+	@objc(remoteConnectionEnforceFloodControl)
 	func enforceFloodControl()
 
-	@objc(clearSendQueue)
+	@objc(remoteConnectionClearSendQueue)
 	func clearSendQueue()
 
 	/// Held until the connection ends: the host balances it when the
 	/// application detaches, so there is no enabling half to call.
-	@objc(disableAppNap)
+	@objc(remoteConnectionDisableAppNap)
 	func disableAppNap()
 
 	/// Held until the connection ends, balanced the same way as ``disableAppNap()``.
-	@objc(disableSuddenTermination)
+	@objc(remoteConnectionDisableSuddenTermination)
 	func disableSuddenTermination()
 }
 
 /// Events the isolated connection host sends back to the application.
-@objc(RCMConnectionManagerClientProtocol)
+@objc(RemoteConnectionClientProtocol)
 nonisolated protocol RemoteConnectionClientProtocol: AnyObject, Sendable { // nonisolated: xpc-shim
-	@objc(ircConnectionWillConnectToProxy:port:)
-	func ircConnectionWillConnect(toProxy proxyHost: String, port proxyPort: UInt16)
+	@objc(remoteConnectionWillConnectToProxy:port:)
+	func willConnect(toProxy proxyHost: String, port proxyPort: UInt16)
 
-	@objc(ircConnectionDidConnectToHost:)
-	func ircConnectionDidConnect(toHost host: String?)
+	@objc(remoteConnectionDidConnectToHost:)
+	func didConnect(toHost host: String?)
 
-	@objc(ircConnectionDidSecureConnectionWithProtocolType:cipherSuite:)
-	func ircConnectionDidSecureConnection(
+	@objc(remoteConnectionDidSecureConnectionWithProtocolType:cipherSuite:)
+	func didSecureConnection(
 		withProtocolType protocolType: tls_protocol_version_t,
 		cipherSuite: tls_ciphersuite_t
 	)
 
-	@objc(ircConnectionDidCloseReadStream)
-	func ircConnectionDidCloseReadStream()
+	@objc(remoteConnectionDidCloseReadStream)
+	func didCloseReadStream()
 
-	@objc(ircConnectionDidDisconnectWithError:)
-	func ircConnectionDidDisconnectWithError(_ disconnectError: Error?)
+	@objc(remoteConnectionDidDisconnectWithError:)
+	func didDisconnect(withError disconnectError: Error?)
 
 	/** The complete lines one read from the server produced, in wire order.
 
@@ -79,17 +83,17 @@ nonisolated protocol RemoteConnectionClientProtocol: AnyObject, Sendable { // no
 	 lines and answered. A server that sends faster than the application can
 	 keep up is slowed by TCP rather than filling a queue between the two
 	 processes, so no amount of traffic can overrun the application. */
-	@objc(ircConnectionDidReceiveLines:acknowledge:)
-	func ircConnectionDidReceive(_ lines: [Data], acknowledge: @escaping @Sendable () -> Void)
+	@objc(remoteConnectionDidReceiveLines:acknowledge:)
+	func didReceive(_ lines: [Data], acknowledge: @escaping @Sendable () -> Void)
 
-	@objc(ircConnectionRequestInsecureCertificateTrust:)
-	func ircConnectionRequestInsecureCertificateTrust(_ response: @escaping TrustDecisionHandler)
+	@objc(remoteConnectionRequestInsecureCertificateTrust:)
+	func requestInsecureCertificateTrust(_ response: @escaping TrustDecisionHandler)
 
-	@objc(ircConnectionWillSendData:)
-	func ircConnectionWillSend(_ data: Data)
+	@objc(remoteConnectionWillSendData:)
+	func willSend(_ data: Data)
 
-	@objc(ircConnectionDidSendData)
-	func ircConnectionDidSendData()
+	@objc(remoteConnectionDidSendData)
+	func didSendData()
 }
 
 /// The interfaces both ends of the connection host speak.
@@ -108,52 +112,10 @@ nonisolated enum RemoteConnectionInterface {
 		let interface = NSXPCInterface(with: RemoteConnectionClientProtocol.self)
 		interface.setClasses(
 			NSSet(objects: NSArray.self, NSData.self) as? Set<AnyHashable> ?? [],
-			for: #selector(RemoteConnectionClientProtocol.ircConnectionDidReceive(_:acknowledge:)),
+			for: #selector(RemoteConnectionClientProtocol.didReceive(_:acknowledge:)),
 			argumentIndex: 0,
 			ofReply: false
 		)
 		return interface
-	}
-}
-
-/** The code-signing requirement the connection host holds its peer to.
-
- An application's embedded XPC service is only published to that application,
- so this is defence in depth rather than the only gate: the host still refuses
- a connection from anything but the application it ships in, signed with the
- very certificate the host itself was signed with. Pinning the certificate
- rather than a team keeps the rule the same for development, Developer ID and
- App Store signatures, all of which sign the application and its services
- together. */
-nonisolated enum RemoteConnectionPeerRequirement {
-	/// The requirement text for `applicationIdentifier` signed with
-	/// `leafCertificate`, the DER bytes of the signing certificate.
-	static func requirement(applicationIdentifier: String, leafCertificate: Data) -> String {
-		/* Requirement hash constants are the certificate's SHA-1, the only
-		 digest the requirement language accepts for `certificate leaf = H`. */
-		let digest = Insecure.SHA1.hash(data: leafCertificate).map { String(format: "%02x", $0) }.joined()
-		return "identifier \"\(applicationIdentifier)\" and anchor apple generic and certificate leaf = H\"\(digest)\""
-	}
-
-	/// The requirement for `applicationIdentifier`, pinned to the certificate
-	/// the running process is signed with. `nil` when the process carries no
-	/// certificate — an unsigned or ad-hoc build, which has nothing to pin.
-	static func requirement(forCurrentProcessAnd applicationIdentifier: String) -> String? {
-		var code: SecCode?
-		var staticCode: SecStaticCode?
-		var information: CFDictionary?
-		guard SecCodeCopySelf([], &code) == errSecSuccess, let code,
-		      SecCodeCopyStaticCode(code, [], &staticCode) == errSecSuccess, let staticCode,
-		      SecCodeCopySigningInformation(staticCode, SecCSFlags(rawValue: kSecCSSigningInformation), &information) == errSecSuccess,
-		      let certificates = (information as? [String: Any])?[kSecCodeInfoCertificates as String] as? [SecCertificate],
-		      let leaf = certificates.first
-		else {
-			return nil
-		}
-
-		return requirement(
-			applicationIdentifier: applicationIdentifier,
-			leafCertificate: SecCertificateCopyData(leaf) as Data
-		)
 	}
 }
