@@ -5,8 +5,8 @@ import AppKit
 
 /// One server in the sidebar, with the conversations drawn beneath it.
 ///
-/// A snapshot: what it describes lives on `NSObject`s that change under
-/// SwiftUI's feet, so the list publishes values instead and rebuilds them when
+/// A snapshot: what it describes lives on `NSObject`s that change while
+/// the outline draws them, so the list publishes values instead and rebuilds them when
 /// the chat session says something changed. A row is a plain function of its
 /// value.
 struct ServerRow: Identifiable, Equatable {

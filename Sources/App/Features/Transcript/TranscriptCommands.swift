@@ -59,7 +59,10 @@ final class TranscriptCommands: NSObject {
 			in: transcript,
 			defaultMenuItems: defaultMenuItems
 		) {
-			menu.addItem(item)
+			// NSTextView may retain its native menu; its items cannot be reparented.
+			if let copy = item.copy() as? NSMenuItem {
+				menu.addItem(copy)
+			}
 		}
 		MenuPresentation.apply(to: menu)
 		return menu
@@ -170,11 +173,15 @@ final class TranscriptCommands: NSObject {
 
 	@objc private func saveInlineImage(_ sender: Any?) {
 		guard let target = (sender as? NSMenuItem)?.representedObject as? TranscriptContextTarget,
-		      let image = target.inlineImage,
-		      let representation = image.tiffRepresentation,
-		      let bitmap = NSBitmapImageRep(data: representation),
-		      let data = bitmap.representation(using: .png, properties: [:])
+		      let image = target.inlineImage
 		else { return }
+		let data: Data
+		do {
+			data = try TranscriptImageExport.pngData(from: image)
+		} catch {
+			NSApp.presentError(error)
+			return
+		}
 		let panel = NSSavePanel()
 		panel.allowedContentTypes = [.png]
 		panel.nameFieldStringValue = target.inlineImageURL
@@ -183,7 +190,13 @@ final class TranscriptCommands: NSObject {
 			.map { "\($0).png" } ?? "image.png"
 		panel.begin { response in
 			guard response == .OK, let url = panel.url else { return }
-			try? data.write(to: url, options: .atomic)
+			Task {
+				do {
+					try await TranscriptImageExport.write(data, to: url)
+				} catch {
+					NSApp.presentError(error)
+				}
+			}
 		}
 	}
 
@@ -278,6 +291,28 @@ final class TranscriptCommands: NSObject {
 			guard !Task.isCancelled, outcome.response == .alternate else { return }
 			OpenLink.open(url: url, inBackground: openInBackground)
 		}
+	}
+}
+
+enum TranscriptImageExport {
+	enum Failure: LocalizedError {
+		case encoding
+		var errorDescription: String? {
+			String(localized: .Transcript.imageEncodingFailed)
+		}
+	}
+
+	static func pngData(from image: NSImage) throws -> Data {
+		guard let representation = image.tiffRepresentation,
+		      let bitmap = NSBitmapImageRep(data: representation),
+		      let data = bitmap.representation(using: .png, properties: [:])
+		else { throw Failure.encoding }
+		return data
+	}
+
+	@concurrent
+	static func write(_ data: Data, to url: URL) async throws {
+		try data.write(to: url, options: .atomic)
 	}
 }
 

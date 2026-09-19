@@ -11,8 +11,17 @@ import Foundation
  turned into one. */
 extension TranscriptView {
 	func contextTarget(at point: NSPoint) -> TranscriptContextTarget {
+		contextTarget(atCharacterIndex: characterIndex(at: point))
+	}
+
+	func selectedContextTarget() -> TranscriptContextTarget {
+		let selection = textView.selectedRange()
+		return contextTarget(atCharacterIndex: selection.location == NSNotFound ? nil : selection.location)
+	}
+
+	private func contextTarget(atCharacterIndex index: Int?) -> TranscriptContextTarget {
 		let target = TranscriptContextTarget()
-		guard let storage = textView.textStorage, let index = characterIndex(at: point) else { return target }
+		guard let storage = textView.textStorage, let index, index >= 0, index < storage.length else { return target }
 		target.anchorURL = (storage.attribute(.link, at: index, effectiveRange: nil) as? URL)?.absoluteString
 		target.nickname = storage.attribute(.transcriptNickname, at: index, effectiveRange: nil) as? String
 		target.lineNumber = storage.attribute(.transcriptLineNumber, at: index, effectiveRange: nil) as? String

@@ -13,10 +13,6 @@ import SwiftUI
 nonisolated struct MemberListPresentationStyle: Equatable, Sendable {
 	/// Whether an IRC operator is drawn as one whatever the channel gave them.
 	let favorsServerStaff: Bool
-	/// "Use an x to indicate a user with no mode set", as the setting offers
-	/// it: a rank column that is blank for most of a channel reads as unfinished
-	/// to the readers who asked for the mark.
-	let marksMembersWithNoMode: Bool
 	private let badgeColors: [UserRank: Color]
 
 	/// Reads the shared main-actor store, not a detached handle: this is
@@ -34,7 +30,6 @@ nonisolated struct MemberListPresentationStyle: Equatable, Sendable {
 
 		return Self(
 			favorsServerStaff: SettingsKeys.Appearance.memberListSortFavorsServerStaff.value,
-			marksMembersWithNoMode: SettingsKeys.Appearance.memberListNoModeSymbol.value,
 			badgeColors: badgeColors
 		)
 	}
@@ -50,9 +45,7 @@ nonisolated struct MemberListPresentationStyle: Equatable, Sendable {
 	}
 
 	func symbolName(for rank: UserRank) -> String? {
-		let style = MemberListRanks.style(for: rank)
-		guard style.symbolName == nil else { return style.symbolName }
-		return marksMembersWithNoMode ? "xmark" : nil
+		MemberListRanks.style(for: rank).symbolName
 	}
 
 	func color(for rank: UserRank) -> Color {
@@ -66,8 +59,7 @@ nonisolated struct MemberListPresentationStyle: Equatable, Sendable {
 /// section header were four separate `switch`es over `UserRank`; a rank added
 /// to one of them was easy to leave out of the other three.
 nonisolated struct MemberListRankStyle: Sendable {
-	/// The glyph the rank is drawn with. A member with no mode has none of its
-	/// own: whether one is drawn at all is a setting.
+	/// Only an actual privilege gets a glyph; an ordinary member has none.
 	let symbolName: String?
 	/// The badge colour setting that answers for the rank, where there is a
 	/// badge to colour.

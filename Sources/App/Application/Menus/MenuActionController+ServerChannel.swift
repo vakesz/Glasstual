@@ -144,7 +144,7 @@ extension MenuActionController {
 
 	@objc func copyUniqueIdentifier(_: Any?) {
 		guard let identifier = context.selectedConversation?.uniqueIdentifier else { return }
-		NSPasteboard.general.setString(identifier, forType: .string)
+		NSPasteboard.general.stringContent = identifier
 	}
 
 	/// The transcript's channel-name menu, whose item carries the name.

@@ -12,7 +12,19 @@ import SwiftUI
  which a half-applied selection can be observed. */
 struct OnboardingNetworkDraft: Equatable {
 	var serverAddress = ""
-	var serverPort = ConnectionDefaults.serverPortSecure
+	var serverPortText = String(ConnectionDefaults.serverPortSecure)
+	var serverPort: UInt16 {
+		get { validServerPort ?? 0 }
+		set { serverPortText = String(newValue) }
+	}
+
+	var validServerPort: UInt16? {
+		let text = serverPortText.trimmingCharacters(in: .whitespacesAndNewlines)
+		guard !text.isEmpty, text.utf8.allSatisfy({ (48 ... 57).contains($0) }),
+		      let port = UInt16(text), port > 0 else { return nil }
+		return port
+	}
+
 	var prefersSecuredConnection = true
 	var accountName = ""
 	var accountPassword = ""
@@ -106,6 +118,15 @@ final class OnboardingNetworkPickerModel {
 		draft.accountName = name
 	}
 
+	func setPrefersSecuredConnection(_ secured: Bool) {
+		if let port = draft.validServerPort {
+			let endpoint = ServerEndpoint(serverAddress: draft.serverAddress, serverPort: port,
+			                              prefersSecuredConnection: draft.prefersSecuredConnection)
+			draft.serverPort = ServerEndpointValidation.server(endpoint, preferringSecuredConnection: secured).serverPort
+		}
+		draft.prefersSecuredConnection = secured
+	}
+
 	// MARK: - Validation
 
 	var serverAddressProblem: String? {
@@ -118,7 +139,7 @@ final class OnboardingNetworkPickerModel {
 
 	var serverPortProblem: String? {
 		guard hasSelection else { return nil }
-		return draft.serverPort > 0 ? nil : String(localized: .Onboarding.enterAPortBetween1)
+		return draft.validServerPort != nil ? nil : String(localized: .Onboarding.enterAPortBetween1)
 	}
 
 	var accountProblem: String? {
@@ -253,8 +274,7 @@ private struct OnboardingNetworkDetailView: View {
 				) {
 					TextField(
 						.Onboarding.networkPickerPort,
-						value: $picker.draft.serverPort,
-						format: .number.grouping(.never)
+						text: $picker.draft.serverPortText
 					)
 					.labelsHidden()
 					.frame(width: 70)
@@ -262,7 +282,10 @@ private struct OnboardingNetworkDetailView: View {
 					.accessibilityIdentifier("network-port")
 				}
 
-				Toggle(.Onboarding.useSslTls, isOn: $picker.draft.prefersSecuredConnection)
+				Toggle(.Onboarding.useSslTls, isOn: Binding(
+					get: { picker.draft.prefersSecuredConnection },
+					set: picker.setPrefersSecuredConnection
+				))
 			}
 			.formStyle(.columns)
 

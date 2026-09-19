@@ -84,7 +84,7 @@ struct TranscriptViewLifecycleTests {
 		host.view.layoutSubtreeIfNeeded()
 
 		let topicField = try #require(
-			descendants(of: NSTextField.self, in: transcriptView)
+			descendants(of: TopicLabel.self, in: transcriptView)
 				.first { visibleTranscriptText($0.attributedStringValue) == "Native AppKit discussion" }
 		)
 		#expect(topicField.isHiddenOrHasHiddenAncestor == false)
@@ -220,7 +220,7 @@ struct TranscriptViewLifecycleTests {
 		transcriptView.setTopic(topic)
 
 		let topicField = try #require(
-			descendants(of: NSTextField.self, in: transcriptView)
+			descendants(of: TopicLabel.self, in: transcriptView)
 				.first { visibleTranscriptText($0.attributedStringValue) == topic }
 		)
 		let attributedTopic = topicField.attributedStringValue
@@ -232,7 +232,7 @@ struct TranscriptViewLifecycleTests {
 		}
 
 		#expect(topicField.isSelectable)
-		#expect(topicField.allowsEditingTextAttributes)
+		#expect(topicField.isEditable == false)
 		#expect(try links == [
 			#require(URL(string: "https://example.com")),
 			#require(URL(string: "http://docs.example.org/guide")),
@@ -258,7 +258,7 @@ struct TranscriptViewLifecycleTests {
 		/* The bar hides itself rather than its label, so a field inside a hidden
 		 bar is still `isHidden == false`: what must be true is that none of them
 		 is on screen. */
-		let noTopicFieldIsVisible = descendants(of: NSTextField.self, in: transcriptView)
+		let noTopicFieldIsVisible = descendants(of: TopicLabel.self, in: transcriptView)
 			.allSatisfy { field in field.isHiddenOrHasHiddenAncestor }
 		#expect(scrollView.frame.maxY == transcriptView.bounds.maxY)
 		#expect(transcriptView.topicBar.isHidden)

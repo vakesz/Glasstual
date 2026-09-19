@@ -53,7 +53,7 @@ struct TranscriptViewKeyRoutingTests {
 		try #require(view.scrollView.contentView.bounds.minY < previousTop)
 		#expect(view.followsBottom == false)
 		#expect(view.scrollsToBottomOnLayout == false)
-		view.appendLines([try #require(rows.last)])
+		try view.appendLines([#require(rows.last)])
 		#expect(view.isNearBottom == false)
 	}
 

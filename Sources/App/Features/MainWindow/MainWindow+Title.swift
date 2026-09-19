@@ -19,6 +19,7 @@ extension MainWindow {
 	}
 
 	func updateTitle() {
+		chrome.connection = selectedSession.flatMap(MainWindowConnectionPresentation.init)
 		let content = MainWindowTitleContent(session: selectedSession, conversation: selectedConversation)
 		title = content.title
 		subtitle = content.subtitle

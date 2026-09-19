@@ -180,4 +180,56 @@ struct ServerSessionReconnectSchedulingTests {
 		#expect(session.isConnecting == false)
 		#expect(session.sentLines.count == 0)
 	}
+
+	@Test("A refused reconnect retains the intent established by disconnect teardown")
+	func refusedAttemptRearmsAfterTeardown() throws {
+		let session = session(autoReconnect: true)
+		defer { session.cancelReconnect() }
+		session.config.serverList = []
+		session.isConnected = true
+		session.reconnect.isEnabled = true
+
+		session.changeStateOff()
+		try #require(session.reconnect.timer.isActive)
+		let firstDelay = session.reconnect.timer.interval
+
+		// A one-shot timer stops itself before invoking its action.
+		session.stopReconnectTimer()
+		session.onReconnectTimer()
+
+		#expect(!session.isConnecting)
+		#expect(session.reconnect.isEnabled)
+		#expect(session.reconnect.timer.isActive)
+		#expect(session.reconnect.timer.interval > firstDelay)
+		#expect(session.reconnect.attemptCount == 2)
+	}
+
+	@Test("Cancelling after teardown prevents a queued reconnect callback from restarting the schedule")
+	func cancellationEndsReconnectIntent() {
+		let session = session(autoReconnect: true)
+		session.isConnected = true
+		session.reconnect.isEnabled = true
+		session.changeStateOff()
+
+		session.cancelReconnect()
+		session.onReconnectTimer()
+
+		#expect(!session.reconnect.isEnabled)
+		#expect(!session.reconnect.timer.isActive)
+		#expect(!session.isConnecting)
+	}
+
+	@Test("A disconnect with automatic reconnection disabled ends the reconnect intent")
+	func disabledPolicyEndsReconnectIntent() {
+		let session = session(autoReconnect: false)
+		session.isConnected = true
+		session.reconnect.isEnabled = true
+		session.reconnect.attemptCount = 3
+
+		session.changeStateOff()
+
+		#expect(!session.reconnect.isEnabled)
+		#expect(!session.reconnect.timer.isActive)
+		#expect(session.reconnect.attemptCount == 0)
+	}
 }

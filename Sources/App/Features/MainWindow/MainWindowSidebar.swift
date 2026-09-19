@@ -13,13 +13,17 @@ struct MainWindowSidebar: View {
 	/// is a route from any subview to the application delegate.
 	let commands: MenuActionController?
 	let redirectTyping: (String) -> Void
+	@State private var appearance = SidebarAppearance()
 
 	var body: some View {
 		VStack(spacing: 0) {
 			SidebarView(model: sidebar, redirectTyping: redirectTyping)
 			Divider()
 			sidebarFooter
-				.background(.bar)
+		}
+		.background {
+			SidebarBackgroundView(isOpaque: appearance.isOpaque)
+				.ignoresSafeArea(.container, edges: .top)
 		}
 	}
 

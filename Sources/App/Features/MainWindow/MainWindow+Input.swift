@@ -20,36 +20,21 @@ extension MainWindow {
 		guard TextZoomPolicy.allowedRange.contains(next) else { return }
 		textSizeMultiplier = next
 		for controller in allTranscriptControllers {
-			controller.changeTextSize(bigger)
+			controller.updateTextScale()
 		}
 	}
 
-	/// Actual Size: back to the unscaled text, in as many steps as it took to
-	/// leave it. The controllers only know how to step, so the window walks
-	/// them back rather than teaching them a second way to be told.
+	/// Reset the model and every rendered transcript in one update, including
+	/// valid restored scales that are not powers of the zoom step.
 	func resetTextSize() {
-		while textSizeMultiplier > 1.0 {
-			let previous = textSizeMultiplier
-			changeTextSize(false)
-			if textSizeMultiplier == previous || textSizeMultiplier < 1.0 {
-				break
-			}
-		}
-		while textSizeMultiplier < 1.0 {
-			let previous = textSizeMultiplier
-			changeTextSize(true)
-			if textSizeMultiplier == previous || textSizeMultiplier > 1.0 {
-				break
-			}
-		}
 		textSizeMultiplier = 1.0
+		for controller in allTranscriptControllers {
+			controller.updateTextScale()
+		}
 	}
 
 	private var allTranscriptControllers: [TranscriptController] {
-		guard let chatSession else { return [] }
-		return chatSession.sessions.flatMap { session in
-			[session.transcriptController].compactMap(\.self) + session.conversationList.compactMap(\.transcriptController)
-		}
+		transcriptControllers.allControllers
 	}
 
 	func markAllAsRead() {
@@ -205,7 +190,7 @@ extension MainWindow {
 
 	func focusTranscript(_: NSEvent) {
 		guard attachedSheet == nil, let view = selectedViewController?.backingView else { return }
-		makeFirstResponder(view)
+		view.focusText()
 	}
 
 	func textEntered() {

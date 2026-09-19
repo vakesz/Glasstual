@@ -45,6 +45,24 @@ enum FileTransferAction: Sendable {
 final class FileTransferList {
 	private(set) var transfers: [FileTransfer] = []
 	var selection: Set<String> = []
+	private var hasActivated = false
+	private var hasExplicitReveal = false
+
+	func reveal(_ identifier: String) {
+		hasExplicitReveal = true
+		filter = .all
+		selection = [identifier]
+	}
+
+	/// Scene restoration is a launch default; a notification's explicit target
+	/// and subsequent user edits take precedence for this model's lifetime.
+	func activate(restoring savedFilter: FileTransferDirectionFilter) {
+		guard !hasActivated else { return }
+		hasActivated = true
+		if !hasExplicitReveal {
+			filter = savedFilter
+		}
+	}
 
 	/// The access Quick Look and the share sheet are holding, which outlives the
 	/// row menu that opened either one.

@@ -13,6 +13,23 @@ import Testing
 @MainActor
 @Suite("Main window text zoom", .serialized)
 struct MainWindowTextZoomTests {
+	@Test("Actual Size resets arbitrary restored multipliers", arguments: [0.5, 0.75, 1.1, 2.9, 3.0])
+	func arbitraryRestoredScale(_ scale: Double) {
+		let window = window()
+		let firstSession = TestServerSession()
+		let secondSession = TestServerSession()
+		let first = window.transcriptControllers.controller(for: firstSession).ensureBackingView()
+		let second = window.transcriptControllers.controller(for: secondSession).ensureBackingView()
+		window.textSizeMultiplier = scale
+		for controller in window.transcriptControllers.allControllers {
+			controller.updateTextScale()
+		}
+		#expect(first.textScale == scale && second.textScale == scale)
+		window.resetTextSize()
+		#expect(window.textSizeMultiplier == 1)
+		#expect(first.textScale == 1 && second.textScale == 1)
+	}
+
 	private func window() -> MainWindow {
 		MainWindow(contentRect: .zero, styleMask: .borderless, backing: .buffered, defer: false)
 	}

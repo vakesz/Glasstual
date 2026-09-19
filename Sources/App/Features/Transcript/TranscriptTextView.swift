@@ -134,6 +134,28 @@ final class TranscriptTextView: NSTextView {
 		return owner?.contextMenu(defaultItems: super.menu(for: event)?.items ?? [])
 	}
 
+	/// AppKit routes both keyboard context menus and VoiceOver Show Menu here.
+	/// Keep NSTextView's native text accessibility and anchor actions to its selection.
+	override func showContextMenuForSelection(_: Any?) {
+		guard owner != nil, let window else { return }
+		let menu = selectionContextMenu()
+		let screenRect = firstRect(forCharacterRange: selectedRange(), actualRange: nil)
+		let anchor = convert(window.convertFromScreen(screenRect), from: nil)
+		menu?.popUp(positioning: nil, at: NSPoint(x: anchor.minX, y: anchor.maxY), in: self)
+	}
+
+	func selectionContextMenu() -> NSMenu? {
+		guard let owner else { return nil }
+		owner.contextMenuTarget = owner.selectedContextTarget()
+		let event = NSEvent.keyEvent(
+			with: .keyDown, location: .zero, modifierFlags: [], timestamp: 0,
+			windowNumber: window?.windowNumber ?? 0, context: nil,
+			characters: "", charactersIgnoringModifiers: "", isARepeat: false, keyCode: 0
+		)
+		let defaults = event.flatMap { super.menu(for: $0)?.items } ?? []
+		return owner.contextMenu(defaultItems: defaults)
+	}
+
 	/** Writes the selection as text a person can paste somewhere.
 
 	 The plain-text flavour `NSTextView` writes is the storage's characters, and

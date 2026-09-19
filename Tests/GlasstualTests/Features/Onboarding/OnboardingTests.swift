@@ -9,6 +9,46 @@ import UserNotifications
 @MainActor
 @Suite("SwiftUI onboarding")
 struct OnboardingTests {
+	@Test("Port text blocks Continue without reverting malformed input", arguments: ["", " ", "0", "65536", "-1", "66x7", "1.5", "６６６７"])
+	func invalidPortText(_ text: String) {
+		let model = identifiedModel()
+		advance(model, to: .network)
+		model.networkPicker.networks.selection = .customServer
+		model.networkPicker.draft.serverAddress = "irc.example.test"
+		model.networkPicker.draft.serverPortText = text
+		#expect(model.networkPicker.serverPortProblem != nil)
+		#expect(!model.isCurrentStepValid)
+		#expect(!model.advance())
+		#expect(model.currentStep == .network)
+		#expect(model.networkPicker.draft.serverPortText == text)
+	}
+
+	@Test("TLS toggles exchange standard ports and preserve custom or invalid input")
+	func tlsPortExchange() {
+		let picker = OnboardingNetworkPickerModel()
+		picker.setPrefersSecuredConnection(false)
+		#expect(picker.draft.serverPort == 6667)
+		picker.setPrefersSecuredConnection(true)
+		#expect(picker.draft.serverPort == 6697)
+		picker.draft.serverPortText = "7000"
+		picker.setPrefersSecuredConnection(false)
+		#expect(picker.draft.serverPortText == "7000")
+		picker.draft.serverPortText = "invalid"
+		picker.setPrefersSecuredConnection(true)
+		#expect(picker.draft.serverPortText == "invalid")
+	}
+
+	@Test("Back and Continue report their actual navigation direction")
+	func navigationDirection() {
+		let model = identifiedModel()
+		_ = model.advance()
+		#expect(model.movesForward)
+		model.moveBack()
+		#expect(!model.movesForward)
+		_ = model.advance()
+		#expect(model.movesForward)
+	}
+
 	/// The live value asks the system, so the tests supply their own answer.
 	private var testAuthorization: OnboardingNotificationAuthorization {
 		OnboardingNotificationAuthorization(

@@ -26,7 +26,7 @@ struct MainWindowTitleContent: Equatable {
 		}
 
 		let network = session.networkNameAlt
-		let status = Self.connectionStatus(for: session)?.title
+		let status = MainWindowConnectionStatus.current(for: session)?.title
 
 		guard let conversation else {
 			title = network.isEmpty ? ApplicationInfo.applicationName() : network
@@ -40,22 +40,6 @@ struct MainWindowTitleContent: Equatable {
 
 	private static func joined(_ parts: [String?]) -> String {
 		parts.compactMap(nonempty).joined(separator: " · ")
-	}
-
-	private static func connectionStatus(for session: ServerSession) -> MainWindowConnectionStatus? {
-		if session.isQuitting || session.isDisconnecting {
-			return .disconnecting
-		}
-		if session.isConnected == false, session.isConnecting == false {
-			return session.isReconnecting ? .waitingToReconnect : .disconnected
-		}
-		if session.isConnecting, session.isLoggedIn == false {
-			return [.retry, .reconnect].contains(session.connectType) ? .reconnecting : .connecting
-		}
-		if session.isConnected, session.isLoggedIn == false {
-			return .loggingOn
-		}
-		return nil
 	}
 
 	private static func displayNickname(for session: ServerSession) -> String? {
@@ -104,7 +88,23 @@ struct MainWindowTitleContent: Equatable {
 // MARK: - Connection status
 
 /// Where a session stands, as the title bar says it.
-nonisolated enum MainWindowConnectionStatus {
+nonisolated enum MainWindowConnectionStatus: Equatable, Sendable {
+	@MainActor static func current(for session: ServerSession) -> MainWindowConnectionStatus? {
+		if session.isQuitting || session.isDisconnecting {
+			return .disconnecting
+		}
+		if session.isConnected == false, session.isConnecting == false {
+			return session.isReconnecting ? .waitingToReconnect : .disconnected
+		}
+		if session.isConnecting, session.isLoggedIn == false {
+			return [.retry, .reconnect].contains(session.connectType) ? .reconnecting : .connecting
+		}
+		if session.isConnected, session.isLoggedIn == false {
+			return .loggingOn
+		}
+		return nil
+	}
+
 	case disconnected
 	case waitingToReconnect
 	case connecting

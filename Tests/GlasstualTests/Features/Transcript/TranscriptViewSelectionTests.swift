@@ -35,9 +35,17 @@ struct TranscriptViewSelectionTests {
 	func removingSelectedSegmentClearsSelection() throws {
 		try withSelectedTranscript { view in
 			view.setUnreadMarker(.line("first body"))
-			let marker = (view.textView.string as NSString).range(of: String(localized: .Transcript.unreadMessages))
-			try #require(marker.location != NSNotFound)
-			view.textView.setSelectedRange(marker)
+			let storage = try #require(view.textView.textStorage)
+			var marker: NSRange?
+			let documentRange = NSRange(location: 0, length: storage.length)
+			storage.enumerateAttribute(.transcriptSelectionSegment, in: documentRange) { value, range, stop in
+				if value as? String == "marker-unread" {
+					marker = range
+					stop.pointee = true
+				}
+			}
+			let selectedMarker = try #require(marker)
+			view.textView.setSelectedRange(selectedMarker)
 			view.setUnreadMarker(.none)
 			#expect(view.textView.selectedRange().length == 0)
 			#expect(view.hasSelection == false)

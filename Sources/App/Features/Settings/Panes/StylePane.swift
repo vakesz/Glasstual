@@ -35,6 +35,18 @@ private struct TranscriptThemeColorRole: Identifiable {
 /// The Style row: the transcript theme, the colours and spacing it draws with,
 /// and what the transcript shows.
 struct StylePane: View {
+	/// The non-key controls this form exposes to Settings search. Colour roles
+	/// come from the same table that draws their wells, so new roles are found.
+	static var searchLabels: [LocalizedStringResource] {
+		[.TranscriptTheme.themeName, .TranscriptTheme.layout, .TranscriptTheme.lines,
+		 .TranscriptTheme.bubbles, .TranscriptTheme.importTheme, .TranscriptTheme.exportTheme,
+		 .TranscriptTheme.colors, .TranscriptTheme.light, .TranscriptTheme.dark,
+		 .TranscriptTheme.lineSpacing, .TranscriptTheme.messageSpacing, .TranscriptTheme.horizontalPadding,
+		 .Settings.styleFontLabel, .Settings.styleFontChange, .Settings.styleNicknameFormatLabel,
+		 .Settings.styleTimestampFormatLabel, .Settings.interfaceResetToDefaults]
+			+ TranscriptThemeColorRole.all.map(\.title)
+	}
+
 	private static let scrollbackPresets = [
 		"1000", "2000", "3000", "4000", "5000", "10000", "20000", "30000", "40000", "50000",
 	]

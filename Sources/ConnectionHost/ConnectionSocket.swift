@@ -341,12 +341,12 @@ actor ConnectionSocket {
 
 		prepareForLegacyDial()
 
-		/* Reported as the first dial's failure when the second fails too: the
-		 legacy offer is the transport's own, and the error it produced would name
-		 a handshake nobody asked for. */
+		/* The second dial can establish and then run for hours. Its eventual
+		 failure belongs to that connection, and a certificate rejection during
+		 its handshake must also retain its own classification. */
 		let legacyFailure = await dial(offeringLegacyCipherSuites: true)
 
-		onDisconnect(with: legacyFailure == nil ? nil : failure)
+		onDisconnect(with: legacyFailure)
 	}
 
 	/** One dial, and the reason it ended — nil when it ended with none.

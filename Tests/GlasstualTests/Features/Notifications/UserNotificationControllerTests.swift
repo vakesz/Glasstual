@@ -60,6 +60,49 @@ struct UserNotificationControllerTests {
 		) == false)
 	}
 
+	@Test("Reading a conversation cancels only its in-flight notifications", arguments: [nil, "channel"] as [String?])
+	func readingConversationCancelsPendingDeliveries(conversation: String?) async {
+		var deliveries = UserNotificationDeliveries()
+		let matching = Task<Void, Never> {}
+		let otherConversation = Task<Void, Never> {}
+		let otherSession = Task<Void, Never> {}
+		deliveries.insert(matching, identifier: "matching", payload: UserNotificationPayload(
+			sessionIdentifier: "session", conversationIdentifier: conversation
+		))
+		deliveries.insert(otherConversation, identifier: "other-conversation", payload: UserNotificationPayload(
+			sessionIdentifier: "session", conversationIdentifier: "other"
+		))
+		deliveries.insert(otherSession, identifier: "other-session", payload: UserNotificationPayload(
+			sessionIdentifier: "other", conversationIdentifier: conversation
+		))
+
+		deliveries.cancel(for: "session", conversationIdentifier: conversation)
+
+		#expect(matching.isCancelled)
+		#expect(otherConversation.isCancelled == false)
+		#expect(otherSession.isCancelled == false)
+		await matching.value
+		await otherConversation.value
+		await otherSession.value
+	}
+
+	@Test("Muting cancels outstanding deliveries after completed requests leave the queue")
+	func mutingCancelsOutstandingDeliveries() async {
+		var deliveries = UserNotificationDeliveries()
+		let completed = Task<Void, Never> {}
+		let pending = Task<Void, Never> {}
+		deliveries.insert(completed, identifier: "completed", payload: UserNotificationPayload(sessionIdentifier: "session"))
+		deliveries.insert(pending, identifier: "pending", payload: UserNotificationPayload(sessionIdentifier: "session"))
+		deliveries.complete("completed")
+
+		deliveries.cancelAll()
+
+		#expect(completed.isCancelled == false)
+		#expect(pending.isCancelled)
+		await completed.value
+		await pending.value
+	}
+
 	/** What the delegate answers for a notification that arrives while Glasstual
 	 is frontmost. The options are the whole of what the system then does with
 	 it: without `.sound` the banner appears and the sound the notification

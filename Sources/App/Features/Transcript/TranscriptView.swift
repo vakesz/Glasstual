@@ -122,6 +122,10 @@ final class TranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 		textView.setSelectedRange(NSRange(location: 0, length: 0))
 	}
 
+	func focusText() {
+		window?.makeFirstResponder(textView)
+	}
+
 	func copySelection() {
 		textView.copy(nil)
 	}
@@ -215,8 +219,10 @@ final class TranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 	private func showTopicBarIfDrawn() {
 		let hidden = topicBar.isEmpty
 		topicBar.isHidden = hidden
-		scrollViewTopWithTopicConstraint?.isActive = !hidden
-		scrollViewTopWithoutTopicConstraint?.isActive = hidden
+		let outgoing = hidden ? scrollViewTopWithTopicConstraint : scrollViewTopWithoutTopicConstraint
+		let incoming = hidden ? scrollViewTopWithoutTopicConstraint : scrollViewTopWithTopicConstraint
+		outgoing?.isActive = false
+		incoming?.isActive = true
 		needsLayout = true
 	}
 
@@ -342,6 +348,7 @@ final class TranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 	private func configureTopicBar() {
 		topicBar.canModifyTopic = { [weak self] in self?.canModifyTopic == true }
 		topicBar.onModifyTopic = { [weak self] in self?.commands.topicBarDoubleClicked() }
+		topicBar.onOpenLink = { [weak self] in self?.commands.openWebpage($0) }
 	}
 
 	private func configureTextView() {

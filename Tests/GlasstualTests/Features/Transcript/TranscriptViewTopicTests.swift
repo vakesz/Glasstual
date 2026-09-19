@@ -3,6 +3,7 @@
 
 import AppKit
 @testable import Glasstual
+import SwiftUI
 import Testing
 
 /// What the transcript shows and hands back, as opposed to how it stores it:
@@ -11,6 +12,40 @@ import Testing
 @MainActor
 @Suite("Transcript view topic bar")
 struct TranscriptViewTopicTests {
+	@Test("Topic expansion grows only the topic row and collapses when the topic changes")
+	func expandingTopicPreservesTranscriptLayout() {
+		let transcript = makeTranscriptView()
+		let topic = transcript.topicBar
+		transcript.setTopic(String(repeating: "Read the channel rules before posting. ", count: 40))
+		transcript.layoutSubtreeIfNeeded()
+		transcript.layoutSubtreeIfNeeded()
+		let width = transcript.frame.width
+		let collapsedHeight = topic.frame.height
+		#expect(topic.disclosure.isHidden == false)
+		#expect(collapsedHeight > 0)
+		#expect(transcript.scrollViewTopWithTopicConstraint?.isActive == true)
+		#expect(transcript.scrollViewTopWithoutTopicConstraint?.isActive == false)
+
+		topic.disclosure.rootView.action()
+		transcript.layoutSubtreeIfNeeded()
+		transcript.layoutSubtreeIfNeeded()
+		#expect(topic.frame.height > collapsedHeight)
+		#expect(transcript.frame.width == width)
+		#expect(topic.label.bounds.width > 0)
+		#expect(topic.label.preferredMaxLayoutWidth == topic.label.bounds.width)
+		#expect(topic.label.frame.maxX <= topic.disclosure.frame.minX)
+		#expect(transcript.scrollView.frame.height > 0)
+		#expect(transcript.hasAmbiguousLayout == false)
+		#expect(topic.hasAmbiguousLayout == false)
+
+		transcript.setTopic("Short topic")
+		transcript.layoutSubtreeIfNeeded()
+		transcript.layoutSubtreeIfNeeded()
+		#expect(topic.label.maximumNumberOfLines == 1)
+		#expect(topic.disclosure.isHidden)
+		#expect(abs(topic.frame.height - collapsedHeight) < 1)
+	}
+
 	/** The topic arrives in the same wire form a message does. It used to be
 	 drawn as it arrived, so a coloured topic put its control codes in the bar,
 	 in the tooltip and on the pasteboard. */

@@ -536,6 +536,7 @@ struct FileTransferTests {
 			sessionIdentifier: transfer.sessionId,
 			accept: false
 		))
+		center.model.activate(restoring: .sending)
 		#expect(center.model.filter == .all && center.model.selection == [transfer.uniqueIdentifier])
 		#expect(!center.model.isChoosingDestination)
 		#expect(center.respondToNotification(

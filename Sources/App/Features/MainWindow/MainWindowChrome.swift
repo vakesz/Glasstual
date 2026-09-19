@@ -22,6 +22,7 @@ final class MainWindowChrome {
 	 main menu as well, so the coordinator that owns the switch writes it here
 	 whenever it changes. */
 	var areNotificationsDisabled = false
+	var connection: MainWindowConnectionPresentation?
 
 	/// Puts the keyboard in the sidebar filter field, which now lives in the
 	/// window toolbar. Channel Spotlight has a command of its own.

@@ -255,12 +255,7 @@ struct TranscriptViewStorageTests {
 	}
 
 	private func textView(of transcriptView: TranscriptView) throws -> NSTextView {
-		func descendants(in root: NSView) -> [NSTextView] {
-			root.subviews.flatMap { view in
-				(view as? NSTextView).map { [$0] } ?? descendants(in: view)
-			}
-		}
-		return try #require(descendants(in: transcriptView).first)
+		transcriptView.textView
 	}
 
 	/** The view is hidden while a channel is not selected, and lines keep

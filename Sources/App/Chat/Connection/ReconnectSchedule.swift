@@ -10,7 +10,7 @@ import Foundation
  back, one the sleep handler caused must, and the interval between attempts
  grows with how many have already failed. */
 struct ReconnectSchedule {
-	/// Whether the next disconnect should be followed by a reconnect.
+	/// Whether this attempt or its pending retry should continue reconnecting.
 	var isEnabled = false
 	/// Whether ``isEnabled`` was set by going to sleep rather than by the
 	/// user, which is what tells waking up to reconnect.
@@ -143,6 +143,7 @@ extension ServerSession {
 			? !config.autoSleepModeDisconnect
 			: config.autoReconnect
 		guard enabled, !reconnect.timer.isActive else { return }
+		reconnect.isEnabled = true
 		let delay = ConnectionTimerPolicy.reconnectDelay(
 			attempt: reconnect.attemptCount,
 			jitter: .random(in: 0 ... 1)
@@ -157,7 +158,7 @@ extension ServerSession {
 	}
 
 	func onReconnectTimer() {
-		guard !isConnecting, !isConnected else { return }
+		guard reconnect.isEnabled, !isConnecting, !isConnected else { return }
 
 		connect(.reconnect)
 

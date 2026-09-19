@@ -28,10 +28,8 @@ struct MemberListProfilePopoverTests {
 		self.channel = channel
 	}
 
-	/// The profile used to wait out the double-click interval, which follows
-	/// the reader's Double-click speed and can be seconds.
-	@Test("A click opens the profile at once, and a click on another member replaces it")
-	func aClickOpensTheProfileAtOnce() throws {
+	@Test("An explicit profile action opens at once and can inspect another member")
+	func anExplicitActionOpensTheProfileAtOnce() throws {
 		let alice = try add("alice")
 		let bob = try add("bob")
 
@@ -100,15 +98,14 @@ struct MemberListProfilePopoverTests {
 			== MemberListRanks.privilegeDescription(for: member.rank))
 	}
 
-	/// "Use an x to indicate a user with no mode set" had no reader at all.
-	@Test("The no-mode mark is drawn only when the preference asks for it")
-	func noModeSymbolFollowsThePreference() {
+	@Test("An archived no-mode preference never adds a fictitious rank badge")
+	func noModeSymbolStaysAbsent() {
 		let key = SettingsKeys.Appearance.memberListNoModeSymbol
 		let previous = key.detachedStoredValue
 		defer { key.detachedStoredValue = previous }
 
 		key.detachedValue = true
-		#expect(MemberListPresentationStyle.current().symbolName(for: UserRank.none) != nil)
+		#expect(MemberListPresentationStyle.current().symbolName(for: UserRank.none) == nil)
 		#expect(MemberListPresentationStyle.current().symbolName(for: .voiced) == "mic.fill")
 
 		key.detachedValue = false
@@ -135,7 +132,6 @@ struct MemberListProfilePopoverTests {
 		noMode.detachedValue = true
 		let favouring = MemberListPresentationStyle.current()
 		#expect(favouring.favorsServerStaff)
-		#expect(favouring.marksMembersWithNoMode)
 		#expect(favouring.displayRank(isIRCOperator: true, channelRank: .voiced) == .irCopByMode)
 		#expect(favouring.displayRank(isIRCOperator: false, channelRank: .voiced) == .voiced)
 

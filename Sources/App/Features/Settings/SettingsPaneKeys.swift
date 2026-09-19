@@ -88,7 +88,6 @@ enum SettingsPaneKeys {
 	private static let interfaceKeys: [SettingsBoundKey] = [
 		.init(SettingsKeys.Messages.rightToLeftFormatting, .Settings.interfaceRightToLeftText),
 		.init(SettingsKeys.Appearance.preferredAppearance, .Settings.interfaceAppearanceLabel),
-		.init(SettingsKeys.Appearance.memberListNoModeSymbol, .Settings.interfaceNoModeSymbol),
 		.init(SettingsKeys.Appearance.memberListSortFavorsServerStaff, .Settings.interfaceStaffAtTop),
 		.init(
 			SettingsKeys.Appearance.memberListUpdatesPopoverOnScroll,
@@ -210,7 +209,11 @@ enum SettingsPaneKeys {
 	]
 
 	private static let displayNamesByKeyName: [String: LocalizedStringResource] = {
-		var names: [String: LocalizedStringResource] = [:]
+		// Retired controls retain readable names in older archive previews, but
+		// are absent from the visible pane inventory and Settings search.
+		var names: [String: LocalizedStringResource] = [
+			SettingsKeys.Appearance.memberListNoModeSymbol.name: .Settings.interfaceNoModeSymbol,
+		]
 
 		for entry in SettingsPane.allCases.flatMap({ keys(for: $0) }) {
 			names[entry.key.name] = entry.displayName

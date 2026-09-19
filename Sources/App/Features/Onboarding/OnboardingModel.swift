@@ -78,7 +78,11 @@ final class OnboardingModel {
 	/// out is read from here and nowhere else.
 	private(set) var accepted = OnboardingAcceptedSteps()
 
-	var currentStep: OnboardingStep = .identity
+	var currentStep: OnboardingStep = .identity {
+		didSet { movesForward = currentStep.rawValue >= oldValue.rawValue }
+	}
+
+	private(set) var movesForward = true
 	var notificationPermissionMessage: LocalizedStringResource = .Onboarding.glasstualWillAskMacosForPermission
 	var notificationPermissionSymbol = "bell.badge"
 
