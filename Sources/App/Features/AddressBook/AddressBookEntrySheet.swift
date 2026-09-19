@@ -91,6 +91,7 @@ struct AddressBookEntryView: View {
 		Section {
 			LabeledContent(model.entryType.identityLabel) {
 				TextField(model.entryType.identityPlaceholder, text: $model.entry.hostmask)
+					.labelsHidden()
 					.textFieldStyle(.roundedBorder)
 					.focused($hostmaskFieldIsFocused)
 					.accessibilityLabel(model.entryType.identityLabel)

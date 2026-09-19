@@ -44,6 +44,9 @@ final class MemberList: ConversationMembersPresenting {
 	}
 
 	private(set) var groups: [MemberListGroup] = []
+	/// A different conversation replaces the table's index space, even when it
+	/// contains some of the same people or rank headings.
+	private(set) var sourceIdentifier: String?
 	/** The badge colours and rank settings every row draws from.
 
 	 Read once per invalidation and handed down. A row used to ask the defaults
@@ -82,6 +85,7 @@ final class MemberList: ConversationMembersPresenting {
 			hideProfile()
 		}
 		memberList?.assign(nil)
+		sourceIdentifier = conversation?.uniqueIdentifier
 		memberList = conversation?.memberInfo
 		if let memberList {
 			memberList.assign(self)

@@ -7,21 +7,30 @@ import SwiftUI
 /// A scene-owned alternative to the shared AppKit font panel. The selected
 /// PostScript name is exactly the value persisted in `TranscriptTheme`.
 struct SettingsFontPicker: View {
-	private struct FontChoice: Identifiable {
+	struct FontChoice: Identifiable {
 		let id: String
 		let displayName: String
 	}
 
-	private static let choices: [FontChoice] = {
+	static let choices: [FontChoice] = {
 		let names = CTFontManagerCopyAvailablePostScriptNames() as? [String] ?? []
-		return names.map { name in
-			let font = CTFontCreateWithName(name as CFString, 13, nil)
-			return FontChoice(id: name, displayName: CTFontCopyDisplayName(font) as String)
+		let installed = names.filter { $0 != TranscriptTheme.lines.fontName }.map { name in
+			FontChoice(id: name, displayName: displayName(for: name))
 		}
 		.sorted {
 			$0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending
 		}
+		return [FontChoice(id: TranscriptTheme.lines.fontName, displayName: displayName(for: TranscriptTheme.lines.fontName))]
+			+ installed
 	}()
+
+	static func displayName(for fontName: String) -> String {
+		if fontName == TranscriptTheme.lines.fontName {
+			return String(localized: .Settings.styleFontSystem)
+		}
+		let font = CTFontCreateWithName(fontName as CFString, 13, nil)
+		return CTFontCopyDisplayName(font) as String
+	}
 
 	/// The transcript renderer's own bounds: a size outside them is rejected
 	/// when the theme is applied, so it is not offered here.

@@ -92,6 +92,7 @@ enum OnboardingScenario {
 			try await awaitStep("Your First Network", driver, window)
 			try await driver.button("Skip", from: window)
 			try await awaitStep("Ready to Go", driver, window)
+			try await verifySummary(kind: kind, driver: driver, window: window)
 			try await driver.button("Finish", from: window)
 			return
 		}
@@ -147,7 +148,39 @@ enum OnboardingScenario {
 		try await driver.toggle("Connect when finished", to: false, from: window)
 		try await driver.button("Continue", from: window)
 		try await awaitStep("Ready to Go", driver, window)
+		try await verifySummary(kind: kind, driver: driver, window: window)
 		try await driver.button("Finish", from: window)
+	}
+
+	/// SwiftUI's summary semantics are exported to an external AX client.
+	/// Reading a process-hosted NSHostingView can return an empty tree instead.
+	private static func verifySummary(kind: ScenarioKind, driver: AccessibilityDriver, window: AXUIElement) async throws {
+		let labels = ["Nickname", "Chat style", "Text size", "Appearance", "Notifications", "Network", "Channels"]
+		var verifiedSummary = ""
+		try await driver.wait("summary announces all seven labels with their values") { deadline in
+			guard let summary = try driver.identified("onboarding-summary", from: window, deadline: deadline) else {
+				return false
+			}
+			for attribute in [kAXValueAttribute, kAXTitleAttribute, kAXDescriptionAttribute] {
+				let paragraph = try driver.text(summary, attribute, deadline: deadline)
+				let lines = paragraph.split(separator: "\n", omittingEmptySubsequences: false)
+				guard lines.count == labels.count else { continue }
+				let values = zip(labels, lines).compactMap { label, line -> String? in
+					let prefix = label + ": "
+					guard line.hasPrefix(prefix) else { return nil }
+					let value = String(line.dropFirst(prefix.count)).trimmingCharacters(in: .whitespaces)
+					return value.isEmpty ? nil : value
+				}
+				guard values.count == labels.count, values.first == "e2euser" else { continue }
+				if kind == .onboardingSkip, values.dropFirst().contains(where: { $0 != "None" }) {
+					continue
+				}
+				verifiedSummary = paragraph
+				return true
+			}
+			return false
+		}
+		try HarnessFiles.write(verifiedSummary, to: "onboarding-summary-accessibility")
 	}
 
 	/// Waits for the step whose header reads `title`, which is how the window

@@ -79,7 +79,8 @@ SwiftUI owns user-facing layout, navigation, forms and scene presentation.
 AppKit is limited to narrow macOS capability adapters: the main-window shell
 that provides restoration and responder-chain commands, TextKit-backed input
 and transcripts, a transcript-anchored reaction popover, the sidebar outline,
-member and server-channel tables, dock-tile rendering and the blocking alert
+member and server-channel tables, the read-only search-window geometry probe,
+dock-tile rendering and the blocking alert
 path used before a SwiftUI scene exists. The list adapters own reusable native
 cells, hit-testing and selection synchronization; their feature models retain
 domain state. SwiftUI owns the surrounding layout, headers and presentation.

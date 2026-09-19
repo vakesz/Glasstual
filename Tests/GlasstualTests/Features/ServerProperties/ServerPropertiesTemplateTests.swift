@@ -99,6 +99,27 @@ struct ServerPropertiesTemplateTests {
 		#expect(model.config == before)
 	}
 
+	@Test("A new custom server starts with TLS on port 6697 without changing saved endpoint defaults")
+	func newCustomServerUsesSecureDefaults() throws {
+		let sheet = ServerPropertiesSheet(session: nil) { _ in
+			Issue.record("Inspecting a new server draft must not save it")
+		}
+		defer { sheet.sheetDidEnd() }
+		let model = sheet.model
+		try #require(model.templatePicker).selection = .customServer
+		model.applySelectedTemplate()
+		#expect(model.serverAddress.isEmpty)
+		#expect(model.serverPort == "6697")
+		#expect(model.primaryServerIsSecured)
+
+		var saved = ServerConfig()
+		saved.serverList = [ServerEndpoint(serverAddress: "irc.example.test", serverPort: 6667, prefersSecuredConnection: false)]
+		let existing = ServerPropertiesModel(config: saved)
+		#expect(existing.serverPort == "6667")
+		#expect(existing.primaryServerIsSecured == false)
+		#expect(existing.config == saved)
+	}
+
 	@Test("Continue does nothing until a row is chosen")
 	func continueNeedsASelection() throws {
 		let model = try Self.newConnectionModel()

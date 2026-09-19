@@ -102,13 +102,14 @@ struct TranscriptRendererTests {
 	@Test("Formatting splits retain the complete channel and canonical nickname targets")
 	func formattedAnnotationsKeepCompleteTargets() {
 		let body = TranscriptRenderer.renderNativeBody(
-			"a\u{02}LI\u{02}ce #sw\u{1D}IF\u{1D}t",
+			"@a\u{02}LI\u{02}ce #sw\u{1D}IF\u{1D}t",
 			withAttributes: TranscriptRenderOptions(lineType: .privateMessage),
 			members: [RenderedMember(nickname: "Alice")]
 		)
-		#expect(body.plainText == "aLIce #swIFt")
+		#expect(body.plainText == "@aLIce #swIFt")
 		#expect(body.mentionedNicknames == ["Alice"])
 		#expect(body.runs == [
+			TranscriptTextRun(text: "@"),
 			TranscriptTextRun(text: "a", action: .nickname("Alice")),
 			TranscriptTextRun(text: "LI", traits: .bold, action: .nickname("Alice")),
 			TranscriptTextRun(text: "ce", action: .nickname("Alice")),

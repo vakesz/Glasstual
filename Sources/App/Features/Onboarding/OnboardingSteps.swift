@@ -29,7 +29,8 @@ struct OnboardingIdentityView: View {
 				label: String(localized: .Onboarding.realName),
 				problem: model.realNameProblem
 			) {
-				TextField(.Onboarding.yourNameOrAnythingYouLike, text: $settings.identity.realName)
+				TextField(.Onboarding.realName, text: $settings.identity.realName,
+				          prompt: Text(.Onboarding.yourNameOrAnythingYouLike))
 					.focused($focusedField, equals: .realName)
 					.accessibilityIdentifier("onboarding-real-name")
 			}
@@ -39,8 +40,9 @@ struct OnboardingIdentityView: View {
 				problem: model.alternateNicknameProblem
 			) {
 				TextField(
-					.Onboarding.stepWelcomeAndIdentityOptional,
-					text: $settings.identity.alternateNickname
+					.Onboarding.alternateNickname,
+					text: $settings.identity.alternateNickname,
+					prompt: Text(.Onboarding.stepWelcomeAndIdentityOptional)
 				)
 				.focused($focusedField, equals: .alternateNickname)
 				.accessibilityIdentifier("onboarding-alternate-nickname")
@@ -100,17 +102,34 @@ struct OnboardingSummaryView: View {
 		String(localized: .Onboarding.summaryNothingChosen)
 	}
 
+	private var summaryRows: [(title: LocalizedStringResource, value: String)] {
+		[
+			(.Onboarding.summaryNickname, nicknameSummary),
+			(.Onboarding.summaryChatStyle, chatStyleSummary),
+			(.Onboarding.summaryTextSize, textSizeSummary),
+			(.Onboarding.summaryAppearance, appearanceSummary),
+			(.Onboarding.summaryNotifications, notificationSummary),
+			(.Onboarding.summaryNetwork, networkSummary),
+			(.Onboarding.summaryChannels, channelSummary),
+		]
+	}
+
 	var body: some View {
 		Form {
-			LabeledContent(.Onboarding.summaryNickname, value: nicknameSummary)
-			LabeledContent(.Onboarding.summaryChatStyle, value: chatStyleSummary)
-			LabeledContent(.Onboarding.summaryTextSize, value: textSizeSummary)
-			LabeledContent(.Onboarding.summaryAppearance, value: appearanceSummary)
-			LabeledContent(.Onboarding.summaryNotifications, value: notificationSummary)
-			LabeledContent(.Onboarding.summaryNetwork, value: networkSummary)
-			LabeledContent(.Onboarding.summaryChannels, value: channelSummary)
+			ForEach(summaryRows.indices, id: \.self) { index in
+				let row = summaryRows[index]
+				LabeledContent(row.title, value: row.value)
+			}
 		}
 		.formStyle(.columns)
+		// The read-only summary is one announcement. Include every label so
+		// adjacent static values cannot lose their meaning when combined.
+		.accessibilityElement(children: .ignore)
+		.accessibilityLabel(Text(verbatim: summaryRows.map {
+			"\(String(localized: $0.title)): \($0.value)"
+		}.joined(separator: "\n")))
+		.accessibilityAddTraits(.isStaticText)
+		.accessibilityIdentifier("onboarding-summary")
 		.frame(maxWidth: 460)
 		.frame(maxWidth: .infinity, alignment: .center)
 	}

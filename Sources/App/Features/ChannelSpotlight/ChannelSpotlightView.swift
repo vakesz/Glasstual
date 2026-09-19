@@ -13,14 +13,17 @@ struct ChannelSpotlightScene: Scene {
 			for: SingletonSceneValue.self
 		) { _ in
 			ChannelSpotlightSceneRoot(window: window)
+				.containerBackground(.clear, for: .window)
+				.toolbarVisibility(.hidden, for: .windowToolbar)
+				.windowMinimizeBehavior(.disabled)
 		} defaultValue: { .instance }
 			.windowResizability(.contentSize)
-			/* A spotlight panel, not a document window: it floats over what it
-			 searches, opens in the middle of the screen, carries no chrome of its
-			 own so the glass effect is not drawn on an opaque square, and is never
-			 restored -- a search nobody asked to resume. */
-			.windowStyle(.plain)
+			// A plain borderless window cannot become key, leaving search typing
+			// in the chat composer. Keep a titled window's keyboard behavior while
+			// hiding its title and letting the search content draw the background.
+			.windowStyle(.hiddenTitleBar)
 			.windowLevel(.floating)
+			.windowBackgroundDragBehavior(.disabled)
 			.defaultPosition(.center)
 			.restorationBehavior(.disabled)
 	}
@@ -29,6 +32,8 @@ struct ChannelSpotlightScene: Scene {
 private struct ChannelSpotlightSceneRoot: View {
 	@Environment(\.dismissWindow) private var dismissWindow
 	@Environment(\.controlActiveState) private var controlActiveState
+	@State private var activation = ChannelSpotlightActivation()
+	@State private var topInset: CGFloat = 0
 	let window: ChannelSpotlightWindow
 
 	var body: some View {
@@ -41,12 +46,14 @@ private struct ChannelSpotlightSceneRoot: View {
 				},
 				close: dismiss
 			)
+			.background(ChannelSpotlightWindowGeometry(topInset: $topInset))
+			.padding(.top, -topInset)
 			.onDisappear {
+				activation = ChannelSpotlightActivation()
 				window.didClose()
 			}
-			.onChange(of: controlActiveState) { _, state in
-				// A spotlight panel goes away as soon as it stops being typed into.
-				guard state != .key else { return }
+			.onChange(of: controlActiveState, initial: true) { _, state in
+				guard activation.shouldDismiss(after: state) else { return }
 				dismiss()
 			}
 		}
@@ -54,6 +61,22 @@ private struct ChannelSpotlightSceneRoot: View {
 
 	private func dismiss() {
 		dismissWindow(id: ApplicationSceneID.channelSpotlight)
+	}
+}
+
+/// Opening a scene can report inactive states before its window becomes key.
+/// Only losing acquired keyboard focus dismisses the search.
+struct ChannelSpotlightActivation {
+	private var hasBecomeKey = false
+
+	mutating func shouldDismiss(after state: ControlActiveState) -> Bool {
+		if state == .key {
+			hasBecomeKey = true
+			return false
+		}
+		guard hasBecomeKey else { return false }
+		hasBecomeKey = false
+		return true
 	}
 }
 
@@ -76,6 +99,7 @@ struct ChannelSpotlightView: View {
 	let close: () -> Void
 
 	@FocusState private var searchIsFocused: Bool
+	@Environment(\.controlActiveState) private var controlActiveState
 	/// Scrolling the result list under the keyboard is motion the system can be
 	/// asked to stop making.
 	@Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -101,6 +125,7 @@ struct ChannelSpotlightView: View {
 					.foregroundStyle(.secondary)
 				TextField(.ChannelSpotlight.searchPlaceholder, text: $model.searchText)
 					.textFieldStyle(.plain)
+					.accessibilityIdentifier("channel-search-field")
 					.focused($searchIsFocused)
 					.onSubmit {
 						if let result = model.selectedResult {
@@ -127,8 +152,11 @@ struct ChannelSpotlightView: View {
 		}
 		.glassEffect(.regular, in: .rect(cornerRadius: 22))
 		.frame(width: ChannelSpotlightLayout.width, height: contentHeight)
-		.onAppear {
-			searchIsFocused = true
+		.defaultFocus($searchIsFocused, true)
+		.onChange(of: controlActiveState, initial: true) { _, state in
+			if state == .key {
+				searchIsFocused = true
+			}
 		}
 		.onKeyPress(.downArrow) {
 			model.selectRelativeResult(offset: 1)

@@ -48,6 +48,30 @@ enum ServerPropertiesListKind {
 	case highlights
 	case addressBook
 
+	var pane: ServerPropertiesSelection {
+		switch self {
+		case .channels: .channelList
+		case .highlights: .highlights
+		case .addressBook: .addressBook
+		}
+	}
+
+	var emptyTitle: LocalizedStringResource {
+		switch self {
+		case .channels: .ServerProperties.channelsEmptyTitle
+		case .highlights: .ServerProperties.highlightsEmptyTitle
+		case .addressBook: .ServerProperties.addressBookEmptyTitle
+		}
+	}
+
+	var emptyDescription: LocalizedStringResource {
+		switch self {
+		case .channels: .ServerProperties.channelsEmptyDescription
+		case .highlights: .ServerProperties.highlightsEmptyDescription
+		case .addressBook: .ServerProperties.addressBookEmptyDescription
+		}
+	}
+
 	var addLabel: LocalizedStringResource {
 		switch self {
 		case .channels: .ServerProperties.addChannelButton

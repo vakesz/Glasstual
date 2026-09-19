@@ -25,7 +25,7 @@ enum OnboardingTextSize: UInt, CaseIterable, Identifiable {
 	var fontSize: CGFloat {
 		switch self {
 		case .small: 11
-		case .medium: 13
+		case .medium: 14
 		case .large: 15
 		}
 	}

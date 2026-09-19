@@ -110,5 +110,6 @@ struct FileTransfersPane: View {
 		} label: {
 			Text(.Settings.fileTransfersPortRangeLabel)
 		}
+		.accessibilityElement(children: .contain)
 	}
 }

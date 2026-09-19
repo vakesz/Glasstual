@@ -85,18 +85,20 @@ enum MenuSheetPresenter {
 	}
 
 	static func presentChannelTopic(for channel: Conversation) {
+		guard ChannelActionPermissions(channel: channel, session: channel.associatedSession).canModifyTopic else { return }
 		present(ChannelTopicSheet(channel: channel) { [weak channel] topic in
 			guard let channel, let session = channel.associatedSession,
-			      session.isLoggedIn, channel.isChannel
+			      ChannelActionPermissions(channel: channel, session: session).canModifyTopic
 			else { return }
 			session.sendTopic(to: topic, in: channel)
 		}) { $0.startSheet() }
 	}
 
 	static func presentChannelModes(for channel: Conversation) {
+		guard ChannelActionPermissions(channel: channel, session: channel.associatedSession).canChangeModes else { return }
 		present(ChannelModesSheet(channel: channel) { [weak channel] modes in
 			guard let channel, let session = channel.associatedSession,
-			      session.isLoggedIn, channel.isChannel,
+			      ChannelActionPermissions(channel: channel, session: session).canChangeModes,
 			      let changes = channel.modeInfo?.changeGroups(for: modes),
 			      changes.isEmpty == false
 			else { return }

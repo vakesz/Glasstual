@@ -14,8 +14,8 @@ Swift-only.
   and restoration when changing an adapter. The deliberate adapters are the
   main-window responder and restoration shell, programmatic `NSMenu` command
   graph, TextKit input and transcript views, transcript reaction popover,
-  the sidebar outline and member/channel tables, dock-tile renderer and
-  pre-scene blocking alerts.
+  the sidebar outline and member/channel tables, the search-window geometry
+  probe, dock-tile renderer and pre-scene blocking alerts.
 - Organize app code by feature under `Sources/App`. A feature owns its views,
   models, controllers, strings and capability adapters. Read
   `Sources/App/README.md` when moving or adding app files.

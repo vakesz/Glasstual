@@ -38,6 +38,13 @@ struct SettingsFieldDraft {
 		edited = nil
 		wasRejected = value.write(submitted) == false
 	}
+
+	/// Choosing a preset replaces an unfinished entry before writing it, so
+	/// a later Return or focus loss cannot submit the discarded text.
+	mutating func choose(_ preset: String, for value: SettingsFieldValue) {
+		edited = preset
+		commit(to: value)
+	}
 }
 
 /** A field that writes when editing ends rather than as it is typed.
@@ -51,6 +58,19 @@ struct SettingsCommittedField: View {
 	var rejectionMessage: LocalizedStringResource?
 
 	@State private var draft = SettingsFieldDraft()
+
+	var body: some View {
+		SettingsCommittedInput(title: title, value: value, rejectionMessage: rejectionMessage, draft: $draft)
+	}
+}
+
+/// A standalone field owns its draft, while a combo shares its draft with
+/// the preset menu. Both use the same completion and rejection behavior.
+private struct SettingsCommittedInput: View {
+	let title: LocalizedStringResource
+	let value: SettingsFieldValue
+	let rejectionMessage: LocalizedStringResource?
+	@Binding var draft: SettingsFieldDraft
 	@FocusState private var isFocused: Bool
 
 	var body: some View {
@@ -88,6 +108,7 @@ struct SettingsComboField: View {
 	let title: LocalizedStringResource
 	let presets: [String]
 	private let storage: Storage
+	@State private var draft = SettingsFieldDraft()
 
 	init(title: LocalizedStringResource, presets: [String], text: Binding<String>) {
 		self.title = title
@@ -114,7 +135,7 @@ struct SettingsComboField: View {
 					.labelsHidden()
 					.accessibilityLabel(Text(title))
 			case let .committed(value, rejectionMessage):
-				SettingsCommittedField(title: title, value: value, rejectionMessage: rejectionMessage)
+				SettingsCommittedInput(title: title, value: value, rejectionMessage: rejectionMessage, draft: $draft)
 			}
 
 			Menu {
@@ -141,7 +162,7 @@ struct SettingsComboField: View {
 	private func choose(_ preset: String) {
 		switch storage {
 		case let .live(text): text.wrappedValue = preset
-		case let .committed(value, _): _ = value.write(preset)
+		case let .committed(value, _): draft.choose(preset, for: value)
 		}
 	}
 }

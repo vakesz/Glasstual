@@ -89,6 +89,8 @@ struct HighlightLogView: View {
 				}
 				.width(min: 100, ideal: 130)
 			}
+			.alternatingRowBackgrounds(model.rows.isEmpty ? .disabled : .enabled)
+			.accessibilityLabel(.HighlightLog.highlightList)
 			.overlay {
 				if model.rows.isEmpty {
 					ContentUnavailableView(
@@ -109,7 +111,6 @@ struct HighlightLogView: View {
 				open(selection)
 			}
 			.onChange(of: model.sortOrder) { _, newOrder in model.sort(using: newOrder) }
-			.accessibilityLabel(.HighlightLog.highlightList)
 
 			Divider()
 			HStack {

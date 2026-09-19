@@ -214,7 +214,7 @@ struct StylePane: View {
 		LabeledContent {
 			HStack {
 				Text(.Settings.styleFontDescription(
-					model.transcriptTheme.fontName,
+					SettingsFontPicker.displayName(for: model.transcriptTheme.fontName),
 					Double(model.transcriptTheme.fontSize)
 						.formatted(.number.precision(.fractionLength(0 ... 1)))
 				))

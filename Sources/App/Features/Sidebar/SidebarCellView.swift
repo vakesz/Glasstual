@@ -12,6 +12,8 @@ final class SidebarCellView: NSTableCellView {
 	let securityImage = NSImageView()
 	let badge = SidebarUnreadBadge()
 	private var content: SidebarOutlineNode.Content?
+	var showMenu: (() -> Bool)?
+	var move: ((Bool) -> Bool)?
 
 	override init(frame frameRect: NSRect) {
 		super.init(frame: frameRect)
@@ -41,6 +43,9 @@ final class SidebarCellView: NSTableCellView {
 		for view in [titleField, leadingImage, securityImage, badge] {
 			view.setAccessibilityElement(false)
 		}
+		setAccessibilityElement(true)
+		setAccessibilityRole(.staticText)
+		setAccessibilityChildren([])
 	}
 
 	@available(*, unavailable)
@@ -49,7 +54,9 @@ final class SidebarCellView: NSTableCellView {
 	}
 
 	func configure(with node: SidebarOutlineNode) {
+		guard content != node.content else { return }
 		content = node.content
+		setAccessibilityLabel(node.accessibilityDescription)
 		leadingImage.image = nil
 		leadingImage.isHidden = true
 		leadingImage.toolTip = nil
@@ -97,6 +104,34 @@ final class SidebarCellView: NSTableCellView {
 		updateColors()
 	}
 
+	/// Native outline proxies expose the cell's metadata. Keep disclosure and
+	/// selection on AppKit's rows, and place secondary actions on this cell.
+	func configureAccessibilityActions(with node: SidebarOutlineNode, canMoveUp: Bool, canMoveDown: Bool) {
+		setAccessibilityIdentifier("sidebar-row-\(node.identity.itemIdentifier)")
+		var actions: [NSAccessibilityCustomAction] = []
+		if canMoveUp {
+			actions.append(NSAccessibilityCustomAction(name: String(localized: .MainWindow.sidebarMoveUp),
+			                                           target: self, selector: #selector(moveSidebarUp)))
+		}
+		if canMoveDown {
+			actions.append(NSAccessibilityCustomAction(name: String(localized: .MainWindow.sidebarMoveDown),
+			                                           target: self, selector: #selector(moveSidebarDown)))
+		}
+		setAccessibilityCustomActions(actions)
+	}
+
+	override func accessibilityPerformShowMenu() -> Bool {
+		showMenu?() ?? false
+	}
+
+	@objc private func moveSidebarUp() -> Bool {
+		move?(true) ?? false
+	}
+
+	@objc private func moveSidebarDown() -> Bool {
+		move?(false) ?? false
+	}
+
 	override var backgroundStyle: NSView.BackgroundStyle {
 		didSet { updateColors() }
 	}
@@ -117,7 +152,7 @@ final class SidebarCellView: NSTableCellView {
 		}
 		switch content {
 		case let .server(server):
-			titleField.textColor = server.isActive ? .labelColor : .tertiaryLabelColor
+			titleField.textColor = server.isActive ? .labelColor : .secondaryLabelColor
 		case let .conversation(conversation):
 			if conversation.hasJoinError {
 				titleField.textColor = .systemRed
@@ -125,7 +160,7 @@ final class SidebarCellView: NSTableCellView {
 			} else if conversation.isActive, conversation.isEmphasized {
 				titleField.textColor = .controlAccentColor
 			} else {
-				titleField.textColor = conversation.isActive ? .labelColor : .tertiaryLabelColor
+				titleField.textColor = conversation.isActive ? .labelColor : .secondaryLabelColor
 			}
 		case nil:
 			titleField.textColor = .labelColor
@@ -188,41 +223,5 @@ final class SidebarUnreadBadge: NSView {
 		super.draw(dirtyRect)
 		fillColor.setFill()
 		NSBezierPath(roundedRect: bounds, xRadius: bounds.height / 2, yRadius: bounds.height / 2).fill()
-	}
-}
-
-/// AppKit owns selection and disclosure semantics. The row adds only the
-/// context-menu and reorder actions that the native outline cannot infer.
-final class SidebarRowView: NSTableRowView {
-	static let reuseIdentifier = NSUserInterfaceItemIdentifier("sidebar-row")
-	var showMenu: (() -> Bool)?
-	var move: ((Bool) -> Bool)?
-
-	func configure(with node: SidebarOutlineNode, canMoveUp: Bool, canMoveDown: Bool) {
-		identifier = Self.reuseIdentifier
-		setAccessibilityIdentifier("sidebar-row-\(node.identity.itemIdentifier)")
-		setAccessibilityLabel(node.accessibilityDescription)
-		var actions: [NSAccessibilityCustomAction] = []
-		if canMoveUp {
-			actions.append(NSAccessibilityCustomAction(name: String(localized: .MainWindow.sidebarMoveUp),
-			                                           target: self, selector: #selector(moveSidebarUp)))
-		}
-		if canMoveDown {
-			actions.append(NSAccessibilityCustomAction(name: String(localized: .MainWindow.sidebarMoveDown),
-			                                           target: self, selector: #selector(moveSidebarDown)))
-		}
-		setAccessibilityCustomActions(actions)
-	}
-
-	override func accessibilityPerformShowMenu() -> Bool {
-		showMenu?() ?? false
-	}
-
-	@objc private func moveSidebarUp() -> Bool {
-		move?(true) ?? false
-	}
-
-	@objc private func moveSidebarDown() -> Bool {
-		move?(false) ?? false
 	}
 }

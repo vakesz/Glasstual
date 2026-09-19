@@ -54,16 +54,18 @@ nonisolated struct TranscriptRenderer {
 	 file's call chain — `result(from:)` projects it into the `Sendable`
 	 `TranscriptBody` the transcript draws. */
 	private let configuration: TranscriptRenderOptions
-	private let members: [RenderedMember]
+	private let members: RenderedMemberDirectory
 	private var body: String
 	private var links: [LinkParserResult] = []
 	private var mentionedNicknames: [String] = []
 	private var isHighlight = false
 
-	init(body: String, configuration: TranscriptRenderOptions, members: [RenderedMember]) {
+	init(body: String, configuration: TranscriptRenderOptions, members: RenderedMemberDirectory) {
 		self.body = body
 		self.configuration = configuration
-		self.members = members
+		self.members = members.caseMapping == configuration.caseMapping
+			? members
+			: RenderedMemberDirectory(members.members, caseMapping: configuration.caseMapping)
 	}
 
 	private var lineType: ChatLineKind {
@@ -171,29 +173,23 @@ nonisolated struct TranscriptRenderer {
 		var nicknameCount = 0
 		var nicknameLength = 0
 
-		for member in members {
-			for range in ranges(of: member.nickname, options: .caseInsensitive) {
-				guard isSurroundedByNonAlphanumerics(range),
-				      attributedBody.attribute(RendererFormatting.url, at: range.location, effectiveRange: nil) == nil
-				else { continue }
+		for reference in TranscriptMemberReference.locate(in: body, members: members) {
+			let range = reference.range
+			guard attributedBody.attribute(RendererFormatting.url, at: range.location, effectiveRange: nil) == nil
+			else { continue }
+			if reference.isExplicitMention {
 				attributedBody.addAttribute(
 					RendererFormatting.conversationTracking,
-					value: member.nickname,
+					value: reference.nickname,
 					range: range
 				)
-				if mentionedNicknames.contains(member.nickname) == false {
-					mentionedNicknames.append(member.nickname)
+				if mentionedNicknames.contains(reference.nickname) == false {
+					mentionedNicknames.append(reference.nickname)
 				}
-				if attributedBody.attribute(
-					RendererFormatting.keywordHighlight,
-					at: range.location,
-					effectiveRange: nil
-				)
-					== nil
-				{
-					nicknameCount += 1
-					nicknameLength += range.length
-				}
+			}
+			if attributedBody.attribute(RendererFormatting.keywordHighlight, at: range.location, effectiveRange: nil) == nil {
+				nicknameCount += 1
+				nicknameLength += range.length
 			}
 		}
 
@@ -335,11 +331,68 @@ nonisolated struct TranscriptRenderer {
 	}
 }
 
+/// A complete member nickname in the message, with explicit address markers
+/// kept separate from the bare names used to detect highlight spam.
+private nonisolated struct TranscriptMemberReference {
+	let nickname: String
+	let range: NSRange
+	let isExplicitMention: Bool
+
+	static func locate(in text: String, members: RenderedMemberDirectory) -> [Self] {
+		let scalars = Array(text.unicodeScalars)
+		var references: [Self] = []
+		var index = 0
+		var utf16Offset = 0
+		while index < scalars.count {
+			guard isNicknameCharacter(scalars[index]) else {
+				utf16Offset += scalars[index].value > 0xFFFF ? 2 : 1
+				index += 1
+				continue
+			}
+			let start = index
+			let rangeStart = utf16Offset
+			while index < scalars.count, isNicknameCharacter(scalars[index]) {
+				utf16Offset += scalars[index].value > 0xFFFF ? 2 : 1
+				index += 1
+			}
+			let spelling = String(String.UnicodeScalarView(scalars[start ..< index]))
+			guard let member = members.member(named: spelling) else { continue }
+			references.append(Self(
+				nickname: member.nickname,
+				range: NSRange(location: rangeStart, length: utf16Offset - rangeStart),
+				isExplicitMention: hasAddressMarker(in: scalars, start: start, end: index)
+			))
+		}
+		return references
+	}
+
+	private static func hasAddressMarker(in scalars: [Unicode.Scalar], start: Int, end: Int) -> Bool {
+		let previous = start > 0 ? scalars[start - 1] : nil
+		let next = end < scalars.count ? scalars[end] : nil
+		if previous == "@" {
+			// Reject email addresses and repeated markers, including an embedded
+			// address with a trailing colon. The marker must begin its own word.
+			guard next != "@" else { return false }
+			return start == 1 || (scalars[start - 2] != "@" && !isNicknameCharacter(scalars[start - 2]))
+		}
+		return next == ":"
+	}
+
+	private static func isNicknameCharacter(_ scalar: Unicode.Scalar) -> Bool {
+		// Keep IRC's nickname punctuation together so @get cannot target the
+		// first part of get_more or get-away. Combining marks stay attached
+		// before the directory applies the server's Unicode normalization.
+		CharacterSet.alphanumerics.contains(scalar)
+			|| CharacterSet.nonBaseCharacters.contains(scalar)
+			|| "-[]\\`_^{}|~".unicodeScalars.contains(scalar)
+	}
+}
+
 extension TranscriptRenderer {
 	nonisolated static func renderNativeBody( // nonisolated: pure
 		_ body: String,
 		withAttributes configuration: TranscriptRenderOptions,
-		members: [RenderedMember]
+		members: RenderedMemberDirectory
 	) -> TranscriptBody {
 		guard body.isEmpty == false else { return TranscriptBody() }
 		var renderer = TranscriptRenderer(body: body, configuration: configuration, members: members)
@@ -397,7 +450,6 @@ nonisolated struct TranscriptRenderOptions: Sendable {
 	var excludedKeywords: [String] = []
 	/// The setting facts the render needs, taken on the main actor.
 	var textPolicy = TranscriptTextRules()
-	/// The server's casemapping, under which a keyword that is somebody's name
-	/// matches every spelling of it.
+	/// The server's casemapping for member nickname references.
 	var caseMapping = ISupportCaseMapping.rfc1459
 }

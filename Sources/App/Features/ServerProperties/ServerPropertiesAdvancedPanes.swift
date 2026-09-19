@@ -257,8 +257,11 @@ struct ServerPropertiesFloodControlPane: View {
 				Text(current, format: .number)
 					.monospacedDigit()
 					.frame(width: 28, alignment: .trailing)
+					.accessibilityHidden(true)
 			}
+			.accessibilityElement(children: .contain)
 		}
+		.accessibilityElement(children: .contain)
 	}
 
 	/// A `Slider` works in `Double`; both limits are stored as counts.

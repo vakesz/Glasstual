@@ -55,12 +55,16 @@ extension MenuActionController {
 	}
 
 	@objc func showChannelModifyTopicSheet(_: Any?) {
-		guard let channel = context.selectedConversation, channel.isChannel else { return }
+		guard let channel = context.selectedConversation,
+		      ChannelActionPermissions(channel: channel, session: context.selectedSession).canModifyTopic
+		else { return }
 		MenuSheetPresenter.presentChannelTopic(for: channel)
 	}
 
 	@objc func showChannelModifyModesSheet(_: Any?) {
-		guard let channel = context.selectedConversation, channel.isChannel else { return }
+		guard let channel = context.selectedConversation,
+		      ChannelActionPermissions(channel: channel, session: context.selectedSession).canChangeModes
+		else { return }
 		MenuSheetPresenter.presentChannelModes(for: channel)
 	}
 

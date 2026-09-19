@@ -3708,6 +3708,150 @@
           }
         }
       }
+    },
+    "channels-empty-title" : {
+      "comment" : "Title in the empty saved-channel list in server properties.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Channels"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nincsenek csatornák"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Kanäle"
+          }
+        }
+      }
+    },
+    "channels-empty-description" : {
+      "comment" : "Guidance in the empty saved-channel list in server properties.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add channels and choose which ones to join when connecting."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adj hozzá csatornákat, és válaszd ki, melyekhez csatlakozol kapcsolódáskor."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Füge Kanäle hinzu und wähle aus, welchen du beim Verbinden beitreten möchtest."
+          }
+        }
+      }
+    },
+    "highlights-empty-title" : {
+      "comment" : "Title in the empty server-specific highlight rule list.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Highlight Rules"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nincsenek kiemelési szabályok"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Hervorhebungsregeln"
+          }
+        }
+      }
+    },
+    "highlights-empty-description" : {
+      "comment" : "Guidance in the empty server-specific highlight rule list.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add keywords to highlight or exclude on this server."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adj meg kulcsszavakat, amelyeket kiemelni vagy kizárni szeretnél ezen a kiszolgálón."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Füge Schlüsselwörter hinzu, die auf diesem Server hervorgehoben oder ausgeschlossen werden sollen."
+          }
+        }
+      }
+    },
+    "address-book-empty-title" : {
+      "comment" : "Title in the empty server-specific address book.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Address Book Entries"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nincsenek címjegyzékbejegyzések"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Adressbucheinträge"
+          }
+        }
+      }
+    },
+    "address-book-empty-description" : {
+      "comment" : "Guidance in the empty server-specific address book containing ignore and tracking rules.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add ignore rules or track users when they come online."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adj hozzá figyelmen kívül hagyási szabályokat, vagy kövesd a felhasználók elérhetőségét."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Füge Ignorierregeln hinzu oder verfolge, wann Benutzer online kommen."
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

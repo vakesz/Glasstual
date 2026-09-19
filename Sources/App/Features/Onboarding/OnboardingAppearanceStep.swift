@@ -20,6 +20,7 @@ struct OnboardingAppearanceView: View {
 				ForEach(OnboardingTranscriptStyle.allCases) { style in
 					OnboardingStylePreview(
 						style: style,
+						colorScheme: previewColorScheme,
 						fontSize: settings.appearance.textSize.fontSize,
 						isSelected: settings.appearance.transcriptStyle == style
 					) { settings.appearance.transcriptStyle = style }
@@ -27,7 +28,6 @@ struct OnboardingAppearanceView: View {
 			}
 			.accessibilityElement(children: .contain)
 			.accessibilityLabel(Text(.Onboarding.chatStyle))
-			.environment(\.colorScheme, previewColorScheme)
 
 			Form {
 				Picker(.Onboarding.textSize, selection: $settings.appearance.textSize) {
@@ -69,6 +69,7 @@ private struct OnboardingAppearancePreviewMessage {
 
 private struct OnboardingStylePreview: View {
 	let style: OnboardingTranscriptStyle
+	let colorScheme: ColorScheme
 	let fontSize: CGFloat
 	let isSelected: Bool
 	let select: () -> Void
@@ -122,6 +123,7 @@ private struct OnboardingStylePreview: View {
 							.padding(UISpacing.regular)
 					}
 				}
+				.environment(\.colorScheme, colorScheme)
 
 				Text(style.title).font(.headline)
 				Text(style.summary)
@@ -133,6 +135,7 @@ private struct OnboardingStylePreview: View {
 		.frame(maxWidth: .infinity)
 		.accessibilityElement(children: .ignore)
 		.accessibilityLabel(Text(style.title))
+		.accessibilityAddTraits(.isButton)
 		.accessibilityAddTraits(isSelected ? [.isSelected] : [])
 	}
 

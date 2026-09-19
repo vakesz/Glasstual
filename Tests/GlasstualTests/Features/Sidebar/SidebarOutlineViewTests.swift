@@ -181,6 +181,50 @@ struct SidebarOutlineViewTests {
 		#expect(fixture.outline.proposedMove(identity: identity, parent: parent, childIndex: 0) == nil)
 	}
 
+	@Test("Exported sidebar cells expose reorder actions without duplicate text or changing native selection")
+	func exportedSidebarAccessibility() throws {
+		let fixture = Fixture(channelNames: ["#first", "#second", "#third"])
+		defer { fixture.close() }
+		fixture.model.select(fixture.channels[1])
+		fixture.apply()
+		fixture.window.setFrameOrigin(NSPoint(x: -4000, y: -4000))
+		fixture.window.order(.below, relativeTo: 0)
+		fixture.outline.layoutSubtreeIfNeeded()
+		fixture.window.displayIfNeeded()
+		let rows = NativeTableAccessibility.rows(in: fixture.outline)
+		try #require(rows.count == fixture.outline.numberOfRows)
+		let entries = NativeTableAccessibility.descendants(of: rows[2]).filter { $0.accessibilityRole() == .staticText }
+		try #require(entries.count == 1)
+		let entry = try #require(entries.first)
+		let identity = SidebarNodeID.conversation(fixture.channels[1].uniqueIdentifier)
+		let node = try #require(fixture.outline.tree.nodes[identity])
+		#expect(entry.accessibilityLabel() == node.accessibilityDescription)
+		#expect(entry.accessibilityChildren()?.isEmpty != false)
+		let actions = try #require(entry.accessibilityCustomActions())
+		#expect(actions.map(\.name) == [String(localized: .MainWindow.sidebarMoveUp), String(localized: .MainWindow.sidebarMoveDown)])
+		let action = try #require(actions.first)
+		#expect(try NSApp.sendAction(#require(action.selector), to: action.target, from: nil))
+		#expect(fixture.session.conversationList.first === fixture.channels[1])
+		#expect(fixture.model.selectedItem === fixture.channels[1])
+		// This fixture has no MainWindow chat observer to publish the move.
+		fixture.model.filterText = ""
+		fixture.apply()
+		let reorderedRows = NativeTableAccessibility.rows(in: fixture.outline)
+		#expect(fixture.outline.selectedRow == 1)
+		#expect(NativeTableAccessibility.isSelected(reorderedRows[1]))
+		let reorderedEntry = try #require(NativeTableAccessibility.descendants(of: reorderedRows[1]).first {
+			$0.accessibilityRole() == .staticText
+		})
+		#expect(reorderedEntry.accessibilityCustomActions()?.map(\.name) == [String(localized: .MainWindow.sidebarMoveDown)])
+		fixture.model.filterText = "second"
+		fixture.apply()
+		let filteredRows = NativeTableAccessibility.rows(in: fixture.outline)
+		let filteredEntry = try #require(NativeTableAccessibility.descendants(of: filteredRows[1]).first {
+			$0.accessibilityRole() == .staticText
+		})
+		#expect(filteredEntry.accessibilityCustomActions()?.isEmpty == true)
+	}
+
 	@Test("Either the app preference or Reduce Transparency makes the entire sidebar opaque")
 	func opaqueSidebarPolicy() {
 		#expect(!SidebarAppearance.usesOpaqueBackground(translucencyDisabled: false, reducesTransparency: false))

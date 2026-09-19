@@ -264,7 +264,8 @@ private struct OnboardingNetworkDetailView: View {
 					label: String(localized: .Onboarding.serverAddress),
 					problem: picker.serverAddressProblem
 				) {
-					TextField(.Onboarding.ircExampleOrg, text: $picker.draft.serverAddress)
+					TextField(.Onboarding.serverAddress, text: $picker.draft.serverAddress,
+					          prompt: Text(.Onboarding.ircExampleOrg))
 						.accessibilityIdentifier("network-address")
 				}
 
@@ -325,6 +326,7 @@ private struct OnboardingNetworkDetailView: View {
 						)
 						.labelsHidden()
 					}
+					.accessibilityElement(children: .contain)
 					ValidatedFormRow(
 						label: String(localized: .Onboarding.networkPickerPassword),
 						problem: picker.accountProblem

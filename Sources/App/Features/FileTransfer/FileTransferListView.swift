@@ -52,7 +52,8 @@ struct FileTransferListView: View {
 				}
 			}
 			.listStyle(.inset)
-			.alternatingRowBackgrounds()
+			.alternatingRowBackgrounds(model.visibleTransfers.isEmpty ? .disabled : .enabled)
+			.accessibilityLabel(Text(.FileTransfer.fileTransfers))
 			.overlay {
 				if model.visibleTransfers.isEmpty {
 					ContentUnavailableView {
@@ -70,7 +71,6 @@ struct FileTransferListView: View {
 				return .handled
 			}
 			.onDeleteCommand(perform: model.selection.isEmpty ? nil : { center.perform(.remove, on: model.selection) })
-			.accessibilityLabel(Text(.FileTransfer.fileTransfers))
 
 			Divider()
 			HStack(spacing: UISpacing.regular) {
