@@ -1824,6 +1824,30 @@
           }
         }
       }
+    },
+    "no-shared-cipher-suite" : {
+      "comment" : "Added after the errSSLPeerHandshakeFail (-9824) and errSSLNegotiation (-9801) descriptions: the handshake failed because the server accepted none of the cipher suites the application offered. One sentence, follows the error description.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "There was no cipher suite in common with the server."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nincs a kiszolgálóval közös titkosítási csomag."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Es gab keine mit dem Server gemeinsame Cipher-Suite."
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

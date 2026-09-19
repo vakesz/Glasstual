@@ -32,7 +32,7 @@ nonisolated enum AccessibilityStrings {
 		String(localized: .Accessibility.mainWindow)
 	}
 
-	static func privateMessageQuery(with nickname: String) -> String {
+	static func directConversation(with nickname: String) -> String {
 		String(localized: .Accessibility.queryWithUser(nickname))
 	}
 

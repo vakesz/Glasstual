@@ -41,10 +41,9 @@ private let propertyListModelLogger = Logger(
 /** Moves `Codable` value models between Swift and the property-list
  dictionaries Glasstual keeps in `UserDefaults`.
 
- Everything on disk was written by `NSDictionary`, so the round trip goes
- through `PropertyListSerialization`: the same numbers, booleans, strings, data
- and nested containers come back out, which is what keeps an existing
- preferences file readable by this build and readable again by the last one. */
+ The round trip goes through `PropertyListSerialization`, so the same numbers,
+ booleans, strings, data and nested containers come back out as `UserDefaults`
+ stored them. */
 public enum PropertyListModel {
 	/// Decodes `dictionary`, or returns `nil` and logs when it does not describe
 	/// a `Model`. Callers skip the malformed entry rather than aborting.
@@ -69,7 +68,7 @@ public enum PropertyListModel {
 		}
 	}
 
-	/// Encodes `value` into the dictionary shape the preferences file stores.
+	/// Encodes `value` into the dictionary shape the settings file stores.
 	/// Returns an empty dictionary and logs if the model is not representable.
 	public static func encode(_ value: some Encodable) -> [String: PropertyListValue] {
 		let encoder = PropertyListEncoder()
@@ -104,39 +103,25 @@ public enum PropertyListModel {
 }
 
 public extension KeyedDecodingContainer {
-	/** Reads `key`, falling back to the first `aliases` entry that is present.
+	/** Reads `key`, or `defaultValue` when the stored dictionary has no usable
+	 entry for it.
 
-	 Configuration dictionaries written by earlier releases spell several
-	 settings differently — `ignoreCTCP` for `ignoreClientToClientProtocol`, and
-	 so on. The canonical key wins whenever both are present. */
+	 A configuration dictionary is whatever is on disk, so one unreadable field
+	 costs that field rather than the whole value. */
 	func decode<Value: Decodable>(
 		_ type: Value.Type,
 		forKey key: Key,
-		aliases: [Key] = [],
 		default defaultValue: Value
 	) -> Value {
-		for candidate in [key] + aliases {
-			if let value = try? decodeIfPresent(type, forKey: candidate) {
-				return value
-			}
-		}
-
-		return defaultValue
+		(try? decodeIfPresent(type, forKey: key)) ?? defaultValue
 	}
 
-	/// As above, but yields `nil` when neither the canonical key nor any alias
-	/// is present, so an absent optional stays absent instead of being wiped.
+	/// As above, but yields `nil` when the key is absent, so an absent optional
+	/// stays absent instead of being wiped.
 	func decodeOptional<Value: Decodable>(
 		_ type: Value.Type,
-		forKey key: Key,
-		aliases: [Key] = []
+		forKey key: Key
 	) -> Value? {
-		for candidate in [key] + aliases {
-			if let value = try? decodeIfPresent(type, forKey: candidate) {
-				return value
-			}
-		}
-
-		return nil
+		(try? decodeIfPresent(type, forKey: key)) ?? nil
 	}
 }

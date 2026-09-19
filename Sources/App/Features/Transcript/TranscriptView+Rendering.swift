@@ -55,7 +55,7 @@ extension TranscriptView {
 			 popover is anchored to the name alone. */
 			var separatorAttributes = attributes
 			separatorAttributes.removeValue(forKey: .transcriptAction)
-			appendIsolated(
+			TranscriptTextSanitizer.appendIsolated(
 				NSAttributedString(string: header.nickname, attributes: attributes),
 				to: result,
 				isolateAttributes: separatorAttributes
@@ -74,7 +74,7 @@ extension TranscriptView {
 				attributes: runAttributes(run, line: line, paragraph: paragraph)
 			))
 		}
-		appendIsolated(body, to: result, isolateAttributes: metadata)
+		TranscriptTextSanitizer.appendIsolated(body, to: result, isolateAttributes: metadata)
 		result.addAttribute(.transcriptSelectionSegment, value: "body",
 		                    range: NSRange(location: bodyStart, length: result.length - bodyStart))
 		let detailsStart = result.length
@@ -94,22 +94,6 @@ extension TranscriptView {
 	 is not isolated can carry the name before it or the reactions after it
 	 along with its own direction. The isolate's two characters are layout, and
 	 carry the padding mark that keeps them off the pasteboard. */
-	func appendIsolated(
-		_ text: NSAttributedString,
-		to result: NSMutableAttributedString,
-		isolateAttributes: [NSAttributedString.Key: Any]
-	) {
-		guard text.length > 0 else { return }
-		var attributes = isolateAttributes
-		attributes.removeValue(forKey: .transcriptAction)
-		attributes.removeValue(forKey: .transcriptReaction)
-		attributes.removeValue(forKey: .link)
-		attributes[.transcriptPadding] = true
-		result.append(NSAttributedString(string: TranscriptTextSanitizer.isolateStart, attributes: attributes))
-		result.append(text)
-		result.append(NSAttributedString(string: TranscriptTextSanitizer.isolateEnd, attributes: attributes))
-	}
-
 	func metadataAttributes(
 		for line: TranscriptRow,
 		paragraph: NSParagraphStyle
@@ -139,7 +123,7 @@ extension TranscriptView {
 		let controller = AppServices.theme
 		let palette = controller.theme.palette
 		let fallback = line.memberType == .localUser ? palette.localNickname : palette.remoteNickname
-		let color = Preferences.Messages.disableNicknameColorHashing.value
+		let color = SettingsKeys.Messages.disableNicknameColorHashing.value
 			? themeColor(fallback)
 			: nicknameColor(for: line.nickname ?? "")
 		var attributes = lineAttributes(for: line).merging([
@@ -276,13 +260,13 @@ extension TranscriptView {
 		let clock = themeColor(palette.timestampText)
 		return switch line.deliveryState {
 		case .pending:
-			DeliveryPresentation(symbol: "clock", label: String(localized: .TranscriptTheme.pending), color: clock)
+			DeliveryPresentation(symbol: "clock", label: String(localized: .Transcript.pending), color: clock)
 		case .delivered:
-			DeliveryPresentation(symbol: "checkmark", label: String(localized: .TranscriptTheme.delivered), color: clock)
+			DeliveryPresentation(symbol: "checkmark", label: String(localized: .Transcript.delivered), color: clock)
 		case .failed:
 			DeliveryPresentation(
 				symbol: "exclamationmark.triangle.fill",
-				label: String(localized: .TranscriptTheme.failed),
+				label: String(localized: .Transcript.failed),
 				color: themeColor(palette.failure)
 			)
 		case .none:
@@ -322,7 +306,7 @@ extension TranscriptView {
 		piece.addAttributes(attributes, range: NSRange(location: 0, length: piece.length))
 		if line.deliveryState == .failed, let reason = line.deliveryFailureReason, reason.isEmpty == false {
 			piece.append(NSAttributedString(string: " ", attributes: attributes))
-			appendIsolated(
+			TranscriptTextSanitizer.appendIsolated(
 				NSAttributedString(string: TranscriptTextSanitizer.singleLine(reason), attributes: attributes),
 				to: piece,
 				isolateAttributes: attributes
@@ -370,7 +354,7 @@ extension TranscriptView {
 			var padding = attributes
 			padding[.transcriptPadding] = true
 			result.append(NSAttributedString(string: "\u{2009}", attributes: padding))
-			appendIsolated(
+			TranscriptTextSanitizer.appendIsolated(
 				NSAttributedString(string: TranscriptTextSanitizer.singleLine(emoji), attributes: attributes),
 				to: result,
 				isolateAttributes: attributes
@@ -407,63 +391,8 @@ extension TranscriptView {
 			.accessibilityCustomText: [description],
 			.toolTip: inlineImage.sourceURL.absoluteString,
 			.transcriptInlineImage: inlineImage.sourceURL.absoluteString,
-		], range: attachmentString.fullRange)
+		], range: NSRange(location: 0, length: attachmentString.length))
 		result.append(attachmentString)
-	}
-
-	func attributedTopic(_ topic: String) -> NSAttributedString {
-		let palette = AppServices.theme.theme.palette
-		/* The topic is context, not conversation: secondary text at the body
-		 size, with only its links in the link colour. It follows ⌘= and ⌘−
-		 with the transcript, because it is text in the same window and a
-		 reader who needs the messages larger needs the topic larger too. */
-		let bodySize = NSFont.preferredFont(forTextStyle: .body).pointSize
-		let font = NSFont.systemFont(ofSize: bodySize * textScale)
-		let secondary = themeColor(palette.secondaryText)
-		/* A topic is wire text: it carries the same control codes a message
-		 does, and drawing the string as it arrived put the codes themselves in
-		 the bar, in its tooltip and on the pasteboard. */
-		let result = (topic as NSString).attributedString(
-			withIRCFormatting: font,
-			preferredFontColor: secondary,
-			honorFormattingPreference: true
-		).map(NSMutableAttributedString.init(attributedString:))
-			?? NSMutableAttributedString(string: topic, attributes: [
-				.font: font,
-				.foregroundColor: secondary,
-			])
-		/* Anybody allowed to set the topic can put a line break or a reversal
-		 in it; the bar is one line of text, in the reading order it is given. */
-		TranscriptTextSanitizer.sanitize(result)
-		/* The links are located in the text as drawn: a scan of the wire form
-		 counts the control codes too, and every range after the first one is
-		 then a few characters out. */
-		for link in LinkParser.locateLinks(in: result.string)
-			where LinkParser.isPermittedLink(link.stringValue)
-		{
-			guard let url = URL(string: link.stringValue), NSMaxRange(link.range) <= result.length else {
-				continue
-			}
-			result.addAttributes([
-				.link: url,
-				.foregroundColor: themeColor(palette.link),
-				.underlineStyle: NSUnderlineStyle.single.rawValue,
-			], range: link.range)
-		}
-		return result
-	}
-
-	/** The caption the topic bar draws after the topic: the channel's modes.
-
-	 Dimmer than the topic and a shade smaller, because it is the bar's own
-	 context rather than text anybody wrote. */
-	func attributedTopicCaption(_ caption: String) -> NSAttributedString {
-		let palette = AppServices.theme.theme.palette
-		let bodySize = NSFont.preferredFont(forTextStyle: .body).pointSize
-		return NSAttributedString(string: caption, attributes: [
-			.font: NSFont.monospacedDigitSystemFont(ofSize: bodySize * textScale * 0.9, weight: .regular),
-			.foregroundColor: themeColor(palette.timestampText),
-		])
 	}
 
 	func resolved(_ color: TranscriptRunColor?) -> NSColor? {
@@ -558,113 +487,9 @@ extension TranscriptView {
 extension TranscriptView {
 	/// The theme's font at this view's text scale. Every attribute run starts
 	/// from it, so the scale is applied once, here.
-	func effectiveFont(_ controller: ThemeController) -> NSFont {
+	func effectiveFont(_ controller: ThemeStore) -> NSFont {
 		let font = controller.font
 		return NSFont(name: font.fontName, size: font.pointSize * textScale)
 			?? NSFont.systemFont(ofSize: font.pointSize * textScale)
-	}
-}
-
-private extension NSAttributedString {
-	var fullRange: NSRange {
-		NSRange(location: 0, length: length)
-	}
-}
-
-extension NSAttributedString.Key {
-	static let transcriptLineNumber = NSAttributedString.Key("GlasstualTranscriptLineNumber")
-	/// The name the run itself spells: the author's, on the name that heads the
-	/// line, and the mentioned member's, on a mention inside a message.
-	static let transcriptNickname = NSAttributedString.Key("GlasstualTranscriptNickname")
-	/** Who wrote the line this run belongs to. Every run of a line carries it,
-	 including the timestamp and the body, which is what lets a reply raised
-	 from anywhere in a message name its author. */
-	static let transcriptLineNickname = NSAttributedString.Key("GlasstualTranscriptLineNickname")
-	static let transcriptLineType = NSAttributedString.Key("GlasstualTranscriptLineType")
-	static let transcriptMessageIdentifier = NSAttributedString.Key("GlasstualTranscriptMessageIdentifier")
-	static let transcriptExcerpt = NSAttributedString.Key("GlasstualTranscriptExcerpt")
-	/// A `TranscriptAction`: what the run stands for when it is clicked.
-	static let transcriptAction = NSAttributedString.Key("GlasstualTranscriptAction")
-	/// A `TranscriptReactionTarget`: the run is a reaction chip, and clicking
-	/// it reacts to that message.
-	static let transcriptReaction = NSAttributedString.Key("GlasstualTranscriptReaction")
-	/// The address an inline image was fetched from, on the character that
-	/// draws it.
-	static let transcriptInlineImage = NSAttributedString.Key("GlasstualTranscriptInlineImage")
-	static let transcriptSelectionSegment = NSAttributedString.Key("GlasstualTranscriptSelectionSegment")
-	/** Characters the transcript drew for its own layout rather than for the
-	 text: the thin spaces that pad a reaction chip, the zero-width space an
-	 unread marker stands on, the isolates wire text is drawn inside. Copying
-	 leaves exactly these out, and nothing the sender typed. */
-	static let transcriptPadding = NSAttributedString.Key("GlasstualTranscriptPadding")
-	/** A hairline drawn across the paragraph that carries it, in this colour,
-	 `transcriptRuleInset` points below the paragraph's top; the paragraph's
-	 layout fragment is a `TranscriptRuleLayoutFragment`. It stands in for an
-	 `NSTextBlock` border: text blocks are TextKit 1 features, and a view whose
-	 storage holds one is silently moved back to TextKit 1, where the
-	 transcript's bottom alignment does not exist. */
-	nonisolated static let transcriptRuleColor =
-		NSAttributedString.Key("GlasstualTranscriptRuleColor")
-	nonisolated static let transcriptRuleInset =
-		NSAttributedString.Key("GlasstualTranscriptRuleInset")
-}
-
-struct CachedTranscriptImage {
-	let linkIdentifier: String
-	/// Where the image came from, so its run can offer the link it stands for.
-	let sourceURL: URL
-	let image: NSImage
-	let originalSize: NSSize
-	let attachment: NSTextAttachment
-}
-
-/** The layout fragment for a paragraph that carries a separator: the unread
- hairline, or the rule above the current-session caption. It draws the
- paragraph as TextKit 2 would and adds the rule, `ruleInset` points below the
- paragraph's top, across the container's width.
-
- This is where TextKit 2 puts a paragraph's decoration. The alternative, an
- `NSTextBlock` border in the paragraph style, is a TextKit 1 feature, and a
- text view whose storage holds one is silently moved back to TextKit 1. */
-final nonisolated class TranscriptRuleLayoutFragment: NSTextLayoutFragment { // nonisolated: immutable
-	let ruleColor: NSColor
-	let ruleInset: CGFloat
-
-	init(textElement: NSTextElement, range: NSTextRange?, ruleColor: NSColor, ruleInset: CGFloat) {
-		self.ruleColor = ruleColor
-		self.ruleInset = ruleInset
-		super.init(textElement: textElement, range: range)
-	}
-
-	@available(*, unavailable)
-	required init?(coder _: NSCoder) {
-		fatalError("TranscriptRuleLayoutFragment is not archived")
-	}
-
-	/** Where the rule goes, relative to the fragment's origin. The fragment's
-	 own frame is only what its centred text used -- nothing at all for the
-	 unread marker's zero-width glyph -- so the rule is measured from the
-	 container's edges instead, the way the old text block's border was. */
-	private var ruleBounds: CGRect {
-		let container = textLayoutManager?.textContainer
-		let padding = container?.lineFragmentPadding ?? 0
-		let width = (container?.size.width ?? layoutFragmentFrame.width) - padding * 2
-		return CGRect(x: padding - layoutFragmentFrame.minX, y: ruleInset, width: max(0, width), height: 1)
-	}
-
-	/// The surface has to cover the rule, which lies outside the text's own
-	/// bounds on both sides and, for the marker paragraph, below its glyph.
-	override var renderingSurfaceBounds: CGRect {
-		super.renderingSurfaceBounds.union(ruleBounds)
-	}
-
-	override func draw(at point: CGPoint, in context: CGContext) {
-		super.draw(at: point, in: context)
-		let rule = ruleBounds
-		guard rule.width > 0 else { return }
-		context.saveGState()
-		context.setFillColor(ruleColor.cgColor)
-		context.fill(rule.offsetBy(dx: point.x, dy: point.y))
-		context.restoreGState()
 	}
 }

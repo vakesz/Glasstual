@@ -25,7 +25,7 @@ Swift-only.
   existing archived runtime boundary.
 - Keep wire, persistence, notification and system identifiers at typed
   boundary adapters. Avoid raw defaults keys and duplicated protocol strings.
-- `@objc` marks a nib, KVO, selector or XPC runtime boundary. Swift-to-Swift
+- `@objc` marks a KVO, selector or XPC runtime boundary. Swift-to-Swift
   calls stay native.
 
 ## Isolation
@@ -59,15 +59,16 @@ the compiler cannot prove that boundary.
 The four isolation rules in `.swiftlint.yml` stay at zero. A finding means
 the boundary must move; it does not justify an exclusion or suppression.
 
-## Preferences, transcript and localization
+## Settings, transcript and localization
 
-- Declare typed `PreferenceKey` values under
-  `Sources/App/Preferences/Keys`. Read and write through those declarations.
-  Registration, storage routing and import/export filtering derive from the
-  declarations, with no generated plist mirror.
-- `Sources/Shared` contains XPC declarations and the app preference store.
-  Only the explicitly listed shared files compile into the connection host,
-  which reads no preferences.
+- Declare typed `SettingsKey` values under `Sources/App/SettingsKeys`, which
+  also holds the defaults store and the launch-time registration, repair and
+  reload steps. Read and write through those declarations. Registration, storage
+  routing and import/export filtering derive from the declarations, with no
+  generated plist mirror.
+- `Sources/Shared` contains the XPC declarations and nothing else, so both the
+  app and the connection host compile the whole folder. The connection host
+  reads no settings.
 - `TranscriptRenderer` produces semantic `TranscriptRow` values and the
   TextKit adapter draws them. Keep HTML, CSS, JavaScript, WebKit and script
   bridges out of the transcript.
@@ -98,8 +99,8 @@ the boundary must move; it does not justify an exclusion or suppression.
 
 - Write new tests with Swift Testing in `Tests/GlasstualTests`, named after
   their subject. Test decisions and runtime contracts, not compiler
-  guarantees. Runtime-name tests belong only where a nib, archive or protocol
-  constant depends on the name.
+  guarantees. Runtime-name tests belong only where an archive, a saved window
+  frame, KVO or a protocol constant depends on the name.
 - End-to-end coverage uses the Accessibility harness under
   `Tests/E2EHarness`, not XCTest UI automation.
 - Every test runs. Fix or remove failures; `.disabled` and `withKnownIssue`

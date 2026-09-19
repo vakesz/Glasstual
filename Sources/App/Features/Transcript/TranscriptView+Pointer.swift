@@ -57,23 +57,11 @@ extension TranscriptView {
 		      textView.selectedRange().length == 0
 		else { return }
 		if let reaction = clickedReaction(at: click.point) {
-			policy.reactionChipClicked(reaction)
+			commands.reactionChipClicked(reaction)
 			return
 		}
 		guard let (nickname, range) = clickedNickname(at: click.point) else { return }
 		showMemberInformation(for: nickname, spelledIn: range, clickedAt: click.point)
-	}
-
-	/// `range` if the storage still spells `nickname` there, and nothing if the
-	/// document moved underneath the click.
-	private func nicknameRange(spelling nickname: String, at range: NSRange) -> NSRange? {
-		guard let storage = textView.textStorage, range.length > 0, NSMaxRange(range) <= storage.length
-		else { return nil }
-		var current = NSRange(location: NSNotFound, length: 0)
-		guard case let .nickname(spelled) = storage.attribute(
-			.transcriptAction, at: range.location, effectiveRange: &current
-		) as? TranscriptAction, spelled == nickname, NSEqualRanges(current, range) else { return nil }
-		return current
 	}
 
 	private func showMemberInformation(for nickname: String, spelledIn range: NSRange, clickedAt point: NSPoint) {
@@ -179,9 +167,9 @@ extension TranscriptView {
 		closeMemberInformation()
 		prepareContextTarget(at: recognizer.location(in: textView))
 		if contextMenuTarget.channelName != nil {
-			policy.channelNameDoubleClicked(in: self)
+			commands.channelNameDoubleClicked(in: self)
 		} else if contextMenuTarget.nickname != nil {
-			policy.nicknameDoubleClicked(in: self)
+			commands.nicknameDoubleClicked(in: self)
 		}
 	}
 }

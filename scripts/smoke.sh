@@ -57,7 +57,8 @@ review_paths=(
 seed_plist="$container_prefs/$SUITE.plist"
 source_plist="$HOME/Library/Group Containers/$GROUP_ID/Library/Preferences/$GROUP_ID.plist"
 plistbuddy=/usr/libexec/PlistBuddy
-client_list_key="World Controller Client Configurations"
+# Preferences.Sessions.serverSessions; see Sources/App/SettingsKeys.
+client_list_key="Sessions -> Server Sessions"
 
 fail() {
 	echo "smoke: $*" >&2

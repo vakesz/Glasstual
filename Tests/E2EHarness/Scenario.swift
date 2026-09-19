@@ -92,7 +92,7 @@ enum Scenario {
 		}
 		let token = "e2e-" + UUID().uuidString.lowercased()
 		let suite = "com.vakesz.glasstual." + token
-		let preferences = try startupPreferences(port: port, kind: kind)
+		let settings = try startupSettings(port: port, kind: kind)
 		try HarnessFiles.write(suite, to: "scratch-suite.txt")
 		let appProcess = Process()
 		appProcess.executableURL = executable
@@ -103,7 +103,7 @@ enum Scenario {
 		}.merging([
 			"GLASSTUAL_UI_REVIEW_SUITE": suite,
 			"GLASSTUAL_UI_REVIEW_DIRECTORY": token,
-			"GLASSTUAL_UI_REVIEW_PREFERENCES": preferences,
+			"GLASSTUAL_UI_REVIEW_PREFERENCES": settings,
 		]) { _, value in value }
 		appProcess.standardOutput = FileHandle.nullDevice
 		appProcess.standardError = FileHandle.nullDevice
@@ -258,23 +258,30 @@ enum Scenario {
 			.write(to: HarnessFiles.root.appendingPathComponent("evidence.json"), options: .atomic)
 	}
 
-	private static func startupPreferences(port: Int, kind: ScenarioKind) throws -> String {
+	/** The defaults key the session list is stored under.
+
+	 The harness drives the shipped binary rather than linking the application,
+	 so it holds the literal; `SettingsKeys.Sessions.serverSessions` declares it,
+	 and `SettingsKeyNamingTests` pins the spelling. */
+	private static let serverSessionsKey = "Sessions -> Server Sessions"
+
+	private static func startupSettings(port: Int, kind: ScenarioKind) throws -> String {
 		let fixtureURL = try URL(fileURLWithPath: HarnessFiles.required("E2E_FIXTURE"))
 		let data = try Data(contentsOf: fixtureURL)
 		guard var fixture = try PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any],
-		      var clients = fixture["World Controller Client Configurations"] as? [[String: Any]], clients.count == 1
+		      var clients = fixture[Self.serverSessionsKey] as? [[String: Any]], clients.count == 1
 		else { throw HarnessFailure.setup("Malformed synthetic startup fixture") }
 		clients[0]["uniqueIdentifier"] = UUID().uuidString
 		clients[0]["serverList"] = [[
 			"uniqueIdentifier": UUID().uuidString,
 			"serverAddress": "127.0.0.1", "serverPort": port, "prefersSecuredConnection": kind.secured,
 		]]
-		fixture["World Controller Client Configurations"] = kind.onboarding ? [] : clients
+		fixture[Self.serverSessionsKey] = kind.onboarding ? [] : clients
 		if kind.onboarding {
-			fixture["Onboarding -> Completed"] = false
-			fixture["DefaultIdentity -> Nickname"] = ""
-			fixture["DefaultIdentity -> Realname"] = ""
-			fixture["DefaultIdentity -> Username"] = "e2euser"
+			fixture["Identity -> Onboarding Completed"] = false
+			fixture["Identity -> Nickname"] = ""
+			fixture["Identity -> Real Name"] = ""
+			fixture["Identity -> Username"] = "e2euser"
 		}
 		let encoded = try PropertyListSerialization.data(fromPropertyList: fixture, format: .xml, options: 0)
 		return encoded.base64EncodedString()

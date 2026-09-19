@@ -6,8 +6,8 @@ import Foundation
 import os
 import Synchronization
 
-nonisolated enum ResourceDocumentType {
-	static let scriptFileExtension = ".scpt"
+/// The filename extension an installable script carries.
+nonisolated enum ResourceDocumentKind {
 	static let scriptFilenameExtension = "scpt"
 }
 
@@ -15,15 +15,16 @@ nonisolated enum ResourceDocumentType {
 nonisolated enum StaticStoreResource {
 	static let name = "StaticStore"
 	static let spellingIgnoresKey = "Spelling Ignores"
-	static let forbiddenScriptCommandsKey = "THOPluginManager List of Forbidden Commands"
-	static let nickServNeedsIdentificationTokensKey = "IRCClient List of NickServ Needs Identification Tokens"
-	static let nickServIdentifiedTokensKey = "IRCClient List of NickServ Successfully Identified Tokens"
+	static let forbiddenScriptCommandsKey = "Forbidden Script Commands"
+	static let nickServNeedsIdentificationTokensKey = "NickServ Needs Identification Tokens"
+	static let nickServIdentifiedTokensKey = "NickServ Identified Tokens"
 }
 
+/// Reading the property lists the application bundle ships with.
 nonisolated enum BundleResources {
 	private static let logger = Logger(
-		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
-		category: "ResourceManager"
+		subsystem: LogSubsystem.current,
+		category: "BundleResources"
 	)
 
 	/// The bundled property lists this process has already read, as the bytes
@@ -50,42 +51,7 @@ nonisolated enum BundleResources {
 		}
 	}
 
-	@concurrent
-	static func copyResourcesToApplicationSupportFolder() async {
-		guard let sourceURL = ApplicationPaths.customScriptsURL,
-		      let destinationRoot = ApplicationPaths.groupContainerApplicationSupportURL
-		else {
-			return
-		}
-
-		let destinationURL = destinationRoot.appendingPathComponent("Custom Scripts", isDirectory: true)
-		let fileManager = FileManager.default
-
-		guard fileManager.fileExists(at: sourceURL),
-		      fileManager.fileExists(at: destinationURL) == false
-		else {
-			return
-		}
-
-		try? fileManager.createSymbolicLink(at: destinationURL, withDestinationURL: sourceURL)
-	}
-
 	// MARK: - Loading
-
-	/// Reads `name`.plist from the bundle and returns `key`'s value, or the
-	/// whole property list when `key` is nil, as `Value`.
-	///
-	/// This replaced sixteen overloads that existed only to spell out these
-	/// defaults for Objective-C, and a `kindOf: AnyClass` runtime check.
-	static func load<Value>(
-		_: Value.Type = Value.self,
-		fromResources name: String,
-		inDirectory subpath: String? = nil,
-		key: String? = nil,
-		cacheValue: Bool = true
-	) -> Value? {
-		loadObject(fromResources: name, inDirectory: subpath, key: key, cacheContents: cacheValue)
-	}
 
 	static func dictionary(
 		fromResources name: String,
@@ -93,7 +59,7 @@ nonisolated enum BundleResources {
 		key: String? = nil,
 		cacheValue: Bool = true
 	) -> [String: PropertyListValue]? {
-		load(Any.self, fromResources: name, inDirectory: subpath, key: key, cacheValue: cacheValue)
+		propertyList(fromResources: name, inDirectory: subpath, key: key, cacheContents: cacheValue)
 			.flatMap { [String: PropertyListValue](propertyList: $0) }
 	}
 
@@ -103,16 +69,19 @@ nonisolated enum BundleResources {
 		key: String? = nil,
 		cacheValue: Bool = true
 	) -> [PropertyListValue]? {
-		load(Any.self, fromResources: name, inDirectory: subpath, key: key, cacheValue: cacheValue)
+		propertyList(fromResources: name, inDirectory: subpath, key: key, cacheContents: cacheValue)
 			.flatMap { [PropertyListValue](propertyList: $0) }
 	}
 
-	private static func loadObject<Value>(
+	/// Reads `name`.plist from the bundle and answers `key`'s value, or the
+	/// whole property list when `key` is nil. The two typed readers above are
+	/// the interface; this is how they read.
+	private static func propertyList(
 		fromResources name: String,
 		inDirectory subpath: String?,
 		key: String?,
 		cacheContents: Bool
-	) -> Value? {
+	) -> Any? {
 		guard let resourceURL = Bundle.main.url(forResource: name, withExtension: "plist", subdirectory: subpath) else {
 			logger.error(
 				"Resource '\(name, privacy: .public)' in subpath '\(subpath ?? "<No subpath>", privacy: .public)' was not found."
@@ -126,10 +95,10 @@ nonisolated enum BundleResources {
 			return nil
 		}
 
-		let propertyList: Any
+		let rootObject: Any
 
 		do {
-			propertyList = try PropertyListSerialization.propertyList(from: fileContents, options: [], format: nil)
+			rootObject = try PropertyListSerialization.propertyList(from: fileContents, options: [], format: nil)
 		} catch {
 			logger.fault(
 				"Resource '\(Self.displayPath(for: resourceURL), privacy: .public)' could not be parsed as a property list with error: \(error.localizedDescription, privacy: .public)"
@@ -138,31 +107,19 @@ nonisolated enum BundleResources {
 			return nil
 		}
 
-		let objectValue: Any?
-
-		if let key {
-			guard let dictionary = [String: PropertyListValue](propertyList: propertyList) else {
-				logger.error(
-					"Contents of resource '\(Self.displayPath(for: resourceURL), privacy: .public)' is not a dictionary. Cannot locate value of 'key' in other formats."
-				)
-
-				return nil
-			}
-
-			objectValue = dictionary[key]?.propertyListObject
-		} else {
-			objectValue = propertyList
+		guard let key else {
+			return rootObject
 		}
 
-		guard let typedValue = objectValue as? Value else {
+		guard let dictionary = [String: PropertyListValue](propertyList: rootObject) else {
 			logger.error(
-				"Contents of key '\(key ?? "<Root Object>", privacy: .public)' in resource '\(Self.displayPath(for: resourceURL), privacy: .public)' is not a \(String(describing: Value.self), privacy: .public)"
+				"Contents of resource '\(Self.displayPath(for: resourceURL), privacy: .public)' is not a dictionary. Cannot locate value of 'key' in other formats."
 			)
 
 			return nil
 		}
 
-		return typedValue
+		return dictionary[key]?.propertyListObject
 	}
 
 	private static func fileContents(

@@ -87,8 +87,8 @@ nonisolated struct NicknameColorOverrides: Sendable {
 
 nonisolated enum NicknameColors {
 	private static let logger = Logger(
-		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
-		category: "NicknameColorStyle"
+		subsystem: LogSubsystem.current,
+		category: "NicknameColors"
 	)
 
 	/// Native transcript colour for a nickname. Pinned colours still win; an
@@ -97,7 +97,7 @@ nonisolated enum NicknameColors {
 	static func color(for inputString: String, overrides: NicknameColorOverrides? = nil) -> NSColor {
 		color(
 			for: inputString,
-			isDark: ThemeSnapshotStore.current.isDarkAppearance,
+			isDark: LiveThemeSnapshot.current.isDarkAppearance,
 			overrides: overrides
 		)
 	}
@@ -143,7 +143,7 @@ nonisolated enum NicknameColors {
 	/// The colour a nickname hashes to, before any pinned colour replaces it.
 	/// The sheet that pins one shows this as what the default colour means.
 	static func generatedColor(for inputString: String) -> NSColor {
-		generatedColor(for: inputString, isDark: ThemeSnapshotStore.current.isDarkAppearance)
+		generatedColor(for: inputString, isDark: LiveThemeSnapshot.current.isDarkAppearance)
 	}
 
 	static func generatedColor(for inputString: String, isDark: Bool) -> NSColor {
@@ -168,37 +168,21 @@ nonisolated enum NicknameColors {
 		return NSNumber(value: value)
 	}
 
-	/// Overrides are stored as their sRGB components. Values written by earlier
-	/// builds are `NSKeyedArchiver` blobs and are still read, so a user's pinned
-	/// colours survive the format change; the next edit rewrites them.
+	/// An override is stored as its sRGB components, which is the only shape
+	/// there is a reader for: anything else a hand-edited plist holds reads as
+	/// no override, leaving the nickname the colour it hashes to.
 	static func pinnedColor(
 		for nickname: String,
 		in overrides: NicknameColorOverrides? = nil
 	) -> NSColor? {
 		let styleKey = colorKey(for: nickname)
-		guard let stored = (overrides?.stored ?? storedOverrides())[styleKey] else {
+		guard let stored = (overrides?.stored ?? storedOverrides())[styleKey]?.dictionary,
+		      let components = NicknameColorComponents(stored: stored.compactMapValues(\.double))
+		else {
 			return nil
 		}
 
-		if let dictionary = stored.dictionary,
-		   let components = NicknameColorComponents(stored: dictionary.compactMapValues(\.double))
-		{
-			return components.color
-		}
-
-		guard let colorData = stored.data else {
-			return nil
-		}
-
-		do {
-			return try NSKeyedUnarchiver.unarchivedObject(ofClass: NSColor.self, from: colorData)
-		} catch {
-			logger.error(
-				"Failed to decode archived nickname color for \(styleKey, privacy: .private): \(error.localizedDescription, privacy: .public)"
-			)
-
-			return nil
-		}
+		return components.color
 	}
 
 	static func setOverride(_ styleValue: NSColor?, for nickname: String) {
@@ -233,7 +217,7 @@ nonisolated enum NicknameColors {
 		overridesKey.detachedPropertyListValue?.dictionary ?? [:]
 	}
 
-	private static var overridesKey: UntypedPreferenceKey {
-		Preferences.Messages.nicknameColorStyleOverrides
+	private static var overridesKey: UntypedSettingsKey {
+		SettingsKeys.Messages.nicknameColorStyleOverrides
 	}
 }

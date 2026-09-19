@@ -7,162 +7,7 @@ import CocoaExtensions
 import Foundation
 import SwiftUI
 
-/** A completed mouse click on the transcript, as the adapter needs to judge it:
- the text view has already placed the caret, followed a link and settled the
- selection by the time one of these is handed over. */
-struct TranscriptClick {
-	let point: NSPoint
-	let clickCount: Int
-	let modifiers: NSEvent.ModifierFlags
-	/// Whether the pointer moved between press and release, which is what a
-	/// selection drag over a name looks like.
-	let dragged: Bool
-}
-
-@MainActor
-final class TranscriptTextView: NSTextView {
-	weak var owner: TranscriptView?
-	private var bottomAlignmentOffset: CGFloat = 0
-
-	/// Told synchronously when the document's height changes, so a transcript
-	/// that follows its end can stay there in the same pass that grew it.
-	var onHeightChange: (@MainActor () -> Void)?
-
-	/** Told about a click once the text view has had it. A gesture recognizer
-	 cannot stand in for this: one that claims the primary button delays every
-	 mouse-down and swallows the events it recognizes, so the caret stops
-	 moving, the selection stops clearing and links stop opening. */
-	var onClick: (@MainActor (TranscriptClick) -> Void)?
-
-	/// Where the click that is currently down began, in view coordinates.
-	private var clickOrigin: NSPoint?
-
-	override func mouseDown(with event: NSEvent) {
-		clickOrigin = convert(event.locationInWindow, from: nil)
-		super.mouseDown(with: event)
-		/* `NSTextView` tracks the drag selection in an event loop of its own and
-		 usually consumes the mouse up that ends it, so the click finishes here;
-		 `mouseUp(with:)` covers the case where it is delivered normally, and
-		 whichever runs first clears the origin. */
-		let ending = NSApp.currentEvent
-		finishClick(endedBy: ending?.type == .leftMouseUp ? ending : nil, startedBy: event)
-	}
-
-	override func mouseUp(with event: NSEvent) {
-		super.mouseUp(with: event)
-		finishClick(endedBy: event, startedBy: event)
-	}
-
-	private func finishClick(endedBy ending: NSEvent?, startedBy start: NSEvent) {
-		guard let origin = clickOrigin else { return }
-		clickOrigin = nil
-		/* Either way it is a left mouse event, which is what makes `clickCount`
-		 meaningful. */
-		let release = ending ?? start
-		let point = convert(release.locationInWindow, from: nil)
-		onClick?(TranscriptClick(
-			point: origin,
-			clickCount: release.clickCount,
-			modifiers: release.modifierFlags.intersection(.deviceIndependentFlagsMask),
-			dragged: abs(point.x - origin.x) > 2 || abs(point.y - origin.y) > 2
-		))
-	}
-
-	override func setFrameSize(_ newSize: NSSize) {
-		let previousHeight = frame.height
-		super.setFrameSize(newSize)
-		if frame.height != previousHeight {
-			onHeightChange?()
-		}
-	}
-
-	override var textContainerOrigin: NSPoint {
-		var origin = super.textContainerOrigin
-		origin.y += bottomAlignmentOffset
-		return origin
-	}
-
-	/// Keeps a short conversation beside the input bar. Once the laid-out text
-	/// is taller than the viewport, TextKit returns to its normal top origin and
-	/// the scroll view behaves like an ordinary transcript.
-	func updateBottomAlignment() {
-		guard let layoutManager = textLayoutManager,
-		      let clipView = enclosingScrollView?.contentView
-		else {
-			bottomAlignmentOffset = 0
-			return
-		}
-
-		let previousOffset = bottomAlignmentOffset
-		bottomAlignmentOffset = 0
-		let origin = super.textContainerOrigin
-		let insets = enclosingScrollView?.contentInsets ?? NSEdgeInsets()
-		let availableHeight = clipView.bounds.height - insets.top - insets.bottom
-		/* Once the laid-out text is taller than the viewport the offset is zero
-		 and stays zero, so only a transcript that still looks short is worth
-		 laying out in full: the alternative is a whole-document layout pass for
-		 every line the view receives. */
-		var contentHeight = layoutManager.usageBoundsForTextContainer.height
-		if contentHeight < availableHeight {
-			layoutManager.ensureLayout(for: layoutManager.documentRange)
-			contentHeight = layoutManager.usageBoundsForTextContainer.height
-		}
-		let offset = max(0, availableHeight - contentHeight - origin.y - textContainerInset.height)
-		bottomAlignmentOffset = offset
-		guard abs(offset - previousOffset) > 0.5 else { return }
-		needsDisplay = true
-	}
-
-	override func keyDown(with event: NSEvent) {
-		if owner?.keyDown(event, in: self) == true {
-			return
-		}
-		super.keyDown(with: event)
-	}
-
-	override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
-		owner?.performDragOperation(sender) ?? false
-	}
-
-	override func menu(for event: NSEvent) -> NSMenu? {
-		owner?.prepareContextTarget(at: convert(event.locationInWindow, from: nil))
-		return owner?.contextMenu(defaultItems: super.menu(for: event)?.items ?? [])
-	}
-
-	/** Writes the selection as text a person can paste somewhere.
-
-	 The plain-text flavour `NSTextView` writes is the storage's characters, and
-	 the transcript's characters include attachments -- a delivery receipt, an
-	 inline image -- which copy as U+FFFC, plus the characters it draws for its
-	 own layout. Each attachment is replaced by the words the renderer attached
-	 for an assistive reader, which is what it says out loud, and the layout's
-	 own characters are left out. Only those: a thin space somebody typed is
-	 part of what they wrote. */
-	override func writeSelection(to pasteboard: NSPasteboard, type: NSPasteboard.PasteboardType) -> Bool {
-		guard type == .string else {
-			return super.writeSelection(to: pasteboard, type: type)
-		}
-		pasteboard.setString(copyableText(in: selectedRange()), forType: .string)
-		return true
-	}
-
-	private func copyableText(in range: NSRange) -> String {
-		guard let storage = textStorage else { return "" }
-		let text = NSMutableString()
-		storage.enumerateAttributes(in: range, options: []) { attributes, runRange, _ in
-			guard attributes[.transcriptPadding] == nil else { return }
-			guard attributes[.attachment] != nil else {
-				text.append(storage.attributedSubstring(from: runRange).string)
-				return
-			}
-			let spoken = (attributes[.accessibilityCustomText] as? [String])?.joined(separator: " ") ?? ""
-			text.append(spoken)
-		}
-		return text as String
-	}
-}
-
-/** The transcript one channel or server view owns: the text view, the scroll
+/** The transcript one conversation or server console owns: the text view, the scroll
  view and the topic bar, plus the editing, selection and scrolling that keep
  them in step.
 
@@ -171,9 +16,9 @@ final class TranscriptTextView: NSTextView {
  does: this file owns the view's state, its construction and the transcript
  API the feature calls; `TranscriptView+Document` owns the lines and every edit to
  them, `TranscriptView+Selection` the selection and the editing batches,
- `TranscriptView+Scrolling` where the reader is looking, `TranscriptView+Topic` the topic
+ `TranscriptView+Scrolling` where the reader is looking, `TranscriptTopicBar` the topic
  bar, `TranscriptView+Pointer` what a point in the text names, `TranscriptView+Printing`
- paper, and `TranscriptViewRendering` turning a row into attributed text. */
+ paper, and `TranscriptView+Rendering` turning a row into attributed text. */
 @MainActor
 final class TranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDelegate {
 	weak var viewController: TranscriptController?
@@ -182,14 +27,14 @@ final class TranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 
 	let inlineImageLoader: InlineImageLoader
 	let viewIdentifier: String
-	let policy = TranscriptContextMenu()
+	let commands: TranscriptCommands
 	/// The profile popover a click on a nickname opened, while it is open.
 	var memberInformationPopover: NSPopover?
+	/// The reaction picker, while it is open, anchored to the message it
+	/// answers.
+	private var reactionPicker: ReactionPopover?
 
-	let topicField = TopicLabel(wrappingLabelWithString: "")
-	/* SwiftUI owns controls; this adapter only hosts one. */
-	let topicDisclosure = NSHostingView(rootView: TopicDisclosureButton(isExpanded: false, action: {}))
-	var isTopicExpanded = false
+	let topicBar = TranscriptTopicBar()
 	let scrollView = NSScrollView()
 	/* SwiftUI owns controls; this adapter only hosts them. */
 	let jumpToLatest = NSHostingView(rootView: TranscriptJumpToLatestButton(action: {}))
@@ -226,7 +71,6 @@ final class TranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 	/// The clip view's last observed top, so a bounds change can say whether
 	/// the reader moved towards the start of the transcript.
 	var lastVisibleTop: CGFloat = 0
-	var topicLineHeightCache: (font: NSFont, height: CGFloat)?
 	/// Resolved nickname colours for the batch being rendered. Each lookup costs
 	/// a read of the defaults store, and one batch asks for the same handful of
 	/// names over and over.
@@ -238,12 +82,6 @@ final class TranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 	/// Set while the view re-selects text it moved itself, so the delegate does
 	/// not mistake bookkeeping for something the reader did.
 	var isAdjustingSelection = false
-	/** The topic as the wire carries it, control codes and all.
-
-	 The label holds the rendered text, so it is not something the topic can be
-	 drawn from a second time: re-rendering from the label dropped every colour
-	 and bold the topic carried the moment the theme or the text size moved. */
-	var topicText = ""
 	/// Guards the scroll a growing document triggers: `scrollToBottom()` resizes
 	/// the document itself, and that resize must not come back through here.
 	var isFollowingDocumentGrowth = false
@@ -253,6 +91,7 @@ final class TranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 
 	init(viewController: TranscriptController) {
 		self.viewController = viewController
+		commands = TranscriptCommands(sink: viewController.commandSink)
 		inlineImageLoader = viewController.inlineImageLoader
 		viewIdentifier = viewController.uniqueIdentifier
 		textView = TranscriptTextView(usingTextLayoutManager: true)
@@ -353,7 +192,62 @@ final class TranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 	}
 
 	func contextMenu(defaultItems: [NSMenuItem]) -> NSMenu {
-		policy.contextMenu(for: self, defaultMenuItems: defaultItems)
+		commands.contextMenu(for: self, defaultMenuItems: defaultItems)
+	}
+
+	// MARK: - The topic bar
+
+	/// Takes the topic the conversation is on now.
+	func setTopic(_ topic: String?) {
+		topicBar.setTopic(topic, modes: channelModeCaption)
+		showTopicBarIfDrawn()
+	}
+
+	/// Redraws the bar from the topic it holds: the modes, the theme or the
+	/// reader's text size moved.
+	func refreshTopicBar() {
+		topicBar.refresh(modes: channelModeCaption)
+		showTopicBarIfDrawn()
+	}
+
+	/// A bar with neither a topic nor modes to draw gives its room back to the
+	/// transcript, which is the only thing outside the bar its content decides.
+	private func showTopicBarIfDrawn() {
+		let hidden = topicBar.isEmpty
+		topicBar.isHidden = hidden
+		scrollViewTopWithTopicConstraint?.isActive = !hidden
+		scrollViewTopWithoutTopicConstraint?.isActive = hidden
+		needsLayout = true
+	}
+
+	/// The channel's modes as the caption spells them, with any key masked, or
+	/// nothing where the view is not a channel or has no modes yet.
+	private var channelModeCaption: String? {
+		guard let modes = viewController?.associatedConversation?.modeInfo?.stringWithMaskedPassword,
+		      modes.isEmpty == false
+		else { return nil }
+		return modes
+	}
+
+	/// Whether the channel lets this reader set the topic: either it is not
+	/// restricted to operators, or they are one.
+	var canModifyTopic: Bool {
+		guard let channel = viewController?.associatedConversation, channel.isChannel else { return false }
+		guard channel.modeInfo?.modes.modeInfo(for: ChannelMode.operatorTopic.rawValue)?.modeIsSet == true
+		else { return true }
+		guard let nickname = viewController?.associatedSession?.userNickname,
+		      let member = channel.findMember(nickname)
+		else { return false }
+		return member.isOp || member.isHalfOp
+	}
+
+	/// Names the transcript for an assistive reader. Without it the text view
+	/// is announced as an unlabelled document, in a window full of them.
+	func updateAccessibilityDescription() {
+		let name = viewController?.associatedConversation?.name
+			?? viewController?.associatedSession?.networkNameAlt ?? ""
+		textView.setAccessibilityLabel(String(localized: .Transcript.transcriptAccessibility(name)))
+		textView.setAccessibilityRoleDescription(String(localized: .Transcript.transcriptRole))
 	}
 
 	/** Shows the profile of a nickname the reader clicked in the transcript,
@@ -361,15 +255,11 @@ final class TranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 	 a profile to show: a name that has since left is left alone. */
 	func showMemberInformation(for nickname: String, relativeTo rect: NSRect, of view: NSView) {
 		closeMemberInformation()
-		guard let member = viewController?.associatedChannel?.findMember(nickname) else { return }
-		let content = MemberListUserInfoContent(
-			member: member,
-			privileges: MemberListPresentation.privilegesDescription(for: member)
-		)
+		guard let member = viewController?.associatedConversation?.findMember(nickname) else { return }
 		let popover = NSPopover()
 		popover.behavior = .transient
 		popover.delegate = self
-		popover.contentViewController = NSHostingController(rootView: MemberListUserInfoView(content: content))
+		popover.contentViewController = MemberListUserInfoPopover.makeViewController(for: member)
 		memberInformationPopover = popover
 		/* The text view is flipped, so `.maxY` is the edge below the name. */
 		popover.show(relativeTo: rect, of: view, preferredEdge: .maxY)
@@ -378,6 +268,48 @@ final class TranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 	func closeMemberInformation() {
 		memberInformationPopover?.close()
 		memberInformationPopover = nil
+	}
+
+	/** Offers the reactions for a message, anchored to the characters the
+	 message drew.
+
+	 The window raises the command, because it is a menu command with a
+	 conversation to send the reaction to; where the picker opens is the
+	 transcript's answer, because only it knows where the message is. A message
+	 whose rows are no longer laid out has no anchor, so the pointer is the
+	 fallback -- the reader is looking at it either way. */
+	func presentReactionPicker(forMessage identifier: String, onPick: @escaping (String) -> Void) {
+		closeReactionPicker()
+		let picker = ReactionPopover()
+		picker.onPick = onPick
+		picker.onClose = { [weak self] in self?.reactionPicker = nil }
+		reactionPicker = picker
+		picker.present(relativeTo: anchorRect(forMessage: identifier), of: textView)
+	}
+
+	func closeReactionPicker() {
+		reactionPicker?.close()
+		reactionPicker = nil
+	}
+
+	/// Where a message is drawn, in the text view's coordinates, falling back to
+	/// the pointer for a message the layout has not reached.
+	private func anchorRect(forMessage identifier: String) -> NSRect {
+		guard let window, let range = document.range(ofMessage: identifier), range.length > 0 else {
+			return pointerRect()
+		}
+		/* The last character of the message: the picker opens under the end of
+		 what it answers rather than under the first of several lines. */
+		let tail = NSRange(location: NSMaxRange(range) - 1, length: 1)
+		let screenRect = textView.firstRect(forCharacterRange: tail, actualRange: nil)
+		guard screenRect.isEmpty == false else { return pointerRect() }
+		return textView.convert(window.convertFromScreen(screenRect), from: nil)
+	}
+
+	private func pointerRect() -> NSRect {
+		guard let window else { return .zero }
+		let point = textView.convert(window.convertPoint(fromScreen: NSEvent.mouseLocation), from: nil)
+		return NSRect(origin: point, size: .zero).insetBy(dx: -1, dy: -1)
 	}
 
 	/** Runs one batch of transcript edits.
@@ -408,24 +340,8 @@ final class TranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 	}
 
 	private func configureTopicBar() {
-		topicField.isSelectable = true
-		topicField.allowsEditingTextAttributes = true
-		topicField.lineBreakMode = .byTruncatingTail
-		topicField.translatesAutoresizingMaskIntoConstraints = false
-		topicField.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-		let topicClick = NSClickGestureRecognizer(target: self, action: #selector(topicDoubleClicked(_:)))
-		topicClick.numberOfClicksRequired = 2
-		topicField.addGestureRecognizer(topicClick)
-		topicField.menu = topicMenu()
-
-		/* The topic stays on one line and the chevron unfolds it. A click on the
-		 text itself cannot do that: the field is selectable so its links open
-		 and its words copy, and a single click there has to keep meaning that. */
-		topicDisclosure.sizingOptions = .intrinsicContentSize
-		topicDisclosure.translatesAutoresizingMaskIntoConstraints = false
-		topicDisclosure.setContentHuggingPriority(.required, for: .horizontal)
-		topicDisclosure.setContentCompressionResistancePriority(.required, for: .horizontal)
-		applyTopicExpansion()
+		topicBar.canModifyTopic = { [weak self] in self?.canModifyTopic == true }
+		topicBar.onModifyTopic = { [weak self] in self?.commands.topicBarDoubleClicked() }
 	}
 
 	private func configureTextView() {
@@ -534,29 +450,20 @@ final class TranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 	}
 
 	private func addSubviewsAndActivateConstraints() {
-		addSubview(topicField)
-		addSubview(topicDisclosure)
+		addSubview(topicBar)
 		addSubview(scrollView)
 		addSubview(jumpToLatest)
 		/* No rule under the topic: the change of colour and the gap are the
 		 edge, and a hairline there read as a second toolbar. */
 		scrollViewTopWithTopicConstraint = scrollView.topAnchor.constraint(
-			equalTo: topicField.bottomAnchor,
+			equalTo: topicBar.bottomAnchor,
 			constant: TranscriptMetrics.topicGap
 		)
 		scrollViewTopWithoutTopicConstraint = scrollView.topAnchor.constraint(equalTo: topAnchor)
 		NSLayoutConstraint.activate([
-			topicField.topAnchor.constraint(equalTo: topAnchor, constant: TranscriptMetrics.topicGap),
-			topicField.leadingAnchor.constraint(equalTo: leadingAnchor, constant: TranscriptMetrics.topicSideInset),
-			topicField.trailingAnchor.constraint(
-				equalTo: topicDisclosure.leadingAnchor,
-				constant: -TranscriptMetrics.topicGap
-			),
-			topicDisclosure.trailingAnchor.constraint(
-				equalTo: trailingAnchor,
-				constant: -TranscriptMetrics.topicSideInset
-			),
-			topicDisclosure.firstBaselineAnchor.constraint(equalTo: topicField.firstBaselineAnchor),
+			topicBar.topAnchor.constraint(equalTo: topAnchor),
+			topicBar.leadingAnchor.constraint(equalTo: leadingAnchor),
+			topicBar.trailingAnchor.constraint(equalTo: trailingAnchor),
 			scrollView.leadingAnchor.constraint(equalTo: leadingAnchor),
 			scrollView.trailingAnchor.constraint(equalTo: trailingAnchor),
 			scrollView.bottomAnchor.constraint(equalTo: bottomAnchor),
@@ -572,8 +479,6 @@ final class TranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 	override func layout() {
 		super.layout()
 		guard window != nil, !isHiddenOrHasHiddenAncestor, editDepth == 0 else { return }
-		updateTopicWrappingWidth()
-		updateTopicDisclosure()
 		textView.updateBottomAlignment()
 		if scrollsToBottomOnLayout {
 			/* The scroll view tiles in its own pass, after this one; forcing it
@@ -605,9 +510,8 @@ final class TranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 			textScale = max(0.5, min(scale, 3))
 			/* The topic is drawn by a label rather than by the document, so the
 			 rebuild below does not reach it. */
-			refreshTopicBar()
-			topicField.invalidateIntrinsicContentSize()
-			topicLineHeightCache = nil
+			topicBar.setTextScale(textScale)
+			showTopicBarIfDrawn()
 			needsLayout = true
 			rebuild()
 		}
@@ -637,7 +541,7 @@ final class TranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 
 	func textView(_: NSTextView, clickedOnLink link: Any, at _: Int) -> Bool {
 		guard let url = link as? URL else { return false }
-		policy.openWebpage(url)
+		commands.openWebpage(url)
 		return true
 	}
 }
@@ -669,40 +573,10 @@ extension TranscriptView {
 	}
 }
 
-extension TranscriptView: NSMenuItemValidation {
-	func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
-		switch menuItem.action {
-		case #selector(changeTopicMenuItemClicked(_:)): canModifyTopic
-		case #selector(copyTopicMenuItemClicked(_:)): topicField.isHidden == false
-		default: true
-		}
-	}
-}
-
 extension TranscriptView: NSPopoverDelegate {
 	func popoverDidClose(_ notification: Notification) {
 		if notification.object as? NSPopover === memberInformationPopover {
 			memberInformationPopover = nil
 		}
-	}
-}
-
-/** Takes the reader back to the newest line. It is the same command the View
- menu carries, offered where the reader is actually looking. */
-struct TranscriptJumpToLatestButton: View {
-	let action: () -> Void
-
-	var body: some View {
-		Button(action: action) {
-			Image(systemName: "arrow.down.to.line")
-				.font(.system(size: 12, weight: .semibold))
-				.frame(width: UIListMetrics.rowHeight, height: UIListMetrics.rowHeight)
-				.contentShape(Circle())
-		}
-		.buttonStyle(.plain)
-		.background(.thinMaterial, in: Circle())
-		.overlay(Circle().strokeBorder(.separator))
-		.accessibilityLabel(Text(.MainWindow.menuNavigationJumpToPresent))
-		.help(Text(.MainWindow.menuNavigationJumpToPresent))
 	}
 }

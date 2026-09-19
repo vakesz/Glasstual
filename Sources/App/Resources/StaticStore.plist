@@ -2,7 +2,7 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>IRCClient List of NickServ Successfully Identified Tokens</key>
+	<key>NickServ Identified Tokens</key>
 	<array>
 		<string>now recognized</string>
 		<string>automatically identified</string>
@@ -13,7 +13,7 @@
 		<string>Jelszavad elfogadva - azonosítás sikeres</string>
 		<string>password accepted</string>
 	</array>
-	<key>IRCClient List of NickServ Needs Identification Tokens</key>
+	<key>NickServ Needs Identification Tokens</key>
 	<array>
 		<string>nickname is owned</string>
 		<string>nickname is registered</string>
@@ -25,7 +25,7 @@
 		<string>identify yourself</string>
 		<string>type /msg NickServ IDENTIFY password</string>
 	</array>
-	<key>THOPluginManager List of Forbidden Commands</key>
+	<key>Forbidden Script Commands</key>
 	<array>
 		<string>connect</string>
 		<string>die</string>

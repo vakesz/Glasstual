@@ -19,22 +19,15 @@ enum InboundEventPolicy {
 	/// Ceiling on the accumulated ZNC certificate chain. A full chain is a
 	/// few kilobytes; without a limit the bouncer can append forever.
 	static let maximumCertificateChainLength = 65536
-
-	static func shouldPrintGeneralEvent(
-		showJoinLeave: Bool,
-		channelIgnoresEvents: Bool
-	) -> Bool {
-		showJoinLeave && !channelIgnoresEvents
-	}
 }
 
 private let inboundEventLogger = Logger(
-	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
-	category: "IRCInboundEvents"
+	subsystem: LogSubsystem.current,
+	category: "ChannelEvents"
 )
 
 @MainActor
-extension Client {
+extension ServerSession {
 	func receiveMode(_ message: Message) {
 		guard message.params.count > 1, let channelName = message.params.first else { return }
 		let sender = message.senderNickname ?? ""
@@ -54,7 +47,7 @@ extension Client {
 			return
 		}
 
-		guard let channel = findChannel(channelName), channel.isChannel else { return }
+		guard let channel = findConversation(channelName), channel.isChannel else { return }
 		if !message.isPrintOnlyMessage, let modeInfo = channel.modeInfo {
 			for mode in modeInfo.updateModes(modeString) where mode.isModeForChangingMemberMode(on: self) {
 				guard let symbol = ChannelModeSymbol(mode.modeSymbol) else { continue }
@@ -63,10 +56,7 @@ extension Client {
 		}
 
 		if shouldPrintReceivedMessage(message, withText: modeString, destinedFor: channel),
-		   InboundEventPolicy.shouldPrintGeneralEvent(
-		   	showJoinLeave: environment.preferences.showJoinLeave,
-		   	channelIgnoresEvents: channel.config.ignoreGeneralEventMessages
-		   )
+		   printsGeneralEvent(isLocalUser: false, in: channel, ignoring: nil)
 		{
 			print(
 				String(localized: .IRC.setsMode(sender, modeString)),
@@ -84,7 +74,7 @@ extension Client {
 
 	func receiveTopic(_ message: Message) {
 		guard message.params.count == 2,
-		      let channel = findChannel(message.params[0]), channel.isChannel
+		      let channel = findConversation(message.params[0]), channel.isChannel
 		else { return }
 		let topic = message.params[1]
 		if !message.isPrintOnlyMessage {
@@ -107,7 +97,7 @@ extension Client {
 		let channelName = message.params[1]
 
 		guard nicknameIsMyself(invitee) else {
-			guard let channel = findChannel(channelName),
+			guard let channel = findConversation(channelName),
 			      shouldPrintReceivedMessage(message, withText: channelName, destinedFor: channel)
 			else { return }
 			print(
@@ -122,14 +112,15 @@ extension Client {
 
 		let text = String(localized: .IRC.invitedYouToJoin(sender, message.senderUsername ?? "", message.senderAddress ?? "", channelName))
 		if shouldPrintReceivedMessage(message, withText: channelName, destinedFor: nil) {
-			let channel = output?.selectedChannel(on: self)
-			print(text, by: nil, in: channel, as: .invite, command: message.command, receivedAt: message.receivedAt)
+			let selectedConversation = output?.selectedConversation(on: self)
+			print(text, by: nil, in: selectedConversation, as: .invite, command: message.command,
+			      receivedAt: message.receivedAt)
 		}
 		notifyEvent(.invite, lineType: .invite, target: nil, nickname: sender, text: channelName)
 		// `JOIN 0` is the "leave every channel" form, and the invite target is
 		// whatever the inviting user typed, so only real channel names may be
 		// auto-joined here.
-		if environment.preferences.autojoinOnInvite, stringIsChannelName(channelName) {
+		if environment.settings.autojoinOnInvite, stringIsChannelName(channelName) {
 			joinUnlistedChannel(channelName)
 		}
 	}

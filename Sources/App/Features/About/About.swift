@@ -33,7 +33,7 @@ struct AboutView: View {
 	let openAcknowledgements: () -> Void
 
 	/// `NSHumanReadableCopyright`, the same line the standard About panel
-	/// shows. It already says this is a fork of Textual, so the panel says it
+	/// shows. It already carries the project's attribution, so the panel says it
 	/// once rather than twice.
 	private var copyright: String {
 		ApplicationInfo.applicationCopyright()
@@ -58,7 +58,7 @@ struct AboutView: View {
 			))
 			.font(.caption)
 			.textSelection(.enabled)
-			.padding(.top, 4)
+			.padding(.top, UISpacing.tight)
 
 			if copyright.isEmpty == false {
 				Text(verbatim: copyright)

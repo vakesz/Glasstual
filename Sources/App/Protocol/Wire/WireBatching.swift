@@ -3,7 +3,7 @@
 
 /** Greedy packing of an outbound list into the commands a server will take.
 
- Every list the client sends in pieces -- channels on a `JOIN`, nicknames on an
+ Every list the session sends in pieces -- channels on a `JOIN`, nicknames on an
  `ISON`, capabilities on a `CAP REQ`, mode changes on a `MODE` -- is bounded the
  same two ways: how many items one command may carry, and how many bytes the
  line has left. What differs is what an item costs, and whether anything beyond
@@ -59,5 +59,42 @@ nonisolated enum WireBatching {
 		}
 
 		return batches
+	}
+
+	/// Splits `targets` into lists of at most `limit` entries, in order.
+	///
+	/// Zero is a server that advertised no limit, and it chunks the same way as
+	/// one: a target list the server never said it accepts is not sent.
+	static func chunkTargets(_ targets: [String], limit: UInt) -> [[String]] {
+		pack(targets, maximumCount: max(Int(min(limit, UInt(targets.count))), 1))
+	}
+
+	/** A list of single-token parameters packed into one command's worth each.
+
+	 `ISON`, `WATCH` and `MONITOR` all take a list the user's address book
+	 decides the length of, and a list long enough overruns either the fifteen
+	 parameters RFC 1459 allows or the 512 bytes the line has. Both are the same
+	 split, so both use this one.
+
+	 - Parameters:
+	   - tokens: The tokens to spread over commands. Empty ones are dropped:
+	     they cannot survive as their own wire token anyway.
+	   - maximumCount: The most parameters one command takes.
+	   - budget: The bytes one command has for its parameters, the spaces
+	     between them included.
+	 */
+	static func packTokens(
+		_ tokens: [String],
+		maximumCount: Int = 0,
+		budget: Int = .max
+	) -> [[String]] {
+		pack(
+			tokens.filter { $0.isEmpty == false },
+			maximumCount: maximumCount,
+			budget: budget,
+			cost: { token, batch in
+				(batch.isEmpty ? 0 : 1) + token.utf8.count
+			}
+		)
 	}
 }

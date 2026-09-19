@@ -34,7 +34,7 @@ struct ChannelModesView: View {
 	}
 
 	var body: some View {
-		VStack(spacing: 12) {
+		VStack(spacing: UISpacing.wide) {
 			Form {
 				Section {
 					ForEach(ChannelMode.booleanModes, id: \.self) { mode in
@@ -59,9 +59,7 @@ struct ChannelModesView: View {
 					/* The warning replaces the alert this sheet used to raise
 					 on the keystroke that crossed the limit: the answer belongs
 					 beside the field being typed in, not in a dialog over it. */
-					if let remaining = model.remainingKeyLength,
-					   let warning = ChannelModesModel.keyLengthWarning(remaining: remaining)
-					{
+					if let warning = model.keyLengthCaption {
 						Text(verbatim: warning).foregroundStyle(.red)
 					} else {
 						Text(.ChannelProperties.channelKeyFieldHint)
@@ -86,7 +84,7 @@ struct ChannelModesView: View {
 			}
 			.formStyle(.grouped)
 
-			HStack(spacing: 8) {
+			HStack(spacing: UISpacing.regular) {
 				Spacer()
 
 				Button(PromptStrings.Action.cancel, action: cancel)
@@ -94,10 +92,10 @@ struct ChannelModesView: View {
 
 				Button(.ChannelProperties.changeModesButton, action: submit)
 					.keyboardShortcut(.defaultAction)
-					.disabled(model.fitsMaximumKeyLength == false)
+					.disabled(model.fitsKeyLengthLimit == false)
 			}
 		}
-		.padding(20)
+		.padding(SheetMetrics.margin)
 		.frame(minWidth: 420, idealWidth: 460, minHeight: 440, idealHeight: 470)
 	}
 

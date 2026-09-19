@@ -6,41 +6,11 @@ import Foundation
 import Observation
 import SwiftUI
 
-enum ServerPropertiesValidation {
-	static func isSingleLine(_ value: String) -> Bool {
-		value.rangeOfCharacter(from: .newlines) == nil
-	}
-
-	/** A real name the server will accept on the USER line: something other
-	 than whitespace, on one line. Onboarding and the server properties sheet
-	 both ask this, so a name one of them accepts the other does not refuse. */
-	static func isRealName(_ value: String) -> Bool {
-		value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false && isSingleLine(value)
-	}
-
-	/// The protocol limits a line in bytes, so a disconnect message is measured
-	/// in UTF-8 bytes rather than in characters, which undercount anything
-	/// outside ASCII.
-	static let maximumCommentLength = 390
-
-	static func isLeavingComment(_ value: String) -> Bool {
-		isSingleLine(value) && value.utf8.count <= maximumCommentLength
-	}
-
-	/// The first alternative nickname the server would refuse, or `nil` when
-	/// every one of them is usable. The message names it, so the check reports
-	/// which one rather than only that one of them failed.
-	static func invalidAlternateNickname(in value: String) -> String? {
-		value.components(separatedBy: .whitespaces)
-			.first { $0.isEmpty == false && ($0 as NSString).isHostmaskNickname == false }
-	}
-}
-
 @MainActor
 @Observable
 final class ServerPropertiesModel {
 	var isSaving = false
-	var config: ClientConfig
+	var config: ServerConfig
 	var selection: ServerPropertiesSelection = .general
 	var selectedAddressBookEntryID: String?
 	var selectedChannelID: String?
@@ -113,7 +83,7 @@ final class ServerPropertiesModel {
 	/// four times; there is nothing to show when there is no certificate.
 	var certificate: ClientCertificateDetails?
 
-	private var submissionWasAttempted = false
+	private var submission = SubmissionGate()
 
 	/// The bundled network catalog the Server Address field completes against.
 	let networkList: NetworkList
@@ -123,7 +93,7 @@ final class ServerPropertiesModel {
 	 `nil` for a connection that already exists — there is nothing to start it
 	 from — and again once a template has been applied, which is what moves the
 	 sheet on to the form. */
-	private(set) var templatePicker: NetworkPickerModel?
+	private(set) var templatePicker: NetworkPickerListModel?
 
 	/** The port and TLS state the field overwrote when it last matched a
 	 network, kept so that typing a host no network claims can put them back.
@@ -149,10 +119,10 @@ final class ServerPropertiesModel {
 
 	/// `offersTemplates` opens the sheet on the network list rather than the
 	/// form; it is what the New Server sheet asks for.
-	init(config: ClientConfig, networkList: NetworkList = NetworkList(), offersTemplates: Bool = false) {
+	init(config: ServerConfig, networkList: NetworkList = NetworkList(), offersTemplates: Bool = false) {
 		self.config = config
 		self.networkList = networkList
-		templatePicker = offersTemplates ? NetworkPickerModel(networkList: networkList) : nil
+		templatePicker = offersTemplates ? NetworkPickerListModel(networkList: networkList) : nil
 		let fields = DerivedFields(config: config, networkList: networkList)
 		lastResolvedAddressText = fields.serverAddress
 		serverAddress = fields.serverAddress
@@ -185,7 +155,7 @@ final class ServerPropertiesModel {
 		let alternateNicknames: String
 		let connectCommands: String
 
-		init(config: ClientConfig, networkList: NetworkList) {
+		init(config: ServerConfig, networkList: NetworkList) {
 			let primary = config.serverList.first
 			serverAddress = ServerPropertiesModel.displayedServerAddress(
 				primary?.serverAddress ?? "",
@@ -211,14 +181,14 @@ final class ServerPropertiesModel {
 		connectCommands = fields.connectCommands
 	}
 
-	var displayedChannels: [ChannelConfig] {
-		config.channelList.filter { $0.type == .channel }
+	var displayedChannels: [ConversationConfig] {
+		config.conversationList.filter { $0.type == .channel }
 	}
 
-	func replace(with config: ClientConfig) {
+	func replace(with config: ServerConfig) {
 		self.config = config
 		apply(DerivedFields(config: config, networkList: networkList))
-		submissionWasAttempted = false
+		submission.reset()
 		/* The secrets come from the one read this sheet already did. Rebuilding
 		 them from the config meant three more keychain lookups on the main
 		 actor every time anything else on the sheet changed. The replacement is
@@ -264,7 +234,7 @@ final class ServerPropertiesModel {
 
 	/// Whether the channel list shows a channel as having a key: an unflushed
 	/// edit if there is one, and otherwise what the one keychain read found.
-	func channelHasSecretKey(_ channel: ChannelConfig) -> Bool {
+	func channelHasSecretKey(_ channel: ConversationConfig) -> Bool {
 		channel.pendingSecretKey.value(orStored: loadedSecrets[channel.keychainItem])?.isEmpty == false
 	}
 
@@ -320,22 +290,32 @@ final class ServerPropertiesModel {
 		editedSecretFields.contains(field) ? .edited(text.trimmed) : pending
 	}
 
-	func serverListForEditing() -> [Server]? {
+	func serverListForEditing() -> [ServerEndpoint]? {
 		let fault: (ServerPropertiesSelection, String)? =
-			if !(resolvedPrimaryServerAddress as NSString).isValidInternetAddress {
+			if !resolvedPrimaryServerAddress.isValidInternetAddress {
 				(.general, CommonValidationStrings.invalidServerAddress)
-			} else if !(serverPort as NSString).isValidInternetPort {
+			} else if !serverPort.isValidInternetPort {
 				(.general, CommonValidationStrings.invalidInternetPort)
 			} else {
 				nil
 			}
 		if let fault {
-			submissionWasAttempted = true
+			submission.attempt()
 			selection = fault.0
 			return nil
 		}
-		var servers = config.serverList
-		var primary = primaryServer ?? Server()
+		return serverList(replacingPrimaryWith: primaryServerForSubmission())
+	}
+
+	/** The primary endpoint as the fields on screen describe it.
+
+	 Both submission paths build it here rather than assembling it themselves,
+	 which is how they came to disagree about an unreadable port. Validation
+	 refuses one before either runs, so the fallback is defence in depth: it
+	 keeps the port the endpoint already had, because moving the person to a
+	 default port without saying so is the worse answer. */
+	private func primaryServerForSubmission() -> ServerEndpoint {
+		var primary = primaryServer ?? ServerEndpoint()
 		primary.serverAddress = resolvedPrimaryServerAddress
 		primary.serverPort = UInt16(serverPort) ?? primary.serverPort
 		primary.pendingServerPassword = submittedSecret(
@@ -343,15 +323,22 @@ final class ServerPropertiesModel {
 			text: serverPassword,
 			pending: primary.pendingServerPassword
 		)
+		return primary
+	}
+
+	/// The endpoint list with `server` as its first entry, whether or not there
+	/// was one to replace.
+	private func serverList(replacingPrimaryWith server: ServerEndpoint) -> [ServerEndpoint] {
+		var servers = config.serverList
 		if servers.isEmpty {
-			servers.append(primary)
+			servers.append(server)
 		} else {
-			servers[0] = primary
+			servers[0] = server
 		}
 		return servers
 	}
 
-	func applyServerList(_ servers: [Server]) {
+	func applyServerList(_ servers: [ServerEndpoint]) {
 		config.serverList = servers
 		let primary = servers.first
 		serverAddress = Self.displayedServerAddress(primary?.serverAddress ?? "", in: networkList)
@@ -359,7 +346,7 @@ final class ServerPropertiesModel {
 		forgetNetworkResolution()
 		/* The endpoint sheet answers with the edits it collected, so the primary
 		 endpoint's secret is whatever came back from it, resolved against the
-		 read this sheet already did. Asking `Server.serverPassword` was a
+		 read this sheet already did. Asking `ServerEndpoint.serverPassword` was a
 		 synchronous keychain lookup on the main actor for a value that is
 		 already here. */
 		editedSecretFields.remove(.serverPassword)
@@ -369,7 +356,7 @@ final class ServerPropertiesModel {
 	/// Turns TLS on or off for the primary endpoint, moving the port with it the
 	/// way the endpoint-list sheet does.
 	func setPrimaryServerSecured(_ secured: Bool) {
-		var server = primaryServer ?? Server()
+		var server = primaryServer ?? ServerEndpoint()
 		server.serverPort = UInt16(serverPort) ?? server.serverPort
 		server = ServerEndpointValidation.server(server, preferringSecuredConnection: secured)
 		serverPort = String(server.serverPort)
@@ -397,7 +384,7 @@ final class ServerPropertiesModel {
 	 The custom server row moves on with the fields as they are. A network sets
 	 the connection's name and primary endpoint, turns SASL on where the network
 	 offers it, and puts its suggested channels on the channel list, where the
-	 Channel List pane can take any of them off again. */
+	 Conversation List pane can take any of them off again. */
 	func applySelectedTemplate() {
 		guard let picker = templatePicker, picker.hasSelection else { return }
 
@@ -405,14 +392,14 @@ final class ServerPropertiesModel {
 			var config = config
 			config.connectionName = network.networkName
 			config.serverList = [
-				Server(
+				ServerEndpoint(
 					serverAddress: network.serverAddress,
 					serverPort: network.serverPort,
 					prefersSecuredConnection: network.prefersSecuredConnection
 				),
 			]
 			config.usesSASL = network.saslSupported
-			config.channelList = network.suggestedChannels.map { ChannelConfig.seed(withName: $0) }
+			config.conversationList = network.suggestedChannels.map { ConversationConfig.seed(withName: $0) }
 			replace(with: config)
 		}
 
@@ -512,7 +499,7 @@ final class ServerPropertiesModel {
 	 wrong here: both values are being replaced at once, so neither may nudge
 	 the other. */
 	private func applyPrimaryServerValues(_ values: PrimaryServerValues) {
-		var server = primaryServer ?? Server()
+		var server = primaryServer ?? ServerEndpoint()
 		server.serverPort = UInt16(values.port) ?? server.serverPort
 		server.prefersSecuredConnection = values.secured
 		storePrimaryServer(server)
@@ -526,22 +513,10 @@ final class ServerPropertiesModel {
 		lastResolvedAddressText = serverAddress.trimmed
 	}
 
-	func submittedConfig() -> ClientConfig? {
+	func submittedConfig() -> ServerConfig? {
 		guard validate() else { return nil }
 		var result = config
-		var server = primaryServer ?? Server()
-		server.serverAddress = resolvedPrimaryServerAddress
-		server.serverPort = UInt16(serverPort) ?? UInt16(ConnectionDefaults.serverPort)
-		server.pendingServerPassword = submittedSecret(
-			.serverPassword,
-			text: serverPassword,
-			pending: server.pendingServerPassword
-		)
-		if result.serverList.isEmpty {
-			result.serverList = [server]
-		} else {
-			result.serverList[0] = server
-		}
+		result.serverList = serverList(replacingPrimaryWith: primaryServerForSubmission())
 		result.nickname = result.nickname.firstToken
 		result.awayNickname = Self.nilIfEmpty(result.awayNickname?.firstToken ?? "")
 		result.username = result.username.firstToken
@@ -575,19 +550,19 @@ final class ServerPropertiesModel {
 			.isEmpty || !ServerPropertiesValidation.isSingleLine(config.connectionName)
 		{
 			(.general, CommonValidationStrings.singleLineRequired)
-		} else if !(resolvedPrimaryServerAddress as NSString).isValidInternetAddress {
+		} else if !resolvedPrimaryServerAddress.isValidInternetAddress {
 			(.general, CommonValidationStrings.invalidServerAddress)
-		} else if !(serverPort as NSString).isValidInternetPort {
+		} else if !serverPort.isValidInternetPort {
 			(.general, CommonValidationStrings.invalidInternetPort)
-		} else if !(config.nickname.firstToken as NSString).isHostmaskNickname {
+		} else if !config.nickname.firstToken.isHostmaskNickname {
 			(.identity, CommonValidationStrings.invalidNickname)
 		} else if let away = config.awayNickname, !away.isEmpty,
-		          !(away.firstToken as NSString).isHostmaskNickname
+		          !away.firstToken.isHostmaskNickname
 		{
 			(.identity, CommonValidationStrings.invalidNickname)
 		} else if let nickname = ServerPropertiesValidation.invalidAlternateNickname(in: alternateNicknames) {
 			(.identity, String(localized: .ServerProperties.pleaseEnterAListOfProperly(nickname)))
-		} else if !(config.username.firstToken as NSString).isHostmaskUsername {
+		} else if !config.username.firstToken.isHostmaskUsername {
 			(.identity, String(localized: .ServerProperties.pleaseEnterAProperlyFormattedUsername))
 		} else if !ServerPropertiesValidation.isRealName(config.realName) {
 			(.identity, CommonValidationStrings.invalidRealName)
@@ -598,28 +573,24 @@ final class ServerPropertiesModel {
 				ServerPropertiesValidation.maximumCommentLength
 			))
 		} else if Self.proxyTypeUsesAddress(config.proxyType),
-		          !(proxyAddress.firstToken as NSString).isValidInternetAddress
+		          !proxyAddress.firstToken.isValidInternetAddress
 		{
 			(.proxyServer, String(localized: .ServerProperties.pleaseEnterAProperlyFormattedProxy))
-		} else if Self.proxyTypeUsesAddress(config.proxyType), !(proxyPort as NSString).isValidInternetPort {
+		} else if Self.proxyTypeUsesAddress(config.proxyType), !proxyPort.isValidInternetPort {
 			(.proxyServer, CommonValidationStrings.invalidInternetPort)
 		} else {
 			nil
 		}
 	}
 
-	/** Why the sheet cannot be saved, once saving has been tried.
-
-	 A new connection opens on empty fields, and a sheet that greets the person
-	 with a complaint about a field they have not reached yet is telling them
-	 they did something wrong before they did anything. */
+	/// Why the sheet cannot be saved, once saving has been tried.
 	var validationMessage: String? {
-		submissionWasAttempted ? validationFault?.message : nil
+		submission.shown(validationFault?.message)
 	}
 
 	@discardableResult
 	func validate() -> Bool {
-		submissionWasAttempted = true
+		submission.attempt()
 
 		guard let fault = validationFault else { return true }
 
@@ -631,20 +602,16 @@ final class ServerPropertiesModel {
 		value.isEmpty ? nil : value
 	}
 
-	static func proxyTypeUsesAddress(_ type: ConnectionProxyType) -> Bool {
+	static func proxyTypeUsesAddress(_ type: ConnectionProxyKind) -> Bool {
 		[.socks5, .HTTP].contains(type)
 	}
 
-	private var primaryServer: Server? {
+	private var primaryServer: ServerEndpoint? {
 		config.serverList.first
 	}
 
-	private func storePrimaryServer(_ server: Server) {
-		if config.serverList.isEmpty {
-			config.serverList.append(server)
-		} else {
-			config.serverList[0] = server
-		}
+	private func storePrimaryServer(_ server: ServerEndpoint) {
+		config.serverList = serverList(replacingPrimaryWith: server)
 	}
 
 	private func uniqueNonempty(_ values: [String]) -> [String] {
@@ -656,51 +623,5 @@ final class ServerPropertiesModel {
 private extension String {
 	var trimmed: String {
 		trimmingCharacters(in: .whitespacesAndNewlines)
-	}
-}
-
-/// The copy the connection sheet names these choices with. Each one is a
-/// closed set the sheet draws a picker or a row from, so the name belongs to
-/// the case rather than to the view that happens to show it.
-extension AddressBookEntryType {
-	var listTitle: LocalizedStringResource {
-		switch self {
-		case .ignore, .mixed: .ServerProperties.userIgnore
-		case .userTracking: .ServerProperties.userTracking
-		@unknown default: .ServerProperties.userIgnore
-		}
-	}
-}
-
-extension ConnectionAddressType {
-	var title: LocalizedStringResource {
-		switch self {
-		case .default: .ServerProperties.addressTypeAutomatic
-		case .v4: .ServerProperties.addressTypeIpv4
-		case .v6: .ServerProperties.addressTypeIpv6
-		}
-	}
-}
-
-extension ConnectionProxyType {
-	var title: LocalizedStringResource {
-		switch self {
-		case .none: .ServerProperties.proxyTypeNone
-		case .automatic: .ServerProperties.proxyTypeAutomatic
-		case .socks5: .ServerProperties.proxyTypeSocks5
-		case .HTTP: .ServerProperties.proxyTypeHttp
-		case .tor: .ServerProperties.proxyTypeTor
-		}
-	}
-}
-
-extension CipherSuiteCollection {
-	var title: LocalizedStringResource {
-		switch self {
-		case .default: .ServerProperties.cipherSuitesDefault
-		case .mozilla2017: .ServerProperties.cipherSuitesMozilla2017
-		case .mozilla2015: .ServerProperties.cipherSuitesMozilla2015
-		case .none: .ServerProperties.cipherSuitesNone
-		}
 	}
 }

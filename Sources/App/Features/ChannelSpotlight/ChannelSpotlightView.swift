@@ -4,7 +4,7 @@
 import SwiftUI
 
 struct ChannelSpotlightScene: Scene {
-	let scenes: ApplicationScenes
+	let window: ChannelSpotlightWindow
 
 	var body: some Scene {
 		WindowGroup(
@@ -12,7 +12,7 @@ struct ChannelSpotlightScene: Scene {
 			id: ApplicationSceneID.channelSpotlight,
 			for: SingletonSceneValue.self
 		) { _ in
-			ChannelSpotlightSceneRoot(scenes: scenes)
+			ChannelSpotlightSceneRoot(window: window)
 		} defaultValue: { .instance }
 			.windowResizability(.contentSize)
 			/* A spotlight panel, not a document window: it floats over what it
@@ -29,10 +29,10 @@ struct ChannelSpotlightScene: Scene {
 private struct ChannelSpotlightSceneRoot: View {
 	@Environment(\.dismissWindow) private var dismissWindow
 	@Environment(\.controlActiveState) private var controlActiveState
-	let scenes: ApplicationScenes
+	let window: ChannelSpotlightWindow
 
 	var body: some View {
-		if let model = scenes.currentChannelSpotlightModel() {
+		if let model = window.current {
 			ChannelSpotlightView(
 				model: model,
 				select: { result in
@@ -42,7 +42,7 @@ private struct ChannelSpotlightSceneRoot: View {
 				close: dismiss
 			)
 			.onDisappear {
-				scenes.channelSpotlightDidClose()
+				window.didClose()
 			}
 			.onChange(of: controlActiveState) { _, state in
 				// A spotlight panel goes away as soon as it stops being typed into.
@@ -167,14 +167,18 @@ struct ChannelSpotlightView: View {
 	private var resultList: some View {
 		ScrollViewReader { proxy in
 			List(model.displayedResults, selection: $model.selectedResultID) { result in
-				ChannelSpotlightRow(
-					result: result,
-					shortcut: shortcut(for: result)
-				)
+				Button {
+					select(result)
+				} label: {
+					ChannelSpotlightRow(
+						result: result,
+						shortcut: shortcut(for: result)
+					)
+					.contentShape(.rect)
+				}
+				.buttonStyle(.plain)
 				.listRowInsets(EdgeInsets())
 				.listRowSeparator(.hidden)
-				.contentShape(.rect)
-				.onTapGesture { select(result) }
 			}
 			.listStyle(.plain)
 			.scrollContentBackground(.hidden)
@@ -227,6 +231,7 @@ private struct ChannelSpotlightRow: View {
 			Text(verbatim: shortcut)
 				.font(.callout.monospacedDigit())
 				.foregroundStyle(.secondary)
+				.accessibilityHidden(true)
 		}
 		.padding(.horizontal, UISpacing.loose)
 		.frame(height: ChannelSpotlightLayout.rowHeight)

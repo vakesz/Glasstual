@@ -8,19 +8,12 @@
 	<array/>
 	<key>NSPrivacyCollectedDataTypes</key>
 	<array/>
-	<!-- Defaults keep App Nap disabled during connections and provide shared
-	     connection settings. System uptime measures elapsed startup stages;
+	<!-- No defaults are read here: the host is handed every connection setting
+	     over XPC, and App Nap is held off with ProcessInfo.beginActivity rather
+	     than a defaults key. System uptime measures elapsed startup stages;
 	     diagnostic events contain only elapsed durations and an attempt UUID. -->
 	<key>NSPrivacyAccessedAPITypes</key>
 	<array>
-		<dict>
-			<key>NSPrivacyAccessedAPIType</key>
-			<string>NSPrivacyAccessedAPICategoryUserDefaults</string>
-			<key>NSPrivacyAccessedAPITypeReasons</key>
-			<array>
-				<string>CA92.1</string>
-			</array>
-		</dict>
 		<dict>
 			<key>NSPrivacyAccessedAPIType</key>
 			<string>NSPrivacyAccessedAPICategorySystemBootTime</string>

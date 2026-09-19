@@ -21,7 +21,7 @@ nonisolated enum SCRAMClientErrorCode: Int, Sendable {
 /// A failed SCRAM exchange. It bridges to an `NSError` in
 /// ``errorDomain`` whose code is the ``SCRAMClientErrorCode`` raw value.
 nonisolated struct SCRAMClientError: LocalizedError, CustomNSError {
-	static let errorDomain = "TLOSCRAMClientErrorDomain"
+	static let errorDomain = "Glasstual.SCRAMClientError"
 
 	let code: SCRAMClientErrorCode
 	/// What went wrong, in terms of the exchange. Not localized: it names wire
@@ -47,10 +47,9 @@ nonisolated struct SCRAMClientError: LocalizedError, CustomNSError {
 /// Channel binding is not offered (`n,,`). Passwords are used as typed;
 /// SASLprep is not applied, which matches what IRC servers do.
 ///
-/// The exchange is driven from `ClientNegotiation`, which is main-actor
-/// state, so the client's state machine belongs to the same domain. Only the
+/// The exchange is driven from the server session's `SASLSession`, which is
+/// main-actor state, so this state machine belongs to the same domain. Only the
 /// PBKDF2 derivation leaves it, and that is a pure function.
-@MainActor
 final class SCRAMClient {
 	/// The exchange, in the order it runs.
 	enum State {
@@ -79,17 +78,19 @@ final class SCRAMClient {
 	private let username: String
 	private let password: String
 	private let clientNonce: String
+	/// Injected so that a test can suspend the derivation and prove a second
+	/// challenge cannot revive the exchange while the first is still deriving.
 	private let deriveKey: @Sendable (String, Data, Int) async -> Data?
 
 	private var clientFirstMessageBare = ""
 	private var serverSignature = Data()
 
-	/// Creates a client with a fresh random nonce.
+	/// Creates an exchange with a fresh random nonce.
 	convenience init(username: String, password: String) {
 		self.init(username: username, password: password, clientNonce: SCRAMClient.makeNonce())
 	}
 
-	/// Creates a client with a caller supplied nonce. Only tests should
+	/// Creates an exchange with a caller supplied nonce. Only tests should
 	/// pick their own nonce.
 	convenience init(username: String, password: String, clientNonce: String) {
 		self.init(username: username, password: password, clientNonce: clientNonce, deriveKey: Self.pbkdf2Offloaded)

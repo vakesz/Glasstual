@@ -8,8 +8,8 @@ import os
 import UserNotifications
 
 private let onboardingLogger = Logger(
-	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
-	category: "Onboarding"
+	subsystem: LogSubsystem.current,
+	category: "OnboardingModel"
 )
 
 struct OnboardingNotificationAuthorization {
@@ -26,67 +26,6 @@ struct OnboardingNotificationAuthorization {
 			)
 		}
 	)
-}
-
-enum OnboardingTextSize: UInt, CaseIterable, Identifiable {
-	case small
-	case medium
-	case large
-
-	var id: Self {
-		self
-	}
-
-	var title: LocalizedStringResource {
-		switch self {
-		case .small: .Onboarding.stepLookAndFeelSmall
-		case .medium: .Onboarding.stepLookAndFeelMedium
-		case .large: .Onboarding.stepLookAndFeelLarge
-		}
-	}
-}
-
-/// The two transcript appearances the appearance step offers.
-enum OnboardingTranscriptStyle: CaseIterable, Identifiable {
-	case bubbles
-	case lines
-
-	var id: Self {
-		self
-	}
-
-	var theme: TranscriptTheme {
-		switch self {
-		case .bubbles: .bubbles
-		case .lines: .lines
-		}
-	}
-
-	var title: LocalizedStringResource {
-		switch self {
-		case .bubbles: .Onboarding.stepLookAndFeelBubbles
-		case .lines: .Onboarding.stepLookAndFeelLines
-		}
-	}
-
-	var summary: LocalizedStringResource {
-		switch self {
-		case .bubbles: .Onboarding.messagesInRoundedBubbles
-		case .lines: .Onboarding.classicLineByLineView
-		}
-	}
-}
-
-extension PreferredAppearance {
-	/// One title per case, so the appearance step's picker cannot drift out of
-	/// step with the tags it sets.
-	var onboardingTitle: LocalizedStringResource {
-		switch self {
-		case .inherited: .Onboarding.stepLookAndFeelSystem
-		case .light: .Onboarding.stepLookAndFeelLight
-		case .dark: .Onboarding.stepLookAndFeelDark
-		}
-	}
 }
 
 enum OnboardingStep: Int, CaseIterable, Identifiable {
@@ -127,83 +66,17 @@ enum OnboardingStep: Int, CaseIterable, Identifiable {
 	}
 }
 
-@Observable
-final class OnboardingSettings {
-	var nickname = ""
-	var realName = ""
-	var alternateNickname = ""
-
-	var transcriptStyle: OnboardingTranscriptStyle = .bubbles
-	var textSize: OnboardingTextSize = .medium
-	var appearance: PreferredAppearance = .inherited
-
-	var notifyOnHighlight = true
-	var notifyOnPrivateMessage = true
-	var playSounds = true
-
-	var clientConfig: ClientConfig?
-	var connectWhenFinished = true
-	var channelsToJoin: [String] = []
-
-	static func fontSize(for textSize: OnboardingTextSize) -> CGFloat {
-		switch textSize {
-		case .small: 11
-		case .medium: 13
-		case .large: 15
-		}
-	}
-
-	static func textSize(forFontSize fontSize: CGFloat) -> OnboardingTextSize {
-		if fontSize < 12 {
-			return .small
-		}
-		if fontSize > 14 {
-			return .large
-		}
-		return .medium
-	}
-}
-
 @MainActor
 @Observable
 final class OnboardingModel {
-	struct Identity: Equatable {
-		let nickname: String
-		let realName: String
-		let alternateNickname: String
-	}
-
-	struct Notifications: Equatable {
-		let highlight: Bool
-		let privateMessage: Bool
-		let sounds: Bool
-	}
-
-	struct Appearance: Equatable {
-		let transcriptStyle: OnboardingTranscriptStyle
-		let textSize: OnboardingTextSize
-		let preferredAppearance: PreferredAppearance
-
-		var theme: TranscriptTheme {
-			var theme = transcriptStyle.theme
-			theme.fontSize = OnboardingSettings.fontSize(for: textSize)
-			return theme
-		}
-	}
-
 	let settings: OnboardingSettings
-	let networkPicker: NetworkPickerModel
+	let networkPicker: OnboardingNetworkPickerModel
 	private let notificationAuthorization: OnboardingNotificationAuthorization
 	private var authorizationTask: Task<Void, Never>?
 
-	/** What each step contributed, rather than what its controls currently show.
-
-	 A step contributes only once it has been accepted with Continue: passing
-	 over a step with Skip, or leaving onboarding without reaching it, has to
-	 leave the corresponding preferences exactly as they were. */
-	private(set) var acceptedIdentity: Identity?
-	private(set) var acceptedAppearance: Appearance?
-	private(set) var acceptedNotifications: Notifications?
+	/// What the accepted steps chose. Everything onboarding applies on the way
+	/// out is read from here and nowhere else.
+	private(set) var accepted = OnboardingAcceptedSteps()
 
 	var currentStep: OnboardingStep = .identity
 	var notificationPermissionMessage: LocalizedStringResource = .Onboarding.glasstualWillAskMacosForPermission
@@ -230,48 +103,46 @@ final class OnboardingModel {
 	}
 
 	private var finished = false
-	private let createConnection: @MainActor (ClientConfig, Bool) -> Bool
+	private let createConnection: @MainActor (ServerConfig, Bool) -> Bool
 	private let applySettings: @MainActor (OnboardingModel) -> Void
 	private let markCompleted: @MainActor () -> Void
 
 	static func shouldPresentOnLaunch() -> Bool {
-		if Preferences.Identity.onboardingCompleted.value {
+		if SettingsKeys.Identity.onboardingCompleted.value {
 			return false
 		}
 
-		return (AppServices.clientDirectory?.clientCount ?? 0) == 0
+		return (AppServices.chatSession?.sessionCount ?? 0) == 0
 	}
 
-	/// Seeded from the preferences the flow writes back to, so the first step
+	/// Seeded from the settings the flow writes back to, so the first step
 	/// already shows whatever the person has set elsewhere.
 	convenience init() {
 		let settings = OnboardingSettings()
-		settings.nickname = Preferences.Identity.nickname.detachedValue
-		settings.realName = Preferences.Identity.realName.detachedValue
-		settings.textSize = OnboardingSettings.textSize(
-			forFontSize: AppServices.theme.theme.fontSize
-		)
-		settings.appearance = Preferences.Appearance.preferredAppearance.value
+		settings.identity.nickname = SettingsKeys.Identity.nickname.detachedValue
+		settings.identity.realName = SettingsKeys.Identity.realName.detachedValue
+		settings.appearance.textSize = OnboardingTextSize(fontSize: AppServices.theme.theme.fontSize)
+		settings.appearance.preferredAppearance = SettingsKeys.Appearance.preferredAppearance.value
 
 		self.init(settings: settings)
 	}
 
 	/// Everything the flow reaches outside itself is passed in, so a test can
-	/// drive the whole thing without a world, preferences or a window.
+	/// drive the whole thing without a chat session, settings or a window.
 	init(
 		settings: OnboardingSettings,
-		networkPicker: NetworkPickerModel = NetworkPickerModel(),
+		networkPicker: OnboardingNetworkPickerModel = OnboardingNetworkPickerModel(),
 		notificationAuthorization: OnboardingNotificationAuthorization = .live,
-		createConnection: (@MainActor (ClientConfig, Bool) -> Bool)? = nil,
+		createConnection: (@MainActor (ServerConfig, Bool) -> Bool)? = nil,
 		applySettings: (@MainActor (OnboardingModel) -> Void)? = nil,
 		markCompleted: (@MainActor () -> Void)? = nil
 	) {
 		self.settings = settings
 		self.networkPicker = networkPicker
 		self.notificationAuthorization = notificationAuthorization
-		self.createConnection = createConnection ?? Self.createClient
+		self.createConnection = createConnection ?? Self.createSession
 		self.applySettings = applySettings ?? Self.applyAcceptedSettings
-		self.markCompleted = markCompleted ?? { Preferences.Identity.onboardingCompleted.value = true }
+		self.markCompleted = markCompleted ?? { SettingsKeys.Identity.onboardingCompleted.value = true }
 	}
 
 	var isFirstStep: Bool {
@@ -295,23 +166,25 @@ final class OnboardingModel {
 	/// The complaint to show under the nickname field, or `nil` when it holds a
 	/// nickname the server will accept.
 	var nicknameProblem: String? {
-		let nickname = settings.nickname.trimmingCharacters(in: .whitespacesAndNewlines)
+		let nickname = settings.identity.nickname.trimmingCharacters(in: .whitespacesAndNewlines)
 		if nickname.isEmpty {
 			return String(localized: .Onboarding.stepWelcomeAndIdentityNicknameRequired)
 		}
-		return (nickname as NSString).isHostmaskNickname ? nil : CommonValidationStrings.invalidNickname
+		return nickname.isHostmaskNickname ? nil : CommonValidationStrings.invalidNickname
 	}
 
 	var alternateNicknameProblem: String? {
-		let alternate = settings.alternateNickname.trimmingCharacters(in: .whitespacesAndNewlines)
+		let alternate = settings.identity.alternateNickname.trimmingCharacters(in: .whitespacesAndNewlines)
 		guard alternate.isEmpty == false else { return nil }
-		return (alternate as NSString).isHostmaskNickname ? nil : CommonValidationStrings.invalidNickname
+		return alternate.isHostmaskNickname ? nil : CommonValidationStrings.invalidNickname
 	}
 
 	/// The same rule the server properties sheet applies, so a real name
 	/// accepted here is not refused the first time that sheet is saved.
 	var realNameProblem: String? {
-		ServerPropertiesValidation.isRealName(settings.realName) ? nil : CommonValidationStrings.invalidRealName
+		ServerPropertiesValidation.isRealName(settings.identity.realName)
+			? nil
+			: CommonValidationStrings.invalidRealName
 	}
 
 	/// Drives the primary button. Nothing is rejected after the fact, so every
@@ -359,15 +232,10 @@ final class OnboardingModel {
 		}
 
 		switch currentStep {
-		case .appearance:
-			acceptedAppearance = nil
-		case .notifications:
-			acceptedNotifications = nil
-		case .network:
-			settings.clientConfig = nil
-			settings.channelsToJoin = []
-		case .identity, .summary:
-			break
+		case .appearance: accepted.appearance = nil
+		case .notifications: accepted.notifications = nil
+		case .network: accepted.network = nil
+		case .identity, .summary: break
 		}
 
 		currentStep = next
@@ -379,7 +247,7 @@ final class OnboardingModel {
 		 which starts when the step appears and stops when it goes. Starting a
 		 second read here asked the system twice for every visit. */
 		if currentStep == .network {
-			networkPicker.updateDefaultNickname(settings.nickname)
+			networkPicker.updateDefaultNickname(settings.identity.nickname)
 		}
 	}
 
@@ -407,56 +275,30 @@ final class OnboardingModel {
 
 	// MARK: - Accepting a step
 
+	/// A step is accepted by handing over the value it was editing; the network
+	/// step adds what its picker answered, which is not on screen anywhere.
 	private func acceptCurrentStep() {
 		switch currentStep {
 		case .identity:
-			acceptIdentity()
+			settings.identity.trimWhitespace()
+			accepted.identity = settings.identity
 		case .appearance:
-			acceptedAppearance = Appearance(
-				transcriptStyle: settings.transcriptStyle,
-				textSize: settings.textSize,
-				preferredAppearance: settings.appearance
-			)
+			accepted.appearance = settings.appearance
 		case .notifications:
-			acceptedNotifications = Notifications(
-				highlight: settings.notifyOnHighlight,
-				privateMessage: settings.notifyOnPrivateMessage,
-				sounds: settings.playSounds
-			)
+			accepted.notifications = settings.notifications
 			requestNotificationAuthorization()
 		case .network:
-			acceptNetwork()
+			settings.network.serverConfig = networkPicker.serverConfig()
+			settings.network.channelsToJoin = networkPicker.channelsToJoin
+			accepted.network = settings.network
 		case .summary:
 			break
 		}
 	}
 
-	private func acceptIdentity() {
-		settings.nickname = settings.nickname.trimmingCharacters(in: .whitespacesAndNewlines)
-		settings.realName = settings.realName.trimmingCharacters(in: .whitespacesAndNewlines)
-		settings.alternateNickname = settings.alternateNickname
-			.trimmingCharacters(in: .whitespacesAndNewlines)
-		acceptedIdentity = Identity(
-			nickname: settings.nickname,
-			realName: settings.realName,
-			alternateNickname: settings.alternateNickname
-		)
-	}
-
-	private func acceptNetwork() {
-		guard networkPicker.hasSelection else {
-			settings.clientConfig = nil
-			settings.channelsToJoin = []
-			return
-		}
-
-		settings.clientConfig = networkPicker.clientConfig()
-		settings.channelsToJoin = networkPicker.suggestedChannels.filter {
-			networkPicker.selectedChannels.contains($0)
-		}
-	}
-
 	private func requestNotificationAuthorization() {
+		guard settings.notifications.notifyAboutMentions else { return }
+
 		authorizationTask = Task {
 			do {
 				_ = try await notificationAuthorization.request()
@@ -491,8 +333,8 @@ final class OnboardingModel {
 		 the window is a dismissal that answers onboarding on its own. */
 		guard finished == false else { return true }
 
-		if let config = configuredClient() {
-			guard createConnection(config, settings.connectWhenFinished) else {
+		if let connection = acceptedConnection {
+			guard createConnection(connection.config, connection.connectWhenFinished) else {
 				completionFailure = String(localized: .Onboarding.connectionUnavailable)
 				return false
 			}
@@ -516,56 +358,62 @@ final class OnboardingModel {
 		finished = true
 	}
 
-	private func configuredClient() -> ClientConfig? {
-		guard let identity = acceptedIdentity, var config = settings.clientConfig else {
+	/// The connection the accepted steps describe, and whether to connect it at
+	/// once. `nil` when no network was chosen, which is a supported answer.
+	private var acceptedConnection: (config: ServerConfig, connectWhenFinished: Bool)? {
+		guard let identity = accepted.identity,
+		      let network = accepted.network,
+		      var config = network.serverConfig
+		else {
 			return nil
 		}
 
 		config.nickname = identity.nickname
 		config.realName = identity.realName
 		config.alternateNicknames = identity.alternateNickname.isEmpty ? [] : [identity.alternateNickname]
-		config.autoConnect = settings.connectWhenFinished
-		config.channelList = settings.channelsToJoin.map(ChannelConfig.seed(withName:))
-		return config
+		config.autoConnect = network.connectWhenFinished
+		config.conversationList = network.channelsToJoin.map(ConversationConfig.seed(withName:))
+
+		return (config, network.connectWhenFinished)
 	}
 
 	private static func applyAcceptedSettings(_ model: OnboardingModel) {
-		if let identity = model.acceptedIdentity {
-			Preferences.Identity.nickname.value = identity.nickname
-			Preferences.Identity.realName.value = identity.realName
+		if let identity = model.accepted.identity {
+			SettingsKeys.Identity.nickname.value = identity.nickname
+			SettingsKeys.Identity.realName.value = identity.realName
 		}
-		if let appearance = model.acceptedAppearance {
+		if let appearance = model.accepted.appearance {
 			AppServices.theme.apply(appearance.theme)
-			if Preferences.Appearance.preferredAppearance.value != appearance.preferredAppearance {
-				Preferences.Appearance.preferredAppearance.value = appearance.preferredAppearance
-				PreferenceReload.perform(.appearance)
+			if SettingsKeys.Appearance.preferredAppearance.value != appearance.preferredAppearance {
+				SettingsKeys.Appearance.preferredAppearance.value = appearance.preferredAppearance
+				SettingsReload.perform(.appearance)
 			}
 		}
-		if let notifications = model.acceptedNotifications {
-			Preferences.Notifications.notifyAboutMentions.value = notifications.highlight || notifications.privateMessage
-			Preferences.Notifications.soundIsMuted.value = notifications.sounds == false
+		if let notifications = model.accepted.notifications {
+			SettingsKeys.Notifications.notifyAboutMentions.value = notifications.notifyAboutMentions
+			SettingsKeys.Notifications.soundIsMuted.value = notifications.playSounds == false
 		}
 	}
 
-	private static func createClient(_ config: ClientConfig, connectWhenFinished: Bool) -> Bool {
+	private static func createSession(_ config: ServerConfig, connectWhenFinished: Bool) -> Bool {
 		guard
-			let world = AppServices.clientDirectory,
+			let chatSession = AppServices.chatSession,
 			let mainWindow = AppServices.delegate.mainWindow
 		else {
-			onboardingLogger.error("Cannot create a connection before the world is ready")
+			onboardingLogger.error("Cannot create a connection before the chat session is ready")
 			return false
 		}
 
-		let client = world.createClient(with: config)
-		mainWindow.expandClient(client)
-		world.save()
+		let session = chatSession.createSession(with: config)
+		mainWindow.expandSession(session)
+		chatSession.save()
 		_ = mainWindow.reloadLoadingScreen()
 
 		if connectWhenFinished {
-			client.connect()
+			session.connect()
 		}
 
-		client.selectFirstChannelInChannelList()
+		session.selectFirstConversation()
 		return true
 	}
 }

@@ -2,30 +2,29 @@
 // Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
 // SPDX-License-Identifier: BSD-3-Clause
 
+import CocoaExtensions
 import Foundation
 
 final class ChannelModeState {
-	private weak var client: Client?
-	private weak var channel: Channel?
+	private weak var session: ServerSession?
 
 	private(set) var modes: ChannelModeContainer
 
-	init(channel: Channel) {
-		guard let associatedClient = channel.associatedClient else {
-			fatalError("ChannelModeState requires an associated client")
+	init(channel: Conversation) {
+		guard let associatedSession = channel.associatedSession else {
+			fatalError("ChannelModeState requires an associated session")
 		}
 
-		client = associatedClient
-		self.channel = channel
-		modes = ChannelModeContainer(client: associatedClient)
+		session = associatedSession
+		modes = ChannelModeContainer(session: associatedSession)
 	}
 
 	func updateModes(_ modeString: String) -> [ModeInfo] {
-		guard let client else {
+		guard let session else {
 			return []
 		}
 
-		let parsedModes = client.supportInfo.parseModes(modeString)
+		let parsedModes = session.supportInfo.parseModes(modeString)
 
 		modes.apply(parsedModes)
 
@@ -49,13 +48,13 @@ final class ChannelModeState {
 
 	 Returns no group where nothing changed. */
 	func changeGroups(for modes: ChannelModeContainer) -> [ModeChangeGroup] {
-		guard let client else {
+		guard let session else {
 			return []
 		}
 
 		let modesOld = self.modes.modes
 		let modesNew = modes.modes
-		let modeKinds = ModeParser.effectiveChannelModeKinds(client.supportInfo.channelModeKinds)
+		let modeKinds = ModeParser.effectiveChannelModeKinds(session.supportInfo.channelModeKinds)
 
 		var removedSymbols = ""
 		var removedParameters: [String] = []
@@ -187,84 +186,5 @@ final class ChannelModeState {
 
 	private func sortedSymbols(_ modes: [String: ModeInfo]) -> [String] {
 		modes.keys.sorted()
-	}
-}
-
-final class ChannelModeContainer: NSObject, NSCopying {
-	private weak var client: Client?
-	private var modeObjects: [String: ModeInfo] = [:]
-
-	init(client: Client?) {
-		self.client = client
-		super.init()
-	}
-
-	func clear() {
-		modeObjects.removeAll()
-	}
-
-	var modes: [String: ModeInfo] {
-		modeObjects
-	}
-
-	/// The list modes this container refuses to hold, because their contents
-	/// belong to the ban-list sheet rather than to the channel's mode string.
-	/// A list the server does not support contributes no symbol at all.
-	private var unwantedModes: [String] {
-		guard let supportInfo = client?.supportInfo else {
-			return []
-		}
-
-		return [ISupportListType.ban, .banException, .inviteException, .quiet]
-			.compactMap { supportInfo.modeSymbol(forList: $0) }
-	}
-
-	private func modeIsPermitted(_ modeSymbol: String) -> Bool {
-		if unwantedModes.contains(modeSymbol) {
-			return false
-		}
-
-		if client?.supportInfo.modeSymbolIsUserPrefix(modeSymbol) == true {
-			return false
-		}
-
-		return true
-	}
-
-	func modeIsDefined(_ modeSymbol: String) -> Bool {
-		modes[modeSymbol] != nil
-	}
-
-	/** A pure lookup. Materialising a placeholder here made the channel's change
-	 command emit `-mode` for modes the channel never had. */
-	func modeInfo(for modeSymbol: String) -> ModeInfo? {
-		modeObjects[modeSymbol]
-	}
-
-	func apply(_ modes: [ModeInfo]) {
-		for mode in modes {
-			changeMode(mode.modeSymbol, modeIsSet: mode.modeIsSet, modeParameter: mode.modeParameter)
-		}
-	}
-
-	func changeMode(_ modeSymbol: String, modeIsSet: Bool) {
-		changeMode(modeSymbol, modeIsSet: modeIsSet, modeParameter: nil)
-	}
-
-	func changeMode(_ modeSymbol: String, modeIsSet: Bool, modeParameter: String?) {
-		guard modeIsPermitted(modeSymbol) else {
-			return
-		}
-
-		let modeUpdated = ModeInfo(modeSymbol: modeSymbol, modeIsSet: modeIsSet, modeParameter: modeParameter)
-
-		modeObjects[modeSymbol] = modeUpdated
-	}
-
-	func copy(with _: NSZone? = nil) -> Any {
-		let object = ChannelModeContainer(client: client)
-		object.modeObjects = modeObjects
-
-		return object
 	}
 }

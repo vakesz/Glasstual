@@ -66,7 +66,7 @@ extension CapabilityRegistry {
 				name: "draft/chathistory",
 				identifier: .chatHistory,
 				requestedByDefault: true,
-				preference: .chatHistory,
+				gate: .chatHistory,
 				dependencies: ["batch", "server-time", "message-tags"],
 				negotiation: .automatic,
 				specification: ircv3Specification("chathistory")
@@ -75,7 +75,7 @@ extension CapabilityRegistry {
 				name: "chathistory",
 				identifier: .chatHistory,
 				requestedByDefault: true,
-				preference: .chatHistory,
+				gate: .chatHistory,
 				dependencies: ["batch", "server-time", "message-tags"],
 				negotiation: .automatic,
 				specification: ircv3Specification("chathistory")
@@ -84,21 +84,21 @@ extension CapabilityRegistry {
 				name: "draft/read-marker",
 				identifier: .readMarker,
 				requestedByDefault: true,
-				preference: .readMarker,
+				gate: .readMarker,
 				specification: ircv3Specification("read-marker")
 			),
 			Capability(
 				name: "read-marker",
 				identifier: .readMarker,
 				requestedByDefault: true,
-				preference: .readMarker,
+				gate: .readMarker,
 				specification: ircv3Specification("read-marker")
 			),
 			Capability(
 				name: "echo-message",
 				identifier: .echoMessage,
 				requestedByDefault: true,
-				preference: .echoMessage,
+				gate: .echoMessage,
 				specification: ircv3Specification("echo-message")
 			),
 			Capability.capability(
@@ -167,7 +167,7 @@ extension CapabilityRegistry {
 					rawValue: CapabilitySet.playback.rawValue | zncPlaybackModule.rawValue
 				),
 				requestedByDefault: true,
-				preference: .always,
+				gate: .always,
 				specification: zncSpecification("Playback")
 			),
 			Capability.capability(
@@ -181,7 +181,7 @@ extension CapabilityRegistry {
 					rawValue: CapabilitySet.serverTime.rawValue | zncServerTime.rawValue
 				),
 				requestedByDefault: true,
-				preference: .always,
+				gate: .always,
 				specification: zncCapabilities
 			),
 			Capability(
@@ -190,7 +190,7 @@ extension CapabilityRegistry {
 					rawValue: CapabilitySet.serverTime.rawValue | zncServerTimeISO.rawValue
 				),
 				requestedByDefault: true,
-				preference: .always,
+				gate: .always,
 				specification: zncCapabilities
 			),
 			Capability.capability(

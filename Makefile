@@ -97,9 +97,16 @@ ensure-linters: ensure-formatters
 	@scripts/ensure-tool.sh actionlint
 	@scripts/ensure-tool.sh shellcheck
 
+# actionlint resolves `shellcheck` from PATH and silently disables the check on
+# inline `run:` blocks when it is absent, which is every CI run: the hosted macOS
+# image does not preinstall it, and this Makefile deliberately does not export a
+# PATH. Naming the pinned binary is what makes the gate mean the same thing here
+# and there. `-pyflakes=` disables the Python check as a decision rather than by
+# the same accident. `shellcheck scripts/*.sh` below covers only the checked-in
+# scripts, never the YAML.
 lint: ensure-linters format-check ## Run whole-tree linters and format checks
 	$(TOOLS_BIN)/swiftlint lint --strict --no-cache --config .swiftlint.yml Sources Tests
-	$(TOOLS_BIN)/actionlint
+	$(TOOLS_BIN)/actionlint -shellcheck $(TOOLS_BIN)/shellcheck -pyflakes=
 	$(TOOLS_BIN)/shellcheck scripts/*.sh
 	@set -euo pipefail; git ls-files --cached --others --exclude-standard -z -- '*.entitlements' '*.plist' '*.strings' '*.xcprivacy' | while IFS= read -r -d '' file; do if [ -f "$$file" ] && [ ! -L "$$file" ]; then plutil -lint "$$file" >/dev/null || exit 1; fi; done
 	git diff --check

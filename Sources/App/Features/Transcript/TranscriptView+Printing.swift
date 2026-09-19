@@ -59,7 +59,7 @@ extension TranscriptView {
 	/// conversation and the network it is on.
 	private var printedDocumentTitle: String {
 		let controller = viewController
-		return [controller?.associatedChannel?.name, controller?.associatedClient?.networkNameAlt]
+		return [controller?.associatedConversation?.name, controller?.associatedSession?.networkNameAlt]
 			.compactMap(\.self)
 			.filter { $0.isEmpty == false }
 			.joined(separator: " — ")

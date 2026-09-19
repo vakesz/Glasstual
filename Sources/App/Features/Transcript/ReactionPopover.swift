@@ -54,7 +54,7 @@ nonisolated enum RecentReactions {
 private struct ReactionPopoverView: View {
 	let send: (String) -> Void
 
-	@State private var recent = Preferences.Reactions.recent.value
+	@State private var recent = SettingsKeys.Reactions.recent.value
 	@State private var input = ""
 	@FocusState private var inputIsFocused: Bool
 	/// The row's hit targets, scaled with the reader's text size so the emoji
@@ -72,8 +72,8 @@ private struct ReactionPopoverView: View {
 						.frame(width: buttonSize, height: buttonSize)
 				}
 				.buttonStyle(.accessoryBar)
-				.help(String(localized: .MainWindow.reactWithEmoji(emoji)))
-				.accessibilityLabel(String(localized: .MainWindow.reactWithEmoji(emoji)))
+				.help(String(localized: .Transcript.reactWithEmoji(emoji)))
+				.accessibilityLabel(String(localized: .Transcript.reactWithEmoji(emoji)))
 			}
 
 			Divider()
@@ -83,7 +83,7 @@ private struct ReactionPopoverView: View {
 			 stays: it is where the palette's choice lands, and
 			 `ReactionInput.emoji(from:)` still decides what counts. It also takes
 			 a pasted emoji, which is what the old field was for. */
-			TextField(String(localized: .MainWindow.customReaction), text: $input)
+			TextField(String(localized: .Transcript.customReaction), text: $input)
 				.labelsHidden()
 				.textFieldStyle(.roundedBorder)
 				.multilineTextAlignment(.center)
@@ -101,14 +101,14 @@ private struct ReactionPopoverView: View {
 					input = ""
 					submit(newValue)
 				}
-				.help(String(localized: .MainWindow.customReaction))
+				.help(String(localized: .Transcript.customReaction))
 
-			Button(String(localized: .MainWindow.moreEmoji), systemImage: "face.smiling") {
+			Button(String(localized: .Transcript.moreEmoji), systemImage: "face.smiling") {
 				presentCharacterPalette()
 			}
 			.labelStyle(.iconOnly)
 			.buttonStyle(.accessoryBar)
-			.help(String(localized: .MainWindow.moreEmoji))
+			.help(String(localized: .Transcript.moreEmoji))
 		}
 		.padding(UISpacing.regular)
 	}
@@ -127,22 +127,25 @@ private struct ReactionPopoverView: View {
 	private func submit(_ candidate: String) {
 		guard let emoji = ReactionInput.emoji(from: candidate) else { return }
 		recent = RecentReactions.recording(emoji, in: recent)
-		Preferences.Reactions.recent.value = recent
+		SettingsKeys.Reactions.recent.value = recent
 		send(emoji)
 	}
 }
 
-/// AppKit presentation shell for the SwiftUI reaction picker.
+/** AppKit presentation shell for the SwiftUI reaction picker.
+
+ It draws the row and reports what was picked; where the popover is anchored
+ and what the pick means are the transcript's, which is the view that knows
+ which characters the message drew. */
 @MainActor
 final class ReactionPopover: NSObject, NSPopoverDelegate {
-	let messageIdentifier: String
-	var completion: ((String, String) -> Void)?
+	/// The emoji the reader picked. The picker closes itself first.
+	var onPick: ((String) -> Void)?
+	/// Called once the popover has gone, however it went, so its owner can drop
+	/// it -- a transient popover is dismissed by the next click anywhere else.
+	var onClose: (() -> Void)?
 
 	private var popover: NSPopover?
-
-	init(messageIdentifier: String) {
-		self.messageIdentifier = messageIdentifier
-	}
 
 	func present(relativeTo rect: NSRect, of view: NSView) {
 		let popover = NSPopover()
@@ -164,10 +167,11 @@ final class ReactionPopover: NSObject, NSPopoverDelegate {
 
 	func popoverDidClose(_: Notification) {
 		popover = nil
+		onClose?()
 	}
 
 	private func submit(_ emoji: String) {
-		completion?(emoji, messageIdentifier)
 		close()
+		onPick?(emoji)
 	}
 }

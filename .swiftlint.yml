@@ -18,6 +18,9 @@ cyclomatic_complexity:
   error: 30
 
 file_length:
+  # A growth ceiling, not a measured limit: the longest file in the tree is
+  # 1057 lines, so neither threshold can fire today. They are here to stop a
+  # file growing past the point where it is still one subject.
   warning: 1200
   error: 2000
   ignore_comment_only_lines: true
@@ -38,7 +41,7 @@ function_parameter_count:
 
 identifier_name:
   max_length:
-    # Nib outlets and protocol-state properties should describe their role
+    # Protocol-state and preference-key properties should describe their role
     # without project-specific abbreviations.
     warning: 64
     error: 72
@@ -55,8 +58,9 @@ identifier_name:
 
 type_name:
   max_length:
-    # Feature-scoped controller names are intentionally explicit while AppKit
-    # runtime names remain part of archive and XPC compatibility.
+    # Feature-scoped controller names are intentionally explicit; the @objc
+    # runtime names that archives and XPC depend on are listed in
+    # ObjCRuntimeNameTests.
     warning: 50
     error: 60
 
@@ -133,5 +137,5 @@ custom_rules:
     name: "Raw User Defaults Key"
     included: 'Sources/.*\.swift'
     regex: '(?:UserDefaults|GlasstualUserDefaults)[^\n]*forKey:\s*"'
-    message: "Read or write through a typed PreferenceKey declaration."
+    message: "Read or write through a typed SettingsKey declaration."
     severity: error

@@ -13,7 +13,7 @@ import SwiftUI
 nonisolated struct MemberListPresentationStyle: Equatable, Sendable {
 	/// Whether an IRC operator is drawn as one whatever the channel gave them.
 	let favorsServerStaff: Bool
-	/// "Use an x to indicate a user with no mode set", as the preference offers
+	/// "Use an x to indicate a user with no mode set", as the setting offers
 	/// it: a rank column that is blank for most of a channel reads as unfinished
 	/// to the readers who asked for the mark.
 	let marksMembersWithNoMode: Bool
@@ -27,14 +27,14 @@ nonisolated struct MemberListPresentationStyle: Equatable, Sendable {
 		var badgeColors: [UserRank: Color] = [:]
 		for (rank, style) in MemberListRanks.ranked {
 			guard let badge = style.badge else { continue }
-			let color = GlasstualUserDefaults.container.color(for: badge.preferenceKey)
+			let color = GlasstualUserDefaults.container.color(for: badge.settingsKey)
 			guard color.alphaComponent > 0 else { continue }
 			badgeColors[rank] = Color(nsColor: color)
 		}
 
 		return Self(
-			favorsServerStaff: Preferences.Appearance.memberListSortFavorsServerStaff.value,
-			marksMembersWithNoMode: Preferences.Appearance.memberListNoModeSymbol.value,
+			favorsServerStaff: SettingsKeys.Appearance.memberListSortFavorsServerStaff.value,
+			marksMembersWithNoMode: SettingsKeys.Appearance.memberListNoModeSymbol.value,
 			badgeColors: badgeColors
 		)
 	}
@@ -62,14 +62,14 @@ nonisolated struct MemberListPresentationStyle: Equatable, Sendable {
 
 /// Everything the member list knows about one rank.
 ///
-/// The glyph, the badge colour preference, the privilege description and the
+/// The glyph, the badge colour setting, the privilege description and the
 /// section header were four separate `switch`es over `UserRank`; a rank added
 /// to one of them was easy to leave out of the other three.
 nonisolated struct MemberListRankStyle: Sendable {
 	/// The glyph the rank is drawn with. A member with no mode has none of its
-	/// own: whether one is drawn at all is a preference.
+	/// own: whether one is drawn at all is a setting.
 	let symbolName: String?
-	/// The badge colour preference that answers for the rank, where there is a
+	/// The badge colour setting that answers for the rank, where there is a
 	/// badge to colour.
 	let badge: UserListModeBadge?
 	let privilegeDescription: LocalizedStringResource
@@ -92,6 +92,21 @@ nonisolated enum MemberListRanks {
 	/// What a rank is called where a row, a tooltip or a profile names it.
 	static func privilegeDescription(for rank: UserRank) -> String {
 		String(localized: style(for: rank).privilegeDescription)
+	}
+
+	/// The rank one member is drawn as, outside the list: there is one member to
+	/// draw rather than a column of them, so there is no snapshot in hand and
+	/// the current one is read for them.
+	@MainActor
+	static func displayRank(for member: Member) -> UserRank {
+		MemberListPresentationStyle.current()
+			.displayRank(isIRCOperator: member.user.isIRCop, channelRank: member.rank)
+	}
+
+	/// The same for what that member's rank is called.
+	@MainActor
+	static func privilegeDescription(for member: Member) -> String {
+		privilegeDescription(for: displayRank(for: member))
 	}
 
 	/// What the group of members holding a rank is headed with.

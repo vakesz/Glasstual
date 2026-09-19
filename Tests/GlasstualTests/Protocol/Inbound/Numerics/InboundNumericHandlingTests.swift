@@ -1,0 +1,329 @@
+// Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
+
+import Foundation
+@testable import Glasstual
+import Testing
+
+/** What the numeric handlers make of replies whose shape the specifications
+ leave open: a NAMES token that is only prefixes, a quiet list with an extra
+ field, a timestamp the server made up, and the four-parameter spelling of
+ RPL_WHOISACTUALLY that half the ircds send. */
+@MainActor
+@Suite("Inbound numeric handling")
+struct InboundNumericHandlingTests {
+	private func session(nickname: String = "me") -> TestServerSession {
+		TestServerSession(configDictionary: ["nickname": nickname, "username": nickname])
+	}
+
+	private func joinedChannel(_ name: String, on session: TestServerSession) throws -> Conversation {
+		let channel = try #require(session.findConversationOrCreate(name))
+
+		channel.activate()
+
+		return channel
+	}
+
+	private func receive(_ line: String, on session: TestServerSession) throws {
+		let message = try #require(Message(line: line, on: session))
+
+		if message.commandNumeric > 0 {
+			session.receiveNumericReply(message)
+		} else {
+			session.forwardsProcessedMessages = true
+			session.processIncomingMessage(message)
+		}
+	}
+
+	private func printedBodies(on session: TestServerSession, forCommand command: String) -> [String] {
+		(session.printedLines as NSArray).compactMap { line in
+			guard let line = line as? [String: Any], line["command"] as? String == command else {
+				return nil
+			}
+
+			return line["messageBody"] as? String
+		}
+	}
+
+	// MARK: - RPL_NAMREPLY
+
+	/// `353 me = #chan :@ alice` — the prefix and the nickname arrived as two
+	/// tokens. The first names nobody, and taking it anyway put a member and a
+	/// directory user under the empty nickname.
+	@Test("A NAMES token of nothing but prefixes is dropped")
+	func namesTokenOfOnlyPrefixesIsDropped() throws {
+		let session = session()
+		let channel = try joinedChannel("#chan", on: session)
+
+		try receive(":irc.example.net 353 me = #chan :@ alice", on: session)
+
+		#expect(channel.numberOfMembers == 1)
+		#expect(channel.memberExists("alice"))
+		#expect(session.findUser("") == nil)
+		#expect(session.numberOfUsers == 1)
+	}
+
+	/// A NAMES line is ordered as one batch when it ends, not one sorted insert
+	/// per name; the members it adds, and the ones it re-ranks, still land in
+	/// rank order with every lookup pointing at the right row.
+	@Test("A NAMES line leaves its members in rank order with every lookup intact")
+	func namesLineIsSortedOnceAndIndexedCorrectly() throws {
+		let session = session()
+		let channel = try joinedChannel("#chan", on: session)
+
+		try receive(":irc.example.net 353 me = #chan :erin dave", on: session)
+		try receive(":irc.example.net 353 me = #chan :carol +bob @alice @dave", on: session)
+
+		let memberInfo = try #require(channel.memberInfo)
+		let nicknames = memberInfo.memberList.map(\.user.nickname)
+
+		#expect(nicknames == ["alice", "dave", "bob", "carol", "erin"])
+
+		for nickname in nicknames {
+			let member = try #require(channel.findMember(nickname))
+			#expect(member.user.nickname == nickname)
+		}
+
+		try receive(":carol!c@example.org PART #chan", on: session)
+
+		#expect(memberInfo.memberList.map(\.user.nickname) == ["alice", "dave", "bob", "erin"])
+		#expect(try #require(channel.findMember("erin")).user.nickname == "erin")
+	}
+
+	/// The NAMES reply is the server's own list, so it is the truth about
+	/// everyone in it — including the member a JOIN already created.
+	@Test("A NAMES entry sets the prefixes of a member that already exists")
+	func namesUpdatesTheModesOfAnExistingMember() throws {
+		let session = session()
+		let channel = try joinedChannel("#chan", on: session)
+
+		try receive(":alice!ali@example.org JOIN #chan", on: session)
+
+		#expect(try #require(channel.findMember("alice")).modes.letters.isEmpty)
+
+		try receive(":irc.example.net 353 me = #chan :@alice", on: session)
+
+		#expect(try #require(channel.findMember("alice")).modes.letters == "o")
+		#expect(try #require(channel.findMember("alice")).mark == "@")
+	}
+
+	/// RFC 1459 6.2's WHO flag field carries the person's channel status, and
+	/// it used to reach a member only on the way in: an op the session had
+	/// already seen join kept no mark at all.
+	@Test("A WHO reply sets the prefixes of a member that already exists")
+	func whoReplyUpdatesTheModesOfAnExistingMember() throws {
+		let session = session()
+		let channel = try joinedChannel("#chan", on: session)
+
+		try receive(":alice!ali@example.org JOIN #chan", on: session)
+		try receive(
+			":irc.example.net 352 me #chan ali example.org irc.example.net alice H@ :0 Alice",
+			on: session
+		)
+
+		#expect(try #require(channel.findMember("alice")).modes.letters == "o")
+	}
+
+	/// Without `multi-prefix` the flag field carries only the highest prefix,
+	/// so it may add to what the member holds but never take the rest away.
+	@Test("A WHO reply without multi-prefix does not drop the modes it omits")
+	func whoReplyKeepsModesItCannotReport() throws {
+		let session = session()
+		let channel = try joinedChannel("#chan", on: session)
+
+		try receive(":irc.example.net 353 me = #chan :@+alice", on: session)
+		try receive(
+			":irc.example.net 352 me #chan ali example.org irc.example.net alice H@ :0 Alice",
+			on: session
+		)
+
+		#expect(try #require(channel.findMember("alice")).modes.letters == "ov")
+	}
+
+	/// The one character a reply without `multi-prefix` carries is the highest
+	/// the person holds, so anything the member is marked with above it was
+	/// lost without the session seeing the MODE.
+	@Test("A WHO reply without multi-prefix drops the modes ranked above the one it reports", arguments: [
+		(flags: "H+", modes: "v"),
+		(flags: "H", modes: ""),
+	])
+	func whoReplyDropsModesRankedAboveTheReportedOne(flags: String, modes: String) throws {
+		let session = session()
+		let channel = try joinedChannel("#chan", on: session)
+
+		try receive(":irc.example.net 353 me = #chan :@alice", on: session)
+		try receive(
+			":irc.example.net 352 me #chan ali example.org irc.example.net alice \(flags) :0 Alice",
+			on: session
+		)
+
+		#expect(try #require(channel.findMember("alice")).modes.letters == modes)
+	}
+
+	// MARK: - Presence and errors
+
+	/// RPL_TARGUMODEG says a message was held back by the recipient's +g, and
+	/// was swallowed without a word.
+	@Test("A caller-ID notice for a +g recipient is printed")
+	func targetInCallerIDModeIsPrinted() throws {
+		let session = session()
+
+		try receive(":irc.example.net 716 me alice :is in +g mode (server-side ignore)", on: session)
+
+		let bodies = session.printedLines.compactMap { ($0 as? [String: Any])?["messageBody"] as? String }
+		#expect(bodies.contains { $0.contains("alice") && $0.contains("+g") })
+	}
+
+	// MARK: - Mode lists
+
+	/// RPL_QUIETLIST writes the mode letter between the channel and the mask,
+	/// and nothing else does. Counting parameters to find it only ever worked
+	/// for the six-parameter shape.
+	@Test("A quiet list reads its mask from the reply's shape, not its length")
+	func quietListReadsTheMaskWhateverTheParameterCount() throws {
+		let session = session()
+		session.recordedOutput.showsMaskListSheet = true
+
+		try receive(":irc.example.net 728 me #chan q short!*@* alice 1700000000", on: session)
+		try receive(":irc.example.net 728 me #chan q bare!*@*", on: session)
+		try receive(":irc.example.net 728 me #chan q long!*@* alice 1700000000 extra", on: session)
+
+		let masks = session.recordedOutput.maskListEntries.map(\.mask)
+
+		#expect(masks == ["short!*@*", "bare!*@*", "long!*@*"])
+	}
+
+	/** The entry used to reach the window carrying nothing but the mask, so
+	 whichever access list happened to be current took it: a window open on one
+	 channel's bans filled with another channel's. The channel and the mode
+	 letter travel with it now. */
+	@Test("A list entry names the channel and the mode it belongs to")
+	func listEntriesNameTheirChannelAndMode() throws {
+		let session = session()
+		session.recordedOutput.showsMaskListSheet = true
+		session.supportInfo.processConfigurationData("CHANMODES=beI,k,l,imnpst PREFIX=(ov)@+ EXCEPTS=e INVEX=I")
+
+		try receive(":irc.example.net 367 me #bans *!*@one.example alice 1700000000", on: session)
+		try receive(":irc.example.net 348 me #excepts *!*@two.example bob 1700000000", on: session)
+		try receive(":irc.example.net 346 me #invites *!*@three.example carol 1700000000", on: session)
+		try receive(":irc.example.net 728 me #quiets q *!*@four.example dave 1700000000", on: session)
+
+		let routes = session.recordedOutput.maskListEntries.map { "\($0.channelName) +\($0.modeSymbol)" }
+
+		#expect(routes == ["#bans +b", "#excepts +e", "#invites +I", "#quiets +q"])
+	}
+
+	/// The end of a list names the same channel and mode its entries did, so a
+	/// window that took none of them does not take the end of it either.
+	@Test("The end of a list names the channel and the mode too")
+	func endOfListNamesItsChannelAndMode() throws {
+		let session = session()
+		session.recordedOutput.showsMaskListSheet = true
+		session.supportInfo.processConfigurationData("CHANMODES=beI,k,l,imnpst PREFIX=(ov)@+ EXCEPTS=e")
+
+		try receive(":irc.example.net 368 me #bans :End of channel ban list", on: session)
+		try receive(":irc.example.net 349 me #excepts :End of channel exception list", on: session)
+		try receive(":irc.example.net 729 me #quiets q :End of channel quiet list", on: session)
+
+		#expect(session.recordedOutput.maskListFinishes == ["#bans +b", "#excepts +e", "#quiets +q"])
+	}
+
+	/// Every trailing timestamp on the wire is server-supplied text, and
+	/// `TimeInterval(param) ?? 0` read an unparsable one as 1970 and a
+	/// forty-digit one as a date past the year 3000.
+	@Test("An unreadable list timestamp leaves the entry undated")
+	func unreadableListTimestampLeavesTheEntryUndated() throws {
+		let session = session()
+		session.recordedOutput.showsMaskListSheet = true
+
+		try receive(
+			":irc.example.net 367 me #chan bad!*@* alice 99999999999999999999999999",
+			on: session
+		)
+		try receive(":irc.example.net 367 me #chan worse!*@* alice notatimestamp", on: session)
+
+		#expect(session.recordedOutput.maskListEntries.count == 2)
+		#expect(session.recordedOutput.maskListEntries.allSatisfy { $0.date == nil })
+	}
+
+	@Test("An unreadable topic timestamp is left out rather than printed as 1970")
+	func unreadableTopicTimestampIsLeftOut() throws {
+		let session = session()
+		_ = try joinedChannel("#chan", on: session)
+
+		try receive(":irc.example.net 333 me #chan alice!ali@example.org notatimestamp", on: session)
+
+		let bodies = printedBodies(on: session, forCommand: "333")
+
+		#expect(bodies.isEmpty == false)
+		#expect(bodies.allSatisfy { $0.contains("1970") == false })
+	}
+
+	@Test("An unreadable sign-on timestamp is left out of the WHOIS line")
+	func unreadableSignOnTimestampIsLeftOut() throws {
+		let session = session()
+
+		try receive(":irc.example.net 317 me alice 300 notatimestamp :seconds idle", on: session)
+
+		let bodies = printedBodies(on: session, forCommand: "317")
+
+		#expect(bodies.isEmpty == false)
+		#expect(bodies.allSatisfy { $0.contains("1970") == false })
+	}
+
+	// MARK: - RPL_WHOISACTUALLY
+
+	/** InspIRCd and Charybdis send `338 <me> <nick> <ip> :is actually using
+	 host`, one parameter shorter than the ircu spelling the handler knew. It
+	 answered "handled" and printed nothing, so the reply vanished. */
+	@Test("A four-parameter RPL_WHOISACTUALLY still reaches the transcript")
+	func fourParameterWhoisActuallyIsPrinted() throws {
+		let session = session()
+
+		try receive(":irc.example.net 338 me alice 192.0.2.1 :is actually using host", on: session)
+
+		#expect(printedBodies(on: session, forCommand: "338").isEmpty == false)
+	}
+
+	// MARK: - Wire spelling
+
+	/** A numeric is written on the wire as three digits.
+	 `String(commandNumeric)` drops the leading zeros, so a comparison against
+	 it would never match a numeric below 100. */
+	@Test("A numeric keeps the leading zeros it was sent with")
+	func numericKeepsItsLeadingZeros() throws {
+		let session = session()
+		let message = try #require(Message(line: ":irc.example.net 001 me :Welcome", on: session))
+
+		#expect(message.command == "001")
+		#expect(message.commandNumeric == 1)
+		#expect(String(message.commandNumeric) != message.command)
+	}
+
+	// MARK: - ISUPPORT
+
+	/** A member carries the prefix table it was stamped with. A second 005 —
+	 which a bouncer sends on attach — changes how everyone already in a
+	 channel ranks, and only a settings reload ever re-stamped them. */
+	@Test("A PREFIX change re-stamps and re-sorts the members already in a channel")
+	func prefixChangeRestampsAndResortsMembers() throws {
+		let session = session()
+
+		try receive(":irc.example.net 005 me PREFIX=(ov)@+ :are supported by this server", on: session)
+
+		let channel = try joinedChannel("#chan", on: session)
+
+		try receive(":irc.example.net 353 me = #chan :@alice +bob carol", on: session)
+
+		let memberInfo = try #require(channel.memberInfo)
+
+		#expect(memberInfo.memberList.map(\.user.nickname) == ["alice", "bob", "carol"])
+
+		/* The same two modes, ranked the other way round. */
+		try receive(":irc.example.net 005 me PREFIX=(vo)+@ :are supported by this server", on: session)
+
+		#expect(memberInfo.memberList.map(\.user.nickname) == ["bob", "alice", "carol"])
+		#expect(try #require(channel.findMember("bob")).mark == "+")
+		#expect(try #require(channel.findMember("alice")).mark == "@")
+	}
+}

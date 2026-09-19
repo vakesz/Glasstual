@@ -15,16 +15,16 @@ struct MemberListUserInfoContent {
 	let privileges: String
 	let awayStatus: String
 
-	init(member: ChannelUser, privileges: String) {
+	init(member: Member, privileges: String) {
 		let user = member.user
 		let unavailable = String(localized: .MemberList.informationUnavailable)
-		let stripsFormatting = Preferences.Messages.removeAllFormatting.value
+		let stripsFormatting = SettingsKeys.Messages.removeAllFormatting.value
 
 		nickname = user.nickname
-		username = user.username.nonEmpty ?? unavailable
-		address = Self.displayText(user.address.nonEmpty ?? unavailable, stripsFormatting: stripsFormatting)
-		realName = Self.displayText(user.realName.nonEmpty ?? unavailable, stripsFormatting: stripsFormatting)
-		account = user.account.nonEmpty ?? String(localized: .MemberList.notLoggedIn)
+		username = user.username?.nonEmpty ?? unavailable
+		address = Self.displayText(user.address?.nonEmpty ?? unavailable, stripsFormatting: stripsFormatting)
+		realName = Self.displayText(user.realName?.nonEmpty ?? unavailable, stripsFormatting: stripsFormatting)
+		account = user.account?.nonEmpty ?? String(localized: .MemberList.notLoggedIn)
 		awayStatus = Self.awayStatus(isAway: user.isAway)
 		self.privileges = user.isBot
 			? String(localized: .MemberList.privilegesWithCaption(
@@ -51,19 +51,12 @@ struct MemberListUserInfoContent {
 		guard let formatted = (value as NSString).attributedString(
 			withIRCFormatting: NSFont.systemFont(ofSize: NSFont.systemFontSize),
 			preferredFontColor: nil,
-			honorFormattingPreference: false
+			honorFormattingSetting: false
 		) else {
 			return AttributedString(value)
 		}
 
 		return AttributedString(formatted)
-	}
-}
-
-private extension String? {
-	var nonEmpty: String? {
-		guard let value = self, value.isEmpty == false else { return nil }
-		return value
 	}
 }
 
@@ -130,5 +123,25 @@ struct MemberListUserInfoView: View {
 				.help(plainValue ?? String(value.characters))
 				.frame(maxWidth: .infinity, alignment: .leading)
 		}
+	}
+}
+
+/** The member profile, packaged for an AppKit popover.
+
+ The member list presents the same profile through SwiftUI's `.popover`, which
+ needs only the view. A transcript click arrives in an `NSTextView` and is
+ anchored with an `NSPopover` instead, so the hosting controller and the
+ content the view wants are assembled here rather than in the transcript: what
+ a profile is made of stays with the member list. */
+enum MemberListUserInfoPopover {
+	static func makeViewController(for member: Member) -> NSViewController {
+		NSHostingController(
+			rootView: MemberListUserInfoView(
+				content: MemberListUserInfoContent(
+					member: member,
+					privileges: MemberListRanks.privilegeDescription(for: member)
+				)
+			)
+		)
 	}
 }

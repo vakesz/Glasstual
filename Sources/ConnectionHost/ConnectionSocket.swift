@@ -119,9 +119,6 @@ actor ConnectionSocket {
 	/// arrives; the handshake must not wait on that forever.
 	private static let trustPromptTimeout: TimeInterval = 300
 
-	private static let torProxyAddress = "127.0.0.1"
-	private static let torProxyPort: UInt16 = 9150
-
 	nonisolated let config: ConnectionConfig
 	nonisolated let uniqueIdentifier: String
 
@@ -136,10 +133,24 @@ actor ConnectionSocket {
 	private let events: AsyncStream<SocketEvent>.Continuation
 
 	private var connection: TransportConnection?
+	/** The task that supervises this transport's dials.
+
+	 A handshake that found no cipher suite in common ends the dial, not the
+	 transport: the supervisor has one more to run. So a close cancels
+	 ``dialTask`` and this one keeps deciding, which is also why an owner's close
+	 is told apart from the transport's own through ``closedByOwner``. */
 	private var connectionTask: Task<Void, Never>?
-	/// The part of a line that arrived without its terminator, waiting for the
-	/// read that completes it.
-	private var readInBuffer = Data()
+	private var dialTask: Task<ConnectionError?, Never>?
+	/** Frames the reads into IRC lines.
+
+	 The terminator is CRLF, and a server whose MOTD file has CRLF endings
+	 writes `CR CR LF`, so every trailing CR goes with the terminator; a line
+	 with nothing left in it is not a message. */
+	private var framer = LineFramer(
+		maximumLineLength: ConnectionSocket.maximumBufferedLineLength,
+		stripsCarriageReturns: true,
+		dropsEmptyLines: true
+	)
 	private var connectTimeoutTask: Task<Void, Never>?
 	private var trustAnswer: AsyncStream<Bool>.Continuation?
 
@@ -150,6 +161,21 @@ actor ConnectionSocket {
 	private var sending = false
 
 	private var alternateDisconnectError: ConnectionError?
+
+	/// Whether the owner asked for this transport to close. A close it asked for
+	/// is never answered by another dial.
+	private var closedByOwner = false
+
+	/// Whether the dial in flight offers the suites with no forward secrecy, so
+	/// that the fallback is offered once and once only.
+	private var offeredLegacyCipherSuites = false
+
+	/** The OSStatus of the TLS failure that ended the dial, when that is what
+	 ended it.
+
+	 Kept as the number: the legacy retry is decided from the code, and by the
+	 time the failure is a `ConnectionError` it is a sentence. */
+	private var tlsFailureCode: Int?
 
 	var disconnected: Bool {
 		connecting == false && connected == false
@@ -188,7 +214,8 @@ actor ConnectionSocket {
 		}
 	}
 
-	/** Begins closing, and reports whether a `.disconnected` event will follow.
+	/** Begins closing at the owner's request, and reports whether a
+	 `.disconnected` event will follow.
 
 	 The owner waits for that event before letting go of the transport, so this
 	 has to be honest about it. A close already under way is still on its way to
@@ -196,22 +223,19 @@ actor ConnectionSocket {
 	 dialled, or has already finished. */
 	@discardableResult
 	func close() -> Bool {
-		guard disconnecting == false else { return true }
-		guard disconnected == false else { return false }
+		/* Recorded before the guard: a close asked for while the transport was
+		 already ending its own dial still has to stop the legacy retry. */
+		closedByOwner = true
 
-		disconnecting = true
-
-		cancelConnectTimeout()
-
-		trustAnswer?.finish()
-		trustAnswer = nil
-		connectionTask?.cancel()
-
-		return true
+		return endDial()
 	}
 
+	/** Ends the dial in flight, recording why.
+
+	 The transport's own failures arrive here. Whether one more dial follows is
+	 ``runConnection()``'s decision; this stops the dial and nothing else. */
 	@discardableResult
-	func close(with error: ConnectionError) -> Bool {
+	private func fail(with error: ConnectionError) -> Bool {
 		guard disconnected == false || disconnecting else { return false }
 
 		/* The reason is recorded whether or not a close is already under way: a
@@ -223,7 +247,22 @@ actor ConnectionSocket {
 			alternateDisconnectError = error
 		}
 
-		return close()
+		return endDial()
+	}
+
+	private func endDial() -> Bool {
+		guard disconnecting == false else { return true }
+		guard disconnected == false else { return false }
+
+		disconnecting = true
+
+		cancelConnectTimeout()
+
+		trustAnswer?.finish()
+		trustAnswer = nil
+		dialTask?.cancel()
+
+		return true
 	}
 
 	private func resetState() {
@@ -234,13 +273,17 @@ actor ConnectionSocket {
 		sending = false
 
 		alternateDisconnectError = nil
+		closedByOwner = false
+		offeredLegacyCipherSuites = false
+		tlsFailureCode = nil
 
 		cancelConnectTimeout()
 
 		connectionTask = nil
+		dialTask = nil
 		connection = nil
 
-		readInBuffer.removeAll()
+		framer.reset()
 	}
 
 	// MARK: - Connect Timeout
@@ -274,20 +317,72 @@ actor ConnectionSocket {
 			"Connection \(identifier, privacy: .public) timed out after \(timeout, privacy: .public) seconds"
 		)
 
-		close(with: .other(message: String(localized: .ConnectionErrors.connectionTimedOut)))
+		fail(with: .other(message: String(localized: .ConnectionErrors.connectionTimedOut)))
 	}
 
 	// MARK: - Connection task
 
+	/** Dials, and dials once more without forward secrecy when the peer accepted
+	 none of the suites the selection offered.
+
+	 The selected suites are offered first on every connect, so a server that has
+	 since been fixed is reached the right way with no state to clear. The second
+	 dial is part of the same connection attempt: it costs the application no
+	 reconnect-backoff step, because as far as the application is concerned this
+	 transport has not failed yet. */
 	private func runConnection() async {
+		let failure = await dial(offeringLegacyCipherSuites: false)
+
+		guard retriesWithoutForwardSecrecy else {
+			onDisconnect(with: failure)
+
+			return
+		}
+
+		prepareForLegacyDial()
+
+		/* Reported as the first dial's failure when the second fails too: the
+		 legacy offer is the transport's own, and the error it produced would name
+		 a handshake nobody asked for. */
+		let legacyFailure = await dial(offeringLegacyCipherSuites: true)
+
+		onDisconnect(with: legacyFailure == nil ? nil : failure)
+	}
+
+	/** One dial, and the reason it ended — nil when it ended with none.
+
+	 Its own task, so that ending the dial — the owner's close, or this
+	 transport's answer to a failure — cancels the dial without cancelling the
+	 supervisor that may still have the legacy retry to run. */
+	private func dial(offeringLegacyCipherSuites offering: Bool) async -> ConnectionError? {
+		offeredLegacyCipherSuites = offering
+
+		let task = Task { [weak self] () -> ConnectionError? in
+			guard let self else { return nil }
+
+			return await performDial(offeringLegacyCipherSuites: offering)
+		}
+
+		dialTask = task
+
+		let failure = await task.value
+
+		dialTask = nil
+
+		return failure
+	}
+
+	private func performDial(offeringLegacyCipherSuites offering: Bool) async -> ConnectionError? {
 		do {
 			let endpoint = NWEndpoint.hostPort(
 				host: NWEndpoint.Host(config.serverAddress),
 				port: NWEndpoint.Port(integerLiteral: config.serverPort)
 			)
 			if config.connectionPrefersSecuredConnection {
-				let parameters = NWParametersBuilder.parameters { constructedTLS() }
-				try applyProxy(to: parameters.parameters)
+				let parameters = NWParametersBuilder.parameters {
+					constructedTLS(offeringLegacyCipherSuites: offering)
+				}
+				try ConnectionParameters.applyProxy(config, to: parameters.parameters, uniqueIdentifier: uniqueIdentifier)
 
 				try await withNetworkConnection(
 					to: endpoint,
@@ -296,8 +391,8 @@ actor ConnectionSocket {
 					try await use(.tls(connection))
 				}
 			} else {
-				let parameters = NWParametersBuilder.parameters { constructedTCP() }
-				try applyProxy(to: parameters.parameters)
+				let parameters = NWParametersBuilder.parameters { ConnectionParameters.tcp(for: config) }
+				try ConnectionParameters.applyProxy(config, to: parameters.parameters, uniqueIdentifier: uniqueIdentifier)
 
 				try await withNetworkConnection(
 					to: endpoint,
@@ -307,11 +402,65 @@ actor ConnectionSocket {
 				}
 			}
 
-			onDisconnect(with: nil)
+			return alternateDisconnectError
 		} catch is CancellationError {
-			onDisconnect(with: nil)
+			return alternateDisconnectError
 		} catch {
-			onDisconnect(with: error)
+			noteTLSFailure(error)
+
+			return alternateDisconnectError ?? ConnectionError.translating(error)
+		}
+	}
+
+	/** Whether the dial that just ended is the one failure this transport answers
+	 by dialling again itself.
+
+	 Everything the connection has done so far is part of the question: a
+	 transport that connected, secured itself or saw the peer's certificate did
+	 agree on a suite, and a close the owner asked for is not something to answer
+	 with another dial. */
+	private var retriesWithoutForwardSecrecy: Bool {
+		SecureTransportSupport.retriesWithLegacyCipherSuites(
+			afterErrorCode: tlsFailureCode,
+			legacySuitesAlreadyOffered: offeredLegacyCipherSuites,
+			peerCertificateSeen: trustExport.certificateChain.isEmpty == false
+		)
+			&& closedByOwner == false
+			&& connected == false
+			&& secured == false
+	}
+
+	/// Puts the transport back where ``open()`` left it, for the one extra dial.
+	private func prepareForLegacyDial() {
+		let identifier = uniqueIdentifier
+
+		ConnectionHostLog.connection.notice(
+			"Connection \(identifier, privacy: .public) found no cipher suite in common; offering the legacy suites once"
+		)
+
+		tlsFailureCode = nil
+		alternateDisconnectError = nil
+		trustExport = TLSTrustExport()
+		connection = nil
+		disconnecting = false
+		connecting = true
+
+		framer.reset()
+
+		config.diagnostics?.record(.transportStarted)
+		scheduleConnectTimeout()
+	}
+
+	/// Records the OSStatus of a TLS failure, which is what the legacy retry is
+	/// decided from.
+	private func noteTLSFailure(_ error: any Error) {
+		switch error {
+		case let .tls(code) as NWError:
+			tlsFailureCode = Int(code)
+		case let error as NSError where SecureTransportSupport.isTLSError(error):
+			tlsFailureCode = error.code
+		default:
+			break
 		}
 	}
 
@@ -371,7 +520,8 @@ actor ConnectionSocket {
 		guard connecting, connected == false, disconnecting == false else { return }
 
 		config.diagnostics?.record(.transportFailed)
-		close(with: connectionError(from: error))
+		noteTLSFailure(error)
+		fail(with: ConnectionError.translating(error))
 	}
 
 	private func onSecured() {
@@ -390,18 +540,11 @@ actor ConnectionSocket {
 		events.yield(.secured(protocolVersion: protocolVersion, cipherSuite: cipherSuite))
 	}
 
-	private func onDisconnect(with error: Error?) {
-		var payload: ConnectionError?
-
-		if let alternateDisconnectError {
-			payload = alternateDisconnectError
-		} else if let error {
-			payload = connectionError(from: error)
-		}
-
+	/// Reports the transport gone, with the reason the dials it ran settled on.
+	private func onDisconnect(with error: ConnectionError?) {
 		resetState()
 
-		events.yield(.disconnected(payload))
+		events.yield(.disconnected(error))
 
 		/* Nothing follows a disconnect, so the host's event loop can end here
 		 rather than waiting on a stream nobody will write to again. */
@@ -437,7 +580,7 @@ actor ConnectionSocket {
 			}
 
 			if isComplete {
-				if readInBuffer.isEmpty == false {
+				if framer.hasPartialLine {
 					throw ConnectionError.socket(error: NSError(domain: NSPOSIXErrorDomain, code: Int(EPROTO)))
 				}
 				events.yield(.closedReadStream)
@@ -449,75 +592,19 @@ actor ConnectionSocket {
 
 	/** Cuts `data` into lines and returns the ones it completes, in order.
 
-	 Terminators are found a line at a time rather than a byte at a time, and
-	 the common case — a read that carries whole lines and nothing was left
-	 over — hands each line straight out of the read without touching the
-	 buffer at all. Only a partial line is copied, and only once: the buffer
-	 keeps its allocation across lines and is never rescanned.
-
-	 Every CR at the end of a line belongs to the terminator, not to the line.
-	 A server whose MOTD file has CRLF line endings writes each of those lines
-	 as `CR CR LF`, so stripping a single CR left one on the end of the trailing
-	 parameter, where nothing downstream may carry it: it reached the transcript
-	 as an invisible control character on every line of the MOTD. */
+	 A line too long to buffer closes the connection, and nothing after it on
+	 this read is framed. The lines before it are still the server's, and they
+	 go out ahead of the disconnect. */
 	private func readIn(_ data: Data) -> [Data] {
 		guard disconnected == false, disconnecting == false else { return [] }
 
-		var lines: [Data] = []
-		var remaining = data[...]
+		do {
+			return try framer.lines(appending: data)
+		} catch {
+			fail(with: .other(message: String(localized: .ConnectionErrors.peerLineTooLong)))
 
-		while let terminator = remaining.firstIndex(of: 0x0A) {
-			let line = remaining[..<terminator]
-			remaining = remaining[remaining.index(after: terminator)...]
-
-			if readInBuffer.isEmpty {
-				/* A whole line inside one read. A read is bounded by
-				 `maximumDataLength`, well under the line ceiling. */
-				var trimmed = line
-
-				while trimmed.last == 0x0D {
-					trimmed = trimmed.dropLast()
-				}
-
-				if trimmed.isEmpty == false {
-					lines.append(Data(trimmed))
-				}
-
-				continue
-			}
-
-			/* A line too long to buffer closes the connection, and nothing
-			 after it on this read is framed. The lines before it are still the
-			 server's, and they go out ahead of the disconnect. */
-			guard bufferPartialLine(line) else { return lines }
-
-			while readInBuffer.last == 0x0D {
-				readInBuffer.removeLast()
-			}
-			if readInBuffer.isEmpty == false {
-				lines.append(readInBuffer)
-			}
-			readInBuffer.removeAll(keepingCapacity: true)
+			return error.completedLines
 		}
-
-		if remaining.isEmpty == false {
-			_ = bufferPartialLine(remaining)
-		}
-
-		return lines
-	}
-
-	/// Holds `bytes` until the rest of their line arrives, disconnecting a peer
-	/// that grows one past the ceiling. Reports whether framing may continue.
-	private func bufferPartialLine(_ bytes: Data.SubSequence) -> Bool {
-		guard readInBuffer.count + bytes.count <= Self.maximumBufferedLineLength else {
-			close(with: .other(message: String(localized: .ConnectionErrors.peerLineTooLong)))
-			return false
-		}
-
-		readInBuffer.append(contentsOf: bytes)
-
-		return true
 	}
 
 	/** Sends `data`, reporting whether it was taken.
@@ -546,7 +633,7 @@ actor ConnectionSocket {
 			try await connection.send(data)
 		} catch {
 			sending = false
-			close(with: connectionError(from: error))
+			fail(with: ConnectionError.translating(error))
 
 			return
 		}
@@ -606,62 +693,22 @@ actor ConnectionSocket {
 
 // MARK: - Parameters
 
-extension ConnectionSocket {
-	private var proxyEndpoint: (host: String, port: UInt16)? {
-		switch config.proxyType {
-		case .socks5, .HTTP:
-			guard let host = config.proxyAddress, host.isEmpty == false else {
-				return nil
-			}
-
-			return (host: host, port: config.proxyPort)
-		case .tor:
-			return (host: Self.torProxyAddress, port: Self.torProxyPort)
-		case .none, .automatic:
-			return nil
-		@unknown default:
-			return nil
-		}
+private extension ConnectionSocket {
+	/// Where this connection dials, when a proxy stands in front of the server.
+	var proxyEndpoint: (host: String, port: UInt16)? {
+		ConnectionParameters.proxyEndpoint(for: config)
 	}
 
-	private func constructedTCP() -> TCP {
-		switch config.addressType {
-		case .v4:
-			TCP { IP().version(.v4) }
-		case .v6:
-			TCP { IP().version(.v6) }
-		default:
-			TCP()
-		}
-	}
+	/** The configured handshake, with the one thing the configuration cannot
+	 answer: whether this peer's certificate chain is acceptable.
 
-	private func constructedTLS() -> TLS {
-		var tls = TLS { constructedTCP() }
-			.version(min: SecureTransportSupport.minimumProtocolType)
-
-		if let clientCertificate = ClientSideCertificate.load(from: config) {
-			let identity = sec_identity_create_with_certificates(
-				clientCertificate.identity,
-				[clientCertificate.certificate] as CFArray
-			)
-
-			if let identity {
-				tls = tls.localIdentity(identity)
-			}
-		}
-
-		if config.cipherSuites == .none {
-			tls = tls.cipherSuiteGroups([.default])
-		} else {
-			let suites = SecureTransportSupport.cipherSuites(
-				inCollection: config.cipherSuites,
-				includeDeprecated: config.connectionPrefersModernCiphersOnly == false
-			).compactMap { tls_ciphersuite_t(rawValue: $0.uint16Value) }
-
-			tls = tls.cipherSuites(suites)
-		}
-
-		tls = tls.certificateValidator { [weak self] _, trust in
+	 The validator is the same on both dials. A downgrade to the legacy suites
+	 changes what is negotiated and nothing about who the peer has to be. */
+	func constructedTLS(offeringLegacyCipherSuites: Bool) -> TLS {
+		ConnectionParameters.tls(
+			for: config,
+			offeringLegacyCipherSuites: offeringLegacyCipherSuites
+		).certificateValidator { [weak self] _, trust in
 			guard let self else { return false }
 
 			let diagnostics = config.diagnostics
@@ -671,78 +718,28 @@ extension ConnectionSocket {
 
 			return await validateCertificate(evaluation)
 		}
-
-		return tls
-	}
-
-	private func applyProxy(to parameters: NWParameters) throws {
-		switch config.proxyType {
-		case .none:
-			parameters.preferNoProxies = true
-		case .automatic:
-			/* The default privacy context consults the system proxy settings
-			 (including PAC) so there is nothing to configure. */
-			parameters.preferNoProxies = false
-		case .socks5, .HTTP, .tor:
-			guard let endpoint = proxyEndpoint else {
-				throw ConnectionError.other(message: String(localized: .ConnectionErrors.proxyAddressMissing))
-			}
-
-			let nwEndpoint = NWEndpoint.hostPort(
-				host: NWEndpoint.Host(endpoint.host),
-				port: NWEndpoint.Port(integerLiteral: endpoint.port)
-			)
-
-			var proxyConfiguration = if config.proxyType == .HTTP {
-				ProxyConfiguration(httpCONNECTProxy: nwEndpoint)
-			} else {
-				ProxyConfiguration(socksv5Proxy: nwEndpoint)
-			}
-
-			/* A proxy the user asked for must be used; never fall back to a
-			 direct connection. */
-			proxyConfiguration.allowFailover = false
-
-			if config.proxyType != .tor,
-			   let username = config.proxyUsername, username.isEmpty == false,
-			   let password = config.proxyPassword, password.isEmpty == false
-			{
-				proxyConfiguration.applyCredential(username: username, password: password)
-			}
-
-			let privacyContext = NWParameters.PrivacyContext(description: "Glasstual.IRCConnection.\(uniqueIdentifier)")
-
-			privacyContext.proxyConfigurations = [proxyConfiguration]
-
-			parameters.setPrivacyContext(privacyContext)
-
-			parameters.preferNoProxies = false
-		@unknown default:
-			throw ConnectionError.other(message: String(localized: .ConnectionErrors.unsupportedProxyType))
-		}
-	}
-
-	private func connectionError(from error: Error) -> ConnectionError {
-		switch error {
-		case let error as ConnectionError:
-			error
-		case let .dns(errorCode) as NWError:
-			ConnectionError(nwDNSError: errorCode)
-		case let .posix(errorCode) as NWError:
-			ConnectionError(nwPOSIXError: errorCode.rawValue)
-		case let .tls(errorCode) as NWError:
-			ConnectionError(tlsError: Int(errorCode))
-		case NWError.wifiAware:
-			.other(message: String(localized: .ConnectionErrors.wifiAwareError))
-		case let error as NWError:
-			.other(message: error.localizedDescription)
-		default:
-			.socket(error: error as NSError)
-		}
 	}
 }
 
 // MARK: - Trust
+
+/// What the service learned about the peer's certificate chain.
+///
+/// Produced and consumed by the socket actor's async TLS validation path. The
+/// `SecTrust` it came from never escapes the validator.
+private struct TLSTrustExport: Sendable {
+	var policyName: String?
+	var certificateChain: [Data] = []
+
+	/// Why the system did not trust the chain. nil when it did, or when the
+	/// chain has not been evaluated yet.
+	var failureDescription: String?
+}
+
+private struct TLSTrustEvaluation: Sendable {
+	var export: TLSTrustExport
+	var isRecoverableFailure: Bool
+}
 
 private extension ConnectionSocket {
 	/// Evaluates the peer inside Network.framework's async TLS handshake. A
@@ -822,7 +819,7 @@ private extension ConnectionSocket {
 		trustAnswer = continuation
 		cancelConnectTimeout()
 
-		client.ircConnectionRequestInsecureCertificateTrust { trusted in
+		client.requestInsecureCertificateTrust { trusted in
 			continuation.yield(trusted)
 			continuation.finish()
 		}
@@ -854,96 +851,3 @@ private extension ConnectionSocket {
 		return false
 	}
 }
-
-// MARK: - Error Translation
-
-private extension ConnectionError {
-	/// The reason named beside the numeric code in a DNS error. `kDNSServiceErr_NoError`
-	/// has no entry: `NWError.dns` is only ever built from a failure.
-	static let dnsErrorReasons: [Int: LocalizedStringResource] = [
-		kDNSServiceErr_NoSuchName: .ConnectionErrors.dnsReasonNoSuchName,
-		kDNSServiceErr_NoMemory: .ConnectionErrors.dnsReasonNoMemory,
-		kDNSServiceErr_BadParam: .ConnectionErrors.dnsReasonBadParameter,
-		kDNSServiceErr_BadReference: .ConnectionErrors.dnsReasonBadReference,
-		kDNSServiceErr_BadState: .ConnectionErrors.dnsReasonBadState,
-		kDNSServiceErr_BadFlags: .ConnectionErrors.dnsReasonBadFlags,
-		kDNSServiceErr_Unsupported: .ConnectionErrors.dnsReasonUnsupported,
-		kDNSServiceErr_NotInitialized: .ConnectionErrors.dnsReasonNotInitialized,
-		kDNSServiceErr_AlreadyRegistered: .ConnectionErrors.dnsReasonAlreadyRegistered,
-		kDNSServiceErr_NameConflict: .ConnectionErrors.dnsReasonNameConflict,
-		kDNSServiceErr_Invalid: .ConnectionErrors.dnsReasonInvalid,
-		kDNSServiceErr_Firewall: .ConnectionErrors.dnsReasonFirewall,
-		kDNSServiceErr_Incompatible: .ConnectionErrors.dnsReasonIncompatible,
-		kDNSServiceErr_BadInterfaceIndex: .ConnectionErrors.dnsReasonBadInterfaceIndex,
-		kDNSServiceErr_Refused: .ConnectionErrors.dnsReasonRefused,
-		kDNSServiceErr_NoSuchRecord: .ConnectionErrors.dnsReasonNoSuchRecord,
-		kDNSServiceErr_NoAuth: .ConnectionErrors.dnsReasonNoAuthentication,
-		kDNSServiceErr_NoSuchKey: .ConnectionErrors.dnsReasonNoSuchKey,
-		kDNSServiceErr_NATTraversal: .ConnectionErrors.dnsReasonNatTraversal,
-		kDNSServiceErr_DoubleNAT: .ConnectionErrors.dnsReasonDoubleNat,
-		kDNSServiceErr_BadTime: .ConnectionErrors.dnsReasonBadTime,
-		kDNSServiceErr_BadSig: .ConnectionErrors.dnsReasonBadSignature,
-		kDNSServiceErr_BadKey: .ConnectionErrors.dnsReasonBadKey,
-		kDNSServiceErr_Transient: .ConnectionErrors.dnsReasonTransient,
-		kDNSServiceErr_ServiceNotRunning: .ConnectionErrors.dnsReasonServiceNotRunning,
-		kDNSServiceErr_NATPortMappingUnsupported: .ConnectionErrors.dnsReasonNatPortMappingUnsupported,
-		kDNSServiceErr_NATPortMappingDisabled: .ConnectionErrors.dnsReasonNatPortMappingDisabled,
-		kDNSServiceErr_NoRouter: .ConnectionErrors.dnsReasonNoRouter,
-		kDNSServiceErr_PollingMode: .ConnectionErrors.dnsReasonPollingMode,
-		kDNSServiceErr_Timeout: .ConnectionErrors.dnsReasonTimeout,
-	]
-
-	init(nwDNSError: DNSServiceErrorType) {
-		let errorCode = Int(nwDNSError)
-		let errorReason = String(
-			localized: Self.dnsErrorReasons[errorCode] ?? .ConnectionErrors.errorReasonUnknown
-		)
-
-		let errorMessage = ConnectionErrorLocalization.formatted(
-			.ConnectionErrors.dnsError(errorReason, errorCode),
-			errorReason,
-			errorCode
-		)
-
-		let nsError = NSError(
-			domain: "NWErrorDomainDNS",
-			code: errorCode,
-			userInfo: [NSLocalizedDescriptionKey: errorMessage]
-		)
-
-		self = .socket(error: nsError)
-	}
-
-	init(nwPOSIXError: Int32) {
-		let errorCode = Int(nwPOSIXError)
-
-		let errorReason = if let errorReasonC = strerror(nwPOSIXError) {
-			String(cString: errorReasonC)
-		} else {
-			String(localized: .ConnectionErrors.errorReasonUnknown)
-		}
-
-		let errorMessage = ConnectionErrorLocalization.formatted(
-			.ConnectionErrors.posixError(errorReason, errorCode),
-			errorReason,
-			errorCode
-		)
-
-		let nsError = NSError(
-			domain: "NWErrorDomainPOSIX",
-			code: errorCode,
-			userInfo: [NSLocalizedDescriptionKey: errorMessage]
-		)
-
-		self = .socket(error: nsError)
-	}
-}
-
-private enum ConnectionErrorLocalization {
-	static func formatted(_ resource: LocalizedStringResource, _ arguments: CVarArg...) -> String {
-		Bundle(for: ConnectionErrorLocalizationBundleToken.self)
-			.localizedString(for: resource, arguments: arguments)
-	}
-}
-
-private final class ConnectionErrorLocalizationBundleToken {}

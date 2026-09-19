@@ -58,10 +58,10 @@ nonisolated struct Prefix: Hashable, Sendable {
 		if let usernameSeparator = userSection.firstIndex(of: "!") {
 			/* `nick!@host`: the username half is empty, which `Hostmask`
 			 refuses. The person is still named, and reading the whole string as
-			 a server name sent their message to the console instead of to the
-			 query with them. A "!" followed by anything else is the fully
-			 qualified form `Hostmask` has already rejected, so its username
-			 half is unusable and the prefix stays unparsed. */
+			 a server name sent their message to the console instead of to
+			 the direct conversation with them. A "!" followed by anything
+			 else is the fully qualified form `Hostmask` has already rejected,
+			 so its username half is unusable and the prefix stays unparsed. */
 			guard userSection.index(after: usernameSeparator) == userSection.endIndex else {
 				return nil
 			}
@@ -86,9 +86,9 @@ nonisolated struct Prefix: Hashable, Sendable {
 	 A server relaying a NICK, QUIT or KICK it generated itself may name the
 	 person and nothing else, and every such line used to be filed as if the
 	 server had sent it: no ignore rule matched, no notification fired, and a
-	 query took the whole prefix as its name. A server name is told apart by its
-	 dot — the nickname grammar has no `.` in it — so `irc.example.net` stays a
-	 server while `alice` becomes a user. */
+	 direct conversation took the whole prefix as its name. A server name is
+	 told apart by its dot — the nickname grammar has no `.` in it — so
+	 `irc.example.net` stays a server while `alice` becomes a user. */
 	private static func bareNickname(parsing prefix: String, maximumNicknameLength: Int) -> Prefix? {
 		guard prefix.contains(".") == false, prefix.contains("!") == false,
 		      Hostmask.isValidNickname(prefix, maximumLength: maximumNicknameLength)

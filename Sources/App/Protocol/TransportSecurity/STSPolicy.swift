@@ -23,11 +23,6 @@ nonisolated enum STSPolicyAction: Sendable, Equatable {
 	case cleared
 }
 
-/// The endpoint a stored STS policy pins a host to.
-nonisolated struct STSPolicyEndpoint: Sendable, Equatable {
-	let port: UInt16
-}
-
 nonisolated struct STSPolicy: Sendable, Equatable {
 	let port: UInt16
 	let expiresAt: Date
@@ -58,7 +53,7 @@ nonisolated struct STSPolicy: Sendable, Equatable {
 		self.init(
 			port: UInt16(port),
 			expiresAt: Date(timeIntervalSince1970: expiresAt),
-			preload: Self.boolValue(dictionary[StorageKey.preload])
+			preload: dictionary[StorageKey.preload]?.boolean ?? false
 		)
 	}
 
@@ -74,16 +69,6 @@ nonisolated struct STSPolicy: Sendable, Equatable {
 		static let port = "port"
 		static let expiresAt = "expiresAt"
 		static let preload = "preload"
-	}
-
-	/// A policy written by an older build spells `preload` as the string the
-	/// header carried, so a string still reads as the flag it stood for.
-	private static func boolValue(_ value: PropertyListValue?) -> Bool {
-		if let boolean = value?.boolean {
-			return boolean
-		}
-
-		return (value?.string as NSString?)?.boolValue ?? false
 	}
 }
 

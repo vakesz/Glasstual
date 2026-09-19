@@ -29,7 +29,7 @@ enum ExtendedBanKind: String {
 
 	/** How a mask on an extended-ban list reads.
 
-	 A type the client does not know still prints: the server named it, and the
+	 A type the session does not know still prints: the server named it, and the
 	 list is the user's to read whatever this build understands. */
 	static func describing(type: String, argument: String?) -> String {
 		guard let argument else {

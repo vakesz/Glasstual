@@ -68,11 +68,25 @@ import Security
 public let tlsProtocolVersionUnknown = tls_protocol_version_t(rawValue: 0)!
 public let tlsCipherSuiteUnknown = tls_ciphersuite_t(rawValue: 0)!
 
+/** Which cipher suites a handshake offers. The raw values are persisted with a
+ server configuration.
+
+ `.system` names no suite of its own: the handshake is handed the platform's
+ default group, which is the list Apple keeps current. The two named lists only
+ narrow that, and neither of them has ever included a suite without forward
+ secrecy -- those are reached by the transport's own fallback and by nothing a
+ user can pick. */
 public enum CipherSuiteCollection: UInt, Sendable {
-	case `default` = 0
-	case mozilla2015 = 1
-	case mozilla2017 = 2
-	case none = 100
+	/// The operating system's default group.
+	case system = 0
+
+	/// TLS 1.3, then ECDHE with an AEAD, then ECDHE with CBC and SHA-2.
+	case modern = 1
+
+	/** `.modern`'s ECDHE suites plus the SHA-1 ones an older server may be
+	 limited to. It names no TLS 1.3 suite, so a connection that chooses it
+	 settles on TLS 1.2. */
+	case intermediate = 2
 }
 
 public enum SecureTransportSupport {
@@ -96,8 +110,10 @@ public enum SecureTransportSupport {
 		return withProtocol && (0x1301 ... 0x1303).contains(suite.rawValue) ? "\(name) (TLS 1.3)" : name
 	}
 
-	public static func isCipherSuiteDeprecated(_ suite: tls_ciphersuite_t) -> Bool {
-		deprecatedSuites.contains(suite.rawValue)
+	/// Whether `suite` has no forward secrecy, so that a later compromise of the
+	/// server's key decrypts a recorded session.
+	public static func isCipherSuiteLegacy(_ suite: tls_ciphersuite_t) -> Bool {
+		nonForwardSecretSuites.contains(suite.rawValue)
 	}
 
 	/// What the server-properties sheet shows the user. It has to name the same
@@ -113,27 +129,63 @@ public enum SecureTransportSupport {
 		}
 	}
 
-	public static func cipherSuites(inCollection collection: CipherSuiteCollection,
-	                                includeDeprecated: Bool = false) -> [NSNumber]
-	{
-		var suites: [UInt16] = switch collection {
-		case .none:
-			[]
-		case .mozilla2015:
-			mozilla2015Suites
-		case .default, .mozilla2017:
-			modernSuites
-		}
-
-		if includeDeprecated {
-			suites.append(contentsOf: deprecatedSuites)
+	/// The suites `collection` offers, most preferred first. `.system` offers
+	/// none of its own: the handshake takes the platform's default group.
+	public static func cipherSuites(inCollection collection: CipherSuiteCollection) -> [NSNumber] {
+		let suites: [UInt16] = switch collection {
+		case .system: []
+		case .modern: modernSuites
+		case .intermediate: intermediateSuites
 		}
 
 		return suites.map(NSNumber.init(value:))
 	}
 
+	/** What the transport's own fallback adds to whichever suites were selected,
+	 once, when the peer refused every one of them.
+
+	 Static RSA: the session key is encrypted to the server's long-term key, so a
+	 recording of the session is readable by anyone who later obtains that key.
+	 No selection offers these and no setting reaches them. A server that
+	 offers nothing else does, and the connection says so every time. */
+	public static let legacyCipherSuites: [NSNumber] = legacySuites.map(NSNumber.init(value:))
+
 	public static func isTLSError(_ error: NSError) -> Bool {
 		error.domain == "kCFStreamErrorDomainSSL"
+	}
+
+	/// Whether `code` says the two sides found no cipher suite in common.
+	/// `errSSLPeerHandshakeFail` is the alert a server sends when it accepted
+	/// none of the suites offered; `errSSLNegotiation` is the local shape of the
+	/// same disagreement.
+	public static func namesNoSharedCipherSuite(errorCode code: Int) -> Bool {
+		noSharedCipherSuiteErrors.contains(code)
+	}
+
+	/** Whether a handshake that failed with `code` may be dialled again with
+	 ``legacyCipherSuites`` added to what was offered.
+
+	 Only a failure to agree on a suite qualifies. A certificate the client will
+	 not accept, a protocol version no suite can change, a session the peer
+	 dropped without a close-notify (-9816, the shape of a throttled reconnect),
+	 a timeout and a cancel are all refused.
+
+	 The other two conditions are what keeps the downgrade honest. It is offered
+	 at most once per connection attempt, and only while the peer's certificate
+	 has not been seen: the suite both sides agreed on is named in the server's
+	 first message, so a failure that arrives after a certificate cannot be one
+	 a suite would fix. A peer able to force a handshake failure therefore gains
+	 nothing but a downgrade the negotiated suite reports back. */
+	public static func retriesWithLegacyCipherSuites(
+		afterErrorCode code: Int?,
+		legacySuitesAlreadyOffered: Bool,
+		peerCertificateSeen: Bool
+	) -> Bool {
+		guard let code, legacySuitesAlreadyOffered == false, peerCertificateSeen == false else {
+			return false
+		}
+
+		return namesNoSharedCipherSuite(errorCode: code)
 	}
 
 	public static func description(forErrorCode originalCode: Int) -> String {
@@ -189,14 +241,23 @@ public enum SecureTransportSupport {
 		0xC024, 0xC028, 0xC023, 0xC027,
 	]
 
-	/** Mozilla's 2015 "intermediate" list, less the DHE and DHE-DSS suites the
+	/** The ECDHE suites, SHA-1 included, less the DHE and DHE-DSS suites the
 	 platform never implemented. */
-	private static let mozilla2015Suites: [UInt16] = [
+	private static let intermediateSuites: [UInt16] = [
 		0xC02F, 0xC02B, 0xC030, 0xC02C,
 		0xC027, 0xC023, 0xC013, 0xC009, 0xC028, 0xC024, 0xC014, 0xC00A,
 	]
 
-	private static let deprecatedSuites: [UInt16] = [0x009C, 0x009D, 0x003C, 0x003D, 0x002F, 0x0035]
+	/// What ``legacyCipherSuites`` offers, most preferred first.
+	private static let legacySuites: [UInt16] = [0x009C, 0x009D, 0x003C, 0x003D, 0x002F, 0x0035]
+
+	/// Every suite with no forward secrecy, ``legacySuites`` plus the 3DES suite
+	/// no list here offers but the platform's own group names.
+	private static let nonForwardSecretSuites: Set<UInt16> = Set(legacySuites + [0x000A])
+
+	/// The codes ``namesNoSharedCipherSuite(errorCode:)`` answers for:
+	/// `errSSLPeerHandshakeFail` and `errSSLNegotiation`.
+	private static let noSharedCipherSuiteErrors: Set<Int> = [-9824, -9801]
 
 	/// One name for every case of `tls_ciphersuite_t`, so a negotiated suite
 	/// always has one -- including the suites only the platform's own
@@ -252,10 +313,20 @@ private enum SecureTransportErrorLocalization {
 			table: "SecureTransportErrorCodes"
 		)
 
-		return bundle.localizedString(
+		let description = bundle.localizedString(
 			for: .SecureTransportErrorCodes.errorDescription(reason, code.value),
 			arguments: [reason, code.value]
 		)
+
+		/* "Handshake failure" names the alert, not the cause, and the cause is
+		 the one a reader can act on: the server accepted none of the suites
+		 offered. Said after the code rather than instead of the reason, so the
+		 number the rest of the sentence carries still matches the OSStatus. */
+		guard SecureTransportSupport.namesNoSharedCipherSuite(errorCode: code.value) else {
+			return description
+		}
+
+		return description + " " + bundle.localizedString(for: .SecureTransportErrorCodes.noSharedCipherSuite)
 	}
 }
 

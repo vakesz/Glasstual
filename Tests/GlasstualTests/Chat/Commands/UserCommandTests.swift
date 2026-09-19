@@ -1,0 +1,250 @@
+// Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
+
+import Foundation
+@testable import Glasstual
+import Testing
+
+/// The command line the user types is parsed once, into a command index entry
+/// and a cursor over the arguments. These pin the parsing, the arity the index
+/// declares, and the developer-mode flag that gates dispatch.
+@MainActor
+struct UserCommandTests {
+	/** A QUIT typed before registration finishes has to unwind the session, not
+	 just set a flag.
+
+	 The session is given a real `Connection` so the teardown runs all the way
+	 through: a connection that never opened closes at once, and the session
+	 hears its own disconnect back. A fixture with no socket at all would stop
+	 the quit half way and could not show the flags unwinding. */
+	@Test("Typed QUIT cancels a connecting session", arguments: ["QUIT", "QUIT leaving"])
+	func quitWhileConnecting(_ command: String) {
+		let session = TestServerSession()
+		let connection = Connection(config: ConnectionConfig(), onSession: session)
+		session.socket = connection
+		session.isConnecting = true
+		session.autoConnect(withDelay: 60, afterWakeUp: false)
+		let scheduled = session.pendingConnectionTask
+
+		session.sendCommand(command, completeTarget: false, target: nil)
+
+		#expect(scheduled?.isCancelled == true)
+		#expect(session.pendingConnectionTask == nil)
+		#expect(session.sentLines.count == 0)
+		/* The connection reported the disconnect back, so the session is over
+		 rather than stuck mid-quit: `isQuitting` is cleared with the rest. */
+		#expect(session.socket == nil)
+		#expect(session.isQuitting == false)
+		#expect(session.isDisconnecting == false)
+		#expect(session.isConnecting == false)
+		#expect(session.isConnected == false)
+		#expect(connection.isConnected == false)
+	}
+
+	@Test("Typed QUIT from the selected server transcript reaches the wire")
+	func quitFromSelectedServerTranscript() {
+		let session = TestServerSession()
+		session.recordedOutput.selectedItem = session
+		session.isConnected = true
+		session.markAsLoggedIn()
+
+		session.inputText("/quit E2E_QUIT", as: .privmsg, destination: session)
+
+		#expect(session.sentLines as? [String] == ["QUIT :E2E_QUIT"])
+		#expect(session.isQuitting)
+		session.cancelPendingSessionTasks()
+	}
+
+	private func parsed(_ input: String) throws -> ParsedUserCommand {
+		try #require(ParsedUserCommand(input))
+	}
+
+	@Test
+	func resolvesTheCommandIndexEntryForATypedCommand() throws {
+		let command = try parsed("/JOIN #channel key")
+
+		#expect(command.command == "JOIN")
+		#expect(command.localCommand == .join)
+		#expect(command.isDeveloperModeOnly == false)
+		#expect(command.arguments.rest == "#channel key")
+	}
+
+	@Test
+	func acceptsACommandWithoutTheLeadingSlash() throws {
+		#expect(try parsed("join #channel").localCommand == .join)
+	}
+
+	@Test
+	func resolvesTheShorthandCommandsToTheirOwnCases() throws {
+		#expect(try parsed("/m +o alice").localCommand == .modeShortcut)
+		#expect(try parsed("/t new topic").localCommand == .topicShortcut)
+	}
+
+	@Test
+	func leavesAnUnknownCommandWithoutAnIndexEntry() throws {
+		let command = try parsed("/nosuchcommand argument")
+
+		#expect(command.localCommand == nil)
+		#expect(command.command == "nosuchcommand")
+		#expect(command.arguments.rest == "argument")
+	}
+
+	@Test
+	func rejectsAnEmptyLine() {
+		#expect(ParsedUserCommand("") == nil)
+	}
+
+	/// The index marks a handful of commands developer-only. The flag has to
+	/// survive parsing, because dispatch is what refuses them.
+	@Test(arguments: ["recv", "join_random", "tage"])
+	func reportsDeveloperOnlyCommands(name: String) throws {
+		#expect(try parsed("/\(name)").isDeveloperModeOnly)
+	}
+
+	@Test(arguments: ["join", "msg", "topic", "quit"])
+	func doesNotReportOrdinaryCommandsAsDeveloperOnly(name: String) throws {
+		#expect(try parsed("/\(name)").isDeveloperModeOnly == false)
+	}
+}
+
+@MainActor
+struct CommandArgumentsTests {
+	@Test
+	func walksTokensLeftToRightWithoutDestroyingTheLine() {
+		var arguments = CommandArguments("#channel alice bye now")
+
+		#expect(arguments.next() == "#channel")
+		#expect(arguments.next() == "alice")
+		#expect(arguments.rest == "bye now")
+	}
+
+	@Test
+	func keepsReturningTheEmptyStringOnceExhausted() {
+		var arguments = CommandArguments("only")
+
+		#expect(arguments.next() == "only")
+		#expect(arguments.next() == "")
+		#expect(arguments.isEmpty)
+	}
+
+	@Test
+	func readsAQuotedTokenAsOneArgument() {
+		var arguments = CommandArguments("\"two words\" tail")
+
+		#expect(arguments.nextQuoted() == "two words")
+		#expect(arguments.rest == "tail")
+	}
+
+	/// The cursor stays put when the line does not start with a quote, so the
+	/// caller can fall back to a plain token.
+	@Test
+	func leavesTheCursorAloneWhenThereIsNoQuotedToken() {
+		var arguments = CommandArguments("plain tail")
+
+		#expect(arguments.nextQuoted() == "")
+		#expect(arguments.next() == "plain")
+	}
+
+	@Test
+	func countsTheTokensThatAreLeft() {
+		var arguments = CommandArguments("a b c")
+
+		#expect(arguments.tokenCount == 3)
+		_ = arguments.next()
+		#expect(arguments.tokenCount == 2)
+	}
+
+	@Test
+	func handsBackTheUnconsumedRemainderWithItsAttributes() {
+		let key = NSAttributedString.Key("CommandArgumentsTest")
+		let source = NSMutableAttributedString(string: "target hello")
+		source.addAttribute(key, value: true, range: NSRange(location: 7, length: 5))
+
+		var arguments = CommandArguments(source)
+		#expect(arguments.next() == "target")
+
+		let remainder = arguments.attributedRest
+		#expect(remainder.string == "hello")
+		#expect(remainder.attribute(key, at: 0, effectiveRange: nil) as? Bool == true)
+	}
+
+	@Test
+	func returnsAnEmptyRemainderOnceTheLineIsConsumed() {
+		var arguments = CommandArguments("only")
+		_ = arguments.next()
+
+		#expect(arguments.attributedRest.length == 0)
+	}
+}
+
+struct CommandArityTests {
+	struct SyntaxCase: Sendable {
+		let syntax: String
+		let arity: CommandArity
+	}
+
+	@Test(arguments: [
+		SyntaxCase(syntax: "<message>", arity: CommandArity(required: 1, optional: 0)),
+		SyntaxCase(syntax: "[comment]", arity: CommandArity(required: 0, optional: 1)),
+		SyntaxCase(syntax: "[channel] <nickname> [comment]", arity: CommandArity(required: 1, optional: 2)),
+		SyntaxCase(syntax: "<subcommand> <target> [arguments]", arity: CommandArity(required: 2, optional: 1)),
+		SyntaxCase(syntax: "<channel[,channel]]> [key[,key]]", arity: CommandArity(required: 1, optional: 1)),
+	])
+	func countsTheGroupsTheSyntaxStringDeclares(testCase: SyntaxCase) {
+		#expect(CommandArity(syntax: testCase.syntax) == testCase.arity)
+	}
+
+	@Test
+	func treatsACommandWithNoSyntaxAsTakingNothing() {
+		#expect(CommandArity(syntax: nil) == .none)
+	}
+
+	@MainActor
+	@Test
+	func carriesTheDeclaredArityOntoTheParsedArguments() throws {
+		let command = try #require(ParsedUserCommand("/chathistory latest #channel"))
+
+		#expect(command.arguments.arity.required == 2)
+		#expect(command.arguments.satisfiesDeclaredArity)
+	}
+
+	@MainActor
+	@Test
+	func failsTheDeclaredArityWhenTooFewArgumentsAreGiven() throws {
+		let command = try #require(ParsedUserCommand("/chathistory latest"))
+
+		#expect(command.arguments.satisfiesDeclaredArity == false)
+	}
+}
+
+@MainActor
+@Suite("Defaults command parsing")
+struct DefaultsCommandRequestTests {
+	@Test("An action, an optional bare -a and a feature name make a change", arguments: [
+		(line: #"enable "Send WHO Command Requests to Channels""#, enabled: true, all: false),
+		(line: #"disable -a "Send WHO Command Requests to Channels""#, enabled: false, all: true),
+		(line: #"ENABLE "-a" "Send WHO Command Requests to Channels""#, enabled: true, all: true),
+		(line: "enable -a Send WHO Command Requests to Channels", enabled: true, all: true),
+	])
+	func readsAChange(line: String, enabled: Bool, all: Bool) throws {
+		let request = try #require(DefaultsCommandRequest(CommandArguments(line)))
+
+		#expect(request == .change(
+			featureName: "Send WHO Command Requests to Channels",
+			enabled: enabled,
+			appliesToAllSessions: all
+		))
+	}
+
+	@Test("Help is its own request")
+	func readsHelp() {
+		#expect(DefaultsCommandRequest(CommandArguments("help")) == .help)
+	}
+
+	@Test("An unknown action or a missing feature is a syntax error, not a disable", arguments: [
+		"", #"toggle "Send WHO Command Requests to Channels""#, "enable", "disable -a",
+	])
+	func rejectsInvalidSyntax(line: String) {
+		#expect(DefaultsCommandRequest(CommandArguments(line)) == nil)
+	}
+}

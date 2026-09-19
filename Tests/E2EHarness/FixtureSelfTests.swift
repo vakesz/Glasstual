@@ -208,7 +208,7 @@ enum FixtureSelfTests {
 
 	private static func snapshotChecks() throws {
 		var snapshot: [String: Any] = ["format": "GlasstualConfiguration", "version": 1,
-		                               "preferences": ["ConfirmApplicationQuit": true], "unset": [String](),
+		                               "preferences": ["Connection -> Confirm Quit": true], "unset": [String](),
 		                               "clients": [["connectionName": "E2E", "nickname": "e2euser",
 		                                            "serverList": [["serverAddress": "127.0.0.1"]]]]]
 		func encoded() throws -> Data {
@@ -222,9 +222,9 @@ enum FixtureSelfTests {
 		snapshot["version"] = 2
 		try mustReject { try ConfigurationSnapshotFixture.validate(encoded()) }
 		snapshot["version"] = 1
-		snapshot["preferences"] = ["ConfirmApplicationQuit": false]
+		snapshot["preferences"] = ["Connection -> Confirm Quit": false]
 		try mustReject { try ConfigurationSnapshotFixture.validate(encoded()) }
-		snapshot["preferences"] = ["ConfirmApplicationQuit": true]
+		snapshot["preferences"] = ["Connection -> Confirm Quit": true]
 		snapshot["clients"] = [["connectionName": "private", "nickname": "private"]]
 		try mustReject { try ConfigurationSnapshotFixture.validate(encoded()) }
 	}

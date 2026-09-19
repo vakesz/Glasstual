@@ -1,0 +1,171 @@
+// Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
+
+import Foundation
+@testable import Glasstual
+import Testing
+
+/** The in-memory index that answers "do we already have this line?".
+
+ It holds a copy of every message body it is given, so it has to shrink again
+ when the store prunes the rows behind those bodies — otherwise a long-running
+ process accumulates a second copy of every message it has ever seen. */
+@MainActor
+@Suite("Scrollback duplicate index")
+struct ScrollbackDuplicateIndexTests {
+	private func chatLine(body: String, messageIdentifier: String, at date: Date) -> ChatLine {
+		var line = ChatLine()
+		line.messageBody = body
+		line.nickname = "alice"
+		line.receivedAt = date
+		line.messageIdentifier = messageIdentifier
+		line.lineType = .privateMessage
+		return line
+	}
+
+	@Test("A pruned line is withdrawn from the index it was added to")
+	func pruningWithdrawsTheLine() {
+		let history = Scrollback.shared
+		let index = history.duplicates
+		let view = "view-\(UUID().uuidString)"
+		let date = Date()
+		let line = chatLine(body: "hello", messageIdentifier: "msg-1", at: date)
+		defer { history.removeHistory(forView: view, forget: true) }
+
+		index.indexChatLine(line, forView: view)
+
+		#expect(index.containsMessageIdentifier("msg-1", forView: view))
+		#expect(index.containsLine(receivedAt: date, nickname: "alice", messageBody: "hello", forView: view))
+
+		Scrollback.noteWillDeleteLines([line.uniqueIdentifier], inView: view)
+
+		#expect(index.containsMessageIdentifier("msg-1", forView: view) == false)
+		#expect(
+			index.containsLine(receivedAt: date, nickname: "alice", messageBody: "hello", forView: view) == false
+		)
+	}
+
+	/// Two lines can carry the same body from the same nickname in the same
+	/// millisecond, and pruning one of them must not make the other invisible.
+	@Test("Pruning one of two identical lines leaves the other findable")
+	func pruningOneOfTwoIdenticalLinesKeepsTheOther() {
+		let history = Scrollback.shared
+		let index = history.duplicates
+		let view = "view-\(UUID().uuidString)"
+		let date = Date()
+		let first = chatLine(body: "same", messageIdentifier: "msg-1", at: date)
+		let second = chatLine(body: "same", messageIdentifier: "msg-2", at: date)
+		defer { history.removeHistory(forView: view, forget: true) }
+
+		index.indexChatLines([first, second], forView: view)
+		Scrollback.noteWillDeleteLines([first.uniqueIdentifier], inView: view)
+
+		#expect(index.containsMessageIdentifier("msg-1", forView: view) == false)
+		#expect(index.containsMessageIdentifier("msg-2", forView: view))
+		#expect(index.containsLine(receivedAt: date, nickname: "alice", messageBody: "same", forView: view))
+
+		Scrollback.noteWillDeleteLines([second.uniqueIdentifier], inView: view)
+
+		#expect(
+			index.containsLine(receivedAt: date, nickname: "alice", messageBody: "same", forView: view) == false
+		)
+	}
+
+	/// The same row is indexed again on every fetch that returns it, and a line
+	/// counted twice would survive its own deletion.
+	@Test("Indexing the same line twice still leaves one entry to withdraw")
+	func reindexingDoesNotDoubleCount() {
+		let history = Scrollback.shared
+		let index = history.duplicates
+		let view = "view-\(UUID().uuidString)"
+		let date = Date()
+		let line = chatLine(body: "hello", messageIdentifier: "msg-1", at: date)
+		defer { history.removeHistory(forView: view, forget: true) }
+
+		index.indexChatLine(line, forView: view)
+		index.indexChatLine(line, forView: view)
+
+		Scrollback.noteWillDeleteLines([line.uniqueIdentifier], inView: view)
+
+		#expect(index.containsMessageIdentifier("msg-1", forView: view) == false)
+		#expect(
+			index.containsLine(receivedAt: date, nickname: "alice", messageBody: "hello", forView: view) == false
+		)
+	}
+
+	/** The fallback key rounds a timestamp to whole milliseconds. A date far
+	 enough from the epoch that the count leaves `Int64` has no key, and asking
+	 for one must answer "not indexed" rather than trap the conversion. */
+	@Test("A timestamp beyond the millisecond range is indexed without a fallback key")
+	func unrepresentableTimestampHasNoFallbackKey() {
+		let index = ScrollbackDuplicateIndex()
+		let view = "view-\(UUID().uuidString)"
+		let date = Date(timeIntervalSince1970: 1e40)
+		let line = chatLine(body: "hello", messageIdentifier: "msg-1", at: date)
+
+		index.indexChatLine(line, forView: view)
+
+		#expect(index.containsMessageIdentifier("msg-1", forView: view))
+		#expect(index.containsLine(receivedAt: date, nickname: "alice", messageBody: "hello", forView: view) == false)
+		#expect(index.newestLineDate(forView: view) == date)
+	}
+
+	/** A read marker is answered against what a person said. The index keeps
+	 both dates because a history request asks for the newest line of any kind,
+	 while the badge may only count conversation. */
+	@Test("The newest conversation date ignores the events a join narrates")
+	func newestConversationDateIgnoresNarratedEvents() {
+		let index = ScrollbackDuplicateIndex()
+		let view = "view-\(UUID().uuidString)"
+		let said = Date(timeIntervalSince1970: 1000)
+		var topic = chatLine(body: "the topic", messageIdentifier: "topic-1", at: said.addingTimeInterval(60))
+		topic.lineType = .topic
+		var mode = chatLine(body: "+nt", messageIdentifier: "mode-1", at: said.addingTimeInterval(120))
+		mode.lineType = .mode
+
+		index.indexChatLines([
+			chatLine(body: "hello", messageIdentifier: "msg-1", at: said),
+			topic,
+			mode,
+		], forView: view)
+
+		#expect(index.newestLineDate(forView: view) == mode.receivedAt)
+		#expect(index.newestConversationLineDate(forView: view) == said)
+	}
+
+	/// A view holding nothing but narrated events has no conversation date at
+	/// all, which is what leaves a freshly joined channel unbadged.
+	@Test("A view of narrated events alone has no newest conversation date")
+	func narratedEventsAloneLeaveNoConversationDate() {
+		let index = ScrollbackDuplicateIndex()
+		let view = "view-\(UUID().uuidString)"
+		var join = chatLine(body: "joined", messageIdentifier: "join-1", at: Date(timeIntervalSince1970: 1000))
+		join.lineType = .join
+
+		index.indexChatLine(join, forView: view)
+
+		#expect(index.newestLineDate(forView: view) == join.receivedAt)
+		#expect(index.newestConversationLineDate(forView: view) == nil)
+	}
+
+	@Test("Shared identifiers remain counted across repeated indexing and pruning")
+	func sharedIdentifiersAreCountedUntilLastPrune() {
+		let index = ScrollbackDuplicateIndex()
+		let view = "view-\(UUID().uuidString)"
+		let date = Date(timeIntervalSince1970: 1000)
+		let first = chatLine(body: "same", messageIdentifier: "shared", at: date)
+		let second = chatLine(body: "same", messageIdentifier: "shared", at: date)
+		let newest = chatLine(body: "newest", messageIdentifier: "newest", at: date.addingTimeInterval(1))
+
+		index.indexChatLines([newest, first, second, first, second], forView: view)
+		#expect(index.newestLineDate(forView: view) == newest.receivedAt)
+		index.forgetLines([first.uniqueIdentifier, first.uniqueIdentifier, "missing"], inView: view)
+		#expect(index.containsMessageIdentifier("shared", forView: view))
+		#expect(index.containsLine(receivedAt: date, nickname: "alice", messageBody: "same", forView: view))
+
+		index.forgetLines([second.uniqueIdentifier], inView: view)
+		#expect(index.containsMessageIdentifier("shared", forView: view) == false)
+		#expect(index.containsLine(receivedAt: date, nickname: "alice", messageBody: "same", forView: view) == false)
+		#expect(index.containsMessageIdentifier("newest", forView: view))
+	}
+}

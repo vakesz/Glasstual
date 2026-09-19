@@ -8,61 +8,27 @@ import Foundation
 import SwiftUI
 
 extension Notification.Name {
-	static let mainWindowAppearanceChanged = Notification.Name("TVCMainWindowAppearanceChangedNotification")
+	static let mainWindowAppearanceChanged = Notification.Name("Glasstual.mainWindowAppearanceChanged")
 	/// The one declaration of the selection notification; an observer that
 	/// spells the name itself is watching a name nobody posts.
-	static let mainWindowSelectionChanged = Notification.Name("TVCMainWindowSelectionChangedNotification")
+	static let mainWindowSelectionChanged = Notification.Name("Glasstual.mainWindowSelectionChanged")
 }
 
-enum ServerListNavigationMovement: UInt {
-	case all
-	case active
-	case unread
-}
+/** The application's one window.
 
-private enum ServerListNavigationSelection {
-	case any
-	case channel
-	case server
-}
-
-nonisolated enum MainWindowConstants {
-	static let legacyFrameKey = "NSWindow Frame -> Internal (v3) -> Main Window"
-	static let systemFrameKeyPrefix = "NSWindow Frame "
-	static let serverListMinimumWidth: CGFloat = 180
-	static let serverListIdealWidth: CGFloat = 220
-	static let serverListMaximumWidth: CGFloat = 280
-	static let conversationMinimumWidth: CGFloat = 360
-	static let memberListMinimumWidth: CGFloat = 160
-	static let memberListIdealWidth: CGFloat = 200
-	static let memberListMaximumWidth: CGFloat = 260
-	static let minimumSplitViewSlack: CGFloat = 60
-	static let minimumContentSize = NSSize(
-		width: serverListIdealWidth + conversationMinimumWidth + memberListMinimumWidth + minimumSplitViewSlack,
-		height: 500
-	)
-	static let minimumRestoredVisibleSize = NSSize(width: 80, height: 40)
-	static let sidebarFooterHeight: CGFloat = 32
-
-	/// The footer icons' hit target: the smallest square that still reads as a
-	/// control at the sidebar's foot.
-	static let footerIconSize: CGFloat = 22
-	/// The draggable width of the edge between conversation and member list.
-	static let memberListHandleWidth: CGFloat = 7
-	/// One press of an arrow key on the focused resize handle.
-	static let memberListKeyboardResizeStep: CGFloat = 16
-	/// The stroke the input capsule draws while it holds the keyboard.
-	static let focusRingWidth: CGFloat = 2
-	/// The same stroke where the system asks for increased contrast.
-	static let focusRingWidthIncreasedContrast: CGFloat = 3
-}
-
+ The explicit Objective-C name is what AppKit writes into the saved application
+ state for the restoration class, so it has to be stable across a launch, not
+ across a release: changing it costs the full-screen state and the Space the
+ window was on once. The frame is not part of that blob — it is stored under the
+ `setFrameAutosaveName` key and survives. */
 @MainActor
-@objc(TVCMainWindow)
+@objc(GlasstualMainWindow)
 final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, CustomKeyboardEventResponder {
-	private(set) var formattingMenu: IRCFormattingMenu!
+	private(set) var formattingMenu: TextFormattingMenu!
 	private(set) var inputContentView: InputFieldContentView!
-	let presentationModel = MainWindowPresentationModel()
+	let columnModel = MainWindowColumnModel()
+	let sheetModel = MainWindowSheetModel()
+	let chrome = MainWindowChrome()
 	private var hostingController: NSHostingController<MainWindowRootView>?
 
 	/// The input field is built by its content view so it can use TextKit 2.
@@ -72,33 +38,38 @@ final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, CustomK
 
 	private(set) var loadingScreen: MainWindowLoadingScreen!
 	private(set) var memberList: MemberList!
-	private(set) var serverList: ServerList!
+	private(set) var sidebar: Sidebar!
 	var inputHistory: InputHistory!
 	var nicknameCompletionStatus: NicknameCompletion!
-	/// The views the tree items are drawn into. The window owns them; the items
+	/// The views the sidebar items are drawn into. The window owns them; the items
 	/// hold only a weak back-reference the registry installs.
 	private(set) lazy var transcriptControllers = TranscriptControllerRegistry(window: self)
 	/// The application-wide snapshot ``appearanceStorage`` was built from.
-	private var appearanceSnapshot: AppearancePropertyCollection?
+	private var appearanceSnapshot: ResolvedAppearance?
 	var selectedItem: ChatItem?
 	var previousSelectedItemId: String?
-	private var keyEventHandler: KeyEventHandler!
+	let keyEventHandler = KeyEventHandler()
 	/** The transcript zoom the View menu last left.
 
 	 Stored beside the column widths rather than held for the session only: the
-	 zoom is a reading preference, and it used to be back at 100% on the next
+	 zoom is a reading setting, and it used to be back at 100% on the next
 	 launch. Every new transcript view reads it as it loads. */
 	var textSizeMultiplier = 1.0 {
 		didSet {
 			guard textSizeMultiplier != oldValue else { return }
-			MainWindowStateStore().saveTextSizeMultiplier(textSizeMultiplier)
+			stateStore.saveTextSizeMultiplier(textSizeMultiplier)
 		}
 	}
+
+	/// The window's own handle on the state it restores from. One handle: a
+	/// store built per call builds a defaults-suite handle with it, and the
+	/// zoom above writes on every step of the View menu's Increase Font Size.
+	let stateStore = MainWindowStateDefaults()
 
 	private var hasConfigured = false
 	private let notifications = NotificationSubscriptions()
 
-	var ignoreServerListSelectionChanges = false
+	var ignoreSidebarSelectionChanges = false
 
 	override init(
 		contentRect: NSRect,
@@ -117,20 +88,19 @@ final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, CustomK
 		setAccessibilityIdentifier("main-window")
 		installUIObjects()
 		inputHistory = InputHistory(window: self)
-		keyEventHandler = KeyEventHandler()
 		nicknameCompletionStatus = NicknameCompletion(window: self)
 		updateAppearance()
 	}
 
 	private func installUIObjects() {
-		formattingMenu = IRCFormattingMenu()
+		formattingMenu = TextFormattingMenu()
 		formattingMenu.attach(to: self)
 		inputContentView = InputFieldContentView(frame: .zero)
 		loadingScreen = MainWindowLoadingScreen()
 		memberList = MemberList()
-		serverList = ServerList()
-		serverList.attach(to: self)
-		presentationModel.attach(to: self)
+		sidebar = Sidebar()
+		sidebar.attach(to: self)
+		columnModel.attach(to: self)
 	}
 
 	/// Completes the programmatic window graph and starts the application.
@@ -162,11 +132,11 @@ final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, CustomK
 		AppServices.theme.reload()
 		controller.menuController?.prepareInitialState()
 		registerKeyHandlers()
-		/* Both have to be listening before the stored clients are restored:
-		 that restore is what publishes the tree they draw. */
-		controller.installClientServices()
-		controller.clientDirectory.setupConfiguration()
-		setupTrees()
+		/* Both have to be listening before the stored sessions are restored:
+		 that restore is what publishes the rows they draw. */
+		controller.installSessionServices()
+		controller.chatSession.setupConfiguration()
+		setupSidebar()
 		DockIcon.drawWithoutCount()
 		observeNotifications()
 		controller.applicationWakeStepTwo()
@@ -174,8 +144,8 @@ final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, CustomK
 
 	/// The connections the window draws. It is `nil` until the application
 	/// finishes waking, which window restoration can precede.
-	var clientDirectory: ClientDirectory? {
-		AppServices.clientDirectory
+	var chatSession: ChatSession? {
+		AppServices.chatSession
 	}
 
 	var menuController: MenuActionController {
@@ -209,11 +179,14 @@ final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, CustomK
 private extension MainWindow {
 	func installSwiftUIContent() {
 		let rootView = MainWindowRootView(
-			model: presentationModel,
+			columns: columnModel,
+			sheets: sheetModel,
+			chrome: chrome,
 			loadingScreen: loadingScreen,
-			serverList: serverList,
+			sidebar: sidebar,
 			memberList: memberList,
-			inputContentView: inputContentView
+			inputContentView: inputContentView,
+			commands: AppServices.delegate.menuController
 		)
 		let hostingController = NSHostingController(rootView: rootView)
 		hostingController.sizingOptions = []
@@ -238,10 +211,11 @@ extension MainWindow {
 		notifications.observe(.themeWasModified) { [weak self] _ in
 			self?.reloadTheme()
 		}
-	}
-
-	var isUsingDarkAppearance: Bool {
-		AppServices.appearance.properties.isDarkAppearance
+		/* Synchronously, so that a settings sheet's write and the redraw it asks
+		 for happen in the same turn. */
+		notifications.observeSynchronously(SettingsReloadRequest.self) { [weak self] request in
+			self?.settingsChanged(request.action)
+		}
 	}
 
 	/** Adopts a new application appearance, when there is a new one to adopt.
@@ -259,7 +233,7 @@ extension MainWindow {
 	}
 
 	private func notifyMainWindowAppearanceChanged() {
-		presentationModel.appearanceRevision &+= 1
+		columnModel.appearanceRevision &+= 1
 		contentView?.superview?.notifyApplicationAppearanceChanged()
 		if styleMask.contains(.titled) {
 			for controller in titlebarAccessoryViewControllers {
@@ -270,10 +244,9 @@ extension MainWindow {
 	}
 
 	private func loadWindowState() {
-		migrateLegacyWindowFrame()
 		repairRestoredWindowFrame()
 		restoreSavedContentSplitViewState()
-		textSizeMultiplier = MainWindowStateStore().loadTextSizeMultiplier()
+		textSizeMultiplier = stateStore.loadTextSizeMultiplier()
 	}
 
 	private func repairRestoredWindowFrame() {
@@ -288,18 +261,6 @@ extension MainWindow {
 		if frameAutosaveName.isEmpty == false {
 			saveFrame(usingName: frameAutosaveName)
 		}
-	}
-
-	private func migrateLegacyWindowFrame() {
-		let defaults = UserDefaults.standard
-		guard let legacyFrame = defaults.string(forKey: MainWindowConstants.legacyFrameKey) else { return }
-		let autosaveName = frameAutosaveName
-		let systemFrameKey = MainWindowConstants.systemFrameKeyPrefix + autosaveName
-		if autosaveName.isEmpty == false, defaults.string(forKey: systemFrameKey) == nil {
-			setFrame(from: legacyFrame)
-			saveFrame(usingName: autosaveName)
-		}
-		defaults.removeObject(forKey: MainWindowConstants.legacyFrameKey)
 	}
 
 	func prepareForApplicationTermination() {
@@ -322,14 +283,79 @@ extension MainWindow {
 	}
 
 	/* The selected item is not encoded into the window's restorable state.
-	 `MainWindowStateStore` already persists it -- written at termination, read
-	 by `restoreSelectionDuringSetup()` once the directory exists, and migrating the
-	 legacy array form on the way. AppKit restores the window itself, meaning
+	 `MainWindowStateDefaults` already persists it -- written at termination, read
+	 by `restoreSelectionDuringSetup()` once the chat session exists. AppKit
+	 restores the window itself, meaning
 	 its frame, whether it was in full screen, and the Space it was on. That
 	 happens between `applicationWillFinishLaunching` and
 	 `applicationDidFinishLaunching`, so the application builds this window in
 	 the first of the two. Built any later, the window did not exist when the
 	 restoration class was asked for it, and nothing was restored. */
+}
+
+// MARK: - Settings reload
+
+/** What a setting change makes the main window redo.
+
+ The window builds and holds the two sidebars, the input field and its history,
+ so it answers the obligations about them itself. Nothing in the settings
+ layer knows they exist; it announces what changed and this is the owner that
+ reads the announcement.
+
+ Every step is idempotent and derives its result from the store rather than from
+ the change, so an obligation that arrives twice costs a redraw and nothing
+ else. */
+extension MainWindow {
+	func settingsChanged(_ action: SettingsReloadAction) {
+		/* Also on the coarse change: the badge counts what the connections hold,
+		 and the connections drop the public-message half of them when that
+		 setting goes off. */
+		if action.isDisjoint(with: [.dockIconBadges, .settingsChanged]) == false {
+			reloadDockIconBadge()
+		}
+
+		if action.isDisjoint(with: [.memberList, .memberListUserBadges]) == false {
+			memberList?.invalidatePresentation()
+		}
+
+		if action.contains(.sidebar) {
+			/* A changed session list is a different list: the rows are rebuilt at
+			 once rather than coalesced with the next inbound burst. */
+			sidebar?.applicationAppearanceChanged()
+		} else if action.contains(.sidebarUnreadBadges) {
+			sidebar?.setNeedsRefresh()
+		}
+
+		if action.contains(.textDirection) {
+			inputTextField?.updateTextDirection()
+		}
+
+		if action.contains(.textFieldFontSize) {
+			inputTextField?.updateTextBasedOnPreferredFontSize()
+		}
+
+		if action.contains(.inputHistoryScope) {
+			inputHistory?.noteInputHistoryObjectScopeDidChange()
+		}
+
+		/* Both change how a line is laid out. The theme controller has already
+		 republished its snapshot by the time this runs, so the transcripts are
+		 asked once, here, rather than once per owner. */
+		if action.isDisjoint(with: [.style, .textDirection]) == false {
+			reloadTheme()
+		}
+	}
+
+	/// The badge is drawn for the screen the window is on, which is why the dock
+	/// tile is the window's to redraw and not the notification layer's.
+	private func reloadDockIconBadge() {
+		if SettingsKeys.Notifications.displayDockBadge.value {
+			DockIcon.resetCachedCount()
+			DockIcon.updateDockIcon()
+		} else {
+			DockIcon.drawWithoutCount()
+		}
+	}
 }
 
 // MARK: - Window delegate
@@ -353,8 +379,8 @@ extension MainWindow {
 	}
 
 	func noteItemWasViewed(_ item: ChatItem) {
-		guard isKeyWindow, let channel = item.associatedChannel else { return }
-		channel.associatedClient.markChannel(asRead: channel)
+		guard isKeyWindow, let conversation = item.associatedConversation else { return }
+		conversation.associatedSession?.markConversation(asRead: conversation)
 	}
 
 	func windowDidChangeScreen(_: Notification) {
@@ -405,311 +431,58 @@ private extension MainWindow {
 	}
 }
 
-// MARK: - Keyboard shortcuts
+// MARK: - Restored frame
 
-extension MainWindow {
-	private func register(
-		key: KeyCode,
-		modifiers: NSEvent.ModifierFlags = [],
-		perform action: @escaping (MainWindow, NSEvent) -> Void
-	) {
-		keyEventHandler.register(key: key, modifiers: modifiers) { [weak self] event in
-			guard let self else { return }
-			action(self, event)
+enum MainWindowFrameRestorationPolicy {
+	static func repairedFrame(
+		_ frame: CGRect,
+		minimumSize: CGSize,
+		minimumVisibleSize: CGSize,
+		visibleScreenFrames: [CGRect]
+	) -> CGRect {
+		let frameIsFinite = [frame.minX, frame.minY, frame.width, frame.height].allSatisfy(\.isFinite)
+		var candidate = frameIsFinite ? frame.standardized : CGRect(origin: .zero, size: minimumSize)
+		let intersections = visibleScreenFrames.map { screenFrame in
+			(screenFrame, intersectionArea(of: candidate, with: screenFrame))
 		}
-	}
+		let bestScreenOverlap = intersections.max { $0.1 < $1.1 }
+		let visibleIntersection = bestScreenOverlap?.0.intersection(candidate) ?? .null
+		let hasUsableVisibleArea = visibleIntersection.isNull == false
+			&& visibleIntersection.width >= min(minimumVisibleSize.width, candidate.width)
+			&& visibleIntersection.height >= min(minimumVisibleSize.height, candidate.height)
+		let isUndersized = candidate.width < minimumSize.width || candidate.height < minimumSize.height
 
-	private func register(
-		character: Character,
-		modifiers: NSEvent.ModifierFlags,
-		perform action: @escaping (MainWindow, NSEvent) -> Void
-	) {
-		keyEventHandler.register(character: character, modifiers: modifiers) { [weak self] event in
-			guard let self else { return }
-			action(self, event)
+		guard frameIsFinite == false || isUndersized || hasUsableVisibleArea == false else {
+			return frame
 		}
-	}
 
-	/** Whether the message field, or anything inside its container, holds the
-	 keyboard.
-
-	 `NSApplication` offers the window every key event before the responder
-	 chain sees it, so a shortcut registered on the window otherwise fires
-	 wherever the keyboard is: typing a filter in the toolbar's search field and
-	 pressing Tab completed a nickname into the chat input and moved the
-	 keyboard there with it. The container is what is asked about, so the field,
-	 its scroll view's clip view and any field editor inside it all count. */
-	var inputBarHoldsKeyboardFocus: Bool {
-		guard let inputContentView, let responder = firstResponder as? NSView else { return false }
-		return responder === inputContentView || responder.isDescendant(of: inputContentView)
-	}
-
-	/// A window-level shortcut that only applies to the message field. It is
-	/// declined -- and so left to whatever view has the keyboard -- otherwise.
-	private func registerForInputBar(
-		key: KeyCode,
-		modifiers: NSEvent.ModifierFlags = [],
-		perform action: @escaping (MainWindow, NSEvent) -> Void
-	) {
-		keyEventHandler.registerConditional(key: key, modifiers: modifiers) { [weak self] event in
-			guard let self, inputBarHoldsKeyboardFocus else { return false }
-			action(self, event)
-			return true
-		}
-	}
-
-	/// The character form of `registerForInputBar(key:modifiers:perform:)`.
-	private func registerForInputBar(
-		character: Character,
-		modifiers: NSEvent.ModifierFlags,
-		perform action: @escaping (MainWindow, NSEvent) -> Void
-	) {
-		keyEventHandler.registerConditional(character: character, modifiers: modifiers) { [weak self] event in
-			guard let self, inputBarHoldsKeyboardFocus else { return false }
-			action(self, event)
-			return true
-		}
-	}
-
-	private func registerInput(
-		key: KeyCode,
-		modifiers: NSEvent.ModifierFlags = [],
-		perform action: @escaping (MainWindow, NSEvent) -> Void
-	) {
-		inputTextField.register(key: key, modifiers: modifiers) { [weak self] event in
-			guard let self else { return }
-			action(self, event)
-		}
-	}
-
-	private func registerInput(
-		character: Character,
-		modifiers: NSEvent.ModifierFlags,
-		perform action: @escaping (MainWindow, NSEvent) -> Void
-	) {
-		inputTextField.register(character: character, modifiers: modifiers) { [weak self] event in
-			guard let self else { return }
-			action(self, event)
-		}
-	}
-
-	func performedCustomKeyboardEvent(_ event: NSEvent) -> Bool {
-		keyEventHandler.processKeyEvent(event)
-	}
-
-	func redirectKeyDown(_ event: NSEvent) {
-		inputTextField.focus()
-		guard event.keyCode != KeyCode.enter.rawValue, event.keyCode != KeyCode.returnKey.rawValue else { return }
-		inputTextField.keyDown(with: event)
-	}
-
-	func registerKeyHandlers() {
-		/* In the message field, Escape dismisses a spelling suggestion, cancels
-		 a reply and closes the completion popup. Anywhere else the window
-		 leaves Escape to whatever holds the keyboard. It used to leave full
-		 screen instead, so the toolbar's search field and the find bar never
-		 got the Escape that clears or closes them. The green button and
-		 Control-Command-F leave full screen. */
-		registerForInputBar(key: .escape) { $0.inputTextField.keyDown(with: $1) }
-		/* Declined, not swallowed, when the preference says Tab does nothing:
-		 the field then hands Tab to keyboard navigation instead of holding the
-		 keyboard in place. */
-		keyEventHandler.registerConditional(key: .tab) { [weak self] event in
-			guard let self, inputBarHoldsKeyboardFocus else { return false }
-			return tab(event)
-		}
-		keyEventHandler.registerConditional(key: .tab, modifiers: .shift) { [weak self] event in
-			guard let self, inputBarHoldsKeyboardFocus else { return false }
-			return shiftTab(event)
-		}
-		register(key: .tab, modifiers: .option) { $0.selectPreviousSelection($1) }
-		/* The two colour commands pop a menu up at the caret, which no menu item
-		 can do, so they stay registrations. Bold, italics and underline are
-		 Format menu items with key equivalents of their own; registering them
-		 here as well gave the window a second, unvalidated copy of each.
-		 Registered unconditionally, ⌘B also swallowed the key wherever the
-		 reader was -- in the toolbar's search field, in a sheet's field, in the
-		 transcript -- and gave nothing back, which is why what is left is
-		 scoped to the input bar. */
-		registerForInputBar(character: "c", modifiers: [.control, .shift]) { $0.textFormattingForegroundColor($1) }
-		registerForInputBar(character: "h", modifiers: [.control, .shift]) { $0.textFormattingBackgroundColor($1) }
-		registerForInputBar(character: "p", modifiers: .control) { $0.inputHistoryUp($1) }
-		registerForInputBar(character: "n", modifiers: .control) { $0.inputHistoryDown($1) }
-
-		registerInput(key: .enter, modifiers: .control) { $0.sendControlEnterMessageMaybe($1) }
-		registerInput(key: .returnKey, modifiers: .command) { $0.sendMessageAsAction($1) }
-		registerInput(key: .enter, modifiers: .command) { $0.sendMessageAsAction($1) }
-		/* Control+Command+T, beside Control+Command+S for the server list:
-		 Option+Command+L is the Window menu's File Transfers, and
-		 Option+Command+T is the system's Show/Hide Toolbar. */
-		registerInput(character: "t", modifiers: [.control, .command]) { $0.focusTranscript($1) }
-		registerInput(key: .upArrow) { $0.inputHistoryUpWithScrollCheck($1) }
-		registerInput(key: .upArrow, modifiers: .option) { $0.inputHistoryUpWithScrollCheck($1) }
-		registerInput(key: .downArrow) { $0.inputHistoryDownWithScrollCheck($1) }
-		registerInput(key: .downArrow, modifiers: .option) { $0.inputHistoryDownWithScrollCheck($1) }
-	}
-}
-
-// MARK: - Navigation
-
-extension MainWindow {
-	/** Moves the selection to the next row that qualifies.
-
-	 `rows` is rotated so the walk starts one past the current selection and
-	 comes back round to it, and the first row that is both of the right kind
-	 and in the right state wins. A selection that is not in `rows` -- nothing
-	 selected, or a row the filter has taken out of the list -- has nowhere to
-	 walk from, so nothing moves. */
-	private func navigate(
-		_ rows: [ChatItem],
-		from startingPoint: Int,
-		isMovingDown: Bool,
-		navigationType: ServerListNavigationMovement,
-		selectionType: ServerListNavigationSelection
-	) {
-		guard rows.indices.contains(startingPoint) else { return }
-		let count = rows.count
-		let rotated = (1 ..< count).lazy.map { offset -> ChatItem in
-			let position = isMovingDown ? startingPoint + offset : startingPoint - offset + count
-			return rows[position % count]
-		}
-		guard let destination = rotated.first(where: {
-			Self.item($0, is: selectionType) && Self.item($0, matches: navigationType)
-		}) else { return }
-		select(destination)
-	}
-
-	private static func item(_ item: ChatItem, is selectionType: ServerListNavigationSelection) -> Bool {
-		switch selectionType {
-		case .any:
-			true
-		case .channel:
-			item.isChannel || item.isPrivateMessage || item.associatedChannel?.isDirectChat == true
-		case .server:
-			item.isClient
-		}
-	}
-
-	private static func item(_ item: ChatItem, matches navigationType: ServerListNavigationMovement) -> Bool {
-		switch navigationType {
-		case .all:
-			true
-		case .active:
-			item.isActive
-		case .unread:
-			item.isUnread
-		}
-	}
-
-	func navigateChannelEntries(_ isMovingDown: Bool, withNavigationType navigationType: ServerListNavigationMovement) {
-		if Preferences.Appearance.channelNavigationIsServerSpecific.value {
-			navigateChannelEntriesWithinServerScope(isMovingDown, navigationType: navigationType)
+		candidate.size.width = max(candidate.width, minimumSize.width)
+		candidate.size.height = max(candidate.height, minimumSize.height)
+		let targetScreen = if let bestScreenOverlap, bestScreenOverlap.1 > 0 {
+			bestScreenOverlap.0
 		} else {
-			navigateChannelEntriesOutsideServerScope(isMovingDown, navigationType: navigationType)
+			visibleScreenFrames.first
 		}
+		guard let targetScreen else {
+			return candidate
+		}
+
+		candidate.size.width = min(candidate.width, targetScreen.width)
+		candidate.size.height = min(candidate.height, targetScreen.height)
+
+		if bestScreenOverlap?.1 ?? 0 > 0 {
+			candidate.origin.x = min(max(candidate.minX, targetScreen.minX), targetScreen.maxX - candidate.width)
+			candidate.origin.y = min(max(candidate.minY, targetScreen.minY), targetScreen.maxY - candidate.height)
+		} else {
+			candidate.origin.x = targetScreen.midX - candidate.width / 2
+			candidate.origin.y = targetScreen.midY - candidate.height / 2
+		}
+
+		return candidate
 	}
 
-	private func navigateChannelEntriesOutsideServerScope(
-		_ isMovingDown: Bool,
-		navigationType: ServerListNavigationMovement
-	) {
-		let rows = serverList.selectableItems
-		navigate(
-			rows,
-			from: serverList.row(forItem: selectedItem),
-			isMovingDown: isMovingDown,
-			navigationType: navigationType,
-			selectionType: .channel
-		)
-	}
-
-	private func navigateChannelEntriesWithinServerScope(
-		_ isMovingDown: Bool,
-		navigationType: ServerListNavigationMovement
-	) {
-		guard let selectedClient else { return }
-		var rows = serverList.items(inContainingGroupOf: selectedItem as Any) ?? []
-		rows.append(selectedClient)
-		navigate(
-			rows,
-			from: rows.firstIndex { $0 === selectedItem } ?? -1,
-			isMovingDown: isMovingDown,
-			navigationType: navigationType,
-			selectionType: .channel
-		)
-	}
-
-	func navigateServerEntries(_ isMovingDown: Bool, withNavigationType navigationType: ServerListNavigationMovement) {
-		let rows = serverList.groupItems
-		navigate(
-			rows,
-			from: rows.firstIndex { $0 === selectedClient } ?? -1,
-			isMovingDown: isMovingDown,
-			navigationType: navigationType,
-			selectionType: .server
-		)
-	}
-
-	func navigateToNextEntry(_ isMovingDown: Bool) {
-		let rows = serverList.selectableItems
-		navigate(
-			rows,
-			from: serverList.row(forItem: selectedItem),
-			isMovingDown: isMovingDown,
-			navigationType: .all,
-			selectionType: .any
-		)
-	}
-
-	func selectPreviousChannel(_: NSEvent?) {
-		navigateChannelEntries(false, withNavigationType: .all)
-	}
-
-	func selectNextChannel(_: NSEvent?) {
-		navigateChannelEntries(true, withNavigationType: .all)
-	}
-
-	func selectPreviousUnreadChannel(_: NSEvent?) {
-		navigateChannelEntries(false, withNavigationType: .unread)
-	}
-
-	func selectNextUnreadChannel(_: NSEvent?) {
-		navigateChannelEntries(true, withNavigationType: .unread)
-	}
-
-	func selectPreviousActiveChannel(_: NSEvent?) {
-		navigateChannelEntries(false, withNavigationType: .active)
-	}
-
-	func selectNextActiveChannel(_: NSEvent?) {
-		navigateChannelEntries(true, withNavigationType: .active)
-	}
-
-	func selectPreviousServer(_: NSEvent?) {
-		navigateServerEntries(false, withNavigationType: .all)
-	}
-
-	func selectNextServer(_: NSEvent?) {
-		navigateServerEntries(true, withNavigationType: .all)
-	}
-
-	func selectPreviousActiveServer(_: NSEvent?) {
-		navigateServerEntries(false, withNavigationType: .active)
-	}
-
-	func selectNextActiveServer(_: NSEvent?) {
-		navigateServerEntries(true, withNavigationType: .active)
-	}
-
-	func selectPreviousSelection(_: NSEvent?) {
-		selectPreviousItem()
-	}
-
-	func selectNextWindow(_: NSEvent?) {
-		navigateToNextEntry(true)
-	}
-
-	func selectPreviousWindow(_: NSEvent?) {
-		navigateToNextEntry(false)
+	private static func intersectionArea(of frame: CGRect, with screenFrame: CGRect) -> CGFloat {
+		let intersection = frame.intersection(screenFrame)
+		return intersection.isNull ? 0 : intersection.width * intersection.height
 	}
 }

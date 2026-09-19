@@ -3,15 +3,20 @@
 
 import SwiftUI
 
-/// The server list, and the two icon-only controls under it.
+/// The sidebar, and the two icon-only controls under it.
 struct MainWindowSidebar: View {
-	let model: MainWindowPresentationModel
-	@Bindable var serverList: ServerList
+	let columns: MainWindowColumnModel
+	let chrome: MainWindowChrome
+	@Bindable var sidebar: Sidebar
+	/// The object the footer's menus send their commands to, handed in rather
+	/// than reached for: the whole command graph behind a view model's property
+	/// is a route from any subview to the application delegate.
+	let commands: MenuActionController?
 	let redirectTyping: (String) -> Void
 
 	var body: some View {
 		VStack(spacing: 0) {
-			ServerListView(model: serverList, redirectTyping: redirectTyping)
+			SidebarView(model: sidebar, redirectTyping: redirectTyping)
 			Divider()
 			sidebarFooter
 				.background(.bar)
@@ -31,15 +36,15 @@ struct MainWindowSidebar: View {
 		HStack(spacing: UISpacing.tight) {
 			Menu {
 				Button(.MainWindow.menuServerAddServer, systemImage: "server.rack") {
-					model.commands?.addServer(nil)
+					commands?.addServer(nil)
 				}
 				Button(.MainWindow.menuServerAddChannel, systemImage: "number") {
-					model.commands?.addChannel(nil)
+					commands?.addChannel(nil)
 				}
 			} label: {
 				footerIcon("plus", titled: String(localized: .MainWindow.addServerOrChannel))
 			} primaryAction: {
-				model.commands?.addChannel(nil)
+				commands?.addChannel(nil)
 			}
 			.sidebarFooterMenu()
 			.help(String(localized: .MainWindow.addServerOrChannel))
@@ -48,32 +53,32 @@ struct MainWindowSidebar: View {
 
 			Menu {
 				Button(String(localized: .MainWindow.markAllAsRead), systemImage: "checkmark.circle") {
-					model.commands?.markAllAsRead(nil)
+					commands?.markAllAsRead(nil)
 				}
 				/* A mode is ticked while it is in force, which is what the
 				 application menu and the Dock menu already do with it. Renaming
 				 the item instead left one command with three names. */
 				Toggle(.MainWindow.menuMuteNotifications, isOn: Binding(
-					get: { model.areNotificationsDisabled },
-					set: { _ in model.commands?.toggleMuteOnNotifications(nil) }
+					get: { chrome.areNotificationsDisabled },
+					set: { _ in commands?.toggleMuteOnNotifications(nil) }
 				))
 				Divider()
 				Button(.MainWindow.menuWindowAddressBook, systemImage: "person.crop.circle") {
-					model.commands?.showAddressBook(nil)
+					commands?.showAddressBook(nil)
 				}
 				Button(.MainWindow.menuWindowFileTransfers, systemImage: "arrow.down.circle") {
-					model.commands?.showFileTransfersWindow(nil)
+					commands?.showFileTransfersWindow(nil)
 				}
 				Divider()
 				Button(
-					MenuCommand.memberListTitle(isVisible: model.isMemberListVisible),
-					systemImage: model.isMemberListVisible ? "sidebar.squares.trailing" : "sidebar.trailing"
+					MenuCommand.memberListTitle(isVisible: columns.isMemberListVisible),
+					systemImage: columns.isMemberListVisible ? "sidebar.squares.trailing" : "sidebar.trailing"
 				) {
-					toggleMemberList()
+					animatingColumnChange { columns.toggleMemberList() }
 				}
-				.disabled(model.isMemberListAvailable == false)
+				.disabled(columns.isMemberListAvailable == false)
 				Button(String(localized: .MainWindow.toolbarInputBarAccessibilitySettings), systemImage: "gear") {
-					model.commands?.showPreferencesWindow(nil)
+					commands?.showSettingsWindow(nil)
 				}
 			} label: {
 				footerIcon("ellipsis.circle", titled: String(localized: .MainWindow.toolbarInputBarAccessibilityMore))
@@ -84,15 +89,6 @@ struct MainWindowSidebar: View {
 		}
 		.padding(.horizontal, UISpacing.wide)
 		.frame(height: MainWindowConstants.sidebarFooterHeight)
-	}
-
-	/** A pane sweeping across the window is exactly the motion Reduce Motion
-	 asks an interface to drop, so the column simply appears instead. The state
-	 change is the view's to animate: the model only records it. */
-	private func toggleMemberList() {
-		withAnimation(ReduceMotion.animation(.default)) {
-			model.toggleMemberList()
-		}
 	}
 
 	/// A bare `Image` carries no accessibility label, so VoiceOver announced

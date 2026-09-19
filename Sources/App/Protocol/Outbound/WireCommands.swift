@@ -6,8 +6,8 @@ import Foundation
 import os
 
 private nonisolated let wireCommandLogger = Logger(
-	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
-	category: "IRCWireCommands"
+	subsystem: LogSubsystem.current,
+	category: "WireCommands"
 )
 
 /// How many nicknames one `MONITOR +`/`WATCH` command carries when the server
@@ -15,176 +15,22 @@ private nonisolated let wireCommandLogger = Logger(
 /// whatever the nicknames are.
 private let watchListGroupSize = 8
 
-/** Splitting a list of single-token parameters over several commands.
-
- `ISON`, `WATCH` and `MONITOR` all take a list the user's address book decides
- the length of, and a list long enough overruns either the fifteen parameters
- RFC 1459 allows or the 512 bytes the line has. Both are the same split, so
- both use this one. */
-nonisolated enum OutboundParameterChunking {
-	/// `parameters` grouped into one command's worth each.
-	///
-	/// - Parameters:
-	///   - parameters: The tokens to spread over commands. Empty ones are
-	///     dropped: they cannot survive as their own wire token anyway.
-	///   - maximumCount: The most parameters one command takes.
-	///   - budget: The bytes one command has for its parameters, the spaces
-	///     between them included.
-	static func chunks(of parameters: [String], maximumCount: Int, budget: Int) -> [[String]] {
-		WireBatching.pack(
-			parameters.filter { $0.isEmpty == false },
-			maximumCount: maximumCount,
-			budget: budget,
-			cost: { parameter, chunk in
-				(chunk.isEmpty ? 0 : 1) + parameter.utf8.count
-			}
-		)
-	}
-}
-
-/** Fitting mode changes into the `MODE` commands a server will take.
-
- A change is a mode string and the parameters that pair with it. What varies is
- how many of those pairs one command may carry: `MODES` from ISUPPORT caps the
- count and the line length caps the bytes, so one change becomes as many
- commands as it needs. Sending a change whole made the server read
- `+ooo alice bob carol` as a single parameter and op nobody. */
-nonisolated enum OutboundModeCommands {
-	/// The groups `tokens` — a mode string and its parameters as the user or a
-	/// sheet wrote them — describe, before any splitting.
-	///
-	/// `/umode +s +cfk` is two independent changes, and a server that reads only
-	/// the first mode string of a line would silently drop the second if they
-	/// shared one.
-	///
-	/// A token is read as a new mode string only once the letters before it have
-	/// had the parameters they are owed: `+k +secret` sets the key `+secret`, and
-	/// reading it as a second mode string sent a bare `+k` and then `+secret`.
-	///
-	/// - Parameter modeTakesParameter: Whether a letter, set or unset, is paired
-	///   with a parameter on this target.
-	static func groups(
-		inTokens tokens: [String],
-		modeTakesParameter: (_ symbol: Character, _ modeIsSet: Bool) -> Bool
-	) -> [ModeChangeGroup] {
-		var result: [ModeChangeGroup] = []
-		var parametersOwed = 0
-
-		for token in tokens where token.isEmpty == false {
-			if parametersOwed > 0 {
-				result[result.count - 1].parameters.append(token)
-				parametersOwed -= 1
-			} else if isModeString(token) || result.isEmpty {
-				result.append(ModeChangeGroup(symbols: token))
-				parametersOwed = modeChanges(in: token).count { change in
-					modeTakesParameter(change.symbol, change.sign == "+")
-				}
-			} else {
-				result[result.count - 1].parameters.append(token)
-			}
-		}
-
-		return result
-	}
-
-	private static func isModeString(_ token: String) -> Bool {
-		token.hasPrefix("+") || token.hasPrefix("-")
-	}
-
-	/// `group` cut into the commands one server will take.
-	///
-	/// - Parameters:
-	///   - maximumModes: `MODES` from ISUPPORT — how many parameterised changes
-	///     one command takes. Zero means the server named no limit.
-	///   - budget: The bytes left for these arguments once the command name and
-	///     the channel are charged.
-	static func groups(for group: ModeChangeGroup, maximumModes: UInt, budget: Int) -> [ModeChangeGroup] {
-		let changes = modeChanges(in: group.symbols)
-
-		/* Only a mode string whose every letter has a parameter can be split:
-		 the letters pair up with the parameters one for one, so any prefix of
-		 the pairs is a valid command. Anything else — a bare `+nt`, a `-k+l`
-		 the caller gave one parameter — goes out whole, because cutting it
-		 would change which parameter belongs to which mode. */
-		guard changes.count == group.parameters.count, changes.count > 1 else {
-			return [group]
-		}
-
-		let pairs = zip(changes, group.parameters).map { (change: $0, parameter: $1) }
-		let batches = WireBatching.pack(
-			pairs,
-			maximumCount: maximumModes > 0 ? Int(maximumModes) : 0,
-			budget: budget,
-			cost: { pair, batch in
-				/* The rebuilt mode string repeats a sign only where it changes,
-				 so a pair costs its sign only when it opens the batch or turns
-				 it around. */
-				let signCost = batch.last?.change.sign == pair.change.sign
-					? 0 : String(pair.change.sign).utf8.count
-
-				return signCost + String(pair.change.symbol).utf8.count + 1 + pair.parameter.utf8.count
-			}
-		)
-
-		return batches.map { batch in
-			ModeChangeGroup(
-				symbols: modeString(for: batch.map(\.change)),
-				parameters: batch.map(\.parameter)
-			)
-		}
-	}
-
-	/// The `(sign, symbol)` pairs a mode string names, in order.
-	private static func modeChanges(in modeString: String) -> [(sign: Character, symbol: Character)] {
-		var sign: Character = "+"
-		var result: [(sign: Character, symbol: Character)] = []
-
-		for character in modeString {
-			if character == "+" || character == "-" {
-				sign = character
-			} else {
-				result.append((sign: sign, symbol: character))
-			}
-		}
-
-		return result
-	}
-
-	/// The pairs written back as a mode string, repeating a sign only where it
-	/// changes.
-	private static func modeString(for changes: [(sign: Character, symbol: Character)]) -> String {
-		var result = ""
-		var sign: Character?
-
-		for change in changes {
-			if change.sign != sign {
-				result.append(change.sign)
-				sign = change.sign
-			}
-
-			result.append(change.symbol)
-		}
-
-		return result
-	}
-}
-
 @MainActor
-extension Client {
+extension ServerSession {
 	func changeNickname(_ nickname: String) {
 		guard isConnected, nickname.isEmpty == false else { return }
 		/* `NICKLEN` is a byte budget like the rest, and a server given a longer
 		 nickname picks the truncation itself — which for anything but ASCII
 		 lands mid-character. */
-		send("NICK", arguments: [truncated(nickname, toLimit: supportInfo.maximumNicknameLength)])
+		send(.nick, arguments: [truncated(nickname, toLimit: supportInfo.maximumNicknameLength)])
 	}
 
-	func part(_ channel: Channel, withComment comment: String? = nil) {
+	func part(_ channel: Conversation, withComment comment: String? = nil) {
 		guard isLoggedIn, channel.isChannel, channel.isActive else { return }
-		send("PART", arguments: [channel.name, comment ?? config.normalLeavingComment])
+		send(.part, arguments: [channel.name, comment ?? config.normalLeavingComment])
 	}
 
-	func sendWho(to channel: Channel, hideResponse: Bool = false) {
+	func sendWho(to channel: Conversation, hideResponse: Bool = false) {
 		guard channel.isChannel else { return }
 		sendWho(toChannelNamed: channel.name, hideResponse: hideResponse)
 	}
@@ -197,22 +43,22 @@ extension Client {
 			requestedCommands.recordWhoRequestOpenedAsVisible()
 		}
 		if supportInfo.whoxSupported {
-			send("WHO", arguments: [channelName, "%tcuhnfar,\(ServerQuirks.whoxToken)"])
+			send(.who, arguments: [channelName, "%tcuhnfar,\(ServerQuirks.whoxToken)"])
 		} else {
-			send("WHO", arguments: [channelName])
+			send(.who, arguments: [channelName])
 		}
 	}
 
 	func sendWhois(_ nickname: String) {
 		guard isLoggedIn, nickname.isEmpty == false else { return }
-		send("WHOIS", arguments: [nickname, nickname])
+		send(.whois, arguments: [nickname, nickname])
 	}
 
-	func kick(_ nickname: String, in channel: Channel) {
+	func kick(_ nickname: String, in channel: Conversation) {
 		guard isLoggedIn, channel.isChannel, channel.isActive, nickname.isEmpty == false else { return }
 		send(
-			"KICK",
-			arguments: [channel.name, nickname, truncatedKickReason(environment.preferences.defaultKickMessage)]
+			.kick,
+			arguments: [channel.name, nickname, truncatedKickReason(environment.settings.defaultKickMessage)]
 		)
 	}
 
@@ -273,7 +119,7 @@ extension Client {
 	func requestModes(inChannelNamed channelName: String) {
 		guard isLoggedIn, channelName.isEmpty == false else { return }
 
-		send("MODE", arguments: [channelName])
+		send(.mode, arguments: [channelName])
 	}
 
 	/** Sends `groups` as `MODE` commands on `channelName`.
@@ -297,7 +143,7 @@ extension Client {
 				maximumModes: supportInfo.maximumModeCount,
 				budget: budget
 			) {
-				send("MODE", arguments: [channelName] + command.wireArguments)
+				send(.mode, arguments: [channelName] + command.wireArguments)
 			}
 		}
 	}
@@ -344,25 +190,25 @@ extension Client {
 
 	func sendPing(_ token: String) {
 		guard isConnected else { return }
-		send("PING", arguments: [token])
+		send(.ping, arguments: [token])
 	}
 
 	func sendPong(_ token: String) {
 		guard isConnected else { return }
-		send("PONG", arguments: [token])
+		send(.pong, arguments: [token])
 	}
 
-	func sendInvite(to nickname: String, toJoin channel: Channel) {
+	func sendInvite(to nickname: String, toJoin channel: Conversation) {
 		guard channel.isChannel else { return }
 		sendInvite(to: nickname, toJoinChannelNamed: channel.name)
 	}
 
 	func sendInvite(to nickname: String, toJoinChannelNamed channelName: String) {
 		guard nickname.isEmpty == false, channelName.isEmpty == false else { return }
-		send("INVITE", arguments: [nickname, channelName])
+		send(.invite, arguments: [nickname, channelName])
 	}
 
-	func sendTopic(to topic: String?, in channel: Channel) {
+	func sendTopic(to topic: String?, in channel: Conversation) {
 		guard channel.isChannel, channel.isActive else { return }
 		sendTopic(to: topic, inChannelNamed: channel.name)
 	}
@@ -373,12 +219,12 @@ extension Client {
 		if let topic {
 			arguments.append(truncatedTopic(topic))
 		}
-		send("TOPIC", arguments: arguments)
+		send(.topic, arguments: arguments)
 	}
 
 	func sendCapabilityAuthenticate(_ data: String) {
 		guard isConnected, data.isEmpty == false else { return }
-		send("AUTHENTICATE", arguments: [data])
+		send(.authenticate, arguments: [data])
 	}
 
 	/** Asks the server which of `nicknames` are online.
@@ -390,8 +236,8 @@ extension Client {
 	func sendIson(forNicknames nicknames: [String], hideResponse: Bool = false) {
 		guard isLoggedIn, nicknames.isEmpty == false else { return }
 
-		for group in OutboundParameterChunking.chunks(
-			of: nicknames,
+		for group in WireBatching.packTokens(
+			nicknames,
 			maximumCount: ProtocolLimits.maximumParameterCount,
 			budget: outboundParameterBudget(forCommand: "ISON", fixedArguments: [])
 		) {
@@ -401,18 +247,18 @@ extension Client {
 				requestedCommands.recordIsonRequestOpenedAsVisible()
 			}
 
-			send("ISON", arguments: group)
+			send(.ison, arguments: group)
 		}
 	}
 
 	func requestChannelList(withArguments arguments: String? = nil) {
 		guard isLoggedIn else { return }
-		send("LIST", arguments: arguments.map { [$0] } ?? [])
+		send(.list, arguments: arguments.map { [$0] } ?? [])
 	}
 
 	func sendPassword(_ password: String) {
 		guard isConnected, password.isEmpty == false else { return }
-		send("PASS", arguments: [password])
+		send(.pass, arguments: [password])
 	}
 
 	/** Adds or removes `nicknames` on the server's presence list.
@@ -426,8 +272,8 @@ extension Client {
 	func modifyWatchList(byAdding adding: Bool, nicknames: [String]) {
 		let accepted = adding ? watchListEntriesWithinServerCeiling(nicknames) : nicknames
 
-		for group in OutboundParameterChunking.chunks(
-			of: accepted,
+		for group in WireBatching.packTokens(
+			accepted,
 			maximumCount: watchListGroupSize,
 			budget: outboundParameterBudget(forCommand: "MONITOR", fixedArguments: ["+"])
 		) {
@@ -446,13 +292,13 @@ extension Client {
 			return nicknames
 		}
 
-		/* What the client believes the server already holds: the address book's
-		 tracked nicknames and the open queries, minus the ones this call is
-		 about — `populateISONTrackedUsersList` records an addition before it
+		/* What the session believes the server already holds: the address book's
+		 tracked nicknames and the open direct conversations, minus the ones this
+		 call is about — `populateISONTrackedUsersList` records an addition before it
 		 sends it, so counting those again would leave no room for them. */
 		let pending = Set(nicknames.map(casefoldNickname))
 		let held = Set(trackedUsers.trackedUsers.keys.map(casefoldNickname))
-			.union(queryPeerNicknames.map(casefoldNickname))
+			.union(directPeerNicknames.map(casefoldNickname))
 			.subtracting(pending)
 		let room = max(Int(ceiling) - held.count, 0)
 
@@ -478,13 +324,13 @@ extension Client {
 	private func modifyWatchListGroup(byAdding adding: Bool, nicknames: [String]) {
 		guard isLoggedIn, nicknames.isEmpty == false else { return }
 		if isCapabilityEnabled(.monitorCommand) {
-			send("MONITOR", arguments: [adding ? "+" : "-", nicknames.joined(separator: ",")])
+			send(.monitor, arguments: [adding ? "+" : "-", nicknames.joined(separator: ",")])
 		} else if isCapabilityEnabled(.watchCommand) {
 			/* One parameter per nickname. Joined into one, the group became a
 			 trailing parameter and went out as `WATCH :+alice +bob`, which the
 			 server reads as a single name. */
 			let modifier = adding ? "+" : "-"
-			send("WATCH", arguments: nicknames.map { modifier + $0 })
+			send(.watch, arguments: nicknames.map { modifier + $0 })
 		}
 	}
 }

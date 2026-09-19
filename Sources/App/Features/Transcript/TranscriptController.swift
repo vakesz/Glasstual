@@ -7,23 +7,23 @@ import CocoaExtensions
 import Foundation
 import os
 
-typealias PrintedLineCompletion = (PrintedLineContext) -> Void
-
 private nonisolated let transcriptControllerLogger = Logger(
-	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
-	category: "LogController"
+	subsystem: LogSubsystem.current,
+	category: "TranscriptController"
 )
 
 /// What a print's render job hands back: the row to draw, and the line already
 /// archived for the view's store.
 private nonisolated struct PrintedLineRender: Sendable {
 	let result: TranscriptRenderResult
-	let historicEntry: ScrollbackEntry?
+	let scrollbackEntry: ScrollbackEntry?
 }
 
 @MainActor
-final class TranscriptController: ServerHistoryPresentation {
+final class TranscriptController: ChatItemPresenting, ServerHistoryPresenting {
 	private(set) var backingView: TranscriptView?
+	/// Where the commands the reader raises in this transcript are carried out.
+	let commandSink: TranscriptCommandSink
 	private(set) var viewIsLoaded = false
 	private(set) weak var attachedWindow: MainWindow?
 	var newestLineNumberFromPreviousSession: String?
@@ -37,7 +37,7 @@ final class TranscriptController: ServerHistoryPresentation {
 
 	private(set) var terminating = false
 	/* Loading history is the other half of this controller, and it lives in
-	 `TranscriptControllerHistoryLoading.swift`: the initial replay, the scrollback
+	 `TranscriptController+HistoryLoading.swift`: the initial replay, the scrollback
 	 pages and the server-history handshake. The state the two halves share is
 	 declared here and reaches no further than this feature. */
 	var historyLoadedForFirstTime = false
@@ -50,18 +50,12 @@ final class TranscriptController: ServerHistoryPresentation {
 	var loadingOlderHistory = false
 	var olderHistoryTask: Task<Void, Never>?
 	var locallyExhaustedBefore: String?
-	var serverHistoryRequest: ServerHistoryRequest? {
-		didSet { refreshServerRetryAvailability() }
-	}
-
-	var serverHistoryCompletedBefore: Date?
-	var serverHistoryExhaustedBefore: Date?
-	var serverHistoryFailed = false {
+	/// Where this transcript stands with the server's own history. None of it is
+	/// observable, so every change to it is mirrored into the banner state here.
+	var serverHistory = ServerHistoryHandshake() {
 		didSet {
-			historyRecovery.serverFailed = serverHistoryFailed
-			if !serverHistoryFailed {
-				historyRecovery.serverFailureReason = nil
-			}
+			historyRecovery.serverFailed = serverHistory.failed
+			historyRecovery.serverFailureReason = serverHistory.failed ? serverHistory.failureReason : nil
 			refreshServerRetryAvailability()
 		}
 	}
@@ -70,8 +64,10 @@ final class TranscriptController: ServerHistoryPresentation {
 		didSet { historyRecovery.olderFailure = olderHistoryFailure }
 	}
 
-	let historyRecovery = TranscriptHistoryRecoveryState()
-	var historyStorageRecovery: TranscriptHistoryRecoveryState {
+	let historyRecovery = TranscriptHistoryRecovery()
+	/// The process-wide storage failures, which the banner composes with this
+	/// view's own. Owned by the scrollback facade, not by any one transcript.
+	var storageRecovery: ScrollbackStorageRecovery {
 		scrollback.recovery
 	}
 
@@ -85,10 +81,10 @@ final class TranscriptController: ServerHistoryPresentation {
 	/** Whether the first history read waits until the view becomes visible.
 
 	 A closure rather than a direct read so a test can pin the decision for one
-	 controller; writing `Preferences.Logging.loadHistoryLazily` instead would
+	 controller; writing `SettingsKeys.Logging.loadHistoryLazily` instead would
 	 change what every other suite running beside it sees. Read on each reload,
-	 so a preference change still takes effect at once. */
-	var loadsHistoryLazily: @MainActor () -> Bool = { Preferences.Logging.loadHistoryLazily.value }
+	 so a setting change still takes effect at once. */
+	var loadsHistoryLazily: @MainActor () -> Bool = { SettingsKeys.Logging.loadHistoryLazily.value }
 
 	private let memberRenderCache = TranscriptMemberDirectoryCache()
 	let inlineImageLoader: InlineImageLoader
@@ -108,21 +104,14 @@ final class TranscriptController: ServerHistoryPresentation {
 		backingView?.displayedLines.compactMap { $0.body.isHighlight ? $0.lineNumber : nil } ?? []
 	}
 
-	/** Reactions that arrived this session, by the message they answer.
+	/** The reactions that arrived this session, by the message they answer.
 
 	 Only for messages this controller still holds, in the view or in its
 	 projection, or is about to: a reaction for anything else has no row to be
-	 drawn on, and keeping every one the connection ever carried grew for as
-	 long as the process ran. Retired with the last row of their message. */
-	private(set) var reactionsByMessageIdentifier: [String: [String: [String]]] = [:]
-
-	/// The longest reaction kept, in UTF-16 units. A reaction is an emoji, and
-	/// the longest sequences in use are a few dozen units.
-	static let maximumReactionLength = 64
-	/// How many people one reaction on one message records.
-	static let maximumReactorsPerReaction = 256
+	 drawn on. Retired with the last row of their message. */
+	private(set) var reactions = TranscriptReactionLedger()
 	private(set) var viewLoadedTimestamp: TimeInterval = 0
-	var lastLineStorage: LogLine?
+	var lastLineStorage: ChatLine?
 	/** The lines handed to `print` that have not been applied to the view yet.
 
 	 Rendering continues off the main actor, so `displayedLines` is empty for a
@@ -133,18 +122,15 @@ final class TranscriptController: ServerHistoryPresentation {
 	 The invariant is that what the pipeline drops, the seams forget: a line
 	 leaves this list when it is applied, when the queued jobs are cancelled, and
 	 when the view is torn down, so nothing here is ever a line the view will
-	 never show. Single-purpose: the two conversation seams in
-	 `MainWindow+ClientDirectorySeams` are the only readers. */
-	var linesAwaitingRender: ArraySlice<LogLine> {
-		awaitingRender[awaitingRenderHead...]
+	 never show. Single-purpose: the two conversation seams of
+	 ``ChatItemPresenting`` — `newestConversationLineDate()` and
+	 `conversationLineCount(after:)` — and `holdsMessage(withIdentifier:)` are the
+	 only readers. */
+	var linesAwaitingRender: ArraySlice<ChatLine> {
+		awaitingRender.lines
 	}
 
-	/** The storage behind ``linesAwaitingRender``. Lines are applied in the order
-	 they were printed, so the one applied is almost always the first still
-	 waiting: withdrawing it moves a head instead of shifting every line behind
-	 it, and the storage is compacted once the head is past half of it. */
-	private var awaitingRender: [LogLine] = []
-	private var awaitingRenderHead = 0
+	private var awaitingRender = PendingLineQueue()
 	var transcriptProjection = TranscriptProjectionState()
 	var transcriptSessionBoundary = TranscriptSessionBoundaryState()
 
@@ -163,20 +149,20 @@ final class TranscriptController: ServerHistoryPresentation {
 
 	/** The item this view draws, fixed when the controller is made.
 
-	 Both references are weak, and both are optional to read. The world owns the
-	 client and the channel; the window's registry owns the controllers and
-	 drops them by identifier, so a controller can still be reached for as long
-	 as the removal is in flight -- which is why every read here is a `guard
-	 let`. The client used to be declared implicitly unwrapped, which promised
-	 the opposite of what those guards say and left an unwrap in reach that
-	 would have trapped exactly when the guards were right. */
-	private(set) weak var associatedClient: Client?
-	private(set) weak var associatedChannel: Channel?
+	 Both references are weak, and both are optional to read. The chat session owns
+	 the server sessions and each session owns its conversations; the window's
+	 registry owns the controllers and drops them by identifier, so a controller
+	 can still be reached for as long as the removal is in flight -- which is why
+	 every read here is a `guard let`. The session used to be declared implicitly
+	 unwrapped, which promised the opposite of what those guards say and left an
+	 unwrap in reach that would have trapped exactly when the guards were right. */
+	private(set) weak var associatedSession: ServerSession?
+	private(set) weak var associatedConversation: Conversation?
 	/// The item's identifier, which never changes once the controller is attached.
 	private(set) var uniqueIdentifier = ""
 
 	var associatedItem: ChatItem? {
-		associatedChannel ?? associatedClient
+		associatedConversation ?? associatedSession
 	}
 
 	var numberOfLines: UInt {
@@ -184,11 +170,11 @@ final class TranscriptController: ServerHistoryPresentation {
 	}
 
 	var inlineMediaEnabledForView: Bool {
-		guard let channel = associatedChannel else {
+		guard let conversation = associatedConversation else {
 			return false
 		}
-		let config = channel.config
-		return Preferences.Messages.showInlineMedia.detachedValue ? !config.inlineMediaDisabled : config
+		let config = conversation.config
+		return SettingsKeys.Messages.showInlineMedia.detachedValue ? !config.inlineMediaDisabled : config
 			.inlineMediaEnabled
 	}
 
@@ -196,40 +182,42 @@ final class TranscriptController: ServerHistoryPresentation {
 		guard let attachedWindow else {
 			return false
 		}
-		if let associatedChannel {
-			return attachedWindow.isItemVisible(associatedChannel)
+		if let associatedConversation {
+			return attachedWindow.isItemVisible(associatedConversation)
 		}
-		guard let associatedClient else {
+		guard let associatedSession else {
 			return false
 		}
-		return attachedWindow.isItemVisible(associatedClient)
+		return attachedWindow.isItemVisible(associatedSession)
 	}
 
-	convenience init(client: Client, in window: MainWindow) {
-		self.init(client: client, in: window, inlineImageLoader: .shared)
+	convenience init(session: ServerSession, in window: MainWindow, commands: TranscriptCommandSink = .menuController()) {
+		self.init(session: session, in: window, inlineImageLoader: .shared, commands: commands)
 	}
 
 	init(
-		client: Client, in window: MainWindow, inlineImageLoader: InlineImageLoader,
-		scrollback: Scrollback = .shared
+		session: ServerSession, in window: MainWindow, inlineImageLoader: InlineImageLoader,
+		scrollback: Scrollback = .shared, commands: TranscriptCommandSink = .menuController()
 	) {
 		self.inlineImageLoader = inlineImageLoader
 		self.scrollback = scrollback
+		commandSink = commands
 		historyPageFetcher = { await scrollback.fetchOutcome($0) }
-		associatedClient = client
-		uniqueIdentifier = client.uniqueIdentifier
+		associatedSession = session
+		uniqueIdentifier = session.uniqueIdentifier
 		attachedWindow = window
 		setUp()
 	}
 
-	init(channel: Channel, in window: MainWindow) {
+	init(conversation: Conversation, in window: MainWindow, commands: TranscriptCommandSink = .menuController()) {
 		inlineImageLoader = .shared
 		scrollback = .shared
+		commandSink = commands
 		let storage = scrollback
 		historyPageFetcher = { await storage.fetchOutcome($0) }
-		associatedClient = channel.associatedClient
-		associatedChannel = channel
-		uniqueIdentifier = channel.uniqueIdentifier
+		associatedSession = conversation.associatedSession
+		associatedConversation = conversation
+		uniqueIdentifier = conversation.uniqueIdentifier
 		attachedWindow = window
 		setUp()
 	}
@@ -240,7 +228,7 @@ final class TranscriptController: ServerHistoryPresentation {
 	}
 
 	isolated deinit {
-		associatedClient?.renderAdmission.retire(view: uniqueIdentifier)
+		associatedSession?.renderAdmission.retire(view: uniqueIdentifier)
 		historyRetryTask?.cancel()
 		pipelineTask?.cancel()
 		olderHistoryTask?.cancel()
@@ -249,8 +237,8 @@ final class TranscriptController: ServerHistoryPresentation {
 		inlineImageLoader.cancelLoads(forView: uniqueIdentifier)
 	}
 
-	var bufferPolicy: TranscriptBufferPolicy {
-		TranscriptBufferPolicy(preference: Preferences.Logging.scrollbackVisibleLimit.value)
+	var bufferPolicy: TranscriptBufferLimits {
+		TranscriptBufferLimits(setting: SettingsKeys.Logging.scrollbackVisibleLimit.value)
 	}
 
 	/// Makes the native AppKit transcript on first visibility. The controller
@@ -275,7 +263,7 @@ final class TranscriptController: ServerHistoryPresentation {
 	}
 
 	private func stopPipeline() {
-		associatedClient?.renderAdmission.retire(view: uniqueIdentifier)
+		associatedSession?.renderAdmission.retire(view: uniqueIdentifier)
 		let retired = pipeline
 		Task { await retired.stop() }
 		pipelineTask?.cancel()
@@ -295,7 +283,7 @@ final class TranscriptController: ServerHistoryPresentation {
 		renderGeneration += 1
 		cancelOlderHistory()
 		pendingApplications.removeAll()
-		forgetLinesAwaitingRender()
+		awaitingRender.removeAll()
 		deferredPrepends.removeAll()
 		applicationTask?.cancel()
 		applicationTask = nil
@@ -325,14 +313,9 @@ final class TranscriptController: ServerHistoryPresentation {
 		olderHistoryTask = nil
 		loadingOlderHistory = false
 		locallyExhaustedBefore = nil
-		let retiredRequest = serverHistoryRequest
-		serverHistoryRequest = nil
-		if let retiredRequest {
-			associatedClient?.cancelServerHistoryRequest(retiredRequest)
+		if let retiredRequest = serverHistory.reset() {
+			associatedSession?.cancelServerHistoryRequest(retiredRequest)
 		}
-		serverHistoryCompletedBefore = nil
-		serverHistoryExhaustedBefore = nil
-		serverHistoryFailed = false
 		olderHistoryFailure = nil
 	}
 
@@ -340,14 +323,14 @@ final class TranscriptController: ServerHistoryPresentation {
 		renderGeneration == generation && !terminating
 	}
 
-	private func scrollbackForgetChannel() {
+	private func forgetScrollback() {
 		guard let associatedItem else {
 			return
 		}
 		scrollbackMutationTask = scrollback.removeHistory(forView: associatedItem.uniqueIdentifier, forget: true)
 	}
 
-	private func scrollbackResetChannel() {
+	private func resetScrollback() {
 		guard let associatedItem else {
 			return
 		}
@@ -355,12 +338,12 @@ final class TranscriptController: ServerHistoryPresentation {
 	}
 
 	private func closeScrollback() {
-		let channel = associatedChannel
-		if !Preferences.Logging.reloadScrollbackOnLaunch.value || channel?.isUtility == true || channel?
+		let conversation = associatedConversation
+		if !SettingsKeys.Logging.reloadScrollbackOnLaunch.value || conversation?.isConsole == true || conversation?
 			.isDirectChat == true ||
-			(channel?.isPrivateMessage == true && !Preferences.Appearance.rememberQueryStates.value)
+			(conversation?.isDirect == true && !SettingsKeys.Appearance.rememberDirectConversations.value)
 		{
-			scrollbackResetChannel()
+			resetScrollback()
 		}
 	}
 
@@ -374,7 +357,7 @@ final class TranscriptController: ServerHistoryPresentation {
 		}
 		renderGeneration += 1
 		terminating = true
-		forgetLinesAwaitingRender()
+		awaitingRender.removeAll()
 		refreshServerRetryAvailability()
 		cancelOlderHistory()
 		pendingApplications.removeAll()
@@ -382,14 +365,14 @@ final class TranscriptController: ServerHistoryPresentation {
 		applicationTask?.cancel()
 		applicationTask = nil
 		viewIsLoaded = false
-		reactionsByMessageIdentifier.removeAll()
+		reactions.removeAll()
 		backingView?.clearLines()
 		backingView = nil
 		inlineImageLoader.cancelLoads(forView: uniqueIdentifier)
 		stopPipeline()
 		switch reason {
 		case .applicationTermination: closeScrollback()
-		case .permanentRemoval: scrollbackForgetChannel()
+		case .permanentRemoval: forgetScrollback()
 		case .preservingRemoval: break
 		}
 	}
@@ -406,7 +389,7 @@ final class TranscriptController: ServerHistoryPresentation {
 	 on the main actor, in the order the jobs were submitted. That split is what
 	 replaced the printing operation: `render` may only capture what can cross
 	 isolation, while `apply` is written here, on the main actor, and so may
-	 capture a `LogLine`, a caller's completion block or anything else the view
+	 capture a `ChatLine`, a caller's completion block or anything else the view
 	 needs. Returning `nil` from `render` drops the job. Render outputs are
 	 Sendable values; AppKit presentation is constructed only during application. */
 	@discardableResult
@@ -419,7 +402,7 @@ final class TranscriptController: ServerHistoryPresentation {
 			return false
 		}
 		let generation = renderGeneration
-		let admission = associatedClient?.renderAdmission
+		let admission = associatedSession?.renderAdmission
 		let ticket = admission?.submit(for: uniqueIdentifier)
 		pipeline.submissions.yield(TranscriptRenderSubmission(isStandalone: isStandalone) { [weak self] in
 			let output = await render()
@@ -430,30 +413,28 @@ final class TranscriptController: ServerHistoryPresentation {
 					}
 					return
 				}
-				self.applyRenderOutput(output, generation: generation) { value in
+				self.queueApplication(generation: generation) {
 					defer {
 						if let ticket {
 							admission?.finish(ticket)
 						}
 					}
-					apply(value)
+					apply(output)
 				}
 			}
 		})
 		return true
 	}
 
-	private func applyRenderOutput<Output: Sendable>(
-		_ output: Output,
-		generation: Int,
-		_ apply: @escaping @MainActor (Output) -> Void
-	) {
-		guard renderGeneration == generation, terminating == false else {
-			return
-		}
+	/** Queues one finished render for application, and starts the drain if it is
+	 not already running.
+
+	 The generation is checked once more where it can have moved: the queued work
+	 runs after a `Task.yield`, and the check the caller made ran before it. */
+	private func queueApplication(generation: Int, _ apply: @escaping @MainActor () -> Void) {
 		pendingApplications.append { [weak self] in
 			guard let self, acceptsRenderGeneration(generation) else { return }
-			apply(output)
+			apply()
 		}
 		guard applicationTask == nil else { return }
 		applicationTask = Task { @MainActor [weak self] in
@@ -496,24 +477,24 @@ final class TranscriptController: ServerHistoryPresentation {
 	/** Snapshot of the main-actor state that rendering needs.
 
 	 The members are only needed to find the mentions in a message, and
-	 building them is a walk of the channel after every join or part: a line
+	 building them is a walk of the member list after every join or part: a line
 	 that is not a message leaves them out, and its sender's mark is looked up
 	 by the caller instead. */
 	func makeRenderContext(includingMembers: Bool = true) -> TranscriptRenderContext {
-		let channel = associatedChannel
+		let conversation = associatedConversation
 		return TranscriptRenderContext(
 			inlineMediaEnabled: inlineMediaEnabledForView,
-			isChannel: channel?.isChannel == true,
-			showsDateChanges: Preferences.Messages.showDateChanges.value,
+			isChannel: conversation?.isChannel == true,
+			showsDateChanges: SettingsKeys.Messages.showDateChanges.value,
 			textPolicy: .current(),
-			members: includingMembers ? memberRenderCache.members(in: channel) : [],
-			caseMapping: associatedClient?.supportInfo.caseMapping ?? .rfc1459,
-			sessionReactions: reactionsByMessageIdentifier
+			members: includingMembers ? memberRenderCache.members(in: conversation) : [],
+			caseMapping: associatedSession?.supportInfo.caseMapping ?? .rfc1459,
+			sessionReactions: reactions.all
 		)
 	}
 
 	private func setInitialTopic() {
-		setTopicNow(associatedChannel?.topic)
+		setTopicNow(associatedConversation?.topic)
 	}
 
 	func setTopic(_ topic: String?) {
@@ -537,7 +518,7 @@ final class TranscriptController: ServerHistoryPresentation {
 	}
 
 	func mark() {
-		let mark = (newestLineNumber ?? lastLineStorage?.uniqueIdentifier).map(TranscriptScrollbackMark.line) ?? .latest
+		let mark = (newestLineNumber ?? lastLineStorage?.uniqueIdentifier).map(UnreadMarker.line) ?? .latest
 		transcriptProjection.setMark(mark)
 		backingView?.setUnreadMarker(mark)
 	}
@@ -545,11 +526,6 @@ final class TranscriptController: ServerHistoryPresentation {
 	func mark(at date: Date) {
 		transcriptProjection.setMark(.after(date))
 		backingView?.setUnreadMarker(.after(date))
-	}
-
-	func unmark() {
-		transcriptProjection.setMark(.none)
-		backingView?.setUnreadMarker(.none)
 	}
 
 	func goToMark() {
@@ -629,7 +605,10 @@ extension TranscriptController {
 		forgetRetiredProjectionMessages()
 	}
 
-	func notifyScrollbackWillDeleteLines(_ lineNumbers: [String]) {
+	/// The view dropped these lines. Only the highlight the reader last jumped
+	/// to is addressed by line number, so it is the only cursor a removal can
+	/// leave pointing at nothing.
+	func notifyLinesWereRemoved(_ lineNumbers: [String]) {
 		guard !terminating else {
 			return
 		}
@@ -723,11 +702,11 @@ extension TranscriptController {
 		}
 		cancelRenderJobs()
 		inlineImageLoader.cancelLoads(forView: uniqueIdentifier)
-		scrollbackResetChannel()
+		resetScrollback()
 		transcriptProjection.reset()
 		transcriptSessionBoundary.reset()
 		newestLineNumberFromPreviousSession = nil
-		reactionsByMessageIdentifier.removeAll()
+		reactions.removeAll()
 		lastVisitedHighlight = nil
 		lastLineStorage = nil
 		reloadingHistory = false
@@ -751,7 +730,7 @@ extension TranscriptController {
 			line.messageIdentifier = update.messageIdentifier ?? line.messageIdentifier
 			line.deliveryFailureReason = update.reason
 		}
-		if let identifier = line.messageIdentifier, let delta = reactionsByMessageIdentifier[identifier] {
+		if let identifier = line.messageIdentifier, let delta = reactions.reactions(forMessage: identifier) {
 			line.mergeReactions(delta)
 		}
 		return line
@@ -759,103 +738,76 @@ extension TranscriptController {
 }
 
 extension TranscriptController {
-	func print(_ logLine: LogLine) {
-		print(logLine, completionBlock: nil)
-	}
-
 	func print(
-		_ logLine: LogLine,
-		completionBlock postPrintBlock: PrintedLineCompletion?
+		_ chatLine: ChatLine,
+		completionBlock postPrintBlock: PrintedLineCompletion? = nil
 	) {
 		guard !terminating else {
 			return
 		}
-		if logLine.lineType == .mode {
+		if chatLine.lineType == .mode {
 			refreshTopicBar()
 		}
-		lastLineStorage = logLine
-		let context = makeRenderContext(includingMembers: logLine.lineType.mentionsMembers)
-		let channel = associatedChannel
-		let senderMark = channel?.isChannel == true
-			? logLine.nickname.flatMap { channel?.findMember($0)?.mark } ?? ""
+		lastLineStorage = chatLine
+		let context = makeRenderContext(includingMembers: chatLine.lineType.mentionsMembers)
+		let conversation = associatedConversation
+		let senderMark = conversation?.isChannel == true
+			? chatLine.nickname.flatMap { conversation?.findMember($0)?.mark } ?? ""
 			: ""
-		let line = LogLineSnapshot(logLine, in: context, modeSymbol: senderMark)
+		let line = ChatLineSnapshot(chatLine, in: context, modeSymbol: senderMark)
 		let viewIdentifier = associatedItem?.uniqueIdentifier
 		let enqueued = enqueueRenderJob {
 			/* Archived here, beside the render, so the main actor that applies
 			 the line only hands the store a finished entry. */
 			PrintedLineRender(
 				result: Self.renderJob(TranscriptRenderRequest(line: line, context: context)),
-				historicEntry: viewIdentifier.map { logLine.historicEntry(forView: $0) }
+				scrollbackEntry: viewIdentifier.map { chatLine.scrollbackEntry(forView: $0) }
 			)
 		} apply: { [weak self] (rendered: PrintedLineRender) in
-			self?.applyPrintedLine(logLine, rendered: rendered, completionBlock: postPrintBlock)
+			self?.applyPrintedLine(chatLine, rendered: rendered, completionBlock: postPrintBlock)
 		}
 		/* Only a line the pipeline took can be applied, and only an applied line
 		 is withdrawn again: a job refused because the application is quitting
 		 would otherwise stay awaiting a render that never comes. */
 		if enqueued {
-			awaitingRender.append(logLine)
+			awaitingRender.append(chatLine)
 		}
-	}
-
-	/// Drops every line still waiting for its render, when the jobs that would
-	/// have applied them are gone.
-	private func forgetLinesAwaitingRender() {
-		awaitingRender.removeAll()
-		awaitingRenderHead = 0
-	}
-
-	private func withdrawLineAwaitingRender(_ logLine: LogLine) {
-		if awaitingRenderHead < awaitingRender.count,
-		   awaitingRender[awaitingRenderHead].uniqueIdentifier == logLine.uniqueIdentifier
-		{
-			awaitingRenderHead += 1
-			if awaitingRenderHead * 2 >= awaitingRender.count {
-				awaitingRender.removeFirst(awaitingRenderHead)
-				awaitingRenderHead = 0
-			}
-			return
-		}
-		awaitingRender.removeFirst(awaitingRenderHead)
-		awaitingRenderHead = 0
-		awaitingRender.removeAll { $0.uniqueIdentifier == logLine.uniqueIdentifier }
 	}
 
 	private func applyPrintedLine(
-		_ logLine: LogLine,
+		_ chatLine: ChatLine,
 		rendered: PrintedLineRender,
 		completionBlock postPrintBlock: PrintedLineCompletion?
 	) {
 		let result = rendered.result
 		/* Withdrawn before any guard below, so a line one of them drops is not
 		 left counted as a line that is still on its way to the view. */
-		withdrawLineAwaitingRender(logLine)
+		awaitingRender.withdraw(chatLine)
 		guard !terminating else {
 			return
 		}
-		/* The client can be torn down between enqueueing the line and printing
+		/* The session can be torn down between enqueueing the line and printing
 		 it; there is nothing left to attribute the line to if it has been. */
-		guard let client = associatedClient, let associatedItem else {
+		guard let session = associatedSession, let associatedItem else {
 			return
 		}
 		let lineNumber = result.lineNumber
-		let channel = associatedChannel
+		let conversation = associatedConversation
 		let alreadyDisplayed = backingView?.containsLine(identifier: lineNumber) == true
 		/* The same line printed again, as opposed to a different line carrying
 		 a message identifier the view has already seen. It was stored when it
 		 was first printed, and a second row under one line identifier is a
 		 cursor history can no longer page from. */
 		let alreadyPrinted = alreadyDisplayed || transcriptProjection
-			.containsLine(withIdentifier: logLine.uniqueIdentifier)
+			.containsLine(withIdentifier: chatLine.uniqueIdentifier)
 		let isDuplicate = alreadyPrinted
-			|| logLine.messageIdentifier.map { scrollback.containsMessageIdentifier(
+			|| chatLine.messageIdentifier.map { scrollback.duplicates.containsMessageIdentifier(
 				$0,
 				forView: associatedItem.uniqueIdentifier
 			) } == true
 		if result.isHighlight, !isDuplicate {
-			if let channel {
-				client.cacheHighlight(in: channel, with: logLine)
+			if let conversation {
+				session.cacheHighlight(in: conversation, with: chatLine)
 			}
 		}
 		let projectionAction = transcriptProjection.record(result)
@@ -864,7 +816,7 @@ extension TranscriptController {
 			var displayedLine = applyingCurrentState(to: result.transcriptLine)
 			if transcriptSessionBoundary.consumePendingMarker(for: result) {
 				displayedLine.markers.insert(
-					.currentSession(String(localized: .MainWindow.currentSession)),
+					.currentSession(String(localized: .Transcript.currentSession)),
 					at: 0
 				)
 			}
@@ -875,23 +827,23 @@ extension TranscriptController {
 		}
 		if alreadyPrinted == false {
 			scrollback.writeNewEntry(
-				rendered.historicEntry ?? logLine.historicEntry(forView: associatedItem.uniqueIdentifier),
-				for: logLine
+				rendered.scrollbackEntry ?? chatLine.scrollbackEntry(forView: associatedItem.uniqueIdentifier),
+				for: chatLine
 			)
 		}
 		/* The body was scanned against the member snapshot the line rendered
-		 with; the conversation weight belongs to whoever is in the channel now. */
-		if let channel {
-			let direction: ChannelConversationDirection = logLine.memberType == .localUser ? .outgoing : .mention
-			for nickname in result.mentionedNicknames where channel.findMember(nickname) != nil {
-				channel.recordConversation(with: nickname, direction: direction)
+		 with; the conversation weight belongs to whoever is in it now. */
+		if let conversation {
+			let direction: MemberConversationDirection = chatLine.memberType == .localUser ? .outgoing : .mention
+			for nickname in result.mentionedNicknames where conversation.findMember(nickname) != nil {
+				conversation.recordConversation(with: nickname, direction: direction)
 			}
 		}
 		var context = PrintedLineContext(
-			client: client,
-			channel: channel,
+			session: session,
+			conversation: conversation,
 			highlight: result.isHighlight,
-			logLine: logLine,
+			chatLine: chatLine,
 			lineNumber: lineNumber
 		)
 		context.isDuplicate = isDuplicate
@@ -905,28 +857,18 @@ extension TranscriptController {
 		fromNickname nickname: String,
 		toMessageIdentifier messageIdentifier: String
 	) {
-		let emoji = TranscriptTextSanitizer.singleLine(wireEmoji)
-		guard !emoji.isEmpty, emoji.utf16.count <= Self.maximumReactionLength,
-		      !nickname.isEmpty, !messageIdentifier.isEmpty,
-		      holdsMessage(withIdentifier: messageIdentifier)
+		guard holdsMessage(withIdentifier: messageIdentifier),
+		      let merged = reactions.record(wireEmoji, from: nickname, forMessage: messageIdentifier)
 		else {
 			return
 		}
-		var reactions = reactionsByMessageIdentifier[messageIdentifier] ?? [:]
-		var nicknames = reactions[emoji] ?? []
-		guard nicknames.count < Self.maximumReactorsPerReaction || nicknames.contains(nickname) else { return }
-		if !nicknames.contains(nickname) {
-			nicknames.append(nickname)
-		}
-		reactions[emoji] = nicknames
-		reactionsByMessageIdentifier[messageIdentifier] = reactions
 		/* A view that is still replaying history has not drawn the line yet; the
 		 reactions are handed to it when the replay finishes. */
 		guard transcriptProjection.phase == .active else {
 			return
 		}
 		enqueueMainActorWork { [weak self] in
-			self?.backingView?.updateReactions(reactions, messageIdentifier: messageIdentifier)
+			self?.backingView?.updateReactions(merged, messageIdentifier: messageIdentifier)
 		}
 	}
 
@@ -950,17 +892,15 @@ extension TranscriptController {
 	}
 
 	private func forgetReactions(for identifiers: [String]) {
-		for identifier in identifiers where reactionsByMessageIdentifier[identifier] != nil {
-			guard backingView?.document.ordinals(ofMessage: identifier) == nil,
-			      transcriptProjection.containsMessage(withIdentifier: identifier) == false
-			else { continue }
-			reactionsByMessageIdentifier.removeValue(forKey: identifier)
+		reactions.forget(identifiers) { [self] identifier in
+			backingView?.document.ordinals(ofMessage: identifier) != nil
+				|| transcriptProjection.containsMessage(withIdentifier: identifier)
 		}
 	}
 
 	func updateDeliveryState(
 		forLineNumber lineNumber: String,
-		state: LogLineDeliveryState,
+		state: ChatLineDeliveryState,
 		messageIdentifier: String?,
 		reason: String?
 	) {
@@ -983,8 +923,10 @@ extension TranscriptController {
 		enqueueMainActorWork { [weak self] in
 			guard let self else { return }
 			backingView?.updateDelivery(update)
-			if let identifier = update.messageIdentifier, let reactions = reactionsByMessageIdentifier[identifier] {
-				backingView?.updateReactions(reactions, messageIdentifier: identifier)
+			if let identifier = update.messageIdentifier,
+			   let merged = reactions.reactions(forMessage: identifier)
+			{
+				backingView?.updateReactions(merged, messageIdentifier: identifier)
 			}
 		}
 	}
@@ -993,12 +935,12 @@ extension TranscriptController {
 extension TranscriptController {
 	private func finishLoading(_ view: TranscriptView) {
 		guard !viewIsLoaded,
-		      let associatedClient,
+		      let associatedSession,
 		      let attachedWindow
 		else {
 			return
 		}
-		withExtendedLifetime((associatedClient, attachedWindow)) {
+		withExtendedLifetime((associatedSession, attachedWindow)) {
 			viewIsLoaded = true
 			viewLoadedTimestamp = Date().timeIntervalSince1970
 			view.setBufferLimit(bufferPolicy.hardLimit)
@@ -1013,35 +955,49 @@ extension TranscriptController {
 	}
 
 	func transcriptViewReceivedDrop(withFile filename: String) {
-		AppServices.delegate.menuController?.sendDroppedFilesToSelectedChannel([filename])
+		commandSink.sendDroppedFiles([filename])
+	}
+}
+
+/** What the IRC layer sees of a transcript. Every requirement is answered by
+ the controller's own state; the protocol is what lets a chat item hold one
+ without depending on the concrete `TranscriptController`. */
+extension TranscriptController {
+	var presentationIdentifier: String {
+		uniqueIdentifier
 	}
 
 	/// The newest line this view printed. The IRC layer consults it when it
 	/// decides what history to ask the server for.
-	func lastLine() -> LogLine? {
+	func lastPrintedLine() -> ChatLine? {
 		lastLineStorage
 	}
-}
 
-/** What a caller's completion block is told about the line it printed.
+	func lastRenderedLineDate() -> Date? {
+		backingView?.displayedLines.filter {
+			ChatHistoryPolicy.marksReadPosition(lineType: $0.lineType, messageIdentifier: $0.messageIdentifier)
+		}.map(\.receivedAt).max()
+	}
 
- A value, and only ever read: the client and the channel are weak because the
- completion may run after either has been torn down, and everything else is the
- rendered outcome the caller asked to hear about. */
-struct PrintedLineContext {
-	private(set) weak var client: Client?
-	private(set) weak var channel: Channel?
-	let isHighlight: Bool
-	let logLine: LogLine
-	let lineNumber: String
-	var isDuplicate = false
-	var isDisplayed = true
+	/** Both conversation seams answer from the union of what the view is showing
+	 and what it has been handed but not applied yet. A line moves from the second
+	 to the first synchronously on the main actor, so neither holds it twice.
 
-	init(client: Client, channel: Channel?, highlight: Bool, logLine: LogLine, lineNumber: String) {
-		self.client = client
-		self.channel = channel
-		isHighlight = highlight
-		self.logLine = logLine
-		self.lineNumber = lineNumber
+	 Lines loaded from storage are in neither list, which is why
+	 `newestKnownConversationLineDate(for:)` combines this with the scrollback's
+	 duplicate index: history seeding fills that index synchronously, so it already
+	 accounts for the scrollback. */
+	func newestConversationLineDate() -> Date? {
+		let displayed = backingView?.displayedLines.filter(\.lineType.isConversation).map(\.receivedAt) ?? []
+		let awaiting = linesAwaitingRender.filter(\.lineType.isConversation).map(\.receivedAt)
+
+		return (displayed + awaiting).max()
+	}
+
+	func conversationLineCount(after date: Date) -> Int {
+		let displayed = backingView?.displayedLines
+			.count { $0.lineType.isConversation && $0.receivedAt > date } ?? 0
+
+		return displayed + linesAwaitingRender.count { $0.lineType.isConversation && $0.receivedAt > date }
 	}
 }

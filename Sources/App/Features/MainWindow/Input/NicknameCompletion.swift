@@ -7,8 +7,8 @@ import AppKit
 @MainActor
 protocol NicknameCompletionWindow: AnyObject {
 	var inputTextField: InputField! { get }
-	var selectedClient: Client? { get }
-	var selectedChannel: Channel? { get }
+	var selectedSession: ServerSession? { get }
+	var selectedConversation: Conversation? { get }
 }
 
 extension MainWindow: NicknameCompletionWindow {}
@@ -97,7 +97,7 @@ private struct CompletionRequest {
 		var range = NSRange(location: start, length: 0)
 
 		if kind == .nickname,
-		   let preferredSuffix = Preferences.Input.tabCompletionSuffix.storedValue,
+		   let preferredSuffix = SettingsKeys.Input.tabCompletionSuffix.storedValue,
 		   preferredSuffix.isEmpty == false
 		{
 			let searchRange = NSRange(location: start, length: text.length - start)
@@ -124,7 +124,7 @@ private struct CompletionRequest {
 		}
 
 		if range.length == 0,
-		   Preferences.Input.tabCompletionCutForward.value,
+		   SettingsKeys.Input.tabCompletionCutForward.value,
 		   start < text.length
 		{
 			for index in start ..< text.length where isSuffixDelimiter(text.character(at: index)) {
@@ -204,7 +204,7 @@ private struct CompletionSession {
 }
 
 @MainActor
-final class NicknameCompletion: NSObject {
+final class NicknameCompletion {
 	private struct Candidate {
 		let displayValue: String
 		let comparisonValue: String
@@ -213,17 +213,8 @@ final class NicknameCompletion: NSObject {
 	private weak var window: (any NicknameCompletionWindow)?
 	private var session: CompletionSession?
 
-	@available(*, unavailable)
-	override convenience init() {
-		fatalError("Use init(window:)")
-	}
-
 	init(window: any NicknameCompletionWindow) {
 		self.window = window
-
-		super.init()
-
-		clear()
 	}
 
 	func completeNickname(_ movingForward: Bool) {
@@ -290,7 +281,9 @@ final class NicknameCompletion: NSObject {
 
 	private func completionCandidates(for request: CompletionRequest) -> [Candidate] {
 		if request.kind == .command {
-			var commands = CommandIndex.localCommandList().map { $0.lowercased() }
+			var commands = CommandIndex
+				.localCommandList(includingDeveloperCommands: SettingsKeys.Commands.developerMode.value)
+				.map { $0.lowercased() }
 
 			commands.append(contentsOf: AppServices.scripts.commandNames)
 			commands.sort { $0.localizedCompare($1) == .orderedAscending }
@@ -298,26 +291,26 @@ final class NicknameCompletion: NSObject {
 			return commands.map { Candidate(displayValue: $0, comparisonValue: $0) }
 		}
 
-		guard let client = window?.selectedClient else {
+		guard let session = window?.selectedSession else {
 			return []
 		}
 
 		if request.kind == .channelName {
-			let selectedChannel = window?.selectedChannel
+			let selectedConversation = window?.selectedConversation
 			var names: [String] = []
 
-			if let selectedChannel {
-				names.append(selectedChannel.name)
+			if let selectedConversation {
+				names.append(selectedConversation.name)
 			}
 
-			for channel in client.channelList where channel !== selectedChannel {
+			for channel in session.conversationList where channel !== selectedConversation {
 				names.append(channel.name)
 			}
 
 			return names.map { Candidate(displayValue: $0, comparisonValue: $0) }
 		}
 
-		guard request.kind == .nickname, let channel = window?.selectedChannel else {
+		guard request.kind == .nickname, let channel = window?.selectedConversation else {
 			return []
 		}
 
@@ -327,8 +320,8 @@ final class NicknameCompletion: NSObject {
 		channel.decayMemberConversations()
 
 		return nicknameCandidates(
-			from: channel.channelMembers,
-			client: client,
+			from: channel.memberList,
+			session: session,
 			searchPatternIsEmpty: request.searchPattern.isEmpty
 		)
 	}
@@ -339,10 +332,10 @@ final class NicknameCompletion: NSObject {
 	/// `nil` when every member carries the same weight: there is then no
 	/// "most highly weighted" user and the alphabetical order stands alone.
 	/// Weights have already been decayed before candidate construction.
-	private func mostWeightedMember(of members: [ChannelUser]) -> ChannelUser? {
+	private func mostWeightedMember(of members: [Member]) -> Member? {
 		let weighted = members.map { (member: $0, weight: $0.totalWeight) }
 
-		guard let heaviest = weighted.reduce(nil, { best, next -> (member: ChannelUser, weight: Double)? in
+		guard let heaviest = weighted.reduce(nil, { best, next -> (member: Member, weight: Double)? in
 			guard let best else {
 				return next
 			}
@@ -360,12 +353,12 @@ final class NicknameCompletion: NSObject {
 	}
 
 	private func nicknameCandidates(
-		from members: [ChannelUser],
-		client: Client,
+		from members: [Member],
+		session: ServerSession,
 		searchPatternIsEmpty: Bool
 	) -> [Candidate] {
-		let sortedMembers: [ChannelUser]
-		let priorityMember: ChannelUser?
+		let sortedMembers: [Member]
+		let priorityMember: Member?
 
 		if searchPatternIsEmpty {
 			/* With no search pattern the list reads alphabetically and only
@@ -379,9 +372,12 @@ final class NicknameCompletion: NSObject {
 			/* With a search pattern the whole list is ordered by conversation
 			 weight, so there is no separate priority candidate. The ordering is
 			 the one the member list uses: `sortedByConversationWeight` reads the
-			 staff preference once and hands it to the pure comparator, rather
+			 staff setting once and hands it to the pure comparator, rather
 			 than fetching it on every one of the n log n comparisons. */
-			sortedMembers = ChannelUser.sortedByConversationWeight(members)
+			sortedMembers = Member.sortedByConversationWeight(
+				members,
+				favoringServerStaff: session.environment.settings.memberListSortFavorsServerStaff
+			)
 			priorityMember = nil
 		}
 
@@ -434,7 +430,7 @@ final class NicknameCompletion: NSObject {
 
 		addNickname(ApplicationInfo.applicationName(), includeTrimmedVariant: false)
 
-		if let networkName = client.supportInfo.networkName {
+		if let networkName = session.supportInfo.networkName {
 			addNickname(networkName, includeTrimmedVariant: false)
 		}
 
@@ -464,7 +460,7 @@ final class NicknameCompletion: NSObject {
 		}
 
 		if request.kind == .nickname, request.isAtStart {
-			let userCompletionSuffix = Preferences.Input.tabCompletionSuffix.storedValue ?? ""
+			let userCompletionSuffix = SettingsKeys.Input.tabCompletionSuffix.storedValue ?? ""
 
 			if whitespaceAlreadyInPosition {
 				if userCompletionSuffix.unicodeScalars.last.map(whitespace.contains) == true {
@@ -477,7 +473,7 @@ final class NicknameCompletion: NSObject {
 					newCompletionSuffix = userCompletionSuffix
 				}
 			} else if userCompletionSuffix.isEmpty {
-				if !Preferences.Input.tabCompletionNoWhitespace.value {
+				if !SettingsKeys.Input.tabCompletionNoWhitespace.value {
 					newCompletionSuffix = " "
 				}
 			} else {
@@ -492,7 +488,7 @@ final class NicknameCompletion: NSObject {
 
 	private func apply(
 		_ completedValue: String,
-		in textView: IRCFormattedTextView,
+		in textView: FormattedTextView,
 		session: inout CompletionSession
 	) {
 		let request = session.request

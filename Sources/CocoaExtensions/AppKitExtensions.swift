@@ -155,7 +155,7 @@ public extension NSTextView {
 }
 
 public extension NSPasteboard {
-	var textualStringContent: String? {
+	var stringContent: String? {
 		get { string(forType: .string) }
 		set {
 			declareTypes([.string], owner: nil)
@@ -166,5 +166,19 @@ public extension NSPasteboard {
 				setData(nil, forType: .string)
 			}
 		}
+	}
+}
+
+public extension NSWorkspace {
+	func nameOfApplication(opening url: URL) -> String? {
+		guard
+			let applicationURL = urlForApplication(toOpen: url),
+			let applicationBundle = Bundle(url: applicationURL)
+		else {
+			return nil
+		}
+
+		return applicationBundle.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String
+			?? applicationBundle.object(forInfoDictionaryKey: kCFBundleNameKey as String) as? String
 	}
 }

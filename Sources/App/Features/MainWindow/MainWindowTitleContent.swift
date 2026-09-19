@@ -18,63 +18,63 @@ struct MainWindowTitleContent: Equatable {
 	let title: String
 	let subtitle: String
 
-	init(client: Client?, channel: Channel?) {
-		guard let client else {
+	init(session: ServerSession?, conversation: Conversation?) {
+		guard let session else {
 			title = ApplicationInfo.applicationName()
 			subtitle = ""
 			return
 		}
 
-		let network = client.networkNameAlt
-		let status = Self.connectionStatus(for: client)?.title
+		let network = session.networkNameAlt
+		let status = Self.connectionStatus(for: session)?.title
 
-		guard let channel else {
+		guard let conversation else {
 			title = network.isEmpty ? ApplicationInfo.applicationName() : network
-			subtitle = Self.joined([status, Self.displayNickname(for: client), client.serverAddress])
+			subtitle = Self.joined([status, Self.displayNickname(for: session), session.serverAddress])
 			return
 		}
 
-		title = channel.name
-		subtitle = Self.joined([status, network] + Self.conversationDetails(for: channel, on: client))
+		title = conversation.name
+		subtitle = Self.joined([status, network] + Self.conversationDetails(for: conversation, on: session))
 	}
 
 	private static func joined(_ parts: [String?]) -> String {
 		parts.compactMap(nonempty).joined(separator: " · ")
 	}
 
-	private static func connectionStatus(for client: Client) -> MainWindowConnectionStatus? {
-		if client.isQuitting || client.isDisconnecting {
+	private static func connectionStatus(for session: ServerSession) -> MainWindowConnectionStatus? {
+		if session.isQuitting || session.isDisconnecting {
 			return .disconnecting
 		}
-		if client.isConnected == false, client.isConnecting == false {
-			return client.isReconnecting ? .waitingToReconnect : .disconnected
+		if session.isConnected == false, session.isConnecting == false {
+			return session.isReconnecting ? .waitingToReconnect : .disconnected
 		}
-		if client.isConnecting, client.isLoggedIn == false {
-			return [.retry, .reconnect].contains(client.connectType) ? .reconnecting : .connecting
+		if session.isConnecting, session.isLoggedIn == false {
+			return [.retry, .reconnect].contains(session.connectType) ? .reconnecting : .connecting
 		}
-		if client.isConnected, client.isLoggedIn == false {
+		if session.isConnected, session.isLoggedIn == false {
 			return .loggingOn
 		}
 		return nil
 	}
 
-	private static func displayNickname(for client: Client) -> String? {
-		let nickname = client.userNickname
+	private static func displayNickname(for session: ServerSession) -> String? {
+		let nickname = session.userNickname
 		guard nickname.isEmpty == false else {
 			return nil
 		}
-		return client.userIsAway ? String(localized: .MainWindow.awayNickname(nickname)) : nickname
+		return session.away.isAway ? String(localized: .MainWindow.awayNickname(nickname)) : nickname
 	}
 
-	private static func conversationDetails(for channel: Channel, on client: Client) -> [String] {
-		switch channel.type {
+	private static func conversationDetails(for conversation: Conversation, on session: ServerSession) -> [String] {
+		switch conversation.type {
 		case .channel:
-			return [MainWindowTitleContent.memberCount(Int(channel.numberOfMembers))]
-		case .privateMessage:
-			return [client.findUser(channel.name)?.hostmaskFragment].compactMap(nonempty)
+			return [MainWindowTitleContent.memberCount(Int(conversation.numberOfMembers))]
+		case .direct:
+			return [session.findUser(conversation.name)?.hostmaskFragment].compactMap(nonempty)
 		case .directChat:
 			return [String(localized: .MainWindow.directChat)]
-		case .utility:
+		case .console:
 			return []
 		@unknown default:
 			return []
@@ -101,7 +101,9 @@ struct MainWindowTitleContent: Equatable {
 	}
 }
 
-/// Where a client stands, as the title bar says it.
+// MARK: - Connection status
+
+/// Where a session stands, as the title bar says it.
 nonisolated enum MainWindowConnectionStatus {
 	case disconnected
 	case waitingToReconnect

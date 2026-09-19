@@ -20,7 +20,7 @@ runs in a sandboxed XPC host.
 - Multiple servers, channel and member management, notifications, file
   transfers, local scrollback and transcript logging.
 - Message rules and user command scripts.
-- Strict concurrency checking and typed preferences throughout the app.
+- Strict concurrency checking and typed settings throughout the app.
 
 ## Screenshots
 

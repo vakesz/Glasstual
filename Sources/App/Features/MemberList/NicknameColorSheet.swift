@@ -83,10 +83,6 @@ final class NicknameColorSheet: SheetSession {
 		))
 	}
 
-	func start() {
-		startSheet()
-	}
-
 	override func submit() {
 		NicknameColors.setOverride(model.colorForPersistence, for: nickname)
 

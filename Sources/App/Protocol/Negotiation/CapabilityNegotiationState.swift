@@ -11,16 +11,22 @@ import Foundation
  moment nothing is outstanding and nothing else is eligible. A `CAP DEL` naming
  an outstanding request counts as its refusal, so a withdrawal cannot leave a
  request waiting for an answer that is never coming. A server that simply never
- answers a `REQ` holds registration open until the client's own registration
+ answers a `REQ` holds registration open until the session's own registration
  timeout fires — the same bound that already covers a server which never sends
  `CAP LS` at all.
 
- The bitset every caller reads through `Client.capabilities` is stored rather
+ The bitset every caller reads through `ServerSession.capabilities` is stored rather
  than projected on each read: `isCapabilityEnabled(_:)` sits on the path of
  every inbound line, and the projection walks the registry to a fixed point.
  Each mutation below refreshes it, which is why the stores it derives from are
  private to this type. */
 struct CapabilityNegotiationState {
+	/// Ceiling on what a multi-line `CAP LS` may offer. The names are arbitrary
+	/// server-controlled tokens and only a final, non-`*` line clears the
+	/// table, so a server sending nothing but continuations grows it forever.
+	/// The largest advertisement any real network sends is a few dozen.
+	static let maximumOfferedCapabilities = 256
+
 	/// What `CAP LS`/`NEW` advertised, keyed by the name the server used.
 	/// IRCv3 names are case-sensitive, so a key is already the spelling to
 	/// echo back in a request.
@@ -166,7 +172,7 @@ struct CapabilityNegotiationState {
 	 one `CAP LS` is held to, because an `ACK` is server-controlled input too. */
 	mutating func acknowledge(_ name: String) -> Bool {
 		guard withdrawnNames.contains(name) == false,
-		      acknowledgedNames.count < ClientNegotiationUtilities.maximumOfferedCapabilities
+		      acknowledgedNames.count < Self.maximumOfferedCapabilities
 		else {
 			return false
 		}

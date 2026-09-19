@@ -56,9 +56,9 @@ nonisolated enum ClientCertificateLoader {
 		let data = SecCertificateCopyData(certificate) as Data
 		return ClientCertificateDetails(
 			commonName: commonName,
-			sha512: (data as NSData).textualSha512.uppercased(),
-			sha256: (data as NSData).textualSha256.uppercased(),
-			sha1: (data as NSData).textualSha1.uppercased()
+			sha512: (data as NSData).sha512Hex.uppercased(),
+			sha256: (data as NSData).sha256Hex.uppercased(),
+			sha1: (data as NSData).sha1Hex.uppercased()
 		)
 	}
 }

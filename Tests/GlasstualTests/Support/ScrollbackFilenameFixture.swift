@@ -28,9 +28,9 @@ nonisolated struct ScrollbackFilenameFixture: Sendable {
 
 	/// What the store is handed. The setter records an issue instead of
 	/// storing, so a rename is reported rather than followed.
-	var store: ScrollbackFilenameStore {
+	var store: ScrollbackFilenameSetting {
 		let filename = filename
-		return ScrollbackFilenameStore(
+		return ScrollbackFilenameSetting(
 			load: { filename },
 			save: { Issue.record("The store renamed its database from \(filename) to \($0 ?? "nothing").") }
 		)

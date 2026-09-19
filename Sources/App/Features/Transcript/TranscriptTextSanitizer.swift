@@ -1,6 +1,7 @@
 // Copyright (c) 2026 Codeux Software, LLC & respective contributors.
 // SPDX-License-Identifier: BSD-3-Clause
 
+import AppKit
 import Foundation
 
 /** Keeps text a stranger sent inside the run it was drawn in.
@@ -65,6 +66,28 @@ nonisolated enum TranscriptTextSanitizer {
 			}
 		}
 		return String(decoding: units, as: UTF16.self)
+	}
+
+	/** Appends `text` inside a directional isolate, so its own reading order
+	 cannot reorder whatever is drawn beside it.
+
+	 The isolate characters carry the surrounding run's attributes, minus the
+	 ones that would make them clickable, and are marked as the transcript's own
+	 padding so that copying leaves them out. */
+	static func appendIsolated(
+		_ text: NSAttributedString,
+		to result: NSMutableAttributedString,
+		isolateAttributes: [NSAttributedString.Key: Any]
+	) {
+		guard text.length > 0 else { return }
+		var attributes = isolateAttributes
+		attributes.removeValue(forKey: .transcriptAction)
+		attributes.removeValue(forKey: .transcriptReaction)
+		attributes.removeValue(forKey: .link)
+		attributes[.transcriptPadding] = true
+		result.append(NSAttributedString(string: isolateStart, attributes: attributes))
+		result.append(text)
+		result.append(NSAttributedString(string: isolateEnd, attributes: attributes))
 	}
 
 	/// The same, applied in place to attributed text that has already been

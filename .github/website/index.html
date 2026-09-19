@@ -18,8 +18,9 @@
     <meta name="twitter:image" content="https://vakesz.github.io/Glasstual/assets/og.png">
     <link rel="canonical" href="https://vakesz.github.io/Glasstual/">
     <link rel="icon" href="assets/app-icon.png">
-    <link rel="preload" href="assets/main-window-light.png" as="image" media="(prefers-color-scheme: light)">
-    <link rel="preload" href="assets/main-window-dark.png" as="image" media="(prefers-color-scheme: dark)">
+    <!-- No screenshot preloads: the screenshots are below the fold and load
+         lazily, and fetching them at head-parse priority only competed with the
+         hero icon. Everything above the fold is discoverable in this HTML. -->
     <link rel="stylesheet" href="styles.css">
     <title>Glasstual for macOS</title>
   </head>
@@ -55,7 +56,10 @@
         <div class="hero-art">
           <div class="ambient-orb orb-one"></div>
           <div class="ambient-orb orb-two"></div>
-          <img src="assets/app-icon.png" alt="Glasstual app icon" width="1024" height="1024">
+          <!-- The largest thing above the fold. .hero-art caps it at 390 CSS px,
+               so the declared size is 2x that for the aspect ratio the layout
+               reserves, not the icon's 1024 px source. -->
+          <img src="assets/app-icon.png" alt="Glasstual app icon" width="780" height="780" fetchpriority="high">
         </div>
       </section>
 

@@ -4,9 +4,8 @@
 
 import CocoaExtensions
 import Foundation
-import Synchronization
 
-enum ISupportListType: UInt, Sendable {
+enum ISupportListKind: UInt, Sendable {
 	case ban = 0
 	case banException = 1
 	case inviteException = 2
@@ -23,10 +22,6 @@ nonisolated enum ISupportCaseMapping: UInt, Sendable {
 	case rfc7613 = 3
 }
 
-nonisolated enum ISupportUserModes {
-	static let highestPrefixRank: UInt = 100
-}
-
 /// One token of an ISUPPORT line as the server sent it.
 ///
 /// A token is either `KEY=value` or a bare `KEY` standing for a feature the
@@ -37,11 +32,12 @@ enum ISupportValue: Sendable, Equatable {
 	case text(String)
 }
 
-/** A token the client reads out of an ISUPPORT line.
+/** A token the session reads out of an ISUPPORT line.
 
  The raw value is the token name as the server writes it, upper-cased. Only a
  token with a case here is read at all, and every one of them is cleared by
- `reset`, so a case added below is a token the client both reads and forgets.
+ `reset` — the reset switch is exhaustive, so a case added below is a token the
+ session both reads and forgets.
  */
 nonisolated enum ISupportToken: String, CaseIterable, Sendable {
 	case awaylen = "AWAYLEN"
@@ -119,47 +115,29 @@ private nonisolated let defaultChannelModeKinds: [Character: ChannelModeKind] = 
 	"o": .userPrefix, "v": .userPrefix,
 ]
 
-/** The ISUPPORT values a channel member needs in order to rank and mark itself.
- Members are ranked, compared and rendered off the main actor, so the client
- republishes these as a value rather than exposing the live table. */
-nonisolated struct UserPrefixTable: Sendable {
-	/// Mode symbols in the order the server ranked them, highest first.
-	var modeSymbols = ["o", "v"]
-	/// The prefix character for the mode symbol at the same index.
-	var prefixCharacters = ["@", "+"]
-	var caseMapping = ISupportCaseMapping.rfc1459
+/** What an ISUPPORT line asks the session to do, beyond the values it recorded.
 
-	func userPrefix(forModeSymbol modeSymbol: String) -> String? {
-		guard let index = modeSymbols.firstIndex(of: modeSymbol),
-		      index < prefixCharacters.count
-		else {
-			return nil
-		}
-
-		return prefixCharacters[index]
+ ``ISupport`` reads tokens and does nothing else: it writes no line and touches
+ no capability state, so it needs no way back to the session that owns it. A
+ token that means more than the value it carries says so here instead, and the
+ session applies it. */
+nonisolated struct ISupportEffects: Sendable, Equatable {
+	/** A capability an ISUPPORT token stands in for on a server that never
+	 offered it through `CAP`, and the pre-CAP line that turns it on. */
+	nonisolated struct LegacyCapability: Sendable, Equatable {
+		let capability: CapabilitySet
+		let command: String
 	}
 
-	func rank(forModeSymbol modeSymbol: String) -> UInt {
-		guard let index = modeSymbols.firstIndex(of: modeSymbol) else {
-			return 0
-		}
-
-		// A server may advertise more prefix modes than the rank ceiling; the
-		// lowest-ranked ones all collapse to rank 1 rather than underflowing.
-		guard UInt(index) < ISupportUserModes.highestPrefixRank else {
-			return 1
-		}
-
-		return ISupportUserModes.highestPrefixRank - UInt(index)
-	}
-
-	func casefold(_ string: String) -> String {
-		ISupportTokenParser.casefold(string, caseMapping: caseMapping)
-	}
+	/// Capabilities the tokens prove the server has.
+	var enabledCapabilities: CapabilitySet = []
+	/// Capability facts the tokens that went away took with them.
+	var withdrawnCapabilities: CapabilitySet = []
+	/// Legacy capabilities to turn on, in the order their tokens arrived.
+	var legacyCapabilities: [LegacyCapability] = []
 }
 
 final class ISupport {
-	private(set) weak var client: Client?
 	var serverAddress: String?
 	private(set) var maximumAwayLength: UInt = 0
 	private(set) var maximumChannelNameLength: UInt = 0
@@ -208,9 +186,17 @@ final class ISupport {
 	private(set) var userModePrefixPairs = defaultUserModePrefixPairs {
 		didSet {
 			updateChannelModeKinds()
-			publishUserPrefixTable()
+			rebuildUserPrefixTable()
 		}
 	}
+
+	/** The same prefixes as a value, and the one copy every prefix question is
+	 answered from.
+
+	 Rebuilt when `PREFIX=` or `CASEMAPPING=` changes rather than per question:
+	 ranking a member list asks for a rank per member per mode, and the members
+	 are ranked off the main actor from this very value. */
+	private(set) var userPrefixes = UserPrefixTable()
 
 	private(set) var banExceptionModeSymbol: String?
 	private(set) var inviteExceptionModeSymbol: String?
@@ -221,7 +207,7 @@ final class ISupport {
 	private(set) var networkName: String?
 	private(set) var networkNameFormatted: String?
 	private(set) var caseMapping: ISupportCaseMapping = .rfc1459 {
-		didSet { publishUserPrefixTable() }
+		didSet { rebuildUserPrefixTable() }
 	}
 
 	/** The `PREFIX` modes as channel-mode kinds.
@@ -243,14 +229,13 @@ final class ISupport {
 		channelModeKinds = advertisedChannelModeKinds.merging(userPrefixModeKinds) { _, prefix in prefix }
 	}
 
-	/// Republishes the table members are stamped with when the list edits one.
-	private func publishUserPrefixTable() {
-		let table = UserPrefixTable(
+	/// Rebuilds the table the prefix questions are answered from.
+	private func rebuildUserPrefixTable() {
+		userPrefixes = UserPrefixTable(
 			modeSymbols: userModePrefixPairs.map(\.modeSymbol),
 			prefixCharacters: userModePrefixPairs.map(\.character),
 			caseMapping: caseMapping
 		)
-		client?.publishUserPrefixes(table)
 	}
 
 	/** The most recent 005 line, its values unescaped, kept so the numeric
@@ -261,9 +246,11 @@ final class ISupport {
 	private var lastConfiguration: [String: ISupportValue] = [:]
 	private var hasReceivedConfiguration = false
 
-	init(client: Client? = nil) {
-		self.client = client
-		prepareInitialState()
+	init() {
+		/* Two settings do not start out cleared: the mode count and the nickname
+		 length begin at the figures the protocol assumes until a server says
+		 otherwise, which is what a reset puts back. */
+		reset()
 	}
 
 	var configurationReceived: Bool {
@@ -278,50 +265,58 @@ final class ISupport {
 		return stringValue(forConfiguration: lastConfiguration)
 	}
 
-	func reset() {
-		reset(withdrawingCapabilityFacts: true)
-	}
+	/** Clears every advertised value, and reports the capability facts the
+	 tokens that are going away stood in for. */
+	@discardableResult
+	func reset() -> ISupportEffects {
+		var effects = ISupportEffects()
 
-	/** Clears every advertised value.
-
-	 `withdrawingCapabilityFacts` is what separates a reconnect from a first
-	 look: a reconnect really has lost the `MONITOR`, `WATCH`, `NAMESX` and
-	 `UHNAMES` the client recorded as capability facts, while a brand new
-	 instance has nothing to withdraw -- see ``prepareInitialState()``. */
-	private func reset(withdrawingCapabilityFacts: Bool) {
 		lastConfiguration = [:]
 		hasReceivedConfiguration = false
 		serverAddress = nil
 		userModePrefixPairs = defaultUserModePrefixPairs
 
 		for token in ISupportToken.allCases {
-			resetSetting(token, withdrawingCapabilityFacts: withdrawingCapabilityFacts)
+			resetSetting(token, into: &effects)
+		}
+
+		return effects
+	}
+
+	@discardableResult
+	func resetSetting(_ key: String) -> ISupportEffects {
+		var effects = ISupportEffects()
+
+		if let token = ISupportToken(tokenName: key) {
+			resetSetting(token, into: &effects)
+		}
+
+		return effects
+	}
+
+	/** Clears one token.
+
+	 The outer switch is exhaustive on purpose: a token the session reads is a
+	 token it has to be able to forget, so a case added to ``ISupportToken``
+	 does not compile until it is put in one of these four groups. */
+	private func resetSetting(_ token: ISupportToken, into effects: inout ISupportEffects) {
+		switch token {
+		case .awaylen, .channellen, .chathistory, .keylen, .kicklen, .linelen,
+		     .maxtargets, .modes, .nicklen, .silence, .topiclen:
+			resetCount(token)
+		case .bot, .callerid, .casemapping, .chanmodes, .chantypes, .deaf,
+		     .excepts, .invex, .prefix, .statusmsg:
+			resetModeSetting(token)
+		case .chanlimit, .clienttagdeny, .elist, .extban, .maxlist, .network, .targmax:
+			resetCollection(token)
+		case .monitor, .namesx, .safelist, .uhnames, .utf8only, .watch, .whox:
+			resetAnnouncement(token, into: &effects)
 		}
 	}
 
-	func resetSetting(_ key: String) {
-		guard let token = ISupportToken(tokenName: key) else { return }
-
-		resetSetting(token, withdrawingCapabilityFacts: true)
-	}
-
-	private func resetSetting(_ token: ISupportToken, withdrawingCapabilityFacts: Bool) {
-		if resetLengthSetting(token) {
-			return
-		}
-
-		if resetModeSetting(token) {
-			return
-		}
-
-		if resetCollectionSetting(token) {
-			return
-		}
-
-		resetFeatureSetting(token, withdrawingCapabilityFacts: withdrawingCapabilityFacts)
-	}
-
-	private func resetLengthSetting(_ token: ISupportToken) -> Bool {
+	/// Puts a length or a count back to what the protocol assumes when no
+	/// server has said otherwise.
+	private func resetCount(_ token: ISupportToken) {
 		switch token {
 		case .awaylen:
 			maximumAwayLength = 0
@@ -347,13 +342,12 @@ final class ISupport {
 		case .topiclen:
 			maximumTopicLength = 0
 		default:
-			return false
+			break
 		}
-
-		return true
 	}
 
-	private func resetModeSetting(_ token: ISupportToken) -> Bool {
+	/// Puts a mode letter, or a table of them, back to the usual spelling.
+	private func resetModeSetting(_ token: ISupportToken) {
 		switch token {
 		case .bot:
 			botModeSymbol = nil
@@ -376,13 +370,11 @@ final class ISupport {
 		case .statusmsg:
 			statusMessagePrefixCharacters = []
 		default:
-			return false
+			break
 		}
-
-		return true
 	}
 
-	private func resetCollectionSetting(_ token: ISupportToken) -> Bool {
+	private func resetCollection(_ token: ISupportToken) {
 		switch token {
 		case .chanlimit:
 			channelLimits = [:]
@@ -401,31 +393,27 @@ final class ISupport {
 		case .targmax:
 			maximumTargetsByCommand = [:]
 		default:
-			return false
+			break
 		}
-
-		return true
 	}
 
-	private func resetFeatureSetting(_ token: ISupportToken, withdrawingCapabilityFacts: Bool) {
-		/// The fact this token stands in for, withdrawn only when the token it
-		/// came from is being taken away rather than merely cleared.
-		func withdraw(_ capability: CapabilitySet) {
-			guard withdrawingCapabilityFacts else { return }
-			client?.removeCapabilityFacts(capability)
-		}
+	/** Takes back what a token announced by being there at all.
 
+	 Four of them were the only evidence for a capability. Losing the token
+	 loses the fact, which only the session can withdraw, so it is reported
+	 rather than acted on. */
+	private func resetAnnouncement(_ token: ISupportToken, into effects: inout ISupportEffects) {
 		switch token {
 		case .monitor:
 			maximumMonitorEntries = 0
-			withdraw(.monitorCommand)
+			effects.withdrawnCapabilities.insert(.monitorCommand)
 		case .watch:
 			maximumWatchEntries = 0
-			withdraw(.watchCommand)
+			effects.withdrawnCapabilities.insert(.watchCommand)
 		case .namesx:
-			withdraw(.multiPrefix)
+			effects.withdrawnCapabilities.insert(.multiPrefix)
 		case .uhnames:
-			withdraw(.userhostInNames)
+			effects.withdrawnCapabilities.insert(.userhostInNames)
 		case .safelist:
 			safeListSupported = false
 		case .utf8only:
@@ -443,14 +431,20 @@ final class ISupport {
 		}
 	}
 
-	func processConfigurationData(_ configurationData: String) {
+	/** Reads one ISUPPORT line into the table.
+
+	 Nothing here reaches the server or the capability state: what the tokens
+	 ask for beyond their values comes back as ``ISupportEffects`` for the session
+	 to apply. */
+	@discardableResult
+	func processConfigurationData(_ configurationData: String) -> ISupportEffects {
+		var effects = ISupportEffects()
 		let trimmed = configurationData.trimmingCharacters(in: .whitespacesAndNewlines)
 
 		if trimmed.isEmpty {
-			return
+			return effects
 		}
 
-		let client = client
 		var configuration: [String: ISupportValue] = [:]
 		let segments = LineParser.wireTokens(in: trimmed)
 
@@ -474,7 +468,10 @@ final class ISupport {
 			if segmentKey.hasPrefix("-"), segmentKey.count > 1 {
 				let negatedKey = String(segmentKey.dropFirst())
 
-				resetSetting(negatedKey)
+				if let token = ISupportToken(tokenName: negatedKey) {
+					resetSetting(token, into: &effects)
+				}
+
 				removeCachedSetting(negatedKey)
 				configuration.removeValue(forKey: negatedKey)
 
@@ -491,307 +488,35 @@ final class ISupport {
 				processValueSegment(token, segmentValue: segmentValue)
 			}
 
-			processFlagSegment(token, segmentValue: segmentValue, client: client)
+			processFlagSegment(token, segmentValue: segmentValue, into: &effects)
 		}
 
 		if configuration.isEmpty == false {
 			lastConfiguration = configuration
 			hasReceivedConfiguration = true
 		}
-	}
 
-	func channelLimit(forChannelNamed channel: String) -> UInt {
-		if channel.isEmpty {
-			return 0
-		}
-
-		guard let prefix = channel.first else {
-			return 0
-		}
-
-		return channelLimits[prefix] ?? 0
-	}
-
-	/** How many targets the server said `command` takes on one line.
-
-	 Zero means the server said nothing usable: it named no `TARGMAX` entry for
-	 the command, or named one with an empty limit, and sent no `MAXTARGETS`
-	 either. The empty `TARGMAX` limit does mean "no limit" in the specification,
-	 but it arrives as the same zero as silence and is read the same
-	 conservative way, because the two are worth the same to a client: see
-	 ``groupsMultipleTargets(forCommand:)`` for what the client then does.
-	 */
-	func maximumTargets(forCommand command: String) -> UInt {
-		if let limit = maximumTargetsByCommand[command.uppercased()] {
-			return limit
-		}
-
-		return maximumTargets
-	}
-
-	/** Whether several targets may ride on one `command`.
-
-	 Only an advertised limit above one earns a comma-separated target list. A
-	 server that advertised nothing (zero) gets one target per line, the same as
-	 one that said `TARGMAX=PRIVMSG:1`: a server that does not take a list
-	 answers `ERR_TOOMANYTARGETS` or silently drops every target after the
-	 first, and the user has no way to tell that the message never arrived. One
-	 line per target always arrives, and costs only lines.
-
-	 `JOIN` does not come through here. A comma-separated channel list is core
-	 `JOIN` syntax rather than an extension, so ``JoinBatching`` fills a line
-	 whether or not the server advertised a `TARGMAX` for it.
-	 */
-	func groupsMultipleTargets(forCommand command: String) -> Bool {
-		maximumTargets(forCommand: command) > 1
-	}
-
-	func maximumListEntries(forModeSymbol modeSymbol: ChannelModeSymbol) -> UInt {
-		maximumListEntries[modeSymbol.character] ?? 0
-	}
-
-	func extendedListSupportsToken(_ token: String) -> Bool {
-		extendedListTokens.contains(token.uppercased())
-	}
-
-	func isClientTagDenied(_ tagName: String) -> Bool {
-		ISupportTokenParser.isClientTag(tagName, deniedBy: clientTagDenyList)
-	}
-
-	func descriptionForExtendedBanMask(_ mask: String) -> String? {
-		if extendedBanTypes.isEmpty {
-			return nil
-		}
-
-		var body = mask
-
-		if let prefix = extendedBanPrefix {
-			if mask.hasPrefix(prefix) == false {
-				return nil
-			}
-
-			body = String(mask.dropFirst(prefix.count))
-		}
-
-		var negated = false
-
-		if extendedBanPrefix != "~", body.hasPrefix("~"), body.count > 1 {
-			negated = true
-			body = String(body.dropFirst())
-		}
-
-		if body.isEmpty {
-			return nil
-		}
-
-		let type = String(body.prefix(1))
-
-		if extendedBanTypes.contains(type) == false {
-			return nil
-		}
-
-		var argument: String?
-
-		if body.count > 2, body[body.index(body.startIndex, offsetBy: 1)] == ":" {
-			argument = String(body.dropFirst(2))
-		} else if body.count > 1 || extendedBanPrefix == nil {
-			return nil
-		}
-
-		let description = Self.localizedDescription(forExtendedBanType: type, argument: argument)
-
-		if negated {
-			return String(localized: .IRC.everyoneExcept(description))
-		}
-
-		return description
-	}
-
-	static func localizedDescription(forExtendedBanType type: String, argument: String?) -> String {
-		ExtendedBanKind.describing(type: type, argument: argument)
-	}
-
-	func stringValue(forConfiguration configuration: [String: ISupportValue]) -> String? {
-		if configuration.isEmpty {
-			return nil
-		}
-
-		var stringValue = ""
-
-		for key in configuration.keys.sorted() {
-			switch configuration[key] {
-			case let .text(value):
-				stringValue.append("\u{02}\(key)\u{02}=\(value) ")
-			case .flag, nil:
-				stringValue.append("\u{02}\(key) \u{02}")
-			}
-		}
-
-		return stringValue
+		return effects
 	}
 
 	func parseModes(_ modeString: String) -> [ModeInfo] {
 		ModeParser.parse(modeString, channelModeKinds: channelModeKinds)
 	}
-
-	func casefoldString(_ string: String) -> String {
-		ISupportTokenParser.casefold(string, caseMapping: caseMapping)
-	}
-
-	/// Whether a mode letter carries a parameter.
-	///
-	/// Through the same RFC 1459 fallback ``ModeParser/parse(_:channelModeKinds:)``
-	/// applies, so that a `MODE` arriving before 005 is answered the same way
-	/// whether it is being parsed or being asked about: without it `+b` read as a
-	/// bare flag here and as a list mode there.
-	func modeHasParameter(_ modeSymbol: String, whenModeIsSet: Bool) -> Bool {
-		guard let symbol = modeSymbol.first, modeSymbol.count == 1 else {
-			return false
-		}
-
-		let modeKinds = ModeParser.effectiveChannelModeKinds(channelModeKinds)
-		let policy = modeKinds[symbol]?.parameterPolicy ?? .never
-
-		return policy.requiresParameter(whenModeIsSet: whenModeIsSet)
-	}
-
-	func userPrefix(forModeSymbol modeSymbol: String) -> String? {
-		userModePrefixPairs.first { $0.modeSymbol == modeSymbol }?.character
-	}
-
-	func modeSymbolIsUserPrefix(_ modeSymbol: String) -> Bool {
-		userPrefix(forModeSymbol: modeSymbol) != nil
-	}
-
-	func modeSymbol(forUserPrefix character: String) -> String? {
-		userModePrefixPairs.first { $0.character == character }?.modeSymbol
-	}
-
-	func characterIsUserPrefix(_ character: String) -> Bool {
-		modeSymbol(forUserPrefix: character) != nil
-	}
-
-	func rankForUserPrefix(withMode modeSymbol: String) -> UInt {
-		guard let modeSymbolIndex = userModePrefixPairs.firstIndex(where: { $0.modeSymbol == modeSymbol })
-		else {
-			return 0
-		}
-
-		// A server may advertise more prefix modes than the rank ceiling; the
-		// lowest-ranked ones all collapse to rank 1 rather than underflowing.
-		guard UInt(modeSymbolIndex) < ISupportUserModes.highestPrefixRank else {
-			return 1
-		}
-
-		return ISupportUserModes.highestPrefixRank - UInt(modeSymbolIndex)
-	}
-
-	func extractStatusMessagePrefix(fromChannelNamed channel: String) -> String {
-		extractCharacters(statusMessagePrefixCharacters, fromChannelNamed: channel)
-	}
-
-	func isListSupported(_ listType: ISupportListType) -> Bool {
-		modeSymbol(forList: listType) != nil
-	}
-
-	func modeSymbol(forList listType: ISupportListType) -> String? {
-		switch listType {
-		case .ban:
-			return "b"
-		case .banException:
-			return banExceptionModeSymbol
-		case .inviteException:
-			return inviteExceptionModeSymbol
-		case .quiet:
-			if modeSymbolIsUserPrefix("q") {
-				return nil
-			}
-
-			return "q"
-		}
-	}
-
-	func statusMessagePrefix(forModeSymbol modeSymbol: String) -> String? {
-		guard let character = userPrefix(forModeSymbol: modeSymbol) else {
-			return nil
-		}
-
-		if statusMessagePrefixCharacters.contains(character) == false {
-			return nil
-		}
-
-		return character
-	}
 }
 
+// MARK: - Reading a token's value
+
 private extension ISupport {
-	/** The state a connection starts in.
+	/** Reads the value half of a token.
 
-	 No capability fact is withdrawn on the way. `Client.supportInfo` is
-	 `lazy`, so the first read of it can come long after ISUPPORT-derived facts
-	 were recorded -- `enableCapability(.watchCommand)` reads it on its way to
-	 asking the server about the tracked peers -- and a construction-time reset
-	 that called back into the client withdrew the very fact that had just been
-	 set, leaving `WATCH` and `MONITOR` disabled on servers that offer them. A
-	 new instance has nothing to withdraw. */
-	func prepareInitialState() {
-		reset(withdrawingCapabilityFacts: false)
-	}
-
-	func processValueSegment(_ token: ISupportToken, segmentValue: String) {
-		if processPositiveLengthValue(token, value: segmentValue) {
+	 A token whose value is a count is read as one first, so that a count the
+	 token does not take (`NETWORK=42`) still falls through to the text reading
+	 that does. */
+	func processValueSegment(_ token: ISupportToken, segmentValue value: String) {
+		if let count = positiveInteger(from: value), processCountValue(token, count: count) {
 			return
 		}
 
-		if processChannelValue(token, value: segmentValue) {
-			return
-		}
-
-		processCollectionValue(token, value: segmentValue)
-	}
-
-	func processPositiveLengthValue(_ token: ISupportToken, value: String) -> Bool {
-		guard let parsedValue = positiveInteger(from: value) else {
-			return false
-		}
-
-		switch token {
-		case .awaylen:
-			maximumAwayLength = parsedValue
-		case .channellen:
-			maximumChannelNameLength = parsedValue
-		case .chathistory:
-			chatHistoryMaximumLines = parsedValue
-		case .keylen:
-			maximumKeyLength = parsedValue
-		case .kicklen:
-			maximumKickLength = parsedValue
-		case .linelen:
-			maximumLineLength = min(parsedValue, UInt(ProtocolLimits.maximumServerLineLength))
-		case .maxtargets:
-			maximumTargets = parsedValue
-		case .modes:
-			maximumModeCount = parsedValue
-		/* The count is the whole point of these two: past it the server answers
-		 ERR_MONLISTFULL or ERR_TOOMANYWATCH and the tail of the list is simply
-		 not tracked. The flag half of the token still enables the capability in
-		 `processCapabilityFlag`. */
-		case .monitor:
-			maximumMonitorEntries = parsedValue
-		case .watch:
-			maximumWatchEntries = parsedValue
-		case .nicklen:
-			maximumNicknameLength = parsedValue
-		case .topiclen:
-			maximumTopicLength = parsedValue
-		default:
-			return false
-		}
-
-		return true
-	}
-
-	func processChannelValue(_ token: ISupportToken, value: String) -> Bool {
 		switch token {
 		case .casemapping:
 			parseCaseMapping(value)
@@ -800,7 +525,9 @@ private extension ISupport {
 			 so a shorter one does not leave the modes it dropped behind. */
 			advertisedChannelModeKinds = ISupportTokenParser.channelModeKinds(from: value, merging: [:])
 		case .chantypes:
-			updateChannelNamePrefixes(from: value)
+			/* An empty CHANTYPES is the server saying it supports no channel
+			 types at all, which is not the same as it saying nothing. */
+			channelNamePrefixes = value.map(String.init)
 		case .network:
 			networkName = value
 			networkNameFormatted = String(localized: .IRC.ircNetwork(value))
@@ -808,15 +535,6 @@ private extension ISupport {
 			parseUserModeSymbols(value)
 		case .statusmsg:
 			statusMessagePrefixCharacters = value.map(String.init)
-		default:
-			return false
-		}
-
-		return true
-	}
-
-	func processCollectionValue(_ token: ISupportToken, value: String) {
-		switch token {
 		case .chanlimit:
 			channelLimits = ISupportTokenParser.channelLimits(from: value)
 		case .clienttagdeny:
@@ -836,6 +554,43 @@ private extension ISupport {
 		}
 	}
 
+	/// Whether `token` is one whose value is a count, and takes this one.
+	func processCountValue(_ token: ISupportToken, count: UInt) -> Bool {
+		switch token {
+		case .awaylen:
+			maximumAwayLength = count
+		case .channellen:
+			maximumChannelNameLength = count
+		case .chathistory:
+			chatHistoryMaximumLines = count
+		case .keylen:
+			maximumKeyLength = count
+		case .kicklen:
+			maximumKickLength = count
+		case .linelen:
+			maximumLineLength = min(count, UInt(ProtocolLimits.maximumServerLineLength))
+		case .maxtargets:
+			maximumTargets = count
+		case .modes:
+			maximumModeCount = count
+		/* The count is the whole point of these two: past it the server answers
+		 ERR_MONLISTFULL or ERR_TOOMANYWATCH and the tail of the list is simply
+		 not tracked. The flag half of the token still enables the capability. */
+		case .monitor:
+			maximumMonitorEntries = count
+		case .watch:
+			maximumWatchEntries = count
+		case .nicklen:
+			maximumNicknameLength = count
+		case .topiclen:
+			maximumTopicLength = count
+		default:
+			return false
+		}
+
+		return true
+	}
+
 	/** A token's value as a count.
 
 	 `NSString.integerValue` used to do this, which accepts trailing junk
@@ -848,101 +603,6 @@ private extension ISupport {
 		}
 
 		return parsedValue
-	}
-
-	/// An empty `CHANTYPES` is the server saying it supports no channel types
-	/// at all, which is not the same as it saying nothing.
-	func updateChannelNamePrefixes(from value: String) {
-		channelNamePrefixes = value.map(String.init)
-	}
-
-	func processFlagSegment(_ token: ISupportToken, segmentValue: String?, client: Client?) {
-		if processModeFlag(token, value: segmentValue) {
-			return
-		}
-
-		if processCapabilityFlag(token, client: client) {
-			return
-		}
-
-		processAvailabilityFlag(token, value: segmentValue)
-	}
-
-	func processModeFlag(_ token: ISupportToken, value: String?) -> Bool {
-		switch token {
-		case .bot:
-			if value?.isModeSymbol == true {
-				botModeSymbol = value
-			}
-		case .callerid:
-			callerIDModeSymbol = validatedModeSymbol(value, fallback: "g")
-		case .deaf:
-			deafModeSymbol = validatedModeSymbol(value, fallback: "D")
-		case .excepts:
-			banExceptionModeSymbol = validatedModeSymbol(value, fallback: "e")
-		case .invex:
-			inviteExceptionModeSymbol = validatedModeSymbol(value, fallback: "I")
-		default:
-			return false
-		}
-
-		return true
-	}
-
-	func validatedModeSymbol(_ value: String?, fallback: String) -> String {
-		guard let value, value.isModeSymbol else {
-			return fallback
-		}
-
-		return value
-	}
-
-	func processCapabilityFlag(_ token: ISupportToken, client: Client?) -> Bool {
-		switch token {
-		case .monitor:
-			client?.enableCapability(.monitorCommand)
-		case .namesx:
-			enableLegacyCapability(.multiPrefix, command: "PROTOCTL NAMESX", on: client)
-		case .uhnames:
-			enableLegacyCapability(.userhostInNames, command: "PROTOCTL UHNAMES", on: client)
-		case .watch:
-			client?.enableCapability(.watchCommand)
-		default:
-			return false
-		}
-
-		return true
-	}
-
-	func enableLegacyCapability(
-		_ capability: CapabilitySet,
-		command: String,
-		on client: Client?
-	) {
-		guard let client, client.capabilityFacts.contains(capability) == false else {
-			return
-		}
-
-		client.sendLine(command)
-		client.addCapabilityFacts(capability)
-	}
-
-	func processAvailabilityFlag(_ token: ISupportToken, value: String?) {
-		switch token {
-		case .safelist:
-			safeListSupported = true
-		case .silence:
-			silenceSupported = true
-			if let value, let limit = positiveInteger(from: value) {
-				maximumSilenceEntries = limit
-			}
-		case .utf8only:
-			utf8Only = true
-		case .whox:
-			whoxSupported = true
-		default:
-			break
-		}
 	}
 
 	func parseCaseMapping(_ caseMapping: String) {
@@ -976,20 +636,68 @@ private extension ISupport {
 		userModePrefixPairs = zip(configuration.modeSymbols, configuration.characters)
 			.map { (modeSymbol: $0, character: $1) }
 	}
+}
 
-	func extractCharacters(_ characters: [String], fromChannelNamed channel: String) -> String {
-		if channel.count < 2 {
-			return ""
-		}
+// MARK: - Reading a token as an announcement
 
-		for character in characters where channel.hasPrefix(character) {
-			let nextCharacter = String(channel.dropFirst().prefix(1))
-
-			if channelNamePrefixes.contains(nextCharacter) {
-				return character
+private extension ISupport {
+	/// Reads what a token says by being present at all, whatever value it
+	/// carried.
+	func processFlagSegment(
+		_ token: ISupportToken,
+		segmentValue value: String?,
+		into effects: inout ISupportEffects
+	) {
+		switch token {
+		// Mode letters, which a server may name or leave at the usual one.
+		case .bot:
+			if value?.isModeSymbol == true {
+				botModeSymbol = value
 			}
+		case .callerid:
+			callerIDModeSymbol = validatedModeSymbol(value, fallback: "g")
+		case .deaf:
+			deafModeSymbol = validatedModeSymbol(value, fallback: "D")
+		case .excepts:
+			banExceptionModeSymbol = validatedModeSymbol(value, fallback: "e")
+		case .invex:
+			inviteExceptionModeSymbol = validatedModeSymbol(value, fallback: "I")
+		// Capabilities the token is the only evidence for.
+		case .monitor:
+			effects.enabledCapabilities.insert(.monitorCommand)
+		case .watch:
+			effects.enabledCapabilities.insert(.watchCommand)
+		case .namesx:
+			effects.legacyCapabilities.append(
+				ISupportEffects.LegacyCapability(capability: .multiPrefix, command: "PROTOCTL NAMESX")
+			)
+		case .uhnames:
+			effects.legacyCapabilities.append(
+				ISupportEffects.LegacyCapability(capability: .userhostInNames, command: "PROTOCTL UHNAMES")
+			)
+		// Plain announcements.
+		case .safelist:
+			safeListSupported = true
+		case .silence:
+			silenceSupported = true
+
+			if let value, let limit = positiveInteger(from: value) {
+				maximumSilenceEntries = limit
+			}
+		case .utf8only:
+			utf8Only = true
+		case .whox:
+			whoxSupported = true
+		default:
+			break
+		}
+	}
+
+	func validatedModeSymbol(_ value: String?, fallback: String) -> String {
+		guard let value, value.isModeSymbol else {
+			return fallback
 		}
 
-		return ""
+		return value
 	}
 }

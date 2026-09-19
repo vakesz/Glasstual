@@ -13,7 +13,7 @@ enum SendingMessage {
 		case malformedMiddleArgument(index: Int)
 	}
 
-	/** The line `command` with `arguments` is written as.
+	/** The line `command` with `arguments` and `tags` is written as.
 
 	 The last argument travels as the trailing parameter whenever it has to — it
 	 is empty, holds a space, or starts with a colon — or wherever the command
@@ -22,15 +22,35 @@ enum SendingMessage {
 	 place, and one holding a space went out as two; `/nick :foo` tripped a debug
 	 assertion. User input reaches here, so each of those is refused with an
 	 error instead. */
-	static func string(command: String, arguments: [String]?) throws(ArgumentError) -> String {
-		let uppercaseCommand = command.uppercased()
+	static func string(
+		command: RemoteCommand,
+		arguments: [String]?,
+		tags: [String: String]? = nil
+	) throws(ArgumentError) -> String {
+		try string(
+			wireCommand: command.wireName,
+			trailingParameter: command.trailingParameter,
+			arguments: arguments,
+			tags: tags
+		)
+	}
+
+	/** The same line for a verb this session's vocabulary has no case for.
+
+	 Nothing the session sends of its own takes this form — a `RemoteCommand`
+	 carries both the spelling and the trailing-parameter rule. The IRCv3
+	 `msg-join` corpus encodes verbs such as `foo`, which is what it is for. */
+	static func string(
+		wireCommand: String,
+		trailingParameter: TrailingParameter? = nil,
+		arguments: [String]?,
+		tags: [String: String]? = nil
+	) throws(ArgumentError) -> String {
+		var line = wireCommand.uppercased()
 
 		guard let arguments, arguments.isEmpty == false else {
-			return uppercaseCommand
+			return tagged(line, with: tags)
 		}
-
-		var line = uppercaseCommand
-		let trailingParameter = RemoteCommand(wireName: command)?.trailingParameter
 
 		for (index, argument) in arguments.enumerated() {
 			line.append(" ")
@@ -59,16 +79,10 @@ enum SendingMessage {
 			line.append(argument)
 		}
 
-		return line
+		return tagged(line, with: tags)
 	}
 
-	static func string(
-		command: String,
-		arguments: [String]?,
-		tags: [String: String]?
-	) throws(ArgumentError) -> String {
-		let line = try string(command: command, arguments: arguments)
-
+	private static func tagged(_ line: String, with tags: [String: String]?) -> String {
 		guard let tags, tags.isEmpty == false else {
 			return line
 		}

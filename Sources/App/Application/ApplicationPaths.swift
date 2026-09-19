@@ -10,12 +10,12 @@ import Synchronization
 /// directory it names, so callers can write into it straight away.
 nonisolated enum ApplicationPaths {
 	private static let logger = Logger(
-		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
+		subsystem: LogSubsystem.current,
 		category: "ApplicationPaths"
 	)
 
 	/** The security-scoped transcript folder, held open for as long as the
-	 process is using it. Main-actor state: every caller -- the preferences pane
+	 process is using it. Main-actor state: every caller -- the settings pane
 	 that picks the folder, the file logger that writes into it, the menu item
 	 that opens it -- is already there. */
 	@MainActor
@@ -206,14 +206,21 @@ nonisolated enum ApplicationPaths {
 		transcriptFolderURLStorage
 	}
 
+	/// Whether a transcript is actually being written: the setting is on and a
+	/// folder the application can still reach has been chosen.
+	@MainActor
+	static var isWritingTranscripts: Bool {
+		SettingsKeys.Logging.logToDisk.value && transcriptFolderURL != nil
+	}
+
 	@MainActor
 	static func setTranscriptFolderURL(_ transcriptFolderURL: Data?) {
 		stopUsingTranscriptFolderURL()
 
 		if let transcriptFolderURL {
-			Preferences.Logging.transcriptFolderBookmark.value = transcriptFolderURL
+			SettingsKeys.Logging.transcriptFolderBookmark.value = transcriptFolderURL
 		} else {
-			Preferences.Logging.transcriptFolderBookmark.reset()
+			SettingsKeys.Logging.transcriptFolderBookmark.reset()
 		}
 		startUsingTranscriptFolderURL()
 	}
@@ -234,10 +241,10 @@ nonisolated enum ApplicationPaths {
 	@MainActor
 	private static func startUsingTranscriptFolderURL(refreshingStaleBookmark: Bool) {
 		/* Security-scoped access is reference counted, so any previous access has to be
-		 released before a new one is taken; launch plus a preference reload both call in. */
+		 released before a new one is taken; launch plus a setting reload both call in. */
 		stopUsingTranscriptFolderURL()
 
-		let bookmark = Preferences.Logging.transcriptFolderBookmark.value
+		let bookmark = SettingsKeys.Logging.transcriptFolderBookmark.value
 		guard bookmark.isEmpty == false else { return }
 
 		var resolvedBookmarkIsStale = true
@@ -282,7 +289,7 @@ nonisolated enum ApplicationPaths {
 				return
 			}
 
-			Preferences.Logging.transcriptFolderBookmark.value = newBookmark
+			SettingsKeys.Logging.transcriptFolderBookmark.value = newBookmark
 			startUsingTranscriptFolderURL(refreshingStaleBookmark: false)
 
 			return
@@ -302,13 +309,13 @@ nonisolated enum ApplicationPaths {
 
 	@MainActor
 	private static func warnUserAboutStaleTranscriptFolderURL() {
-		guard Preferences.Logging.logToDisk.value else {
+		guard SettingsKeys.Logging.logToDisk.value else {
 			return
 		}
 
 		Alerts.alert(
-			withMessage: PromptStrings.Logging.staleLocationBody,
 			title: PromptStrings.Logging.staleLocationTitle,
+			body: PromptStrings.Logging.staleLocationBody,
 			defaultButton: PromptStrings.Action.confirmation
 		)
 	}

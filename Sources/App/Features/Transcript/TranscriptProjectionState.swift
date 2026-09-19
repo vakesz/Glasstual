@@ -3,26 +3,11 @@
 
 import Foundation
 
-/** A zero or otherwise invalid scrollback preference restores the transcript's
- established defaults. */
-nonisolated struct TranscriptBufferPolicy: Equatable, Sendable {
-	static let defaultHardLimit = 1000
-	static let validLimits = 100 ... 50000
+/** Where the transcript draws the line that says "you had read this far".
 
-	let hardLimit: Int
-
-	init(preference: UInt) {
-		if preference >= UInt(Self.validLimits.lowerBound),
-		   preference <= UInt(Self.validLimits.upperBound)
-		{
-			hardLimit = Int(preference)
-		} else {
-			hardLimit = Self.defaultHardLimit
-		}
-	}
-}
-
-nonisolated enum TranscriptScrollbackMark: Equatable, Sendable {
+ One marker per transcript, and `none` is a real answer: a transcript the reader
+ has never left has nothing to mark. */
+nonisolated enum UnreadMarker: Equatable, Sendable {
 	case none
 	case latest
 	case line(String)
@@ -31,57 +16,9 @@ nonisolated enum TranscriptScrollbackMark: Equatable, Sendable {
 
 nonisolated struct TranscriptDeliveryUpdate: Equatable, Sendable {
 	let lineNumber: String
-	let state: LogLineDeliveryState
+	let state: ChatLineDeliveryState
 	let messageIdentifier: String?
 	let reason: String?
-}
-
-nonisolated struct TranscriptReplaySnapshot: Sendable {
-	let results: [TranscriptRenderResult]
-}
-
-/// Tracks the one visual boundary between restored scrollback and lines from
-/// this process. The boundary may be known during the initial replay or may
-/// have to wait for the first live line that arrives afterwards.
-nonisolated struct TranscriptSessionBoundaryState: Sendable {
-	private(set) var newestPreviousSessionLineNumber: String?
-	private(set) var firstCurrentSessionLineNumber: String?
-	private var markerIsPending = false
-
-	mutating func prepareInitialHistory(
-		_ historicLines: [LogLine],
-		renderedLines: [TranscriptRenderResult]
-	) -> String? {
-		newestPreviousSessionLineNumber = historicLines.last { $0.fromCurrentSession == false }?
-			.uniqueIdentifier
-		firstCurrentSessionLineNumber = nil
-		guard newestPreviousSessionLineNumber != nil else {
-			markerIsPending = false
-			return nil
-		}
-		guard let firstCurrent = renderedLines.first(where: \.fromCurrentSession) else {
-			markerIsPending = true
-			return nil
-		}
-		markerIsPending = false
-		firstCurrentSessionLineNumber = firstCurrent.lineNumber
-		return firstCurrent.lineNumber
-	}
-
-	mutating func consumePendingMarker(for line: TranscriptRenderResult) -> Bool {
-		guard markerIsPending, line.fromCurrentSession else {
-			return false
-		}
-		markerIsPending = false
-		firstCurrentSessionLineNumber = line.lineNumber
-		return true
-	}
-
-	mutating func reset() {
-		newestPreviousSessionLineNumber = nil
-		firstCurrentSessionLineNumber = nil
-		markerIsPending = false
-	}
 }
 
 /** Owns the bounded transcript while its native view does not exist or is
@@ -103,7 +40,7 @@ nonisolated struct TranscriptProjectionState: Sendable {
 	}
 
 	private(set) var phase: Phase = .dormant
-	private(set) var mark: TranscriptScrollbackMark = .none
+	private(set) var mark: UnreadMarker = .none
 	private(set) var deliveryUpdates: [String: TranscriptDeliveryUpdate] = [:]
 
 	private var capacity: Int
@@ -139,7 +76,7 @@ nonisolated struct TranscriptProjectionState: Sendable {
 		recentResults.count
 	}
 
-	init(capacity: Int = TranscriptBufferPolicy.defaultHardLimit) {
+	init(capacity: Int = TranscriptBufferLimits.defaultHardLimit) {
 		self.capacity = max(capacity, 1)
 	}
 
@@ -179,10 +116,12 @@ nonisolated struct TranscriptProjectionState: Sendable {
 		}
 	}
 
-	mutating func beginReplay() -> TranscriptReplaySnapshot {
+	/// The rows the projection is holding, which the replay re-draws instead of
+	/// rendering them a second time.
+	mutating func beginReplay() -> [TranscriptRenderResult] {
 		phase = .loading
 		pendingResults.removeAll(keepingCapacity: true)
-		return TranscriptReplaySnapshot(results: recentResults)
+		return recentResults
 	}
 
 	mutating func finishReplay(displaying lineNumbers: Set<String>) -> [TranscriptRenderResult] {
@@ -208,13 +147,13 @@ nonisolated struct TranscriptProjectionState: Sendable {
 		pendingResults.removeAll()
 	}
 
-	mutating func setMark(_ mark: TranscriptScrollbackMark) {
+	mutating func setMark(_ mark: UnreadMarker) {
 		self.mark = mark
 	}
 
 	mutating func updateDelivery(
 		lineNumber: String,
-		state: LogLineDeliveryState,
+		state: ChatLineDeliveryState,
 		messageIdentifier: String?,
 		reason: String?
 	) {

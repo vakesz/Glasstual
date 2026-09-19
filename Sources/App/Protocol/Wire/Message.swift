@@ -24,11 +24,11 @@ private nonisolated let maximumServerTimeInterval: Double = 1e11
 /** How far a bouncer's `server-time` may run behind arrival and still be live.
 
  A bouncer replays without a batch, so the only thing separating playback from
- a line that took a moment to reach the client is how old the server time is. */
+ a line that took a moment to reach the session is how old the server time is. */
 nonisolated let liveServerTimeTolerance: TimeInterval = 30
 
 /// Whether a line is replayed history rather than something happening now.
-nonisolated func messageIsHistoric( // nonisolated: pure
+nonisolated func messageIsReplayed( // nonisolated: pure
 	serverTime: Date,
 	arrivedAt: Date,
 	inReplayBatch: Bool,
@@ -48,7 +48,7 @@ nonisolated func ircWireTimestampDate(from value: String) -> Date? { // nonisola
 }
 
 /** A `time` (or bouncer `t`) tag read as a date, or `nil` when it carries no
- timestamp the client can act on.
+ timestamp the session can act on.
 
  Two spellings reach this: the specification's `YYYY-MM-DDThh:mm:ss.sssZ`, which
  common servers may also send to whole seconds, and the bare Unix seconds a
@@ -64,37 +64,58 @@ private nonisolated func serverTimeDate(from value: String) -> Date? { // noniso
 	return DateFormatting.date(fromISO8601: value)
 }
 
+/** What the wire parser needs to know about the session a line arrived on.
+
+ Reading a line asks the connection exactly five questions, and none of them
+ changes while the line is being read, so they travel as one value: the parser
+ is then a function of the line and the connection's advertised state, with no
+ session to reach into. */
+nonisolated struct MessageParsingContext: Sendable {
+	/// Whom a line with no prefix is attributed to.
+	var serverAddress = ""
+	/// The longest nickname to read out of a sender prefix.
+	var maximumNicknameLength = defaultHostmaskNicknameLength
+	/// IRCv3 `batch` is negotiated, so a `batch` tag names a batch.
+	var batchEnabled = false
+	/// IRCv3 `server-time` is negotiated, so a `time` tag dates the line.
+	var serverTimeEnabled = false
+	/// The peer is a bouncer, which replays without opening a batch.
+	var isKnownBouncer = false
+
+	/// A line read outside any session: the grammar and nothing else.
+	static let none = MessageParsingContext()
+}
+
 /** One line received from the server, parsed.
 
- A message is a reference type because it is passed down a long handler chain
- and because it points back at the `MessageBatch` that contains it. Handlers
- treat it as read-only; the two places that need a changed message start from
- `duplicate()`, which never touches the receiver.
-
- It is main-actor state: every handler that reads or rewrites one is already
- there, and so is the batch it points back at. */
-final class Message {
+ A plain value: handlers take one and treat it as read-only because a copy is
+ all they have, and the two places that rewrite a line assign to a `var` of
+ their own. The one reference it keeps is `parentBatchMessage`, the batch that
+ holds it — that has identity, so it stays a class. */
+nonisolated struct Message {
 	var sender = Prefix()
-	var command = ""
+	/// The wire command as the server spelled it, upper-cased by the parser for
+	/// everything that is not a numeric.
+	private(set) var command = ""
+
+	/// The command as this session's vocabulary names it, `nil` for a numeric or
+	/// a verb the catalogue has no case for. Resolved where `command` is
+	/// written, so a handler matches a case rather than a string literal.
+	private(set) var remoteCommand: RemoteCommand?
 	var commandNumeric: UInt = 0
 	var params: [String] = []
 	var receivedAt = Date()
-	var isHistoric = false
+	var isReplayed = false
 	/// `true` when a negotiated `server-time` (or bouncer `t`) tag supplied
 	/// `receivedAt`. The resume point a bouncer replays from is the newest
 	/// such stamp, whether or not the line turned out to be replay.
 	var hasServerTime = false
-	var isEventOnlyMessage = false
 	var isPrintOnlyMessage = false
 	var batchToken: String?
 	var messageTags: [String: String]? = [:]
 	var messageIdentifier: String?
 	var senderAccount: String?
 	var parentBatchMessage: MessageBatch?
-
-	var paramsCount: UInt {
-		UInt(params.count)
-	}
 
 	var senderNickname: String? {
 		sender.nickname
@@ -124,35 +145,41 @@ final class Message {
 		return sequence(1)
 	}
 
-	init() {}
-
-	init?(line: String, on client: Client? = nil) {
-		guard parseLine(line, for: client) else {
+	init?(line: String, context: MessageParsingContext = .none) {
+		guard let parsed = LineParser.parsedLine(fromLine: line) else {
 			return nil
 		}
+
+		if let tagSection = parsed.messageTagSection {
+			readExtensions(tagSection, context: context)
+		}
+
+		if let senderSection = parsed.senderSection {
+			sender = Prefix.user(parsing: senderSection, maximumNicknameLength: context.maximumNicknameLength)
+				?? Prefix(nickname: senderSection, hostmask: senderSection, isServer: true)
+		} else {
+			sender = Prefix(
+				nickname: context.serverAddress,
+				hostmask: context.serverAddress,
+				isServer: true
+			)
+		}
+
+		setCommand(parsed.command)
+		commandNumeric = parsed.commandNumeric
+		params = parsed.parameters
 	}
 
-	private init(copying other: Message) {
-		sender = other.sender
-		command = other.command
-		commandNumeric = other.commandNumeric
-		params = other.params
-		receivedAt = other.receivedAt
-		isHistoric = other.isHistoric
-		hasServerTime = other.hasServerTime
-		isEventOnlyMessage = other.isEventOnlyMessage
-		isPrintOnlyMessage = other.isPrintOnlyMessage
-		batchToken = other.batchToken
-		messageTags = other.messageTags
-		messageIdentifier = other.messageIdentifier
-		senderAccount = other.senderAccount
-		parentBatchMessage = other.parentBatchMessage
+	/// Rewrites what the line says it is. Both spellings move together, so a
+	/// handler matching on ``remoteCommand`` sees the rewrite.
+	mutating func rewrite(as command: RemoteCommand) {
+		self.command = command.wireName
+		remoteCommand = command
 	}
 
-	/// An editable copy. Handlers treat the message they are given as read-only,
-	/// so a rewrite starts here rather than by editing the original.
-	func duplicate() -> Message {
-		Message(copying: self)
+	private mutating func setCommand(_ wireName: String) {
+		command = wireName
+		remoteCommand = RemoteCommand(wireName: wireName)
 	}
 
 	func param(at index: UInt) -> String {
@@ -174,83 +201,41 @@ final class Message {
 		return params[start...].joined(separator: " ")
 	}
 
-	// MARK: - Line Parser
+	/** The message tags, and the two things they say about the line itself.
 
-	@discardableResult
-	func parseLine(_ line: String, for client: Client?) -> Bool {
-		guard let parsed = LineParser.parsedLine(fromLine: line) else {
-			return false
-		}
-
-		if let tagSection = parsed.messageTagSection {
-			parseExtensions(tagSection, for: client)
-		}
-
-		if let senderSection = parsed.senderSection {
-			parseSender(senderSection, for: client)
-		} else {
-			let serverAddress = client?.serverAddress ?? ""
-			sender = Prefix(nickname: serverAddress, hostmask: serverAddress, isServer: true)
-		}
-
-		command = parsed.command
-		commandNumeric = parsed.commandNumeric
-		params = parsed.parameters
-
-		return true
-	}
-
-	func parseExtensions(_ extensionInfo: String, for client: Client?) {
+	 Which batch the named token belongs to is the session's answer, not the
+	 line's, so it is resolved by the caller: `isReplayed` is what the timestamp
+	 alone makes it, and a replay batch adds to it there. */
+	private mutating func readExtensions(_ extensionInfo: String, context: MessageParsingContext) {
 		let parsedTags = MessageTagParser.parsedTags(fromSection: extensionInfo)
 
 		messageTags = parsedTags.tags
 		messageIdentifier = parsedTags.messageIdentifier
 		senderAccount = parsedTags.senderAccount
 
-		guard let client else {
+		if context.batchEnabled,
+		   let batchToken = parsedTags.tags["batch"],
+		   batchToken.unicodeScalars.allSatisfy({ CharacterSet.alphanumerics.contains($0) || $0 == "_" || $0 == "-" })
+		{
+			self.batchToken = batchToken
+		}
+
+		guard context.serverTimeEnabled,
+		      let dateString = parsedTags.tags["time"] ?? parsedTags.tags["t"],
+		      let dateObject = serverTimeDate(from: dateString)
+		else {
 			return
 		}
 
-		/* The batch is resolved first because whether the line is replay is
-		 decided by the batch it sits in, not by the fact that it carries a
-		 timestamp. */
-		if client.isCapabilityEnabled(.batch) {
-			if let batchToken = parsedTags.tags["batch"],
-			   batchToken.unicodeScalars.allSatisfy({
-			   	CharacterSet.alphanumerics.contains($0) || $0 == "_" || $0 == "-"
-			   })
-			{
-				self.batchToken = batchToken
-				parentBatchMessage = client.queuedBatchMessage(withToken: batchToken) as? MessageBatch
-			}
-		}
-
-		isHistoric = parentBatchMessage?.isReplay ?? false
-
-		if client.isCapabilityEnabled(.serverTime) {
-			let dateString = parsedTags.tags["time"] ?? parsedTags.tags["t"]
-
-			if let dateString, let dateObject = serverTimeDate(from: dateString) {
-				let arrivedAt = receivedAt
-				receivedAt = dateObject
-				hasServerTime = true
-				isHistoric = messageIsHistoric(
-					serverTime: dateObject,
-					arrivedAt: arrivedAt,
-					inReplayBatch: isHistoric,
-					isKnownBouncer: client.znc.isConnected
-				)
-			}
-		}
-	}
-
-	func parseSender(_ senderInfo: String, for client: Client?) {
-		guard let parsed = (senderInfo as NSString).senderPrefix(on: client) else {
-			sender = Prefix(nickname: senderInfo, hostmask: senderInfo, isServer: true)
-			return
-		}
-
-		sender = parsed
+		let arrivedAt = receivedAt
+		receivedAt = dateObject
+		hasServerTime = true
+		isReplayed = messageIsReplayed(
+			serverTime: dateObject,
+			arrivedAt: arrivedAt,
+			inReplayBatch: false,
+			isKnownBouncer: context.isKnownBouncer
+		)
 	}
 }
 
@@ -372,7 +357,7 @@ nonisolated enum LineParser {
 	}
 }
 
-/// The message tags of one line, with the two the client reads by name pulled
+/// The message tags of one line, with the two the session reads by name pulled
 /// out of them.
 nonisolated struct ParsedMessageTags: Sendable, Equatable {
 	let tags: [String: String]

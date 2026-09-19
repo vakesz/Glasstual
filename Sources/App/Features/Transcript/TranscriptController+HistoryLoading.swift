@@ -23,11 +23,11 @@ extension TranscriptController {
 			return
 		}
 		let firstLoad = !historyLoadedForFirstTime
-		let channel = associatedChannel
-		let includeStoredHistory = !(firstLoad && !Preferences.Logging.reloadScrollbackOnLaunch.value ||
-			channel?.isUtility == true ||
-			channel?.isDirectChat == true ||
-			(firstLoad && channel?.isPrivateMessage == true && !Preferences.Appearance.rememberQueryStates.value))
+		let conversation = associatedConversation
+		let includeStoredHistory = !(firstLoad && !SettingsKeys.Logging.reloadScrollbackOnLaunch.value ||
+			conversation?.isConsole == true ||
+			conversation?.isDirectChat == true ||
+			(firstLoad && conversation?.isDirect == true && !SettingsKeys.Appearance.rememberDirectConversations.value))
 		if loadsHistoryLazily(), !viewIsVisible {
 			return
 		}
@@ -48,7 +48,7 @@ private extension TranscriptController {
 			return false
 		}
 		let viewIdentifier = associatedItem.uniqueIdentifier
-		let replay = transcriptProjection.beginReplay()
+		let replayedResults = transcriptProjection.beginReplay()
 		let context = makeHistoryRenderContext()
 		let generation = renderGeneration
 		let fetch = historyPageFetcher
@@ -83,14 +83,15 @@ private extension TranscriptController {
 				fetchSucceeded = false
 			}
 			let rows = Array(storedEntries.reversed())
-			let historicEntries = ScrollbackClient.logLines(from: rows)
-			let renderedReplay = Dictionary(uniqueKeysWithValues: replay.results.map { ($0.lineNumber, $0) })
+			let decoded = ScrollbackSession.decode(rows)
+			let scrollbackLines = decoded.lines
+			let renderedReplay = Dictionary(uniqueKeysWithValues: replayedResults.map { ($0.lineNumber, $0) })
 			var consumedReplay = Set<String>()
 			var slots: [TranscriptRenderResult?] = []
-			var freshSnapshots: [LogLineSnapshot] = []
+			var freshSnapshots: [ChatLineSnapshot] = []
 			var freshSlots: [Int] = []
 			for row in rows {
-				guard let line = LogLine.logLine(from: row) else { continue }
+				guard let line = ChatLine(entry: row) else { continue }
 				if var replayed = renderedReplay[line.uniqueIdentifier],
 				   consumedReplay.insert(line.uniqueIdentifier).inserted
 				{
@@ -98,7 +99,7 @@ private extension TranscriptController {
 					slots.append(replayed)
 				} else {
 					freshSlots.append(slots.count)
-					freshSnapshots.append(LogLineSnapshot(line, in: context, historyCursor: row.cursor))
+					freshSnapshots.append(ChatLineSnapshot(line, in: context, historyCursor: row.cursor))
 					slots.append(nil)
 				}
 			}
@@ -108,16 +109,16 @@ private extension TranscriptController {
 				}
 			}
 			var results = slots.compactMap(\.self)
-			results += replay.results.filter { !consumedReplay.contains($0.lineNumber) }
+			results += replayedResults.filter { !consumedReplay.contains($0.lineNumber) }
 			return TranscriptHistoryRenderOutput(
-				historicEntries: historicEntries,
+				scrollbackLines: scrollbackLines,
 				results: results,
-				fetchSucceeded: fetchSucceeded && historicEntries.count == storedEntries.count,
-				failure: historicEntries.count == storedEntries.count ? failure : .invalidEntry
+				fetchSucceeded: fetchSucceeded && decoded.isWholePage,
+				failure: decoded.isWholePage ? failure : .invalidEntry
 			)
 		} apply: { [weak self] (loaded: TranscriptHistoryRenderOutput) in
 			self?.applyReloadedHistory(
-				loaded.historicEntries,
+				loaded.scrollbackLines,
 				results: loaded.results,
 				forView: viewIdentifier,
 				firstLoad: firstLoad,
@@ -128,7 +129,7 @@ private extension TranscriptController {
 	}
 
 	private func applyReloadedHistory(
-		_ historicEntries: [LogLine],
+		_ scrollbackLines: [ChatLine],
 		results inputResults: [TranscriptRenderResult],
 		forView viewIdentifier: String,
 		firstLoad: Bool,
@@ -137,16 +138,16 @@ private extension TranscriptController {
 	) {
 		historyLoadFailure = failure
 		var results = inputResults
-		scrollback.indexLogLines(historicEntries, forView: viewIdentifier)
+		scrollback.duplicates.indexChatLines(scrollbackLines, forView: viewIdentifier)
 		/* Only where nothing has been printed this session: every line this
 		 process prints sets it, so anything newer than the stored page is
 		 already there. */
 		if lastLineStorage == nil {
-			lastLineStorage = historicEntries.last
+			lastLineStorage = scrollbackLines.last
 		}
 		if firstLoad {
 			let markerLineNumber = transcriptSessionBoundary.prepareInitialHistory(
-				historicEntries,
+				scrollbackLines,
 				renderedLines: results
 			)
 			newestLineNumberFromPreviousSession = transcriptSessionBoundary
@@ -155,7 +156,7 @@ private extension TranscriptController {
 			   let markerIndex = results.firstIndex(where: { $0.lineNumber == markerLineNumber })
 			{
 				results[markerIndex].transcriptLine.markers.insert(
-					.currentSession(String(localized: .MainWindow.currentSession)),
+					.currentSession(String(localized: .Transcript.currentSession)),
 					at: 0
 				)
 			}
@@ -192,7 +193,7 @@ private extension TranscriptController {
 		var pending = transcriptProjection.takePendingResults(displaying: displayed)
 		if let pendingIndex = pending.firstIndex(where: { transcriptSessionBoundary.consumePendingMarker(for: $0) }) {
 			pending[pendingIndex].transcriptLine.markers.insert(
-				.currentSession(String(localized: .MainWindow.currentSession)),
+				.currentSession(String(localized: .Transcript.currentSession)),
 				at: 0
 			)
 		}
@@ -218,8 +219,8 @@ private extension TranscriptController {
 		for update in transcriptProjection.deliveryUpdates.values {
 			backingView?.updateDelivery(update)
 		}
-		for (identifier, reactions) in reactionsByMessageIdentifier {
-			backingView?.updateReactions(reactions, messageIdentifier: identifier)
+		for (identifier, merged) in reactions.all {
+			backingView?.updateReactions(merged, messageIdentifier: identifier)
 		}
 		switch transcriptProjection.mark {
 		case .none:
@@ -275,7 +276,7 @@ extension TranscriptController {
 	 Succeeding retires this view's own failures with it: nothing is going to
 	 read history into a transcript that no longer exists. */
 	private func retryStorageOnly() {
-		guard historyRecovery.localMessage != nil || historyStorageRecovery.localMessage != nil else { return }
+		guard historyRecovery.localMessage != nil || storageRecovery.localMessage != nil else { return }
 		historyRecovery.isRetrying = true
 		/* The banner outlives the controller, so the state is held strongly:
 		 whoever is still watching it has to see the spinner stop. */
@@ -294,7 +295,7 @@ extension TranscriptController {
 
 extension TranscriptController {
 	func loadOlderHistory() {
-		guard !terminating, !reloadingHistory, !loadingOlderHistory, serverHistoryRequest == nil,
+		guard !terminating, !reloadingHistory, !loadingOlderHistory, serverHistory.request == nil,
 		      let associatedItem,
 		      let backingView, backingView.displayedBounds.remainingCapacity > 0,
 		      let oldestDisplayedLineNumber = oldestLineNumber
@@ -342,68 +343,64 @@ extension TranscriptController {
 			} else {
 				storedEntries
 			}
-			let entries = ScrollbackClient.logLines(from: ordered)
-			guard entries.count == storedEntries.count else {
+			let decoded = ScrollbackSession.decode(ordered)
+			guard decoded.isWholePage else {
 				loadingOlderHistory = false
 				olderHistoryFailure = .invalidEntry
 				return
 			}
+			let entries = decoded.lines
 			guard entries.isEmpty == false else {
 				loadingOlderHistory = false
 				locallyExhaustedBefore = oldestDisplayedLineNumber
 				noteLocalScrollbackExhausted()
 				return
 			}
-			prependHistoricLogLines(entries, before: oldestDisplayedLineNumber, cursors: ordered.map(\.cursor))
+			prependEarlierChatLines(entries, before: oldestDisplayedLineNumber, cursors: ordered.map(\.cursor))
 		}
 	}
 
 	private func noteLocalScrollbackExhausted() {
-		guard let channel = associatedChannel,
-		      let client = associatedClient,
-		      client.chatHistoryIsAvailable(for: channel),
+		guard let conversation = associatedConversation,
+		      let session = associatedSession,
+		      session.chatHistoryIsAvailable(for: conversation),
 		      let oldestDate = backingView?.displayedLines.first?.receivedAt,
-		      serverHistoryRequest == nil, serverHistoryExhaustedBefore != oldestDate,
-		      serverHistoryCompletedBefore != oldestDate
+		      serverHistory.canAsk(before: oldestDate)
 		else {
 			return
 		}
 		let request = ServerHistoryRequest(id: UUID(), before: oldestDate, oldestLineNumber: oldestLineNumber)
-		serverHistoryRequest = request
-		if client.requestServerHistory(request, in: channel, presentation: self) {
-			serverHistoryFailed = false
+		serverHistory.request = request
+		if session.requestServerHistory(request, in: conversation, presentation: self) {
+			serverHistory.noteAdmitted()
 		} else {
-			serverHistoryRequest = nil
+			serverHistory.retire()
 		}
 	}
 
 	func receiveServerHistory(_ outcome: ServerHistoryOutcome, for request: ServerHistoryRequest) {
-		guard !terminating, serverHistoryRequest?.id == request.id else { return }
+		guard !terminating, serverHistory.isCurrent(request) else { return }
 		guard oldestLineNumber == request.oldestLineNumber,
 		      backingView?.displayedLines.first?.receivedAt == request.before
 		else {
-			serverHistoryRequest = nil
+			serverHistory.retire()
 			return
 		}
 		switch outcome {
 		case let .page(lines, extent):
-			serverHistoryFailed = false
+			serverHistory.noteAdmitted()
 			guard !lines.isEmpty else {
-				serverHistoryRequest = nil
-				serverHistoryCompletedBefore = request.before
-				if extent == .exhausted {
-					serverHistoryExhaustedBefore = request.before
-				}
+				serverHistory.retire()
+				serverHistory.noteAnswered(before: request.before, extent: extent, oldestCursor: request.before)
 				return
 			}
-			prependHistoricLogLines(
+			prependEarlierChatLines(
 				lines,
 				before: request.oldestLineNumber,
 				archivesForStorage: true
 			) { [weak self] accepted, entries in
-				guard let self, serverHistoryRequest?.id == request.id else { return }
-				serverHistoryRequest = nil
-				serverHistoryCompletedBefore = nil
+				guard let self, serverHistory.isCurrent(request) else { return }
+				serverHistory.retire(forgettingAnsweredCursor: true)
 				guard !accepted.isEmpty else { return }
 				let acceptedIdentifiers = Set(accepted)
 				for (line, entry) in zip(lines, entries) where acceptedIdentifiers.contains(line.uniqueIdentifier) {
@@ -412,35 +409,30 @@ extension TranscriptController {
 				// The local store was already exhausted before this older server page.
 				locallyExhaustedBefore = oldestLineNumber
 				if accepted.count == Set(lines.map(\.uniqueIdentifier)).count {
-					serverHistoryCompletedBefore = request.before
-					if extent ==
-						.exhausted
-					{
-						serverHistoryExhaustedBefore = backingView?.displayedLines.first?.receivedAt
-					}
+					serverHistory.noteAnswered(
+						before: request.before,
+						extent: extent,
+						oldestCursor: backingView?.displayedLines.first?.receivedAt
+					)
 				}
 			}
 		case let .failed(reason):
-			serverHistoryRequest = nil
-			serverHistoryFailed = true
-			historyRecovery.serverFailureReason = reason
-			serverHistoryCompletedBefore = nil
+			serverHistory.noteFailed(reason: reason)
 		case .cancelled:
-			serverHistoryRequest = nil
-			serverHistoryCompletedBefore = nil
+			serverHistory.retire(forgettingAnsweredCursor: true)
 		}
 	}
 
 	/** Whether Retry Server History has anything left to ask for.
 
-	 A request already in flight is one answer; the other belongs to the client,
+	 A request already in flight is one answer; the other belongs to the session,
 	 which retires the connection's server-history slot when an unlabeled request
-	 times out, so the button is offered only while the client would act on it. */
+	 times out, so the button is offered only while the session would act on it. */
 	var serverHistoryRetryIsAvailable: Bool {
-		guard !terminating, serverHistoryRequest == nil,
-		      let client = associatedClient, let channel = associatedChannel
+		guard !terminating, serverHistory.request == nil,
+		      let session = associatedSession, let conversation = associatedConversation
 		else { return false }
-		return client.canRetryServerHistory(for: channel)
+		return session.canRetryServerHistory(for: conversation)
 	}
 
 	/// Copies the answer into the observable recovery state the banner draws
@@ -451,13 +443,12 @@ extension TranscriptController {
 
 	func retryServerHistory() {
 		guard serverHistoryRetryIsAvailable else { return }
-		serverHistoryCompletedBefore = nil
-		serverHistoryExhaustedBefore = nil
+		serverHistory.forgetAnsweredCursors()
 		noteLocalScrollbackExhausted()
 	}
 
-	func prependHistoricLogLines(_ logLines: [LogLine]) {
-		prependHistoricLogLines(logLines, before: nil)
+	func prependEarlierChatLines(_ chatLines: [ChatLine]) {
+		prependEarlierChatLines(chatLines, before: nil)
 	}
 
 	/** Renders older lines and puts them above what the view shows.
@@ -465,19 +456,19 @@ extension TranscriptController {
 	 `archivesForStorage` is for lines the store does not have yet, a server
 	 page: they are archived beside the render, off the main actor, and handed
 	 to `completion` with the identifiers the view accepted. */
-	private func prependHistoricLogLines(
-		_ logLines: [LogLine], before expectedOldest: String?, cursors: [ScrollbackRowCursor?] = [],
+	private func prependEarlierChatLines(
+		_ chatLines: [ChatLine], before expectedOldest: String?, cursors: [ScrollbackRowCursor?] = [],
 		archivesForStorage: Bool = false,
 		completion: (@MainActor (_ accepted: [String], _ entries: [ScrollbackEntry]) -> Void)? = nil
 	) {
-		guard !terminating, !logLines.isEmpty, let associatedItem else {
+		guard !terminating, !chatLines.isEmpty, let associatedItem else {
 			completion?([], [])
 			return
 		}
 		let viewIdentifier = associatedItem.uniqueIdentifier
 		let context = makeHistoryRenderContext()
-		let lines = logLines.enumerated().map {
-			LogLineSnapshot(
+		let lines = chatLines.enumerated().map {
+			ChatLineSnapshot(
 				$0.element,
 				in: context,
 				historyCursor: cursors.indices.contains($0.offset) ? cursors[$0.offset] : nil
@@ -487,7 +478,7 @@ extension TranscriptController {
 		enqueueRenderJob {
 			(
 				results: Self.renderJob(snapshots, context: context),
-				entries: archivesForStorage ? logLines.map { $0.historicEntry(forView: viewIdentifier) } : []
+				entries: archivesForStorage ? chatLines.map { $0.scrollbackEntry(forView: viewIdentifier) } : []
 			)
 		} apply: { [weak self] (rendered: (results: [TranscriptRenderResult], entries: [ScrollbackEntry])) in
 			guard let self else { return }
@@ -495,7 +486,7 @@ extension TranscriptController {
 			let apply: @MainActor () -> Void = { [weak self] in
 				guard let self, acceptsRenderGeneration(generation) else { return }
 				let accepted = applyPrependedLines(
-					logLines,
+					chatLines,
 					results: rendered.results,
 					before: expectedOldest,
 					forView: viewIdentifier
@@ -523,7 +514,7 @@ extension TranscriptController {
 	}
 
 	private func applyPrependedLines(
-		_ logLines: [LogLine], results: [TranscriptRenderResult], before expectedOldest: String?,
+		_ chatLines: [ChatLine], results: [TranscriptRenderResult], before expectedOldest: String?,
 		forView viewIdentifier: String
 	) -> [String] {
 		if expectedOldest != nil {
@@ -531,8 +522,8 @@ extension TranscriptController {
 		}
 		guard expectedOldest == nil || oldestLineNumber == expectedOldest else { return [] }
 		let accepted = Set(backingView?.prependLines(results.map { applyingCurrentState(to: $0.transcriptLine) }) ?? [])
-		scrollback.indexLogLines(
-			zip(logLines, results).filter { accepted.contains($0.1.lineNumber) }.map(\.0), forView: viewIdentifier
+		scrollback.duplicates.indexChatLines(
+			zip(chatLines, results).filter { accepted.contains($0.1.lineNumber) }.map(\.0), forView: viewIdentifier
 		)
 		for result in results where accepted.contains(result.lineNumber) && result.processesInlineMedia {
 			processInlineMedia(result.links, atLineNumber: result.lineNumber)

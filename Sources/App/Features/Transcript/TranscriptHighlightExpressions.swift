@@ -6,8 +6,8 @@ import OSLog
 import Synchronization
 
 private nonisolated let highlightExpressionLogger = Logger(
-	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
-	category: "LogRenderer"
+	subsystem: LogSubsystem.current,
+	category: "TranscriptHighlightExpressions"
 )
 
 /** The compiled form of the highlight keywords, kept between rendered lines.
@@ -18,13 +18,13 @@ private nonisolated let highlightExpressionLogger = Logger(
  just as often. Compiling once and keeping a bounded number of the results
  turns that into a dictionary lookup.
 
- Rendering runs off the main actor on several lines at a time, so the store is
+ Rendering runs off the main actor on several lines at a time, so the cache is
  a `Mutex` around a value this type never lets out. What it holds are
  `NSRegularExpression`s, which Foundation documents as immutable and safe to
  match from several threads; nothing here mutates one. */
 final nonisolated class TranscriptHighlightExpressions: Sendable { // nonisolated: immutable
 	/// Enough for the keyword lists people actually keep, and small enough that
-	/// a channel-specific list cannot grow the store without bound.
+	/// a channel-specific list cannot grow the cache without bound.
 	private static let capacity = 64
 
 	/** How much of a line one of the reader's own patterns is matched against.
@@ -32,12 +32,12 @@ final nonisolated class TranscriptHighlightExpressions: Sendable { // nonisolate
 	 A pathological pattern costs time in proportion to the input, and IRC
 	 lines arrive from strangers. Four kilobytes is far past any real message
 	 and far short of anything that could stall a render. It bounds the patterns
-	 that come through this store and nothing else: the renderer's own fixed
+	 that come through this cache and nothing else: the renderer's own fixed
 	 patterns cannot backtrack, and capping them only stopped a channel name
 	 late in a long line from being a link. */
 	static let maximumMatchedLength = 4096
 
-	private struct Store {
+	private struct Cache {
 		/// Patterns that compiled, least recently used first.
 		var order: [String] = []
 		var expressions: [String: NSRegularExpression] = [:]
@@ -46,10 +46,10 @@ final nonisolated class TranscriptHighlightExpressions: Sendable { // nonisolate
 		var failures: Set<String> = []
 	}
 
-	private let store = Mutex(Store())
+	private let cache = Mutex(Cache())
 
 	/// The one cache the renderer uses. Patterns come from the reader's own
-	/// preferences, so there is nothing per view to keep apart.
+	/// settings, so there is nothing per view to keep apart.
 	static let shared = TranscriptHighlightExpressions()
 
 	/// The compiled form of `pattern`, or `nil` when it does not compile.
@@ -60,13 +60,13 @@ final nonisolated class TranscriptHighlightExpressions: Sendable { // nonisolate
 			case unknown
 		}
 
-		let lookup = store.withLock { store -> Lookup in
-			if let expression = store.expressions[pattern] {
-				store.order.removeAll { $0 == pattern }
-				store.order.append(pattern)
+		let lookup = cache.withLock { cache -> Lookup in
+			if let expression = cache.expressions[pattern] {
+				cache.order.removeAll { $0 == pattern }
+				cache.order.append(pattern)
 				return .hit(expression)
 			}
-			return store.failures.contains(pattern) ? .knownFailure : .unknown
+			return cache.failures.contains(pattern) ? .knownFailure : .unknown
 		}
 		switch lookup {
 		case let .hit(expression): return expression
@@ -78,19 +78,19 @@ final nonisolated class TranscriptHighlightExpressions: Sendable { // nonisolate
 		if compiled == nil {
 			highlightExpressionLogger.error("Highlight pattern did not compile; it will be ignored")
 		}
-		return store.withLock { store -> NSRegularExpression? in
+		return cache.withLock { cache -> NSRegularExpression? in
 			guard let compiled else {
-				if store.failures.count >= Self.capacity {
-					store.failures.removeFirst()
+				if cache.failures.count >= Self.capacity {
+					cache.failures.removeFirst()
 				}
-				store.failures.insert(pattern)
+				cache.failures.insert(pattern)
 				return nil
 			}
-			store.expressions[pattern] = compiled
-			store.order.removeAll { $0 == pattern }
-			store.order.append(pattern)
-			while store.order.count > Self.capacity {
-				store.expressions.removeValue(forKey: store.order.removeFirst())
+			cache.expressions[pattern] = compiled
+			cache.order.removeAll { $0 == pattern }
+			cache.order.append(pattern)
+			while cache.order.count > Self.capacity {
+				cache.expressions.removeValue(forKey: cache.order.removeFirst())
 			}
 			return compiled
 		}

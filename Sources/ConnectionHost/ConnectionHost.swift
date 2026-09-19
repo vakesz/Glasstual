@@ -8,7 +8,11 @@ import os
 /** Logging for the connection classes. */
 enum ConnectionHostLog {
 	static let connection = Logger(
-		subsystem: Bundle.main.bundleIdentifier ?? "com.vakesz.glasstual.IRCConnectionHost", category: "Connection"
+		subsystem: LogSubsystem.current, category: "Connection"
+	)
+
+	static let listener = Logger(
+		subsystem: LogSubsystem.current, category: "Listener"
 	)
 }
 
@@ -95,8 +99,8 @@ actor ConnectionHost {
 			/* Returning in silence left the application waiting for a connection
 			 nothing was going to make: it had asked, and the only answer it ever
 			 gets is a callback. Refusing out loud is what lets it retry. */
-			client?.ircConnectionDidDisconnectWithError(
-				ConnectionError.other(message: String(localized: .ConnectionErrors.connectionAlreadyOpen))
+			client?.didDisconnect(
+				withError: ConnectionError.other(message: String(localized: .ConnectionErrors.connectionAlreadyOpen))
 			)
 
 			return
@@ -386,14 +390,14 @@ actor ConnectionHost {
 		}
 		switch event {
 		case let .willConnectToProxy(host, port):
-			client?.ircConnectionWillConnect(toProxy: host, port: port)
+			client?.willConnect(toProxy: host, port: port)
 		case let .connected(host):
 			guard closing == false else { return }
 			ready = true
-			client?.ircConnectionDidConnect(toHost: host)
+			client?.didConnect(toHost: host)
 			startWriterIfNeeded()
 		case let .secured(protocolVersion, cipherSuite):
-			client?.ircConnectionDidSecureConnection(withProtocolType: protocolVersion, cipherSuite: cipherSuite)
+			client?.didSecureConnection(withProtocolType: protocolVersion, cipherSuite: cipherSuite)
 		case let .received(lines, acknowledged):
 			/* The transport waits on the application's reply, not on this
 			 loop: the forwarding returns at once, so the events behind these
@@ -402,19 +406,19 @@ actor ConnectionHost {
 				acknowledged.finish()
 				return
 			}
-			client.ircConnectionDidReceive(lines) {
+			client.didReceive(lines) {
 				acknowledged.finish()
 			}
 		case let .willSend(data):
-			client?.ircConnectionWillSend(data)
+			client?.willSend(data)
 		case .didSend:
-			client?.ircConnectionDidSendData()
+			client?.didSendData()
 		case .closedReadStream:
-			client?.ircConnectionDidCloseReadStream()
+			client?.didCloseReadStream()
 		case let .disconnected(error):
 			resetState()
 
-			client?.ircConnectionDidDisconnectWithError(error.map { $0 as NSError })
+			client?.didDisconnect(withError: error.map { $0 as NSError })
 
 			releaseSocket()
 		}

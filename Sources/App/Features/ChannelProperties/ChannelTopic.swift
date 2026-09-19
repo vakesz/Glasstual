@@ -11,47 +11,43 @@ import SwiftUI
 final class ChannelTopicModel {
 	var formattedTopic: String
 
-	let maximumLength: Int
+	private let maximumLength: UInt
 
 	init(formattedTopic: String, maximumLength: UInt) {
 		self.formattedTopic = formattedTopic
-		self.maximumLength = Int(clamping: maximumLength)
+		self.maximumLength = maximumLength
 	}
 
-	/// TOPICLEN is an octet count, so the topic is measured in UTF-8 bytes.
-	var formattedTopicLength: Int {
-		formattedTopic.utf8.count
+	/// The server's TOPICLEN against what the editor holds, or `nil` where no
+	/// connection named one.
+	var lengthLimit: ServerLengthLimit? {
+		ServerLengthLimit(using: formattedTopic, maximum: maximumLength)
 	}
 
-	/// What the sheet counts down, or `nil` where the server named no limit.
-	/// Negative once the topic no longer fits, which is what disables the
-	/// button and turns the footer into a warning.
-	var remainingLength: Int? {
-		maximumLength > 0 ? maximumLength - formattedTopicLength : nil
+	var fitsLengthLimit: Bool {
+		lengthLimit?.isExceeded != true
 	}
 
-	var fitsMaximumLength: Bool {
-		(remainingLength ?? 0) >= 0
+	/// What the footer under the editor says about the server's topic limit:
+	/// how much room is left, or how far past it the topic already is.
+	var lengthCaption: String? {
+		guard let limit = lengthLimit else { return nil }
+
+		return limit.isExceeded
+			? String(localized: .ChannelProperties.charactersOverLimit(arg1: -limit.remaining))
+			: String(localized: .ChannelProperties.charactersRemaining(arg1: limit.remaining))
 	}
 
 	var topicForSubmission: String {
 		formattedTopic.replacingOccurrences(of: "\n", with: " ")
 	}
-
-	/// What the footer under the editor says about the server's topic limit:
-	/// how much room is left, or how far past it the topic already is.
-	static func lengthFooter(remaining: Int) -> String {
-		remaining < 0
-			? String(localized: .ChannelTopic.charactersOverLimit(arg1: -remaining))
-			: String(localized: .ChannelTopic.charactersRemaining(arg1: remaining))
-	}
 }
 
 @MainActor
 final class ChannelTopicSheet: SheetSession, ChannelScoped {
-	private(set) var client: Client?
-	private(set) var channel: Channel?
-	private(set) var clientId: String?
+	private(set) var session: ServerSession?
+	private(set) var channel: Conversation?
+	private(set) var sessionId: String?
 	private(set) var channelId: String?
 
 	let model: ChannelTopicModel
@@ -59,17 +55,17 @@ final class ChannelTopicSheet: SheetSession, ChannelScoped {
 	/// The topic the person chose to set.
 	private let onSubmitTopic: (String) -> Void
 
-	init(channel: Channel, onSubmitTopic: @escaping (String) -> Void) {
+	init(channel: Conversation, onSubmitTopic: @escaping (String) -> Void) {
 		self.onSubmitTopic = onSubmitTopic
-		let client = channel.associatedClient
+		let session = channel.associatedSession
 
-		self.client = client
+		self.session = session
 		self.channel = channel
-		clientId = client?.uniqueIdentifier
+		sessionId = session?.uniqueIdentifier
 		channelId = channel.uniqueIdentifier
 		model = ChannelTopicModel(
 			formattedTopic: channel.topic ?? "",
-			maximumLength: client?.supportInfo.maximumTopicLength ?? 0
+			maximumLength: session?.supportInfo.maximumTopicLength ?? 0
 		)
 
 		super.init(window: nil)
@@ -81,14 +77,59 @@ final class ChannelTopicSheet: SheetSession, ChannelScoped {
 		))
 	}
 
-	func start() {
-		startSheet()
-	}
-
 	override func submit() {
-		guard model.fitsMaximumLength else { return }
+		guard model.fitsLengthLimit else { return }
 		onSubmitTopic(model.topicForSubmission)
 
 		super.submit()
+	}
+}
+
+@MainActor
+struct ChannelTopicView: View {
+	@Bindable var model: ChannelTopicModel
+
+	let channelName: String
+	let submit: @MainActor () -> Void
+	let cancel: @MainActor () -> Void
+
+	var body: some View {
+		VStack(spacing: UISpacing.wide) {
+			Form {
+				Section {
+					ChannelTopicEditor(
+						formattedText: $model.formattedTopic,
+						accessibilityLabel: String(localized: .ChannelProperties.topicEditorHeading(channelName)),
+						submit: submit
+					)
+					.frame(minHeight: 94)
+					.accessibilityHint(.ChannelProperties.editorAccessibilityHint)
+				} header: {
+					Text(.ChannelProperties.topicEditorHeading(channelName))
+				} footer: {
+					/* The count replaces the alert this sheet used to raise on
+					 the keystroke that crossed the limit: the answer belongs
+					 beside the text being typed, not in a dialog over it. */
+					if let caption = model.lengthCaption {
+						Text(verbatim: caption)
+							.foregroundStyle(model.fitsLengthLimit ? AnyShapeStyle(.secondary) : AnyShapeStyle(.red))
+					}
+				}
+			}
+			.formStyle(.grouped)
+
+			HStack(spacing: UISpacing.regular) {
+				Spacer()
+
+				Button(.ChannelProperties.cancelButton, action: cancel)
+					.keyboardShortcut(.cancelAction)
+
+				Button(.ChannelProperties.changeTopicButton, action: submit)
+					.keyboardShortcut(.defaultAction)
+					.disabled(model.fitsLengthLimit == false)
+			}
+		}
+		.padding(SheetMetrics.margin)
+		.frame(minWidth: 480, idealWidth: 600, minHeight: 260, idealHeight: 280)
 	}
 }

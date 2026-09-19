@@ -49,7 +49,7 @@ enum HarnessMain {
 				// owns scenario-deadline and removes it once the helper exits.
 				try? HarnessFiles.removeArmedDeadlines()
 			}
-			// Errors contain only harness-authored diagnostics, never wire payloads or preferences.
+			// Errors contain only harness-authored diagnostics, never wire payloads or settings.
 			let message = "E2E: \(error)\n"
 			try? FileHandle.standardError.write(contentsOf: Data(message.utf8))
 			if case HarnessFailure.setup = error {

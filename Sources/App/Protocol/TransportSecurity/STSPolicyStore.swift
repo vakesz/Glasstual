@@ -4,9 +4,7 @@
 import CocoaExtensions
 import Foundation
 
-let stsPolicyStoreDefaultsKey = Preferences.Connection.stsPolicies.name
-
-/// The STS policies this client has been told to honour, keyed by host.
+/// The STS policies this session has been told to honour, keyed by host.
 ///
 /// Main-actor, like the connection setup and the capability negotiation that
 /// are its only callers, so the policies need no lock of their own.
@@ -14,7 +12,13 @@ final class STSPolicyStore {
 	private let userDefaults: UserDefaults?
 	private var policies: [String: STSPolicy] = [:]
 
-	static let shared = STSPolicyStore(userDefaults: GlasstualUserDefaults.container)
+	/** The store the running application hands every session through its
+	 services.
+
+	 A policy names a host rather than a session, so one table serves every
+	 connection. Sessions reach it through `ChatServices.stsPolicies`, never
+	 statically, which is what lets a test drive the STS path with its own. */
+	static let applicationStore = STSPolicyStore(userDefaults: GlasstualUserDefaults.container)
 
 	init(userDefaults: UserDefaults?) {
 		self.userDefaults = userDefaults
@@ -52,15 +56,11 @@ final class STSPolicyStore {
 		save()
 	}
 
-	/// The endpoint a stored policy pins `host` to, or `nil` when there is no
+	/// The port a stored policy pins `host` to, or `nil` when there is no
 	/// policy. A stored policy always requires a secured connection, so the
 	/// port is the whole answer.
-	func enforcedEndpoint(forHost host: String) -> STSPolicyEndpoint? {
-		guard let policy = policy(forHost: host) else {
-			return nil
-		}
-
-		return STSPolicyEndpoint(port: policy.port)
+	func enforcedPort(forHost host: String) -> UInt16? {
+		policy(forHost: host)?.port
 	}
 
 	/// The longest an advertised policy is allowed to last.
@@ -143,7 +143,7 @@ final class STSPolicyStore {
 	}
 
 	private func load() {
-		guard let stored = userDefaults?.propertyListValue(for: Preferences.Connection.stsPolicies)?.dictionary else {
+		guard let stored = userDefaults?.propertyListValue(for: SettingsKeys.Connection.stsPolicies)?.dictionary else {
 			return
 		}
 
@@ -166,6 +166,6 @@ final class STSPolicyStore {
 		}
 
 		let stored = policies.mapValues { PropertyListValue.dictionary($0.dictionaryValue) }
-		userDefaults.setPropertyListValue(.dictionary(stored), for: Preferences.Connection.stsPolicies)
+		userDefaults.setPropertyListValue(.dictionary(stored), for: SettingsKeys.Connection.stsPolicies)
 	}
 }

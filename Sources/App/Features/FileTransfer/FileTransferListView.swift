@@ -8,12 +8,16 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct FileTransferListView: View {
-	let center: FileTransferCenter
+	let center: FileTransferStore
 	@Bindable private var model: FileTransferList
+	/// Quick Look binds straight into the access the window is holding, so the
+	/// list model is not asked to forward a preview selection it does not own.
+	@Bindable private var fileAccess: FileTransferFileAccess
 
-	init(center: FileTransferCenter) {
+	init(center: FileTransferStore) {
 		self.center = center
 		model = center.model
+		fileAccess = center.model.fileAccess
 	}
 
 	/** Which directions the window was last showing.
@@ -21,25 +25,25 @@ struct FileTransferListView: View {
 	 The model stays the authority — a notification action can widen the filter
 	 to reveal the transfer it names — so this only remembers what the model was
 	 last set to, and restores it when the window comes back. */
-	@SceneStorage("file-transfer-filter") private var shownDirections = FileTransferSelection.all
+	@SceneStorage("file-transfer-filter") private var storedDirectionFilter = FileTransferDirectionFilter.all
 
 	var body: some View {
 		VStack(spacing: 0) {
 			HStack {
-				Picker(.FileTransfers.show, selection: $model.filter) {
-					Text(.FileTransfers.all).tag(FileTransferSelection.all)
-					Text(.FileTransfers.sending).tag(FileTransferSelection.sending)
-					Text(.FileTransfers.receiving).tag(FileTransferSelection.receiving)
+				Picker(.FileTransfer.show, selection: $model.filter) {
+					Text(.FileTransfer.all).tag(FileTransferDirectionFilter.all)
+					Text(.FileTransfer.sending).tag(FileTransferDirectionFilter.sending)
+					Text(.FileTransfer.receiving).tag(FileTransferDirectionFilter.receiving)
 				}
 				.pickerStyle(.segmented)
 				.fixedSize()
 
 				Spacer()
-				Text(.FileTransfers.transfers(model.visibleTransfers.count))
+				Text(.FileTransfer.transfers(model.visibleTransfers.count))
 					.foregroundStyle(.secondary)
 					.monospacedDigit()
 			}
-			.padding(.horizontal, 12)
+			.padding(.horizontal, UISpacing.wide)
 			.padding(.vertical, 10)
 
 			List(selection: $model.selection) {
@@ -52,25 +56,25 @@ struct FileTransferListView: View {
 			.overlay {
 				if model.visibleTransfers.isEmpty {
 					ContentUnavailableView {
-						Label(.FileTransfers.noFileTransfers, systemImage: "arrow.left.arrow.right")
+						Label(.FileTransfer.noFileTransfers, systemImage: "arrow.left.arrow.right")
 					} description: {
-						Text(.FileTransfers.transfersAppearHere)
+						Text(.FileTransfer.transfersAppearHere)
 					}
 				}
 			}
 			.onChange(of: model.selection) { model.selectionDidChange() }
-			.onChange(of: model.filter) { shownDirections = model.filter }
+			.onChange(of: model.filter) { storedDirectionFilter = model.filter }
 			.onKeyPress(.space) {
 				guard model.canPerform(.preview) else { return .ignored }
 				center.perform(.preview, on: model.selection)
 				return .handled
 			}
 			.onDeleteCommand(perform: model.selection.isEmpty ? nil : { center.perform(.remove, on: model.selection) })
-			.accessibilityLabel(Text(.FileTransfers.fileTransfers))
+			.accessibilityLabel(Text(.FileTransfer.fileTransfers))
 
 			Divider()
-			HStack(spacing: 8) {
-				Button(.FileTransfers.clearAllStoppedTransfers, action: center.clearStoppedTransfers)
+			HStack(spacing: UISpacing.regular) {
+				Button(.FileTransfer.clearAllStoppedTransfers, action: center.clearStoppedTransfers)
 					.disabled(model.canClearStoppedTransfers == false)
 
 				Spacer()
@@ -85,33 +89,33 @@ struct FileTransferListView: View {
 				Button {
 					center.perform(.downloadTo, on: model.selection)
 				} label: {
-					Label(.FileTransfers.downloadTo, systemImage: "folder.badge.arrow.down")
+					Label(.FileTransfer.downloadTo, systemImage: "folder.badge.arrow.down")
 				}
 				.disabled(model.canPerform(.downloadTo) == false)
 
 				Button {
 					center.perform(.stop, on: model.selection)
 				} label: {
-					Label(.FileTransfers.cancelTransfer, systemImage: "stop.fill")
+					Label(.FileTransfer.cancelTransfer, systemImage: "stop.fill")
 				}
 				.disabled(model.canPerform(.stop) == false)
 
 				Button {
 					center.perform(.preview, on: model.selection)
 				} label: {
-					Label(.FileTransfers.quickLook, systemImage: "eye")
+					Label(.FileTransfer.quickLook, systemImage: "eye")
 				}
 				.disabled(model.canPerform(.preview) == false)
 			}
 			.controlSize(.small)
 			.padding(10)
 		}
-		.task { model.filter = shownDirections }
+		.task { model.filter = storedDirectionFilter }
 		.onExitCommand(perform: center.dismiss)
-		.quickLookPreview($model.previewSelection, in: model.previewItems)
+		.quickLookPreview($fileAccess.previewSelection, in: model.previewItems)
 		.onDisappear {
-			model.previewSelection = nil
-			model.releaseShareAccess()
+			fileAccess.previewSelection = nil
+			fileAccess.releaseShareAccess()
 		}
 		.fileImporter(
 			isPresented: $model.isChoosingDestination,
@@ -152,29 +156,29 @@ struct FileTransferListView: View {
 	private func transferMenu(for identifiers: Set<String>) -> some View {
 		Button(model.startActionTitle(for: identifiers)) { center.perform(.start, on: identifiers) }
 			.disabled(model.canPerform(.start, on: identifiers) == false)
-		Button(.FileTransfers.downloadTo) { center.perform(.downloadTo, on: identifiers) }
+		Button(.FileTransfer.downloadTo) { center.perform(.downloadTo, on: identifiers) }
 			.disabled(model.canPerform(.downloadTo, on: identifiers) == false)
-		Button(.FileTransfers.cancelTransfer) { center.perform(.stop, on: identifiers) }
+		Button(.FileTransfer.cancelTransfer) { center.perform(.stop, on: identifiers) }
 			.disabled(model.canPerform(.stop, on: identifiers) == false)
 
 		Divider()
-		Button(.FileTransfers.quickLook) { center.perform(.preview, on: identifiers) }
+		Button(.FileTransfer.quickLook) { center.perform(.preview, on: identifiers) }
 			.disabled(model.canPerform(.preview, on: identifiers) == false)
-		Button(.FileTransfers.openFile) { center.perform(.open, on: identifiers) }
+		Button(.FileTransfer.openFile) { center.perform(.open, on: identifiers) }
 			.disabled(model.canPerform(.open, on: identifiers) == false)
-		Button(.FileTransfers.showInFinder) { center.perform(.reveal, on: identifiers) }
+		Button(.FileTransfer.showInFinder) { center.perform(.reveal, on: identifiers) }
 			.disabled(model.canPerform(.reveal, on: identifiers) == false)
 
 		/* Asking the model settles the rows' local files once for the whole
 		 menu, and leaves the share holding the access it needs to read them. */
 		let urls = model.shareableFileURLs(for: identifiers)
 		ShareLink(items: urls) {
-			Text(.FileTransfers.share)
+			Text(.FileTransfer.share)
 		}
 		.disabled(urls.count != identifiers.count)
 
 		Divider()
-		Button(.FileTransfers.removeFromList, role: .destructive) {
+		Button(.FileTransfer.removeFromList, role: .destructive) {
 			center.perform(.remove, on: identifiers)
 		}
 	}
@@ -186,7 +190,7 @@ private struct FileTransferRowView: View {
 	var body: some View {
 		let presentation = FileTransferRowPresentation(transfer: transfer)
 
-		HStack(spacing: 12) {
+		HStack(spacing: UISpacing.wide) {
 			Image(nsImage: fileIcon)
 				.resizable()
 				.scaledToFit()
@@ -204,7 +208,7 @@ private struct FileTransferRowView: View {
 						.foregroundStyle(.secondary)
 						.monospacedDigit()
 						.accessibilityIdentifier("file-transfer-bytes-\(transfer.uniqueIdentifier)")
-						.accessibilityLabel(Text(.FileTransfers.transferTotalSize(presentation.totalSize)))
+						.accessibilityLabel(Text(.FileTransfer.transferTotalSize(presentation.totalSize)))
 						.accessibilityValue(Text(verbatim: presentation.processedSize))
 				}
 
@@ -230,11 +234,11 @@ private struct FileTransferRowView: View {
 		case .indeterminate:
 			ProgressView()
 				.progressViewStyle(.linear)
-				.accessibilityLabel(Text(.FileTransfers.transferProgress))
+				.accessibilityLabel(Text(.FileTransfer.transferProgress))
 		case let .determinate(value, total):
 			ProgressView(value: Double(value), total: Double(max(total, 1)))
 				.progressViewStyle(.linear)
-				.accessibilityLabel(Text(.FileTransfers.transferProgress))
+				.accessibilityLabel(Text(.FileTransfer.transferProgress))
 		}
 	}
 
@@ -245,11 +249,11 @@ private struct FileTransferRowView: View {
 }
 
 struct FileTransferListScene: Scene {
-	let center: FileTransferCenter
+	let center: FileTransferStore
 
 	var body: some Scene {
 		WindowGroup(
-			String(localized: .FileTransfers.fileTransfers),
+			String(localized: .FileTransfer.fileTransfers),
 			id: ApplicationSceneID.fileTransfers,
 			for: SingletonSceneValue.self
 		) { _ in

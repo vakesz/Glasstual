@@ -23,20 +23,12 @@ nonisolated enum ApplicationInfo {
 		bundleValue(for: "CFBundleShortVersionString")
 	}
 
-	static func applicationProcessID() -> Int32 {
-		ProcessInfo.processInfo.processIdentifier
-	}
-
 	static func applicationBundleIdentifier() -> String {
 		guard let identifier = Bundle.main.bundleIdentifier, !identifier.isEmpty else {
 			preconditionFailure("The generated Info.plist is missing CFBundleIdentifier")
 		}
 
 		return identifier
-	}
-
-	static func applicationInfoPlist() -> [String: PropertyListValue] {
-		Bundle.main.infoDictionary.flatMap { [String: PropertyListValue](propertyList: $0) } ?? [:]
 	}
 
 	static func applicationLaunchDate() -> Date? {
@@ -52,15 +44,15 @@ nonisolated enum ApplicationInfo {
 	}
 
 	@MainActor static func timeIntervalSinceApplicationInstall() -> TimeInterval {
-		Preferences.Internals.runTime.value + timeIntervalSinceApplicationLaunch()
+		SettingsKeys.Internals.runTime.value + timeIntervalSinceApplicationLaunch()
 	}
 
 	@MainActor static func saveTimeIntervalSinceApplicationInstall() {
-		Preferences.Internals.runTime.value = timeIntervalSinceApplicationInstall()
+		SettingsKeys.Internals.runTime.value = timeIntervalSinceApplicationInstall()
 	}
 
 	@MainActor static func applicationRunCount() -> UInt {
-		Preferences.Internals.runCount.value
+		SettingsKeys.Internals.runCount.value
 	}
 
 	/// The stored count is read back before it is raised, and a value a
@@ -69,11 +61,7 @@ nonisolated enum ApplicationInfo {
 	/// a launch from ending on the increment if one ever gets past it.
 	@MainActor static func incrementApplicationRunCount() {
 		let count = applicationRunCount()
-		Preferences.Internals.runCount.value = count < .max ? count + 1 : count
-	}
-
-	static func applicationBirthday() -> TimeInterval {
-		1_279_871_580
+		SettingsKeys.Internals.runCount.value = count < .max ? count + 1 : count
 	}
 
 	private static func bundleValue(for key: String) -> String {

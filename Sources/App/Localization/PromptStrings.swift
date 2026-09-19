@@ -25,10 +25,6 @@ nonisolated enum PromptStrings {
 			String(localized: .Prompts.cancel)
 		}
 
-		static var chooseFile: String {
-			String(localized: .Prompts.chooseFile)
-		}
-
 		static var close: String {
 			String(localized: .Prompts.close)
 		}
@@ -57,16 +53,12 @@ nonisolated enum PromptStrings {
 			String(localized: .Prompts.open)
 		}
 
-		static var remove: String {
-			String(localized: .Prompts.remove)
-		}
-
 		static var save: String {
 			String(localized: .Prompts.save)
 		}
 
-		static var select: String {
-			String(localized: .Prompts.select)
+		static var saveFile: String {
+			String(localized: .Prompts.saveFile)
 		}
 
 		static var send: String {
@@ -84,10 +76,6 @@ nonisolated enum PromptStrings {
 		static var doNotAskAgain: String {
 			String(localized: .Prompts.doNotAskMeAgain)
 		}
-
-		static var doNotShowAgain: String {
-			String(localized: .Prompts.doNotShowThisMessageAgain)
-		}
 	}
 
 	enum Application {
@@ -101,40 +89,6 @@ nonisolated enum PromptStrings {
 
 		static var quitTitle: String {
 			String(localized: .Prompts.areYouSureYouWantToQuitGlasstual)
-		}
-	}
-
-	enum ConfigurationTransfer {
-		static var exportBody: String {
-			String(localized: .Prompts.pleaseNoteThatTheFollowingItemsCannotBeExported)
-		}
-
-		static var exportButtonTitle: String {
-			String(localized: .Prompts.saveFile)
-		}
-
-		static var exportTitle: String {
-			String(localized: .Prompts.thisActionWillSaveACopy)
-		}
-
-		static var importBody: String {
-			String(localized: .Prompts.pleaseNoteThatTheFollowingItems)
-		}
-
-		static var importTitle: String {
-			String(localized: .Prompts.thisActionWillOverwriteYourConfiguration)
-		}
-
-		static var importBackupFailedBody: String {
-			String(localized: .Prompts.yourCurrentPreferencesCouldNotBeBackedUp)
-		}
-
-		static var importFailureTitle: String {
-			String(localized: .Prompts.thePreferencesCouldNotBeImported)
-		}
-
-		static var importInvalidDocumentBody: String {
-			String(localized: .Prompts.theSelectedFileIsNotAPreferencesFile)
 		}
 	}
 
@@ -186,14 +140,6 @@ nonisolated enum PromptStrings {
 	}
 
 	enum DirectChat {
-		static var acceptButtonTitle: String {
-			Action.accept
-		}
-
-		static var declineButtonTitle: String {
-			Action.decline
-		}
-
 		static func body(sender: String) -> String {
 			String(localized: .Prompts.wantsToStartADirectChat(sender))
 		}
@@ -204,14 +150,6 @@ nonisolated enum PromptStrings {
 	}
 
 	enum DocumentImport {
-		static var documentOpenBody: String {
-			String(localized: .Prompts.intentionallyEmptyInformativeText)
-		}
-
-		static func documentOpenTitle(filename: String) -> String {
-			String(localized: .Prompts.areYouSureYouWantToOpenTheFileNamed(filename))
-		}
-
 		static func scriptCommandBody(name: String) -> String {
 			String(localized: .Prompts.typeIntoTheMainInputText(name))
 		}
@@ -242,10 +180,6 @@ nonisolated enum PromptStrings {
 			String(localized: .Prompts.scrollbackDatabaseCouldNotBeOpened)
 		}
 
-		static var scrollbackFailureTitle: String {
-			String(localized: .Prompts.couldNotOpenSavedConversationHistory)
-		}
-
 		static var staleLocationBody: String {
 			String(localized: .Prompts.navigateToPreferencesAdvancedLogLocation)
 		}
@@ -260,10 +194,6 @@ nonisolated enum PromptStrings {
 	}
 
 	enum TransportSecurity {
-		static var invalidCertificateContinueButtonTitle: String {
-			Action.continueAction
-		}
-
 		static func certificateFailureBody(serverName: String) -> String {
 			String(localized: .Prompts.certificateForThisServerIsInvalid(serverName))
 		}
@@ -294,10 +224,6 @@ nonisolated enum PromptStrings {
 
 		static func encryptedConnectionTitle(policyName: String) -> String {
 			String(localized: .Prompts.glasstualIsUsingAnEncryptedConnection(policyName))
-		}
-
-		static func encryptionDescription(policyName: String) -> String {
-			String(localized: .Prompts.encryptionWithADigitalCertificateKeeps(policyName))
 		}
 
 		static func trustFailure(_ description: String) -> String {

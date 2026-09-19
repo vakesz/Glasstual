@@ -31,7 +31,13 @@
  *********************************************************************** */
 
 import Foundation
+import os
 import Security
+
+private let keychainLogger = Logger(
+	subsystem: Logging.frameworkSubsystem,
+	category: "Keychain"
+)
 
 /** An edit to a keychain-backed secret that has not been flushed yet.
 
@@ -107,7 +113,7 @@ public enum KeychainItem: Sendable, Equatable, Hashable {
 		case let .nicknamePassword(identifier): "glasstual.nickserv.\(identifier)"
 		case let .proxyPassword(identifier): "glasstual.proxy-server.\(identifier)"
 		case let .serverPassword(identifier): "glasstual.server.\(identifier)"
-		case let .channelSecretKey(identifier): "glasstual.cjoinkey.\(identifier)"
+		case let .channelSecretKey(identifier): "glasstual.channel-key.\(identifier)"
 		}
 	}
 
@@ -115,11 +121,11 @@ public enum KeychainItem: Sendable, Equatable, Hashable {
 	 build running the unit tests or a UI review, where it is prefixed.
 
 	 Those runs set `GLASSTUAL_UI_REVIEW_SUITE` or
-	 `GLASSTUAL_UI_REVIEW_DIRECTORY` to keep off the user's real preferences and
+	 `GLASSTUAL_UI_REVIEW_DIRECTORY` to keep off the user's real settings and
 	 files, and the prefix does the same for secrets: the tests run inside the
 	 application and share its access group, so without it a test item and a
-	 real one with the same identifier would be one item. ``service`` stays the
-	 name earlier releases wrote, which is what everything else asks for. */
+	 real one with the same identifier would be one item. ``service`` is what a
+	 shipping build writes, and what every other reader of these names asks for. */
 	public var storedService: String {
 		KeychainStore.isolatedServicePrefix + service
 	}
@@ -198,10 +204,9 @@ public actor KeychainWriter {
 /// The `SecItem` calls behind ``KeychainItem``. The four cases of that enum are
 /// the whole surface anything outside this framework needs.
 ///
-/// Secrets go to the process's default keychain access group, which is the
-/// first entry of its `keychain-access-groups` entitlement. The application
-/// declares its own there, and the IRC connection host — which holds only its
-/// own group — cannot read any of them.
+/// Every item is written to, looked up in and deleted from one keychain access
+/// group, ``accessGroup``. The application declares its own group, and the IRC
+/// connection host — which holds only its own — cannot read any of them.
 enum KeychainStore {
 	/// Prepended to every stored service name in a Debug test or UI-review run;
 	/// empty otherwise, and always empty in a Release build.
@@ -215,6 +220,35 @@ enum KeychainStore {
 		#else
 			return ""
 		#endif
+	}()
+
+	/** The one keychain access group these calls name, on every operation.
+
+	 It is the first group of the running process's `keychain-access-groups`
+	 entitlement, read from the process's own signature rather than spelled out
+	 here: the string carries a team prefix the source does not know. That is
+	 also the group an add without one lands in, so nothing about where a secret
+	 is written changes. What changes is the lookup: it answers with an item in
+	 this group and no other, so a secret an earlier build left in one of the
+	 process's other groups can no longer shadow the one this build wrote, and
+	 which of two items for one service wins is no longer unspecified.
+
+	 `nil` in a process whose signature carries no such entitlement: there is no
+	 group to name, and `SecItem` is left to its own default. */
+	static let accessGroup: String? = {
+		guard let task = SecTaskCreateFromSelf(nil) else {
+			keychainLogger.error("Could not read this process's own signature to name a keychain access group")
+
+			return nil
+		}
+		let entitlement = SecTaskCopyValueForEntitlement(task, "keychain-access-groups" as CFString, nil)
+		guard let group = (entitlement as? [String])?.first else {
+			keychainLogger.error("This process is entitled to no keychain access group")
+
+			return nil
+		}
+
+		return group
 	}()
 
 	@discardableResult
@@ -295,11 +329,19 @@ enum KeychainStore {
 	/// `errSecItemNotFound`, then fail again as `errSecDuplicateItem` when the
 	/// add ran, dropping the new password without saying so.
 	///
+	/// `kSecUseDataProtectionKeychain` is what makes ``accessGroup`` mean
+	/// anything: without it macOS answers from the legacy file-based keychain,
+	/// which has no access groups and ignores the attribute in silence.
 	private static func identityQuery(service: String) -> [CFString: Any] {
-		[
+		var query: [CFString: Any] = [
 			kSecClass: kSecClassGenericPassword,
 			kSecAttrService: service,
 			kSecUseDataProtectionKeychain: true,
 		]
+		if let accessGroup {
+			query[kSecAttrAccessGroup] = accessGroup
+		}
+
+		return query
 	}
 }

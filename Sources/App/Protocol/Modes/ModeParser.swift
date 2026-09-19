@@ -4,11 +4,35 @@
 
 import Foundation
 
+/** One `MODE` command's arguments after the channel name.
+
+ A mode change is a mode string and the parameters that pair with it, and the
+ two are separate tokens on the wire. Carrying them as one space-joined string
+ meant the compiler built `"+ooo alice bob carol"` and `sendModes` took it apart
+ again with the wire tokeniser — a round trip through text whose only job was to
+ be undone, and one that could not carry a parameter containing a space. */
+nonisolated struct ModeChangeGroup: Sendable, Equatable {
+	/// The mode string, signs included: `+ooo`, `-k+l`, `+nt`.
+	var symbols: String
+	/// The parameters the mode string's letters pair with, in order.
+	var parameters: [String]
+
+	init(symbols: String, parameters: [String] = []) {
+		self.symbols = symbols
+		self.parameters = parameters
+	}
+
+	/// The group as the wire arguments that follow the channel name.
+	var wireArguments: [String] {
+		[symbols] + parameters
+	}
+}
+
 nonisolated enum ModeParser {
 	/** The channel modes RFC 1459 2.3 defines, for a server that has not said
 	 which it has.
 
-	 `CHANMODES` arrives in 005, which is after the client has already joined
+	 `CHANMODES` arrives in 005, which is after the session has already joined
 	 nothing and before it has joined anything — but a server may never send one
 	 at all, and a `MODE` or `RPL_CHANNELMODEIS` can arrive before it does. With
 	 no table every letter parsed as a plain flag, so `+b nick!*@*` recorded a
@@ -145,5 +169,32 @@ nonisolated enum ModeParser {
 		flush()
 
 		return results
+	}
+}
+
+extension ServerSession {
+	func compileListOfModeChanges(
+		forModeSymbol modeSymbol: String,
+		modeIsSet: Bool,
+		parameterString: String
+	) -> [ModeChangeGroup] {
+		compileListOfModeChanges(
+			forModeSymbol: modeSymbol,
+			modeIsSet: modeIsSet,
+			modeParameters: parameterString.components(separatedBy: .whitespaces)
+		)
+	}
+
+	func compileListOfModeChanges(
+		forModeSymbol modeSymbol: String,
+		modeIsSet: Bool,
+		modeParameters: [String]
+	) -> [ModeChangeGroup] {
+		ModeParser.compileModeChanges(
+			symbol: modeSymbol,
+			isSet: modeIsSet,
+			parameters: modeParameters,
+			maximumModes: supportInfo.maximumModeCount
+		)
 	}
 }

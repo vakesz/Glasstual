@@ -127,12 +127,27 @@ deliberate removal rather than a missing port.
   the tests ever asked whether a read found nothing or was refused, so
   `KeychainItem.password` answering `nil` for both is the whole surface.
   `PendingKeychainSecret.merged(over:)` had no caller
-- `KeychainStore.migrateFromOtherAccessGroup(...)`,
-  `removeCopiesOutsideAccessGroup(...)` and the `entitledAccessGroups` lookup
-  that named the group to write to. Secrets go to the process's default keychain
-  access group, which is the first entitled one -- the same group the explicit
-  name selected -- so a build that predates this fork's container is not
-  something the read path still looks for
+- `KeychainStore.migrateFromOtherAccessGroup(...)` and
+  `removeCopiesOutsideAccessGroup(...)`. Nothing moves a secret between access
+  groups or deletes a copy in another one: an item a build that predates this
+  fork's container left behind stays where it is, and the read path does not
+  look for it. The `entitledAccessGroups` lookup is back, as
+  `KeychainStore.accessGroup`: it reads the first group of the process's
+  `keychain-access-groups` entitlement and names it on every `SecItem` call, so
+  a lookup answers with an item in that one group rather than with whichever of
+  the process's groups the keychain picked
+- `NSCoder.textual_decodeString(forKey:)` and `Numeric.data`, neither of which
+  had a caller anywhere in the tree
+- `Int64.textualPaddedByteCountDescription`, a one-line
+  `formatted(.byteCount(style: .file))`. Its three callers now go through the
+  application's own `LocalizedByteCount`, so the framework no longer owns a
+  user-facing format
+- `SystemInformation.systemBuildVersion`, `systemStandardVersion` and
+  `systemOperatingSystemName`, with the private `SystemVersion` struct that read
+  `/System/Library/CoreServices/SystemVersion.plist` to back the first of them.
+  Nothing named the machine's OS version. `SystemInformation.xcstrings` and its
+  one `operating-system-macos` key stay: the translations are preserved even
+  though the code that read them is gone
 
 Narrowed rather than removed: `String.IPv4AddressBytes` / `IPv6AddressBytes`
 (read only by `isIPv4Address` / `isIPv6Address`),
@@ -167,6 +182,47 @@ names are:
   matches one pattern against many subjects shares the one cache
 - `NSColor.textualChannelByte(_:)` / `textualChannel(_:)`, both private, ->
   `channelByte(_:)` / `channel(_:)`
+- `NSWorkspace.textual_nameOfApplication(toOpen:)` ->
+  `NSWorkspace.nameOfApplication(opening:)`
+- `NSData.textualSha1` / `textualSha256` / `textualSha512` ->
+  `NSData.sha1Hex` / `sha256Hex` / `sha512Hex`, with the private
+  `textual_hexadecimalString(for:)` helper renamed `hexadecimalString(for:)` and
+  the private `textualData` bridge inlined
+- `NSNumber.textualIntegerStringValueWithLeadingZero` -> `NSNumber.twoDigitString`
+- `NSPasteboard.textualStringContent` -> `NSPasteboard.stringContent`
+- `CharacterSet.textualHexadecimal` -> `CharacterSet.hexadecimalDigits`,
+  `textualPercentEncoded` -> `unreservedURICharacters`,
+  `textualAlphanumericDashPeriod` -> `hostNameCharacters`,
+  `textualLetter` -> `asciiLetters`
+- `CipherSuiteCollection` names what each case is instead of when it was
+  written: `.none` -> `.system` (it never meant "no suites" — it means the
+  platform's own group), `.mozilla2015` -> `.intermediate`, and `.default` and
+  `.mozilla2017` -> one `.modern`, the two having named byte-identical lists.
+  Raw values changed with them; nothing reads the old ones
+- `SecureTransportSupport.isCipherSuiteDeprecated(_:)` ->
+  `isCipherSuiteLegacy(_:)`, and it now answers for every suite without forward
+  secrecy rather than only for the six the fallback offers
+
+## Members added here
+
+- `SecureTransportSupport.legacyCipherSuites`,
+  `namesNoSharedCipherSuite(errorCode:)` and
+  `retriesWithLegacyCipherSuites(afterErrorCode:legacySuitesAlreadyOffered:peerCertificateSeen:)`,
+  with the `no-shared-cipher-suite` entry of `SecureTransportErrorCodes.xcstrings`.
+  Together they are the judgement behind the transport's one automatic dial
+  without forward secrecy: which failure means the two sides agreed on no cipher
+  suite, and what may be offered when it does. `cipherSuites(inCollection:)`
+  lost its `includeDeprecated:` parameter in the same change — the suites it
+  used to add are reached through `legacyCipherSuites` and by nothing a user can
+  choose
+- `String.nonEmpty` in `StringExtensions.swift`, which reads an empty string as
+  the absent value it stands for on the wire. It came from the application's own
+  `UI/NonEmptyString.swift` when that folder was dissolved: it extends
+  Foundation and nothing about it is UI
+- `ComparisonResult.ordered(by:)` in `FoundationExtensions.swift`, which flips an
+  ascending result for a descending `SortOrder`. It came from the application's
+  own `UI/ComparisonResult+SortOrder.swift` in the same change, for the same
+  reason; every `SortComparator` a table column is built from needs the flip
 
 ## Files renamed or merged
 
@@ -198,6 +254,13 @@ for each standalone type:
   `DataHelper.swift` → `DataExtensions.swift`
 - `FileManagerHelper.swift` → `FileReplacement.swift`, after which
   `stageAndReplaceItem(at:withItemAt:)` is what the file is about
+- `SystemInformation.swift` → `SystemSleepState.swift`. Once the OS-version
+  accessors went, the type answered one question — whether the machine is
+  asleep — so it is named for it: `beginObservingSleepState()` is
+  `beginObserving()` and `systemIsSleeping` is `isSleeping`
+- `NSWorkspace.textual_nameOfApplication(toOpen:)` moved from
+  `FoundationExtensions.swift` to `AppKitExtensions.swift`. One file per
+  extended framework, and `NSWorkspace` is not Foundation
 
 ## Files removed
 
@@ -217,6 +280,12 @@ for each standalone type:
   travel with their source: `Sources/CocoaExtensions/LICENSE.txt`,
   `Sources/CocoaExtensions/ACKNOWLEDGEMENT.txt` and the per-file notices listed
   below.
+- `.gitignore`, the upstream repository's own ignore file. It listed
+  `*.mode1v3`, `*.pbxuser`, `*.perspectivev3`, `*.pyc`, `build`,
+  `Build Results`, `xcuserdata` and `*.xcworkspace` — none of which can appear
+  inside a source directory here, and the last of which fought the
+  repository-root `.gitignore`. It is neither a licence nor a provenance
+  record, so it carries nothing that had to be preserved.
 
 ## Files authored here
 

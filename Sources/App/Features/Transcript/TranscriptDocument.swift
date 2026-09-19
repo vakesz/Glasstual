@@ -51,11 +51,13 @@ struct TranscriptDocument {
 	/// The ordinal of `lines[0]`.
 	private(set) var firstLineOrdinal = 0
 
-	/// The decoded images each line drew, keyed by line number.
-	var inlineImages: [String: [CachedTranscriptImage]] = [:]
+	/// The decoded images each line drew, keyed by line number. Written only
+	/// from here, beside the lines the keys name: a table a caller could edit
+	/// on its own is a table that can outlive the line it belongs to.
+	private(set) var inlineImages: [String: [CachedTranscriptImage]] = [:]
 
 	/// How many lines the reader asked to keep.
-	var bufferLimit = TranscriptBufferPolicy.defaultHardLimit
+	var bufferLimit = TranscriptBufferLimits.defaultHardLimit
 
 	/** Older lines pulled in while the reader follows the end, which raise the
 	 buffer's ceiling so the trim after the prepend does not take them straight
@@ -113,6 +115,16 @@ struct TranscriptDocument {
 		return NSRange(location: location(ofLineAt: index), length: length(ofLineAt: index))
 	}
 
+	/// The characters one message drew, across every row it is spread over, or
+	/// nothing where no row of it is in the document.
+	func range(ofMessage identifier: String) -> NSRange? {
+		guard let ordinals = messageLineOrdinals[identifier] else { return nil }
+		let indices = ordinals.map { $0 - firstLineOrdinal }.filter { lines.indices.contains($0) }
+		guard let first = indices.min(), let last = indices.max() else { return nil }
+		let start = location(ofLineAt: first)
+		return NSRange(location: start, length: location(ofLineAt: last) + length(ofLineAt: last) - start)
+	}
+
 	/// The lines of `newLines` the document does not already hold, in order and
 	/// without repeats within the batch itself.
 	func accepting(_ newLines: [TranscriptRow]) -> [TranscriptRow] {
@@ -126,13 +138,13 @@ struct TranscriptDocument {
 
 	 While the reader follows the end it is what they asked for, widened by any
 	 scrollback pulled in since. While they are reading back it is the largest
-	 scrollback the preference allows: every line trimmed from the top then is
+	 scrollback the setting allows: every line trimmed from the top then is
 	 one the reader may be looking at, and trimming it moved the text under them
 	 and pulled the viewport into the range that fetches more history -- so a
-	 busy channel dropped what the reader had loaded and fetched it again, once
+	 busy conversation dropped what the reader had loaded and fetched it again, once
 	 per message. The scrollback comes back down when they return to the end. */
 	func effectiveBufferLimit(followsBottom: Bool) -> Int {
-		let ceiling = TranscriptBufferPolicy.validLimits.upperBound
+		let ceiling = TranscriptBufferLimits.validLimits.upperBound
 		return followsBottom ? min(bufferLimit + scrollbackAllowance, ceiling) : ceiling
 	}
 
@@ -142,9 +154,9 @@ struct TranscriptDocument {
 	}
 
 	/// How many more lines the document may hold at all, whatever the reader's
-	/// buffer preference: the hard ceiling a prepend is measured against.
+	/// buffer setting: the hard ceiling a prepend is measured against.
 	var roomBeforeCeiling: Int {
-		TranscriptBufferPolicy.validLimits.upperBound - lines.count
+		TranscriptBufferLimits.validLimits.upperBound - lines.count
 	}
 
 	// MARK: - Editing
@@ -302,7 +314,7 @@ struct TranscriptDocument {
 	/** Moves the unread boundary, and answers with the indices to redraw.
 
 	 `caption` is the marker's text, which the caller reads from the catalog. */
-	mutating func setUnreadMarker(_ mark: TranscriptScrollbackMark, caption: String) -> [Int] {
+	mutating func setUnreadMarker(_ mark: UnreadMarker, caption: String) -> [Int] {
 		var changed: [Int] = []
 		for index in lines.indices where lines[index].markers.contains(where: \.isUnread) {
 			lines[index].markers.removeAll(where: \.isUnread)

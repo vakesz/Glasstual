@@ -21,11 +21,11 @@ nonisolated struct ModeInfo: Hashable, Sendable {
 	}
 
 	@MainActor
-	func isModeForChangingMemberMode(on client: Client) -> Bool {
+	func isModeForChangingMemberMode(on session: ServerSession) -> Bool {
 		guard modeParameter?.isEmpty == false else {
 			return false
 		}
 
-		return client.supportInfo.modeSymbolIsUserPrefix(modeSymbol)
+		return session.supportInfo.modeSymbolIsUserPrefix(modeSymbol)
 	}
 }

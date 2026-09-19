@@ -1,0 +1,197 @@
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
+
+import Foundation
+@testable import Glasstual
+import Testing
+
+/// Behaviour corpus for hyperlink detection in message bodies.
+@MainActor
+struct LinkParserCorpusTests {
+	nonisolated struct LinkCase: Sendable {
+		let text: String
+		let links: [String]
+
+		init(_ text: String, _ links: [String]) {
+			self.text = text
+			self.links = links
+		}
+	}
+
+	// MARK: - Detection
+
+	nonisolated static let detectionCases: [LinkCase] = [
+		/* Plain addresses with an explicit scheme. */
+		LinkCase("see http://example.com/page for details", ["http://example.com/page"]),
+		LinkCase("http://example.com:8080/x", ["http://example.com:8080/x"]),
+		LinkCase("http://example.com/#frag", ["http://example.com/#frag"]),
+		LinkCase("HTTP://EXAMPLE.COM/A", ["HTTP://EXAMPLE.COM/A"]),
+		LinkCase(
+			"multiple http://a.example.com and http://b.example.com links",
+			["http://a.example.com", "http://b.example.com"]
+		),
+		/* Bare domains get the default scheme. */
+		LinkCase("visit example.com now", ["http://example.com"]),
+		LinkCase("visit www.example.com now", ["http://www.example.com"]),
+		/* mDNS names are matched by a supplementary expression. */
+		LinkCase("printer.local/setup", ["http://printer.local/setup"]),
+		/* Subreddit shorthand expands to a reddit address. */
+		LinkCase("go to /r/swift now", ["https://www.reddit.com/r/swift"]),
+		/* Built-in schemes the data detector does not produce on its own. */
+		LinkCase("spotify:track:6rqhFgbbKwnb9MLmUQDhG6", ["spotify:track:6rqhFgbbKwnb9MLmUQDhG6"]),
+		LinkCase(
+			"magnet:?xt=urn:btih:0123456789abcdef0123456789abcdef01234567",
+			["magnet:?xt=urn:btih:0123456789abcdef0123456789abcdef01234567"]
+		),
+		LinkCase("xmpp:user@example.com", ["xmpp:user@example.com"]),
+		/* IPv6 literals keep their brackets and port. */
+		LinkCase("ipv6 http://[2001:db8::1]/path here", ["http://[2001:db8::1]/path"]),
+		LinkCase("ipv6 http://[2001:db8::1]:8080/path here", ["http://[2001:db8::1]:8080/path"]),
+		/* E-mail addresses and IRC hostmasks are never links. */
+		LinkCase("mail me at someone@example.com ok", []),
+		LinkCase("nick!user@host said hi", []),
+		/* Too short to be a link. */
+		LinkCase("a.b", []),
+	]
+
+	@Test(arguments: Self.detectionCases)
+	func locatesLinks(testCase: LinkCase) {
+		let located = LinkParser.locateLinks(in: testCase.text).map(\.stringValue)
+
+		#expect(located == testCase.links)
+	}
+
+	// MARK: - Trailing punctuation and brackets
+
+	nonisolated static let punctuationCases: [LinkCase] = [
+		/* Sentence punctuation is not part of the address. */
+		LinkCase("see http://example.com/page. for details", ["http://example.com/page"]),
+		LinkCase("question? http://example.com/a?", ["http://example.com/a"]),
+		LinkCase("trailing dots http://example.com/a...", ["http://example.com/a"]),
+		LinkCase("end of sentence at example.com.", ["http://example.com"]),
+		LinkCase("quote \"http://example.com/a\" end", ["http://example.com/a"]),
+		/* A comma inside a path is kept; the data detector decides the extent. */
+		LinkCase("https://example.com/a,b", ["https://example.com/a,b"]),
+		/* An unmatched closing bracket belongs to the sentence. */
+		LinkCase("wrap (http://example.com/page) here", ["http://example.com/page"]),
+		LinkCase("brackets [http://example.com/a] end", ["http://example.com/a"]),
+		LinkCase("emphasis (see example.com)", ["http://example.com"]),
+		LinkCase("unbalanced http://example.com/a) tail", ["http://example.com/a"]),
+		LinkCase("http://example.com/a]", ["http://example.com/a"]),
+		/* A matched closing bracket belongs to the address. */
+		LinkCase(
+			"wrap http://example.com/page_(disambiguation) here",
+			["http://example.com/page_(disambiguation)"]
+		),
+	]
+
+	@Test(arguments: Self.punctuationCases)
+	func trimsTrailingPunctuationButKeepsBalancedBrackets(testCase: LinkCase) {
+		let located = LinkParser.locateLinks(in: testCase.text).map(\.stringValue)
+
+		#expect(located == testCase.links)
+	}
+
+	// MARK: - Dangerous schemes
+
+	/// Schemes that execute code or read local state are never linked.
+	@Test(arguments: [
+		"javascript:alert(1)",
+		"javascript:void(document.cookie)",
+		"data:text/html;base64,PHNjcmlwdD4=",
+		"data:text/plain,hello",
+		"file:///etc/passwd",
+		"FILE:///etc/passwd",
+		"file://localhost/etc/passwd",
+		"see file:///Users/someone/secret.txt here",
+		"see javascript:alert(1) here",
+	])
+	func neverLinksExecutableOrLocalSchemes(text: String) {
+		let located = LinkParser.locateLinks(in: text)
+
+		/* Asserting emptiness rather than filtering the results: a loop over an
+		 empty array checks nothing, and a link to somewhere else entirely is
+		 just as wrong as the scheme this case is named for. */
+		#expect(located.isEmpty, "\(text) produced \(located.map(\.stringValue))")
+	}
+
+	// MARK: - Ranges and identity
+
+	@Test
+	func reportsTheRangeAndIdentityOfEachMatch() throws {
+		let text = "visit example.com and http://other.example/a"
+		let located = LinkParser.locateLinks(in: text)
+
+		#expect(located.count == 2)
+
+		let first = try #require(located.first)
+		let second = try #require(located.last)
+
+		#expect(first.range == NSRange(location: 6, length: 11))
+		#expect(first.uniqueIdentifier != second.uniqueIdentifier)
+	}
+}
+
+/** Corpus for the allowlist `OpenLink.open(url:inBackground:)` consults before
+ handing a URL to `NSWorkspace`, stated over whole URLs rather than bare
+ schemes so that scheme extraction is part of what is checked.
+
+ `OpenLink.open` itself is not driven here. It returns `Void` and reaches
+ `NSWorkspace.shared` directly, so a call proves nothing about whether it
+ opened, and a call that *did* open would launch an application out of the test
+ run. Pinning the guard itself needs an injectable opener on `OpenLink`; until
+ that exists this suite covers the rule the guard applies, and
+ `LinkSchemeRulesTests` covers the same rule over bare scheme strings. */
+@MainActor
+struct OpenLinkSchemeCorpusTests {
+	/// The predicate `OpenLink.open(url:inBackground:)` guards on.
+	private static func permitsOpening(_ url: URL) -> Bool {
+		guard let scheme = url.scheme else { return false }
+
+		return LinkParser.isPermittedScheme(scheme)
+	}
+
+	@Test(arguments: [
+		"file:///etc/passwd",
+		"file:///Applications/Calculator.app",
+		"file://localhost/etc/passwd",
+	])
+	func refusesFileURLs(address: String) throws {
+		let url = try #require(URL(string: address))
+
+		#expect(Self.permitsOpening(url) == false)
+	}
+
+	@Test(arguments: [
+		"https://example.com/",
+		"http://example.com/a",
+		"xmpp:user@example.com",
+	])
+	func acceptsOrdinaryRemoteURLs(address: String) throws {
+		let url = try #require(URL(string: address))
+
+		#expect(Self.permitsOpening(url))
+	}
+
+	/// Schemes that reach local shares or system surfaces must be refused too.
+	@Test(arguments: [
+		"smb://example.com/share",
+		"afp://example.com/share",
+		"x-apple.systempreferences:com.apple.preference.security",
+	])
+	func refusesLocalShareAndSystemSchemes(address: String) throws {
+		let url = try #require(URL(string: address))
+
+		#expect(Self.permitsOpening(url) == false)
+	}
+
+	/// A URL with no scheme at all — what `OpenLink.open(string:)` produces from
+	/// a relative reference — is refused rather than defaulted.
+	@Test(arguments: ["example.com/path", "/etc/passwd"])
+	func refusesURLsWithoutAScheme(address: String) throws {
+		let url = try #require(URL(string: address))
+
+		#expect(url.scheme == nil)
+		#expect(Self.permitsOpening(url) == false)
+	}
+}
