@@ -1,6 +1,31 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "image-encoding-failed" : {
+      "comment" : "Error when an inline image cannot be converted for saving as PNG.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The image could not be converted to PNG."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Bild konnte nicht in PNG umgewandelt werden."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A képet nem sikerült PNG formátumra alakítani."
+          }
+        }
+      },
+      "generatesSymbol" : true
+    },
     "copy-image" : {
       "extractionState" : "manual",
       "generatesSymbol" : true,

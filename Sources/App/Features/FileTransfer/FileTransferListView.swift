@@ -110,7 +110,7 @@ struct FileTransferListView: View {
 			.controlSize(.small)
 			.padding(10)
 		}
-		.task { model.filter = storedDirectionFilter }
+		.task { model.activate(restoring: storedDirectionFilter) }
 		.onExitCommand(perform: center.dismiss)
 		.quickLookPreview($fileAccess.previewSelection, in: model.previewItems)
 		.onDisappear {

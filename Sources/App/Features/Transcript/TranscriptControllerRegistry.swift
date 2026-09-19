@@ -23,6 +23,10 @@ final class TranscriptControllerRegistry {
 		self.window = window
 	}
 
+	var allControllers: [TranscriptController] {
+		Array(controllers.values)
+	}
+
 	var count: Int {
 		controllers.count
 	}

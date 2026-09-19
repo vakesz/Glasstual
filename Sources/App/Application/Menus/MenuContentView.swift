@@ -52,6 +52,19 @@ struct MenuContentView: View {
 	fileprivate static func submenu(_ entries: [MenuItemSnapshot], _ prepareSelection: @escaping () -> Void) -> Self {
 		Self(entries: entries, prepareSelection: prepareSelection)
 	}
+
+	/// The same validated commands for AppKit-owned lists. Each item retains its
+	/// action target, so callers may move the items into a larger contextual menu.
+	static func nativeMenu(
+		menu: NSMenu,
+		context: MenuTargetContext? = nil,
+		prepareSelection: @escaping () -> Void
+	) -> NSMenu {
+		MenuItemSnapshot.nativeMenu(
+			entries: MenuItemSnapshot.validating(menu, context: context),
+			prepareSelection: prepareSelection
+		)
+	}
 }
 
 /// One item AppKit left visible, with everything the SwiftUI menu draws or
@@ -78,6 +91,7 @@ struct MenuItemSnapshot: Identifiable {
 	/// Whether the command is currently in force. AppKit draws this as a tick;
 	/// SwiftUI draws it by making the row a toggle.
 	let isOn: Bool
+	private let state: NSControl.StateValue
 	let shortcut: KeyboardShortcut?
 	let content: Content
 	private let context: MenuTargetContext?
@@ -116,6 +130,7 @@ struct MenuItemSnapshot: Identifiable {
 				title: item.title,
 				isEnabled: item.isEnabled,
 				isOn: item.state == .on,
+				state: item.state,
 				shortcut: shortcut(for: item),
 				content: content,
 				context: context
@@ -163,6 +178,59 @@ struct MenuItemSnapshot: Identifiable {
 		return context.resolver.withContext(context.context) {
 			NSApp.sendAction(action, to: target, from: sender)
 		}
+	}
+
+	fileprivate static func nativeMenu(
+		entries: [MenuItemSnapshot],
+		prepareSelection: @escaping () -> Void
+	) -> NSMenu {
+		let menu = NSMenu()
+		menu.autoenablesItems = false
+		for entry in entries {
+			let item: NSMenuItem
+			switch entry.content {
+			case .separator:
+				menu.addItem(.separator())
+				continue
+			case let .submenu(children):
+				item = NSMenuItem(title: entry.title, action: nil, keyEquivalent: entry.sender.keyEquivalent)
+				item.submenu = nativeMenu(entries: children, prepareSelection: prepareSelection)
+			case .command:
+				let commandTarget = NativeMenuCommandTarget(entry: entry, prepareSelection: prepareSelection)
+				item = NSMenuItem(title: entry.title, action: #selector(NativeMenuCommandTarget.invokeMenuCommand(_:)),
+				                  keyEquivalent: entry.sender.keyEquivalent)
+				item.target = commandTarget
+				// Target is weak. The native item owns its dispatch context, while
+				// the snapshot retains the original sender and represented object.
+				item.representedObject = commandTarget
+			}
+			item.identifier = entry.sender.identifier
+			item.tag = entry.sender.tag
+			item.isEnabled = entry.isEnabled
+			item.state = entry.state
+			item.keyEquivalentModifierMask = entry.sender.keyEquivalentModifierMask
+			item.isAlternate = entry.sender.isAlternate
+			item.indentationLevel = entry.sender.indentationLevel
+			item.toolTip = entry.sender.toolTip
+			item.image = entry.sender.image
+			menu.addItem(item)
+		}
+		MenuPresentation.apply(to: menu)
+		return menu
+	}
+}
+
+private final class NativeMenuCommandTarget: NSObject {
+	private let entry: MenuItemSnapshot
+	private let prepareSelection: () -> Void
+
+	init(entry: MenuItemSnapshot, prepareSelection: @escaping () -> Void) {
+		self.entry = entry
+		self.prepareSelection = prepareSelection
+	}
+
+	@objc func invokeMenuCommand(_: NSMenuItem) {
+		entry.perform(prepareSelection: prepareSelection)
 	}
 }
 

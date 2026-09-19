@@ -430,7 +430,7 @@ extension ServerSession {
 		performedSTSUpgrade = false
 
 		resetChatHistoryState()
-		reconnect.isEnabled = false
+		// Reconnect intent belongs to the pending schedule, which survives this reset.
 		reconnect.timeoutWarningShown = false
 		lastWhoRequestConversationListIndex = 0
 		server = nil
@@ -466,7 +466,11 @@ extension ServerSession {
 
 		if !terminating, reconnect.isEnabled {
 			startReconnectTimer()
+			reconnect.isEnabled = reconnect.timer.isActive
 		} else {
+			reconnect.isEnabled = false
+		}
+		if !reconnect.isEnabled {
 			/* Nothing is scheduled, so the backoff has nothing to grow for. A
 			 user-initiated disconnect ends the run, and the connection the user
 			 starts next must not inherit the delay this one had reached. */

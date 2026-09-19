@@ -6,15 +6,8 @@ import AppKit
 import SwiftUI
 import Testing
 
-/** Where the conversation and the member list begin, under a transparent
- titlebar.
-
- The two columns are built by different frameworks: the transcript is an AppKit
- scroll view inside an `NSViewRepresentable`, which SwiftUI lays out inside the
- safe area, and the member list is a SwiftUI `List` whose own scroll view runs
- the full height of the window and insets its rows by the titlebar instead.
- Those are two ways of reaching the same line, and the reader sees them side by
- side, so the line is what this measures. */
+/// Both native lists respect the titlebar safe area. The member table starts
+/// below its persistent SwiftUI header and ends alongside the transcript.
 @MainActor
 @Suite("Main window column alignment")
 struct MainWindowColumnAlignmentTests {
@@ -24,7 +17,7 @@ struct MainWindowColumnAlignmentTests {
 		}
 	}
 
-	@Test("The transcript and the member list start their content on the same line")
+	@Test("The transcript and member rail respect the safe area and fixed member header")
 	func columnsStartAtTheSafeAreaTop() throws {
 		let session = ServerSession(config: ServerConfig())
 		let window = MainWindow(
@@ -39,7 +32,6 @@ struct MainWindowColumnAlignmentTests {
 		let host = NSHostingController(rootView: HStack(spacing: 0) {
 			TranscriptViewRepresentable(transcriptView: transcriptView)
 			MemberListView(model: memberList, redirectTyping: { _ in })
-				.scrollEdgeEffectStyle(.soft, for: .top)
 				.frame(width: 200)
 		})
 		host.preferredContentSize = NSSize(width: 800, height: 600)
@@ -67,6 +59,8 @@ struct MainWindowColumnAlignmentTests {
 			descendants(of: NSScrollView.self, in: host.view).first { $0 !== transcript }
 		)
 		let listFrame = list.convert(list.bounds, to: host.view)
-		#expect(abs(listFrame.minY + list.contentInsets.top - safeTop) < 0.5, "list at \(listFrame)")
+		#expect(listFrame.minY > safeTop, "The persistent member header needs room above the table")
+		#expect(list.contentInsets.top == 0)
+		#expect(abs(listFrame.maxY - transcriptFrame.maxY) < 0.5, "list at \(listFrame)")
 	}
 }

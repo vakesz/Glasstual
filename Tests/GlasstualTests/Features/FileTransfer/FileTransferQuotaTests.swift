@@ -74,7 +74,7 @@ struct FileTransferQuotaTests {
 			)
 		}
 
-		for index in 0..<FileTransferConstants.receiverHardLimit {
+		for index in 0 ..< FileTransferConstants.receiverHardLimit {
 			#expect(offer(index) != nil)
 		}
 		#expect(offer(FileTransferConstants.receiverHardLimit) == nil)

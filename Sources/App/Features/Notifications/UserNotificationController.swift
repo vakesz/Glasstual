@@ -302,7 +302,7 @@ final class UserNotificationController: NSObject, UserNotificationPresenting {
 		conversationIdentifier: String?
 	) -> Bool {
 		/* Equality of nil is valid so both conversation IDs can be absent. */
-		return UserNotificationPayload(userInfo: userInfo)
+		UserNotificationPayload(userInfo: userInfo)
 			.isInScope(of: sessionIdentifier, conversationIdentifier: conversationIdentifier)
 	}
 }

@@ -75,13 +75,32 @@ struct SettingsDestination: Identifiable, Equatable, Sendable {
 	func matches(searchText: String) -> Bool {
 		let terms = searchText.split(whereSeparator: \.isWhitespace)
 		guard terms.isEmpty == false else { return true }
-		let labels = [title] + panes.flatMap { pane in
+		let labels = [title] + supplementarySearchLabels.map { String(localized: $0) } + panes.flatMap { pane in
 			[String(localized: pane.title)] + SettingsPaneKeys.keys(for: pane).map {
 				String(localized: $0.displayName)
 			}
 		}
 		return terms.allSatisfy { term in
 			labels.contains { $0.localizedStandardContains(String(term)) }
+		}
+	}
+
+	/// Controls such as theme fields and folder actions do not each own a
+	/// defaults key. Search indexes their visible labels as well as stored keys.
+	private var supplementarySearchLabels: [LocalizedStringResource] {
+		switch id {
+		case .style:
+			StylePane.searchLabels
+		case .general:
+			[.SettingsTransfer.settingsAndRecovery, .SettingsTransfer.importConfiguration,
+			 .SettingsTransfer.exportConfiguration, .SettingsTransfer.previewBackup, .SettingsTransfer.showBackups]
+		case .fileTransfers:
+			[.Settings.fileTransfersDestinationLabel, .Settings.downloadDestination,
+			 .Settings.fileTransfersUseDownloads, .Settings.fileTransfersPortRangeLabel]
+		case .logLocation:
+			[.Settings.logLocationFolderLabel, .Settings.transcriptFolder]
+		default:
+			[]
 		}
 	}
 

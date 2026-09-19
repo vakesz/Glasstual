@@ -7,13 +7,15 @@ Swift-only.
 ## Architecture
 
 - SwiftUI owns layout, navigation, forms, sheets and scene presentation.
-  AppKit adapters provide only capabilities SwiftUI cannot provide. Keep them
-  narrow, stateless and inside their owning feature.
+  AppKit adapters provide platform capabilities and the approved native list
+  rendering below. Keep domain state in the feature model; adapters own only
+  native view, reuse and interaction state.
 - Preserve keyboard commands, focus, selection, drag and drop, accessibility
   and restoration when changing an adapter. The deliberate adapters are the
   main-window responder and restoration shell, programmatic `NSMenu` command
   graph, TextKit input and transcript views, transcript reaction popover,
-  dock-tile renderer and pre-scene blocking alerts.
+  the sidebar outline and member/channel tables, dock-tile renderer and
+  pre-scene blocking alerts.
 - Organize app code by feature under `Sources/App`. A feature owns its views,
   models, controllers, strings and capability adapters. Read
   `Sources/App/README.md` when moving or adding app files.

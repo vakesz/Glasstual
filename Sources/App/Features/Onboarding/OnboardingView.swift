@@ -63,7 +63,10 @@ struct OnboardingView: View {
 					.scrollBounceBehavior(.basedOnSize)
 					.id(model.currentStep)
 					.transition(
-						reduceMotion ? .opacity : .opacity.combined(with: .move(edge: .trailing))
+						reduceMotion ? .opacity : .asymmetric(
+							insertion: .opacity.combined(with: .move(edge: model.movesForward ? .trailing : .leading)),
+							removal: .opacity.combined(with: .move(edge: model.movesForward ? .leading : .trailing))
+						)
 					)
 				}
 			}

@@ -290,7 +290,7 @@ extension AccessibilityDriver {
 		guard let node = try find(from: sidebar, deadline: deadline, matching: {
 			let description = try text($0, kAXDescriptionAttribute, deadline: deadline)
 			let title = try text($0, kAXTitleAttribute, deadline: deadline)
-			return [description, title].contains { $0 == label || $0.hasPrefix(label + ", ") }
+			return [description, title].contains { $0.hasPrefix(label) }
 		}) else { return nil }
 		return try nativeRow(containing: node, deadline: deadline)
 	}

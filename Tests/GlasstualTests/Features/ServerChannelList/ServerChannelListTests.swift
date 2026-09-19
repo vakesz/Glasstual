@@ -380,6 +380,14 @@ struct ServerChannelListTests {
 		#expect(entry.displayedTopic == "systems")
 	}
 
+	@Test("Truncating a long Unicode topic preserves complete characters")
+	func topicTruncationPreservesCharacters() {
+		let character = "👩🏽‍💻"
+		let topic = String(repeating: character, count: ServerChannelListModel.maximumDisplayedTopicLength + 1)
+		let entry = ServerChannelListEntry(channelName: "#chat", unformattedTopic: topic)
+		#expect(entry.displayedTopic == String(repeating: character, count: ServerChannelListModel.maximumDisplayedTopicLength) + "…")
+	}
+
 	@Test("Typing does not filter until it stops, and the filter still runs")
 	func filteringIsDebounced() async {
 		let model = await populatedModel()

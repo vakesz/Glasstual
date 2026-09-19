@@ -151,16 +151,8 @@ struct SidebarProjectionTests {
 		#expect(list.selectedRow == row)
 	}
 
-	/** Disclosing a server has two entry points because they animate
-	 differently, and only because of that: the reader's chevron takes the
-	 ambient transaction so the outline opens the way the reader expects, while
-	 the application's own call -- the saved expansion restored at launch, the
-	 server a selection has to be disclosed to reach -- publishes with animation
-	 off, so it cannot land as a second, differently-transacted list update in
-	 the same turn as the rows the chat session has just published. Two updates in one
-	 turn is what made the outline begin the second from inside the first, the
-	 reentrant delegate operation AppKit warns about on every launch. What they
-	 must not differ in is the answer, which is what this pins. */
+	/// Native disclosure and programmatic selection use the same persisted
+	/// expansion state and therefore publish the same value projection.
 	@Test("The chevron and the application disclose a server the same way")
 	func bothWaysOfDisclosingAServerAgree() throws {
 		let hidden = try #require(betaChannels.first)

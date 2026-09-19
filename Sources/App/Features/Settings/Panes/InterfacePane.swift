@@ -17,10 +17,6 @@ struct InterfacePane: View {
 			)
 			appearancePicker
 			SettingsToggle(
-				title: .Settings.interfaceNoModeSymbol,
-				isOn: model.settings.binding(for: SettingsKeys.Appearance.memberListNoModeSymbol)
-			)
-			SettingsToggle(
 				title: .Settings.interfaceStaffAtTop,
 				isOn: model.settings.binding(
 					for: SettingsKeys.Appearance.memberListSortFavorsServerStaff

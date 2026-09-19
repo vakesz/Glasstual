@@ -202,6 +202,20 @@ private actor LegacyCipherSuiteListener {
 		listener.cancel()
 	}
 
+	func sendOverlongLine() async throws {
+		let peer = try #require(peers.last)
+		let data = Data(repeating: 0x61, count: 1024 * 1024 + 1)
+		try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+			peer.send(content: data, completion: .contentProcessed { error in
+				if let error {
+					continuation.resume(throwing: error)
+				} else {
+					continuation.resume()
+				}
+			})
+		}
+	}
+
 	private func accept(_ connection: NWConnection) {
 		dialCount += 1
 		peers.append(connection)
@@ -308,6 +322,11 @@ nonisolated struct LegacyCipherSuiteFallbackLoopbackTests {
 		var disconnectError: Error?
 		var dialCount = 0
 		var trustRequested = false
+		var disconnected = false
+	}
+
+	enum SecuredAction {
+		case finish, sendOverlongLine, close
 	}
 
 	@Test("A server that offers only legacy suites is reached by the second dial")
@@ -362,11 +381,57 @@ nonisolated struct LegacyCipherSuiteFallbackLoopbackTests {
 		#expect(error.code == Int(ConnectionErrorCode.badCertificate.rawValue))
 	}
 
+	@Test("A protocol failure after a successful fallback retains its actual error")
+	@concurrent
+	func establishedFallbackReportsItsOwnFailure() async throws {
+		let outcome = try await Self.dial(
+			serverOffering: [0x009C],
+			validatingCertificateChain: false,
+			afterSecuring: .sendOverlongLine
+		)
+
+		#expect(outcome.negotiatedSuite != nil)
+		#expect(outcome.dialCount == 2)
+		#expect(outcome.disconnected)
+		let error = try #require(outcome.disconnectError as NSError?)
+		#expect(error.domain == connectionErrorDomain)
+		#expect(error.code == Int(ConnectionErrorCode.other.rawValue))
+	}
+
+	@Test("Rejecting the fallback peer's certificate retains the certificate error")
+	@concurrent
+	func fallbackCertificateRejectionIsReported() async throws {
+		let outcome = try await Self.dial(serverOffering: [0x009C], validatingCertificateChain: true)
+
+		#expect(outcome.trustRequested)
+		#expect(outcome.negotiatedSuite == nil)
+		#expect(outcome.dialCount == 2)
+		let error = try #require(outcome.disconnectError as NSError?)
+		#expect(error.domain == connectionErrorDomain)
+		#expect(error.code == Int(ConnectionErrorCode.badCertificate.rawValue))
+	}
+
+	@Test("Closing an established fallback reports a clean disconnect")
+	@concurrent
+	func establishedFallbackClosesCleanly() async throws {
+		let outcome = try await Self.dial(
+			serverOffering: [0x009C],
+			validatingCertificateChain: false,
+			afterSecuring: .close
+		)
+
+		#expect(outcome.negotiatedSuite != nil)
+		#expect(outcome.dialCount == 2)
+		#expect(outcome.disconnected)
+		#expect(outcome.disconnectError == nil)
+	}
+
 	// MARK: - The harness
 
 	static func dial(
 		serverOffering suites: [UInt16],
-		validatingCertificateChain: Bool
+		validatingCertificateChain: Bool,
+		afterSecuring: SecuredAction = .finish
 	) async throws -> Outcome {
 		let server = try LegacyCipherSuiteListener(offering: suites)
 		let port = try await server.start()
@@ -417,11 +482,17 @@ nonisolated struct LegacyCipherSuiteFallbackLoopbackTests {
 			switch event {
 			case let .didSecure(suite):
 				outcome.negotiatedSuite = suite
-				/* Nothing more is expected: the dial that secured itself is the
-				 last one, and the count is read below. */
-				continuation.finish()
+				switch afterSecuring {
+				case .finish:
+					continuation.finish()
+				case .sendOverlongLine:
+					try await server.sendOverlongLine()
+				case .close:
+					host.close()
+				}
 			case let .didDisconnect(error):
 				outcome.disconnectError = error
+				outcome.disconnected = true
 				continuation.finish()
 			case let .requestInsecureCertificateTrust(answer):
 				outcome.trustRequested = true

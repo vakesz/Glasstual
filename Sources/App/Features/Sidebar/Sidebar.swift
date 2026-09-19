@@ -3,9 +3,8 @@
 
 import AppKit
 import Observation
-import SwiftUI
 
-/// Selection, expansion and ordering state for the SwiftUI server sidebar.
+/// Selection, expansion and ordering state for the server sidebar.
 ///
 /// The chat session remains the source of truth for servers and conversations.
 /// This model derives `rows` from it — value snapshots the view draws without
@@ -69,33 +68,11 @@ final class Sidebar {
 
 	// MARK: - Rows
 
-	/** Rebuilds what the list draws.
-
-	 Every rebuild publishes under a transaction of its own naming, and they all
-	 name the same one unless the reader worked the chevron. Two rows values
-	 published in one turn under *different* transactions are two list updates
-	 rather than one, and the outline begins the second while it is still
-	 applying the first -- a reentrant operation in its own table delegate,
-	 which AppKit warns about on every launch and says it will assert on. That
-	 is what happened here: the chat session published its first rows without
-	 animation, and the saved expansion followed in the same turn through a
-	 path that left the transaction to whatever was ambient.
-
-	 Without animation, because the sidebar's table applies the selection to a
-	 row only once that row materialises, and an animated insert or replace
-	 beside the selected row left that row's outgoing copy drawn under the
-	 incoming one, a ghost label with a stale highlight. The chevron's own open
-	 and close animation is the one the reader expects, so the one rebuild the
-	 reader asked for by working it keeps the ambient transaction instead. */
-	private func rebuildRows(animated: Bool = false) {
+	/// Publishes the latest value projection; the native outline coalesces its
+	/// own rendering and never writes presentation transactions into this model.
+	private func rebuildRows() {
 		selectableItemsStorage = builtSelectableItems()
-		guard animated == false else {
-			rows = builtRows()
-			return
-		}
-		withTransaction(Transaction(animation: nil)) {
-			rows = builtRows()
-		}
+		rows = builtRows()
 	}
 
 	private func builtRows() -> [ServerRow] {
@@ -228,10 +205,10 @@ final class Sidebar {
 		selectedItemIdentifier = item.uniqueIdentifier
 	}
 
-	func selectFromSwiftUI(_ identifier: String?) {
+	func selectFromView(_ identifier: String?) {
 		guard selectedItemIdentifier != identifier else { return }
 		selectedItemIdentifier = identifier
-		mainWindow?.sidebarSelectionDidChangeFromSwiftUI()
+		mainWindow?.sidebarSelectionDidChangeFromView()
 	}
 
 	func items(inContainingGroupOf item: ChatItem) -> [ChatItem]? {
@@ -277,31 +254,22 @@ final class Sidebar {
 			|| listedConversations(for: session).isEmpty == false
 	}
 
-	/** Discloses a server's conversations, or closes them.
-
-	 Not animated: this is the application's own call -- the saved expansion
-	 restored at launch, and the server a selection had to be disclosed to reach
-	 -- and those arrive in the same turn as the rows the chat session has just
-	 published. ``setExpanded(_:forServerID:)`` is the reader's chevron and is
-	 the one that animates. */
+	/// Expansion belongs to the chat session so it survives relaunch. Collapsing
+	/// the selected conversation's parent selects that server's console.
 	func setExpanded(_ expanded: Bool, for session: ServerSession) {
-		setExpanded(expanded, for: session, animated: false)
-	}
-
-	private func setExpanded(_ expanded: Bool, for session: ServerSession, animated: Bool) {
 		guard session.sidebarItemIsExpanded != expanded else { return }
 		session.sidebarItemIsExpanded = expanded
 		selectableItemsStorage = nil
-		rebuildRows(animated: animated)
+		rebuildRows()
 
 		if expanded == false, selectedItem?.associatedSession === session, selectedItem !== session {
 			selectedItemIdentifier = session.uniqueIdentifier
-			mainWindow?.sidebarSelectionDidChangeFromSwiftUI()
+			mainWindow?.sidebarSelectionDidChangeFromView()
 		}
 	}
 
 	/// The disclosure toggle, from a row that only knows the server's identity.
-	/// The reader worked the chevron, so this is the rebuild that animates.
+	/// Filtering temporarily owns disclosure and leaves the saved choice intact.
 	func setExpanded(_ expanded: Bool, forServerID serverID: String) {
 		/* A filter draws every match, disclosed or not, so the chevron it leaves
 		 open is not describing the server's own state and closing it would only
@@ -310,7 +278,7 @@ final class Sidebar {
 		guard isFiltering == false,
 		      let session = sessions.first(where: { $0.uniqueIdentifier == serverID })
 		else { return }
-		setExpanded(expanded, for: session, animated: true)
+		setExpanded(expanded, for: session)
 	}
 
 	func expandItem(_ item: ChatItem?) {

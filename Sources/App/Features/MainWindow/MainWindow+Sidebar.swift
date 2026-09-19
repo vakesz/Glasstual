@@ -100,7 +100,7 @@ extension MainWindow {
 		}
 	}
 
-	func sidebarSelectionDidChangeFromSwiftUI() {
+	func sidebarSelectionDidChangeFromView() {
 		sidebarSelectionDidChange()
 	}
 

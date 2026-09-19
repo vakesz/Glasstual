@@ -23,15 +23,18 @@ final class ServerChannelList {
 	 limit counts from the last reply, so a network streaming a very long
 	 listing is never cut off. */
 	private let replyTimeout: TimeInterval
-	private lazy var replyWatchdog = SessionTimer { [weak self] _ in
-		self?.finishRefresh()
+	private let clock: TimerClock
+	private var replyDeadline: ContinuousClock.Instant?
+	private lazy var replyWatchdog = SessionTimer(clock: clock) { [weak self] _ in
+		self?.checkReplyDeadline()
 	}
 
 	private var connectionObservation: Task<Void, Never>?
 
-	init(session: ServerSession, replyTimeout: TimeInterval = 60) {
+	init(session: ServerSession, replyTimeout: TimeInterval = 60, clock: TimerClock = .continuous) {
 		self.session = session
 		self.replyTimeout = replyTimeout
+		self.clock = clock
 		observeConnection()
 	}
 
@@ -85,6 +88,7 @@ final class ServerChannelList {
 	}
 
 	func finishRefresh() {
+		replyDeadline = nil
 		replyWatchdog.stop()
 		model.finishRefresh()
 	}
@@ -97,16 +101,29 @@ final class ServerChannelList {
 	}
 
 	func close() {
+		replyDeadline = nil
 		replyWatchdog.stop()
 		connectionObservation?.cancel()
 		connectionObservation = nil
 		model.cancelPendingWrites()
 	}
 
-	/// Moves the deadline on: every reply starts the wait again, so a network
-	/// streaming a very long listing is never cut off.
+	/// A reply advances the deadline without creating another sleeping task.
+	/// Large networks can deliver thousands of replies in a single burst.
 	private func noteReply() {
-		replyWatchdog.start(replyTimeout)
+		replyDeadline = clock.now().advanced(by: .seconds(replyTimeout))
+		replyWatchdog.startIfIdle(replyTimeout)
+	}
+
+	private func checkReplyDeadline() {
+		guard let replyDeadline else { return }
+		let remaining = clock.now().duration(to: replyDeadline).components
+		let interval = TimeInterval(remaining.seconds) + TimeInterval(remaining.attoseconds) / 1e18
+		if interval > 0 {
+			replyWatchdog.start(interval)
+		} else {
+			finishRefresh()
+		}
 	}
 
 	/** A listing cannot outlive the registration it was asked on: the server
@@ -141,9 +158,13 @@ nonisolated struct ServerChannelListEntry: Identifiable, Hashable, Sendable {
 	 the tooltip and for copying. */
 	var displayedTopic: String {
 		let topic = unformattedTopic
-		guard topic.count > ServerChannelListModel.maximumDisplayedTopicLength else { return topic }
+		guard let end = topic.index(
+			topic.startIndex,
+			offsetBy: ServerChannelListModel.maximumDisplayedTopicLength,
+			limitedBy: topic.endIndex
+		), end < topic.endIndex else { return topic }
 
-		return String(topic.prefix(ServerChannelListModel.maximumDisplayedTopicLength)) + "\u{2026}"
+		return String(topic[..<end]) + "\u{2026}"
 	}
 
 	func matches(_ searchString: String) -> Bool {
@@ -162,7 +183,7 @@ nonisolated struct ServerChannelListEntry: Identifiable, Hashable, Sendable {
 }
 
 nonisolated struct ServerChannelListComparator: SortComparator {
-	enum Field: Hashable, Sendable {
+	enum Field: String, Hashable, Sendable {
 		case channelName
 		case memberCount
 		case topic
@@ -200,6 +221,9 @@ final class ServerChannelListModel {
 	static let filterDelay = Duration.milliseconds(120)
 
 	private(set) var rows: [ServerChannelListEntry] = []
+	/// Changes only when a filtered snapshot is published, never on selection
+	/// or incoming replies still waiting for their batch.
+	private(set) var rowsRevision = 0
 	var selection: Set<ServerChannelListEntry.ID> = []
 	var searchString = "" {
 		didSet {
@@ -212,7 +236,10 @@ final class ServerChannelListModel {
 	var sortOrder: [ServerChannelListComparator] = [
 		ServerChannelListComparator(field: .memberCount, order: .reverse),
 	] {
-		didSet { applyFilterAndSort() }
+		didSet {
+			guard sortOrder != oldValue else { return }
+			applyFilterAndSort()
+		}
 	}
 
 	var isRefreshing = true
@@ -298,6 +325,7 @@ final class ServerChannelListModel {
 		cancelPendingWrites()
 		allEntries.removeAll()
 		rows.removeAll()
+		rowsRevision += 1
 		selection.removeAll()
 		discardedEntryCount = 0
 	}
@@ -373,6 +401,7 @@ final class ServerChannelListModel {
 				try Task.checkCancellation()
 				guard let self else { return }
 				rows = result.rows
+				rowsRevision += 1
 				selection.formIntersection(result.identifiers)
 				isFiltering = false
 				filterTask = nil

@@ -38,53 +38,27 @@ struct MainWindowRootView: View {
 					max: MainWindowConstants.sidebarMaximumWidth
 				)
 			} detail: {
-				/* Beside the conversation, not in a split of its own, and not an
-				 `.inspector` either.
-
-				 An inspector -- like a second `HSplitView` pane -- inserts a pane
-				 into the detail column, and the column then grows by the pane's
-				 width instead of sharing its space: the columns spilled past the
-				 window, or AppKit gave up after three hundred layout passes with
-				 the transcript left at whatever width the loop was passing
-				 through. What feeds that loop is still here: the transcript's
-				 bottom inset is measured in AppKit from the floating input bar's
-				 frame, so the detail column's width decides a value that moves a
-				 view inside it. A stack changes nothing the split view measures,
-				 so the divider carries its own drag -- with the pointer, keyboard
-				 and reset behaviour an inspector's divider would have given it. */
-				HStack(spacing: 0) {
-					MainWindowConversation(columns: columns, inputContentView: inputContentView)
-						.frame(
-							minWidth: MainWindowConstants.conversationMinimumWidth,
-							maxWidth: .infinity,
-							maxHeight: .infinity
-						)
-					if columns.isMemberListAvailable, columns.isMemberListVisible {
-						MemberListResizeHandle(width: $memberListWidth)
-						/* The rows scroll up into the titlebar's safe area and
-						 the system's soft edge effect is what keeps the toolbar
-						 legible over them, so nothing here insets the list by
-						 hand. The list paints no ground of its own; the column's
-						 is the conversation's, so the divider is the only edge. */
-						MemberListView(model: memberList, redirectTyping: redirectTyping)
-							.scrollEdgeEffectStyle(.soft, for: .top)
-							.frame(width: memberListWidth)
+				GeometryReader { geometry in
+					let railWidth = MainWindowMemberRail.effectiveWidth(preferred: memberListWidth, available: geometry.size.width)
+					HStack(spacing: 0) {
+						VStack(spacing: 0) {
+							if let connection = chrome.connection {
+								MainWindowConnectionRow(presentation: connection) { action in
+									connection.perform(action, in: columns.window, commands: commands)
+								}
+							}
+							MainWindowConversation(columns: columns, inputContentView: inputContentView)
+						}
+						.frame(maxWidth: .infinity, maxHeight: .infinity)
+						if columns.isMemberListVisible, let width = railWidth {
+							MemberListResizeHandle(width: Binding(
+								get: { width }, set: { memberListWidth = $0 }
+							))
+							MemberListView(model: memberList, redirectTyping: redirectTyping)
+								.frame(width: width)
+						}
 					}
 				}
-				/* One ground for both columns, up under the transparent titlebar.
-
-				 Measured: the list's own scroll view runs the full height of the
-				 window and insets its rows by the titlebar, while the transcript
-				 is an `NSViewRepresentable` that SwiftUI lays out inside the safe
-				 area. The two agree on where their content starts -- both at the
-				 safe-area top -- and disagree only about the strip above it, so
-				 each column painting its own ground left that strip in the theme
-				 colour beside the list and in the window's colour beside the
-				 transcript. A background changes nothing the split view measures,
-				 which is what keeps this out of the layout loop the comment on
-				 `conversation` describes; insetting the list to match the
-				 transcript, or lifting the transcript out of the safe area, would
-				 both put a column's own layout back into the column's insets. */
 				.background(columns.conversationBackground.ignoresSafeArea(.container, edges: .top))
 			}
 			/* On the split view rather than on the sidebar: `.sidebar` placement

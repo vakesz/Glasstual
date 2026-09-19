@@ -82,45 +82,13 @@ struct ServerChannelListView: View {
 	}
 
 	private var channelTable: some View {
-		Table(model.rows, selection: $model.selection, sortOrder: $model.sortOrder) {
-			TableColumn(
-				.ServerChannelList.channelName,
-				sortUsing: ServerChannelListComparator(field: .channelName, order: .forward)
-			) { entry in
-				Text(verbatim: entry.channelName)
-					.lineLimit(1)
-			}
-			.width(min: 100, ideal: 150)
-
-			TableColumn(
-				.ServerChannelList.memberCount,
-				sortUsing: ServerChannelListComparator(field: .memberCount, order: .forward)
-			) { entry in
-				Text(entry.memberCount, format: .number)
-					.monospacedDigit()
-			}
-			.width(min: 70, ideal: 90, max: 120)
-
-			TableColumn(
-				.ServerChannelList.topic,
-				sortUsing: ServerChannelListComparator(field: .topic, order: .forward)
-			) { entry in
-				Text(formattedTopic(entry.displayedTopic))
-					.lineLimit(1)
-					.help(entry.plainTopic)
-			}
-			.width(min: 220, ideal: 420)
-		}
-		/* The table's own selection menu, which is what carries the clicked rows
-		 into the command and makes the double click the same command again. */
-		.contextMenu(forSelectionType: ServerChannelListEntry.ID.self) { identifiers in
-			Button(.ServerChannelList.joinSelectedChannels) {
-				join(identifiers)
-			}
-			.disabled(identifiers.isEmpty)
-		} primaryAction: { identifiers in
-			join(identifiers)
-		}
+		ServerChannelListTable(
+			model: model,
+			revision: model.rowsRevision,
+			selection: model.selection,
+			sortOrder: model.sortOrder,
+			joinSelected: joinSelected
+		)
 		.overlay {
 			if model.rows.isEmpty {
 				if model.isRefreshing || model.isFiltering {
@@ -134,7 +102,6 @@ struct ServerChannelListView: View {
 				}
 			}
 		}
-		.copyable(model.selectedCopyItems)
 		.accessibilityLabel(.ServerChannelList.publicChannelList)
 	}
 
@@ -188,22 +155,5 @@ struct ServerChannelListView: View {
 			}
 		}
 		.padding(UISpacing.wide)
-	}
-
-	/// Joins what the menu or the double click named, which is not necessarily
-	/// what was selected before it landed.
-	private func join(_ identifiers: Set<ServerChannelListEntry.ID>) {
-		guard identifiers.isEmpty == false else { return }
-		model.selection = identifiers
-		joinSelected()
-	}
-
-	private func formattedTopic(_ topic: String) -> AttributedString {
-		guard topic.isEmpty == false else { return AttributedString() }
-		let formatted = (topic as NSString).attributedString(
-			withIRCFormatting: NSFont.systemFont(ofSize: NSFont.systemFontSize),
-			preferredFontColor: .controlTextColor
-		) ?? NSAttributedString()
-		return AttributedString(formatted)
 	}
 }

@@ -13,9 +13,14 @@ private final class MenuValidator: NSObject, NSMenuItemValidation {
 	var hiddenTitles: Set<String> = []
 	var disabledTitles: Set<String> = []
 	private(set) var validationCount = 0
+	private(set) var invokedItems: [NSMenuItem] = []
 
 	@objc
-	func invoke(_: Any?) {}
+	func invoke(_ sender: Any?) {
+		if let item = sender as? NSMenuItem {
+			invokedItems.append(item)
+		}
+	}
 
 	func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
 		validationCount += 1
@@ -25,13 +30,13 @@ private final class MenuValidator: NSObject, NSMenuItemValidation {
 }
 
 @MainActor
-@Suite("SwiftUI rendering of AppKit menus", .serialized)
+@Suite("Contextual rendering of AppKit menus", .serialized)
 struct MenuContentViewTests {
 	@Test(
 		"Context JOIN retries the clicked channel after identification without reconnecting",
-		arguments: [false, true]
+		arguments: [false, true], [false, true]
 	)
-	func contextJoinAfterIdentification(otherSessionSelected: Bool) async throws {
+	func contextJoinAfterIdentification(otherSessionSelected: Bool, usesNativeMenu: Bool) async throws {
 		try await withChannelMenu { controller, window, session, other in
 			let context = controller.context
 			session.userNickname = "mynick"
@@ -65,11 +70,23 @@ struct MenuContentViewTests {
 			#expect(window.selectedConversation === previous)
 			#expect(context.selectedSession === previousSession)
 			#expect(context.selectedConversation === previous)
+			let native = MenuContentView.nativeMenu(menu: menu.menu, context: menu.context) {
+				window.sidebar.selectFromView(channel.uniqueIdentifier)
+			}
+			let nativeJoin = try #require(native.item(for: .joinChannel))
+			let combined = NSMenu()
+			native.removeItem(nativeJoin)
+			combined.addItem(nativeJoin)
+			#expect(window.selectedConversation === previous)
 
 			// Revalidating the shared NSMenu must not retarget an existing snapshot.
 			_ = MenuItemSnapshot.validating(controller.mainMenuChannelMenu)
-			let performed = join.perform {
-				window.sidebar.selectFromSwiftUI(channel.uniqueIdentifier)
+			let performed: Bool = if usesNativeMenu {
+				try NSApp.sendAction(#require(nativeJoin.action), to: nativeJoin.target, from: nativeJoin)
+			} else {
+				join.perform {
+					window.sidebar.selectFromView(channel.uniqueIdentifier)
+				}
 			}
 			#expect(performed)
 			/* Clicking the row publishes it, and the command runs against the
@@ -290,6 +307,62 @@ struct MenuContentViewTests {
 		#expect(entries[0].shortcut == KeyboardShortcut("m", modifiers: [.command, .shift]))
 		#expect(entries[1].isOn == false)
 		#expect(entries[1].shortcut == nil)
+	}
+
+	@Test("Reparented native menu items preserve mixed state, shortcuts and their original sender")
+	func nativeItemsRetainDispatchAndPresentation() throws {
+		let validator = MenuValidator()
+		validator.disabledTitles = ["Disabled"]
+		validator.hiddenTitles = ["Hidden"]
+		let source = menu(["Action", "Disabled", "Hidden"], validatedBy: validator)
+		let original = try #require(source.item(at: 0))
+		let payload = NSObject()
+		original.representedObject = payload
+		original.state = .mixed
+		original.keyEquivalent = "m"
+		original.keyEquivalentModifierMask = [.command, .shift]
+		original.toolTip = "Details"
+		var selectionCount = 0
+		let combined = NSMenu()
+		do {
+			let native = MenuContentView.nativeMenu(menu: source) { selectionCount += 1 }
+			#expect(native.items.map(\.title) == ["Action", "Disabled"])
+			#expect(native.item(at: 1)?.isEnabled == false)
+			let item = try #require(native.item(at: 0))
+			native.removeItem(item)
+			combined.addItem(item)
+		}
+		let item = try #require(combined.item(at: 0))
+		#expect(item.state == .mixed)
+		#expect(item.keyEquivalent == "m")
+		#expect(item.keyEquivalentModifierMask == [.command, .shift])
+		#expect(item.toolTip == "Details")
+		#expect(selectionCount == 0)
+		#expect(try NSApp.sendAction(#require(item.action), to: item.target, from: item))
+		#expect(selectionCount == 1)
+		#expect(validator.invokedItems.first === original)
+		#expect(validator.invokedItems.first?.representedObject as? NSObject === payload)
+	}
+
+	@Test("Keyboard sidebar menus use the selected row and background menus preserve it")
+	func sidebarSelectionAndBackgroundMenus() async throws {
+		try await withChannelMenu { _, window, session, _ in
+			session.markAsLoggedIn()
+			let channel = try #require(session.findConversationOrCreate("#keyboard"))
+			channel.activate()
+			window.select(channel)
+			window.sidebar.filterText = ""
+			let outline = SidebarOutlineView(model: window.sidebar, redirectTyping: { _ in })
+			defer { outline.stopUpdates() }
+			outline.apply(SidebarOutlineSnapshot(model: window.sidebar))
+			let selectionMenu = try #require(outline.selectionContextMenu())
+			#expect(selectionMenu.item(for: .leaveChannel)?.isEnabled == true)
+			#expect(window.selectedConversation === channel)
+			let background = try #require(outline.contextMenu(for: nil))
+			#expect(background.item(for: .addServer) != nil)
+			#expect(background.item(for: .leaveChannel) == nil)
+			#expect(window.selectedConversation === channel)
+		}
 	}
 
 	private static func items(of menu: NSMenu) -> [NSMenuItem] {

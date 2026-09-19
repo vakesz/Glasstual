@@ -35,7 +35,14 @@ struct MemberListGroup: Identifiable {
 @MainActor
 @Observable
 final class MemberList: ConversationMembersPresenting {
-	var selectedMemberIDs: Set<User.ID> = []
+	var selectedMemberIDs: Set<User.ID> = [] {
+		didSet {
+			if oldValue != selectedMemberIDs {
+				hideProfile()
+			}
+		}
+	}
+
 	private(set) var groups: [MemberListGroup] = []
 	/** The badge colours and rank settings every row draws from.
 
@@ -71,6 +78,9 @@ final class MemberList: ConversationMembersPresenting {
 	init() {}
 
 	func assign(to conversation: Conversation?) {
+		if memberList !== conversation?.memberInfo {
+			hideProfile()
+		}
 		memberList?.assign(nil)
 		memberList = conversation?.memberInfo
 		if let memberList {
@@ -176,10 +186,34 @@ final class MemberList: ConversationMembersPresenting {
 
 	// MARK: - Profile popover
 
+	var profileMember: Member? {
+		_ = presentationRevision
+		return memberShowingProfile.flatMap(member(withID:))
+	}
+
+	var selectedProfileMember: Member? {
+		guard selectedMemberIDs.count == 1, let identifier = selectedMemberIDs.first else { return nil }
+		return member(withID: identifier)
+	}
+
+	func member(withID identifier: User.ID) -> Member? {
+		if let memberList {
+			return memberList.findMember(withUserID: identifier)
+		}
+		return members.first { $0.id == identifier }
+	}
+
 	/** Opens `member`'s profile at once. The list owns the one popover, so a
 	 click on another row replaces it rather than stacking a second one. */
 	func showProfile(for member: User.ID) {
+		guard self.member(withID: member) != nil else { return }
 		memberShowingProfile = member
+	}
+
+	/// Scrolling may inspect another person without moving the native selection.
+	func followProfileWhileScrolling(over identifier: User.ID?, enabled: Bool) {
+		guard enabled, memberShowingProfile != nil, let identifier else { return }
+		showProfile(for: identifier)
 	}
 
 	/// Takes the open profile down: the double click that opens a conversation

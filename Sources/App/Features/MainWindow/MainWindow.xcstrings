@@ -5382,6 +5382,150 @@
           }
         }
       }
+    },
+    "sidebar-join-failed": {
+      "comment": "Status of a channel whose latest join attempt failed; also the error icon tooltip.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Join failed"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beitritt fehlgeschlagen"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A belépés sikertelen"
+          }
+        }
+      }
+    },
+    "sidebar-move-up": {
+      "comment": "Context menu and accessibility action to move a server or conversation up within its group.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move Up"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nach oben bewegen"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mozgatás felfelé"
+          }
+        }
+      }
+    },
+    "sidebar-move-down": {
+      "comment": "Context menu and accessibility action to move a server or conversation down within its group.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move Down"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nach unten bewegen"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mozgatás lefelé"
+          }
+        }
+      }
+    },
+    "connection-connect-now": {
+      "comment": "Connection status action to reconnect immediately instead of waiting for a scheduled retry.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect Now"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jetzt verbinden"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csatlakozás most"
+          }
+        }
+      }
+    },
+    "connection-connect": {
+      "comment": "Connection status action to connect the selected server.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbinden"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csatlakozás"
+          }
+        }
+      }
+    },
+    "connection-cancel-reconnect": {
+      "comment": "Connection status action to cancel a scheduled reconnection.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel Reconnect"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erneutes Verbinden abbrechen"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Újracsatlakozás megszakítása"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

@@ -272,8 +272,7 @@ extension FileTransferStore {
 	 widened to make sure the row it names is actually on screen. */
 	func respondToNotification(for identifier: String, sessionIdentifier: String?, accept: Bool) -> Bool {
 		guard let transfer = notifiedTransfer(identifier, of: sessionIdentifier) else { return false }
-		model.filter = .all
-		model.selection = [identifier]
+		model.reveal(identifier)
 		if accept, !transfer.isSender, transfer.transferStatus == .stopped {
 			perform(.start, on: [identifier])
 		}

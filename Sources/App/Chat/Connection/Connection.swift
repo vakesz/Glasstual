@@ -133,8 +133,11 @@ final class Connection {
 	private nonisolated let clientShim: ConnectionClientShim
 	private var eventTask: Task<Void, Never>?
 	private let closeClock: TimerClock
+	private let diagnostics: ConnectionDiagnostics
+	private let recordTermination: (ConnectionTermination) -> Void
 	private let makeService: () -> NSXPCConnection
 	private var closeDeadlineTask: Task<Void, Never>?
+	private var localCloseRequested = false
 	/// Whether the disconnect has already been reported. Read by the files
 	/// that carry the rest of `Connection`; only this one sets it.
 	private(set) var terminal = false
@@ -160,11 +163,14 @@ final class Connection {
 		config: ConnectionConfig,
 		onSession session: ServerSession,
 		closeClock: TimerClock,
+		recordTermination: @escaping (ConnectionTermination) -> Void = { $0.record() },
 		makeService: @escaping () -> NSXPCConnection = {
 			NSXPCConnection(serviceName: "com.vakesz.glasstual.IRCConnectionHost")
 		}
 	) {
 		self.closeClock = closeClock
+		diagnostics = config.diagnostics ?? ConnectionDiagnostics()
+		self.recordTermination = recordTermination
 		self.makeService = makeService
 		self.session = session
 		self.config = config
@@ -248,7 +254,7 @@ final class Connection {
 			EOFReceived = true
 			session?.connectionDidCloseReadStream()
 		case let .didDisconnect(error):
-			didDisconnect(with: error)
+			didDisconnect(with: error, trigger: .hostDisconnect)
 		case .didReceive:
 			/* Delivered by `receive(_:)`, which the event loop awaits so that
 			 the acknowledgement follows the last line. */
@@ -260,11 +266,11 @@ final class Connection {
 		case .didSendData:
 			didWrite()
 		case let .serviceFailed(error):
-			didDisconnect(with: error)
+			didDisconnect(with: error, trigger: .serviceFailure)
 		case .serviceInterrupted:
-			handleServiceInvalidation()
+			handleServiceInvalidation(trigger: .serviceInterrupted)
 		case .serviceInvalidated:
-			handleServiceInvalidation()
+			handleServiceInvalidation(trigger: .serviceInvalidated)
 		}
 	}
 
@@ -293,16 +299,16 @@ final class Connection {
 		pendingStartupEvent = nil
 	}
 
-	private func handleServiceInvalidation() {
+	private func handleServiceInvalidation(trigger: ConnectionTermination.Trigger) {
 		if isDisconnecting {
-			didDisconnect(with: nil)
+			didDisconnect(with: nil, trigger: trigger)
 		} else {
 			let error = NSError(
 				domain: connectionErrorDomain,
 				code: Int(ConnectionErrorCode.other.rawValue),
 				userInfo: [NSLocalizedDescriptionKey: String(localized: .IRC.connectionServiceClosedUnexpectedly)]
 			)
-			didDisconnect(with: error)
+			didDisconnect(with: error, trigger: trigger)
 		}
 	}
 
@@ -375,7 +381,7 @@ final class Connection {
 		isConnecting = true
 		let events = eventContinuation
 		guard let proxy = remoteObjectProxy(errorHandler: { events.yield(.serviceFailed($0)) }) else {
-			handleServiceInvalidation()
+			handleServiceInvalidation(trigger: .serviceFailure)
 			return
 		}
 		proxy.open(with: ConnectionConfigEnvelope(config: config))
@@ -396,18 +402,19 @@ final class Connection {
 			isDisconnecting = true
 			remoteObjectProxy()?.close()
 		} else {
-			didDisconnect(with: nil)
+			didDisconnect(with: nil, trigger: .localClose)
 		}
 	}
 
 	/// QUIT starts this before its two-second grace period, keeping the total at five seconds.
 	func beginCloseDeadline() {
 		guard terminal == false, closeDeadlineTask == nil else { return }
+		localCloseRequested = true
 		closeDeadlineTask = Task { [weak self, closeClock] in
 			await closeClock.wait(5)
 			guard Task.isCancelled == false, let self else { return }
 			connectionLogger.error("IRC connection did not close within five seconds; invalidating service")
-			didDisconnect(with: nil)
+			didDisconnect(with: nil, trigger: .closeDeadline)
 		}
 	}
 
@@ -417,10 +424,25 @@ final class Connection {
 		return session.convert(fromCommonEncoding: data)
 	}
 
-	private func didDisconnect(with error: Error?) {
+	private func didDisconnect(with error: Error?, trigger: ConnectionTermination.Trigger) {
 		guard terminal == false else { return }
 		terminal = true
-		config.diagnostics?.record(.disconnected)
+		let nsError = error as NSError?
+		recordTermination(ConnectionTermination(
+			attemptIdentifier: diagnostics.identifier,
+			elapsed: ProcessInfo.processInfo.systemUptime - diagnostics.requestedAt,
+			trigger: trigger,
+			phase: terminationPhase,
+			localCloseRequested: localCloseRequested,
+			receivedEOF: EOFReceived,
+			disconnectMode: .effective(
+				configured: session?.disconnectType ?? .normal,
+				errorDomain: nsError?.domain,
+				errorCode: nsError?.code
+			),
+			errorDomain: nsError?.domain,
+			errorCode: nsError?.code
+		))
 		closeDeadlineTask?.cancel()
 		closeDeadlineTask = nil
 		invalidateProcess()
@@ -431,5 +453,21 @@ final class Connection {
 		}
 		eventContinuation.finish()
 		eventTask?.cancel()
+	}
+
+	private var terminationPhase: ConnectionTermination.Phase {
+		if recordedFirstJoin {
+			return .joined
+		}
+		if session?.isLoggedIn == true {
+			return session?.startup.authentication == .confirmed ? .authenticated : .registered
+		}
+		if isSecured {
+			return .secured
+		}
+		if isConnected {
+			return .connected
+		}
+		return isConnecting ? .connecting : .requested
 	}
 }

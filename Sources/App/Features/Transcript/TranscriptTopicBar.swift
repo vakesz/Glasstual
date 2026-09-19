@@ -27,6 +27,7 @@ final class TranscriptTopicBar: NSView {
 	var canModifyTopic: (@MainActor () -> Bool)?
 	/// The reader asked to set the topic, by double click or from the menu.
 	var onModifyTopic: (@MainActor () -> Void)?
+	var onOpenLink: (@MainActor (URL) -> Void)?
 
 	private(set) var label = TopicLabel(wrappingLabelWithString: "")
 	/** SwiftUI owns controls; this adapter only hosts one. */
@@ -129,8 +130,7 @@ final class TranscriptTopicBar: NSView {
 
 	private func configure() {
 		label.isSelectable = true
-		label.allowsEditingTextAttributes = true
-		label.lineBreakMode = .byTruncatingTail
+		label.onOpenLink = { [weak self] in self?.onOpenLink?($0) }
 		label.translatesAutoresizingMaskIntoConstraints = false
 		label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
 		let topicClick = NSClickGestureRecognizer(target: self, action: #selector(topicDoubleClicked(_:)))
@@ -161,7 +161,7 @@ final class TranscriptTopicBar: NSView {
 				equalTo: trailingAnchor,
 				constant: -TranscriptMetrics.topicSideInset
 			),
-			disclosure.firstBaselineAnchor.constraint(equalTo: label.firstBaselineAnchor),
+			disclosure.topAnchor.constraint(equalTo: label.topAnchor),
 		])
 	}
 
@@ -365,11 +365,69 @@ extension TranscriptTopicBar: NSMenuItemValidation {
  through the transcript's fitting size that became the column's minimum, so
  the window grew to the topic's length on every corner drag. The height still
  comes from the label, wrapped at `preferredMaxLayoutWidth`. */
-final class TopicLabel: NSTextField {
+final class TopicLabel: NSTextView, NSTextViewDelegate {
+	var onOpenLink: (@MainActor (URL) -> Void)?
+	var maximumNumberOfLines = 1 {
+		didSet {
+			textContainer?.maximumNumberOfLines = maximumNumberOfLines
+			invalidateIntrinsicContentSize()
+		}
+	}
+
+	var preferredMaxLayoutWidth: CGFloat = 0 {
+		didSet {
+			guard preferredMaxLayoutWidth > 0 else { return }
+			textContainer?.containerSize = NSSize(width: preferredMaxLayoutWidth, height: .greatestFiniteMagnitude)
+			invalidateIntrinsicContentSize()
+		}
+	}
+
+	var attributedStringValue: NSAttributedString {
+		get { attributedString() }
+		set {
+			textStorage?.setAttributedString(newValue)
+			invalidateIntrinsicContentSize()
+		}
+	}
+
+	convenience init(wrappingLabelWithString text: String) {
+		self.init(usingTextLayoutManager: true)
+		isEditable = false
+		isSelectable = true
+		isRichText = true
+		drawsBackground = false
+		textContainerInset = .zero
+		textContainer?.lineFragmentPadding = 0
+		textContainer?.widthTracksTextView = false
+		textContainer?.maximumNumberOfLines = 1
+		textContainer?.lineBreakMode = .byTruncatingTail
+		delegate = self
+		attributedStringValue = NSAttributedString(string: text, attributes: [.font: NSFont.systemFont(ofSize: 13)])
+	}
+
 	override var intrinsicContentSize: NSSize {
-		var size = super.intrinsicContentSize
-		size.width = NSView.noIntrinsicMetric
-		return size
+		let text = attributedStringValue
+		let font = text.length > 0 ? text.attribute(.font, at: 0, effectiveRange: nil) as? NSFont : nil
+		let lineHeight = TextLineMetrics.lineHeight(for: font ?? NSFont.systemFont(ofSize: 13))
+		let width = preferredMaxLayoutWidth > 0 ? preferredMaxLayoutWidth : max(bounds.width, 1)
+		let height = text.boundingRect(with: NSSize(width: width, height: .greatestFiniteMagnitude),
+		                               options: [.usesLineFragmentOrigin, .usesFontLeading]).height
+		return NSSize(
+			width: NSView.noIntrinsicMetric,
+			height: ceil(max(lineHeight, min(height, lineHeight * CGFloat(maximumNumberOfLines))))
+		)
+	}
+
+	func textView(_: NSTextView, clickedOnLink link: Any, at _: Int) -> Bool {
+		let url = (link as? URL) ?? (link as? String).flatMap(URL.init(string:))
+		if let url {
+			onOpenLink?(url)
+		}
+		return true
+	}
+
+	override func menu(for _: NSEvent) -> NSMenu? {
+		menu
 	}
 }
 

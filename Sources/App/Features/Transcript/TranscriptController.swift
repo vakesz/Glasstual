@@ -591,7 +591,7 @@ extension TranscriptController {
 		maybeReloadHistory()
 	}
 
-	func changeTextSize(_: Bool) {
+	func updateTextScale() {
 		guard let attachedWindow else {
 			return
 		}

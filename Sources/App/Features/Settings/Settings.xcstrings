@@ -3080,19 +3080,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Server list and user list appear transparent"
+            "value": "Server sidebar appears transparent"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Átlátszó kiszolgáló- és felhasználólista"
+            "value": "Átlátszó kiszolgáló-oldalsáv"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Server- und Benutzerliste transparent darstellen"
+            "value": "Serverseitenleiste transparent darstellen"
           }
         }
       }

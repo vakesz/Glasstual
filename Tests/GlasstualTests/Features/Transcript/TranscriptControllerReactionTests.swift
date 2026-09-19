@@ -11,12 +11,6 @@ import Testing
 @MainActor
 @Suite("Live message reactions", .serialized)
 struct TranscriptControllerReactionTests {
-	private func textView(in root: NSView) -> NSTextView? {
-		root.subviews.lazy.compactMap { view in
-			(view as? NSTextView) ?? textView(in: view)
-		}.first
-	}
-
 	@Test("A reaction to a line already on screen is drawn without a history reload")
 	func reactionReachesTheTranscript() async throws {
 		/* The transcript only draws live lines once the initial history load has
@@ -43,7 +37,7 @@ struct TranscriptControllerReactionTests {
 		line.messageIdentifier = "msg-\(UUID().uuidString)"
 		controller.print(line)
 
-		let transcript = try #require(textView(in: transcriptView))
+		let transcript = transcriptView.textView
 		await controller.drainRenderJobs()
 		try #require(transcript.string.contains("shipping it"))
 

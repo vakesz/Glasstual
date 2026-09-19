@@ -5,6 +5,14 @@ import SwiftUI
 
 struct OnboardingAppearanceView: View {
 	@Bindable var settings: OnboardingSettings
+	@State private var systemAppearance = SystemAppearanceSnapshot()
+
+	private var previewColorScheme: ColorScheme {
+		switch settings.appearance.previewMode(systemMode: systemAppearance.mode) {
+		case .light: .light
+		case .dark: .dark
+		}
+	}
 
 	var body: some View {
 		VStack(spacing: 18) {
@@ -19,6 +27,7 @@ struct OnboardingAppearanceView: View {
 			}
 			.accessibilityElement(children: .contain)
 			.accessibilityLabel(Text(.Onboarding.chatStyle))
+			.environment(\.colorScheme, previewColorScheme)
 
 			Form {
 				Picker(.Onboarding.textSize, selection: $settings.appearance.textSize) {
@@ -39,6 +48,16 @@ struct OnboardingAppearanceView: View {
 			.frame(maxWidth: 360)
 		}
 		.frame(maxWidth: .infinity, alignment: .center)
+	}
+}
+
+extension OnboardingAppearance {
+	func previewMode(systemMode: AppearanceMode) -> AppearanceMode {
+		switch preferredAppearance {
+		case .inherited: systemMode
+		case .light: .light
+		case .dark: .dark
+		}
 	}
 }
 

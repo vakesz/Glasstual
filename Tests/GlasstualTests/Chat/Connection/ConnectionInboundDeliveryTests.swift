@@ -393,6 +393,7 @@ struct ConnectionInboundDeliveryTests {
 	func closeDeadlineCompletesExactlyOnce() async {
 		let session = TestServerSession()
 		let listener = NSXPCListener.anonymous()
+		var terminations: [ConnectionTermination] = []
 		let (ticks, tick) = AsyncStream<Void>.makeStream()
 		var waits: [TimeInterval] = []
 		let clock = TimerClock(now: { .now }, wait: { interval in
@@ -401,9 +402,9 @@ struct ConnectionInboundDeliveryTests {
 				return
 			}
 		})
-		let connection = Connection(config: ConnectionConfig(), onSession: session, closeClock: clock) {
-			NSXPCConnection(listenerEndpoint: listener.endpoint)
-		}
+		let connection = Connection(config: ConnectionConfig(), onSession: session, closeClock: clock,
+		                            recordTermination: { terminations.append($0) },
+		                            makeService: { NSXPCConnection(listenerEndpoint: listener.endpoint) })
 		session.socket = connection
 		session.isConnecting = true
 		var completions = 0
@@ -423,6 +424,10 @@ struct ConnectionInboundDeliveryTests {
 		}
 		#expect(completions == 1)
 		#expect(session.socket == nil)
+		#expect(terminations.count == 1)
+		#expect(terminations.first?.trigger == .closeDeadline)
+		#expect(terminations.first?.phase == .connecting)
+		#expect(terminations.first?.localCloseRequested == true)
 		#expect(connection.isConnecting == false)
 		#expect(connection.isDisconnecting == false)
 		connection.open()

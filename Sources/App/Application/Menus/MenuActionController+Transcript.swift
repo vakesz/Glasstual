@@ -90,7 +90,7 @@ extension MenuActionController {
 
 	@objc func copyURL(_ sender: NSMenuItem?) {
 		guard let url = sender?.userInfoString, url.isEmpty == false else { return }
-		NSPasteboard.general.setString(url, forType: .string)
+		NSPasteboard.general.stringContent = url
 	}
 
 	@objc func openLogLocation(_: Any?) {
