@@ -84,6 +84,7 @@ enum MenuCommand: String, CaseIterable, Sendable {
 	case quiets // List of Quiets…
 	case channelProperties // Channel Properties…
 	case copyChannelIdentifier // Copy Unique Identifier
+	case toggleFavorite // Pin to Favorites
 	case navigationServers // Servers
 	case navigationChannels // Channels
 	case moveBackward // Move Backward
@@ -122,6 +123,8 @@ enum MenuCommand: String, CaseIterable, Sendable {
 	case webSearch // Search With %@
 	case transcriptDictionary // Look Up in Dictionary
 	case transcriptChannelMenu // Channel
+	case muteUser // Mute User
+	case unmuteUser // Unmute User
 	case addIgnore // Add Ignore…
 	case modifyIgnore // Modify Ignore…
 	case removeIgnore // Remove Ignore
@@ -204,7 +207,7 @@ extension MenuCommand {
 		case .joinChannel, .leaveChannel, .addChannel, .deleteChannel,
 		     .viewChannelLogs, .modifyTopic, .modes, .channelModeModerated,
 		     .channelModeInviteOnly, .channelModeManageAll, .bans, .banExceptions,
-		     .inviteExceptions, .quiets, .channelProperties, .copyChannelIdentifier:
+		     .inviteExceptions, .quiets, .channelProperties, .copyChannelIdentifier, .toggleFavorite:
 			.channel
 		case .minimize, .zoom, .toggleMemberList, .toggleSidebar,
 		     .appearanceSystem, .appearanceLight, .appearanceDark, .sortChannelList,
@@ -214,7 +217,7 @@ extension MenuCommand {
 		case .webSearch, .transcriptDictionary, .transcriptChannelMenu,
 		     .transcriptReply, .transcriptReact:
 			.transcript
-		case .addIgnore, .modifyIgnore, .removeIgnore, .inviteTo, .whois,
+		case .muteUser, .unmuteUser, .addIgnore, .modifyIgnore, .removeIgnore, .inviteTo, .whois,
 		     .startDirectConversation, .giveOp, .giveHalfop, .giveVoice, .takeOp, .takeHalfop,
 		     .takeVoice, .ban, .kick, .kickban, .ctcp, .ircOperator, .changeColor,
 		     .ctcpSendFile, .ctcpPing, .ctcpTime, .ctcpClientInfo, .ctcpVersion,
@@ -288,11 +291,12 @@ extension MenuCommand {
 		.addChannel: "plus.circle", .deleteChannel: "trash",
 		.viewChannelLogs: "doc.text", .modifyTopic: "text.quote",
 		.modes: "slider.horizontal.3", .bans: "hand.raised",
-		.channelProperties: "gearshape", .copyChannelIdentifier: "link",
+		.channelProperties: "gearshape", .copyChannelIdentifier: "link", .toggleFavorite: "pin",
 		.closeQuery: "xmark", .queryLogs: "doc.text",
 		.channelNameJoinChannel: "arrow.right.square", .copyLinkURL: "link",
 		.webSearch: "magnifyingglass", .transcriptDictionary: "book",
 		.transcriptChannelMenu: "number",
+		.muteUser: "speaker.slash", .unmuteUser: "speaker.wave.2",
 		.addIgnore: "hand.raised", .modifyIgnore: "pencil",
 		.removeIgnore: "hand.raised.slash", .inviteTo: "envelope",
 		.whois: "info.circle", .startDirectConversation: "bubble.left",

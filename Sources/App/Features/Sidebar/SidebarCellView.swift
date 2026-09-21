@@ -8,6 +8,9 @@ import AppKit
 final class SidebarCellView: NSTableCellView {
 	static let reuseIdentifier = NSUserInterfaceItemIdentifier("sidebar-cell")
 	let titleField = NSTextField(labelWithString: "")
+	let subtitleField = NSTextField(labelWithString: "")
+	let networkImage = NSImageView()
+	private let subtitleStack = NSStackView()
 	let leadingImage = NSImageView()
 	let securityImage = NSImageView()
 	let badge = SidebarUnreadBadge()
@@ -23,7 +26,21 @@ final class SidebarCellView: NSTableCellView {
 		titleField.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
 		let spacer = NSView()
 		spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
-		let stack = NSStackView(views: [leadingImage, titleField, securityImage, spacer, badge])
+		subtitleField.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+		subtitleField.lineBreakMode = .byTruncatingTail
+		subtitleField.maximumNumberOfLines = 1
+		subtitleField.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+		subtitleStack.addArrangedSubview(networkImage)
+		subtitleStack.addArrangedSubview(subtitleField)
+		subtitleStack.orientation = .horizontal
+		subtitleStack.alignment = .centerY
+		subtitleStack.spacing = UISpacing.tight
+		let labels = NSStackView(views: [titleField, subtitleStack])
+		labels.orientation = .vertical
+		labels.alignment = .leading
+		labels.spacing = 1
+		labels.detachesHiddenViews = true
+		let stack = NSStackView(views: [leadingImage, labels, securityImage, spacer, badge])
 		stack.orientation = .horizontal
 		stack.alignment = .centerY
 		stack.spacing = UISpacing.regular
@@ -37,10 +54,12 @@ final class SidebarCellView: NSTableCellView {
 			stack.centerYAnchor.constraint(equalTo: centerYAnchor),
 			leadingImage.widthAnchor.constraint(equalToConstant: UIListMetrics.glyphWidth),
 			leadingImage.heightAnchor.constraint(equalToConstant: 14),
+			networkImage.widthAnchor.constraint(equalToConstant: 10),
+			networkImage.heightAnchor.constraint(equalToConstant: 10),
 			securityImage.widthAnchor.constraint(equalToConstant: 10),
 			securityImage.heightAnchor.constraint(equalToConstant: 12),
 		])
-		for view in [titleField, leadingImage, securityImage, badge] {
+		for view in [titleField, subtitleField, networkImage, subtitleStack, leadingImage, securityImage, badge] {
 			view.setAccessibilityElement(false)
 		}
 		setAccessibilityElement(true)
@@ -57,6 +76,10 @@ final class SidebarCellView: NSTableCellView {
 		guard content != node.content else { return }
 		content = node.content
 		setAccessibilityLabel(node.accessibilityDescription)
+		subtitleField.stringValue = ""
+		subtitleStack.isHidden = true
+		networkImage.image = nil
+		networkImage.isHidden = true
 		leadingImage.image = nil
 		leadingImage.isHidden = true
 		leadingImage.toolTip = nil
@@ -70,6 +93,13 @@ final class SidebarCellView: NSTableCellView {
 		case let .server(server):
 			titleField.stringValue = server.title
 			titleField.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .semibold)
+			if server.isFavoritesGroup {
+				leadingImage.image = NSImage(systemSymbolName: "pin.fill", accessibilityDescription: nil)
+				leadingImage.isHidden = false
+			} else {
+				leadingImage.image = NSImage(systemSymbolName: server.identityStyle.icon.symbolName, accessibilityDescription: nil)
+				leadingImage.isHidden = false
+			}
 			if server.isSecured {
 				securityImage.image = NSImage(systemSymbolName: "lock.fill", accessibilityDescription: nil)
 				securityImage.toolTip = String(localized: .MainWindow.connectionSecurity)
@@ -77,12 +107,20 @@ final class SidebarCellView: NSTableCellView {
 			}
 		case let .conversation(conversation):
 			titleField.stringValue = conversation.title
+			if let network = conversation.networkTitle {
+				subtitleField.stringValue = network
+				subtitleStack.isHidden = false
+				if let style = conversation.networkIdentityStyle {
+					networkImage.image = NSImage(systemSymbolName: style.icon.symbolName, accessibilityDescription: nil)
+					networkImage.isHidden = false
+				}
+			}
 			titleField.font = .systemFont(ofSize: NSFont.systemFontSize)
 			let symbol: String? = if conversation.hasJoinError {
 				"exclamationmark.triangle.fill"
 			} else {
 				switch conversation.kind {
-				case .channel: nil
+				case .channel: conversation.isFavorite ? "pin.fill" : nil
 				case .directChat: "bubble.left.and.bubble.right.fill"
 				case .direct, .console: "person.fill"
 				}
@@ -107,7 +145,12 @@ final class SidebarCellView: NSTableCellView {
 	/// Native outline proxies expose the cell's metadata. Keep disclosure and
 	/// selection on AppKit's rows, and place secondary actions on this cell.
 	func configureAccessibilityActions(with node: SidebarOutlineNode, canMoveUp: Bool, canMoveDown: Bool) {
-		setAccessibilityIdentifier("sidebar-row-\(node.identity.itemIdentifier)")
+		let prefix = if case .favorite = node.identity {
+			"sidebar-favorite-"
+		} else {
+			"sidebar-row-"
+		}
+		setAccessibilityIdentifier(prefix + node.identity.itemIdentifier)
 		var actions: [NSAccessibilityCustomAction] = []
 		if canMoveUp {
 			actions.append(NSAccessibilityCustomAction(name: String(localized: .MainWindow.sidebarMoveUp),
@@ -140,20 +183,30 @@ final class SidebarCellView: NSTableCellView {
 		// NSTableCellView forwards backgroundStyle to direct controls. The
 		// stack owns these controls, so forward the native style through it.
 		titleField.cell?.backgroundStyle = backgroundStyle
+		subtitleField.cell?.backgroundStyle = backgroundStyle
+		subtitleField.textColor = backgroundStyle == .emphasized ? .labelColor : .secondaryLabelColor
 		leadingImage.cell?.backgroundStyle = backgroundStyle
 		securityImage.cell?.backgroundStyle = backgroundStyle
+		networkImage.cell?.backgroundStyle = backgroundStyle
+		networkImage.contentTintColor = .secondaryLabelColor
 		securityImage.contentTintColor = .secondaryLabelColor
 		leadingImage.contentTintColor = .secondaryLabelColor
+		leadingImage.alphaValue = 1
 		if backgroundStyle == .emphasized {
 			titleField.textColor = .labelColor
 			leadingImage.contentTintColor = .labelColor
 			securityImage.contentTintColor = .labelColor
+			networkImage.contentTintColor = .labelColor
 			return
 		}
 		switch content {
 		case let .server(server):
 			titleField.textColor = server.isActive ? .labelColor : .secondaryLabelColor
+			leadingImage.contentTintColor = server.identityStyle.color.nsColor
+			leadingImage.alphaValue = server.isActive ? 1 : 0.6
 		case let .conversation(conversation):
+			leadingImage.alphaValue = 1
+			networkImage.contentTintColor = conversation.networkIdentityStyle?.color.nsColor ?? .secondaryLabelColor
 			if conversation.hasJoinError {
 				titleField.textColor = .systemRed
 				leadingImage.contentTintColor = .systemRed

@@ -19,6 +19,9 @@ runs in a sandboxed XPC host.
 - Native Lines and Bubbles transcript themes with light and dark appearances.
 - Multiple servers, channel and member management, notifications, file
   transfers, local scrollback and transcript logging.
+- Favorites across networks, Unread and Mentions sidebar filters, and server
+  colors and icons under Server Properties → General.
+- Slash-command suggestions with descriptions, syntax and argument hints.
 - Message rules and user command scripts.
 - Strict concurrency checking and typed settings throughout the app.
 

@@ -12,6 +12,12 @@ private enum MenuServerSuppressionKey: String {
 // MARK: - Server and channel commands
 
 extension MenuActionController {
+	@objc func toggleFavorite(_: Any?) {
+		guard isRunning, let conversation = context.selectedConversation else { return }
+		mainWindow.sidebar.toggleFavorite(conversation)
+		chatSession?.save()
+	}
+
 	@objc func connect(_: Any?) {
 		connect(bypassingProxy: false)
 	}

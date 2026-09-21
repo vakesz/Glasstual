@@ -44,6 +44,39 @@ enum AddressBookLookupPolicy {
 }
 
 extension ServerSession {
+	func isUserMuted(nickname: String) -> Bool {
+		let hostmask = findUser(nickname)?.hostmask ?? "\(nickname)!*@*"
+		return config.ignoreList.contains {
+			$0.muteMessages && $0.checkMatch(hostmask, caseMapping: supportInfo.caseMapping)
+		}
+	}
+
+	/// A quick mute follows the nickname, including when the sender has left.
+	/// It does not discard messages or broaden to other users on the same host.
+	func setUserMuted(_ muted: Bool, nickname: String) {
+		guard nickname.isHostmaskNickname(on: self), !nicknameIsMyself(nickname), isTerminating == false,
+		      isUserMuted(nickname: nickname) != muted else { return }
+		var newConfig = config
+		if muted {
+			let mask = AddressBookEntryMatcher.escapedGlobLiteral(nickname) + "!*@*"
+			var entry = AddressBookEntry(hostmask: mask)
+			entry.muteMessages = true
+			newConfig.ignoreList.append(entry)
+		} else {
+			let hostmask = findUser(nickname)?.hostmask ?? "\(nickname)!*@*"
+			newConfig.ignoreList = newConfig.ignoreList.compactMap { entry in
+				guard entry.muteMessages, entry.checkMatch(hostmask, caseMapping: supportInfo.caseMapping) else { return entry }
+				var unmuted = entry
+				unmuted.muteMessages = false
+				return unmuted.ignoresEvents || unmuted.trackUserActivity ? unmuted : nil
+			}
+		}
+		updateConfig(newConfig)
+		if let chatSession, chatSession.sessions.contains(where: { $0 === self }) {
+			chatSession.save()
+		}
+	}
+
 	func findIgnores(forHostmask hostmask: String) -> [AddressBookEntry] {
 		addressBookMatchCache.findIgnores(forHostmask: hostmask, in: config.ignoreList)
 	}

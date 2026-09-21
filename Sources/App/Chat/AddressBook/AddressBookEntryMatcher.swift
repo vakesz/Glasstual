@@ -69,15 +69,19 @@ nonisolated enum HostmaskGlob {
 	/// the escape character and the upper-case form of `|`, so `a\*b` would
 	/// fold to `a|*b` and stop meaning "a literal asterisk".
 	static func compile(_ hostmask: String, caseMapping: ISupportCaseMapping) -> [HostmaskGlobToken] {
-		compile(hostmask).map { token in
-			guard case let .literal(scalar) = token else {
-				return token
+		var result: [HostmaskGlobToken] = []
+		var literal = ""
+		for token in compile(hostmask) {
+			if case let .literal(scalar) = token {
+				literal.unicodeScalars.append(scalar)
+			} else {
+				result.append(contentsOf: casefold(literal, caseMapping: caseMapping).unicodeScalars.map(HostmaskGlobToken.literal))
+				literal = ""
+				result.append(token)
 			}
-
-			let folded = casefold(String(scalar), caseMapping: caseMapping)
-
-			return .literal(folded.unicodeScalars.first ?? scalar)
 		}
+		result.append(contentsOf: casefold(literal, caseMapping: caseMapping).unicodeScalars.map(HostmaskGlobToken.literal))
+		return result
 	}
 
 	/// `tokens` must already be folded by `casefold(_:caseMapping:)` under the
@@ -215,7 +219,7 @@ nonisolated struct AddressBookEntryMatcher: Sendable {
 
 	/// `value` as a mask that matches itself: a nickname the user typed is a
 	/// literal, so a glob metacharacter in it must not become a wildcard.
-	private static func escapedGlobLiteral(_ value: String) -> String {
+	static func escapedGlobLiteral(_ value: String) -> String {
 		var escaped = ""
 
 		for character in value {

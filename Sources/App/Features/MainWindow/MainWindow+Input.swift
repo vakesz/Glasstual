@@ -90,6 +90,9 @@ extension MainWindow {
 	private func performTabKeyAction(movingForward: Bool) -> Bool {
 		switch SettingsKeys.Input.tabKeyAction.value {
 		case .nicknameComplete:
+			if inputTextField.commandDiscovery.isEditingCommand, inputTextField.acceptSlashCommand() {
+				return true
+			}
 			completeNickname(movingForward)
 		case .unreadConversation:
 			navigateConversationEntries(movingForward, withNavigationType: .unread)
@@ -117,6 +120,12 @@ extension MainWindow {
 	}
 
 	private func moveInputHistory(_ movingUp: Bool, checkScroller: Bool, event: NSEvent) {
+		if checkScroller,
+		   event.modifierFlags.isDisjoint(with: [.shift, .control, .option, .command]),
+		   inputTextField.moveSlashCommandSelection(forward: movingUp == false)
+		{
+			return
+		}
 		if checkScroller {
 			let caret = inputTextField.caretLocation
 			if caret != .onlyLine {

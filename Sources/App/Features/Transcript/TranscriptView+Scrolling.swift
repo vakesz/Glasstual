@@ -65,6 +65,9 @@ extension TranscriptView {
 	}
 
 	func jump(to lineNumber: String) -> Bool {
+		if let index = document.index(ofLine: lineNumber) {
+			revealFoldedLine(document[index].lineNumber)
+		}
 		guard let range = range(ofLine: lineNumber) else { return false }
 		followsBottom = false
 		scrollsToBottomOnLayout = false
@@ -114,9 +117,10 @@ extension TranscriptView {
 	 batch cost the entire transcript; the estimate it refines later moves the
 	 document's height, which ``documentHeightDidChange()`` already follows. */
 	func ensureLayoutForTail() {
+		guard let lastIndex = document.indices.last(where: { document.length(ofLineAt: $0) > 0 }) else { return }
+		let lastStart = document.location(ofLineAt: lastIndex)
 		guard let layoutManager = textView.textLayoutManager,
 		      let contentManager = layoutManager.textContentManager,
-		      let lastStart = document.lineStarts.dropLast().last,
 		      let tailStart = contentManager.location(contentManager.documentRange.location, offsetBy: lastStart),
 		      let tail = NSTextRange(location: tailStart, end: contentManager.documentRange.endLocation)
 		else { return }

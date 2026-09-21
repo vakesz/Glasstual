@@ -3163,6 +3163,30 @@
         }
       }
     },
+    "menu-member-mute" : {
+      "comment" : "Member context menu action. Collapse this user’s messages while keeping them available to expand.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mute User"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Felhasználó némítása"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Benutzer stummschalten"
+          }
+        }
+      }
+    },
     "menu-member-remove-ignore" : {
       "comment" : "Member list context menu item title.",
       "extractionState" : "manual",
@@ -3327,6 +3351,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sprechrecht entziehen (-v)"
+          }
+        }
+      }
+    },
+    "menu-member-unmute" : {
+      "comment" : "Member context menu action. Show messages from a previously muted user normally.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unmute User"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Felhasználó némításának feloldása"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stummschaltung aufheben"
           }
         }
       }

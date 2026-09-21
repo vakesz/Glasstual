@@ -78,8 +78,7 @@ extension ServerSession {
 		for conversation in conversationList {
 			guard let nicknames = recordedNicknames[conversation.uniqueIdentifier],
 			      nicknames.isEmpty == false,
-			      environment.settings.showJoinLeave,
-			      !conversation.config.ignoreGeneralEventMessages
+			      printsGeneralEvent(isLocalUser: false, in: conversation, ignoring: nil)
 			else { continue }
 
 			let nicknameList = NetsplitSummaryPolicy.nicknameList(
@@ -109,7 +108,11 @@ extension ServerSession {
 		      !nickname.isEmpty
 		else { return false }
 
-		netsplitCollapse.record(nickname, in: conversation.uniqueIdentifier)
+		let isLocalUser = nicknameIsMyself(nickname)
+		let ignore = isLocalUser ? nil : message.senderHostmask.flatMap(findAddressBookEntry(forHostmask:))
+		if printsGeneralEvent(isLocalUser: isLocalUser, in: conversation, ignoring: ignore) {
+			netsplitCollapse.record(nickname, in: conversation.uniqueIdentifier)
+		}
 
 		return true
 	}

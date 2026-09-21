@@ -11,10 +11,11 @@ enum ServerConfigPolicy {
 		isConsole: Bool,
 		isDirectChat: Bool,
 		isChannel: Bool,
-		rememberDirectConversations: Bool
+		rememberDirectConversations: Bool,
+		isFavorite: Bool = false
 	) -> Bool {
 		guard isConsole == false, isDirectChat == false else { return false }
-		return isChannel || rememberDirectConversations
+		return isChannel || rememberDirectConversations || isFavorite
 	}
 
 	static func storedConversationConfigurations(
@@ -26,7 +27,8 @@ enum ServerConfigPolicy {
 				isConsole: conversation.isConsole,
 				isDirectChat: conversation.isDirectChat,
 				isChannel: conversation.isChannel,
-				rememberDirectConversations: rememberDirectConversations
+				rememberDirectConversations: rememberDirectConversations,
+				isFavorite: conversation.config.isFavorite
 			) else { return nil }
 			return conversation.config
 		}

@@ -535,6 +535,37 @@ struct ServerSessionHistoryTests {
 		}
 	}
 
+	@Test("A collapsed channel keeps admitted events when global events are off")
+	func collapsedChannelKeepsEventsWithGlobalEventsOff() throws {
+		try withNetsplitSession(showingJoinsAndQuits: false) { session in
+			session.config.ignoreList = [AddressBookEntry.newIgnoreEntry(forHostmask: "bob!*@*")]
+			try withChannel(named: "#chat", on: session) { channel in
+				var config = channel.config
+				config.generalEventMessageDisplay = .collapse
+				channel.updateConfig(config)
+				channel.activate()
+				let linesBeforeJoin = session.printedLines.count
+				try feed([":alice!u@h JOIN #chat", ":bob!u@h JOIN #chat"], to: session)
+
+				#expect(session.printedLines.count == linesBeforeJoin + 1)
+				let linesBeforeSplit = session.printedLines.count
+				try feed([
+					":irc.example.net BATCH +ns netsplit irc.hub irc.leaf",
+					"@batch=ns :alice!u@h QUIT :irc.hub irc.leaf",
+					"@batch=ns :bob!u@h QUIT :irc.hub irc.leaf",
+					":irc.example.net BATCH -ns",
+				], to: session)
+
+				let newLines = printedLines(from: linesBeforeSplit, on: session)
+				#expect(newLines.count == 1)
+				#expect((newLines.first?["messageBody"] as? String)?.contains("alice") == true)
+				#expect((newLines.first?["messageBody"] as? String)?.contains("bob") == false)
+				#expect(channel.memberExists("alice") == false)
+				#expect(channel.memberExists("bob") == false)
+			}
+		}
+	}
+
 	@Test("A netsplit batch prints one summary line and takes its users out of the channel")
 	func netsplitBatchProducesOneSummaryLineAndUpdatesMembers() throws {
 		try withNetsplitSession(showingJoinsAndQuits: true) { session in

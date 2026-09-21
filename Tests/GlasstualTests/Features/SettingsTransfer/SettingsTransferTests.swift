@@ -228,6 +228,42 @@ struct SettingsTransferTests {
 		#expect(throws: SettingsTransferError.self) { try SettingsArchive.decode(futureData) }
 	}
 
+	@Test("Channel event display choices survive settings transfer", arguments: GeneralEventMessageDisplay.allCases)
+	func channelEventDisplayTransfers(_ display: GeneralEventMessageDisplay) throws {
+		var configuration = config("Events")
+		configuration.conversationList[0].generalEventMessageDisplay = display
+		let archive = SettingsSessionArchive.portableDictionary(configuration)
+		let restored = try SettingsSessionArchive.decode(.array([.dictionary(archive)]))
+
+		#expect(restored.first?.conversationList.first?.generalEventMessageDisplay == display)
+	}
+
+	@Test("Settings transfer rejects unknown channel event display choices")
+	func invalidChannelEventDisplayIsRejected() {
+		let configuration = config("Events")
+		var channel = PropertyListModel.encode(configuration.conversationList[0])
+		channel["generalEventMessageDisplay"] = "future-mode"
+		var archive = SettingsSessionArchive.portableDictionary(configuration)
+		archive["conversationList"] = .array([.dictionary(channel)])
+
+		#expect(throws: SettingsTransferError.self) {
+			try SettingsSessionArchive.decode(.array([.dictionary(archive)]))
+		}
+	}
+
+	@Test("Muted user entries survive settings transfer")
+	func mutedUserTransfers() throws {
+		var configuration = config("Muted user")
+		var entry = AddressBookEntry(hostmask: "alice!*@*")
+		entry.muteMessages = true
+		configuration.ignoreList = [entry]
+		let archive = SettingsSessionArchive.portableDictionary(configuration)
+		let restored = try SettingsSessionArchive.decode(.array([.dictionary(archive)]))
+
+		#expect(restored.first?.ignoreList.first?.hostmask == "alice!*@*")
+		#expect(restored.first?.ignoreList.first?.muteMessages == true)
+	}
+
 	@Test("Number drafts commit only on explicit completion and report what the store refused")
 	func transientNumberEditing() {
 		var committed = "15000"

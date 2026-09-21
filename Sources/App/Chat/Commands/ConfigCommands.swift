@@ -141,7 +141,7 @@ extension ServerSession {
 			return
 		}
 		let hostmask = member.hostmask ?? "\(nickname)!*@*"
-		let matches = config.ignoreList.filter { $0.entryType == .ignore && $0.checkMatch(hostmask) }
+		let matches = findIgnores(forHostmask: hostmask)
 		if isIgnore, matches.isEmpty == false {
 			printDebugInformation(String(localized: .IRC.ignoreAlreadyExistsThatMatches(member.nickname)))
 			return

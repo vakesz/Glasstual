@@ -51,16 +51,32 @@ struct ServerSessionInboundHandlerPolicyTests {
 	@Test("Membership, reconnect and certificate events keep their eligibility rules")
 	func eventEligibilityPolicies() {
 		#expect(MembershipEventPolicy.shouldPrint(
-			isLocalUser: true, showJoinLeave: false, channelIgnoresEvents: true, addressBookIgnoresEvents: true
+			isLocalUser: true, showJoinLeave: false, channelDisplay: .hide, addressBookIgnoresEvents: true
 		))
 		#expect(MembershipEventPolicy.shouldPrint(
-			isLocalUser: false, showJoinLeave: true, channelIgnoresEvents: false, addressBookIgnoresEvents: true
+			isLocalUser: false, showJoinLeave: true, channelDisplay: .show, addressBookIgnoresEvents: true
 		) == false)
 		#expect(InboundEventPolicy.cancelsReconnect(
 			forError: "Closing Link: user (Max SendQ exceeded)"
 		))
 		#expect(InboundEventPolicy.acceptsCertificateChunk(String(repeating: "a", count: 65)))
 		#expect(InboundEventPolicy.acceptsCertificateChunk(String(repeating: "a", count: 66)) == false)
+	}
+
+	@Test("Collapse admits channel events when the global event preference is off")
+	func collapsedChannelOverridesGlobalEventPreference() {
+		#expect(MembershipEventPolicy.shouldPrint(
+			isLocalUser: false, showJoinLeave: false, channelDisplay: .collapse, addressBookIgnoresEvents: false
+		))
+		#expect(MembershipEventPolicy.shouldPrint(
+			isLocalUser: false, showJoinLeave: false, channelDisplay: .show, addressBookIgnoresEvents: false
+		) == false)
+		#expect(MembershipEventPolicy.shouldPrint(
+			isLocalUser: false, showJoinLeave: true, channelDisplay: .hide, addressBookIgnoresEvents: false
+		) == false)
+		#expect(MembershipEventPolicy.shouldPrint(
+			isLocalUser: false, showJoinLeave: false, channelDisplay: .collapse, addressBookIgnoresEvents: true
+		) == false)
 	}
 
 	@Test("A ChanServ notice addressed to a channel loses its destination prefix")

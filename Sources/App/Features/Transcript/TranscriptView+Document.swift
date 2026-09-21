@@ -97,7 +97,9 @@ extension TranscriptView {
 	func setUnreadMarker(_ mark: UnreadMarker) {
 		performEditingBatch {
 			let caption = String(localized: .Transcript.unreadMessages)
-			for index in document.setUnreadMarker(mark, caption: caption) {
+			let changed = document.setUnreadMarker(mark, caption: caption)
+			refreshFolding()
+			for index in changed {
 				refresh(at: index)
 			}
 		}
@@ -157,12 +159,13 @@ extension TranscriptView {
 			let rendered = NSMutableAttributedString()
 			for line in newLines[start ..< min(start + 32, newLines.count)] {
 				starts.append(location + rendered.length)
-				rendered.append(render(line))
+				rendered.append(renderVisibleLine(line))
 			}
 			storage.replaceCharacters(in: NSRange(location: location, length: 0), with: rendered)
 			location += rendered.length
 		}
 		document.insert(newLines, at: index, starts: starts, totalLength: location - origin)
+		refreshFolding()
 	}
 
 	/// Removes the oldest `indices` lines and the characters they drew. Only the
@@ -178,6 +181,7 @@ extension TranscriptView {
 		closeReactionPicker()
 		let retirement = document.remove(indices)
 		storage.deleteCharacters(in: retirement.characterRange)
+		refreshFolding()
 		if retirement.messageIdentifiers.isEmpty == false {
 			viewController?.transcriptDidRetireMessages(retirement.messageIdentifiers)
 		}
@@ -196,11 +200,11 @@ extension TranscriptView {
 
 	/// Redraws one line in place. A delivery receipt, a reaction, an unread
 	/// boundary or a decoded image changes that line and nothing else.
-	private func refresh(at index: Int) {
+	func refresh(at index: Int) {
 		guard let storage = textView.textStorage, document.indices.contains(index) else { return }
 		beginNicknameColorBatch()
 		let anchor = selectionAnchor()
-		let rendered = render(document[index])
+		let rendered = renderVisibleLine(document[index])
 		storage.replaceCharacters(
 			in: NSRange(location: document.location(ofLineAt: index), length: document.length(ofLineAt: index)),
 			with: rendered

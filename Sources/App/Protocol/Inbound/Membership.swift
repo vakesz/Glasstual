@@ -8,10 +8,10 @@ enum MembershipEventPolicy {
 	static func shouldPrint(
 		isLocalUser: Bool,
 		showJoinLeave: Bool,
-		channelIgnoresEvents: Bool,
+		channelDisplay: GeneralEventMessageDisplay,
 		addressBookIgnoresEvents: Bool
 	) -> Bool {
-		isLocalUser || (showJoinLeave && !channelIgnoresEvents && !addressBookIgnoresEvents)
+		isLocalUser || ((showJoinLeave || channelDisplay == .collapse) && channelDisplay != .hide && !addressBookIgnoresEvents)
 	}
 }
 
@@ -28,7 +28,7 @@ extension ServerSession {
 		MembershipEventPolicy.shouldPrint(
 			isLocalUser: isLocalUser,
 			showJoinLeave: environment.settings.showJoinLeave,
-			channelIgnoresEvents: channel.config.ignoreGeneralEventMessages,
+			channelDisplay: channel.config.generalEventMessageDisplay,
 			addressBookIgnoresEvents: entry?.ignoreGeneralEventMessages ?? false
 		)
 	}

@@ -15,6 +15,7 @@ private enum TranscriptContextMenuSuppressionKey: String {
 }
 
 final class TranscriptContextTarget: NSObject {
+	var foldLineNumber: String?
 	var anchorURL: String?
 	var channelName: String?
 	var nickname: String?
@@ -61,6 +62,10 @@ final class TranscriptCommands: NSObject {
 		) {
 			// NSTextView may retain its native menu; its items cannot be reparented.
 			if let copy = item.copy() as? NSMenuItem {
+				// AppKit does not copy the associated nickname used by member commands.
+				if let nickname = item.userInfoString {
+					copy.setUserInfoString(nickname, recursively: true)
+				}
 				menu.addItem(copy)
 			}
 		}
@@ -99,6 +104,9 @@ final class TranscriptCommands: NSObject {
 		in view: TranscriptView,
 		defaultMenuItems: [NSMenuItem]
 	) -> [NSMenuItem] {
+		if let lineNumber = target.foldLineNumber {
+			return view.foldMenuItems(for: lineNumber) + muteMenuItems(for: target.lineNickname)
+		}
 		if target.inlineImage != nil {
 			return inlineImageMenuItems(for: target)
 		}
@@ -115,8 +123,16 @@ final class TranscriptCommands: NSObject {
 		}
 
 		var items = defaultMenuItems.filter { $0.action != #selector(NSTextView.cut(_:)) }
+		items.append(contentsOf: muteMenuItems(for: target.lineNickname))
 		items.append(contentsOf: messageMenuItems(for: target, in: view))
 		return items
+	}
+
+	private func muteMenuItems(for nickname: String?) -> [NSMenuItem] {
+		guard let nickname, nickname.isEmpty == false else { return [] }
+		let items = copiedMenuItems(from: sink.memberMenu(), userInfo: nickname)
+			.filter { $0.command == .muteUser || $0.command == .unmuteUser }
+		return items.isEmpty ? [] : [.separator()] + items
 	}
 
 	/** What an inline image offers on a right click.

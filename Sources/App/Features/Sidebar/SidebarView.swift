@@ -7,16 +7,51 @@ import Observation
 import SwiftUI
 
 struct SidebarView: View {
-	let model: Sidebar
+	@Bindable var model: Sidebar
 	let redirectTyping: (String) -> Void
 
 	var body: some View {
-		SidebarOutlineRepresentable(model: model, snapshot: SidebarOutlineSnapshot(model: model), redirectTyping: redirectTyping)
-			.overlay {
-				if model.hasNoFilterMatches {
-					ContentUnavailableView.search(text: model.filterText)
-				}
+		VStack(spacing: 0) {
+			ViewThatFits(in: .horizontal) {
+				filterPicker.pickerStyle(.segmented).fixedSize(horizontal: true, vertical: false)
+				filterPicker.pickerStyle(.menu)
 			}
+			.frame(maxWidth: .infinity)
+			.padding(.horizontal, UISpacing.regular)
+			.padding(.vertical, UISpacing.tight)
+
+			SidebarOutlineRepresentable(model: model, snapshot: SidebarOutlineSnapshot(model: model), redirectTyping: redirectTyping)
+				.overlay {
+					if model.hasNoFilterMatches {
+						emptyResults
+					}
+				}
+		}
+	}
+
+	private var filterPicker: some View {
+		Picker(.Sidebar.filterLabel, selection: $model.filter) {
+			ForEach(SidebarFilter.allCases) { filter in
+				Text(filter.title).tag(filter)
+			}
+		}
+		.labelsHidden()
+		.accessibilityIdentifier("sidebar-filter")
+	}
+
+	@ViewBuilder
+	private var emptyResults: some View {
+		if !model.filterText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+			ContentUnavailableView.search(text: model.filterText)
+		} else if model.filter == .mentions {
+			ContentUnavailableView(.Sidebar.noMentionsTitle, systemImage: "at", description: Text(.Sidebar.noMentionsDescription))
+		} else {
+			ContentUnavailableView(
+				.Sidebar.noUnreadTitle,
+				systemImage: "checkmark.message",
+				description: Text(.Sidebar.conversationsWithNewMessages)
+			)
+		}
 	}
 }
 

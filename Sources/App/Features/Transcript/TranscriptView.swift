@@ -164,6 +164,11 @@ final class TranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 	 the focus back and left the transcript unable to scroll at all. */
 	func keyDown(_ event: NSEvent, in _: NSView) -> Bool {
 		let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+		if modifiers.isEmpty, [" ", "\r", "\n"].contains(event.charactersIgnoringModifiers ?? ""),
+		   activateSelectedFold()
+		{
+			return true
+		}
 		guard modifiers.isDisjoint(with: [.command, .option, .control]),
 		      Self.isTextInput(event.charactersIgnoringModifiers)
 		else { return false }
@@ -340,6 +345,20 @@ final class TranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 		addSubviewsAndActivateConstraints()
 		setTopic(nil)
 		applyTheme()
+		if viewController?.associatedConversation != nil {
+			notifications.observe(.conversationConfigWasUpdated) { [weak self] notification in
+				guard let self, let conversation = viewController?.associatedConversation,
+				      notification.object as AnyObject? === conversation else { return }
+				reloadFolding()
+			}
+		}
+		if viewController?.associatedSession != nil {
+			notifications.observe(.serverSessionConfigWasUpdated) { [weak self] notification in
+				guard let self, let session = viewController?.associatedSession,
+				      notification.object as AnyObject? === session else { return }
+				reloadFolding()
+			}
+		}
 	}
 
 	private func configureTopicBar() {
@@ -543,7 +562,13 @@ final class TranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 		rebuild()
 	}
 
-	func textView(_: NSTextView, clickedOnLink link: Any, at _: Int) -> Bool {
+	func textView(_ textView: NSTextView, clickedOnLink link: Any, at index: Int) -> Bool {
+		if let storage = textView.textStorage, index >= 0, index < storage.length,
+		   let lineNumber = storage.attribute(.transcriptFoldLineNumber, at: index, effectiveRange: nil) as? String
+		{
+			toggleFoldedGroup(lineNumber)
+			return true
+		}
 		guard let url = link as? URL else { return false }
 		commands.openWebpage(url)
 		return true

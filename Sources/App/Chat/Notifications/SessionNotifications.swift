@@ -20,6 +20,7 @@ extension ServerSession {
 		text: String? = nil,
 		userInfo suppliedUserInfo: UserNotificationPayload? = nil
 	) {
+		guard nickname.map({ isUserMuted(nickname: $0) }) != true else { return }
 		guard UserNotificationPolicy.admits(UserNotificationAdmissionContext(
 			event: event,
 			isTerminating: isTerminating,

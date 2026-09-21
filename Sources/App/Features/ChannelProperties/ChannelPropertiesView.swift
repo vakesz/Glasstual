@@ -105,10 +105,12 @@ struct ChannelPropertiesView: View {
 				Toggle(.ChannelProperties.joinOnConnect, isOn: $model.config.autoJoin)
 				Toggle(.ChannelProperties.muteThisConversation, isOn: $model.isMuted)
 				Toggle(.ChannelProperties.showUnreadCountInChannelList, isOn: $model.config.showsUnreadCount)
-				Toggle(
-					.ChannelProperties.disableGeneralEventMessages,
-					isOn: $model.config.ignoreGeneralEventMessages
-				)
+				Picker(.ChannelProperties.generalEventMessages, selection: $model.config.generalEventMessageDisplay) {
+					Text(.ChannelProperties.generalEventMessagesShow).tag(GeneralEventMessageDisplay.show)
+					Text(.ChannelProperties.generalEventMessagesCollapse).tag(GeneralEventMessageDisplay.collapse)
+					Text(.ChannelProperties.generalEventMessagesHide).tag(GeneralEventMessageDisplay.hide)
+				}
+				.help(.ChannelProperties.generalEventMessagesHelp)
 				Toggle(.ChannelProperties.disableHighlights, isOn: $model.config.ignoreHighlights)
 				Toggle(model.inlineMediaOverrideTitle, isOn: $model.inlineMediaOverride)
 			}

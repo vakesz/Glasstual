@@ -9,6 +9,18 @@ import Testing
 @MainActor
 @Suite("Channel properties model")
 struct ChannelPropertiesModelTests {
+	@Test("Saving and reopening channel properties preserves the event display choice")
+	func generalEventDisplaySurvivesEditing() throws {
+		let model = ChannelPropertiesModel(config: ConversationConfig(name: "#swift"))
+		model.config.generalEventMessageDisplay = .collapse
+		let stored = PropertyListModel.encode(model.submittedConfig)
+		let restored = try #require(PropertyListModel.decode(ConversationConfig.self, from: stored))
+		model.replace(with: restored)
+
+		#expect(model.config.generalEventMessageDisplay == .collapse)
+		#expect(model.submittedConfig.ignoreGeneralEventMessages == false)
+	}
+
 	/// `inlineMediaDisabled` and `inlineMediaEnabled` are the two halves of one
 	/// override, and `TranscriptController.inlineMediaEnabledForView` reads
 	/// exactly one of them depending on the application-wide setting. Editing

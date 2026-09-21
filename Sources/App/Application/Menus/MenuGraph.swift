@@ -560,7 +560,13 @@ private extension MenuGraph {
 		),
 	]
 
+	private static let favoriteEntry = Entry.item(
+		String(localized: .Sidebar.pinFavorite), .toggleFavorite, #selector(MenuActionController.toggleFavorite(_:))
+	)
+
 	static let channelEntries: [Entry] = [
+		favoriteEntry,
+		.separator(),
 		.item(String(localized: .MainWindow.menuChannelJoin), .joinChannel, #selector(MenuActionController.joinChannel(_:))),
 		.item(String(localized: .MainWindow.menuChannelLeave), .leaveChannel, #selector(MenuActionController.leaveConversation(_:))),
 		.separator(),
@@ -655,6 +661,8 @@ private extension MenuGraph {
 	 Shift-Command-L. Two menu-bar items on one shortcut leave AppKit to pick
 	 one of them. */
 	static let directEntries: [Entry] = [
+		favoriteEntry,
+		.separator(),
 		.item(String(localized: .MainWindow.menuQueryClose), .closeQuery, #selector(MenuActionController.leaveConversation(_:))),
 		.separator(),
 		.item(
@@ -930,6 +938,9 @@ private extension MenuGraph {
 	]
 
 	static let memberEntries: [Entry] = [
+		.item(String(localized: .MainWindow.menuMemberMute), .muteUser, #selector(MenuActionController.memberMute(_:))),
+		.item(String(localized: .MainWindow.menuMemberUnmute), .unmuteUser, #selector(MenuActionController.memberUnmute(_:))),
+		.separator(),
 		.item(String(localized: .MainWindow.menuMemberAddIgnore), .addIgnore, #selector(MenuActionController.memberAddIgnore(_:))),
 		.item(
 			String(localized: .MainWindow.menuMemberModifyIgnore),

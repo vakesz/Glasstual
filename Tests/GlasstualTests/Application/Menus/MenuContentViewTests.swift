@@ -206,11 +206,11 @@ struct MenuContentViewTests {
 	/** HIG: disable, do not remove.
 
 	 Availability used to be expressed by hiding, so the menus changed shape as
-	 the selection moved and nobody could learn where a command lived. Two pairs
-	 are the exception — Connect and Disconnect, Join and Leave — because each
+	 the selection moved and nobody could learn where a command lived. State pairs
+	 are the exception: Connect and Disconnect, Join and Leave, Mute and Unmute. Each
 	 pair is one command in two states and showing both offers a choice that
 	 does not exist. */
-	@Test("Only the two state pairs are ever hidden")
+	@Test("Only commands with mutually exclusive states are ever hidden")
 	func availabilityIsExpressedByEnablement() async throws {
 		try await withChannelMenu { controller, _, _, _ in
 			let menus = try [
@@ -222,6 +222,7 @@ struct MenuContentViewTests {
 			]
 			let allowedToHide: Set<MenuCommand> = [
 				.connect, .connectWithoutProxy, .disconnect, .joinChannel, .leaveChannel,
+				.muteUser, .unmuteUser,
 			]
 
 			var hidden: [String] = []

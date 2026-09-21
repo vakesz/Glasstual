@@ -6,10 +6,20 @@ import AppKit
 enum SidebarNodeID: Hashable {
 	case server(String)
 	case conversation(String)
+	case favorites
+	case favorite(String)
+
+	var isReorderable: Bool {
+		switch self {
+		case .server, .conversation: true
+		case .favorites, .favorite: false
+		}
+	}
 
 	var itemIdentifier: String {
 		switch self {
-		case let .server(identifier), let .conversation(identifier): identifier
+		case let .server(identifier), let .conversation(identifier), let .favorite(identifier): identifier
+		case .favorites: "sidebar-favorites"
 		}
 	}
 }
@@ -18,17 +28,26 @@ enum SidebarNodeID: Hashable {
 /// so removing a filter restores the same node identities.
 struct SidebarOutlineSnapshot: Equatable {
 	let rows: [ServerRow]
+	let favorites: ServerRow?
 	let selectedIdentifier: String?
 	let isFiltering: Bool
 	let knownIdentifiers: Set<SidebarNodeID>
 
 	init(model: Sidebar) {
 		rows = model.rows
+		favorites = model.favoriteRows.isEmpty ? nil : ServerRow(
+			id: SidebarNodeID.favorites.itemIdentifier, title: String(localized: .Sidebar.favoritesTitle),
+			isActive: true, isSecured: false, isExpanded: model.favoritesExpanded || model.isFiltering,
+			showsDisclosure: true, conversations: model.favoriteRows, isFavoritesGroup: true
+		)
 		selectedIdentifier = model.selectedItemIdentifier
 		isFiltering = model.isFiltering
-		knownIdentifiers = Set(model.sessions.flatMap { session in
+		knownIdentifiers = Set([SidebarNodeID.favorites] + model.sessions.flatMap { session in
 			[SidebarNodeID.server(session.uniqueIdentifier)]
-				+ session.conversationList.map { SidebarNodeID.conversation($0.uniqueIdentifier) }
+				+ session.conversationList.flatMap { conversation in
+					[SidebarNodeID.conversation(conversation.uniqueIdentifier)]
+						+ (conversation.config.isFavorite ? [.favorite(conversation.uniqueIdentifier)] : [])
+				}
 		})
 	}
 }
@@ -54,6 +73,9 @@ final class SidebarOutlineNode: NSObject {
 	var accessibilityDescription: String {
 		switch content {
 		case let .server(server):
+			if server.isFavoritesGroup {
+				return server.title
+			}
 			var phrases = [server.isActive
 				? AccessibilityStrings.connectedServer(server.title)
 				: AccessibilityStrings.disconnectedServer(server.title)]
@@ -70,6 +92,12 @@ final class SidebarOutlineNode: NSObject {
 				AccessibilityStrings.unjoinedChannel(conversation.title)
 			}
 			var phrases = [identity]
+			if let network = conversation.networkTitle {
+				phrases.append(network)
+			}
+			if conversation.isFavorite {
+				phrases.append(String(localized: .Sidebar.favoriteAccessibility))
+			}
 			if conversation.hasJoinError {
 				phrases.append(String(localized: .MainWindow.sidebarJoinFailed))
 			}
@@ -101,6 +129,15 @@ final class SidebarOutlineTree {
 				return child
 			}
 			return parent
+		}
+		if let favorites = snapshot.favorites {
+			let parent = node(.favorites, content: .server(favorites))
+			parent.children = favorites.conversations.map { conversation in
+				let child = node(.favorite(conversation.id), content: .conversation(conversation))
+				child.parentIdentifier = favorites.id
+				return child
+			}
+			roots.insert(parent, at: 0)
 		}
 		nodes = nodes.filter { snapshot.knownIdentifiers.contains($0.key) }
 		return previousOrder != roots.map { [$0.identity] + $0.children.map(\.identity) }

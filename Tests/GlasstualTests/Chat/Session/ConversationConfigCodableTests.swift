@@ -105,6 +105,55 @@ struct ConversationConfigCodableTests {
 		#expect(restored.pushNotifications == false)
 	}
 
+	@Test("Every general-event display choice survives the round trip", arguments: GeneralEventMessageDisplay.allCases)
+	func generalEventDisplayRoundTrips(_ display: GeneralEventMessageDisplay) throws {
+		var config = ConversationConfig(name: "#swift")
+		config.generalEventMessageDisplay = display
+
+		let restored = try #require(
+			PropertyListModel.decode(ConversationConfig.self, from: PropertyListModel.encode(config))
+		)
+
+		#expect(restored.generalEventMessageDisplay == display)
+		#expect(restored.ignoreGeneralEventMessages == (display == .hide))
+	}
+
+	@Test("The old hidden-event flag retains its stored shape")
+	func legacyHiddenEventsRoundTrip() throws {
+		let fixture: [String: PropertyListValue] = [
+			"name": "#swift",
+			"uniqueIdentifier": "8B2F4C1A-0000-4000-8000-000000000009",
+			"ignoreGeneralEventMessages": true,
+		]
+		let restored = try #require(PropertyListModel.decode(ConversationConfig.self, from: fixture))
+
+		#expect(restored.generalEventMessageDisplay == .hide)
+		#expect(PropertyListModel.encode(restored) == fixture)
+	}
+
+	@Test("An explicit event display overrides the old hidden-event flag")
+	func explicitEventDisplayWins() throws {
+		let restored = try #require(PropertyListModel.decode(ConversationConfig.self, from: [
+			"name": "#swift",
+			"ignoreGeneralEventMessages": true,
+			"generalEventMessageDisplay": "collapse",
+		]))
+
+		#expect(restored.generalEventMessageDisplay == .collapse)
+		#expect(restored.ignoreGeneralEventMessages == false)
+	}
+
+	@Test("An unrecognized event display falls back to the old hidden-event setting")
+	func unknownEventDisplayUsesLegacyFlag() throws {
+		let restored = try #require(PropertyListModel.decode(ConversationConfig.self, from: [
+			"name": "#swift",
+			"ignoreGeneralEventMessages": true,
+			"generalEventMessageDisplay": "future-mode",
+		]))
+
+		#expect(restored.generalEventMessageDisplay == .hide)
+	}
+
 	@Test("The channel key is not part of the encoded value")
 	func secretKeyIsNeverEncoded() {
 		var config = ConversationConfig(name: "#swift")

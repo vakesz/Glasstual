@@ -24,6 +24,8 @@ struct ServerRow: Identifiable, Equatable {
 	/// Every conversation under the server, disclosed or not — the outline hides
 	/// what is closed. A filter is the one thing that takes rows out of this.
 	let conversations: [ConversationRow]
+	var isFavoritesGroup = false
+	var identityStyle = ServerIdentityStyle()
 }
 
 /// One conversation in the sidebar.
@@ -48,6 +50,10 @@ struct ConversationRow: Identifiable, Equatable {
 	/// colour it went and read for itself would change nothing here and the
 	/// list would keep the badges it already had.
 	let unreadBadgeTint: NSColor?
+	var isFavorite = false
+	/// Present only in Favorites, where conversations from several networks share one group.
+	var networkTitle: String?
+	var networkIdentityStyle: ServerIdentityStyle?
 
 	/// Asks for attention: a channel where the nickname was said, or a
 	/// conversation with one person that has anything unread — every line of a

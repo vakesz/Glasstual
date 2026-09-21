@@ -25,6 +25,8 @@ nonisolated extension NSAttributedString.Key { // nonisolated: constants
 	static let transcriptExcerpt = NSAttributedString.Key("GlasstualTranscriptExcerpt")
 	/// A `TranscriptAction`: what the run stands for when it is clicked.
 	static let transcriptAction = NSAttributedString.Key("GlasstualTranscriptAction")
+	/// The first row in an expandable group, carried by its disclosure link.
+	static let transcriptFoldLineNumber = NSAttributedString.Key("GlasstualTranscriptFoldLineNumber")
 	/// A `TranscriptReactionTarget`: the run is a reaction chip, and clicking
 	/// it reacts to that message.
 	static let transcriptReaction = NSAttributedString.Key("GlasstualTranscriptReaction")

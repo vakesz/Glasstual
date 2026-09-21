@@ -93,7 +93,9 @@ final class SidebarOutlineView: NSOutlineView, NSOutlineViewDataSource, NSOutlin
 	func apply(_ next: SidebarOutlineSnapshot) {
 		guard snapshot != next else { return }
 		let previousSelection = snapshot?.selectedIdentifier
+		let previousNode = node(at: selectedRow)
 		let contentChanged = snapshot?.rows != next.rows
+			|| snapshot?.favorites != next.favorites
 			|| snapshot?.knownIdentifiers != next.knownIdentifiers
 			|| snapshot?.isFiltering != next.isFiltering
 		let viewport = viewportAnchor()
@@ -114,7 +116,7 @@ final class SidebarOutlineView: NSOutlineView, NSOutlineViewDataSource, NSOutlin
 				}
 			}
 		}
-		let selected = next.selectedIdentifier.flatMap(tree.node(withItemIdentifier:))
+		let selected = selectionNode(identifier: next.selectedIdentifier, previous: previousNode)
 		let selectedIndex = selected.map { row(forItem: $0) } ?? -1
 		selectRowIndexes(selectedIndex >= 0 ? IndexSet(integer: selectedIndex) : [], byExtendingSelection: false)
 		if contentChanged {
@@ -132,6 +134,15 @@ final class SidebarOutlineView: NSOutlineView, NSOutlineViewDataSource, NSOutlin
 		if previousSelection != next.selectedIdentifier, selectedIndex >= 0 {
 			scrollRowToVisible(selectedIndex)
 		}
+	}
+
+	private func selectionNode(identifier: String?, previous: SidebarOutlineNode?) -> SidebarOutlineNode? {
+		guard let identifier else { return nil }
+		if let previous, previous.identity.itemIdentifier == identifier, row(forItem: previous) >= 0 {
+			return previous
+		}
+		return [tree.node(withItemIdentifier: identifier), tree.nodes[.favorite(identifier)]]
+			.compactMap(\.self).first { row(forItem: $0) >= 0 }
 	}
 
 	private func viewportAnchor() -> (identity: SidebarNodeID, offset: CGFloat)? {
@@ -191,6 +202,18 @@ final class SidebarOutlineView: NSOutlineView, NSOutlineViewDataSource, NSOutlin
 		cell.move = { [weak self] upward in self?.move(identity, upward: upward) ?? false }
 	}
 
+	func outlineView(_: NSOutlineView, heightOfRowByItem item: Any) -> CGFloat {
+		guard let node = item as? SidebarOutlineNode else { return rowHeight }
+		if case .favorite = node.identity {
+			return 40
+		}
+		return rowHeight
+	}
+
+	func outlineView(_: NSOutlineView, shouldSelectItem item: Any) -> Bool {
+		(item as? SidebarOutlineNode)?.identity != .favorites
+	}
+
 	func outlineView(_: NSOutlineView, selectionIndexesForProposedSelection proposed: IndexSet) -> IndexSet {
 		guard !isApplyingSnapshot, proposed.isEmpty else { return proposed }
 		return selectedRowIndexes
@@ -215,13 +238,16 @@ final class SidebarOutlineView: NSOutlineView, NSOutlineViewDataSource, NSOutlin
 
 	private func expansionChanged(_ notification: Notification, expanded: Bool) {
 		guard !isApplyingSnapshot,
-		      let node = notification.userInfo?[Self.expandedItemKey] as? SidebarOutlineNode,
-		      case let .server(identifier) = node.identity else { return }
-		model.setExpanded(expanded, forServerID: identifier)
+		      let node = notification.userInfo?[Self.expandedItemKey] as? SidebarOutlineNode else { return }
+		switch node.identity {
+		case let .server(identifier): model.setExpanded(expanded, forServerID: identifier)
+		case .favorites: model.favoritesExpanded = expanded
+		case .conversation, .favorite: break
+		}
 	}
 
 	@objc private func activateClickedRow(_: Any?) {
-		guard let node = node(at: clickedRow) else { return }
+		guard let node = node(at: clickedRow), node.identity != .favorites else { return }
 		model.selectFromView(node.identity.itemIdentifier)
 		model.mainWindow?.sidebarItemDoubleClicked()
 	}
@@ -270,7 +296,7 @@ final class SidebarOutlineView: NSOutlineView, NSOutlineViewDataSource, NSOutlin
 			guard let identifier = identity?.itemIdentifier, model?.item(withID: identifier) != nil else { return }
 			model?.selectFromView(identifier)
 		}
-		if let identity {
+		if let identity, identity.isReorderable {
 			menu.addItem(.separator())
 			for upward in [true, false] {
 				let item = NSMenuItem(title: String(localized: upward ? .MainWindow.sidebarMoveUp : .MainWindow.sidebarMoveDown),
@@ -300,8 +326,9 @@ final class SidebarOutlineView: NSOutlineView, NSOutlineViewDataSource, NSOutlin
 	// MARK: - Reordering
 
 	private func adjacentMove(_ identity: SidebarNodeID, upward: Bool) -> SidebarOutlineMove? {
-		guard !model.isFiltering, let node = tree.nodes[identity] else { return nil }
+		guard !model.isFiltering, identity.isReorderable, let node = tree.nodes[identity] else { return nil }
 		let siblings = node.parentIdentifier.flatMap { tree.nodes[.server($0)]?.children } ?? tree.roots
+			.filter { $0.identity != .favorites }
 		guard let index = siblings.firstIndex(where: { $0.identity == identity }) else { return nil }
 		let destination = upward ? index - 1 : index + 2
 		return proposedMove(identity: identity, parent: node.parentIdentifier, childIndex: destination)
@@ -318,8 +345,9 @@ final class SidebarOutlineView: NSOutlineView, NSOutlineViewDataSource, NSOutlin
 	}
 
 	func proposedMove(identity: SidebarNodeID, parent: String?, childIndex: Int) -> SidebarOutlineMove? {
-		guard !model.isFiltering, childIndex >= 0, let node = tree.nodes[identity], node.parentIdentifier == parent else { return nil }
-		let siblings = parent.flatMap { tree.nodes[.server($0)]?.children } ?? tree.roots
+		guard !model.isFiltering, identity.isReorderable, childIndex >= 0, let node = tree.nodes[identity],
+		      node.parentIdentifier == parent else { return nil }
+		let siblings = parent.flatMap { tree.nodes[.server($0)]?.children } ?? tree.roots.filter { $0.identity != .favorites }
 		guard childIndex <= siblings.count, let from = siblings.firstIndex(where: { $0.identity == identity }),
 		      let move = SidebarReorderPolicy.move(fromOffsets: IndexSet(integer: from), toOffset: childIndex),
 		      siblings.indices.contains(move.to) else { return nil }
@@ -357,7 +385,7 @@ final class SidebarOutlineView: NSOutlineView, NSOutlineViewDataSource, NSOutlin
 	}
 
 	func outlineView(_: NSOutlineView, pasteboardWriterForItem item: Any) -> (any NSPasteboardWriting)? {
-		guard !model.isFiltering, let node = item as? SidebarOutlineNode else { return nil }
+		guard !model.isFiltering, let node = item as? SidebarOutlineNode, node.identity.isReorderable else { return nil }
 		draggedIdentity = node.identity
 		let writer = NSPasteboardItem()
 		writer.setData(Data(), forType: Self.dragType)
@@ -382,10 +410,11 @@ final class SidebarOutlineView: NSOutlineView, NSOutlineViewDataSource, NSOutlin
 	private func dropMove(_ info: any NSDraggingInfo, item: Any?, index: Int) -> SidebarOutlineMove? {
 		guard info.draggingSource as? NSOutlineView === self, let identity = draggedIdentity else { return nil }
 		let parent = item as? SidebarOutlineNode
-		if let parent, case .conversation = parent.identity {
+		if let parent, case .server = parent.identity {} else if parent != nil {
 			return nil
 		}
-		return proposedMove(identity: identity, parent: parent?.identity.itemIdentifier, childIndex: index)
+		let favoriteOffset = parent == nil && tree.roots.first?.identity == .favorites ? 1 : 0
+		return proposedMove(identity: identity, parent: parent?.identity.itemIdentifier, childIndex: index - favoriteOffset)
 	}
 }
 
