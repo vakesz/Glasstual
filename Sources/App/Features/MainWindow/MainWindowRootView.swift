@@ -37,6 +37,14 @@ struct MainWindowRootView: View {
 					ideal: MainWindowConstants.sidebarIdealWidth,
 					max: MainWindowConstants.sidebarMaximumWidth
 				)
+				// Automatic placement keeps this inside the sidebar; navigation placement moves it into the detail toolbar.
+				.toolbar {
+					if columns.isSidebarVisible {
+						ToolbarItem(placement: .automatic) {
+							sidebarFilterMenu
+						}
+					}
+				}
 			} detail: {
 				GeometryReader { geometry in
 					let railWidth = MainWindowMemberRail.effectiveWidth(preferred: memberListWidth, available: geometry.size.width)
@@ -131,6 +139,30 @@ struct MainWindowRootView: View {
 		.sheet(item: presentedSheet) { presentation in
 			MainWindowSheetHost(model: sheets, presentation: presentation)
 		}
+	}
+
+	private var sidebarFilterMenu: some View {
+		Menu {
+			Picker(.Sidebar.filterLabel, selection: $sidebar.filter) {
+				ForEach(SidebarFilter.allCases) { filter in
+					Text(filter.title).tag(filter)
+				}
+			}
+			.pickerStyle(.inline)
+		} label: {
+			Label(
+				.Sidebar.filterLabel,
+				systemImage: sidebar.filter == .all ? "line.3.horizontal.decrease" : "line.3.horizontal.decrease.circle.fill"
+			)
+			.labelStyle(.iconOnly)
+			.foregroundStyle(sidebar.filter == .all ? Color.primary : Color.accentColor)
+		}
+		.menuStyle(.button)
+		.menuIndicator(.hidden)
+		.buttonBorderShape(.circle)
+		.accessibilityValue(Text(sidebar.filter.title))
+		.accessibilityIdentifier("sidebar-filter")
+		.help(String(localized: .Sidebar.filterLabel))
 	}
 
 	private var sidebarVisibility: Binding<NavigationSplitViewVisibility> {
