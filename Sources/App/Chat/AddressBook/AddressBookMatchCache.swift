@@ -32,14 +32,16 @@ final class AddressBookMatchCache {
 		}
 
 		if match.entryType == .ignore {
-			return [match]
+			return match.muteMessages && !match.ignoresEvents ? [] : [match]
 		}
 
 		guard match.entryType == .mixed else {
 			return []
 		}
 
-		return match.parentEntries?.filter { $0.entryType == .ignore } ?? []
+		return match.parentEntries?.filter {
+			$0.entryType == .ignore && ($0.muteMessages == false || $0.ignoresEvents)
+		} ?? []
 	}
 
 	func findAddressBookEntry(forHostmask hostmask: String, in entries: [AddressBookEntry]) -> AddressBookEntry? {
@@ -95,6 +97,7 @@ final class AddressBookMatchCache {
 		\.ignorePrivateMessages,
 		\.ignorePublicMessageHighlights,
 		\.ignorePublicMessages,
+		\.muteMessages,
 		\.trackUserActivity,
 	]
 

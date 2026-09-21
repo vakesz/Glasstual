@@ -481,6 +481,54 @@
         }
       }
     },
+    "mute-messages" : {
+      "comment" : "Checkbox for keeping a user’s messages in collapsible transcript groups.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mute messages"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Üzenetek némítása"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nachrichten stummschalten"
+          }
+        }
+      }
+    },
+    "mute-messages-description" : {
+      "comment" : "Explains how muting differs from ignoring messages.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Group messages in the transcript so you can expand them when needed. Notifications stay silent."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Az üzenetek összecsukott csoportokba kerülnek, és szükség esetén kinyithatók. Az értesítések némák maradnak."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nachrichten werden im Verlauf gruppiert und können bei Bedarf aufgeklappt werden. Mitteilungen bleiben stumm."
+          }
+        }
+      }
+    },
     "notice-messages" : {
       "comment" : "Checkbox for ignoring notice messages.",
       "extractionState" : "manual",

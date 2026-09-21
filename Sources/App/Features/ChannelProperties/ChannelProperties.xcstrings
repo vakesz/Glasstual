@@ -1,6 +1,126 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "general-event-messages" : {
+      "comment" : "Label for the channel general-event display picker.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "General event messages"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Általános eseményüzenetek"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allgemeine Ereignismeldungen"
+          }
+        }
+      }
+    },
+    "general-event-messages-show" : {
+      "comment" : "Channel event display option that shows every event.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Megjelenítés"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anzeigen"
+          }
+        }
+      }
+    },
+    "general-event-messages-collapse" : {
+      "comment" : "Channel event display option that groups consecutive events in an expandable summary.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collapse"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Összecsukás"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zusammenklappen"
+          }
+        }
+      }
+    },
+    "general-event-messages-hide" : {
+      "comment" : "Channel event display option that hides events.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elrejtés"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausblenden"
+          }
+        }
+      }
+    },
+    "general-event-messages-help" : {
+      "comment" : "Help for the channel event display picker. Collapsed groups can be expanded in the transcript.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collapse groups consecutive channel events so you can expand them when needed."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Az összecsukás csoportosítja az egymást követő csatornaeseményeket, hogy szükség esetén kinyithasd őket."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zusammenklappen fasst aufeinanderfolgende Kanalereignisse zusammen, die du bei Bedarf aufklappen kannst."
+          }
+        }
+      }
+    },
     "change-modes-button" : {
       "comment" : "Title of the button that submits the edited channel modes.",
       "extractionState" : "manual",

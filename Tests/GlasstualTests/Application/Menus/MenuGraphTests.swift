@@ -12,9 +12,9 @@ import Testing
 @MainActor
 @Suite("Menu graph titles")
 struct MenuGraphTests {
-	/// Every English value the main window's catalog holds.
-	private static func catalogValues() throws -> Set<String> {
-		let url = RepositoryPaths.appSources.appending(path: "Features/MainWindow/MainWindow.xcstrings")
+	/// English values from a feature that contributes menu commands.
+	private static func catalogValues(feature: String) throws -> Set<String> {
+		let url = RepositoryPaths.appSources.appending(path: "Features/\(feature)/\(feature).xcstrings")
 		let catalog = try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any]
 		let strings = catalog?["strings"] as? [String: Any] ?? [:]
 
@@ -48,7 +48,7 @@ struct MenuGraphTests {
 
 	@Test("Every title the menu graph draws comes from the String Catalog")
 	func everyMenuTitleIsLocalized() throws {
-		let values = try Self.catalogValues()
+		let values = try Self.catalogValues(feature: "MainWindow").union(Self.catalogValues(feature: "Sidebar"))
 		let controller = MenuActionController()
 		let mainMenu = MenuGraph.builtMainMenu(for: controller)
 
@@ -80,6 +80,17 @@ struct MenuGraphTests {
 			.filter { values.contains($0) == false }
 
 		#expect(unlocalized.isEmpty, "Untranslatable menu titles: \(Set(unlocalized).sorted())")
+	}
+
+	@Test("Channels and private conversations offer the same Favorites command")
+	func favoritesAreAvailableInConversationMenus() throws {
+		let controller = MenuActionController()
+		_ = MenuGraph.builtMainMenu(for: controller)
+		for menu in [controller.mainMenuChannelMenu, controller.mainMenuDirectMenu] {
+			let item = try #require(menu.item(for: .toggleFavorite))
+			#expect(item.title == String(localized: .Sidebar.pinFavorite))
+			#expect(item.action == #selector(MenuActionController.toggleFavorite(_:)))
+		}
 	}
 
 	/** Search moved out of the sidebar and into the window toolbar, so the

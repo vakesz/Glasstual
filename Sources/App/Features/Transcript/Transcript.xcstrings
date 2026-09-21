@@ -1,6 +1,300 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "expand-general-events": {
+      "comment": "Disclosure link for a collapsed group. The argument is the number of channel events.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Show %ld general event"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Show %ld general events"
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%ld allgemeines Ereignis anzeigen"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%ld allgemeine Ereignisse anzeigen"
+                }
+              }
+            }
+          }
+        },
+        "hu": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%ld általános esemény megjelenítése"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%ld általános esemény megjelenítése"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "collapse-general-events": {
+      "comment": "Disclosure link for an expanded group. The argument is the number of channel events.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Collapse %ld general event"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Collapse %ld general events"
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%ld allgemeines Ereignis einklappen"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%ld allgemeine Ereignisse einklappen"
+                }
+              }
+            }
+          }
+        },
+        "hu": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%ld általános esemény összecsukása"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%ld általános esemény összecsukása"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "expand-muted-messages": {
+      "comment": "Disclosure link for collapsed messages from a muted user. Arguments: message count, nickname.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Show %1$ld muted message from %2$@"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Show %1$ld muted messages from %2$@"
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$ld stummgeschaltete Nachricht von %2$@ anzeigen"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$ld stummgeschaltete Nachrichten von %2$@ anzeigen"
+                }
+              }
+            }
+          }
+        },
+        "hu": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%2$@ %1$ld némított üzenetének megjelenítése"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%2$@ %1$ld némított üzenetének megjelenítése"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "collapse-muted-messages": {
+      "comment": "Disclosure link for expanded messages from a muted user. Arguments: message count, nickname.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Collapse %1$ld muted message from %2$@"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Collapse %1$ld muted messages from %2$@"
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$ld stummgeschaltete Nachricht von %2$@ einklappen"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$ld stummgeschaltete Nachrichten von %2$@ einklappen"
+                }
+              }
+            }
+          }
+        },
+        "hu": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%2$@ %1$ld némított üzenetének összecsukása"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%2$@ %1$ld némított üzenetének összecsukása"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "expand-messages": {
+      "comment": "Context menu action for a transcript message group.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expand Messages"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nachrichten ausklappen"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Üzenetek kibontása"
+          }
+        }
+      }
+    },
+    "collapse-messages": {
+      "comment": "Context menu action for a transcript message group.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Collapse Messages"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nachrichten einklappen"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Üzenetek összecsukása"
+          }
+        }
+      }
+    },
     "image-encoding-failed" : {
       "comment" : "Error when an inline image cannot be converted for saving as PNG.",
       "extractionState" : "manual",

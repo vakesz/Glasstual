@@ -36,6 +36,7 @@ nonisolated struct AddressBookEntry: Codable, Equatable, Sendable {
 	var ignorePrivateMessages = false
 	var ignorePublicMessageHighlights = false
 	var ignorePublicMessages = false
+	var muteMessages = false
 	var trackUserActivity = false
 
 	/** The rules a `.mixed` entry was merged from. Never persisted: a merged
@@ -68,6 +69,7 @@ nonisolated struct AddressBookEntry: Codable, Equatable, Sendable {
 		case ignorePrivateMessages
 		case ignorePublicMessageHighlights
 		case ignorePublicMessages
+		case muteMessages
 		case trackUserActivity
 	}
 
@@ -114,6 +116,7 @@ nonisolated struct AddressBookEntry: Codable, Equatable, Sendable {
 			default: false
 		)
 		ignorePublicMessages = container.decode(Bool.self, forKey: .ignorePublicMessages, default: false)
+		muteMessages = container.decode(Bool.self, forKey: .muteMessages, default: false)
 	}
 
 	/// Writes only the settings that differ from their default, so a stored
@@ -153,6 +156,7 @@ nonisolated struct AddressBookEntry: Codable, Equatable, Sendable {
 			(ignorePrivateMessages, .ignorePrivateMessages),
 			(ignorePublicMessageHighlights, .ignorePublicMessageHighlights),
 			(ignorePublicMessages, .ignorePublicMessages),
+			(muteMessages, .muteMessages),
 		]
 
 		for (value, key) in settings where value {
@@ -173,11 +177,19 @@ nonisolated struct AddressBookEntry: Codable, Equatable, Sendable {
 			&& lhs.ignorePrivateMessages == rhs.ignorePrivateMessages
 			&& lhs.ignorePublicMessageHighlights == rhs.ignorePublicMessageHighlights
 			&& lhs.ignorePublicMessages == rhs.ignorePublicMessages
+			&& lhs.muteMessages == rhs.muteMessages
 			&& lhs.trackUserActivity == rhs.trackUserActivity
 	}
 }
 
 nonisolated extension AddressBookEntry {
+	/// Muting keeps messages in history. These flags instead discard events.
+	var ignoresEvents: Bool {
+		ignoreClientToClientProtocol || ignoreFileTransferRequests || ignoreGeneralEventMessages
+			|| ignoreInlineMedia || ignoreNoticeMessages || ignorePrivateMessageHighlights
+			|| ignorePrivateMessages || ignorePublicMessageHighlights || ignorePublicMessages
+	}
+
 	/// An entry that suppresses everything from `hostmask`.
 	static func newIgnoreEntry(forHostmask hostmask: String? = nil) -> AddressBookEntry {
 		var entry = AddressBookEntry(entryType: .ignore, hostmask: hostmask ?? "")
@@ -212,6 +224,13 @@ nonisolated extension AddressBookEntry {
 
 	func checkMatch(_ hostmask: String) -> Bool {
 		matcher.matches(hostmask: hostmask)
+	}
+
+	/// Session-owned mute rules use the server's advertised nickname mapping.
+	/// Legacy ignore and tracking lookups keep their existing default mapping.
+	func checkMatch(_ hostmask: String, caseMapping: ISupportCaseMapping) -> Bool {
+		AddressBookEntryMatcher(entryType: entryType, hostmask: self.hostmask, caseMapping: caseMapping)
+			.matches(hostmask: hostmask)
 	}
 
 	/// A copy under a fresh identity.

@@ -140,6 +140,12 @@ nonisolated enum SettingsSessionArchive {
 		let valid: Bool = switch kind {
 		case .session:
 			(unsigned("dictionaryVersion") ?? 0) <= ServerConfigDefaults.dictionaryVersion
+				&& values[ServerConfig.CodingKeys.sidebarColor.rawValue]?.string.map {
+					ServerIdentityStyle.Color(rawValue: $0) != nil
+				} != false
+				&& values[ServerConfig.CodingKeys.sidebarIcon.rawValue]?.string.map {
+					ServerIdentityStyle.Icon(rawValue: $0) != nil
+				} != false
 				&& unsigned("addressType").map { ConnectionAddressKind(rawValue: $0) != nil } != false
 				&& unsigned("proxyType").map { ConnectionProxyKind(rawValue: $0) != nil } != false
 				&& unsigned("cipherSuites").map { CipherSuiteCollection(rawValue: $0) != nil } != false
@@ -148,6 +154,7 @@ nonisolated enum SettingsSessionArchive {
 		case .channel:
 			values["name"]?.string.map { !$0.isEmpty && !$0.contains(where: \.isWhitespace) } == true
 				&& unsigned("type").map { ConversationKind(rawValue: $0) != nil } != false
+				&& values["generalEventMessageDisplay"]?.string.map { GeneralEventMessageDisplay(rawValue: $0) != nil } != false
 		case .highlight: values["matchKeyword"]?.string?.isEmpty == false
 		case .ignore: unsigned("entryType").map { $0 <= 2 } != false
 		}
@@ -178,7 +185,7 @@ nonisolated enum SettingsSessionArchive {
 			case "entryType": .unsigned
 			case "ignoreClientToClientProtocol", "ignoreFileTransferRequests", "ignoreGeneralEventMessages",
 			     "ignoreInlineMedia", "ignoreNoticeMessages", "ignorePrivateMessageHighlights", "ignorePrivateMessages",
-			     "ignorePublicMessageHighlights", "ignorePublicMessages", "trackUserActivity": .flag
+			     "ignorePublicMessageHighlights", "ignorePublicMessages", "muteMessages", "trackUserActivity": .flag
 			default: nil
 			}
 		}
@@ -186,17 +193,17 @@ nonisolated enum SettingsSessionArchive {
 
 	private static func channelField(_ name: String) -> Field? {
 		switch name {
-		case "uniqueIdentifier", "name", "label", "defaultModes", "defaultTopic": .text
+		case "uniqueIdentifier", "name", "label", "defaultModes", "defaultTopic", "generalEventMessageDisplay": .text
 		case "type": .unsigned
 		case "autoJoin", "ignoreGeneralEventMessages", "ignoreHighlights", "inlineMediaDisabled", "inlineMediaEnabled",
-		     "pushNotifications", "showsUnreadCount": .flag
+		     "pushNotifications", "showsUnreadCount", "isFavorite": .flag
 		default: nil
 		}
 	}
 
 	private static func sessionField(_ key: ServerConfig.CodingKeys) -> Field {
 		switch key {
-		case .uniqueIdentifier, .connectionName, .nickname, .awayNickname, .username, .realName,
+		case .uniqueIdentifier, .connectionName, .sidebarColor, .sidebarIcon, .nickname, .awayNickname, .username, .realName,
 		     .saslMechanismPreference,
 		     .proxyAddress, .proxyUsername, .normalLeavingComment, .sleepModeLeavingComment, .ctcpVersionReply:
 			.text

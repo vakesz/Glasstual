@@ -17,6 +17,15 @@ final class Sidebar {
 	/// What the view draws. Rebuilt whenever the chat session reports a change,
 	/// so a row is never asked to notice one on its own.
 	private(set) var rows: [ServerRow] = []
+	private(set) var favoriteRows: [ConversationRow] = []
+	var favoritesExpanded = true {
+		didSet { rebuildRows() }
+	}
+
+	var filter: SidebarFilter = .all {
+		didSet { rebuildRows() }
+	}
+
 	/// What the sidebar's search field holds. While it is non-empty the list
 	/// shows every conversation whose name contains it, under its server, whether
 	/// or not that server is disclosed.
@@ -73,6 +82,15 @@ final class Sidebar {
 	private func rebuildRows() {
 		selectableItemsStorage = builtSelectableItems()
 		rows = builtRows()
+		let tint = unreadBadgeTint
+		favoriteRows = sessions.flatMap { session in
+			listedConversations(for: session).filter(\.config.isFavorite).map { conversation in
+				var row = conversationRow(conversation, unreadBadgeTint: tint)
+				row.networkTitle = session.label
+				row.networkIdentityStyle = session.config.sidebarIdentity
+				return row
+			}
+		}
 	}
 
 	private func builtRows() -> [ServerRow] {
@@ -89,7 +107,8 @@ final class Sidebar {
 					disclose. A server with no conversations under it gets a plain
 					row rather than a chevron that would open onto nothing. */
 				showsDisclosure: conversations.isEmpty == false,
-				conversations: conversations.map { conversationRow($0, unreadBadgeTint: tint) }
+				conversations: conversations.map { conversationRow($0, unreadBadgeTint: tint) },
+				identityStyle: session.config.sidebarIdentity
 			)
 		}
 	}
@@ -129,8 +148,18 @@ final class Sidebar {
 			unreadCount: conversation.unreadCount,
 			showsUnreadCount: conversation.config.showsUnreadCount,
 			highlightCount: conversation.config.ignoreHighlights ? 0 : conversation.nicknameHighlightCount,
-			unreadBadgeTint: unreadBadgeTint
+			unreadBadgeTint: unreadBadgeTint,
+			isFavorite: conversation.config.isFavorite
 		)
+	}
+
+	func toggleFavorite(_ conversation: Conversation) {
+		guard conversation.isChannel || conversation.isDirect,
+		      item(withID: conversation.uniqueIdentifier) === conversation else { return }
+		var config = conversation.config
+		config.isFavorite.toggle()
+		conversation.updateConfig(config)
+		rebuildRows()
 	}
 
 	var sessions: [ServerSession] {
@@ -176,7 +205,10 @@ final class Sidebar {
 			if isExpanded(session) {
 				return [session] + session.conversationList
 			}
-			return [session] + (isFiltering ? listedConversations(for: session) : [])
+			return [session] + session.conversationList.filter { conversation in
+				conversation.config.isFavorite || conversation.uniqueIdentifier == selectedItemIdentifier
+					|| (isFiltering && matchesFilter(conversation))
+			}
 		}
 	}
 
@@ -224,7 +256,7 @@ final class Sidebar {
 	}
 
 	var isFiltering: Bool {
-		filterQuery.isEmpty == false
+		filter != .all || filterQuery.isEmpty == false
 	}
 
 	/// A filter that matches nobody, which the list answers with a no-results
@@ -244,13 +276,18 @@ final class Sidebar {
 	 conversations out of them. */
 	private func listedConversations(for session: ServerSession) -> [Conversation] {
 		guard isFiltering else { return session.conversationList }
-		return session.conversationList.filter { $0.label.localizedStandardContains(filterQuery) }
+		return session.conversationList.filter(matchesFilter)
+	}
+
+	private func matchesFilter(_ conversation: Conversation) -> Bool {
+		let matchesName = filterQuery.isEmpty || conversation.label.localizedStandardContains(filterQuery)
+		return matchesName && filter.matches(conversation)
 	}
 
 	/// A server row stays while it, or a conversation under it, matches the filter.
 	private func isVisible(_ session: ServerSession) -> Bool {
 		guard isFiltering else { return true }
-		return session.label.localizedStandardContains(filterQuery)
+		return (filter == .all && session.label.localizedStandardContains(filterQuery))
 			|| listedConversations(for: session).isEmpty == false
 	}
 
@@ -262,7 +299,9 @@ final class Sidebar {
 		selectableItemsStorage = nil
 		rebuildRows()
 
-		if expanded == false, selectedItem?.associatedSession === session, selectedItem !== session {
+		if expanded == false, selectedItem?.associatedSession === session, selectedItem !== session,
+		   (selectedItem as? Conversation)?.config.isFavorite != true
+		{
 			selectedItemIdentifier = session.uniqueIdentifier
 			mainWindow?.sidebarSelectionDidChangeFromView()
 		}

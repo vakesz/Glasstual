@@ -16,7 +16,13 @@ nonisolated struct ConversationConfig: Codable, Sendable, Equatable, Hashable {
 	var type: ConversationKind
 
 	var autoJoin = true
-	var ignoreGeneralEventMessages = false
+	var generalEventMessageDisplay: GeneralEventMessageDisplay = .show
+	/// The inbound filter only drops events when they are hidden completely.
+	var ignoreGeneralEventMessages: Bool {
+		get { generalEventMessageDisplay == .hide }
+		set { generalEventMessageDisplay = newValue ? .hide : .show }
+	}
+
 	/// Whether a mention in this channel is worth interrupting for.
 	var ignoreHighlights = false
 	var inlineMediaDisabled = false
@@ -25,6 +31,8 @@ nonisolated struct ConversationConfig: Codable, Sendable, Equatable, Hashable {
 	/// switch, under the name it has always been stored as.
 	var pushNotifications = true
 	var showsUnreadCount = true
+	/// A pinned channel or direct conversation stays available across launches.
+	var isFavorite = false
 
 	var label: String?
 	var defaultModes: String?
@@ -64,11 +72,13 @@ nonisolated struct ConversationConfig: Codable, Sendable, Equatable, Hashable {
 		case type
 		case autoJoin
 		case ignoreGeneralEventMessages
+		case generalEventMessageDisplay
 		case ignoreHighlights
 		case inlineMediaDisabled
 		case inlineMediaEnabled
 		case pushNotifications
 		case showsUnreadCount
+		case isFavorite
 		case label
 		case defaultModes
 		case defaultTopic
@@ -83,6 +93,7 @@ nonisolated struct ConversationConfig: Codable, Sendable, Equatable, Hashable {
 		type = ConversationKind(rawValue: container.decode(UInt.self, forKey: .type, default: 0)) ?? .channel
 		pushNotifications = container.decode(Bool.self, forKey: .pushNotifications, default: true)
 		showsUnreadCount = container.decode(Bool.self, forKey: .showsUnreadCount, default: true)
+		isFavorite = container.decode(Bool.self, forKey: .isFavorite, default: false)
 
 		guard type == .channel else {
 			return
@@ -93,7 +104,12 @@ nonisolated struct ConversationConfig: Codable, Sendable, Equatable, Hashable {
 
 	private mutating func decodeChannelSettings(from container: KeyedDecodingContainer<CodingKeys>) {
 		autoJoin = container.decode(Bool.self, forKey: .autoJoin, default: true)
-		ignoreGeneralEventMessages = container.decode(Bool.self, forKey: .ignoreGeneralEventMessages, default: false)
+		let legacyHidesEvents = container.decode(Bool.self, forKey: .ignoreGeneralEventMessages, default: false)
+		generalEventMessageDisplay = container.decode(
+			GeneralEventMessageDisplay.self,
+			forKey: .generalEventMessageDisplay,
+			default: legacyHidesEvents ? .hide : .show
+		)
 		ignoreHighlights = container.decode(Bool.self, forKey: .ignoreHighlights, default: false)
 		inlineMediaDisabled = container.decode(Bool.self, forKey: .inlineMediaDisabled, default: false)
 		inlineMediaEnabled = container.decode(Bool.self, forKey: .inlineMediaEnabled, default: false)
@@ -109,6 +125,10 @@ nonisolated struct ConversationConfig: Codable, Sendable, Equatable, Hashable {
 
 		if pushNotifications == false {
 			try container.encode(false, forKey: .pushNotifications)
+		}
+
+		if isFavorite {
+			try container.encode(true, forKey: .isFavorite)
 		}
 
 		if showsUnreadCount == false {
@@ -133,6 +153,10 @@ nonisolated struct ConversationConfig: Codable, Sendable, Equatable, Hashable {
 		try container.encodeIfPresent(defaultTopic, forKey: .defaultTopic)
 		if autoJoin == false {
 			try container.encode(false, forKey: .autoJoin)
+		}
+		// Keep the existing show/hide archive format; only collapse needs a new key.
+		if generalEventMessageDisplay == .collapse {
+			try container.encode(generalEventMessageDisplay, forKey: .generalEventMessageDisplay)
 		}
 
 		let flags: [(Bool, CodingKeys)] = [

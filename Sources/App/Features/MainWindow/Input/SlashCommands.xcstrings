@@ -1,0 +1,4038 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "command-suggestions": {
+      "comment": "Slash-command suggestions above the input field. Keyboard keys name their action.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Command suggestions"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parancsjavaslatok"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Befehlsvorschläge"
+          }
+        }
+      }
+    },
+    "description-action": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send an action in the selected conversation"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cselekvés küldése a kijelölt beszélgetésben"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktion in der ausgewählten Unterhaltung senden"
+          }
+        }
+      }
+    },
+    "description-advanced-connection-setting": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change an advanced connection setting"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speciális kapcsolatbeállítás módosítása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erweiterte Verbindungseinstellung ändern"
+          }
+        }
+      }
+    },
+    "description-attach": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Attach a ZNC channel"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ZNC-csatorna csatolása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ZNC-Kanal anhängen"
+          }
+        }
+      }
+    },
+    "description-autojoin": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Join the configured automatic channels"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csatlakozás az automatikus csatornákhoz"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatisch konfigurierte Kanäle betreten"
+          }
+        }
+      }
+    },
+    "description-away": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark yourself as away"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Távol állapot beállítása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Als abwesend markieren"
+          }
+        }
+      }
+    },
+    "description-ban": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ban a user from a channel"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Felhasználó kitiltása egy csatornáról"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Person aus einem Kanal verbannen"
+          }
+        }
+      }
+    },
+    "description-ban-remove-user": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ban and remove a user from a channel"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Felhasználó kitiltása és eltávolítása egy csatornáról"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Person aus einem Kanal verbannen und entfernen"
+          }
+        }
+      }
+    },
+    "description-broadcast-action": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send an action to all joined channels"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cselekvés küldése minden csatlakozott csatornára"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktion an alle betretenen Kanäle senden"
+          }
+        }
+      }
+    },
+    "description-broadcast-message": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send a message to all joined channels"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Üzenet küldése minden csatlakozott csatornára"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nachricht an alle betretenen Kanäle senden"
+          }
+        }
+      }
+    },
+    "description-broadcast-raw": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send a raw IRC line on every connection"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nyers IRC-sor küldése minden kapcsolaton"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rohe IRC-Zeile über alle Verbindungen senden"
+          }
+        }
+      }
+    },
+    "description-browse-channels": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Browse the network’s channels"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hálózati csatornák böngészése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kanäle des Netzwerks durchsuchen"
+          }
+        }
+      }
+    },
+    "description-capabilities": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show enabled IRC capabilities"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Engedélyezett IRC-képességek megjelenítése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktivierte IRC-Fähigkeiten anzeigen"
+          }
+        }
+      }
+    },
+    "description-certificate": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inspect this connection’s TLS certificate"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A kapcsolat TLS-tanúsítványának megtekintése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TLS-Zertifikat dieser Verbindung prüfen"
+          }
+        }
+      }
+    },
+    "description-channel-operator-message": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send a message to channel operators"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Üzenet küldése csatornaoperátoroknak"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nachricht an Kanaloperatoren senden"
+          }
+        }
+      }
+    },
+    "description-channel-operator-notice": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send a notice to channel operators"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Értesítés küldése csatornaoperátoroknak"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notice an Kanaloperatoren senden"
+          }
+        }
+      }
+    },
+    "description-check-online-nicknames": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check which nicknames are online"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Online becenevek ellenőrzése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prüfen, welche Nicknames online sind"
+          }
+        }
+      }
+    },
+    "description-clear": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear the selected transcript"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kijelölt átirat törlése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausgewählten Gesprächsverlauf leeren"
+          }
+        }
+      }
+    },
+    "description-clear-all": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear transcripts on configured connections"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Átiratok törlése a beállított kapcsolatokon"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gesprächsverläufe der konfigurierten Verbindungen leeren"
+          }
+        }
+      }
+    },
+    "description-clear-away-status": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear your away status"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Távol állapot megszüntetése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abwesenheitsstatus aufheben"
+          }
+        }
+      }
+    },
+    "description-close": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close a conversation"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beszélgetés bezárása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unterhaltung schließen"
+          }
+        }
+      }
+    },
+    "description-color": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a nickname’s display color"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Becenév megjelenítési színének kiválasztása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anzeigefarbe eines Nicknames wählen"
+          }
+        }
+      }
+    },
+    "description-connect": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect or reconnect to this network"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csatlakozás vagy újracsatlakozás ehhez a hálózathoz"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mit diesem Netzwerk verbinden oder neu verbinden"
+          }
+        }
+      }
+    },
+    "description-ctcp": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send a CTCP request"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CTCP-kérés küldése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CTCP-Anfrage senden"
+          }
+        }
+      }
+    },
+    "description-ctcp-reply": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send a CTCP reply"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CTCP-válasz küldése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CTCP-Antwort senden"
+          }
+        }
+      }
+    },
+    "description-detach": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detach a ZNC channel"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ZNC-csatorna leválasztása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ZNC-Kanal abtrennen"
+          }
+        }
+      }
+    },
+    "description-direct-chat-file-transfer": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start a direct chat or send a file"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Közvetlen beszélgetés indítása vagy fájl küldése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Direkten Chat starten oder Datei senden"
+          }
+        }
+      }
+    },
+    "description-disconnect-network": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnect from this network"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leválasztás erről a hálózatról"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Von diesem Netzwerk trennen"
+          }
+        }
+      }
+    },
+    "description-disconnect-user": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnect a user from the server"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Felhasználó leválasztása a kiszolgálóról"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Person vom Server trennen"
+          }
+        }
+      }
+    },
+    "description-grant-operator": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grant channel operator status"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csatornaoperátori állapot megadása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kanaloperatorstatus erteilen"
+          }
+        }
+      }
+    },
+    "description-halfop": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grant half-operator status"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Féloperátori állapot megadása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Halboperatorstatus erteilen"
+          }
+        }
+      }
+    },
+    "description-history": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Request history from the server"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Előzmények lekérése a kiszolgálóról"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verlauf vom Server anfordern"
+          }
+        }
+      }
+    },
+    "description-ignore": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add an ignore rule for a user"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mellőzési szabály hozzáadása egy felhasználóhoz"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ignorierregel für eine Person hinzufügen"
+          }
+        }
+      }
+    },
+    "description-invite": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invite people to a channel"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Személyek meghívása egy csatornára"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Personen in einen Kanal einladen"
+          }
+        }
+      }
+    },
+    "description-ip-address-ban": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manage an IP-address ban"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IP-cím kitiltásának kezelése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IP-Adresssperre verwalten"
+          }
+        }
+      }
+    },
+    "description-join": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Join one or more channels"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csatlakozás egy vagy több csatornához"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einen oder mehrere Kanäle betreten"
+          }
+        }
+      }
+    },
+    "description-leave-channel": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave a channel or close a private conversation"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilépés egy csatornáról vagy privát beszélgetés bezárása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kanal verlassen oder private Unterhaltung schließen"
+          }
+        }
+      }
+    },
+    "description-matching-user-information": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Request information about matching users"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Egyező felhasználók adatainak lekérése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Informationen über passende Personen anfordern"
+          }
+        }
+      }
+    },
+    "description-measure-round-trip": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Measure the connection round-trip time"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapcsolat oda-vissza válaszidejének mérése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbindungslatenz messen"
+          }
+        }
+      }
+    },
+    "description-message": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send a message to a person or channel"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Üzenet küldése egy személynek vagy csatornára"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nachricht an eine Person oder einen Kanal senden"
+          }
+        }
+      }
+    },
+    "description-mode": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View or change IRC modes"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IRC-módok megtekintése vagy módosítása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IRC-Modi anzeigen oder ändern"
+          }
+        }
+      }
+    },
+    "description-mute": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mute notification sounds"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Értesítési hangok némítása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mitteilungstöne stummschalten"
+          }
+        }
+      }
+    },
+    "description-names": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Request channel member names"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csatornatagok nevének lekérése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Namen der Kanalmitglieder anfordern"
+          }
+        }
+      }
+    },
+    "description-network-ban": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manage a network-wide ban"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hálózatszintű kitiltás kezelése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Netzwerkweite Verbannung verwalten"
+          }
+        }
+      }
+    },
+    "description-nick": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change your nickname"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Becenév módosítása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eigenen Nickname ändern"
+          }
+        }
+      }
+    },
+    "description-nickname-completion-priorities": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show nickname-completion priorities"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Becenévkiegészítési prioritások megjelenítése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prioritäten der Nickname-Vervollständigung anzeigen"
+          }
+        }
+      }
+    },
+    "description-notice": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send an IRC notice"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IRC-értesítés küldése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IRC-Notice senden"
+          }
+        }
+      }
+    },
+    "description-notification": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show a local notification"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Helyi értesítés megjelenítése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lokale Mitteilung anzeigen"
+          }
+        }
+      }
+    },
+    "description-online-status-list": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inspect the server’s online-status list"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kiszolgálói onlineállapot-lista megtekintése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Online-Statusliste des Servers prüfen"
+          }
+        }
+      }
+    },
+    "description-open-private-conversation": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open a private conversation"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privát beszélgetés megnyitása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Private Unterhaltung öffnen"
+          }
+        }
+      }
+    },
+    "description-operator-message": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send a server operator message"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Üzenet küldése kiszolgálói operátoroknak"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nachricht an Server-Operatoren senden"
+          }
+        }
+      }
+    },
+    "description-password": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send a server connection password"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kiszolgálói kapcsolati jelszó küldése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbindungspasswort an den Server senden"
+          }
+        }
+      }
+    },
+    "description-prevent-speaking": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prevent a user from speaking in a channel"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Felhasználó beszédének letiltása egy csatornán"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Person am Sprechen in einem Kanal hindern"
+          }
+        }
+      }
+    },
+    "description-previous-nickname": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Look up a previously used nickname"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Korábban használt becenév adatainak lekérése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Früher verwendeten Nickname abfragen"
+          }
+        }
+      }
+    },
+    "description-print-text-toggle-log": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Print text or toggle the raw protocol log"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Szöveg kiírása vagy a nyers protokollnapló kapcsolása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text ausgeben oder rohes Protokoll umschalten"
+          }
+        }
+      }
+    },
+    "description-query-name": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retitle the selected private conversation"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kijelölt privát beszélgetés átnevezése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausgewählte private Unterhaltung umbenennen"
+          }
+        }
+      }
+    },
+    "description-random-join": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Join random channels for debugging"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Véletlen csatornákhoz csatlakozás hibakereséshez"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zufällige Kanäle zum Debuggen betreten"
+          }
+        }
+      }
+    },
+    "description-raw": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send a raw IRC protocol line"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nyers IRC-protokollsor küldése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rohe IRC-Protokollzeile senden"
+          }
+        }
+      }
+    },
+    "description-real-name": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change your real name"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Valódi név módosítása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eigenen richtigen Namen ändern"
+          }
+        }
+      }
+    },
+    "description-receive": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Simulate receiving an IRC line"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IRC-sor fogadásának szimulálása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empfang einer IRC-Zeile simulieren"
+          }
+        }
+      }
+    },
+    "description-rejoin": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave and rejoin the selected channel"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilépés és újracsatlakozás a kijelölt csatornához"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausgewählten Kanal verlassen und erneut betreten"
+          }
+        }
+      }
+    },
+    "description-remove-ban": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove a channel ban"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csatornáról való kitiltás eltávolítása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kanalverbannung aufheben"
+          }
+        }
+      }
+    },
+    "description-remove-channel-user": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove a user from a channel"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Felhasználó eltávolítása egy csatornáról"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Person aus einem Kanal entfernen"
+          }
+        }
+      }
+    },
+    "description-remove-half-operator": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove half-operator status"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Féloperátori állapot eltávolítása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Halboperatorstatus entziehen"
+          }
+        }
+      }
+    },
+    "description-remove-ignore-rule": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove an ignore rule for a user"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Felhasználó mellőzési szabályának eltávolítása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ignorierregel für eine Person entfernen"
+          }
+        }
+      }
+    },
+    "description-remove-operator": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove channel operator status"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csatornaoperátori állapot eltávolítása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kanaloperatorstatus entziehen"
+          }
+        }
+      }
+    },
+    "description-remove-voice": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove voice status"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beszédjog eltávolítása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sprachrecht entziehen"
+          }
+        }
+      }
+    },
+    "description-report-connection-latency": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Report connection latency to this conversation"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapcsolati késleltetés közlése ebben a beszélgetésben"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbindungslatenz in dieser Unterhaltung melden"
+          }
+        }
+      }
+    },
+    "description-report-project-time": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Report time since the project’s first commit"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A projekt első commitja óta eltelt idő közlése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zeit seit dem ersten Projekt-Commit melden"
+          }
+        }
+      }
+    },
+    "description-restore-notification-sounds": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore notification sounds"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Értesítési hangok visszaállítása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mitteilungstöne wieder einschalten"
+          }
+        }
+      }
+    },
+    "description-restore-speaking": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore a user’s ability to speak"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Felhasználó beszédjogának visszaállítása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sprechmöglichkeit einer Person wiederherstellen"
+          }
+        }
+      }
+    },
+    "description-script": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run an installed script"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telepített szkript futtatása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installiertes Skript ausführen"
+          }
+        }
+      }
+    },
+    "description-secret-action": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send an action without echoing it locally"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cselekvés küldése helyi megjelenítés nélkül"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktion ohne lokale Anzeige senden"
+          }
+        }
+      }
+    },
+    "description-secret-message": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send a message without echoing it locally"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Üzenet küldése helyi megjelenítés nélkül"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nachricht ohne lokale Anzeige senden"
+          }
+        }
+      }
+    },
+    "description-server": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect to another IRC server"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csatlakozás egy másik IRC-kiszolgálóhoz"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mit einem anderen IRC-Server verbinden"
+          }
+        }
+      }
+    },
+    "description-server-user-restriction": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manage a server-side user restriction"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kiszolgálóoldali felhasználói korlátozás kezelése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serverseitige Einschränkung einer Person verwalten"
+          }
+        }
+      }
+    },
+    "description-silence": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manage the server-side silence list"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kiszolgálóoldali némítási lista kezelése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serverseitige Silence-Liste verwalten"
+          }
+        }
+      }
+    },
+    "description-sound": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Play a notification sound"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Értesítési hang lejátszása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mitteilungston abspielen"
+          }
+        }
+      }
+    },
+    "description-switch-conversation": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Switch to a matching conversation"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Váltás egy egyező beszélgetésre"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zu einer passenden Unterhaltung wechseln"
+          }
+        }
+      }
+    },
+    "description-temporary-shun": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Temporarily restrict a user on the server"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Felhasználó ideiglenes korlátozása a kiszolgálón"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Person vorübergehend auf dem Server einschränken"
+          }
+        }
+      }
+    },
+    "description-timer": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schedule commands or manage timers"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parancsok ütemezése vagy időzítők kezelése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Befehle planen oder Timer verwalten"
+          }
+        }
+      }
+    },
+    "description-topic": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read or change the channel topic"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csatornatéma lekérése vagy módosítása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kanalthema lesen oder ändern"
+          }
+        }
+      }
+    },
+    "description-user-information": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Look up a user’s information"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Felhasználó adatainak lekérése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Informationen zu einer Person abfragen"
+          }
+        }
+      }
+    },
+    "description-user-mode": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View or change your user modes"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saját felhasználói módok megtekintése vagy módosítása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eigene Benutzermodi anzeigen oder ändern"
+          }
+        }
+      }
+    },
+    "description-version": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Report your Glasstual version"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstual-verzió közlése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstual-Version melden"
+          }
+        }
+      }
+    },
+    "description-voice": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grant voice status"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beszédjog megadása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sprachrecht erteilen"
+          }
+        }
+      }
+    },
+    "description-znc-certificate": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inspect the certificate reported by ZNC"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A ZNC által jelentett tanúsítvány megtekintése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Von ZNC gemeldetes Zertifikat prüfen"
+          }
+        }
+      }
+    },
+    "hint-add-remove-mask": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use + to add a mask or - to remove one. With no arguments, requests the list. Requires server support."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+ jellel hozzáadhatsz, - jellel eltávolíthatsz egy maszkot. Argumentum nélkül listáz. Kiszolgálói támogatás szükséges."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mit + eine Maske hinzufügen, mit - entfernen. Ohne Argumente wird die Liste angefordert. Serverunterstützung erforderlich."
+          }
+        }
+      }
+    },
+    "hint-all-joined-channels": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sends to every joined channel. Settings determine whether other connections are included."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minden csatlakozott csatornára elküldi. A beállításoktól függ, hogy más kapcsolatokra is érvényes-e."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sendet an alle betretenen Kanäle. Die Einstellungen bestimmen, ob weitere Verbindungen einbezogen werden."
+          }
+        }
+      }
+    },
+    "hint-channel": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Omit the channel to use the selected channel."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A csatornát elhagyva a kijelölt csatornára érvényes."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ohne Kanalangabe wird der ausgewählte Kanal verwendet."
+          }
+        }
+      }
+    },
+    "hint-channel-privileges": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Omit the channel to use the selected channel. Requires the appropriate channel privileges."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A csatornát elhagyva a kijelölt csatornára érvényes. Megfelelő csatornajogosultság szükséges."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ohne Kanalangabe gilt der ausgewählte Kanal. Entsprechende Kanalrechte sind erforderlich."
+          }
+        }
+      }
+    },
+    "hint-channels": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Separate multiple channel names with spaces."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Több csatornanevet szóközzel válassz el."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mehrere Kanalnamen mit Leerzeichen trennen."
+          }
+        }
+      }
+    },
+    "hint-channels-comma-separated-keys": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Separate channels and their keys with commas. With no channel, rejoins the selected channel."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A csatornákat és kulcsaikat vesszővel válaszd el. Csatorna nélkül újracsatlakozik a kijelölt csatornához."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kanäle und Schlüssel mit Kommas trennen. Ohne Kanalangabe wird der ausgewählte Kanal erneut betreten."
+          }
+        }
+      }
+    },
+    "hint-chathistory-subcommands": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server support is required. Use an IRCv3 CHATHISTORY subcommand such as LATEST with its target and arguments."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kiszolgálói támogatás szükséges. IRCv3 CHATHISTORY-alparancsot használj, például LATEST, a céllal és argumentumokkal."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serverunterstützung ist erforderlich. Nutze einen IRCv3-CHATHISTORY-Unterbefehl wie LATEST mit Ziel und Argumenten."
+          }
+        }
+      }
+    },
+    "hint-count": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a count from 1 to 20. The default is 1."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adj meg 1 és 20 közötti darabszámot. Az alapérték 1."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gib eine Anzahl von 1 bis 20 ein. Der Standardwert ist 1."
+          }
+        }
+      }
+    },
+    "hint-ctcp": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a nickname and a CTCP command such as VERSION or PING."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adj meg egy becenevet és egy CTCP-parancsot, például VERSION vagy PING."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gib einen Nickname und einen CTCP-Befehl wie VERSION oder PING ein."
+          }
+        }
+      }
+    },
+    "hint-direct-chat-file-path": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use chat for a direct conversation or send with a file path for a file transfer."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A chat közvetlen beszélgetést indít, a send fájlútvonallal fájlt küld."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nutze chat für eine direkte Unterhaltung oder send mit einem Dateipfad für eine Übertragung."
+          }
+        }
+      }
+    },
+    "hint-irc-protocol-line": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a complete IRC protocol line. Include a colon before a trailing parameter containing spaces."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adj meg egy teljes IRC-protokollsort. A szóközöket tartalmazó utolsó paraméter elé írj kettőspontot."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gib eine vollständige IRC-Protokollzeile ein. Setze vor einem letzten Parameter mit Leerzeichen einen Doppelpunkt."
+          }
+        }
+      }
+    },
+    "hint-list-status-clear": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L lists entries, S requests status, C clears the list. Add or remove people through the Address Book."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Az L listáz, az S állapotot kér, a C törli a listát. Személyeket a címjegyzékben adhatsz hozzá vagy távolíthatsz el."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L zeigt Einträge, S fragt den Status ab, C leert die Liste. Personen über das Adressbuch hinzufügen oder entfernen."
+          }
+        }
+      }
+    },
+    "hint-local-text-protocol-log": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter text to display locally, or raw on / raw off to toggle the protocol log."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adj meg helyben megjelenítendő szöveget, vagy a raw on / raw off paranccsal kapcsold az IRC-naplót."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gib lokal anzuzeigenden Text ein oder schalte mit raw on / raw off das Protokoll ein oder aus."
+          }
+        }
+      }
+    },
+    "hint-message": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Type the message after the command. Spaces are part of the message."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A parancs után írd az üzenetet. A szóközök az üzenet részei."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schreibe die Nachricht nach dem Befehl. Leerzeichen gehören zur Nachricht."
+          }
+        }
+      }
+    },
+    "hint-mode": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start with + or - to change modes on the selected channel, or enter a target first."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A kijelölt csatorna módjait + vagy - jellel kezdve módosíthatod, vagy először adj meg egy célt."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beginne mit + oder -, um Modi des ausgewählten Kanals zu ändern, oder gib zuerst ein Ziel ein."
+          }
+        }
+      }
+    },
+    "hint-nickname": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter the user’s nickname on this network."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add meg a felhasználó becenevét ezen a hálózaton."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gib den Nickname der Person in diesem Netzwerk ein."
+          }
+        }
+      }
+    },
+    "hint-nickname-address-book": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a nickname. If no matching user is available, the Address Book opens for editing."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adj meg egy becenevet. Ha nincs megfelelő felhasználó, szerkesztésre megnyílik a címjegyzék."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gib einen Nickname ein. Falls keine passende Person verfügbar ist, öffnet sich das Adressbuch zur Bearbeitung."
+          }
+        }
+      }
+    },
+    "hint-nickname-first-message": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a nickname and optionally a first message."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adj meg egy becenevet és igény szerint egy első üzenetet."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gib einen Nickname und optional eine erste Nachricht ein."
+          }
+        }
+      }
+    },
+    "hint-nickname-private-conversation": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Omit the nickname in a private conversation to look up that person."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privát beszélgetésben a becenevet elhagyva az adott személy adatait kéri le."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In einer privaten Unterhaltung kann der Nickname entfallen, um diese Person abzufragen."
+          }
+        }
+      }
+    },
+    "hint-nicknames": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Separate multiple nicknames with spaces."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Több becenevet szóközzel válassz el."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mehrere Nicknames mit Leerzeichen trennen."
+          }
+        }
+      }
+    },
+    "hint-nicknames-channel-last": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Separate nicknames with spaces. The optional channel comes last."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A beceneveket szóközzel válaszd el. A nem kötelező csatorna a végére kerül."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nicknames mit Leerzeichen trennen. Der optionale Kanal steht am Ende."
+          }
+        }
+      }
+    },
+    "hint-no-arguments": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No arguments needed."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nem szükséges argumentum."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Argumente erforderlich."
+          }
+        }
+      }
+    },
+    "hint-notification": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An optional channel links the notification to that conversation."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A nem kötelező csatorna az értesítést az adott beszélgetéshez kapcsolja."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein optionaler Kanal verknüpft die Mitteilung mit dieser Unterhaltung."
+          }
+        }
+      }
+    },
+    "hint-operator": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Requires server operator privileges. Supported masks, durations and options depend on the server."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kiszolgálói operátorjog szükséges. A maszkok, időtartamok és lehetőségek a kiszolgálótól függenek."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erfordert Server-Operatorrechte. Unterstützte Masken, Zeitangaben und Optionen hängen vom Server ab."
+          }
+        }
+      }
+    },
+    "hint-optional-reason": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The reason is optional and can contain spaces."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Az indok nem kötelező, és szóközöket is tartalmazhat."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Grund ist optional und darf Leerzeichen enthalten."
+          }
+        }
+      }
+    },
+    "hint-placeholder-values": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replace <placeholders> with values. Items in [brackets] are optional."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A <helyőrzőket> cseréld értékekre. A [zárójelben] lévő elemek nem kötelezők."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<Platzhalter> durch Werte ersetzen. Angaben in [Klammern] sind optional."
+          }
+        }
+      }
+    },
+    "hint-port-tls-prefix": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prefix the port with + to use TLS, for example +6697."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A TLS használatához írj + jelet a port elé, például +6697."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Setze für TLS ein + vor den Port, zum Beispiel +6697."
+          }
+        }
+      }
+    },
+    "hint-real-name": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The real name may contain spaces. Requires server support for SETNAME."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A valódi név szóközöket is tartalmazhat. SETNAME-kiszolgálótámogatás szükséges."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der richtige Name darf Leerzeichen enthalten. Erfordert SETNAME-Unterstützung auf dem Server."
+          }
+        }
+      }
+    },
+    "hint-reconnect-current-endpoint": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Omit the server to reconnect to the current endpoint."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A kiszolgálót elhagyva a jelenlegi végponthoz csatlakozik újra."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ohne Serverangabe wird die Verbindung zum aktuellen Endpunkt neu hergestellt."
+          }
+        }
+      }
+    },
+    "hint-script": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arguments are passed to the installed script. Check its documentation for supported options."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Az argumentumokat a telepített szkript kapja meg. A támogatott lehetőségeket a dokumentációja ismerteti."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Argumente werden an das installierte Skript übergeben. Unterstützte Optionen stehen in dessen Dokumentation."
+          }
+        }
+      }
+    },
+    "hint-search-conversation-name": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Type part of a channel or conversation name. Searches across all networks."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Írd be egy csatorna vagy beszélgetés nevének részletét. Minden hálózaton keres."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gib einen Teil eines Kanal- oder Gesprächsnamens ein. Sucht in allen Netzwerken."
+          }
+        }
+      }
+    },
+    "hint-seconds-repeat-management": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seconds must be positive. Repeat 0 runs indefinitely. Use help for management commands."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A másodpercek száma pozitív legyen. A 0 ismétlés korlátlan futást jelent. A kezeléshez használd a help alparancsot."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sekunden müssen positiv sein. Wiederholungszahl 0 läuft unbegrenzt. help erklärt die Verwaltungsbefehle."
+          }
+        }
+      }
+    },
+    "hint-sound": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter the name of a system notification sound, such as Glass."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add meg egy rendszerértesítési hang nevét, például Glass."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gib den Namen eines Systemklangs ein, zum Beispiel Glass."
+          }
+        }
+      }
+    },
+    "hint-supported-features-help": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use help to list supported features. The -a flag applies a change to all connections."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A támogatott funkciókat a help listázza. A -a kapcsoló minden kapcsolatra alkalmazza a módosítást."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "help listet unterstützte Funktionen auf. Mit -a gilt die Änderung für alle Verbindungen."
+          }
+        }
+      }
+    },
+    "hint-target-optional": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Omit the target to close the selected conversation."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A célt elhagyva a kijelölt beszélgetést zárja be."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ohne Zielangabe wird die ausgewählte Unterhaltung geschlossen."
+          }
+        }
+      }
+    },
+    "hint-targets": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use a nickname or channel as the target. Separate multiple targets with commas."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A cél becenév vagy csatorna lehet. Több célt vesszővel válassz el."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Als Ziel dient ein Nickname oder Kanal. Mehrere Ziele mit Kommas trennen."
+          }
+        }
+      }
+    },
+    "hint-topic": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Omit the channel to use the selected channel. Omit the topic to read it."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A csatornát elhagyva a kijelölt csatornára érvényes. A témát elhagyva lekéri azt."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ohne Kanalangabe gilt der ausgewählte Kanal. Ohne Thema wird das aktuelle Thema abgefragt."
+          }
+        }
+      }
+    },
+    "hint-znc-channel": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Requires a ZNC connection. Omit the channel to use the selected channel."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ZNC-kapcsolat szükséges. A csatornát elhagyva a kijelölt csatornára érvényes."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erfordert eine ZNC-Verbindung. Ohne Kanalangabe gilt der ausgewählte Kanal."
+          }
+        }
+      }
+    },
+    "keyboard-hint": {
+      "comment": "Slash-command suggestions above the input field. Keyboard keys name their action.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "↑↓ to choose · Tab to insert · Esc to close"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "↑↓ választás · Tab beillesztés · Esc bezárás"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "↑↓ auswählen · Tab einfügen · Esc schließen"
+          }
+        }
+      }
+    },
+    "keyboard-hint-without-tab": {
+      "comment": "Slash-command suggestions above the input field. Keyboard keys name their action.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "↑↓ to choose · Click to insert · Esc to close"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "↑↓ választás · Kattintás beillesztés · Esc bezárás"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "↑↓ auswählen · Klicken zum Einfügen · Esc schließen"
+          }
+        }
+      }
+    },
+    "syntax-address-port-password": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<address> [[+]port] [password]"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<cím> [[+]port] [jelszó]"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<Adresse> [[+]Port] [Passwort]"
+          }
+        }
+      }
+    },
+    "syntax-arguments": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[arguments]"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[argumentumok]"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[Argumente]"
+          }
+        }
+      }
+    },
+    "syntax-channel-mask-flags": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<channel|mask> [flags]"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<csatorna|maszk> [jelzők]"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<Kanal|Maske> [Flags]"
+          }
+        }
+      }
+    },
+    "syntax-channel-message": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[channel] <message>"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[csatorna] <üzenet>"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[Kanal] <Nachricht>"
+          }
+        }
+      }
+    },
+    "syntax-channel-nickname": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[channel] <nickname>"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[csatorna] <becenév>"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[Kanal] <Nickname>"
+          }
+        }
+      }
+    },
+    "syntax-channel-nickname-reason": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[channel] <nickname> [reason]"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[csatorna] <becenév> [indok]"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[Kanal] <Nickname> [Grund]"
+          }
+        }
+      }
+    },
+    "syntax-channel-optional": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[channel]"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[csatorna]"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[Kanal]"
+          }
+        }
+      }
+    },
+    "syntax-channel-reason": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[channel] [reason]"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[csatorna] [indok]"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[Kanal] [Grund]"
+          }
+        }
+      }
+    },
+    "syntax-channels": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<channel> [more channels]"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<csatorna> [további csatornák]"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<Kanal> [weitere Kanäle]"
+          }
+        }
+      }
+    },
+    "syntax-channels-keys": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[channel[,channel]] [key[,key]]"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[csatorna[,csatorna]] [kulcs[,kulcs]]"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[Kanal[,Kanal]] [Schlüssel[,Schlüssel]]"
+          }
+        }
+      }
+    },
+    "syntax-chat-send-nickname-path": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "chat <nickname> | send <nickname> <path>"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "chat <becenév> | send <becenév> <útvonal>"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "chat <Nickname> | send <Nickname> <Pfad>"
+          }
+        }
+      }
+    },
+    "syntax-comment": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[reason]"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[indok]"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[Grund]"
+          }
+        }
+      }
+    },
+    "syntax-count": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[count]"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[darabszám]"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[Anzahl]"
+          }
+        }
+      }
+    },
+    "syntax-flags-arguments": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[flags] [arguments]"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[jelzők] [argumentumok]"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[Flags] [Argumente]"
+          }
+        }
+      }
+    },
+    "syntax-help-enable-disable-feature": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "help | enable|disable [-a] \"feature\""
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "help | enable|disable [-a] \"funkció\""
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "help | enable|disable [-a] \"Funktion\""
+          }
+        }
+      }
+    },
+    "syntax-irc-line": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<IRC line>"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<IRC-sor>"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<IRC-Zeile>"
+          }
+        }
+      }
+    },
+    "syntax-list-status-clear": {
+      "comment": "Syntax for MONITOR and WATCH list, status and clear subcommands. Keep the literal protocol letters L, S and C unchanged.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L | S | C"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L | S | C"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L | S | C"
+          }
+        }
+      }
+    },
+    "syntax-mask-duration-reason": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<+|-><mask|nickname> [duration] [reason]"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<+|-><maszk|becenév> [időtartam] [indok]"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<+|-><Maske|Nickname> [Dauer] [Grund]"
+          }
+        }
+      }
+    },
+    "syntax-mask-nickname": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[<+|-><mask|nickname>]"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[<+|-><maszk|becenév>]"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[<+|-><Maske|Nickname>]"
+          }
+        }
+      }
+    },
+    "syntax-mask-nickname-reason": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<+|-><mask|nickname> [reason]"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<+|-><maszk|becenév> [indok]"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<+|-><Maske|Nickname> [Grund]"
+          }
+        }
+      }
+    },
+    "syntax-message": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<message>"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<üzenet>"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<Nachricht>"
+          }
+        }
+      }
+    },
+    "syntax-message-targets": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<target[,target]> <message>"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<cél[,cél]> <üzenet>"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<Ziel[,Ziel]> <Nachricht>"
+          }
+        }
+      }
+    },
+    "syntax-name-fragment": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<name fragment>"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<névrészlet>"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<Namensteil>"
+          }
+        }
+      }
+    },
+    "syntax-nickname": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<nickname>"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<becenév>"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<Nickname>"
+          }
+        }
+      }
+    },
+    "syntax-nickname-command-arguments": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<nickname> <command> [arguments]"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<becenév> <parancs> [argumentumok]"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<Nickname> <Befehl> [Argumente]"
+          }
+        }
+      }
+    },
+    "syntax-nickname-message": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<nickname> [message]"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<becenév> [üzenet]"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<Nickname> [Nachricht]"
+          }
+        }
+      }
+    },
+    "syntax-nickname-optional": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[nickname]"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[becenév]"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[Nickname]"
+          }
+        }
+      }
+    },
+    "syntax-nickname-reason": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<nickname> [reason]"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<becenév> [indok]"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<Nickname> [Grund]"
+          }
+        }
+      }
+    },
+    "syntax-nicknames": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<nickname> [more nicknames]"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<becenév> [további becenevek]"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<Nickname> [weitere Nicknames]"
+          }
+        }
+      }
+    },
+    "syntax-nicknames-channel": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<nickname> [more nicknames] [channel]"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<becenév> [további becenevek] [csatorna]"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<Nickname> [weitere Nicknames] [Kanal]"
+          }
+        }
+      }
+    },
+    "syntax-operator-message": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[channel] <message>"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[csatorna] <üzenet>"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[Kanal] <Nachricht>"
+          }
+        }
+      }
+    },
+    "syntax-password": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<password>"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<jelszó>"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<Passwort>"
+          }
+        }
+      }
+    },
+    "syntax-real-name": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<real name>"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<valódi név>"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<richtiger Name>"
+          }
+        }
+      }
+    },
+    "syntax-seconds-repeat-command": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<seconds> [repeat] <command> | help | list | stop|restart|remove <ID>"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<másodperc> [ismétlés] <parancs> | help | list | stop|restart|remove <azonosító>"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<Sekunden> [Wiederholungen] <Befehl> | help | list | stop|restart|remove <ID>"
+          }
+        }
+      }
+    },
+    "syntax-server-optional": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[server]"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[kiszolgáló]"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[Server]"
+          }
+        }
+      }
+    },
+    "syntax-sound": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<sound name>"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<hang neve>"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<Klangname>"
+          }
+        }
+      }
+    },
+    "syntax-subcommand-target-arguments": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<subcommand> <target> [arguments]"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<alparancs> <cél> [argumentumok]"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<Unterbefehl> <Ziel> [Argumente]"
+          }
+        }
+      }
+    },
+    "syntax-target-flags-arguments": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[target] [flags] [arguments]"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[cél] [jelzők] [argumentumok]"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[Ziel] [Flags] [Argumente]"
+          }
+        }
+      }
+    },
+    "syntax-target-optional": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[target]"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[cél]"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[Ziel]"
+          }
+        }
+      }
+    },
+    "syntax-topic": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[channel] [topic]"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[csatorna] [téma]"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[Kanal] [Thema]"
+          }
+        }
+      }
+    },
+    "syntax-watch-list-status-clear": {
+      "comment": "Syntax for MONITOR and WATCH list, status and clear subcommands. Keep the literal protocol letters L, S and C unchanged.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L | S | C"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L | S | C"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L | S | C"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

@@ -12,6 +12,14 @@ import CocoaExtensions
  the connection, the conversation and the nicknames the command applies to. */
 
 extension MenuActionController {
+	@objc func memberMute(_ sender: NSMenuItem?) {
+		setMemberMuted(true, sender: sender)
+	}
+
+	@objc func memberUnmute(_ sender: NSMenuItem?) {
+		setMemberMuted(false, sender: sender)
+	}
+
 	@objc func memberAddIgnore(_ sender: NSMenuItem?) {
 		performIgnore(sender: sender, remove: false)
 	}
@@ -145,6 +153,12 @@ extension MenuActionController {
 }
 
 private extension MenuActionController {
+	func setMemberMuted(_ muted: Bool, sender: NSMenuItem?) {
+		guard let target = context.muteTarget(for: sender) else { return }
+		context.deselectMembers(for: sender)
+		target.session.setUserMuted(muted, nickname: target.nickname)
+	}
+
 	func performIgnore(sender: NSMenuItem?, remove: Bool) {
 		guard let target = context.commandTarget(for: sender),
 		      let nickname = target.nicknames.first

@@ -51,6 +51,7 @@ nonisolated struct ServerConfig: Codable, Equatable, Sendable {
 
 	var uniqueIdentifier = UUID().uuidString
 	var connectionName = ApplicationStrings.untitledConnection
+	var sidebarIdentity = ServerIdentityStyle()
 	var nickname = ""
 	var awayNickname: String?
 	var username = ""

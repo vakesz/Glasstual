@@ -181,6 +181,9 @@ struct MenuItemValidator {
 		let isJoined = permissions.isJoined
 
 		switch item.command {
+		case .toggleFavorite:
+			item.title = String(localized: conversation?.config.isFavorite == true ? .Sidebar.unpinFavorite : .Sidebar.pinFavorite)
+			return conversation.map { $0.isChannel || $0.isDirect } == true
 		case .joinChannel:
 			item.isHidden = isJoined
 			return conversation.map { session?.canJoin($0) == true } == true
@@ -261,8 +264,16 @@ struct MenuItemValidator {
 		}
 	}
 
-	private func validateMemberCommand(_ item: NSMenuItem) -> Bool {
+	func validateMemberCommand(_ item: NSMenuItem) -> Bool {
 		switch item.command {
+		case .muteUser, .unmuteUser:
+			guard let target = context.muteTarget(for: item) else {
+				item.isHidden = item.command == .unmuteUser
+				return false
+			}
+			let muted = target.session.isUserMuted(nickname: target.nickname)
+			item.isHidden = item.command == .muteUser ? muted : !muted
+			return !item.isHidden
 		case .addIgnore:
 			return existingIgnore(for: item) == .none
 		case .modifyIgnore, .removeIgnore:

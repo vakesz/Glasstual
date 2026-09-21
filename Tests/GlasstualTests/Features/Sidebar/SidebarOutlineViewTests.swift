@@ -248,6 +248,10 @@ struct SidebarOutlineViewTests {
 		defer { fixture.close() }
 		fixture.window.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
 		fixture.session.config.connectionName = longTitle
+		fixture.session.config.sidebarIdentity = ServerIdentityStyle(color: .teal, icon: .code)
+		fixture.other.config.sidebarIdentity = ServerIdentityStyle(color: .purple, icon: .people)
+		fixture.model.toggleFavorite(fixture.channels[0])
+		fixture.model.toggleFavorite(fixture.channels[2])
 		fixture.session.isConnected = true
 		for channel in fixture.channels.prefix(3) {
 			channel.activate()
@@ -264,6 +268,7 @@ struct SidebarOutlineViewTests {
 		fixture.window.order(.below, relativeTo: 0)
 		fixture.window.contentView?.layoutSubtreeIfNeeded()
 		fixture.outline.layoutSubtreeIfNeeded()
+		fixture.outline.scrollRowToVisible(0)
 		for index in 0 ..< fixture.outline.numberOfRows {
 			let cell = try #require(fixture.outline.view(atColumn: 0, row: index, makeIfNecessary: true) as? SidebarCellView)
 			cell.layoutSubtreeIfNeeded()
@@ -291,6 +296,111 @@ struct SidebarOutlineViewTests {
 			.appending(path: "review-fixtures", directoryHint: .isDirectory)
 		try FileManager.default.createDirectory(at: output, withIntermediateDirectories: true)
 		try png.write(to: output.appending(path: "sidebar-\(language)-\(dark ? "dark" : "light").png"))
+	}
+
+	@Test("Favorite rows share conversation selection while keeping native identities distinct")
+	func favoritesRetainSelectionAndNativeIdentity() throws {
+		let fixture = Fixture()
+		defer { fixture.close() }
+		let conversation = fixture.channels[0]
+		fixture.model.toggleFavorite(conversation)
+		fixture.apply()
+		let favorite = try #require(fixture.outline.tree.nodes[.favorite(conversation.uniqueIdentifier)])
+		let ordinary = try #require(fixture.outline.tree.nodes[.conversation(conversation.uniqueIdentifier)])
+		let group = try #require(fixture.outline.tree.nodes[.favorites])
+		#expect(favorite !== ordinary)
+		#expect(fixture.outline.tree.roots.first === group)
+		#expect(!fixture.outline.outlineView(fixture.outline, shouldSelectItem: group))
+		#expect(favorite.accessibilityDescription.contains("Libera Chat"))
+		let favoriteIndex = fixture.outline.row(forItem: favorite)
+		fixture.outline.selectRowIndexes(IndexSet(integer: favoriteIndex), byExtendingSelection: false)
+		#expect(fixture.model.selectedItem === conversation)
+		conversation.unreadCount = 4
+		fixture.model.filterText = ""
+		fixture.apply()
+		#expect(fixture.outline.node(at: fixture.outline.selectedRow) === favorite)
+		#expect(fixture.outline.selectedRowIndexes.count == 1)
+		let favoriteCell = try #require(fixture.outline.view(atColumn: 0, row: favoriteIndex, makeIfNecessary: true) as? SidebarCellView)
+		#expect(favoriteCell.subtitleField.stringValue == "Libera Chat")
+		#expect(favoriteCell.networkImage.isHidden == false)
+		#expect(favoriteCell.accessibilityIdentifier() == "sidebar-favorite-" + conversation.uniqueIdentifier)
+		fixture.model.toggleFavorite(conversation)
+		fixture.apply()
+		#expect(fixture.outline.node(at: fixture.outline.selectedRow) === ordinary)
+		#expect(fixture.model.selectedItem === conversation)
+		#expect(fixture.outline.tree.nodes[.favorite(conversation.uniqueIdentifier)] == nil)
+	}
+
+	@Test("Favorites do not shift network reorder destinations or allow dragging shortcut rows")
+	func favoritesPreserveNetworkReordering() throws {
+		let fixture = Fixture()
+		defer { fixture.close() }
+		let conversation = fixture.channels[0]
+		fixture.model.toggleFavorite(conversation)
+		fixture.apply()
+		let favorite = try #require(fixture.outline.tree.nodes[.favorite(conversation.uniqueIdentifier)])
+		#expect(fixture.outline.outlineView(fixture.outline, pasteboardWriterForItem: favorite) == nil)
+		#expect(!fixture.outline.canMove(favorite.identity, upward: false))
+		#expect(fixture.outline.proposedMove(identity: .server(fixture.session.uniqueIdentifier), parent: nil, childIndex: 2)?
+			.before == nil)
+		#expect(fixture.outline.move(.server(fixture.session.uniqueIdentifier), upward: false))
+		#expect(fixture.chat.sessions.map(\.uniqueIdentifier) == [fixture.other, fixture.session].map(\.uniqueIdentifier))
+	}
+
+	@Test("Reading a filtered favorite keeps the transcript selected and restores its native row")
+	func attentionFilterRetainsFavoriteIdentity() throws {
+		let fixture = Fixture()
+		defer { fixture.close() }
+		let conversation = fixture.channels[0]
+		fixture.model.toggleFavorite(conversation)
+		conversation.unreadCount = 1
+		fixture.model.filter = .unread
+		fixture.model.select(conversation)
+		fixture.apply()
+		let favorite = try #require(fixture.outline.tree.nodes[.favorite(conversation.uniqueIdentifier)])
+		conversation.unreadCount = 0
+		fixture.model.filterText = ""
+		fixture.apply()
+		#expect(fixture.outline.numberOfRows == 0)
+		#expect(fixture.model.selectedItem === conversation)
+		#expect(fixture.outline.tree.nodes[.favorite(conversation.uniqueIdentifier)] === favorite)
+		fixture.model.filter = .all
+		fixture.apply()
+		#expect(fixture.outline.row(forItem: favorite) >= 0)
+		#expect(fixture.outline.selectedRowIndexes.count == 1)
+	}
+
+	@Test("Server identity styling reaches headers and favorite subtitles without changing error colors")
+	func serverIdentityColorsRemainSeparateFromSemanticState() throws {
+		let fixture = Fixture()
+		defer { fixture.close() }
+		let style = ServerIdentityStyle(color: .purple, icon: .star)
+		fixture.session.config.sidebarIdentity = style
+		fixture.channels[0].errorOnLastJoinAttempt = true
+		fixture.model.toggleFavorite(fixture.channels[0])
+		fixture.apply()
+		let server = try #require(fixture.outline.tree.nodes[.server(fixture.session.uniqueIdentifier)])
+		let favorite = try #require(fixture.outline.tree.nodes[.favorite(fixture.channels[0].uniqueIdentifier)])
+		let ordinary = try #require(fixture.outline.tree.nodes[.conversation(fixture.channels[1].uniqueIdentifier)])
+		let cell = SidebarCellView(frame: NSRect(x: 0, y: 0, width: 200, height: 40))
+		cell.configure(with: server)
+		#expect(cell.leadingImage.contentTintColor == style.color.nsColor)
+		#expect(cell.leadingImage.image != nil)
+		#expect(cell.leadingImage.alphaValue < 1)
+		cell.configure(with: favorite)
+		#expect(cell.leadingImage.contentTintColor == .systemRed)
+		#expect(cell.networkImage.contentTintColor == style.color.nsColor)
+		#expect(cell.networkImage.image != nil)
+		#expect(cell.subtitleField.stringValue == fixture.session.label)
+		cell.backgroundStyle = .emphasized
+		#expect(cell.networkImage.contentTintColor == .labelColor)
+		#expect(cell.subtitleField.cell?.backgroundStyle == .emphasized)
+		cell.backgroundStyle = .normal
+		cell.configure(with: ordinary)
+		#expect(cell.networkImage.isHidden)
+		#expect(cell.networkImage.image == nil)
+		#expect(cell.subtitleField.stringValue.isEmpty)
+		#expect(cell.leadingImage.alphaValue == 1)
 	}
 
 	private func checkSelectedCellStyle(in outline: SidebarOutlineView) throws {

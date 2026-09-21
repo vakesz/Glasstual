@@ -41,6 +41,8 @@ struct ServerPropertiesGeneralPane: View {
 				Button(.ServerProperties.modifyAlternateServers) { commands?.editEndpoints() }
 			}
 
+			ServerIdentityPicker(style: $model.config.sidebarIdentity, name: model.config.connectionName)
+
 			Section {
 				Toggle(.ServerProperties.connectWhenGlasstualOpens, isOn: $model.config.autoConnect)
 				Toggle(

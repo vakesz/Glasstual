@@ -19,6 +19,7 @@ import Foundation
  is the difference. Nothing is renumbered when older lines are put in front or
  the oldest are trimmed. */
 struct TranscriptDocument {
+	var folding = TranscriptFoldingState()
 	/// The rows the transcript is showing, oldest first.
 	private(set) var lines: [TranscriptRow] = []
 
@@ -163,6 +164,7 @@ struct TranscriptDocument {
 
 	/// Empties the document. The caller empties the text storage to match.
 	mutating func removeAll() {
+		folding.reset()
 		lines.removeAll()
 		lineStarts = [0]
 		highlightedLineCount = 0
@@ -281,6 +283,20 @@ struct TranscriptDocument {
 	/// Records that one line was redrawn at a different length.
 	mutating func noteLineRedrawn(at index: Int, newLength: Int) {
 		shiftLineStarts(after: index, by: newLength - length(ofLineAt: index))
+		checkInvariant()
+	}
+
+	/// Reindexes a contiguous batch once, including rows that drew no text.
+	/// Expanding a large group must not shift the document once per message.
+	mutating func noteLinesRedrawn(in indices: Range<Int>, lengths: [Int]) {
+		precondition(indices.count == lengths.count)
+		let previousEnd = lineStarts[indices.upperBound]
+		var location = lineStarts[indices.lowerBound]
+		for (index, length) in zip(indices, lengths) {
+			lineStarts[index] = location
+			location += length
+		}
+		shiftLineStarts(after: indices.upperBound - 1, by: location - previousEnd)
 		checkInvariant()
 	}
 

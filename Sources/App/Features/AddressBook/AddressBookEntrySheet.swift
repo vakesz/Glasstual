@@ -55,6 +55,11 @@ struct AddressBookEntryView: View {
 				identitySection
 
 				if model.editsIgnoreSettings {
+					Section {
+						Toggle(.AddressBook.muteMessages, isOn: $model.entry.muteMessages)
+					} footer: {
+						Text(.AddressBook.muteMessagesDescription)
+					}
 					ignoreSection
 				}
 				if model.editsTracking {

@@ -109,6 +109,23 @@ final class MenuContextResolver {
 
 	// MARK: - Members
 
+	/// Local presentation settings also apply to nicknames in old transcripts,
+	/// after a sender has left or the connection has closed.
+	func muteTarget(for sender: NSMenuItem?) -> (session: ServerSession, nickname: String)? {
+		guard let session = selectedSession, selectedConversation?.isConsole == false else { return nil }
+		let nickname: String?
+		if let senderNickname = sender?.userInfoString {
+			nickname = senderNickname
+		} else if sender == nil, let pointedNickname {
+			nickname = pointedNickname
+		} else {
+			let nicknames = selectedNicknames(for: sender)
+			nickname = nicknames.count == 1 ? nicknames.first : nil
+		}
+		guard let nickname, nickname.isHostmaskNickname(on: session), !session.nicknameIsMyself(nickname) else { return nil }
+		return (session, nickname)
+	}
+
 	/// The members a member-list command applies to: the one the menu was
 	/// opened on, or the current selection.
 	///

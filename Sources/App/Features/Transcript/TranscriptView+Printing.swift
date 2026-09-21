@@ -48,7 +48,7 @@ extension TranscriptView {
 			beginNicknameColorBatch()
 			let paper = NSMutableAttributedString()
 			for line in document.lines {
-				paper.append(render(line))
+				paper.append(renderVisibleLine(line))
 			}
 			beginNicknameColorBatch()
 			return paper

@@ -26,6 +26,7 @@ final class InputField: FormattedTextView, AppearanceObserving {
 	var heightConstraint: NSLayoutConstraint?
 	weak var contentView: InputFieldContentView?
 	let accessoryModel = InputAccessoryModel()
+	let commandDiscovery = SlashCommandDiscoveryModel()
 	/// What the capsule around this field watches to draw its focus ring.
 	let focusModel = InputFocusModel()
 	/// The typing notices this field's conversation owes and is owed. Built on
@@ -67,6 +68,7 @@ final class InputField: FormattedTextView, AppearanceObserving {
 		let accepted = super.becomeFirstResponder()
 		if accepted {
 			focusModel.isFirstResponder = true
+			refreshSlashCommands()
 		}
 		return accepted
 	}
@@ -75,6 +77,7 @@ final class InputField: FormattedTextView, AppearanceObserving {
 		let resigned = super.resignFirstResponder()
 		if resigned {
 			focusModel.isFirstResponder = false
+			refreshSlashCommands()
 		}
 		return resigned
 	}
@@ -82,6 +85,7 @@ final class InputField: FormattedTextView, AppearanceObserving {
 	/// The window became or stopped being key, or the field changed windows.
 	private func windowKeyStateChanged() {
 		focusModel.windowIsKey = window?.isKeyWindow == true
+		refreshSlashCommands()
 	}
 
 	// MARK: - Replies
@@ -244,11 +248,22 @@ final class InputField: FormattedTextView, AppearanceObserving {
 		if isReplacingEntireValue == false {
 			typingNotice.noteTextChanged(stringValue)
 		}
+		refreshSlashCommands()
 	}
 
 	override func paste(_ sender: Any?) {
 		super.paste(sender)
 		recalculateTextViewSize()
+	}
+
+	override func setMarkedText(_ string: Any, selectedRange: NSRange, replacementRange: NSRange) {
+		super.setMarkedText(string, selectedRange: selectedRange, replacementRange: replacementRange)
+		refreshSlashCommands()
+	}
+
+	override func unmarkText() {
+		super.unmarkText()
+		refreshSlashCommands()
 	}
 
 	func textView(_: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
@@ -258,16 +273,24 @@ final class InputField: FormattedTextView, AppearanceObserving {
 			 Shift+Return sent the message and Option+Return was the only way to
 			 get a second line into one. Declining leaves the text view to do
 			 what it already does with the key. */
-			if NSApp.currentEvent?.modifierFlags.contains(.shift) == true {
+			if hasMarkedText() || NSApp.currentEvent?.modifierFlags.contains(.shift) == true {
 				return false
+			}
+			if acceptIncompleteSlashCommand() {
+				return true
 			}
 			(window as? MainWindow)?.textEntered()
 			return true
 		}
 
-		if commandSelector == #selector(NSResponder.cancelOperation(_:)), replyMessageIdentifier != nil {
-			cancelReply()
-			return true
+		if commandSelector == #selector(NSResponder.cancelOperation(_:)) {
+			if dismissSlashCommands() {
+				return true
+			}
+			if replyMessageIdentifier != nil {
+				cancelReply()
+				return true
+			}
 		}
 
 		/* Tab and Shift-Tab reach the field only when the window declined them,
@@ -313,6 +336,7 @@ final class InputField: FormattedTextView, AppearanceObserving {
 		set {
 			super.string = newValue
 			placeholder.updateVisibility(in: self)
+			refreshSlashCommands()
 		}
 	}
 

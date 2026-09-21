@@ -15,6 +15,8 @@ nonisolated extension ServerConfig {
 		case dictionaryVersion
 		case uniqueIdentifier
 		case connectionName
+		case sidebarColor
+		case sidebarIcon
 		case nickname
 		case awayNickname
 		case username
@@ -116,6 +118,12 @@ nonisolated extension ServerConfig {
 			String.self,
 			forKey: .connectionName,
 			default: Self.codingDefaults.connectionName
+		)
+		sidebarIdentity.color = container.decode(
+			ServerIdentityStyle.Color.self, forKey: .sidebarColor, default: .standard
+		)
+		sidebarIdentity.icon = container.decode(
+			ServerIdentityStyle.Icon.self, forKey: .sidebarIcon, default: .network
 		)
 		nickname = container.decode(String.self, forKey: .nickname, default: nickname)
 		username = container.decode(String.self, forKey: .username, default: username)
@@ -379,6 +387,8 @@ nonisolated extension ServerConfig {
 
 		try encode(\.alternateNicknames, forKey: .alternateNicknames, &container)
 		try encode(\.connectionName, forKey: .connectionName, &container)
+		try encode(\.sidebarIdentity.color, forKey: .sidebarColor, &container)
+		try encode(\.sidebarIdentity.icon, forKey: .sidebarIcon, &container)
 		try encode(\.saslAuthenticationDisableExternalMechanism, forKey: .saslAuthenticationDisableExternalMechanism, &container)
 		try encode(\.sendAuthenticationRequestsToUserServ, forKey: .sendAuthenticationRequestsToUserServ, &container)
 	}

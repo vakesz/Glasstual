@@ -52,7 +52,7 @@ struct MainWindowConversation: View {
 					inputField: inputContentView,
 					accessoryHeight: InputBarLayout.accessoryHeight(
 						for: inputContentView.textView.accessoryModel
-					),
+					) + SlashCommandDiscoveryView.height(for: inputContentView.textView.commandDiscovery),
 					isObscured: columns.isConversationObscured
 				)
 				.id(columns.appearanceRevision)
@@ -70,6 +70,11 @@ struct MainWindowConversation: View {
 	private var inputBar: some View {
 		GlassEffectContainer(spacing: 0) {
 			VStack(spacing: 0) {
+				SlashCommandDiscoveryView(model: inputContentView.textView.commandDiscovery) { suggestion in
+					inputContentView.textView.acceptSlashCommand(suggestion)
+				}
+				.padding(.horizontal, UISpacing.regular)
+
 				InputAccessoryView(model: inputContentView.textView.accessoryModel) {
 					inputContentView.textView.focus()
 				}
