@@ -148,6 +148,7 @@ extension TranscriptView {
 	/// Renders `newLines` and splices them into the document at `index`.
 	private func insert(_ newLines: [TranscriptRow], at index: Int) {
 		guard let storage = textView.textStorage, newLines.isEmpty == false else { return }
+		let changed = foldInsertedLines(newLines, at: index)
 		beginNicknameColorBatch()
 		let origin = document.location(ofLineAt: index)
 		var starts: [Int] = []
@@ -165,7 +166,7 @@ extension TranscriptView {
 			location += rendered.length
 		}
 		document.insert(newLines, at: index, starts: starts, totalLength: location - origin)
-		refreshFolding()
+		redrawFoldedLines(changed.subtracting(newLines.map(\.lineNumber)))
 	}
 
 	/// Removes the oldest `indices` lines and the characters they drew. Only the
@@ -179,9 +180,10 @@ extension TranscriptView {
 		 message it answers can be one of the rows leaving here. */
 		closeMemberInformation()
 		closeReactionPicker()
+		let removedRows = Array(document.lines[indices])
 		let retirement = document.remove(indices)
 		storage.deleteCharacters(in: retirement.characterRange)
-		refreshFolding()
+		redrawFoldedLines(document.folding.retire(rows: removedRows, firstRetainedRow: document.lines.first))
 		if retirement.messageIdentifiers.isEmpty == false {
 			viewController?.transcriptDidRetireMessages(retirement.messageIdentifiers)
 		}

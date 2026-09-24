@@ -5,15 +5,79 @@ import Foundation
 import Observation
 import SwiftUI
 
-/** What one transcript has to tell the reader about history it could not load.
+/** The state of one transcript's local history loads and recovery banner.
 
  One object per view, observed by ``TranscriptHistoryRecoveryView``: the
- controller records what failed, the banner decides what that reads as. Failures
+ controller records load phases and failures, and the banner presents them. Failures
  that belong to the database rather than to any one conversation are
  ``ScrollbackStorageRecovery``'s, which the banner composes with this. */
 @MainActor
 @Observable
 final class TranscriptHistoryRecovery {
+	private enum LoadPhase {
+		case unloaded
+		case loading(wasLoaded: Bool)
+		case loaded
+	}
+
+	private enum OlderPagePhase {
+		case idle
+		case loading
+	}
+
+	private var loadPhase = LoadPhase.unloaded
+	private var olderPagePhase = OlderPagePhase.idle
+	private(set) var hasEverLoaded = false
+
+	var isLoaded: Bool {
+		switch loadPhase {
+		case .loaded, .loading(wasLoaded: true): true
+		case .unloaded, .loading(wasLoaded: false): false
+		}
+	}
+
+	var isReloading: Bool {
+		if case .loading = loadPhase {
+			return true
+		}
+
+		return false
+	}
+
+	var isLoadingOlderPage: Bool {
+		if case .loading = olderPagePhase {
+			return true
+		}
+
+		return false
+	}
+
+	func beginReload() {
+		loadPhase = .loading(wasLoaded: isLoaded)
+	}
+
+	func finishReload(succeeded: Bool) {
+		loadPhase = succeeded ? .loaded : .unloaded
+		hasEverLoaded = hasEverLoaded || succeeded
+	}
+
+	func cancelReload() {
+		guard case let .loading(wasLoaded) = loadPhase else { return }
+		loadPhase = wasLoaded ? .loaded : .unloaded
+	}
+
+	func clearLoadedHistory() {
+		loadPhase = .unloaded
+	}
+
+	func beginOlderPage() {
+		olderPagePhase = .loading
+	}
+
+	func endOlderPage() {
+		olderPagePhase = .idle
+	}
+
 	var initialFailure: ScrollbackFetchFailure?
 	var olderFailure: ScrollbackFetchFailure?
 	var serverFailed = false

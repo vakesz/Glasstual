@@ -38,9 +38,22 @@ struct CommandIndexTests {
 		#expect(LocalCommand.back.syntax == "BACK")
 		#expect(LocalCommand.modeShortcut.displayName == "M")
 
-		let commands = CommandIndex.localCommandList(includingDeveloperCommands: false)
+		let commands = CommandIndex.candidates(includingDeveloperCommands: false, scriptCommands: []).map(\.name)
 
-		#expect(commands.contains("JOIN"))
-		#expect(commands.contains("BACK"))
+		#expect(commands.contains("join"))
+		#expect(commands.contains("back"))
+	}
+
+	@Test("Completion follows script visibility and dispatch precedence")
+	func completionCandidatesRespectDispatch() throws {
+		let candidates = CommandIndex.candidates(
+			includingDeveloperCommands: false,
+			scriptCommands: ["JOIN", "whowas", "Weather", "weather", "bad name", "recv"]
+		)
+		#expect(try #require(candidates.first { $0.name == "join" }).isScript == false)
+		#expect(try #require(candidates.first { $0.name == "whowas" }).isScript)
+		#expect(candidates.filter { $0.name == "weather" }.count == 1)
+		#expect(candidates.contains { $0.name == "bad name" } == false)
+		#expect(candidates.contains { $0.name == "recv" } == false)
 	}
 }

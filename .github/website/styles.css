@@ -153,6 +153,20 @@ figure { margin: 0; }
 .site-footer > div { display: flex; flex-direction: column; gap: 4px; }
 .site-footer nav a { padding: 5px; }.site-footer a:hover { color: var(--text); }
 
+.document-page { padding-block: 88px 120px; }
+.document-page .eyebrow { margin-bottom: 18px; }
+.document-page h1 { max-width: 760px; }
+.document-lead { max-width: 720px; margin: 24px 0 56px; color: var(--muted); font-size: 19px; line-height: 1.6; }
+.document-content { max-width: 760px; }
+.document-content section { padding-block: 28px; border-top: 1px solid var(--line); }
+.document-content h2 { margin-bottom: 15px; font-size: 27px; letter-spacing: -0.035em; }
+.document-content p, .document-content li { color: var(--muted); line-height: 1.7; }
+.document-content p { margin: 0 0 14px; }
+.document-content ul { margin: 0 0 16px; padding-left: 22px; }
+.document-content a { color: var(--accent-deep); text-decoration: underline; text-underline-offset: 3px; }
+.document-content a:hover { color: var(--accent); }
+.document-updated { margin-top: 48px; color: var(--muted); font-size: 13px; }
+
 :focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 75%, white); outline-offset: 3px; }
 
 @media (max-width: 900px) {
@@ -165,9 +179,11 @@ figure { margin: 0; }
 @media (max-width: 680px) {
   .section-shell { width: min(100% - 30px, 1180px); }
   .site-header { min-height: 58px; }.site-header nav a:not(.github-link) { display: none; }
+  .site-header nav a[href="support.html"], .site-header nav a[href="privacy.html"] { display: inline-flex; }
   .hero { min-height: auto; padding-block: 70px; }.hero-summary { font-size: 17px; }.hero-actions { align-items: flex-start; flex-direction: column; gap: 18px; }
   .proof-strip { flex-wrap: wrap; justify-content: flex-start; gap: 15px 28px; }
   .feature-section, .screenshot-section { padding-block: 90px; }.feature-grid { grid-template-columns: 1fr; }.feature-card-wide { grid-column: auto; }.feature-card { min-height: auto; padding: 26px; }.feature-icon { margin-bottom: 30px; }
+  .document-page { padding-block: 64px 90px; }.document-lead { font-size: 17px; }
   .settings-section { padding-block: 88px; }.settings-body { grid-template-columns: 1fr; }.settings-sidebar { display: none; }.settings-panel { padding: 20px; }
   .screenshot-heading { align-items: flex-start; flex-direction: column; gap: 24px; }.welcome-shot { width: min(85%, 340px); }.site-footer { flex-direction: column; }.site-footer nav { flex-wrap: wrap; }
 }

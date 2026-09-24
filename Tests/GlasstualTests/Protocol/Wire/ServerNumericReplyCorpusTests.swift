@@ -165,7 +165,7 @@ struct ServerNumericReplyCorpusTests {
 		let session = TestServerSession(configDictionary: ["nickname": "abcdefghi", "username": "abcdefghi"])
 
 		session.supportInfo.processConfigurationData("NICKLEN=9")
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		session.nicknameRetry.sentNickname = "abcdefghi"
 		session.tryAnotherNickname()
 
@@ -178,7 +178,7 @@ struct ServerNumericReplyCorpusTests {
 	func aRetryBeforeISupportUsesTheDefaultLength() {
 		let session = TestServerSession(configDictionary: ["nickname": "nick", "username": "nick"])
 
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		session.nicknameRetry.sentNickname = "nick"
 		session.tryAnotherNickname()
 

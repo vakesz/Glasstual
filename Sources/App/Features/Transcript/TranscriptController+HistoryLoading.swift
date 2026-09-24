@@ -12,17 +12,17 @@ import Foundation
  view's life cycle; the state the two halves share is declared there. */
 extension TranscriptController {
 	func maybeReloadHistory() {
-		guard viewIsLoaded, !historyLoaded, !reloadingHistory else {
+		guard viewIsLoaded, !historyRecovery.isLoaded, !historyRecovery.isReloading else {
 			return
 		}
 		reloadHistory()
 	}
 
 	func reloadHistory() {
-		guard !terminating, !reloadingHistory else {
+		guard !terminating, !historyRecovery.isReloading else {
 			return
 		}
-		let firstLoad = !historyLoadedForFirstTime
+		let firstLoad = !historyRecovery.hasEverLoaded
 		let conversation = associatedConversation
 		let includeStoredHistory = !(firstLoad && !SettingsKeys.Logging.reloadScrollbackOnLaunch.value ||
 			conversation?.isConsole == true ||
@@ -35,7 +35,9 @@ extension TranscriptController {
 		/* The latch closes only for a fetch that reached the pipeline. Nothing
 		 else reopens it: a view that latched on a job it never submitted would
 		 refuse every later reload and park its deferred prepends for good. */
-		reloadingHistory = fetchHistory(firstLoad: firstLoad, includeStoredHistory: includeStoredHistory)
+		if fetchHistory(firstLoad: firstLoad, includeStoredHistory: includeStoredHistory) {
+			historyRecovery.beginReload()
+		}
 	}
 }
 
@@ -48,7 +50,7 @@ private extension TranscriptController {
 			return false
 		}
 		let viewIdentifier = associatedItem.uniqueIdentifier
-		let replayedResults = transcriptProjection.beginReplay()
+		let replayedResults = transcriptProjection.beginReplay(displaying: backingView?.displayedLines ?? [])
 		let context = makeHistoryRenderContext()
 		let generation = renderGeneration
 		let fetch = historyPageFetcher
@@ -136,7 +138,7 @@ private extension TranscriptController {
 		fetchSucceeded: Bool,
 		failure: ScrollbackFetchFailure?
 	) {
-		historyLoadFailure = failure
+		historyRecovery.initialFailure = failure
 		var results = inputResults
 		scrollback.duplicates.indexChatLines(scrollbackLines, forView: viewIdentifier)
 		/* Only where nothing has been printed this session: every line this
@@ -205,9 +207,7 @@ private extension TranscriptController {
 		}
 		_ = transcriptProjection.finishReplay(displaying: displayed)
 		restoreTranscriptProjectionState()
-		reloadingHistory = false
-		historyLoaded = fetchSucceeded
-		historyLoadedForFirstTime = historyLoadedForFirstTime || fetchSucceeded
+		historyRecovery.finishReload(succeeded: fetchSucceeded)
 		if viewIsVisible, let associatedItem {
 			attachedWindow?.noteItemWasViewed(associatedItem)
 		}
@@ -216,9 +216,11 @@ private extension TranscriptController {
 	}
 
 	private func restoreTranscriptProjectionState() {
-		for update in transcriptProjection.deliveryUpdates.values {
+		for update in Array(transcriptProjection.deliveryUpdates.values) {
 			backingView?.updateDelivery(update)
+			transcriptProjection.deliveryWasApplied(update)
 		}
+		forgetRetiredProjectionMessages()
 		for (identifier, merged) in reactions.all {
 			backingView?.updateReactions(merged, messageIdentifier: identifier)
 		}
@@ -242,7 +244,7 @@ extension TranscriptController {
 			retryStorageOnly()
 			return
 		}
-		guard !reloadingHistory else { return }
+		guard !historyRecovery.isReloading else { return }
 		let generation = renderGeneration
 		let storage = scrollback
 		/* The banner outlives the controller, so the recovery state is held
@@ -255,15 +257,15 @@ extension TranscriptController {
 			let available = await storage.retryLoading()
 			guard let self, !Task.isCancelled, acceptsRenderGeneration(generation) else { return }
 			if available {
-				if !historyLoaded {
+				if !historyRecovery.isLoaded {
 					reloadHistory()
-				} else if olderHistoryFailure != nil {
+				} else if historyRecovery.olderFailure != nil {
 					locallyExhaustedBefore = nil
 					loadOlderHistory()
 				}
 				await drainRenderJobs()
-			} else if historyLoadFailure == nil {
-				historyLoadFailure = .unavailable
+			} else if historyRecovery.initialFailure == nil {
+				historyRecovery.initialFailure = .unavailable
 			}
 		}
 	}
@@ -285,8 +287,8 @@ extension TranscriptController {
 		historyRetryTask = Task { @MainActor [weak self] in
 			let available = await storage.retryLoading()
 			if available, let self {
-				historyLoadFailure = nil
-				olderHistoryFailure = nil
+				historyRecovery.initialFailure = nil
+				historyRecovery.olderFailure = nil
 			}
 			state.isRetrying = false
 		}
@@ -295,7 +297,8 @@ extension TranscriptController {
 
 extension TranscriptController {
 	func loadOlderHistory() {
-		guard !terminating, !reloadingHistory, !loadingOlderHistory, serverHistory.request == nil,
+		guard !terminating, !historyRecovery.isReloading, !historyRecovery.isLoadingOlderPage,
+		      serverHistory.request == nil,
 		      let associatedItem,
 		      let backingView, backingView.displayedBounds.remainingCapacity > 0,
 		      let oldestDisplayedLineNumber = oldestLineNumber
@@ -304,8 +307,8 @@ extension TranscriptController {
 			noteLocalScrollbackExhausted()
 			return
 		}
-		loadingOlderHistory = true
-		olderHistoryFailure = nil
+		historyRecovery.beginOlderPage()
+		historyRecovery.olderFailure = nil
 		let generation = renderGeneration
 		let fetch = historyPageFetcher
 		let viewIdentifier = associatedItem.uniqueIdentifier
@@ -324,18 +327,18 @@ extension TranscriptController {
 			let outcome = await fetch(request)
 			guard let self, !Task.isCancelled, acceptsRenderGeneration(generation) else { return }
 			guard oldestLineNumber == oldestDisplayedLineNumber else {
-				loadingOlderHistory = false
+				historyRecovery.endOlderPage()
 				return
 			}
 			let storedEntries: [ScrollbackEntry]
 			switch outcome {
 			case let .page(entries): storedEntries = entries
 			case let .failed(failure):
-				loadingOlderHistory = false
-				olderHistoryFailure = failure
+				historyRecovery.endOlderPage()
+				historyRecovery.olderFailure = failure
 				return
 			case .cancelled:
-				loadingOlderHistory = false
+				historyRecovery.endOlderPage()
 				return
 			}
 			let ordered: [ScrollbackEntry] = if case .rowPage = request.kind {
@@ -345,13 +348,13 @@ extension TranscriptController {
 			}
 			let decoded = ScrollbackSession.decode(ordered)
 			guard decoded.isWholePage else {
-				loadingOlderHistory = false
-				olderHistoryFailure = .invalidEntry
+				historyRecovery.endOlderPage()
+				historyRecovery.olderFailure = .invalidEntry
 				return
 			}
 			let entries = decoded.lines
 			guard entries.isEmpty == false else {
-				loadingOlderHistory = false
+				historyRecovery.endOlderPage()
 				locallyExhaustedBefore = oldestDisplayedLineNumber
 				noteLocalScrollbackExhausted()
 				return
@@ -493,7 +496,7 @@ extension TranscriptController {
 				)
 				completion?(accepted, rendered.entries)
 			}
-			if reloadingHistory {
+			if historyRecovery.isReloading {
 				deferredPrepends.append(apply)
 			} else {
 				apply()
@@ -518,7 +521,7 @@ extension TranscriptController {
 		forView viewIdentifier: String
 	) -> [String] {
 		if expectedOldest != nil {
-			loadingOlderHistory = false
+			historyRecovery.endOlderPage()
 		}
 		guard expectedOldest == nil || oldestLineNumber == expectedOldest else { return [] }
 		let accepted = Set(backingView?.prependLines(results.map { applyingCurrentState(to: $0.transcriptLine) }) ?? [])

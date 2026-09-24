@@ -88,7 +88,7 @@ struct RenderAdmissionTests {
 	func networkWaitsForApplication() async throws {
 		let session = TestServerSession()
 		session.forwardsProcessedMessages = true
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		session.renderAdmission = RenderAdmission(capacity: 1)
 		let ticket = session.renderAdmission.submit(for: "test-view")
 		defer { session.renderAdmission.finish(ticket) }

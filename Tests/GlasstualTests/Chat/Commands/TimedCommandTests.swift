@@ -50,7 +50,7 @@ struct TimedCommandTests {
 	@Test("A timed command made in a channel that has since closed is removed rather than run elsewhere")
 	func timedCommandForAClosedChannelIsRemoved() throws {
 		let session = TestServerSession(configDictionary: ["nickname": "me"])
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		session.markAsLoggedIn()
 		let closed = try #require(session.findConversationOrCreate("#closed"))
 		let selected = try #require(session.findConversationOrCreate("#selected"))
@@ -72,7 +72,7 @@ struct TimedCommandTests {
 	@Test("A timed command runs in the channel it was made in, not the one selected when it fires")
 	func timedCommandRunsInItsOwnChannel() throws {
 		let session = TestServerSession(configDictionary: ["nickname": "me"])
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		session.markAsLoggedIn()
 		let origin = try #require(session.findConversationOrCreate("#origin"))
 		let selected = try #require(session.findConversationOrCreate("#selected"))

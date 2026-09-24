@@ -103,6 +103,13 @@ private nonisolated enum TransportTransition: Sendable {
 /// operations. The actor owns the connection, line buffer and state flags;
 /// what the host needs to know comes back through `events`, in wire order.
 actor ConnectionSocket {
+	private enum Phase: Equatable {
+		case idle
+		case connecting
+		case connected
+		case disconnecting(wasConnected: Bool)
+	}
+
 	/// Maximum bytes requested from the transport in a single read.
 	private static let maximumDataLength = 64 * 1024
 
@@ -153,10 +160,28 @@ actor ConnectionSocket {
 	)
 	private var connectTimeoutTask: Task<Void, Never>?
 	private var trustAnswer: AsyncStream<Bool>.Continuation?
+	/// State callbacks and deadlines can finish after a failed dial has already
+	/// handed this socket to its legacy retry. Only the current dial may act on
+	/// them.
+	private var dialGeneration = 0
 
-	private var connecting = false
-	private var connected = false
-	private var disconnecting = false
+	private var phase = Phase.idle
+	private var connecting: Bool {
+		phase == .connecting || phase == .disconnecting(wasConnected: false)
+	}
+
+	private var connected: Bool {
+		phase == .connected || phase == .disconnecting(wasConnected: true)
+	}
+
+	private var disconnecting: Bool {
+		if case .disconnecting = phase {
+			return true
+		}
+
+		return false
+	}
+
 	private var secured = false
 	private var sending = false
 
@@ -178,7 +203,7 @@ actor ConnectionSocket {
 	private var tlsFailureCode: Int?
 
 	var disconnected: Bool {
-		connecting == false && connected == false
+		phase == .idle
 	}
 
 	init(
@@ -203,7 +228,8 @@ actor ConnectionSocket {
 			events.yield(.willConnectToProxy(host: proxyEndpoint.host, port: proxyEndpoint.port))
 		}
 
-		connecting = true
+		phase = .connecting
+		dialGeneration += 1
 
 		scheduleConnectTimeout()
 
@@ -254,7 +280,7 @@ actor ConnectionSocket {
 		guard disconnecting == false else { return true }
 		guard disconnected == false else { return false }
 
-		disconnecting = true
+		phase = .disconnecting(wasConnected: connected)
 
 		cancelConnectTimeout()
 
@@ -266,9 +292,7 @@ actor ConnectionSocket {
 	}
 
 	private func resetState() {
-		connecting = false
-		connected = false
-		disconnecting = false
+		phase = .idle
 		secured = false
 		sending = false
 
@@ -290,13 +314,14 @@ actor ConnectionSocket {
 
 	private func scheduleConnectTimeout() {
 		cancelConnectTimeout()
+		let generation = dialGeneration
 
 		connectTimeoutTask = Task { [weak self] in
 			try? await Task.sleep(for: .seconds(Self.connectTimeout), clock: .continuous)
 
 			guard Task.isCancelled == false, let self else { return }
 
-			await onConnectTimeout()
+			await onConnectTimeout(generation: generation)
 		}
 	}
 
@@ -305,10 +330,11 @@ actor ConnectionSocket {
 		connectTimeoutTask = nil
 	}
 
-	private func onConnectTimeout() {
+	private func onConnectTimeout(generation: Int) {
+		guard generation == dialGeneration else { return }
 		connectTimeoutTask = nil
 
-		guard connecting, connected == false else { return }
+		guard connecting, connected == false, disconnecting == false else { return }
 
 		let identifier = uniqueIdentifier
 		let timeout = Self.connectTimeout
@@ -442,8 +468,8 @@ actor ConnectionSocket {
 		alternateDisconnectError = nil
 		trustExport = TLSTrustExport()
 		connection = nil
-		disconnecting = false
-		connecting = true
+		phase = .connecting
+		dialGeneration += 1
 
 		framer.reset()
 
@@ -466,6 +492,7 @@ actor ConnectionSocket {
 
 	private func use(_ connection: TransportConnection) async throws {
 		self.connection = connection
+		let generation = dialGeneration
 
 		try Task.checkCancellation()
 
@@ -480,23 +507,22 @@ actor ConnectionSocket {
 			for await transition in transitions {
 				switch transition {
 				case .ready:
-					await self?.onReady()
+					await self?.onReady(generation: generation)
 				case let .failed(error):
-					await self?.onTransportFailure(error)
+					await self?.onTransportFailure(error, generation: generation)
 				}
 			}
 		}
 
 		defer { readiness.cancel() }
 
-		try await read(from: connection)
+		try await read(from: connection, generation: generation)
 	}
 
 	private func onConnect() {
 		cancelConnectTimeout()
 
-		connecting = false
-		connected = true
+		phase = .connected
 
 		/* When a proxy is in use the remote endpoint is the proxy, not the
 		 server, so report nil as the host contract asks. */
@@ -505,8 +531,8 @@ actor ConnectionSocket {
 
 	/// The transport finished establishing, so the handshake — if there was
 	/// one — has run and its metadata is readable.
-	private func onReady() {
-		guard connecting, disconnecting == false else { return }
+	private func onReady(generation: Int) {
+		guard generation == dialGeneration, connecting, disconnecting == false else { return }
 
 		config.diagnostics?.record(.transportReady)
 		onConnect()
@@ -516,8 +542,8 @@ actor ConnectionSocket {
 	/// The transport reported it cannot establish. Only an establishing
 	/// connection is closed here: once ready, a drop is reported by the read
 	/// that fails, and a close already under way keeps its own error.
-	private func onTransportFailure(_ error: NWError) {
-		guard connecting, connected == false, disconnecting == false else { return }
+	private func onTransportFailure(_ error: NWError, generation: Int) {
+		guard generation == dialGeneration, connecting, connected == false, disconnecting == false else { return }
 
 		config.diagnostics?.record(.transportFailed)
 		noteTLSFailure(error)
@@ -553,12 +579,12 @@ actor ConnectionSocket {
 
 	// MARK: - Read & Write
 
-	private func read(from connection: TransportConnection) async throws {
+	private func read(from connection: TransportConnection, generation: Int) async throws {
 		while connecting || connected, disconnecting == false {
 			let message = try await connection.receive(atMost: Self.maximumDataLength)
 			try Task.checkCancellation()
 			// A completed read also proves readiness if its state callback is still queued.
-			onReady()
+			onReady(generation: generation)
 
 			let (content, isComplete) = message
 
@@ -705,7 +731,9 @@ private extension ConnectionSocket {
 	 The validator is the same on both dials. A downgrade to the legacy suites
 	 changes what is negotiated and nothing about who the peer has to be. */
 	func constructedTLS(offeringLegacyCipherSuites: Bool) -> TLS {
-		ConnectionParameters.tls(
+		let generation = dialGeneration
+
+		return ConnectionParameters.tls(
 			for: config,
 			offeringLegacyCipherSuites: offeringLegacyCipherSuites
 		).certificateValidator { [weak self] _, trust in
@@ -716,7 +744,7 @@ private extension ConnectionSocket {
 			let evaluation = Self.evaluateCertificate(trust)
 			diagnostics?.record(.certificateEvaluationCompleted)
 
-			return await validateCertificate(evaluation)
+			return await validateCertificate(evaluation, generation: generation)
 		}
 	}
 }
@@ -775,8 +803,8 @@ private extension ConnectionSocket {
 		)
 	}
 
-	func validateCertificate(_ evaluation: TLSTrustEvaluation) async -> Bool {
-		guard connecting, disconnecting == false else { return false }
+	func validateCertificate(_ evaluation: TLSTrustEvaluation, generation: Int) async -> Bool {
+		guard generation == dialGeneration, connecting, disconnecting == false else { return false }
 		trustExport = evaluation.export
 
 		guard let failureDescription = evaluation.export.failureDescription else {

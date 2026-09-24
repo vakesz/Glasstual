@@ -96,7 +96,7 @@ struct LinePresentationPolicyTests {
 			nicknamePassword: nil,
 			fixture: ChatEnvironmentFixture(settings: settings)
 		)
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		session.socket = Connection(config: ConnectionConfig(), onSession: session)
 		_ = try #require(session.socket)
 		let channel = try #require(session.findConversationOrCreate("#\u{2}chan"))

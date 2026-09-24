@@ -120,7 +120,7 @@ struct LabeledResponseRetirementTests {
 	func nestedFailureWinsOverEcho(_ labelOnRoot: Bool, _ failure: Bool) throws {
 		let session = sessionWithLabeledResponse()
 		session.enableCapability(.batch)
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		session.forwardsProcessedMessages = true
 		let socket = Connection(config: ConnectionConfig(), onSession: session)
 		session.socket = socket
@@ -159,7 +159,7 @@ struct LabeledResponseRetirementTests {
 		let session = sessionWithLabeledResponse()
 		session.enableCapability(.batch)
 		session.enableCapability(.serverTime)
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		session.forwardsProcessedMessages = true
 		let socket = Connection(config: ConnectionConfig(), onSession: session)
 		session.socket = socket

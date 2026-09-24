@@ -22,7 +22,7 @@ struct TranscriptControllerRemovalTests {
 		defer { try? FileManager.default.removeItem(at: directory) }
 		let store = ScrollbackStore(filenameSetting: ScrollbackFilenameFixture("removal.sqlite").store)
 		let historySession = ScrollbackSession(
-			store: .store(store), databaseDirectory: { directory.path },
+			store: store, databaseDirectory: { directory.path },
 			reportFailure: { Issue.record(Comment(rawValue: $0)) }
 		)
 		let history = Scrollback(session: historySession)

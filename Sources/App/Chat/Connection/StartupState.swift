@@ -17,6 +17,7 @@ final class StartupState {
 	var authentication = Authentication.pending
 	var joining = Joining.pending
 	var requiresAuthentication = false
+	var credentialTask: Task<Void, Never>?
 	var settlingTask: Task<Void, Never>?
 	var authenticationTask: Task<Void, Never>?
 
@@ -25,13 +26,16 @@ final class StartupState {
 	}
 
 	func cancel() {
+		credentialTask?.cancel()
 		settlingTask?.cancel()
 		authenticationTask?.cancel()
+		credentialTask = nil
 		settlingTask = nil
 		authenticationTask = nil
 	}
 
 	isolated deinit {
+		credentialTask?.cancel()
 		settlingTask?.cancel()
 		authenticationTask?.cancel()
 	}

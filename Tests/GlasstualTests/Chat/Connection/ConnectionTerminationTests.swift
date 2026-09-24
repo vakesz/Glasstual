@@ -13,7 +13,7 @@ struct ConnectionTerminationTests {
 	@Test("A host failure captures the state before reset and reports only once")
 	func hostFailurePreservesTerminalState() async throws {
 		let session = TestServerSession()
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		session.disconnectType = .reachabilityChange
 		var config = ConnectionConfig()
 		config.diagnostics = ConnectionDiagnostics()
@@ -68,7 +68,7 @@ struct ConnectionTerminationTests {
 	@Test("A certificate error retains its effective disconnect mode and startup phase")
 	func certificateErrorIsClassified() async throws {
 		let session = TestServerSession()
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		session.markAsLoggedIn()
 		session.startup.authentication = .confirmed
 		let recorder = TerminationRecorder()
@@ -90,7 +90,7 @@ struct ConnectionTerminationTests {
 	@Test("An unavailable service records startup failure exactly once")
 	func unavailableServiceIsRecorded() async throws {
 		let session = TestServerSession()
-		session.isConnecting = true
+		session.setConnectionTransportForTesting(.connecting)
 		let recorder = TerminationRecorder()
 		let connection = Connection(config: ConnectionConfig(), onSession: session, closeClock: .continuous,
 		                            recordTermination: recorder.record,

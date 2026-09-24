@@ -25,7 +25,7 @@ struct ISupportTests {
 		#expect(awaySession.away.message == expected)
 
 		let session = TestServerSession()
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		session.markAsLoggedIn()
 		session.supportInfo.processConfigurationData("KICKLEN=\(limit) TOPICLEN=\(limit)")
 		session.sendCommand("KICK #test nick \u{e9}\u{e9}ab", completeTarget: false, target: nil)

@@ -1,347 +1,258 @@
 // Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
 // SPDX-License-Identifier: BSD-3-Clause
 
+import CoreData
 import Foundation
 @testable import Glasstual
+import Synchronization
 import Testing
 
-/// Holds every fetch at the door until the test lets them through, so the
-/// order requests were made in is the only thing the queue can go by.
-private actor FetchGate {
-	private var isOpen: Bool
-	private var waiting: [CheckedContinuation<Void, Never>] = []
-
-	init(isOpen: Bool = false) {
-		self.isOpen = isOpen
-	}
+private actor ScrollbackOperationGate {
+	private var entered = false
+	private var observer: CheckedContinuation<Void, Never>?
+	private var blocked: CheckedContinuation<Void, Never>?
+	private var released = false
 
 	func wait() async {
-		guard isOpen == false else {
-			return
-		}
-
-		await withCheckedContinuation { continuation in
-			waiting.append(continuation)
-		}
+		guard !released else { return }
+		entered = true
+		observer?.resume()
+		observer = nil
+		await withCheckedContinuation { blocked = $0 }
 	}
 
-	func open() {
-		isOpen = true
+	func ready() async {
+		guard !entered else { return }
+		await withCheckedContinuation { observer = $0 }
+	}
 
-		for continuation in waiting {
-			continuation.resume()
-		}
-
-		waiting.removeAll()
+	func release() {
+		released = true
+		blocked?.resume()
+		blocked = nil
 	}
 }
 
-private actor ScrollbackTestService {
-	/// The storage value the session drives, forwarding to this service.
-	nonisolated var storage: ScrollbackStoreOperations { // nonisolated: pure
-		ScrollbackStoreOperations(
-			openDatabase: { await self.openDatabase(inDirectory: $0) },
-			close: { await self.close() },
-			setMaximumLineCount: { await self.setMaximumLineCount($0) },
-			writeChatLine: { await self.writeChatLine($0) },
-			forgetView: { await self.forgetView($0) },
-			resetData: { await self.resetData(forView: $0) },
-			saveData: { await self.saveData() },
-			fetchOutcome: { await self.fetchOutcome($0) }
+private actor ScrollbackOperationRecorder {
+	private(set) var operations: [ScrollbackStoreOperation] = []
+
+	func record(_ operation: ScrollbackStoreOperation) {
+		operations.append(operation)
+	}
+}
+
+private actor ScrollbackDirectory {
+	var path: String?
+
+	init(_ path: String?) {
+		self.path = path
+	}
+
+	func set(_ path: String?) {
+		self.path = path
+	}
+}
+
+@MainActor
+@Suite("Scrollback session", .serialized)
+struct ScrollbackSessionTests {
+	private func directory() throws -> URL {
+		let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+		try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+		return url
+	}
+
+	private func entry(_ identifier: String) -> ScrollbackEntry {
+		ScrollbackEntry(
+			lineData: Data(identifier.utf8),
+			uniqueIdentifier: identifier,
+			viewIdentifier: "view",
+			sessionIdentifier: 1,
+			creationDate: TimeInterval(identifier.count)
 		)
 	}
 
-	let probe: IsolationProbe
-	let openGate = FetchGate()
-	/// Open unless a test asked to hold pages at the door.
-	let fetchGate: FetchGate
-	private(set) var openCount = 0
-	private(set) var closeCount = 0
-	private(set) var fetchCount = 0
-	/// What the store was asked to do, in the order it was asked.
-	private(set) var operations: [String] = []
-	private(set) var entries: [ScrollbackEntry] = []
-	private var outcome = ScrollbackOpenOutcome.failed(reason: "Injected open failure")
-	private var fetchFailure: ScrollbackFetchFailure?
-	private var directory: String? = "/injected/history"
-
-	init(probe: IsolationProbe, holdsFetches: Bool = false) {
-		self.probe = probe
-		fetchGate = FetchGate(isOpen: !holdsFetches)
+	private func newest() -> ScrollbackFetchRequest {
+		.newestEntries(forView: "view", fetchLimit: 10)
 	}
 
-	func setOutcome(_ outcome: ScrollbackOpenOutcome) {
-		self.outcome = outcome
+	private func storage(
+		in directory: URL,
+		willPerform: (@Sendable (ScrollbackStoreOperation) async -> Void)? = nil
+	) throws -> (store: ScrollbackStore, context: NSManagedObjectContext) {
+		let context = try ScrollbackQueries.makeStack(at: directory.appendingPathComponent("history.sqlite"))
+		let store = ScrollbackStore(filenameSetting: ScrollbackFilenameFixture().store,
+		                            makeStack: { _ in context }, willPerform: willPerform)
+		return (store, context)
 	}
 
-	func setFetchFailure(_ failure: ScrollbackFetchFailure?) {
-		fetchFailure = failure
+	private func session(
+		store: ScrollbackStore,
+		directory: @escaping @Sendable () async -> String?,
+		reportFailure: @escaping @MainActor @Sendable (String) -> Void = { Issue.record(Comment(rawValue: $0)) }
+	) -> ScrollbackSession {
+		ScrollbackSession(store: store, databaseDirectory: directory, reportFailure: reportFailure)
 	}
 
-	func setDirectory(_ directory: String?) {
-		self.directory = directory
-	}
-
-	func databaseDirectory() -> String? {
-		directory
-	}
-
-	func openDatabase(inDirectory databaseDirectory: String) async -> ScrollbackOpenOutcome {
-		#expect(databaseDirectory == "/injected/history")
-		openCount += 1
-		await probe.record("open")
-		await openGate.wait()
-		return outcome
-	}
-
-	func close() -> ScrollbackSaveOutcome {
-		closeCount += 1
-		return .saved
-	}
-
-	func setMaximumLineCount(_: UInt) {}
-	func writeChatLine(_ chatLine: ScrollbackEntry) -> ScrollbackWriteOutcome {
-		operations.append("write \(chatLine.uniqueIdentifier)")
-		entries.append(chatLine)
-		return .accepted
-	}
-
-	func forgetView(_ view: String) -> ScrollbackDeletionOutcome {
-		operations.append("forget")
-		return remove(view)
-	}
-
-	func resetData(forView view: String) -> ScrollbackDeletionOutcome {
-		operations.append("reset")
-		return remove(view)
-	}
-
-	private func remove(_ view: String) -> ScrollbackDeletionOutcome {
-		let removed = entries.filter { $0.viewIdentifier == view }
-		entries.removeAll { $0.viewIdentifier == view }
-		return .deleted(.init(deletedCount: UInt(removed.count), uniqueIdentifiers: removed.map(\.uniqueIdentifier)))
-	}
-
-	func saveData() -> ScrollbackSaveOutcome {
-		.saved
-	}
-
-	func fetchOutcome(_ request: ScrollbackFetchRequest) async -> ScrollbackFetchOutcome {
-		fetchCount += 1
-		operations.append("fetch")
-		switch request.kind {
-		case .before: await probe.record("before")
-		case let .rowPage(cursor, _, _): await probe.record(cursor == nil ? "newest" : "before")
+	@Test("An empty page and an unavailable database remain different outcomes")
+	func emptyPageIsNotFailure() async throws {
+		let directory = try directory()
+		defer { try? FileManager.default.removeItem(at: directory) }
+		let (store, context) = try storage(in: directory)
+		let session = session(store: store, directory: { directory.path })
+		switch await session.fetchOutcome(newest()) {
+		case let .page(entries): #expect(entries.isEmpty)
+		default: Issue.record("An empty store did not return a successful page")
 		}
-		await fetchGate.wait()
-		return fetchFailure.map(ScrollbackFetchOutcome.failed) ?? .page(entries)
-	}
-}
-
-@Suite("Scrollback session")
-struct ScrollbackSessionTests {
-	@Test("Read failures and empty pages remain distinct through the production session")
-	func typedReadFailureCanBeRetried() async {
-		let service = ScrollbackTestService(probe: IsolationProbe())
-		await service.setOutcome(.opened)
-		await service.openGate.open()
-		let session = ScrollbackSession(store: service.storage, databaseDirectory: { await service.databaseDirectory() },
-		                                reportFailure: { _ in Issue.record("The database opened successfully") })
-		let request = Self.request(view: "a", label: "a1")
-		await service.setFetchFailure(.read("Injected read failure"))
-		guard case .failed(.read("Injected read failure")) = await session.fetchOutcome(request) else {
-			Issue.record("A failed read was converted to an empty page")
-			await session.prepareForTermination()
-			return
+		#expect(await session.isLoaded)
+		#expect(await session.prepareForTermination() == .saved)
+		switch await store.fetchOutcome(newest()) {
+		case .failed(.unavailable): break
+		default: Issue.record("A closed store did not report unavailability")
 		}
-		#expect(await session.fetchOutcome(request).entries.isEmpty)
-		await service.setFetchFailure(nil)
-		guard case let .page(entries) = await session.fetchOutcome(request) else {
-			Issue.record("A read failure prevented retry")
-			await session.prepareForTermination()
-			return
-		}
-		#expect(entries.isEmpty)
-		#expect(await service.openCount == 1)
-		await session.prepareForTermination()
+		try await ScrollbackFixture.close(context)
 	}
 
-	@Test("Cancelling a caller answers cancellation rather than exhaustion")
-	func cancelledFetchHasTypedOutcome() async {
-		let service = ScrollbackTestService(probe: IsolationProbe(), holdsFetches: true)
-		await service.setOutcome(.opened)
-		await service.openGate.open()
-		let session = Self.session(on: service)
-		let task = Task { await session.fetchOutcome(Self.request(view: "a", label: "a1")) }
-		while await service.fetchCount == 0 {
-			await Task.yield()
+	@Test("A malformed page remains a failure and a later valid page can load")
+	func invalidPageCanBeRetried() async throws {
+		let directory = try directory()
+		defer { try? FileManager.default.removeItem(at: directory) }
+		let (store, context) = try storage(in: directory)
+		let session = session(store: store, directory: { directory.path })
+		let invalid = ScrollbackEntry(
+			lineData: Data(), uniqueIdentifier: "invalid", viewIdentifier: "view",
+			sessionIdentifier: 1, creationDate: -1
+		)
+		#expect(await session.writeEntry(invalid) == .accepted)
+		if case .failed(.invalidEntry) = await session.fetchOutcome(newest()) {} else {
+			Issue.record("A malformed row was reported as an empty page")
 		}
+		if case .deleted = await session.removeHistory("view", forget: false) {} else {
+			Issue.record("The malformed row could not be cleared")
+		}
+		#expect(await session.writeEntry(entry("valid")) == .accepted)
+		#expect(await session.fetchOutcome(newest()).entries.map(\.uniqueIdentifier) == ["valid"])
+		#expect(await session.prepareForTermination() == .saved)
+		try await ScrollbackFixture.close(context)
+	}
+
+	@Test("Cancelling a page held at transaction admission reports cancellation")
+	func cancelledFetchHasTypedOutcome() async throws {
+		let directory = try directory()
+		defer { try? FileManager.default.removeItem(at: directory) }
+		let gate = ScrollbackOperationGate()
+		let (store, context) = try storage(in: directory, willPerform: { operation in
+			if case .fetch = operation {
+				await gate.wait()
+			}
+		})
+		let session = session(store: store, directory: { directory.path })
+		#expect(await session.retryLoading())
+		let request = newest()
+		let task = Task { await session.fetchOutcome(request) }
+		await gate.ready()
 		task.cancel()
-		await service.fetchGate.open()
+		await gate.release()
 		if case .cancelled = await task.value {} else {
 			Issue.record("Cancellation was reported as a page")
 		}
-		await session.prepareForTermination()
+		#expect(await session.prepareForTermination() == .saved)
+		try await ScrollbackFixture.close(context)
 	}
 
-	/** The changes and the page a caller asks for in one turn, in that order.
-
-	 The queue is the only thing that puts them in order: the write, the clear and
-	 the write behind it reach the store from three different tasks, and a page
-	 asked for last has to hold what the writes ahead of it stored. */
-	@Test("Writes, a clear and a page run in the order they were asked for")
-	func changesRunInTheOrderTheyWereAskedFor() async {
-		let service = ScrollbackTestService(probe: IsolationProbe())
-		await service.setOutcome(.opened)
-		await service.openGate.open()
-		let session = Self.session(on: service)
-		session.write(Self.entry("first")) { #expect($0 == .accepted) }
-		session.write(Self.entry("second")) { #expect($0 == .accepted) }
-		_ = session.removeHistory(forView: "a", forget: false) { outcome in
+	@Test("Synchronous writes, a clear, and a later page use one request order")
+	func changesRunInTheOrderTheyWereAskedFor() async throws {
+		let directory = try directory()
+		defer { try? FileManager.default.removeItem(at: directory) }
+		let recorder = ScrollbackOperationRecorder()
+		let (store, context) = try storage(in: directory, willPerform: { operation in
+			await recorder.record(operation)
+		})
+		let session = session(store: store, directory: { directory.path })
+		#expect(await session.retryLoading())
+		session.write(entry("first")) { #expect($0 == .accepted) }
+		session.write(entry("second")) { #expect($0 == .accepted) }
+		let queued = session.removeHistory(forView: "view", forget: false) { outcome in
 			guard case let .deleted(result) = outcome else {
 				Issue.record("The clear did not run")
 				return
 			}
 			#expect(result.uniqueIdentifiers == ["first", "second"])
 		}
-		session.write(Self.entry("third")) { #expect($0 == .accepted) }
-		let page = await session.fetchOutcome(Self.request(view: "a", label: "a1"))
+		#expect(queued)
+		session.write(entry("third")) { #expect($0 == .accepted) }
+		let page = await session.fetchOutcome(newest())
 		#expect(page.entries.map(\.uniqueIdentifier) == ["third"])
-		#expect(await service.operations == ["write first", "write second", "reset", "write third", "fetch"])
-		await session.prepareForTermination()
+		#expect(await recorder.operations == [.write, .write, .reset, .write, .fetch])
+		#expect(await session.prepareForTermination() == .saved)
+		try await ScrollbackFixture.close(context)
 	}
 
-	/// A session on `service`, whose database opens and whose failures are a test
-	/// failure.
-	private static func session(on service: ScrollbackTestService) -> ScrollbackSession {
-		ScrollbackSession(
-			store: service.storage,
-			databaseDirectory: { await service.databaseDirectory() },
-			reportFailure: { Issue.record(Comment(rawValue: $0)) }
-		)
-	}
-
-	private static func entry(_ identifier: String) -> ScrollbackEntry {
-		ScrollbackEntry(
-			lineData: Data(),
-			uniqueIdentifier: identifier,
-			viewIdentifier: "a",
-			sessionIdentifier: 0,
-			creationDate: 0
-		)
-	}
-
-	/// A request labelled by the line number it asks for, which is what the
-	/// recorder reads back.
-	private static func request(view: String, label: String) -> ScrollbackFetchRequest {
-		ScrollbackFetchRequest(
-			viewIdentifier: view,
-			kind: .before(uniqueIdentifier: label, fetchLimit: 1, limitToDate: nil)
-		)
-	}
-
-	@Test(
-		"Failed opens report once across concurrent and serial operations until explicit retry",
-		arguments: [false, true]
-	)
-	func failedOpenRequiresExplicitRetry(withReason: Bool) async {
-		let probe = IsolationProbe()
-		let service = ScrollbackTestService(probe: probe)
-		let reason = withReason ? "Injected open failure" : nil
-		await service.setOutcome(.failed(reason: reason))
-		var reports: [String] = []
-		let session = ScrollbackSession(
-			store: service.storage,
-			databaseDirectory: { await service.databaseDirectory() },
-			reportFailure: {
-				#expect(isolationIsMainActor(#isolation))
-				reports.append($0)
+	@Test("An open failure stays latched until explicit retry")
+	func failedOpenRequiresExplicitRetry() async throws {
+		let directory = try directory()
+		defer { try? FileManager.default.removeItem(at: directory) }
+		let attempts = Mutex<Int>(0)
+		let shouldFail = Mutex<Bool>(true)
+		let context = try ScrollbackQueries.makeStack(at: directory.appendingPathComponent("history.sqlite"))
+		let store = ScrollbackStore(filenameSetting: ScrollbackFilenameFixture().store, makeStack: { url in
+			attempts.withLock { $0 += 1 }
+			if shouldFail.withLock({ $0 }) {
+				throw NSError(domain: "Injected open failure", code: 1)
 			}
-		)
-		let entry = ScrollbackEntry(
-			lineData: Data(), uniqueIdentifier: "line", viewIdentifier: "a",
-			sessionIdentifier: 0, creationDate: 0
-		)
-		let request = Self.request(view: "a", label: "a1")
-		let firstWrite = Task { await session.writeEntry(entry) }
-		while await service.openCount == 0 {
-			await Task.yield()
-		}
+			#expect(url == directory.appendingPathComponent("history.sqlite"))
+			return context
+		})
+		var reports: [String] = []
+		let session = session(store: store, directory: { directory.path }, reportFailure: { reports.append($0) })
+		#expect(await session.writeEntry(entry("first")) == .unavailable)
+		#expect(await session.isUnavailable)
+		#expect(attempts.withLock { $0 } == 1)
+		let blocked = entry("blocked")
+		let request = newest()
 		await withTaskGroup(of: Void.self) { group in
 			for _ in 0 ..< 10 {
-				group.addTask { await session.writeEntry(entry) }
-				group.addTask { #expect(await session.fetchOutcome(request).entries.isEmpty) }
+				group.addTask { _ = await session.writeEntry(blocked) }
+				group.addTask { _ = await session.fetchOutcome(request) }
 			}
-			await service.openGate.open()
 		}
-		#expect(await firstWrite.value == .unavailable)
-		for _ in 0 ..< 3 {
-			await session.writeEntry(entry)
-			#expect(await session.fetchOutcome(request).entries.isEmpty)
-		}
-		await session.removeHistory("a", forget: true)
-		await session.removeHistory("a", forget: false)
-		#expect(await service.openCount == 1)
-		#expect(await service.entries.isEmpty)
-		#expect(await service.fetchCount == 0)
-		#expect(await session.isLoaded == false)
-		#expect(await session.isUnavailable)
-		let message = reason.map(PromptStrings.Logging.lastError) ?? PromptStrings.Logging.scrollbackFailureBody
-		#expect(reports == [message])
-
+		#expect(attempts.withLock { $0 } == 1)
+		#expect(reports.count == 1)
 		#expect(await session.retryLoading() == false)
-		await session.writeEntry(entry)
-		#expect(await session.fetchOutcome(request).entries.isEmpty)
-		#expect(await service.openCount == 2)
-		#expect(reports == [message, message])
-
-		await service.setOutcome(.opened)
-		// Recovery alone does not make ordinary traffic reopen the preserved file.
-		await session.writeEntry(entry)
-		#expect(await service.openCount == 2)
+		#expect(attempts.withLock { $0 } == 2)
+		#expect(reports.count == 2)
+		shouldFail.withLock { $0 = false }
+		#expect(await session.writeEntry(entry("still blocked")) == .unavailable)
+		#expect(attempts.withLock { $0 } == 2)
 		#expect(await session.retryLoading())
-		#expect(await session.isLoaded)
-		#expect(await session.isUnavailable == false)
-		await session.writeEntry(entry)
-		#expect(await session.fetchOutcome(request).entries.map(\.uniqueIdentifier) == ["line"])
-		let newest = ScrollbackFetchRequest(
-			viewIdentifier: "a", kind: .rowPage(before: nil, fetchLimit: 1, limitToDate: nil)
-		)
-		#expect(await session.fetchOutcome(newest).entries.map(\.uniqueIdentifier) == ["line"])
-		#expect(await session.retryLoading())
-		#expect(await service.openCount == 3)
-		#expect(await service.fetchCount == 2)
-		#expect(reports == [message, message])
-		probe.expectOrder(["open", "open", "open", "before", "newest"])
-		probe.expectNoneOnMainActor()
-		await session.prepareForTermination()
+		#expect(attempts.withLock { $0 } == 3)
+		#expect(await session.writeEntry(entry("accepted")) == .accepted)
+		#expect(await session.fetchOutcome(newest()).entries.map(\.uniqueIdentifier) == ["accepted"])
+		#expect(await session.prepareForTermination() == .saved)
 		#expect(await session.retryLoading() == false)
-		#expect(await service.openCount == 3)
-		#expect(await service.closeCount == 1)
+		#expect(attempts.withLock { $0 } == 3)
+		try await ScrollbackFixture.close(context)
 	}
 
-	@Test("A missing setup directory stays retryable without reporting an open failure")
-	func missingDatabaseDirectoryAnswersSafely() async {
-		let service = ScrollbackTestService(probe: IsolationProbe())
-		await service.setDirectory(nil)
-		await service.setOutcome(.opened)
-		await service.openGate.open()
-		let session = ScrollbackSession(
-			store: service.storage,
-			databaseDirectory: { await service.databaseDirectory() },
-			reportFailure: { _ in Issue.record("No database open failed") }
-		)
-		let result = await session.fetchOutcome(Self.request(view: "a", label: "a1")).entries
-
-		#expect(result.isEmpty)
+	@Test("A missing setup directory remains retryable without an open failure")
+	func missingDatabaseDirectoryAnswersSafely() async throws {
+		let directory = try directory()
+		defer { try? FileManager.default.removeItem(at: directory) }
+		let path = ScrollbackDirectory(nil)
+		let (store, context) = try storage(in: directory)
+		let session = session(store: store, directory: { await path.path }, reportFailure: {
+			Issue.record("No database open failed: \($0)")
+		})
+		switch await session.fetchOutcome(newest()) {
+		case .failed(.unavailable): break
+		default: Issue.record("A missing directory was not reported as unavailable")
+		}
 		#expect(await session.isLoaded == false)
 		#expect(await session.isUnavailable == false)
-		#expect(await service.openCount == 0)
-		await service.setDirectory("/injected/history")
-		_ = await session.fetchOutcome(Self.request(view: "a", label: "a1")).entries
+		await path.set(directory.path)
+		#expect(await session.fetchOutcome(newest()).entries.isEmpty)
 		#expect(await session.isLoaded)
-		#expect(await service.openCount == 1)
-		#expect(await service.fetchCount == 1)
-		await session.prepareForTermination()
+		#expect(await session.prepareForTermination() == .saved)
+		try await ScrollbackFixture.close(context)
 	}
 }

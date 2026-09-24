@@ -56,8 +56,8 @@ struct ChannelActionPermissionsTests {
 		let targetSession: ServerSession?
 		switch reason {
 		case 0: session.isLoggedIn = false; targetSession = session
-		case 1: session.isQuitting = true; targetSession = session
-		case 2: session.isDisconnecting = true; targetSession = session
+		case 1: session.setConnectionShutdownForTesting(.quitting); targetSession = session
+		case 2: session.setConnectionShutdownForTesting(.disconnecting); targetSession = session
 		case 3: session.isTerminating = true; targetSession = session
 		case 4: channel.deactivate(); targetSession = session
 		case 5: session.remove(channel); targetSession = session

@@ -173,7 +173,7 @@ struct ServerSessionReconnectSchedulingTests {
 	@Test("The scheduled run does nothing while the session is already connected")
 	func theRunIsANoOperationWhileConnected() {
 		let session = session(autoReconnect: true)
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 
 		session.onReconnectTimer()
 
@@ -186,7 +186,7 @@ struct ServerSessionReconnectSchedulingTests {
 		let session = session(autoReconnect: true)
 		defer { session.cancelReconnect() }
 		session.config.serverList = []
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		session.reconnect.isEnabled = true
 
 		session.changeStateOff()
@@ -207,7 +207,7 @@ struct ServerSessionReconnectSchedulingTests {
 	@Test("Cancelling after teardown prevents a queued reconnect callback from restarting the schedule")
 	func cancellationEndsReconnectIntent() {
 		let session = session(autoReconnect: true)
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		session.reconnect.isEnabled = true
 		session.changeStateOff()
 
@@ -222,7 +222,7 @@ struct ServerSessionReconnectSchedulingTests {
 	@Test("A disconnect with automatic reconnection disabled ends the reconnect intent")
 	func disabledPolicyEndsReconnectIntent() {
 		let session = session(autoReconnect: false)
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		session.reconnect.isEnabled = true
 		session.reconnect.attemptCount = 3
 

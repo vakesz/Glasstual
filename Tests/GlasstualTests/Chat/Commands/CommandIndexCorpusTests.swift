@@ -68,16 +68,17 @@ struct CommandIndexCorpusTests {
 		let command = try #require(LocalCommand(typedName: name))
 
 		#expect(command.isDeveloperModeOnly)
-		#expect(CommandIndex.localCommandList(includingDeveloperCommands: false).contains(command.displayName) == false)
+		#expect(CommandIndex.candidates(includingDeveloperCommands: false, scriptCommands: [])
+			.contains { $0.name == command.rawValue } == false)
 	}
 
 	@Test
 	func onlyDeveloperCommandsAreHidden() {
-		let offered = Set(CommandIndex.localCommandList(includingDeveloperCommands: false))
+		let offered = Set(CommandIndex.candidates(includingDeveloperCommands: false, scriptCommands: []).map(\.name))
 		let expected = Set(
 			LocalCommand.allCases
 				.filter { $0.isDeveloperModeOnly == false }
-				.map(\.displayName)
+				.map(\.rawValue)
 		)
 
 		#expect(offered == expected)

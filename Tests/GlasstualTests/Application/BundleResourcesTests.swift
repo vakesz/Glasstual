@@ -10,11 +10,10 @@ import Testing
 struct BundleResourcesTests {
 	@Test("The bundled property lists load through the resource manager")
 	func bundleResourcesLoadsKnownPropertyLists() {
-		let networks = BundleResources.dictionary(fromResources: "IRCNetworks", cacheValue: false)
 		let networkList = BundleResources.array(fromResources: "IRCNetworks", cacheValue: false)
 		let staticStore = BundleResources.dictionary(fromResources: "StaticStore")
 
-		#expect(networks != nil || networkList != nil)
+		#expect(networkList?.isEmpty == false)
 		#expect(staticStore != nil)
 		#expect((staticStore?.count ?? 0) > 0)
 	}

@@ -18,14 +18,14 @@ struct MainWindowConnectionPresentationTests {
 		#expect(waiting.status == .waitingToReconnect)
 		#expect(waiting.actions == [.connect, .cancelReconnect])
 		#expect(MainWindowTitleContent(session: session, conversation: nil).subtitle.hasPrefix(waiting.status.title))
-		session.isConnecting = true
+		session.setConnectionTransportForTesting(.connecting)
 		#expect(MainWindowConnectionPresentation(session: session)?.actions == [.disconnect])
-		session.isConnecting = false
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.idle)
+		session.setConnectionTransportForTesting(.connected)
 		#expect(MainWindowConnectionPresentation(session: session)?.status == .loggingOn)
 		session.isLoggedIn = true
 		#expect(MainWindowConnectionPresentation(session: session) == nil)
-		session.isDisconnecting = true
+		session.setConnectionShutdownForTesting(.disconnecting)
 		#expect(MainWindowConnectionPresentation(session: session)?.actions == [])
 		session.isTerminating = true
 		#expect(MainWindowConnectionPresentation(session: session) == nil)

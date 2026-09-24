@@ -7,8 +7,8 @@ import os
 
 /// The transaction the store is about to run, for a test that has to hold one
 /// in flight. Nothing in the app observes it.
-nonisolated enum ScrollbackStoreOperation: Sendable {
-	case write, reset, forget, close, save, resize
+nonisolated enum ScrollbackStoreOperation: Equatable, Sendable {
+	case write, reset, forget, close, save, resize, fetch
 }
 
 /** The Core Data transaction, and every view's counters.
@@ -245,6 +245,7 @@ actor ScrollbackStore {
 		guard lifecycle == .open else { return .failed(.unavailable) }
 		await enter()
 		defer { leave() }
+		await willPerform?(.fetch)
 		guard !Task.isCancelled else { return .cancelled }
 		guard let context else { return .failed(.unavailable) }
 		do {

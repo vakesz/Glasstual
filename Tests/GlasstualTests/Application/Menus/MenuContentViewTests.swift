@@ -41,7 +41,7 @@ struct MenuContentViewTests {
 			let context = controller.context
 			session.userNickname = "mynick"
 			session.markAsLoggedIn()
-			session.isConnected = true
+			session.setConnectionTransportForTesting(.connected)
 			let channel = try #require(session.findConversationOrCreate("#retry"))
 			let previousSession = otherSessionSelected ? other : session
 			previousSession.markAsLoggedIn()
@@ -196,7 +196,7 @@ struct MenuContentViewTests {
 			)
 			let join = try #require(entries.first { $0.command == .joinChannel })
 			#expect(join.isEnabled)
-			session.isDisconnecting = true
+			session.setConnectionShutdownForTesting(.disconnecting)
 			#expect(join.perform {})
 			#expect(session.sentLines.count == 0)
 			#expect(channel.status == .parted)

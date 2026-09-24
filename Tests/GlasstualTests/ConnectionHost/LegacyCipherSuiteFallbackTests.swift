@@ -343,6 +343,23 @@ nonisolated struct LegacyCipherSuiteFallbackLoopbackTests {
 		#expect(outcome.dialCount == 2, "the transport dialled \(outcome.dialCount) times")
 	}
 
+	@Test("Repeated default-system retries reach a TLS 1.2 static RSA server")
+	@concurrent
+	func systemDefaultReachesLegacyOnlyServer() async throws {
+		for attempt in 1 ... 8 {
+			let outcome = try await Self.dial(
+				serverOffering: [0x009D], // TLS_RSA_WITH_AES_256_GCM_SHA384
+				validatingCertificateChain: false,
+				cipherSuites: .system
+			)
+
+			let suite = try #require(outcome.negotiatedSuite, "attempt \(attempt) never secured itself")
+
+			#expect(SecureTransportSupport.isCipherSuiteLegacy(suite))
+			#expect(outcome.dialCount == 2, "attempt \(attempt) dialled \(outcome.dialCount) times")
+		}
+	}
+
 	@Test("A server that agrees on nothing is dialled twice at most, then reported")
 	@concurrent
 	func aServerThatAgreesOnNothingIsNotDialledForever() async throws {
@@ -431,6 +448,7 @@ nonisolated struct LegacyCipherSuiteFallbackLoopbackTests {
 	static func dial(
 		serverOffering suites: [UInt16],
 		validatingCertificateChain: Bool,
+		cipherSuites: CipherSuiteCollection = .modern,
 		afterSecuring: SecuredAction = .finish
 	) async throws -> Outcome {
 		let server = try LegacyCipherSuiteListener(offering: suites)
@@ -441,7 +459,7 @@ nonisolated struct LegacyCipherSuiteFallbackLoopbackTests {
 		config.serverPort = port
 		config.connectionPrefersSecuredConnection = true
 		config.connectionShouldValidateCertificateChain = validatingCertificateChain
-		config.cipherSuites = .modern
+		config.cipherSuites = cipherSuites
 
 		let (events, continuation) = AsyncStream<FallbackHostEvent>.makeStream()
 		let shim = FallbackSessionShim(events: continuation)

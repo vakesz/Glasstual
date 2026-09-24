@@ -115,7 +115,7 @@ struct ServerSessionSCRAMMutualAuthenticationTests {
 			fixture: ChatEnvironmentFixture(settings: ChatSettings())
 		)
 		session.socket = Connection(config: ConnectionConfig(), onSession: session)
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		try receive("CAP * LS :sasl=SCRAM-SHA-256,PLAIN", on: session)
 		try receive("CAP user ACK :sasl", on: session)
 		let (started, signal) = AsyncStream<Void>.makeStream()

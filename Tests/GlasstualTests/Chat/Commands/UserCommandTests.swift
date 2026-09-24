@@ -22,7 +22,7 @@ struct UserCommandTests {
 		let session = TestServerSession()
 		let connection = Connection(config: ConnectionConfig(), onSession: session)
 		session.socket = connection
-		session.isConnecting = true
+		session.setConnectionTransportForTesting(.connecting)
 		session.autoConnect(withDelay: 60, afterWakeUp: false)
 		let scheduled = session.pendingConnectionTask
 
@@ -45,7 +45,7 @@ struct UserCommandTests {
 	func quitFromSelectedServerTranscript() {
 		let session = TestServerSession()
 		session.recordedOutput.selectedItem = session
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		session.markAsLoggedIn()
 
 		session.inputText("/quit E2E_QUIT", as: .privmsg, destination: session)

@@ -46,7 +46,7 @@ struct ServerSessionLiberaRegistrationReplayTests {
 	func registersWithoutSASL() throws {
 		let session = TestServerSession(configDictionary: ["nickname": "me", "username": "me"], nicknamePassword: nil)
 		session.forwardsProcessedMessages = true
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 
 		try replayRegistration(on: session)
 
@@ -69,7 +69,7 @@ struct ServerSessionLiberaRegistrationReplayTests {
 			nicknamePassword: "secret"
 		)
 		session.forwardsProcessedMessages = true
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 
 		try replayRegistration(on: session) { session in
 			guard session.isCapabilityEnabled(.isInSASLNegotiation) else { return }
@@ -109,7 +109,7 @@ struct ServerSessionLiberaRegistrationReplayTests {
 		let session = TestServerSession(configDictionary: ["nickname": "me", "username": "me"], nicknamePassword: nil)
 		session.forwardsProcessedMessages = true
 		session.forwardsSentLines = true
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 
 		try replayRegistration(on: session)
 

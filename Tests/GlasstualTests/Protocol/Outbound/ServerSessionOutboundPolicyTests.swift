@@ -327,7 +327,7 @@ struct ServerSessionOutboundPolicyTests {
 			nicknamePassword: nil,
 			fixture: ChatEnvironmentFixture(settings: settings)
 		)
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		session.markAsLoggedIn()
 		session.supportInfo.processConfigurationData("KICKLEN=7 TOPICLEN=3 AWAYLEN=3 NICKLEN=4")
 		let channel = try #require(session.findConversationOrCreate("#chat"))
@@ -454,7 +454,7 @@ struct ServerSessionOutboundPolicyTests {
 			nicknamePassword: nil,
 			fixture: ChatEnvironmentFixture(settings: settings)
 		)
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		session.markAsLoggedIn()
 
 		for _ in 0 ..< 20 {
@@ -470,7 +470,7 @@ struct ServerSessionOutboundPolicyTests {
 	@Test("A CTCP PING echo that is not a timestamp is reported without a lag")
 	func ctcpPingReplyWithoutATimestampIsNotTimed() throws {
 		let session = TestServerSession(configDictionary: ["nickname": "me"])
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		session.markAsLoggedIn()
 		let message = try #require(
 			Message(line: ":alice!u@h NOTICE me :\u{01}PING not-a-number\u{01}", on: session)
@@ -489,7 +489,7 @@ struct ServerSessionOutboundPolicyTests {
 	private func loggedInSession() -> TestServerSession {
 		let session = TestServerSession(configDictionary: ["nickname": "tester"])
 
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		session.markAsLoggedIn()
 
 		return session

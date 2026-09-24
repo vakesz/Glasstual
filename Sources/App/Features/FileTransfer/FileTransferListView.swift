@@ -191,11 +191,8 @@ private struct FileTransferRowView: View {
 		let presentation = FileTransferRowPresentation(transfer: transfer)
 
 		HStack(spacing: UISpacing.wide) {
-			Image(nsImage: fileIcon)
-				.resizable()
-				.scaledToFit()
-				.frame(width: 44, height: 44)
-				.accessibilityHidden(true)
+			FileTransferIconView(filename: transfer.filename)
+				.equatable()
 
 			VStack(alignment: .leading, spacing: 5) {
 				HStack {
@@ -241,9 +238,23 @@ private struct FileTransferRowView: View {
 				.accessibilityLabel(Text(.FileTransfer.transferProgress))
 		}
 	}
+}
+
+/// A filename changes only when a download claims its destination. Keep the
+/// Workspace icon lookup out of a row that redraws for every progress sample.
+private struct FileTransferIconView: View, Equatable {
+	let filename: String
+
+	var body: some View {
+		Image(nsImage: fileIcon)
+			.resizable()
+			.scaledToFit()
+			.frame(width: 44, height: 44)
+			.accessibilityHidden(true)
+	}
 
 	private var fileIcon: NSImage {
-		let contentType = UTType(filenameExtension: (transfer.filename as NSString).pathExtension)
+		let contentType = UTType(filenameExtension: (filename as NSString).pathExtension)
 		return NSWorkspace.shared.icon(for: contentType ?? .data)
 	}
 }

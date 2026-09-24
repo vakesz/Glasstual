@@ -34,12 +34,7 @@ actor ConnectionHost {
 	private var ready = false
 	private var closing = false
 
-	private var sendQueue: [Data] = []
-
-	/// How many entries at the head of `sendQueue` came from a bypass write.
-	/// A bypass line goes in front of the queued traffic but behind the bypass
-	/// lines already waiting, so two of them cannot swap places on the wire.
-	private var sendQueueBypassCount = 0
+	private var sendQueue = ConnectionHostSendQueue()
 
 	/// Ticks the flood-control window. A `ContinuousClock` task rather than a
 	/// timer, so it keeps its cadence across system sleep and cancels cleanly.
@@ -215,8 +210,6 @@ actor ConnectionHost {
 
 	func clearSendQueue() {
 		sendQueue.removeAll()
-
-		sendQueueBypassCount = 0
 	}
 
 	func send(_ data: Data, bypassQueue: Bool) {
@@ -226,12 +219,7 @@ actor ConnectionHost {
 			return
 		}
 
-		if bypassQueue {
-			sendQueue.insert(data, at: sendQueueBypassCount)
-			sendQueueBypassCount += 1
-		} else {
-			sendQueue.append(data)
-		}
+		sendQueue.append(data, bypassingFloodControl: bypassQueue)
 		startWriterIfNeeded()
 	}
 
@@ -244,28 +232,38 @@ actor ConnectionHost {
 	}
 
 	private func drainWrites(to socket: ConnectionSocket) async {
+		var restartAfterClear = false
 		while Task.isCancelled == false, self.socket === socket, ready, closing == false, sendQueue.isEmpty == false {
-			let bypass = sendQueueBypassCount > 0
+			let bypass = sendQueue.firstBypassesFloodControl
 			if bypass == false, floodControlEnforced,
 			   floodControlCurrentMessageCount >= Int(floodControlMaximumMessages)
 			{
 				break
 			}
-			let data = sendQueue.removeFirst()
-			if bypass {
-				sendQueueBypassCount -= 1
-			} else {
+			guard let next = sendQueue.takeFirst() else { break }
+			let clearGeneration = sendQueue.clearGeneration
+			if bypass == false {
 				floodControlCurrentMessageCount += 1
 			}
-			guard await socket.write(data) else {
+			guard await socket.write(next.data) else {
+				/* Closing clears the queue while a write may be suspended. A failed
+				 write from that retired drain must not put its old line back. */
+				guard Task.isCancelled == false, self.socket === socket, closing == false else { return }
+				if clearGeneration != sendQueue.clearGeneration {
+					/* A QUIT may have replaced the queued traffic while this write
+					 was in flight. Let a new drain send that replacement. */
+					if bypass == false, floodControlEnforced, floodControlCurrentMessageCount > 0 {
+						floodControlCurrentMessageCount -= 1
+					}
+					restartAfterClear = true
+					break
+				}
 				/* The transport reports `false` only when it did not take the
 				 line, so the line is still owed to the server: put it back at
 				 the head, in front of the traffic queued behind it, and let
 				 the next drain try again. */
-				sendQueue.insert(data, at: 0)
-				if bypass {
-					sendQueueBypassCount += 1
-				} else {
+				sendQueue.putBack(next)
+				if bypass == false {
 					floodControlCurrentMessageCount -= 1
 				}
 				break
@@ -273,6 +271,9 @@ actor ConnectionHost {
 		}
 		guard Task.isCancelled == false, self.socket === socket else { return }
 		writerTask = nil
+		if restartAfterClear {
+			startWriterIfNeeded()
+		}
 	}
 
 	// MARK: - Flood Control

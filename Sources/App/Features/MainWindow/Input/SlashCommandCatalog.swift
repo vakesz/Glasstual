@@ -24,26 +24,18 @@ enum SlashCommandCatalog {
 		scriptCommands: [String] = []
 	) -> [SlashCommandSuggestion] {
 		guard let request = SlashCommandRequest(text: text, selection: selection) else { return [] }
-		let scripts = Set(scriptCommands.map { $0.lowercased() }.filter(isValidScriptName))
-		var results: [SlashCommandSuggestion] = []
-		var includedNames: Set<String> = []
-
-		for command in LocalCommand.allCases {
-			guard includingDeveloperCommands || command.isDeveloperModeOnly == false,
-			      matches(command.rawValue, request: request)
-			else { continue }
-			includedNames.insert(command.rawValue)
-			// A script can override commands forwarded to the server, but cannot
-			// override a local handler or bypass the developer-mode gate.
-			if command.group == nil, scripts.contains(command.rawValue) {
-				results.append(scriptSuggestion(name: command.rawValue))
-			} else if let help = SlashCommandHelp.byCommand[command] {
-				results.append(help.suggestion(for: command))
+		let results = CommandIndex.candidates(
+			includingDeveloperCommands: includingDeveloperCommands,
+			scriptCommands: scriptCommands
+		).compactMap { candidate -> SlashCommandSuggestion? in
+			guard matches(candidate.name, request: request) else { return nil }
+			if candidate.isScript {
+				return scriptSuggestion(name: candidate.name)
 			}
-		}
-		for name in scripts where includedNames.contains(name) == false && matches(name, request: request) {
-			guard LocalCommand(typedName: name) == nil else { continue }
-			results.append(scriptSuggestion(name: name))
+			guard let command = LocalCommand(typedName: candidate.name),
+			      let help = SlashCommandHelp.byCommand[command]
+			else { return nil }
+			return help.suggestion(for: command)
 		}
 		return results.sorted { left, right in
 			if (left.name == request.commandName) != (right.name == request.commandName) {
@@ -65,9 +57,5 @@ enum SlashCommandCatalog {
 			argumentHint: String(localized: .SlashCommands.hintScript),
 			isScript: true
 		)
-	}
-
-	private static func isValidScriptName(_ name: String) -> Bool {
-		name.isEmpty == false && name.contains("/") == false && name.contains(where: \.isWhitespace) == false
 	}
 }

@@ -18,7 +18,7 @@ struct ServerSessionNicknameCollisionTests {
 	private func registeringSession() -> TestServerSession {
 		let session = TestServerSession(configDictionary: ["nickname": "mara", "username": "mara"])
 		session.config.alternateNicknames = ["mara-alt", "mara-alt2"]
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 
 		return session
 	}
@@ -74,7 +74,7 @@ struct ServerSessionNicknameCollisionTests {
 	@Test("A 433 that arrives while disconnected is not answered")
 	func collisionWhileDisconnectedDoesNothing() throws {
 		let session = registeringSession()
-		session.isConnected = false
+		session.setConnectionTransportForTesting(.idle)
 
 		try session.receiveNumericReply(collision("mara", on: session))
 

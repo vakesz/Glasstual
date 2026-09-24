@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="index, follow">
+    <meta name="description" content="How Glasstual handles IRC connections, local data, file transfers, and support requests.">
+    <link rel="canonical" href="https://vakesz.github.io/Glasstual/privacy.html">
+    <link rel="icon" href="assets/app-icon.png">
+    <link rel="stylesheet" href="styles.css">
+    <title>Privacy - Glasstual</title>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="wordmark" href="index.html" aria-label="Glasstual home">
+        <img src="assets/app-icon.png" alt="" width="36" height="36">
+        <span>Glasstual</span>
+      </a>
+      <nav aria-label="Main navigation">
+        <a href="index.html#features">Features</a>
+        <a href="support.html">Support</a>
+        <a class="github-link" href="https://github.com/vakesz/Glasstual">GitHub</a>
+      </nav>
+    </header>
+
+    <main class="section-shell document-page">
+      <p class="eyebrow">Glasstual</p>
+      <h1>Privacy</h1>
+      <p class="document-lead">Glasstual is an IRC client. It has no Glasstual account, advertising, or developer-operated analytics service. It connects to the networks and peers you choose and keeps its settings and chat history on your Mac.</p>
+
+      <div class="document-content">
+        <section aria-labelledby="local-data">
+          <h2 id="local-data">Data on your Mac</h2>
+          <p>Glasstual stores server settings, preferences, and local conversation history on your Mac. It can also save transcript log files if you turn on logging. Saved server, nickname, proxy, and channel passwords are stored in the macOS Keychain. Commands you configure to run when connecting may contain sensitive text and can remain in local settings or backups. Files you receive are saved in Downloads or a folder you select.</p>
+          <p>You can clear a conversation's scrollback in the app. Turning off transcript logging stops new log files from being written; it does not delete files already saved. Removing the app may leave its local data and Keychain items on your Mac. <a href="support.html">Contact support</a> if you need help removing them.</p>
+        </section>
+
+        <section aria-labelledby="network-data">
+          <h2 id="network-data">IRC connections</h2>
+          <p>When you connect to an IRC network, Glasstual sends the connection details, nickname, authentication information, and messages needed to use that network. The network and other participants may see or retain what you send according to their own practices. Glasstual does not operate those networks.</p>
+          <p>Direct chat and file transfers can connect to another participant's computer. That participant may see your network address. If a DCC transfer needs to discover your public address and your router does not provide it, Glasstual contacts api.ipify.org by default. A setting can instead use wtfismyip.com, canhazip.com, or ifconfig.me, or avoid these lookups by using a router-only or manual address.</p>
+        </section>
+
+        <section aria-labelledby="media-data">
+          <h2 id="media-data">Links and images</h2>
+          <p>If inline images are enabled, Glasstual may fetch images linked in messages over HTTP or HTTPS. The image host receives the request and may see your IP address. Opening a link sends you to your browser, whose privacy settings and the destination site's policy then apply.</p>
+        </section>
+
+        <section aria-labelledby="support-data">
+          <h2 id="support-data">Support and your choices</h2>
+          <p>If you email us or open a GitHub issue, we receive the information you choose to provide. Please do not include passwords, private messages, or unredacted logs in a report. Support correspondence remains in our mailbox or issue history until it is deleted. You can ask us to delete our copy by emailing <a href="mailto:hello@vakesz.com">hello@vakesz.com</a>. Public GitHub issues are also subject to <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement">GitHub's privacy statement</a>.</p>
+          <p>Questions about this policy can be sent to <a href="mailto:hello@vakesz.com">hello@vakesz.com</a>.</p>
+        </section>
+      </div>
+
+      <p class="document-updated">Last updated September 24, 2026.</p>
+    </main>
+
+    <footer class="site-footer">
+      <div><span>Glasstual is an independent fork of Textual.</span></div>
+      <nav aria-label="Footer navigation">
+        <a href="index.html">Home</a>
+        <a href="support.html">Support</a>
+        <a href="https://github.com/vakesz/Glasstual/blob/main/LICENSE">Licenses</a>
+      </nav>
+    </footer>
+  </body>
+</html>

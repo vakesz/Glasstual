@@ -268,7 +268,7 @@ struct ServerSessionHistoryTests {
 	func unlabeledCancellationCannotConsumeARetry() throws {
 		let session = makeHistorySession()
 		try withChannel(named: "#chat", on: session) { channel in
-			session.isConnected = true
+			session.setConnectionTransportForTesting(.connected)
 			let socket = Connection(config: ConnectionConfig(), onSession: session)
 			session.socket = socket
 			let before = Date(timeIntervalSince1970: 100)

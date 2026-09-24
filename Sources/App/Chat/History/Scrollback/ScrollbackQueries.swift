@@ -5,10 +5,6 @@ import CoreData
 import Foundation
 import os
 
-/// Locates the bundle the compiled model ships in. `Bundle(for:)` needs a class
-/// to point at; this one exists for no other reason.
-private final nonisolated class ScrollbackModelBundleToken {} // nonisolated: immutable
-
 /** Where the name of the database file is kept between launches.
 
  A pair of closures rather than a protocol: the only thing that varies is where
@@ -64,18 +60,18 @@ nonisolated enum ScrollbackQueries {
 	/// Builds the stack, or throws what stopped it. The reason travels: it is
 	/// the only thing the failure alert has to tell the reader.
 	static func makeStack(at url: URL) throws -> NSManagedObjectContext {
-		guard
-			let modelURL = modelBundle.url(forResource: modelName, withExtension: "momd"),
-			let model = NSManagedObjectModel(contentsOf: modelURL)
-		else {
+		let unindexedModel: NSManagedObjectModel
+		do {
+			unindexedModel = try ScrollbackModelMigration.loadUnindexedModel()
+		} catch {
 			logger.error("Scrollback model is missing")
-
-			throw CocoaError(.fileNoSuchFile)
+			throw error
 		}
+		let model = try ScrollbackModelMigration.indexedModel(from: unindexedModel)
 
 		let coordinator = NSPersistentStoreCoordinator(managedObjectModel: model)
-		// Inferred migration may legally drop entire entities and their archives.
-		// Open only compatible stores until a data-preserving migration is defined.
+		// The explicit index upgrade handles only the known unindexed schema.
+		// Never infer a migration for any other store at ordinary open.
 		let options: [AnyHashable: Any] = [
 			NSMigratePersistentStoresAutomaticallyOption: false,
 			NSInferMappingModelAutomaticallyOption: false,
@@ -83,9 +79,12 @@ nonisolated enum ScrollbackQueries {
 		]
 
 		do {
+			try ScrollbackModelMigration.upgradeIfNeeded(
+				at: url, from: unindexedModel, to: model, using: coordinator, options: options
+			)
 			_ = try coordinator.addPersistentStore(type: .sqlite, at: url, options: options)
 		} catch {
-			logger.error("Error creating persistent store: \(error.localizedDescription, privacy: .public)")
+			logger.error("Error opening persistent store: \(error.localizedDescription, privacy: .public)")
 
 			throw error
 		}
@@ -95,13 +94,6 @@ nonisolated enum ScrollbackQueries {
 		context.undoManager = nil
 
 		return context
-	}
-
-	/// The bundle the compiled model ships in, found through a type compiled
-	/// beside it so the lookup does not depend on which process `Bundle.main`
-	/// names.
-	private static var modelBundle: Bundle {
-		Bundle(for: ScrollbackModelBundleToken.self)
 	}
 
 	// MARK: - Reads

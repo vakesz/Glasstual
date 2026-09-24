@@ -21,12 +21,13 @@ nonisolated struct TranscriptDeliveryUpdate: Equatable, Sendable {
 	let reason: String?
 }
 
-/** Owns the bounded transcript while its native view does not exist or is
- rebuilding.
+/** Owns rendered rows until the native document can own them.
 
- What it stores is the rendered rows: a ``TranscriptRow`` is already the
- semantic form a theme change re-renders from, so keeping the archives beside
- them was a second copy of the same conversation under a second ceiling. */
+ Dormant and loading transcripts need a bounded bridge for live prints. Once
+ replay has finished, the document is the row owner and this state keeps only
+ unread-marker and in-flight delivery information. A later replay takes a
+ temporary snapshot from the document; ordinary active prints never build a
+ second semantic row buffer. */
 nonisolated struct TranscriptProjectionState: Sendable {
 	enum Phase: Equatable, Sendable {
 		case dormant
@@ -44,12 +45,12 @@ nonisolated struct TranscriptProjectionState: Sendable {
 	private(set) var deliveryUpdates: [String: TranscriptDeliveryUpdate] = [:]
 
 	private var capacity: Int
-	/// The retained rows, oldest first.
+	/// Rows awaiting a document, oldest first. Empty while active.
 	private var recentResults: [TranscriptRenderResult] = []
 	/// What ``recentResults`` holds, so a duplicate check is an answer rather
 	/// than a walk.
 	private var recentLineNumbers: Set<String> = []
-	/// How many retained rows carry each message identifier.
+	/// How many buffered rows or in-flight receipts carry each message identifier.
 	private var recentMessageIdentifiers: [String: Int] = [:]
 	/// Message identifiers no retained row carries any longer, since the owner
 	/// last took them.
@@ -86,6 +87,7 @@ nonisolated struct TranscriptProjectionState: Sendable {
 	}
 
 	mutating func record(_ result: TranscriptRenderResult) -> LiveLineAction {
+		guard phase != .active else { return .append }
 		/* A line printed a second time moves to the end rather than appearing
 		 twice. It is rare enough to be worth a walk when it happens, and the
 		 set above is what keeps the common case from walking at all. */
@@ -104,7 +106,7 @@ nonisolated struct TranscriptProjectionState: Sendable {
 
 		switch phase {
 		case .active:
-			return .append
+			preconditionFailure("Active transcripts cannot retain projection rows")
 		case .loading:
 			pendingResults.append(result)
 			if pendingResults.count > capacity {
@@ -116,9 +118,22 @@ nonisolated struct TranscriptProjectionState: Sendable {
 		}
 	}
 
-	/// The rows the projection is holding, which the replay re-draws instead of
-	/// rendering them a second time.
-	mutating func beginReplay() -> [TranscriptRenderResult] {
+	/// Snapshots the visible tail only for a new replay. Before the first view
+	/// exists, the dormant rows are already here. After a completed replay the
+	/// document supplies the only persistent semantic rows.
+	mutating func beginReplay(displaying rows: [TranscriptRow] = []) -> [TranscriptRenderResult] {
+		if phase == .active {
+			recentResults = rows.suffix(capacity).map {
+				TranscriptRenderResult(transcriptLine: $0, fromCurrentSession: false, processesInlineMedia: false)
+			}
+			recentLineNumbers = Set(recentResults.map(\.lineNumber))
+			recentMessageIdentifiers.removeAll(keepingCapacity: true)
+			for result in recentResults {
+				if let identifier = result.transcriptLine.messageIdentifier {
+					retainMessage(identifier)
+				}
+			}
+		}
 		phase = .loading
 		pendingResults.removeAll(keepingCapacity: true)
 		return recentResults
@@ -127,6 +142,13 @@ nonisolated struct TranscriptProjectionState: Sendable {
 	mutating func finishReplay(displaying lineNumbers: Set<String>) -> [TranscriptRenderResult] {
 		let pending = takePendingResults(displaying: lineNumbers)
 		phase = .active
+		/* The document now answers whether each message survived the replay.
+		 Offer every projected identifier for retirement, and let its owner keep
+		 those whose rows are actually displayed. */
+		retiredMessageIdentifiers.append(contentsOf: recentMessageIdentifiers.keys)
+		recentResults.removeAll(keepingCapacity: false)
+		recentLineNumbers.removeAll(keepingCapacity: false)
+		recentMessageIdentifiers.removeAll(keepingCapacity: false)
 		return pending
 	}
 
@@ -151,35 +173,60 @@ nonisolated struct TranscriptProjectionState: Sendable {
 		self.mark = mark
 	}
 
+	@discardableResult
 	mutating func updateDelivery(
 		lineNumber: String,
 		state: ChatLineDeliveryState,
 		messageIdentifier: String?,
-		reason: String?
-	) {
+		reason: String?,
+		isDisplayed: Bool = false
+	) -> TranscriptDeliveryUpdate? {
+		/* A later state transition need not repeat the acknowledgement's
+		 identifier. Keep the identifier already assigned to this line. */
+		let identifier = messageIdentifier ?? deliveryUpdates[lineNumber]?.messageIdentifier
 		let update = TranscriptDeliveryUpdate(
 			lineNumber: lineNumber,
 			state: state,
-			messageIdentifier: messageIdentifier,
+			messageIdentifier: identifier,
 			reason: reason
 		)
-		/* An ack can arrive after its line has been trimmed away. Recording one
-		 for a line the state no longer holds would keep it for the session:
-		 only lines it still holds are ever trimmed from here. The row itself is
-		 not rewritten -- `applyingCurrentState(to:)` folds the update in when
-		 the row is drawn, which is what a replayed row needs anyway. */
-		guard recentLineNumbers.contains(lineNumber) else {
-			return
+		/* An ack can arrive after its line has been trimmed away. Record one
+		 only while a buffered or displayed row can receive it. A buffered row
+		 folds the receipt in when it is drawn; an active row takes the receipt
+		 directly and then this temporary entry is retired. */
+		guard recentLineNumbers.contains(lineNumber) || phase == .active && isDisplayed else {
+			return nil
 		}
 		/* An acknowledgement is where an outgoing line first learns its
 		 message identifier, so the identifier the update names counts as one
 		 the row carries. */
 		let previous = deliveryUpdates[lineNumber]?.messageIdentifier
 		deliveryUpdates[lineNumber] = update
-		if let messageIdentifier, messageIdentifier != previous {
-			retainMessage(messageIdentifier)
+		if let identifier, identifier != previous {
+			retainMessage(identifier)
 			if let previous {
 				releaseMessage(previous)
+			}
+		}
+		return update
+	}
+
+	/// A receipt has reached the document, which now owns the updated row. An
+	/// older queued receipt must not withdraw one that arrived after it.
+	mutating func deliveryWasApplied(_ update: TranscriptDeliveryUpdate) {
+		guard phase == .active, deliveryUpdates[update.lineNumber] == update else { return }
+		deliveryUpdates.removeValue(forKey: update.lineNumber)
+		if let identifier = update.messageIdentifier {
+			releaseMessage(identifier)
+		}
+	}
+
+	/// The native document trimmed these lines before a queued receipt landed.
+	mutating func retireDisplayedLines(_ lineNumbers: [String]) {
+		guard phase == .active else { return }
+		for lineNumber in lineNumbers {
+			if let identifier = deliveryUpdates.removeValue(forKey: lineNumber)?.messageIdentifier {
+				releaseMessage(identifier)
 			}
 		}
 	}

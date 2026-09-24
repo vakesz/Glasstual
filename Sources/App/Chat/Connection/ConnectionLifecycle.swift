@@ -65,7 +65,7 @@ extension ServerSession {
 
 	private func connect(_ mode: SessionConnectMode, bypassProxy: Bool, retryingServerIdentifier: String?) {
 		guard isTerminating == false else { return }
-		guard isConnecting == false, isConnected == false, isQuitting == false, isDisconnecting == false else {
+		guard connectionState.canConnect else {
 			return
 		}
 		guard SystemSleepState.isSleeping == false else {
@@ -81,7 +81,7 @@ extension ServerSession {
 		cancelConnectCommandSettling()
 		connectType = mode
 		disconnectType = .normal
-		isConnecting = true
+		connectionState.beginPreparation()
 		stopReconnectTimer()
 		reconnect.isEnabled = true
 		output?.updateTitle(for: self)
@@ -122,14 +122,14 @@ extension ServerSession {
 		let conversationConfigs = conversationList.map(\.config)
 		let items = configurationSnapshot.keychainItems + conversationConfigs.map(\.keychainItem)
 			+ (selectedServer.map { [$0.keychainItem] } ?? [])
-		pendingCredentialTask = Task { [weak self] in
+		startup.credentialTask = Task { [weak self] in
 			let stored = await loadCredentials(items)
 			guard !Task.isCancelled, let self, !isTerminating, isConnecting, startup.identifier == startupIdentifier else { return }
 			guard config == configurationSnapshot else {
 				// Refresh the same attempt. Endpoint selection has already consumed
 				// an explicit target or advanced the configured-server rotation.
-				pendingCredentialTask = nil
-				isConnecting = false
+				startup.credentialTask = nil
+				connectionState.cancelPreparation()
 				pendingEndpoint = requestedEndpoint
 				connect(mode, bypassProxy: bypassProxy, retryingServerIdentifier: selectedServer?.uniqueIdentifier)
 				return
@@ -147,7 +147,8 @@ extension ServerSession {
 			)
 			let connection = Connection(config: socketConfig, onSession: self)
 			socket = connection
-			pendingCredentialTask = nil
+			startup.credentialTask = nil
+			connectionState.finishPreparation()
 			connection.open()
 		}
 	}
@@ -251,7 +252,7 @@ extension ServerSession {
 		if isConnecting, socket == nil {
 			// Credential preparation is already a connection attempt, but has no
 			// socket delegate to deliver its completion to removal/reconnect callers.
-			isDisconnecting = true
+			connectionState.beginDisconnect()
 			output?.updateTitle(for: self)
 			NotificationCenter.default.post(name: .serverSessionWillDisconnect, object: self)
 			changeStateOff()
@@ -262,7 +263,7 @@ extension ServerSession {
 		cancelPendingSessionTasks()
 		cancelDelayedDisconnect()
 		guard isConnecting || isConnected, let socket else { return }
-		isDisconnecting = true
+		connectionState.beginDisconnect()
 		output?.updateTitle(for: self)
 		NotificationCenter.default.post(name: .serverSessionWillDisconnect, object: self)
 		socket.close()
@@ -277,7 +278,7 @@ extension ServerSession {
 
 	func quit(withComment comment: String) {
 		guard isConnecting || isConnected, isQuitting == false, isDisconnecting == false else { return }
-		isQuitting = true
+		connectionState.beginQuit()
 		if isConnecting, socket == nil {
 			cancelReconnect()
 			NotificationCenter.default.post(name: .serverSessionWillSendQuit, object: self)
@@ -319,13 +320,10 @@ extension ServerSession {
 
 	func cancelPendingSessionTasks() {
 		outboundTextProducer?.cancel()
-		if pendingCredentialTask != nil, socket == nil {
-			isConnecting = false
-			isQuitting = false
+		if startup.credentialTask != nil, socket == nil {
+			connectionState.cancelPreparation()
 			output?.updateTitle(for: self)
 		}
-		pendingCredentialTask?.cancel()
-		pendingCredentialTask = nil
 		pendingConfirmationTasks.values.forEach { $0.cancel() }
 		pendingConfirmationTasks.removeAll()
 		readMarkers.timer.stop()
@@ -403,15 +401,11 @@ extension ServerSession {
 		nextMessageReplyIdentifier = nil
 		reconnect.connectDelay = 0
 		invokingISONCommandForFirstTime = false
-		isAutojoining = false
-		isAutojoined = false
 		cancelConnectCommandSettling()
 		autojoin.delayedWarningCount = 0
-		isConnected = false
-		isConnecting = false
+		connectionState.clearTransport()
 		isLoggedIn = false
-		isQuitting = false
-		isDisconnecting = false
+		connectionState.clearShutdown()
 		inWhoisResponse = false
 		inWhowasResponse = false
 		nickServ = NickServIdentification()
@@ -537,8 +531,7 @@ extension ServerSession {
 			printDebugInformation(toConsole: String(localized: .IRC.connectionToHostEstablished))
 		}
 
-		isConnecting = false
-		isConnected = true
+		connectionState.didConnect()
 		userNickname = config.nickname
 		nicknameRetry.sentNickname = config.nickname
 		output?.updateTitle(for: self)

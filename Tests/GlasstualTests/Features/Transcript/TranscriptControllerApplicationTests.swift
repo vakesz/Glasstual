@@ -347,7 +347,7 @@ struct TranscriptControllerApplicationTests {
 		controller.loadOlderHistory()
 		await controller.drainRenderJobs()
 		#expect(controller.olderHistoryFailed)
-		#expect(controller.olderHistoryFailure == .read("Injected read failure"))
+		#expect(controller.historyRecovery.olderFailure == .read("Injected read failure"))
 		#expect(controller.oldestLineNumber == live.uniqueIdentifier)
 		var older = line("older", date: 1)
 		older.reactions = ["+1": ["alice"]]
@@ -580,7 +580,7 @@ struct TranscriptControllerApplicationTests {
 		controller.historyPageFetcher = { _ in .failed(.read("Cannot read history")) }
 		let view = controller.ensureBackingView()
 		await controller.drainRenderJobs()
-		#expect(controller.historyLoadFailure == .read("Cannot read history"))
+		#expect(controller.historyRecovery.initialFailure == .read("Cannot read history"))
 		let live = line("live")
 		controller.print(live)
 		await controller.drainRenderJobs()
@@ -588,7 +588,7 @@ struct TranscriptControllerApplicationTests {
 		controller.historyPageFetcher = { _ in .page([]) }
 		controller.notifyDidBecomeVisible()
 		await controller.drainRenderJobs()
-		#expect(controller.historyLoadFailure == nil)
+		#expect(controller.historyRecovery.initialFailure == nil)
 		#expect(view.displayedLines.map(\.lineNumber) == [live.uniqueIdentifier])
 	}
 
@@ -636,7 +636,7 @@ struct TranscriptControllerApplicationTests {
 			session.enableCapability(.labeledResponse)
 		}
 		let channel = try #require(session.findConversationOrCreate("#history"))
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		session.isLoggedIn = true
 		session.socket = Connection(config: ConnectionConfig(), onSession: session)
 		session.forwardsProcessedMessages = true

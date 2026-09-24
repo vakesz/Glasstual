@@ -109,6 +109,9 @@ struct SidebarProjectionTests {
 
 		#expect(list.rows.isEmpty)
 		#expect(list.hasNoFilterMatches)
+		let snapshot = SidebarOutlineSnapshot(model: list)
+		#expect(snapshot.knownIdentifiers.contains(.server(beta.uniqueIdentifier)))
+		#expect(snapshot.knownIdentifiers.contains(.conversation(betaChannels[0].uniqueIdentifier)))
 	}
 
 	/// The regression: the filter used to narrow the index space every
@@ -170,6 +173,21 @@ struct SidebarProjectionTests {
 		list.setExpanded(true, for: beta)
 		#expect(list.rows == disclosedByReader)
 		#expect(list.row(forItem: hidden) == 4)
+	}
+
+	@Test("Collapsing a selected server removes its hidden conversation from navigation")
+	func collapseUpdatesSelectionAndIndexTogether() throws {
+		let conversation = try #require(betaChannels.first)
+		list.setExpanded(true, for: beta)
+		list.select(conversation)
+		#expect(list.selectedItem === conversation)
+
+		list.setExpanded(false, for: beta)
+
+		#expect(list.selectedItem === beta)
+		#expect(list.row(forItem: conversation) == -1)
+		let selectedRow = try #require(list.selectableItems.indices.contains(list.selectedRow) ? list.selectedRow : nil)
+		#expect(list.selectableItems[selectedRow] === beta)
 	}
 
 	/// A row is compared by what it draws, so the badge colour has to be part

@@ -331,7 +331,7 @@ struct IRCSpecISupportTests {
 		#expect(session.stringIsNickname("shortnic"))
 		#expect(session.stringIsNickname("muchtoolongnickname"))
 		#expect(session.stringIsNickname(String(repeating: "a", count: 51)) == false)
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		session.changeNickname("muchtoolongnickname")
 		#expect(session.sentLines.lastObject as? String == "NICK muchtool")
 	}

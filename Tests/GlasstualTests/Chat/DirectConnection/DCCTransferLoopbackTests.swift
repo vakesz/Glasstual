@@ -87,6 +87,32 @@ struct DCCTransferLoopbackTests {
 
 		#expect(senderEvents.last.map(TransferFixture.isFinished) == true)
 		#expect(received.last.map(TransferFixture.isFinished) == true)
+		for events in [senderEvents, received] {
+			let progress = events.compactMap { event -> UInt64? in
+				if case let .progress(bytes) = event {
+					bytes
+				} else {
+					nil
+				}
+			}
+			#expect(progress.last == UInt64(payload.count))
+			#expect(zip(progress, progress.dropFirst()).allSatisfy { pair in pair.0 < pair.1 })
+			let finalProgressIndex = try #require(events.lastIndex { event in
+				if case .progress = event {
+					true
+				} else {
+					false
+				}
+			})
+			let completionIndex = try #require(events.firstIndex { event in
+				if case .completion = event {
+					true
+				} else {
+					false
+				}
+			})
+			#expect(finalProgressIndex < completionIndex)
+		}
 
 		let delivered = try Data(contentsOf: destination)
 		#expect(delivered.count == payload.count)

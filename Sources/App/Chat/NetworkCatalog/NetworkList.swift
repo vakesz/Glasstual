@@ -83,29 +83,13 @@ nonisolated struct NetworkList: Sendable {
 	}
 
 	private static func loadNetworks() -> [Network] {
-		if let resource = BundleResources.array(fromResources: "IRCNetworks", cacheValue: false) {
-			return resource.compactMap { entry in
-				guard let dictionary = entry.dictionary else {
-					return nil
-				}
-
-				return Network(dictionary: dictionary)
-			}
-		}
-
-		guard
-			let legacyList = BundleResources.dictionary(fromResources: "IRCNetworks", cacheValue: false)
-		else {
+		guard let resource = BundleResources.array(fromResources: "IRCNetworks", cacheValue: false) else {
 			return []
 		}
-
-		return legacyList.compactMap { name, configuration in
-			guard var dictionary = configuration.dictionary else {
+		return resource.compactMap { entry in
+			guard let dictionary = entry.dictionary else {
 				return nil
 			}
-
-			dictionary["name"] = .string(name)
-
 			return Network(dictionary: dictionary)
 		}
 	}

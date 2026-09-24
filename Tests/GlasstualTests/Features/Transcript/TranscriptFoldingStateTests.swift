@@ -18,7 +18,7 @@ struct TranscriptFoldingStateTests {
 		)
 		#expect(changed == ["first", "second"])
 		#expect(state.presentations["first"] == .summary(kind: .generalEvents, count: 2, expanded: false))
-		#expect(state.presentations["second"] == .hidden(summaryLineNumber: "first"))
+		#expect(state.presentations["second"] == .hidden)
 	}
 
 	@Test("Conversation and important event rows break general-event groups", arguments: [
@@ -57,7 +57,7 @@ struct TranscriptFoldingStateTests {
 		#expect(state.presentations["first"] == .summary(
 			kind: .mutedUser(normalizedNickname: "{alice}", displayNickname: "[Alice]"), count: 2, expanded: false
 		))
-		#expect(state.presentations["second"] == .hidden(summaryLineNumber: "first"))
+		#expect(state.presentations["second"] == .hidden)
 
 		state.update(rows: rows, generalEventDisplay: .show, mutedNicknames: ["{Alice}"], caseMapping: .ascii)
 		#expect(state.presentations["first"] == nil)
@@ -112,7 +112,7 @@ struct TranscriptFoldingStateTests {
 		let kind = TranscriptFoldKind.mutedUser(normalizedNickname: "alice", displayNickname: "alice")
 		#expect(state.presentations["before"] == .summary(kind: kind, count: 1, expanded: false))
 		#expect(state.presentations["boundary"] == .summary(kind: kind, count: 2, expanded: false))
-		#expect(state.presentations["after"] == .hidden(summaryLineNumber: "boundary"))
+		#expect(state.presentations["after"] == .hidden)
 	}
 
 	@Test("Toggling opens every row and keeps the summary available to close the group")
@@ -127,21 +127,20 @@ struct TranscriptFoldingStateTests {
 		#expect(state.presentations["second"] == nil)
 		#expect(state.reveal(lineNumber: "second").isEmpty)
 		#expect(state.toggle(summaryLineNumber: "first") == ["first", "second"])
-		#expect(state.presentations["second"] == .hidden(summaryLineNumber: "first"))
+		#expect(state.presentations["second"] == .hidden)
 		#expect(state.toggle(summaryLineNumber: "missing").isEmpty)
 		#expect(state.reveal(lineNumber: "missing").isEmpty)
 	}
 
-	@Test("Jumping to a hidden row also accepts its persisted history identity")
-	func revealingAcceptsHistoryIdentity() {
-		var hidden = row("rendered", kind: .quit)
-		hidden.historyCursor = ScrollbackRowCursor(timestamp: 0, insertionIdentifier: 1, lineIdentifier: "stored", rowURI: "history")
+	@Test("Revealing a hidden display row opens its group")
+	func revealingHiddenDisplayRow() {
+		let hidden = row("rendered", kind: .quit)
 		var state = TranscriptFoldingState()
 		state.update(
 			rows: [row("summary", kind: .join), hidden],
 			generalEventDisplay: .collapse, mutedNicknames: [], caseMapping: .rfc1459
 		)
-		#expect(state.reveal(lineNumber: "stored") == ["summary", "rendered"])
+		#expect(state.reveal(lineNumber: "rendered") == ["summary", "rendered"])
 		#expect(state.presentations["rendered"] == nil)
 		#expect(state.presentations["summary"] == .summary(kind: .generalEvents, count: 2, expanded: true))
 	}
@@ -180,7 +179,99 @@ struct TranscriptFoldingStateTests {
 		)
 		#expect(changed == ["first", "second"])
 		#expect(state.presentations["first"] == .summary(kind: .generalEvents, count: 2, expanded: false))
-		#expect(state.presentations["second"] == .hidden(summaryLineNumber: "first"))
+		#expect(state.presentations["second"] == .hidden)
+	}
+
+	@Test("Incremental edge edits agree with a full regrouping while keeping expansion")
+	func incrementalEdgesMatchFullRegrouping() {
+		var rows = [row("first", kind: .join), row("second", kind: .part)]
+		var state = TranscriptFoldingState()
+		#expect(state.append(
+			rows: rows, generalEventDisplay: .collapse, mutedNicknames: [], caseMapping: .rfc1459
+		) == ["first", "second"])
+		state.toggle(summaryLineNumber: "first")
+		rows.append(contentsOf: [row("third", kind: .quit), row("visible")])
+		#expect(state.append(
+			rows: Array(rows.suffix(2)), generalEventDisplay: .collapse,
+			mutedNicknames: [], caseMapping: .rfc1459
+		) == ["first"])
+		expectFullRegroupingAgrees(state, rows: rows)
+
+		let older = [row("older", kind: .nick), row("oldest", kind: .mode)]
+		rows.insert(contentsOf: older, at: 0)
+		#expect(state.prepend(
+			rows: older, generalEventDisplay: .collapse, mutedNicknames: [], caseMapping: .rfc1459
+		) == ["older", "oldest", "first"])
+		#expect(state.presentations["older"] == .summary(kind: .generalEvents, count: 5, expanded: true))
+		expectFullRegroupingAgrees(state, rows: rows)
+
+		let retired = Array(rows.prefix(3))
+		rows.removeFirst(3)
+		#expect(state.retire(rows: retired, firstRetainedRow: rows.first) == ["second"])
+		#expect(state.presentations["second"] == .summary(kind: .generalEvents, count: 2, expanded: true))
+		expectFullRegroupingAgrees(state, rows: rows)
+		#expect(state.toggle(summaryLineNumber: "second") == ["second", "third"])
+		#expect(state.presentations["third"] == .hidden)
+	}
+
+	@Test("Retiring a muted summary uses the new oldest sender spelling")
+	func mutedSummarySpellingAfterRetirement() {
+		let first = row("first", nickname: "ALICE")
+		let second = row("second", nickname: "Alice")
+		var state = TranscriptFoldingState()
+		state.append(
+			rows: [first, second], generalEventDisplay: .show,
+			mutedNicknames: ["alice"], caseMapping: .rfc1459
+		)
+		#expect(state.retire(rows: [first], firstRetainedRow: second) == ["second"])
+		#expect(state.presentations["second"] == .summary(
+			kind: .mutedUser(normalizedNickname: "alice", displayNickname: "Alice"), count: 1, expanded: false
+		))
+		expectFullRegroupingAgrees(state, rows: [second], generalEventDisplay: .show, mutedNicknames: ["alice"])
+	}
+
+	@Test("A marker on the retained first row prevents an older batch from joining its group")
+	func prependingRespectsExistingMarkerBoundary() {
+		var marked = row("marked", kind: .join)
+		marked.markers = [.unread("Unread")]
+		var state = TranscriptFoldingState()
+		state.append(
+			rows: [marked, row("later", kind: .part)], generalEventDisplay: .collapse,
+			mutedNicknames: [], caseMapping: .rfc1459
+		)
+		let older = row("older", kind: .quit)
+		state.prepend(
+			rows: [older], generalEventDisplay: .collapse,
+			mutedNicknames: [], caseMapping: .rfc1459
+		)
+		#expect(state.presentations["older"] == .summary(kind: .generalEvents, count: 1, expanded: false))
+		#expect(state.presentations["marked"] == .summary(kind: .generalEvents, count: 2, expanded: false))
+		expectFullRegroupingAgrees(state, rows: [older, marked, row("later", kind: .part)])
+	}
+
+	@Test("A capped fold keeps its summary and identifiers after repeated append and trim")
+	func cappedGroupSurvivesEdgeChurn() {
+		let initial = (0 ..< 1100).map { row("row-\($0)", kind: .join) }
+		var retained = ArraySlice(initial)
+		var state = TranscriptFoldingState()
+		state.append(
+			rows: initial, generalEventDisplay: .collapse, mutedNicknames: [], caseMapping: .rfc1459
+		)
+		for number in 1100 ..< 2300 {
+			let newest = row("row-\(number)", kind: .part)
+			state.append(
+				rows: [newest], generalEventDisplay: .collapse, mutedNicknames: [], caseMapping: .rfc1459
+			)
+			retained.append(newest)
+			let oldest = retained.removeFirst()
+			state.retire(rows: [oldest], firstRetainedRow: retained.first)
+		}
+		#expect(state.rowCount == 1100)
+		#expect(state.presentations["row-1200"] == .summary(kind: .generalEvents, count: 1100, expanded: false))
+		#expect(state.presentations["row-2299"] == .hidden)
+		#expect(state.presentations["row-0"] == nil)
+		expectFullRegroupingAgrees(state, rows: Array(retained))
+		#expect(state.reveal(lineNumber: "row-2299").count == 1100)
 	}
 
 	@Test("Retired row identities cannot reopen a future group")
@@ -236,8 +327,8 @@ struct TranscriptFoldingStateTests {
 		state.update(rows: rows, generalEventDisplay: .collapse, mutedNicknames: [], caseMapping: .rfc1459)
 		state.toggle(summaryLineNumber: "first")
 		state.update(rows: rows, generalEventDisplay: .hide, mutedNicknames: [], caseMapping: .rfc1459)
-		#expect(state.presentations["first"] == .hidden(summaryLineNumber: "first"))
-		#expect(state.presentations["second"] == .hidden(summaryLineNumber: "second"))
+		#expect(state.presentations["first"] == .hidden)
+		#expect(state.presentations["second"] == .hidden)
 		#expect(state.presentations["visible"] == nil)
 		#expect(state.reveal(lineNumber: "second").isEmpty)
 		#expect(state.toggle(summaryLineNumber: "first").isEmpty)
@@ -254,5 +345,20 @@ struct TranscriptFoldingStateTests {
 			deliveryState: .none, deliveryFailureReason: nil, reactions: [:], markers: [],
 			body: TranscriptBody(plainText: identifier)
 		)
+	}
+
+	private func expectFullRegroupingAgrees(
+		_ state: TranscriptFoldingState,
+		rows: [TranscriptRow],
+		generalEventDisplay: GeneralEventMessageDisplay = .collapse,
+		mutedNicknames: Set<String> = []
+	) {
+		var rebuilt = state
+		rebuilt.update(
+			rows: rows, generalEventDisplay: generalEventDisplay,
+			mutedNicknames: mutedNicknames, caseMapping: .rfc1459
+		)
+		#expect(state.presentations == rebuilt.presentations)
+		#expect(state.rowCount == rows.count)
 	}
 }

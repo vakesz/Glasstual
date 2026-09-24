@@ -68,17 +68,19 @@ struct MainWindowTitleContentTests {
 		#expect(content.subtitle.contains("Alice (away)"))
 	}
 
-	@Test("Disconnecting outranks connecting, logging on, and disconnected", arguments: 0 ..< 16)
-	func disconnectingStatusTakesPrecedence(flags: Int) {
-		let session = TestServerSession()
-		session.isConnecting = flags & 1 != 0
-		session.isConnected = flags & 2 != 0
-		session.isLoggedIn = flags & 4 != 0
-		session.isQuitting = flags & 8 == 0
-		session.isDisconnecting = flags & 8 != 0
-
-		let content = MainWindowTitleContent(session: session, conversation: nil)
-		#expect(content.subtitle.hasPrefix(MainWindowConnectionStatus.disconnecting.title))
+	@Test("Disconnecting outranks connecting and logging on")
+	func disconnectingStatusTakesPrecedence() {
+		for transport in [SessionConnectionState.Transport.preparingCredentials, .connecting, .connected] {
+			for shutdown in [SessionConnectionState.Shutdown.quitting, .disconnecting] {
+				for loggedIn in [false, true] {
+					let session = TestServerSession()
+					session.connectionState = SessionConnectionState(transport: transport, shutdown: shutdown)
+					session.isLoggedIn = loggedIn
+					let content = MainWindowTitleContent(session: session, conversation: nil)
+					#expect(content.subtitle.hasPrefix(MainWindowConnectionStatus.disconnecting.title))
+				}
+			}
+		}
 	}
 
 	@Test("The native window updates a selected child's status when its session changes")
@@ -96,10 +98,15 @@ struct MainWindowTitleContentTests {
 			.disconnected, .connecting, .loggingOn, nil, .disconnecting, .disconnected,
 		]
 		for status in phases {
-			session.isConnecting = status == .connecting
-			session.isConnected = status == .loggingOn || status == nil || status == .disconnecting
+			session.connectionState = switch status {
+			case .disconnected: SessionConnectionState()
+			case .connecting: SessionConnectionState(transport: .connecting)
+			case .loggingOn: SessionConnectionState(transport: .connected)
+			case .disconnecting: SessionConnectionState(transport: .connected, shutdown: .quitting)
+			case nil: SessionConnectionState(transport: .connected)
+			default: SessionConnectionState()
+			}
 			session.isLoggedIn = status == nil || status == .disconnecting
-			session.isQuitting = status == .disconnecting
 			window.updateTitle(for: session)
 
 			#expect(window.selectedItem === channel)
@@ -129,7 +136,7 @@ struct MainWindowTitleContentTests {
 		let subtitle = window.subtitle
 		let accessibleTitle = window.accessibilityTitle()
 
-		session.isConnecting = true
+		session.setConnectionTransportForTesting(.connecting)
 		window.updateTitle(for: sibling)
 		window.updateTitle(for: TestServerSession())
 		#expect(window.subtitle == subtitle)
@@ -155,7 +162,7 @@ struct MainWindowTitleContentTests {
 		session.cancelReconnect()
 		window.updateTitle(for: session)
 		#expect(window.subtitle.hasPrefix(MainWindowConnectionStatus.disconnected.title))
-		session.isConnecting = true
+		session.setConnectionTransportForTesting(.connecting)
 		for mode in [SessionConnectMode.reconnect, .retry] {
 			session.connectType = mode
 			window.updateTitle(for: session)
@@ -174,7 +181,7 @@ struct MainWindowTitleContentTests {
 		#expect(window.title == "Test Network")
 		#expect(window.accessibilityTitle() == window.title + ", " + window.subtitle)
 
-		session.isDisconnecting = true
+		session.setConnectionShutdownForTesting(.disconnecting)
 		window.updateTitle(for: session)
 		#expect(window.subtitle.hasPrefix(MainWindowConnectionStatus.disconnecting.title))
 		#expect(window.accessibilityTitle() == window.title + ", " + window.subtitle)

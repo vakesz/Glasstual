@@ -13,7 +13,7 @@ struct UserScriptRunnerTests {
 	@Test("Delayed script output cannot target a replacement connection or channel")
 	func staleScriptDestination() throws {
 		let session = TestServerSession()
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		let channel = try #require(session.findConversationOrCreate("#scripts"))
 		let original = ScriptInvocation(session: session, target: channel.name)
 		#expect(session.scriptInvocationIsCurrent(original))

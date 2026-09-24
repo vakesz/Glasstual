@@ -61,14 +61,16 @@ final class ConversationMembers {
 		self.presentation = presentation
 	}
 
-	/** Scope these to one synchronous protocol message, not an entire NAMES/WHO exchange.
-
-	 Directory and member lookups remain current while presentation is deferred,
-	 but the ordering does not: a member added or resorted inside the batch is
-	 appended, and the batch sorts once as it ends. A NAMES line carries dozens of
-	 names, and a sorted insert for each one — a binary search, a shift and an
-	 index update — made a large channel's join quadratic. */
+	/** A protocol handler may coalesce its own edits. The connection also keeps
+	 changed lists open for one bounded, synchronous read turn. Directory and
+	 member lookups stay current while ordering and presentation are deferred. */
 	func beginPresentationUpdates() {
+		deferInboundPresentationIfNeeded()
+		presentationUpdateDepth += 1
+	}
+
+	/// Called once when this list first changes in the connection's read turn.
+	func beginInboundPresentationUpdates() {
 		presentationUpdateDepth += 1
 	}
 
@@ -90,11 +92,17 @@ final class ConversationMembers {
 	/// protocol message is still assembling one.
 	private func publishMembers() {
 		guard conversation?.isChannel == true else { return }
+		deferInboundPresentationIfNeeded()
 		guard presentationUpdateDepth == 0 else {
 			presentationUpdatePending = true
 			return
 		}
 		presentation?.membersDidChange(memberContainer)
+	}
+
+	private func deferInboundPresentationIfNeeded() {
+		guard conversation?.isChannel == true else { return }
+		session?.deferMemberPresentation(self)
 	}
 
 	private func sortedIndex(for member: Member) -> Int {
@@ -127,6 +135,7 @@ final class ConversationMembers {
 	/// Inserts `member` at its rank, or appends it for the enclosing update batch
 	/// to sort.
 	private func sortedInsert(_ member: Member) {
+		deferInboundPresentationIfNeeded()
 		guard presentationUpdateDepth == 0 else {
 			indexByUserID[member.id] = memberContainer.count
 			memberContainer.append(member)
@@ -444,6 +453,7 @@ final class ConversationMembers {
 			) == .orderedAscending
 		}
 		reindexMembers()
+		orderingPending = false
 	}
 
 	func clearMembers() {
