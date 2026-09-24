@@ -108,6 +108,29 @@ struct TranscriptViewFoldingTests {
 		}
 	}
 
+	@Test("History aliases reveal the first matching folded display row")
+	func historyAliasRevealsMatchingGroup() throws {
+		try withTranscript { view, _ in
+			var first = line("first", kind: .join)
+			first.historyCursor = ScrollbackRowCursor(
+				timestamp: 0, insertionIdentifier: 1, lineIdentifier: "shared", rowURI: "first-history"
+			)
+			var second = line("second", kind: .part)
+			second.historyCursor = ScrollbackRowCursor(
+				timestamp: 1, insertionIdentifier: 2, lineIdentifier: "shared", rowURI: "second-history"
+			)
+			view.appendLines([first])
+			view.appendLines([line("visible"), second])
+			#expect(view.document.index(ofLine: "shared") == 0)
+			#expect(view.jump(to: "shared"))
+			#expect(view.textView.string.contains("first body"))
+			#expect(view.textView.string.contains("second body") == false)
+			#expect(view.document.folding.presentations["second"] == .summary(
+				kind: .generalEvents, count: 1, expanded: false
+			))
+		}
+	}
+
 	@Test("An unread marker divides a collapsed group and remains visible after expansion")
 	func unreadBoundaryRemainsVisible() throws {
 		try withTranscript { view, _ in

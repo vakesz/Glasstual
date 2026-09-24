@@ -26,7 +26,7 @@ struct TranscriptControllerHistoryRecoveryTests {
 		let context = try ScrollbackQueries.makeStack(at: directory.appendingPathComponent("history.sqlite"))
 		let store = ScrollbackStore(filenameSetting: ScrollbackFilenameFixture().store, makeStack: { _ in context })
 		let historySession = ScrollbackSession(
-			store: .store(store),
+			store: store,
 			databaseDirectory: { directory.path },
 			reportFailure: { Issue.record("\($0)") }
 		)
@@ -55,9 +55,9 @@ struct TranscriptControllerHistoryRecoveryTests {
 			try await setSession(nil, context: context, view: identifier)
 			controller.loadOlderHistory()
 			await controller.drainRenderJobs()
-			#expect(controller.olderHistoryFailure == .invalidEntry)
+			#expect(controller.historyRecovery.olderFailure == .invalidEntry)
 		} else {
-			#expect(controller.historyLoadFailure == .invalidEntry)
+			#expect(controller.historyRecovery.initialFailure == .invalidEntry)
 		}
 		#expect(controller.historyRecovery.localMessage != nil)
 		try await setSession(1, context: context, view: identifier)
@@ -84,7 +84,7 @@ struct TranscriptControllerHistoryRecoveryTests {
 		defer { try? FileManager.default.removeItem(at: directory) }
 		let context = try ScrollbackQueries.makeStack(at: directory.appendingPathComponent("history.sqlite"))
 		let store = ScrollbackStore(filenameSetting: ScrollbackFilenameFixture().store, makeStack: { _ in context })
-		let session = ScrollbackSession(store: .store(store), databaseDirectory: { directory.path },
+		let session = ScrollbackSession(store: store, databaseDirectory: { directory.path },
 		                                reportFailure: { Issue.record("\($0)") })
 		let history = Scrollback(session: session)
 		var old = ChatLine()

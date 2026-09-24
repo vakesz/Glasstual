@@ -78,7 +78,7 @@ struct ServerSessionConnectionDelegatePolicyTests {
 			}
 		}
 
-		session.isConnecting = true
+		session.setConnectionTransportForTesting(.connecting)
 		session.changeStateOff()
 		await controller.drainRenderJobs()
 

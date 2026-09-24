@@ -79,6 +79,39 @@ nonisolated enum DCCTransferEvent: Sendable {
 	case failed(DCCTransferError)
 }
 
+/// Keeps display progress below the rate of file blocks without losing the
+/// latest byte count. The transfer flushes it before completion, failure or
+/// cancellation, so progress cannot arrive after a terminal event.
+nonisolated struct DCCProgressSampler {
+	let minimumInterval: Duration
+	private var lastEmission: ContinuousClock.Instant?
+	private var lastReportedBytes: UInt64?
+	private var pendingBytes: UInt64?
+
+	init(minimumInterval: Duration) {
+		self.minimumInterval = minimumInterval
+	}
+
+	mutating func record(_ bytes: UInt64, at now: ContinuousClock.Instant) -> UInt64? {
+		guard (pendingBytes ?? lastReportedBytes).map({ bytes > $0 }) ?? true else { return nil }
+		if let lastEmission, now - lastEmission < minimumInterval {
+			pendingBytes = bytes
+			return nil
+		}
+		lastEmission = now
+		lastReportedBytes = bytes
+		pendingBytes = nil
+		return bytes
+	}
+
+	mutating func flush() -> UInt64? {
+		guard let pendingBytes else { return nil }
+		self.pendingBytes = nil
+		lastReportedBytes = pendingBytes
+		return pendingBytes
+	}
+}
+
 /// One DCC file transfer: the socket, the file and the DCC acknowledgement
 /// protocol, all owned by a single actor.
 ///
@@ -151,6 +184,10 @@ actor DCCTransfer {
 	/// The transfer paces itself to this many bytes a second so a local
 	/// transfer cannot starve the rest of the app.
 	static let rateLimitBytesPerSecond: UInt64 = 10 * 1024 * 1024
+	/// Progress is presentation data; byte I/O and DCC acknowledgements still
+	/// happen for every block. Ten updates per second keep large transfers from
+	/// asking the main actor to redraw a row for every 64 KiB block.
+	static let progressInterval: Duration = .milliseconds(100)
 	/// How long the sender waits for the receiver to close once the last block
 	/// has gone out.
 	static let gracefulCloseTimeout: Duration = .seconds(30)
@@ -168,6 +205,7 @@ actor DCCTransfer {
 	private var submittedBytes: UInt64 = 0
 	private var isCancelled = false
 	private var hasFinished = false
+	private var progressSampler = DCCProgressSampler(minimumInterval: DCCTransfer.progressInterval)
 
 	init(config: Config) {
 		let (stream, continuation) = AsyncStream<DCCTransferEvent>.makeStream()
@@ -198,6 +236,7 @@ actor DCCTransfer {
 			isCancelled = true
 			running?.cancel()
 			tearDown()
+			flushProgress()
 			hasFinished = true
 			eventContinuation.finish()
 		}
@@ -255,8 +294,22 @@ actor DCCTransfer {
 		guard hasFinished == false else {
 			return
 		}
-
+		if case let .progress(processedBytes) = event {
+			if let bytes = progressSampler.record(processedBytes, at: .now) {
+				eventContinuation.yield(.progress(processedBytes: bytes))
+			}
+			return
+		}
+		if case .completion = event {
+			flushProgress()
+		}
 		eventContinuation.yield(event)
+	}
+
+	private func flushProgress() {
+		if let bytes = progressSampler.flush() {
+			eventContinuation.yield(.progress(processedBytes: bytes))
+		}
 	}
 
 	private func finish(with event: DCCTransferEvent) {
@@ -264,6 +317,7 @@ actor DCCTransfer {
 			return
 		}
 
+		flushProgress()
 		hasFinished = true
 		eventContinuation.yield(event)
 		eventContinuation.finish()

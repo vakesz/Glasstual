@@ -38,16 +38,8 @@ final class TranscriptController: ChatItemPresenting, ServerHistoryPresenting {
 	private(set) var terminating = false
 	/* Loading history is the other half of this controller, and it lives in
 	 `TranscriptController+HistoryLoading.swift`: the initial replay, the scrollback
-	 pages and the server-history handshake. The state the two halves share is
-	 declared here and reaches no further than this feature. */
-	var historyLoadedForFirstTime = false
-	var reloadingHistory = false
-	var historyLoaded = false
-	var historyLoadFailure: ScrollbackFetchFailure? {
-		didSet { historyRecovery.initialFailure = historyLoadFailure }
-	}
-
-	var loadingOlderHistory = false
+	 pages and the server-history handshake. Local load status lives in
+	 ``historyRecovery``; the server handshake remains separate. */
 	var olderHistoryTask: Task<Void, Never>?
 	var locallyExhaustedBefore: String?
 	/// Where this transcript stands with the server's own history. None of it is
@@ -60,10 +52,6 @@ final class TranscriptController: ChatItemPresenting, ServerHistoryPresenting {
 		}
 	}
 
-	var olderHistoryFailure: ScrollbackFetchFailure? {
-		didSet { historyRecovery.olderFailure = olderHistoryFailure }
-	}
-
 	let historyRecovery = TranscriptHistoryRecovery()
 	/// The process-wide storage failures, which the banner composes with this
 	/// view's own. Owned by the scrollback facade, not by any one transcript.
@@ -73,7 +61,7 @@ final class TranscriptController: ChatItemPresenting, ServerHistoryPresenting {
 
 	var historyRetryTask: Task<Void, Never>?
 	var olderHistoryFailed: Bool {
-		olderHistoryFailure != nil
+		historyRecovery.olderFailure != nil
 	}
 
 	var historyPageFetcher: @Sendable @concurrent (ScrollbackFetchRequest) async
@@ -290,7 +278,7 @@ final class TranscriptController: ChatItemPresenting, ServerHistoryPresenting {
 		/* The dropped jobs include whatever was going to finish the replay, so
 		 the latch has to be released here rather than waiting for a completion
 		 that is never going to arrive. */
-		reloadingHistory = false
+		historyRecovery.cancelReload()
 		stopPipeline()
 		pipeline = TranscriptRenderPipeline()
 		startPipeline()
@@ -311,12 +299,12 @@ final class TranscriptController: ChatItemPresenting, ServerHistoryPresenting {
 		historyRecovery.isRetrying = false
 		olderHistoryTask?.cancel()
 		olderHistoryTask = nil
-		loadingOlderHistory = false
+		historyRecovery.endOlderPage()
 		locallyExhaustedBefore = nil
 		if let retiredRequest = serverHistory.reset() {
 			associatedSession?.cancelServerHistoryRequest(retiredRequest)
 		}
-		olderHistoryFailure = nil
+		historyRecovery.olderFailure = nil
 	}
 
 	func acceptsRenderGeneration(_ generation: Int) -> Bool {
@@ -612,6 +600,8 @@ extension TranscriptController {
 		guard !terminating else {
 			return
 		}
+		transcriptProjection.retireDisplayedLines(lineNumbers)
+		forgetRetiredProjectionMessages()
 		if let lastVisitedHighlight, lineNumbers.contains(lastVisitedHighlight) {
 			self.lastVisitedHighlight = nil
 		}
@@ -709,8 +699,7 @@ extension TranscriptController {
 		reactions.removeAll()
 		lastVisitedHighlight = nil
 		lastLineStorage = nil
-		reloadingHistory = false
-		historyLoaded = false
+		historyRecovery.clearLoadedHistory()
 		backingView?.clearLines()
 		if let backingView {
 			viewIsLoaded = false
@@ -887,7 +876,7 @@ extension TranscriptController {
 		forgetReactions(for: identifiers)
 	}
 
-	private func forgetRetiredProjectionMessages() {
+	func forgetRetiredProjectionMessages() {
 		forgetReactions(for: transcriptProjection.takeRetiredMessageIdentifiers())
 	}
 
@@ -904,25 +893,30 @@ extension TranscriptController {
 		messageIdentifier: String?,
 		reason: String?
 	) {
-		transcriptProjection.updateDelivery(
+		guard let update = transcriptProjection.updateDelivery(
 			lineNumber: lineNumber,
 			state: state,
 			messageIdentifier: messageIdentifier,
-			reason: reason
-		)
+			reason: reason,
+			isDisplayed: backingView?.containsLine(identifier: lineNumber) == true
+		) else { return }
 		forgetRetiredProjectionMessages()
 		guard transcriptProjection.phase == .active else {
 			return
 		}
-		let update = TranscriptDeliveryUpdate(
-			lineNumber: lineNumber,
-			state: state,
-			messageIdentifier: messageIdentifier,
-			reason: reason
-		)
 		enqueueMainActorWork { [weak self] in
 			guard let self else { return }
+			let previousIdentifier: String? = if let backingView, let index = backingView.document.index(ofLine: update.lineNumber) {
+				backingView.document[index].messageIdentifier
+			} else {
+				nil
+			}
 			backingView?.updateDelivery(update)
+			transcriptProjection.deliveryWasApplied(update)
+			forgetRetiredProjectionMessages()
+			if let previousIdentifier, previousIdentifier != update.messageIdentifier {
+				forgetReactions(for: [previousIdentifier])
+			}
 			if let identifier = update.messageIdentifier,
 			   let merged = reactions.reactions(forMessage: identifier)
 			{

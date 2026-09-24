@@ -124,3 +124,16 @@ extension Message {
 		session.resolveBatch(of: &self)
 	}
 }
+
+/// Tests can place a session at a transport or shutdown boundary without
+/// exposing independently writable lifecycle flags to production callers.
+@MainActor
+extension ServerSession {
+	func setConnectionTransportForTesting(_ transport: SessionConnectionState.Transport) {
+		connectionState = SessionConnectionState(transport: transport, shutdown: connectionState.shutdown)
+	}
+
+	func setConnectionShutdownForTesting(_ shutdown: SessionConnectionState.Shutdown) {
+		connectionState = SessionConnectionState(transport: connectionState.transport, shutdown: shutdown)
+	}
+}

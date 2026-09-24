@@ -352,7 +352,7 @@ struct ServerSessionNegotiationTests {
 	func saslNegotiationIsBounded() throws {
 		let session = makeSession(configuration: ["usesSASL": true], nicknamePassword: "secret")
 		defer { session.stopAllTimers() }
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 
 		try session.handleCapabilityOrAuthenticationRequest(message(
 			":irc.example.net CAP * LS :sasl=PLAIN",
@@ -379,7 +379,7 @@ struct ServerSessionNegotiationTests {
 	func eachSASLRoundIsBounded() throws {
 		let session = makeSession(configuration: ["usesSASL": true], nicknamePassword: "secret")
 		defer { session.stopAllTimers() }
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 
 		try session.handleCapabilityOrAuthenticationRequest(message(
 			":irc.example.net CAP * LS :sasl=PLAIN",
@@ -413,7 +413,7 @@ struct ServerSessionNegotiationTests {
 	func saslDeadlineAbortsAndContinues() throws {
 		let session = makeSession(configuration: ["usesSASL": true], nicknamePassword: "secret")
 		defer { session.stopAllTimers() }
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		try session.handleCapabilityOrAuthenticationRequest(message(
 			":irc.example.net CAP * LS :sasl=PLAIN",
 			on: session
@@ -455,7 +455,7 @@ struct ServerSessionNegotiationTests {
 	func nullCharactersInCredentialsAbortSASL() throws {
 		let session = makeSession(configuration: ["usesSASL": true], nicknamePassword: "hunter\u{0}2")
 		defer { session.stopAllTimers() }
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		try session.handleCapabilityOrAuthenticationRequest(message(
 			":irc.example.net CAP * LS :sasl=PLAIN",
 			on: session
@@ -520,7 +520,7 @@ struct ServerSessionNegotiationTests {
 			nicknamePassword: "secret"
 		)
 		defer { session.stopAllTimers() }
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		try session.handleCapabilityOrAuthenticationRequest(message(
 			":irc.example.net CAP * LS :sasl=PLAIN,SCRAM-SHA-256",
 			on: session
@@ -551,7 +551,7 @@ struct ServerSessionNegotiationTests {
 			nicknamePassword: "secret"
 		)
 		defer { session.stopAllTimers() }
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		try session.handleCapabilityOrAuthenticationRequest(message(
 			":irc.example.net CAP * LS :sasl=SCRAM-SHA-256",
 			on: session
@@ -604,7 +604,7 @@ struct ServerSessionNegotiationTests {
 	func plainIsWithheldWithoutEncryption(_ serverPrefersTLS: Bool) throws {
 		let session = makeSession(configuration: ["usesSASL": true], nicknamePassword: "secret")
 		defer { session.stopAllTimers() }
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		session.server = ServerEndpoint(serverAddress: "irc.example.net", prefersSecuredConnection: serverPrefersTLS)
 
 		try session.handleCapabilityOrAuthenticationRequest(message(":irc.example.net CAP * LS :sasl=PLAIN", on: session))

@@ -33,7 +33,7 @@ struct SendingMessageEmptyArgumentTests {
 	@Test("A refused argument list sends nothing and says so")
 	func refusedArgumentsSendNothing() {
 		let session = TestServerSession(configDictionary: ["nickname": "me"])
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		session.markAsLoggedIn()
 
 		session.send(.mode, arguments: ["#chat", "", "nick"])

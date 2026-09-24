@@ -10,37 +10,6 @@ private nonisolated let scrollbackSessionLogger = Logger(
 	category: "ScrollbackSession"
 )
 
-/** The storage operations the session drives.
-
- Closures rather than a protocol: `ScrollbackStore` is the only thing that
- implements them, and a test that wants an open to fail supplies its own
- closures instead of a second conformer, so opening failures never touch the
- reader's database. */
-nonisolated struct ScrollbackStoreOperations: Sendable {
-	var openDatabase: @Sendable (String) async -> ScrollbackOpenOutcome
-	var close: @Sendable () async -> ScrollbackSaveOutcome
-	var setMaximumLineCount: @Sendable (UInt) async -> Void
-	var writeChatLine: @Sendable (ScrollbackEntry) async -> ScrollbackWriteOutcome
-	var forgetView: @Sendable (String) async -> ScrollbackDeletionOutcome
-	var resetData: @Sendable (String) async -> ScrollbackDeletionOutcome
-	var saveData: @Sendable () async -> ScrollbackSaveOutcome
-	var fetchOutcome: @Sendable (ScrollbackFetchRequest) async -> ScrollbackFetchOutcome
-
-	/// The real database.
-	static func store(_ store: ScrollbackStore) -> Self {
-		Self(
-			openDatabase: { await store.openDatabase(inDirectory: $0) },
-			close: { await store.close() },
-			setMaximumLineCount: { await store.setMaximumLineCount($0) },
-			writeChatLine: { await store.writeChatLine($0) },
-			forgetView: { await store.forgetView($0) },
-			resetData: { await store.resetData(forView: $0) },
-			saveData: { await store.saveData() },
-			fetchOutcome: { await store.fetchOutcome($0) }
-		)
-	}
-}
-
 /** Coordinates the in-process history store and runs what is asked of it in the
  order it was asked.
 
@@ -76,7 +45,7 @@ actor ScrollbackSession {
 	 time and a second queue would only move the wait. */
 	private nonisolated let changes: AsyncStream<Change>.Continuation
 	private let databaseDirectory: @Sendable () async -> String?
-	private let store: ScrollbackStoreOperations
+	private let store: ScrollbackStore
 	/** Where a database that will not open is reported.
 
 	 Storage presents nothing itself: the in-transcript recovery banner already
@@ -107,19 +76,19 @@ actor ScrollbackSession {
 		filenameSetting: ScrollbackFilenameSetting = .stored
 	) {
 		self.init(
-			store: .store(ScrollbackStore(
+			store: ScrollbackStore(
 				filenameSetting: filenameSetting,
 				deletionHandler: { identifiers, viewIdentifier in
 					await Scrollback.noteWillDeleteLines(identifiers, inView: viewIdentifier)
 				}
-			)),
+			),
 			databaseDirectory: { databaseDirectory },
 			reportFailure: { Scrollback.shared.recovery.storageFailure = $0 }
 		)
 	}
 
 	init(
-		store: ScrollbackStoreOperations,
+		store: ScrollbackStore,
 		databaseDirectory: @escaping @Sendable () async -> String?,
 		reportFailure: @escaping @MainActor @Sendable (String) -> Void
 	) {
@@ -193,7 +162,7 @@ actor ScrollbackSession {
 			return false
 		}
 		guard isTerminating == false else { return false }
-		let outcome = await store.openDatabase(databaseDirectory)
+		let outcome = await store.openDatabase(inDirectory: databaseDirectory)
 		guard isTerminating == false else { return false }
 
 		switch outcome {
@@ -308,7 +277,7 @@ actor ScrollbackSession {
 		guard await ensureLoaded(), !isTerminating else { return .unavailable }
 		return forget
 			? await store.forgetView(viewIdentifier)
-			: await store.resetData(viewIdentifier)
+			: await store.resetData(forView: viewIdentifier)
 	}
 
 	func saveData() async -> ScrollbackSaveOutcome {

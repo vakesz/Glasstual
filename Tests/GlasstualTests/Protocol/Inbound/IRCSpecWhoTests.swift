@@ -18,7 +18,7 @@ struct IRCSpecWhoTests {
 		list.assign(to: channel)
 		let connection = Connection(config: ConnectionConfig(), onSession: session)
 		session.socket = connection
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		let revision = list.presentationRevision
 		let names = (0 ..< 256).map { "member\($0)" }.joined(separator: " ")
 		session.connectionDidReceive(":server 353 me = #names :\(names)")
@@ -27,6 +27,31 @@ struct IRCSpecWhoTests {
 		#expect(list.presentationRevision == revision + 1)
 		#expect(list.groups.flatMap(\.members).count == 256)
 		list.assign(to: nil)
+	}
+
+	@Test("A pending read keeps member lookups current before publishing ordered rows")
+	func pendingReadKeepsMembershipCurrent() throws {
+		let session = session()
+		let channel = try joinedChannel("#names", on: session)
+		let list = MemberList()
+		list.assign(to: channel)
+		defer { list.assign(to: nil) }
+		session.setConnectionTransportForTesting(.connected)
+		let revision = list.presentationRevision
+
+		session.beginInboundMemberPresentationUpdates()
+		session.connectionDidReceive(":server 353 me = #names :alice bob")
+		#expect(channel.findMember("bob") != nil)
+		#expect(channel.numberOfMembers == 2)
+		#expect(list.presentationRevision == revision)
+		session.connectionDidReceive(":server 353 me = #names :@alice carol")
+		#expect(channel.findMember("alice")?.modes.letters == "o")
+		#expect(channel.findMember("carol") != nil)
+		#expect(list.presentationRevision == revision)
+		session.finishInboundMemberPresentationUpdates()
+
+		#expect(list.presentationRevision == revision + 1)
+		#expect(list.groups.flatMap(\.members).map(\.user.nickname) == ["alice", "bob", "carol"])
 	}
 
 	@Test("WHO and WHOX publish each related list once and preserve selection", arguments: [false, true])
@@ -48,7 +73,7 @@ struct IRCSpecWhoTests {
 		let revisions = [firstList.presentationRevision, secondList.presentationRevision]
 		let connection = Connection(config: ConnectionConfig(), onSession: session)
 		session.socket = connection
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		let line = whox
 			? ":server 354 me \(ServerQuirks.whoxToken) #first ali example.org alice G* account :Alice Example"
 			: ":server 352 me #first ali example.org server alice G* :0 Alice Example"

@@ -6,13 +6,50 @@ import CoreData
 import Synchronization
 import Testing
 
+private nonisolated struct SavedScrollbackRow: Hashable, Sendable {
+	let entryID: Int64
+	let createdAt: Double
+	let data: Data
+	let lineID: String
+	let sessionID: Int64
+	let viewID: String
+
+	init(entryID: Int64, createdAt: Double, data: Data, lineID: String, sessionID: Int64, viewID: String) {
+		self.entryID = entryID
+		self.createdAt = createdAt
+		self.data = data
+		self.lineID = lineID
+		self.sessionID = sessionID
+		self.viewID = viewID
+	}
+
+	init(_ object: NSManagedObject) throws {
+		entryID = try #require((object.value(forKey: ScrollbackAttribute.entryID.rawValue) as? NSNumber)?.int64Value)
+		createdAt = try #require((object.value(forKey: ScrollbackAttribute.createdAt.rawValue) as? NSNumber)?.doubleValue)
+		data = try #require(object.value(forKey: ScrollbackAttribute.lineData.rawValue) as? Data)
+		lineID = try #require(object.value(forKey: ScrollbackAttribute.lineID.rawValue) as? String)
+		sessionID = try #require((object.value(forKey: ScrollbackAttribute.sessionID.rawValue) as? NSNumber)?.int64Value)
+		viewID = try #require(object.value(forKey: ScrollbackAttribute.viewID.rawValue) as? String)
+	}
+
+	func insert(in context: NSManagedObjectContext, entity: NSEntityDescription) {
+		let object = NSManagedObject(entity: entity, insertInto: context)
+		object.setValue(NSNumber(value: entryID), forKey: ScrollbackAttribute.entryID.rawValue)
+		object.setValue(NSNumber(value: createdAt), forKey: ScrollbackAttribute.createdAt.rawValue)
+		object.setValue(data, forKey: ScrollbackAttribute.lineData.rawValue)
+		object.setValue(lineID, forKey: ScrollbackAttribute.lineID.rawValue)
+		object.setValue(NSNumber(value: sessionID), forKey: ScrollbackAttribute.sessionID.rawValue)
+		object.setValue(viewID, forKey: ScrollbackAttribute.viewID.rawValue)
+	}
+}
+
 /// What the store does when it is asked to open a database and the setting
 /// that remembers one names nothing, or names something it cannot read.
 ///
-/// 2.0 writes a schema no earlier release wrote and migrates nothing, so a 1.x
+/// 2.0 writes a schema no 1.x release wrote, so a 1.x
 /// `logControllerHistoricLog_*.sqlite` is never named by the setting again.
-/// These cover both halves of that: a fresh database is minted under the current
-/// name, and anything already in the directory is left exactly as it was.
+/// Existing 2.x stores do receive the index-only model upgrade. These tests
+/// cover both paths and keep unrelated files in the directory intact.
 @MainActor
 @Suite("Scrollback database file", .serialized)
 struct ScrollbackStoreFileTests {
@@ -29,6 +66,94 @@ struct ScrollbackStoreFileTests {
 			.filter { $0.pathExtension == "sqlite" }
 			.map(\.lastPathComponent)
 			.sorted()
+	}
+
+	@Test("A compatible unindexed 2.x database upgrades without losing or merging rows")
+	func compatibleUnindexedDatabasePreservesEveryRow() async throws {
+		let directory = try makeDirectory()
+		defer { try? FileManager.default.removeItem(at: directory) }
+		let filename = "\(ScrollbackStore.databaseFilenamePrefix)\(UUID().uuidString).sqlite"
+		let url = directory.appendingPathComponent(filename)
+		let expected = [
+			SavedScrollbackRow(entryID: 1, createdAt: 1000, data: Data("first archive".utf8),
+			                   lineID: "one", sessionID: 11, viewID: "main"),
+			SavedScrollbackRow(entryID: 7, createdAt: 2000, data: Data("second archive".utf8),
+			                   lineID: "shared", sessionID: 11, viewID: "main"),
+			SavedScrollbackRow(entryID: 7, createdAt: 2000, data: Data("third archive".utf8),
+			                   lineID: "shared", sessionID: 11, viewID: "main"),
+			SavedScrollbackRow(entryID: 2, createdAt: 1500, data: Data("other view".utf8),
+			                   lineID: "other", sessionID: 22, viewID: "side"),
+		]
+
+		// Mint the actual shipping 2.x schema before its fetch indexes were added.
+		let seedingContext = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
+		try await seedingContext.perform {
+			let model = try ScrollbackModelMigration.loadUnindexedModel()
+			let entity = try #require(model.entitiesByName[ScrollbackQueries.entityName])
+			#expect(entity.indexes.isEmpty)
+			let coordinator = NSPersistentStoreCoordinator(managedObjectModel: model)
+			let persistentStore = try coordinator.addPersistentStore(type: .sqlite, at: url)
+			seedingContext.persistentStoreCoordinator = coordinator
+			for row in expected {
+				row.insert(in: seedingContext, entity: entity)
+			}
+			try seedingContext.save()
+			let request = NSFetchRequest<NSManagedObject>(entityName: ScrollbackQueries.entityName)
+			#expect(try seedingContext.count(for: request) == expected.count)
+			seedingContext.reset()
+			try coordinator.remove(persistentStore)
+		}
+		let unindexedModel = try ScrollbackModelMigration.loadUnindexedModel()
+		let indexedModel = try ScrollbackModelMigration.indexedModel(from: unindexedModel)
+		let originalMetadata = try NSPersistentStoreCoordinator.metadataForPersistentStore(
+			type: .sqlite, at: url, options: nil
+		)
+		#expect(unindexedModel.isConfiguration(withName: nil, compatibleWithStoreMetadata: originalMetadata))
+		#expect(!indexedModel.isConfiguration(withName: nil, compatibleWithStoreMetadata: originalMetadata))
+		let workingURL = directory.appendingPathComponent(".\(filename).indexing.sqlite")
+		try Data("interrupted migration".utf8).write(to: workingURL)
+
+		let setting = ScrollbackFilenameFixture(filename).store
+		let store = ScrollbackStore(filenameSetting: setting)
+		#expect(await store.openDatabase(inDirectory: directory.path).isOpen)
+		#expect(!FileManager.default.fileExists(atPath: workingURL.path))
+		let mainRows = await store.fetchOutcome(.newestEntries(forView: "main", fetchLimit: 10)).entries
+		let sideRows = await store.fetchOutcome(.newestEntries(forView: "side", fetchLimit: 10)).entries
+		#expect(mainRows.count == 3)
+		#expect(sideRows.count == 1)
+		#expect(Set(mainRows.map(\.data)) == Set(expected.filter { $0.viewID == "main" }.map(\.data)))
+		#expect(sideRows.map(\.data) == [expected[3].data])
+		#expect(await store.close() == .saved)
+		let upgradedMetadata = try NSPersistentStoreCoordinator.metadataForPersistentStore(
+			type: .sqlite, at: url, options: nil
+		)
+		#expect(indexedModel.isConfiguration(withName: nil, compatibleWithStoreMetadata: upgradedMetadata))
+		let upgradedUUID = try #require(upgradedMetadata[NSStoreUUIDKey] as? String)
+
+		// Read all columns from the upgraded file, including the tied physical rows.
+		let upgradedContext = try ScrollbackQueries.makeStack(at: url)
+		let actual = try await upgradedContext.perform {
+			let request = NSFetchRequest<NSManagedObject>(entityName: ScrollbackQueries.entityName)
+			return try upgradedContext.fetch(request).map(SavedScrollbackRow.init)
+		}
+		#expect(actual.count == expected.count)
+		#expect(Set(actual) == Set(expected))
+
+		try Data("interrupted cleanup".utf8).write(to: workingURL)
+		let relaunched = ScrollbackStore(filenameSetting: setting)
+		#expect(await relaunched.openDatabase(inDirectory: directory.path).isOpen)
+		#expect(!FileManager.default.fileExists(atPath: workingURL.path))
+		let reopenedMainRows = await relaunched.fetchOutcome(.newestEntries(forView: "main", fetchLimit: 10)).entries
+		let reopenedSideRows = await relaunched.fetchOutcome(.newestEntries(forView: "side", fetchLimit: 10)).entries
+		#expect(reopenedMainRows.count == 3)
+		#expect(Set(reopenedMainRows.map(\.data)) == Set(expected.filter { $0.viewID == "main" }.map(\.data)))
+		#expect(reopenedSideRows.map(\.data) == [expected[3].data])
+		#expect(await relaunched.close() == .saved)
+		let reopenedMetadata = try NSPersistentStoreCoordinator.metadataForPersistentStore(
+			type: .sqlite, at: url, options: nil
+		)
+		#expect(reopenedMetadata[NSStoreUUIDKey] as? String == upgradedUUID)
+		#expect(try sqliteNames(in: directory) == [filename])
 	}
 
 	@Test("An empty preference mints a database under the current name and keeps it across reopen")

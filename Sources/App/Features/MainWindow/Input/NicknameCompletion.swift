@@ -281,11 +281,10 @@ final class NicknameCompletion {
 
 	private func completionCandidates(for request: CompletionRequest) -> [Candidate] {
 		if request.kind == .command {
-			var commands = CommandIndex
-				.localCommandList(includingDeveloperCommands: SettingsKeys.Commands.developerMode.value)
-				.map { $0.lowercased() }
-
-			commands.append(contentsOf: AppServices.scripts.commandNames)
+			var commands = CommandIndex.candidates(
+				includingDeveloperCommands: SettingsKeys.Commands.developerMode.value,
+				scriptCommands: AppServices.scripts.commandNames
+			).map(\.name)
 			commands.sort { $0.localizedCompare($1) == .orderedAscending }
 
 			return commands.map { Candidate(displayValue: $0, comparisonValue: $0) }

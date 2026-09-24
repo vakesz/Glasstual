@@ -68,7 +68,7 @@ struct TranscriptControllerHistoryLatchTests {
 
 		controller.ensureBackingView()
 		await gate.waitUntilRequested()
-		#expect(controller.reloadingHistory)
+		#expect(controller.historyRecovery.isReloading)
 
 		/* Clearing retires the generation the parked read is rendering for, so
 		 its output is dropped when it finally arrives. */
@@ -76,8 +76,8 @@ struct TranscriptControllerHistoryLatchTests {
 		await gate.release()
 		await controller.drainRenderJobs()
 
-		#expect(controller.reloadingHistory == false)
-		#expect(controller.historyLoaded)
+		#expect(controller.historyRecovery.isReloading == false)
+		#expect(controller.historyRecovery.isLoaded)
 		#expect(await gate.fetchCount == 2)
 	}
 
@@ -95,8 +95,8 @@ struct TranscriptControllerHistoryLatchTests {
 
 		controller.ensureBackingView()
 		await controller.drainRenderJobs()
-		#expect(controller.historyLoaded == false)
-		#expect(controller.reloadingHistory == false)
+		#expect(controller.historyRecovery.isLoaded == false)
+		#expect(controller.historyRecovery.isReloading == false)
 
 		weak let retiredSession = session
 		session = nil
@@ -105,7 +105,7 @@ struct TranscriptControllerHistoryLatchTests {
 
 		controller.notifyDidBecomeVisible()
 
-		#expect(controller.reloadingHistory == false)
+		#expect(controller.historyRecovery.isReloading == false)
 	}
 
 	/** A retired view can no longer read history into a transcript, so Retry
@@ -120,7 +120,7 @@ struct TranscriptControllerHistoryLatchTests {
 		defer { try? FileManager.default.removeItem(at: directory) }
 		let store = ScrollbackStore(filenameSetting: ScrollbackFilenameFixture().store)
 		let historySession = ScrollbackSession(
-			store: .store(store),
+			store: store,
 			databaseDirectory: { directory.path },
 			reportFailure: { Issue.record("\($0)") }
 		)
@@ -131,7 +131,7 @@ struct TranscriptControllerHistoryLatchTests {
 			scrollback: Scrollback(session: historySession)
 		)
 		controller.historyPageFetcher = { _ in .page([]) }
-		controller.historyLoadFailure = .unavailable
+		controller.historyRecovery.initialFailure = .unavailable
 		#expect(controller.historyRecovery.localMessage != nil)
 		#expect(controller.storageRecovery.localMessage == nil)
 
@@ -141,7 +141,7 @@ struct TranscriptControllerHistoryLatchTests {
 		await controller.historyRetryTask?.value
 
 		#expect(controller.historyRecovery.isRetrying == false)
-		#expect(controller.historyLoadFailure == nil)
+		#expect(controller.historyRecovery.initialFailure == nil)
 		#expect(controller.historyRecovery.localMessage == nil)
 		await historySession.prepareForTermination()
 	}

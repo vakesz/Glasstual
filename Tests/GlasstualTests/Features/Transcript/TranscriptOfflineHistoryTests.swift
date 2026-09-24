@@ -62,7 +62,7 @@ struct TranscriptOfflineHistoryTests {
 			for controller in controllers {
 				_ = controller.ensureBackingView()
 				await controller.drainRenderJobs()
-				#expect(controller.historyLoaded == false)
+				#expect(controller.historyRecovery.isLoaded == false)
 			}
 			#expect(await archive.requests.isEmpty)
 			let orderedItems: [ChatItem] = selectChannelFirst ? [channel, session] : [session, channel]
@@ -74,7 +74,7 @@ struct TranscriptOfflineHistoryTests {
 				let expected = try #require(archivedIdentifiers[item.uniqueIdentifier])
 				#expect(window.selectedItem === item)
 				#expect(view === controller.backingView)
-				#expect(controller.historyLoaded)
+				#expect(controller.historyRecovery.isLoaded)
 				if reloadOnLaunch == false {
 					#expect(view.displayedLines.isEmpty)
 					#expect(await archive.requests.isEmpty)

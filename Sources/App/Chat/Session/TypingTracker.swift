@@ -9,18 +9,11 @@ extension Notification.Name {
 
 nonisolated let typingTrackerConversationKey = "channel"
 
-private final class TypingEntry {
+private struct TypingEntry {
 	let nickname: String
 	let sequence: UInt
 	var state: TypingState
 	var updatedAt: Date
-
-	init(nickname: String, sequence: UInt, state: TypingState, updatedAt: Date) {
-		self.nickname = nickname
-		self.sequence = sequence
-		self.state = state
-		self.updatedAt = updatedAt
-	}
 
 	var expiresAt: Date {
 		let timeout = state == .active ? 6.0 : 30.0
@@ -29,11 +22,19 @@ private final class TypingEntry {
 	}
 }
 
+private final class TypingBucket {
+	weak var conversation: Conversation?
+	var entries: [String: TypingEntry] = [:]
+
+	init(conversation: Conversation) {
+		self.conversation = conversation
+	}
+}
+
 final class TypingTracker {
 	private weak var session: ServerSession?
 
-	private var entries: [String: [String: TypingEntry]] = [:]
-	private let conversations = NSMapTable<NSString, Conversation>.strongToWeakObjects()
+	private var buckets: [String: TypingBucket] = [:]
 	/// Drops the indicators whose timeout has passed, for as long as there is
 	/// one to drop.
 	private lazy var expiryTimer = SessionTimer { [weak self] _ in
@@ -64,36 +65,36 @@ final class TypingTracker {
 
 		let conversationKey = conversation.uniqueIdentifier
 		let nicknameKey = casefolded(nickname)
-		var conversationEntries = entries[conversationKey] ?? [:]
-		let existingEntry = conversationEntries[nicknameKey]
+		let bucket = buckets[conversationKey] ?? TypingBucket(conversation: conversation)
+		let existingEntry = bucket.entries[nicknameKey]
 		var changed = false
 
 		if state == .done {
 			if existingEntry != nil {
-				conversationEntries.removeValue(forKey: nicknameKey)
+				bucket.entries.removeValue(forKey: nicknameKey)
 				changed = true
 			}
-		} else if let existingEntry {
+		} else if var existingEntry {
 			changed = existingEntry.state != state
 			existingEntry.state = state
 			existingEntry.updatedAt = date
+			bucket.entries[nicknameKey] = existingEntry
 		} else {
 			sequence += 1
-			conversationEntries[nicknameKey] = TypingEntry(
+			bucket.entries[nicknameKey] = TypingEntry(
 				nickname: nickname,
 				sequence: sequence,
 				state: state,
 				updatedAt: date
 			)
-			conversations.setObject(conversation, forKey: conversationKey as NSString)
+			bucket.conversation = conversation
 			changed = true
 		}
 
-		if conversationEntries.isEmpty {
-			entries.removeValue(forKey: conversationKey)
-			conversations.removeObject(forKey: conversationKey as NSString)
+		if bucket.entries.isEmpty {
+			buckets.removeValue(forKey: conversationKey)
 		} else {
-			entries[conversationKey] = conversationEntries
+			buckets[conversationKey] = bucket
 		}
 
 		scheduleExpiry()
@@ -106,25 +107,21 @@ final class TypingTracker {
 	func removeNickname(_ nickname: String) {
 		let nicknameKey = casefolded(nickname)
 
-		for conversationKey in Array(entries.keys) {
-			guard var conversationEntries = entries[conversationKey], conversationEntries.removeValue(forKey: nicknameKey) != nil
+		for conversationKey in Array(buckets.keys) {
+			guard let bucket = buckets[conversationKey], bucket.entries.removeValue(forKey: nicknameKey) != nil
 			else {
 				continue
 			}
 
-			let conversation = conversations.object(forKey: conversationKey as NSString)
-
-			if conversationEntries.isEmpty {
-				entries.removeValue(forKey: conversationKey)
-				conversations.removeObject(forKey: conversationKey as NSString)
-			} else {
-				entries[conversationKey] = conversationEntries
+			if bucket.entries.isEmpty {
+				buckets.removeValue(forKey: conversationKey)
 			}
 
-			if let conversation {
+			if let conversation = bucket.conversation {
 				postChange(for: conversation)
 			}
 		}
+		scheduleExpiry()
 	}
 
 	/** The key a nickname is filed under.
@@ -141,26 +138,20 @@ final class TypingTracker {
 	func removeAll(in conversation: Conversation) {
 		let conversationKey = conversation.uniqueIdentifier
 
-		guard entries.removeValue(forKey: conversationKey) != nil else {
+		guard buckets.removeValue(forKey: conversationKey) != nil else {
 			return
 		}
 
-		conversations.removeObject(forKey: conversationKey as NSString)
+		scheduleExpiry()
 		postChange(for: conversation)
 	}
 
 	func removeAll() {
-		let conversationKeys = Array(entries.keys)
-
-		entries.removeAll()
-
-		for conversationKey in conversationKeys {
-			if let conversation = conversations.object(forKey: conversationKey as NSString) {
-				postChange(for: conversation)
-			}
+		let conversations = buckets.values.compactMap(\.conversation)
+		buckets.removeAll()
+		for conversation in conversations {
+			postChange(for: conversation)
 		}
-
-		conversations.removeAllObjects()
 		expiryTimer.stop()
 	}
 
@@ -169,7 +160,7 @@ final class TypingTracker {
 	}
 
 	func typingNicknames(in conversation: Conversation, at date: Date) -> [String] {
-		guard let conversationEntries = entries[conversation.uniqueIdentifier] else {
+		guard let conversationEntries = buckets[conversation.uniqueIdentifier]?.entries else {
 			return []
 		}
 
@@ -180,24 +171,20 @@ final class TypingTracker {
 	}
 
 	func expireEntries(at date: Date) {
-		for conversationKey in Array(entries.keys) {
-			guard var conversationEntries = entries[conversationKey] else {
+		for conversationKey in Array(buckets.keys) {
+			guard let bucket = buckets[conversationKey] else {
 				continue
 			}
 
-			let oldCount = conversationEntries.count
-			conversationEntries = conversationEntries.filter { $0.value.expiresAt >= date }
-			let changed = conversationEntries.count != oldCount
-			let conversation = conversations.object(forKey: conversationKey as NSString)
+			let oldCount = bucket.entries.count
+			bucket.entries = bucket.entries.filter { $0.value.expiresAt >= date }
+			let changed = bucket.entries.count != oldCount
 
-			if conversationEntries.isEmpty {
-				entries.removeValue(forKey: conversationKey)
-				conversations.removeObject(forKey: conversationKey as NSString)
-			} else {
-				entries[conversationKey] = conversationEntries
+			if bucket.entries.isEmpty {
+				buckets.removeValue(forKey: conversationKey)
 			}
 
-			if changed, let conversation {
+			if changed, let conversation = bucket.conversation {
 				postChange(for: conversation)
 			}
 		}
@@ -206,7 +193,7 @@ final class TypingTracker {
 	}
 
 	private func scheduleExpiry() {
-		guard entries.isEmpty == false else {
+		guard buckets.isEmpty == false else {
 			expiryTimer.stop()
 			return
 		}

@@ -68,7 +68,7 @@ struct ScrollbackTransactionTests {
 			default: break
 			}
 		})
-		let session = ScrollbackSession(store: .store(store), databaseDirectory: { directory.path }, reportFailure: {
+		let session = ScrollbackSession(store: store, databaseDirectory: { directory.path }, reportFailure: {
 			Issue.record(Comment(rawValue: $0))
 		})
 		let history = Scrollback(session: session)

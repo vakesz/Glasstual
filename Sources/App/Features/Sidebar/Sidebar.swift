@@ -1,7 +1,7 @@
 // Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
 // SPDX-License-Identifier: BSD-3-Clause
 
-import AppKit
+import Foundation
 import Observation
 
 /// Selection, expansion and ordering state for the server sidebar.
@@ -14,10 +14,17 @@ import Observation
 @Observable
 final class Sidebar {
 	private(set) var selectedItemIdentifier: String?
-	/// What the view draws. Rebuilt whenever the chat session reports a change,
-	/// so a row is never asked to notice one on its own.
-	private(set) var rows: [ServerRow] = []
-	private(set) var favoriteRows: [ConversationRow] = []
+	/// One value projection supplies drawing, navigation and native-node identity.
+	/// Publishing it once keeps those answers on the same chat-session snapshot.
+	private(set) var projection = SidebarProjection.empty
+	var rows: [ServerRow] {
+		projection.rows
+	}
+
+	var favoriteRows: [ConversationRow] {
+		projection.favoriteRows
+	}
+
 	var favoritesExpanded = true {
 		didSet { rebuildRows() }
 	}
@@ -30,10 +37,7 @@ final class Sidebar {
 	/// shows every conversation whose name contains it, under its server, whether
 	/// or not that server is disclosed.
 	var filterText = "" {
-		didSet {
-			selectableItemsStorage = nil
-			rebuildRows()
-		}
+		didSet { rebuildRows() }
 	}
 
 	@ObservationIgnored weak var mainWindow: MainWindow?
@@ -48,15 +52,10 @@ final class Sidebar {
 	 disagree with the session the moves are performed against. */
 	@ObservationIgnored var chatSessionSource: @MainActor () -> ChatSession? = { nil }
 
-	/** The index space, resolved once per change rather than per question.
-
-	 Selecting an item asks for its row, the replacement search walks every
-	 row, and conversation navigation rotates the whole list, so one command used
-	 to flatten the chat session a dozen times. The list is dropped whenever anything it
-	 is derived from changes -- and dropped rather than rebuilt, because a
-	 change arrives before the rows are rebuilt and the answer has to be
-	 current for the selection that follows it in the same turn. */
-	@ObservationIgnored private var selectableItemsStorage: [ChatItem]?
+	/// Inbound changes publish on the next actor turn. Commands in the current
+	/// turn still need a fresh index space, so they may build this unpublished
+	/// projection once. The next published rebuild uses the latest source state.
+	@ObservationIgnored private var pendingProjection: SidebarProjection?
 
 	/// Bookkeeping for the coalescing below, and nothing the view draws: observed
 	/// it would mark the model changed on every inbound burst -- a list update
@@ -80,76 +79,11 @@ final class Sidebar {
 	/// Publishes the latest value projection; the native outline coalesces its
 	/// own rendering and never writes presentation transactions into this model.
 	private func rebuildRows() {
-		selectableItemsStorage = builtSelectableItems()
-		rows = builtRows()
-		let tint = unreadBadgeTint
-		favoriteRows = sessions.flatMap { session in
-			listedConversations(for: session).filter(\.config.isFavorite).map { conversation in
-				var row = conversationRow(conversation, unreadBadgeTint: tint)
-				row.networkTitle = session.label
-				row.networkIdentityStyle = session.config.sidebarIdentity
-				return row
-			}
-		}
-	}
-
-	private func builtRows() -> [ServerRow] {
-		let tint = unreadBadgeTint
-		return sessions.filter(isVisible).map { session in
-			let conversations = listedConversations(for: session)
-			return ServerRow(
-				id: session.uniqueIdentifier,
-				title: session.label,
-				isActive: session.isActive,
-				isSecured: session.isSecured,
-				isExpanded: isFiltering || isExpanded(session),
-				/* An outline offers disclosure where there is something to
-					disclose. A server with no conversations under it gets a plain
-					row rather than a chevron that would open onto nothing. */
-				showsDisclosure: conversations.isEmpty == false,
-				conversations: conversations.map { conversationRow($0, unreadBadgeTint: tint) },
-				identityStyle: session.config.sidebarIdentity
-			)
-		}
-	}
-
-	/** The unread badge's colour, resolved while the rows are built.
-
-	 A row draws what its value says and is compared by it, so a colour the row
-	 read out of the defaults for itself was invisible to that comparison: the
-	 setting changed, every row's value was unchanged, and nothing redrew. */
-	private var unreadBadgeTint: NSColor? {
-		guard let color = GlasstualUserDefaults.container
-			.storedColor(for: SettingsKeys.Badges.sidebarUnreadHighlight),
-			color.alphaComponent > 0
-		else {
-			return nil
-		}
-
-		return color
-	}
-
-	private func conversationRow(_ conversation: Conversation, unreadBadgeTint: NSColor?) -> ConversationRow {
-		let kind: ConversationRow.Kind = if conversation.isChannel {
-			.channel
-		} else if conversation.isDirectChat {
-			.directChat
-		} else if conversation.isConsole {
-			.console
-		} else {
-			.direct
-		}
-		return ConversationRow(
-			id: conversation.uniqueIdentifier,
-			title: conversation.label,
-			kind: kind,
-			isActive: conversation.isActive,
-			hasJoinError: conversation.errorOnLastJoinAttempt,
-			unreadCount: conversation.unreadCount,
-			showsUnreadCount: conversation.config.showsUnreadCount,
-			highlightCount: conversation.config.ignoreHighlights ? 0 : conversation.nicknameHighlightCount,
-			unreadBadgeTint: unreadBadgeTint,
-			isFavorite: conversation.config.isFavorite
+		pendingProjection = nil
+		updateIsPending = false
+		projection = SidebarProjection(
+			sessions: sessions, selectedItemIdentifier: selectedItemIdentifier,
+			filter: filter, filterText: filterText
 		)
 	}
 
@@ -192,29 +126,25 @@ final class Sidebar {
 	 with -1, and ⌥↑/⌥↓ walked from a row that was not in the list. Whatever is
 	 drawn is selectable; nothing that is drawn is left out. */
 	var selectableItems: [ChatItem] {
-		if let selectableItemsStorage {
-			return selectableItemsStorage
-		}
-		let items = builtSelectableItems()
-		selectableItemsStorage = items
-		return items
+		currentProjection.selectableItems
 	}
 
-	private func builtSelectableItems() -> [ChatItem] {
-		sessions.flatMap { session -> [ChatItem] in
-			if isExpanded(session) {
-				return [session] + session.conversationList
-			}
-			return [session] + session.conversationList.filter { conversation in
-				conversation.config.isFavorite || conversation.uniqueIdentifier == selectedItemIdentifier
-					|| (isFiltering && matchesFilter(conversation))
-			}
+	private var currentProjection: SidebarProjection {
+		guard updateIsPending else { return projection }
+		if let pendingProjection {
+			return pendingProjection
 		}
+		let current = SidebarProjection(
+			sessions: sessions, selectedItemIdentifier: selectedItemIdentifier,
+			filter: filter, filterText: filterText
+		)
+		pendingProjection = current
+		return current
 	}
 
 	var selectedRow: Int {
 		guard let selectedItemIdentifier else { return -1 }
-		return selectableItems.firstIndex { $0.uniqueIdentifier == selectedItemIdentifier } ?? -1
+		return currentProjection.itemIndexes[selectedItemIdentifier] ?? -1
 	}
 
 	var selectedItem: ChatItem? {
@@ -228,7 +158,10 @@ final class Sidebar {
 
 	func row(forItem item: ChatItem?) -> Int {
 		guard let item else { return -1 }
-		return selectableItems.firstIndex { $0 === item } ?? -1
+		let current = currentProjection
+		guard let index = current.itemIndexes[item.uniqueIdentifier], current.selectableItems[index] === item
+		else { return -1 }
+		return index
 	}
 
 	/// Selects `item`, if it is one of the rows the sidebar is showing.
@@ -249,8 +182,7 @@ final class Sidebar {
 	}
 
 	/// Whether the server's conversations are disclosed. `setExpanded` is the
-	/// only writer: the cached index space is dropped there, and a flag set
-	/// behind the list's back would leave it holding the old rows.
+	/// only writer and publishes a new projection with the changed disclosure.
 	func isExpanded(_ session: ServerSession) -> Bool {
 		session.sidebarItemIsExpanded
 	}
@@ -269,40 +201,18 @@ final class Sidebar {
 		filterText.trimmingCharacters(in: .whitespacesAndNewlines)
 	}
 
-	/** The conversations listed under a server, disclosed or not.
-
-	 Disclosure is the outline's to apply: the rows carry every conversation so
-	 that a server keeps its chevron while it is closed, and only the filter takes
-	 conversations out of them. */
-	private func listedConversations(for session: ServerSession) -> [Conversation] {
-		guard isFiltering else { return session.conversationList }
-		return session.conversationList.filter(matchesFilter)
-	}
-
-	private func matchesFilter(_ conversation: Conversation) -> Bool {
-		let matchesName = filterQuery.isEmpty || conversation.label.localizedStandardContains(filterQuery)
-		return matchesName && filter.matches(conversation)
-	}
-
-	/// A server row stays while it, or a conversation under it, matches the filter.
-	private func isVisible(_ session: ServerSession) -> Bool {
-		guard isFiltering else { return true }
-		return (filter == .all && session.label.localizedStandardContains(filterQuery))
-			|| listedConversations(for: session).isEmpty == false
-	}
-
 	/// Expansion belongs to the chat session so it survives relaunch. Collapsing
 	/// the selected conversation's parent selects that server's console.
 	func setExpanded(_ expanded: Bool, for session: ServerSession) {
 		guard session.sidebarItemIsExpanded != expanded else { return }
 		session.sidebarItemIsExpanded = expanded
-		selectableItemsStorage = nil
-		rebuildRows()
-
-		if expanded == false, selectedItem?.associatedSession === session, selectedItem !== session,
-		   (selectedItem as? Conversation)?.config.isFavorite != true
-		{
+		let selectServer = expanded == false && selectedItem?.associatedSession === session && selectedItem !== session
+			&& (selectedItem as? Conversation)?.config.isFavorite != true
+		if selectServer {
 			selectedItemIdentifier = session.uniqueIdentifier
+		}
+		rebuildRows()
+		if selectServer {
 			mainWindow?.sidebarSelectionDidChangeFromView()
 		}
 	}
@@ -339,7 +249,7 @@ final class Sidebar {
 	}
 
 	private func contentsChanged() {
-		selectableItemsStorage = nil
+		pendingProjection = nil
 		updateIsPending = true
 		guard updateDepth == 0, refreshTask == nil else { return }
 		// Inbound bursts can invalidate the same rows several times before the
@@ -375,7 +285,6 @@ final class Sidebar {
 	/// A new appearance changes what the rows draw, so they are rebuilt at
 	/// once rather than coalesced with the next inbound burst.
 	func applicationAppearanceChanged() {
-		selectableItemsStorage = nil
 		rebuildRows()
 	}
 

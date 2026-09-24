@@ -316,18 +316,30 @@ extension LocalCommand {
 	]
 }
 
-/// The names `/`-completion offers.
-///
-/// Everything else a command declares is a property of `LocalCommand` or
-/// `RemoteCommand`; only the completion lists are worth keeping built.
+/// The commands offered by both input completion paths, with the same
+/// visibility and script precedence as command dispatch.
 enum CommandIndex {
-	static func localCommandList(includingDeveloperCommands: Bool) -> [String] {
-		includingDeveloperCommands ? allCommandNames : publicCommandNames
+	struct Candidate: Equatable {
+		let name: String
+		let isScript: Bool
 	}
 
-	private static let allCommandNames = LocalCommand.allCases.map(\.displayName)
+	static func candidates(includingDeveloperCommands: Bool, scriptCommands: [String]) -> [Candidate] {
+		let scripts = Set(scriptCommands.map { $0.lowercased() }.filter(isValidScriptName))
+		var result: [Candidate] = []
+		for command in LocalCommand.allCases where includingDeveloperCommands || !command.isDeveloperModeOnly {
+			result.append(Candidate(
+				name: command.rawValue,
+				isScript: command.group == nil && scripts.contains(command.rawValue)
+			))
+		}
+		for name in scripts where LocalCommand(typedName: name) == nil {
+			result.append(Candidate(name: name, isScript: true))
+		}
+		return result
+	}
 
-	private static let publicCommandNames = LocalCommand.allCases
-		.filter { $0.isDeveloperModeOnly == false }
-		.map(\.displayName)
+	private static func isValidScriptName(_ name: String) -> Bool {
+		!name.isEmpty && !name.contains("/") && !name.contains(where: \.isWhitespace)
+	}
 }

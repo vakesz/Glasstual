@@ -73,6 +73,17 @@ struct AboutView: View {
 				Text(.About.acknowledgementsButton)
 			}
 			.padding(.top, 18)
+
+			HStack(spacing: 16) {
+				Link(destination: URL(string: "https://vakesz.github.io/Glasstual/privacy.html")!) {
+					Text(.About.privacyPolicyLink)
+				}
+				Link(destination: URL(string: "https://vakesz.github.io/Glasstual/support.html")!) {
+					Text(.About.supportLink)
+				}
+			}
+			.font(.caption)
+			.padding(.top, 12)
 		}
 		.padding(.horizontal, 24)
 		.padding(.vertical, 24)

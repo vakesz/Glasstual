@@ -5,20 +5,38 @@ import Testing
 @MainActor
 @Suite("Menu action coordinator")
 struct MenuActionControllerTests {
-	@Test("Connection commands reject every stopping state", arguments: 0 ..< 32)
-	func serverConnectionActionsShareStateGuards(flags: Int) {
-		let session = TestServerSession()
-		session.isConnecting = flags & 1 != 0
-		session.isConnected = flags & 2 != 0
-		session.isQuitting = flags & 4 != 0
-		session.isDisconnecting = flags & 8 != 0
-		session.isTerminating = flags & 16 != 0
-		session.config.proxyType = .socks5
-		let policy = MenuServerActionRules(session: session)
+	private let activeStates: [SessionConnectionState] = [
+		.init(transport: .preparingCredentials), .init(transport: .connecting), .init(transport: .connected),
+	]
 
-		#expect(policy.canConnect == (flags == 0))
-		#expect(policy.canConnectWithoutProxy == policy.canConnect)
-		#expect(policy.canDisconnect == (flags > 0 && flags < 4))
+	private let stoppingStates: [SessionConnectionState] = [
+		.init(transport: .preparingCredentials, shutdown: .quitting),
+		.init(transport: .connecting, shutdown: .quitting),
+		.init(transport: .connected, shutdown: .quitting),
+		.init(transport: .preparingCredentials, shutdown: .disconnecting),
+		.init(transport: .connecting, shutdown: .disconnecting),
+		.init(transport: .connected, shutdown: .disconnecting),
+		.init(transport: .connected, shutdown: .disconnectingAfterQuit),
+	]
+
+	@Test("Connection commands reject every stopping state")
+	func serverConnectionActionsShareStateGuards() {
+		let cases = [(SessionConnectionState(), true, false)]
+			+ activeStates.map { ($0, false, true) }
+			+ stoppingStates.map { ($0, false, false) }
+		for (state, canConnect, canDisconnect) in cases {
+			let session = TestServerSession()
+			session.connectionState = state
+			session.config.proxyType = .socks5
+			let policy = MenuServerActionRules(session: session)
+			#expect(policy.canConnect == canConnect)
+			#expect(policy.canConnectWithoutProxy == canConnect)
+			#expect(policy.canDisconnect == canDisconnect)
+			session.isTerminating = true
+			let terminatingPolicy = MenuServerActionRules(session: session)
+			#expect(!terminatingPolicy.canConnect)
+			#expect(!terminatingPolicy.canDisconnect)
+		}
 	}
 
 	@Test("Proxy bypass requires a proxy and all connection commands require a session")
@@ -41,36 +59,34 @@ struct MenuActionControllerTests {
 		session.reconnect.timer.start(3600, repeats: false)
 		defer { session.reconnect.timer.stop() }
 		#expect(MenuServerActionRules(session: session).canCancelReconnect)
-		session.isDisconnecting = true
+		session.setConnectionShutdownForTesting(.disconnecting)
 		#expect(MenuServerActionRules(session: session).canCancelReconnect == false)
-		session.isDisconnecting = false
-		session.isQuitting = true
+		session.setConnectionShutdownForTesting(.none)
+		session.setConnectionShutdownForTesting(.quitting)
 		#expect(MenuServerActionRules(session: session).canCancelReconnect == false)
-		session.isQuitting = false
+		session.setConnectionShutdownForTesting(.none)
 		session.isTerminating = true
 		#expect(MenuServerActionRules(session: session).canCancelReconnect == false)
 	}
 
-	@Test("Connection menu validation shares action eligibility without changing visibility", arguments: 0 ..< 32)
-	func connectionMenuPreservesVisibility(flags: Int) {
-		let controller = MenuActionController()
-		let session = TestServerSession()
-		controller.context.pointedSession = session
-		session.isConnecting = flags & 1 != 0
-		session.isConnected = flags & 2 != 0
-		session.isQuitting = flags & 4 != 0
-		session.isDisconnecting = flags & 8 != 0
-		session.isTerminating = flags & 16 != 0
-		let policy = MenuServerActionRules(session: session)
-		let connect = NSMenuItem()
-		connect.command = .connect
-		let disconnect = NSMenuItem()
-		disconnect.command = .disconnect
+	@Test("Connection menu validation shares action eligibility without changing visibility")
+	func connectionMenuPreservesVisibility() {
+		for state in [SessionConnectionState()] + activeStates + stoppingStates {
+			let controller = MenuActionController()
+			let session = TestServerSession()
+			controller.context.pointedSession = session
+			session.connectionState = state
+			let policy = MenuServerActionRules(session: session)
+			let connect = NSMenuItem()
+			connect.command = .connect
+			let disconnect = NSMenuItem()
+			disconnect.command = .disconnect
 
-		#expect(controller.validator.validateServerCommand(connect) == policy.canConnect)
-		#expect(controller.validator.validateServerCommand(disconnect) == policy.canDisconnect)
-		#expect(connect.isHidden == (session.isConnecting || session.isConnected))
-		#expect(disconnect.isHidden == (session.isConnecting == false && session.isConnected == false))
+			#expect(controller.validator.validateServerCommand(connect) == policy.canConnect)
+			#expect(controller.validator.validateServerCommand(disconnect) == policy.canDisconnect)
+			#expect(connect.isHidden == (session.isConnecting || session.isConnected))
+			#expect(disconnect.isHidden == (session.isConnecting == false && session.isConnected == false))
+		}
 	}
 
 	@Test("Disconnect becomes disabled after its first invocation and cannot quit twice")
@@ -80,7 +96,7 @@ struct MenuActionControllerTests {
 		controller.context.pointedSession = session
 		let connection = Connection(config: ConnectionConfig(), onSession: session)
 		session.socket = connection
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		session.markAsLoggedIn()
 		defer {
 			session.cancelDelayedDisconnect()
@@ -119,7 +135,7 @@ struct MenuActionControllerTests {
 		let controller = MenuActionController()
 		let session = TestServerSession()
 		controller.context.pointedSession = session
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		let item = NSMenuItem()
 		item.command = .changeNickname
 

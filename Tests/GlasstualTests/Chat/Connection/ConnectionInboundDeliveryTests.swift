@@ -13,7 +13,7 @@ struct ConnectionInboundDeliveryTests {
 	@Test("A missing XPC service ends startup explicitly")
 	func unavailableConnectionService() async throws {
 		let session = TestServerSession()
-		session.isConnecting = true
+		session.setConnectionTransportForTesting(.connecting)
 		let connection = Connection(config: ConnectionConfig(), onSession: session, closeClock: .continuous,
 		                            makeService: { NSXPCConnection(serviceName: "test.glasstual.unavailable-service") })
 		session.socket = connection
@@ -82,6 +82,133 @@ struct ConnectionInboundDeliveryTests {
 
 		try await deliver([Data("PING :second".utf8)], to: receiver)
 		#expect(session.sentLines.lastObject as? String == "PONG second")
+	}
+
+	@Test("Member replies in one read publish once before acknowledgement")
+	func memberRepliesPublishAtReadBoundary() async throws {
+		let (session, connection) = connectedSession()
+		let channel = try #require(session.findConversationOrCreate("#burst"))
+		channel.activate()
+		let initial = session.findUserOrCreate("member0")
+		channel.addMember(Member(user: initial, prefixes: session.currentUserPrefixes))
+		let list = MemberList()
+		list.assign(to: channel)
+		defer { list.assign(to: nil) }
+		list.selectedMemberIDs = [initial.id]
+		list.showProfile(for: initial.id)
+		let revision = list.presentationRevision
+
+		try await deliver([
+			Data(":server 353 me = #burst :member0 member1".utf8),
+			Data(":server 353 me = #burst :@member2 member3".utf8),
+			Data(":server 366 me #burst :End of /NAMES list".utf8),
+		], to: connection.callbackReceiver)
+
+		#expect(list.presentationRevision == revision + 1)
+		#expect(channel.numberOfMembers == 4)
+		#expect(channel.findMember("member2")?.modes.letters == "o")
+		#expect(list.groups.flatMap(\.members).count == 4)
+		#expect(list.selectedMemberIDs == [initial.id])
+		#expect(list.memberShowingProfile == initial.id)
+	}
+
+	@Test("A long member read publishes at the bounded turn and at acknowledgement")
+	func longMemberReadPublishesAtTurnBoundaries() async throws {
+		let (session, connection) = connectedSession()
+		let channel = try #require(session.findConversationOrCreate("#many"))
+		channel.activate()
+		let list = MemberList()
+		list.assign(to: channel)
+		defer { list.assign(to: nil) }
+		let revision = list.presentationRevision
+		let lines = (0 ..< 65).map { Data(":server 353 me = #many :member\($0)".utf8) }
+
+		try await deliver(lines, to: connection.callbackReceiver)
+
+		#expect(list.presentationRevision == revision + 2)
+		#expect(channel.numberOfMembers == 65)
+		#expect(channel.findMember("member64") != nil)
+		#expect(list.groups.flatMap(\.members).count == 65)
+	}
+
+	@Test("A renderer backpressure wait flushes member presentation first")
+	func memberPresentationFlushesBeforeAdmissionWait() async throws {
+		let (session, connection) = connectedSession()
+		let channel = try #require(session.findConversationOrCreate("#waiting"))
+		channel.activate()
+		let list = MemberList()
+		list.assign(to: channel)
+		defer { list.assign(to: nil) }
+		let admission = RenderAdmission(capacity: 1)
+		session.renderAdmission = admission
+		var pending: UUID?
+		let (printed, notePrinted) = AsyncStream<Void>.makeStream()
+		session.linePrintObserver = { request in
+			guard request.messageBody == "hold" else { return }
+			pending = admission.submit(for: channel.uniqueIdentifier)
+			notePrinted.yield()
+			notePrinted.finish()
+		}
+		let (acknowledgements, acknowledge) = AsyncStream<Void>.makeStream()
+		let deadline = Task {
+			try? await Task.sleep(for: .seconds(5))
+			notePrinted.finish()
+			acknowledge.finish()
+		}
+		defer {
+			deadline.cancel()
+			if let pending {
+				admission.finish(pending)
+			}
+		}
+		let revision = list.presentationRevision
+		connection.callbackReceiver.didReceive([
+			Data(":server 353 me = #waiting :alice".utf8),
+			Data(":alice!a@host PRIVMSG #waiting :hold".utf8),
+			Data(":server 353 me = #waiting :bob".utf8),
+		]) {
+			acknowledge.yield()
+			acknowledge.finish()
+		}
+		for await _ in printed {}
+		let identifier = try #require(pending)
+		#expect(list.presentationRevision == revision + 1)
+		#expect(channel.findMember("alice") != nil)
+		#expect(channel.findMember("bob") == nil)
+		admission.finish(identifier)
+		var didAcknowledge = false
+		for await _ in acknowledgements {
+			didAcknowledge = true
+		}
+		try #require(didAcknowledge, "The read was not acknowledged")
+		#expect(list.presentationRevision == revision + 2)
+		#expect(channel.findMember("bob") != nil)
+	}
+
+	@Test("A retired socket flushes changes already handled before acknowledgement")
+	func retiredSocketFlushesMemberPresentation() async throws {
+		let (session, connection) = connectedSession()
+		let channel = try #require(session.findConversationOrCreate("#retired"))
+		channel.activate()
+		let list = MemberList()
+		list.assign(to: channel)
+		defer { list.assign(to: nil) }
+		session.linePrintObserver = { request in
+			if request.messageBody == "retire" {
+				session.socket = nil
+			}
+		}
+		let revision = list.presentationRevision
+
+		try await deliver([
+			Data(":server 353 me = #retired :alice".utf8),
+			Data(":alice!a@host PRIVMSG #retired :retire".utf8),
+			Data(":server 353 me = #retired :bob".utf8),
+		], to: connection.callbackReceiver)
+
+		#expect(list.presentationRevision == revision + 1)
+		#expect(channel.findMember("alice") != nil)
+		#expect(channel.findMember("bob") == nil)
 	}
 
 	/// The host reads nothing more until it hears back, so a read that lands
@@ -284,7 +411,7 @@ struct ConnectionInboundDeliveryTests {
 	private func connectedSession() -> (TestServerSession, Connection) {
 		let session = TestServerSession()
 		session.forwardsProcessedMessages = true
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		let connection = Connection(config: ConnectionConfig(), onSession: session)
 		session.socket = connection
 		return (session, connection)
@@ -406,7 +533,7 @@ struct ConnectionInboundDeliveryTests {
 		                            recordTermination: { terminations.append($0) },
 		                            makeService: { NSXPCConnection(listenerEndpoint: listener.endpoint) })
 		session.socket = connection
-		session.isConnecting = true
+		session.setConnectionTransportForTesting(.connecting)
 		var completions = 0
 		session.addDisconnectCallback { completions += 1 }
 		connection.open()

@@ -235,7 +235,7 @@ struct ServerSessionMultiTargetSendTests {
 	@Test("A /msg destination spelled differently from its channel is sent once")
 	func msgDestinationMatchedByCasemappingIsSentOnce() throws {
 		let session = session()
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		session.markAsLoggedIn()
 		session.supportInfo.processConfigurationData("TARGMAX=PRIVMSG:4")
 		_ = try channels(["#one", "#two"], on: session)

@@ -34,21 +34,16 @@ struct SidebarOutlineSnapshot: Equatable {
 	let knownIdentifiers: Set<SidebarNodeID>
 
 	init(model: Sidebar) {
-		rows = model.rows
-		favorites = model.favoriteRows.isEmpty ? nil : ServerRow(
+		let projection = model.projection
+		rows = projection.rows
+		favorites = projection.favoriteRows.isEmpty ? nil : ServerRow(
 			id: SidebarNodeID.favorites.itemIdentifier, title: String(localized: .Sidebar.favoritesTitle),
 			isActive: true, isSecured: false, isExpanded: model.favoritesExpanded || model.isFiltering,
-			showsDisclosure: true, conversations: model.favoriteRows, isFavoritesGroup: true
+			showsDisclosure: true, conversations: projection.favoriteRows, isFavoritesGroup: true
 		)
 		selectedIdentifier = model.selectedItemIdentifier
 		isFiltering = model.isFiltering
-		knownIdentifiers = Set([SidebarNodeID.favorites] + model.sessions.flatMap { session in
-			[SidebarNodeID.server(session.uniqueIdentifier)]
-				+ session.conversationList.flatMap { conversation in
-					[SidebarNodeID.conversation(conversation.uniqueIdentifier)]
-						+ (conversation.config.isFavorite ? [.favorite(conversation.uniqueIdentifier)] : [])
-				}
-		})
+		knownIdentifiers = projection.knownIdentifiers
 	}
 }
 

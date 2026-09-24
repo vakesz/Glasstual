@@ -212,17 +212,35 @@ final class Connection {
 	 behind the burst meanwhile: the host reads the next one only after the
 	 acknowledgement. */
 	private func receive(_ lines: [Data]) async {
+		var batchingSession: ServerSession?
+		defer { batchingSession?.finishInboundMemberPresentationUpdates() }
+
 		for (index, line) in lines.enumerated() {
 			guard let session else { return }
-			await session.renderAdmission.waitForCapacity()
+			/* A renderer at capacity must be allowed to drain. Finish the native
+			 list snapshot before giving the main actor away. The same boundary is
+			 used every 64 lines and before the host's acknowledgement. */
+			if batchingSession == nil || !session.renderAdmission.hasCapacity {
+				batchingSession?.finishInboundMemberPresentationUpdates()
+				batchingSession = nil
+				await session.renderAdmission.waitForCapacity()
+			}
 			guard !Task.isCancelled, terminal == false, session.socket === self else { return }
+			if batchingSession == nil {
+				session.beginInboundMemberPresentationUpdates()
+				batchingSession = session
+			}
 			if let string = convertFromCommonEncoding(line) {
 				session.connectionDidReceive(string)
 			}
 			if (index + 1).isMultiple(of: Self.linesPerTurn) {
+				batchingSession?.finishInboundMemberPresentationUpdates()
+				batchingSession = nil
 				await Task.yield()
 			}
 		}
+		batchingSession?.finishInboundMemberPresentationUpdates()
+		batchingSession = nil
 		await session?.renderAdmission.waitForCapacity()
 	}
 

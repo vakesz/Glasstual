@@ -13,7 +13,6 @@ final class RecordingSessionOutput: ServerSessionPresenting {
 	private(set) var reloadedGroups: [ChatItem] = []
 	private(set) var titleUpdates: [ChatItem?] = []
 	private(set) var clearedItems: [ChatItem] = []
-	private(set) var evaluatedFunctions: [String] = []
 	/// Every sheet the protocol layer asked for, in order. No window is
 	/// involved, which is the point of the seam.
 	private(set) var presentedAlerts: [AlertRequest] = []
@@ -160,11 +159,5 @@ final class RecordingSessionOutput: ServerSessionPresenting {
 
 	func destroyInputHistory(for _: ChatItem) {}
 
-	func evaluateFunctionOnAllViews(_ function: String, arguments _: [Any]?, onQueue _: Bool) {
-		evaluatedFunctions.append(function)
-	}
-
-	func notifyAllViewsAppearanceDidChange() {
-		evaluatedFunctions.append("Glasstual.appearanceDidChange")
-	}
+	func notifyAllViewsAppearanceDidChange() {}
 }

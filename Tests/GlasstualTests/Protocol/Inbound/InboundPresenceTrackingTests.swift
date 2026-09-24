@@ -126,7 +126,7 @@ struct InboundPresenceTrackingTests {
 	@Test("Renaming a query to a change of case keeps the query")
 	func setQueryNameToAChangeOfCaseKeepsTheQuery() throws {
 		let session = session()
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		session.markAsLoggedIn()
 		let peerQuery = try query("bob", on: session)
 
@@ -140,7 +140,7 @@ struct InboundPresenceTrackingTests {
 	@Test("Renaming a query moves the peer's MONITOR entry to the new nickname")
 	func setQueryNameMovesTheMonitorEntry() throws {
 		let session = session()
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		session.markAsLoggedIn()
 		session.enableCapability(.monitorCommand)
 		let peerQuery = try query("bob", on: session)
@@ -175,7 +175,7 @@ struct InboundPresenceTrackingTests {
 		let session = session()
 		let peers = try (1 ... 16).map { try query("peer\($0)", on: session) }
 
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		session.markAsLoggedIn()
 		session.onISONTimer()
 
@@ -201,7 +201,7 @@ struct InboundPresenceTrackingTests {
 		let session = session()
 		_ = try query("peer", on: session)
 
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		session.markAsLoggedIn()
 		session.enableCapability(.monitorCommand)
 		session.onISONTimer()
@@ -272,7 +272,7 @@ struct InboundPresenceTrackingTests {
 	func nicknameRetriesStopAtTheCeiling() throws {
 		let session = session(nickname: "mara")
 		session.config.alternateNicknames = ["mara-alt"]
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 
 		for _ in 0 ... Int(NicknameRetryPolicy.maximumAttempts) + 3 {
 			let collision = try #require(
@@ -296,7 +296,7 @@ struct InboundPresenceTrackingTests {
 	@Test("A nickname that lands resets the retry count")
 	func aNicknameThatLandsResetsTheRetryCount() throws {
 		let session = session(nickname: "mara")
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		session.nicknameRetry.attempt = NicknameRetryPolicy.maximumAttempts
 
 		try receive(":mara!m@example.org NICK mara2", on: session)

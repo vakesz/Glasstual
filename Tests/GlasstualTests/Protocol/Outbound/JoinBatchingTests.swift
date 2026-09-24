@@ -152,8 +152,13 @@ struct ServerSessionJoinCommandTests {
 	func joinRequiresAvailableSession(flags: Int) throws {
 		let session = TestServerSession()
 		session.isLoggedIn = flags & 1 != 0
-		session.isQuitting = flags & 2 != 0
-		session.isDisconnecting = flags & 4 != 0
+		let shutdown: SessionConnectionState.Shutdown = switch flags & 6 {
+		case 0: .none
+		case 2: .quitting
+		case 4: .disconnecting
+		default: .disconnectingAfterQuit
+		}
+		session.setConnectionShutdownForTesting(shutdown)
 		session.isTerminating = flags & 8 != 0
 		let channel = try #require(session.findConversationOrCreate("#retry"))
 		channel.errorOnLastJoinAttempt = true

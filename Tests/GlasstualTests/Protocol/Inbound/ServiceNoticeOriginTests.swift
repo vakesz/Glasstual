@@ -124,7 +124,7 @@ struct ServiceNoticeOriginTests {
 			nicknamePassword: nil,
 			fixture: ChatEnvironmentFixture(settings: settings)
 		)
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		session.supportInfo.serverAddress = "irc.example.net"
 		let channel = try #require(session.findConversationOrCreate("#swift", as: .channel))
 		let host = fromServices ? "services.example.net" : "cable.isp.example.com"

@@ -43,7 +43,7 @@ struct IRCSpecCapabilityNegotiationTests {
 	@Test("Wire CAP facts lose withdrawn dependencies without erasing SASL or ISUPPORT")
 	func wireProjectionSeparatesFacts() {
 		let session = session(password: "secret")
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		let socket = Connection(config: ConnectionConfig(), onSession: session)
 		session.socket = socket
 		func receive(_ line: String) {
@@ -71,7 +71,7 @@ struct IRCSpecCapabilityNegotiationTests {
 	@Test("ISUPPORT legacy facts and CAP names survive each other's withdrawal")
 	func legacyFactsAreIndependent() {
 		let session = session()
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		let socket = Connection(config: ConnectionConfig(), onSession: session)
 		session.socket = socket
 		func receive(_ line: String) {
@@ -95,7 +95,7 @@ struct IRCSpecCapabilityNegotiationTests {
 	@Test("DEL answers an outstanding request, and the stale ACK cannot resurrect it")
 	func withdrawalAnswersOutstandingRequest() {
 		let session = session()
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		session.isLoggedIn = true
 		let socket = Connection(config: ConnectionConfig(), onSession: session)
 		session.socket = socket
@@ -432,7 +432,7 @@ struct IRCSpecCapabilityNegotiationTests {
 			configDictionary: ["disconnectOnSASLFailure": true], nicknamePassword: "secret",
 			fixture: ChatEnvironmentFixture(settings: ChatSettings())
 		)
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		try receive("CAP * LS :sasl=PLAIN", on: session)
 		try receive("CAP me ACK :sasl", on: session)
 		let result = try #require(Message(line: ":irc.example.net \(numeric) me :Authenticated", on: session))
@@ -450,7 +450,7 @@ struct IRCSpecCapabilityNegotiationTests {
 			nicknamePassword: "secret",
 			fixture: ChatEnvironmentFixture(settings: ChatSettings())
 		)
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		try receive("CAP * LS :sasl=PLAIN", on: session)
 		try receive("CAP me ACK :sasl", on: session)
 		let result = try #require(Message(line: ":irc.example.net \(numeric) me PLAIN :Failed", on: session))
@@ -470,7 +470,7 @@ struct IRCSpecCapabilityNegotiationTests {
 			nicknamePassword: "secret",
 			fixture: ChatEnvironmentFixture(settings: ChatSettings())
 		)
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		try receive("CAP * LS :sasl=SCRAM-SHA-256,PLAIN", on: session)
 		try receive("CAP me ACK :sasl", on: session)
 		try receive("AUTHENTICATE +", on: session)
@@ -671,7 +671,7 @@ struct IRCSpecCapabilityNegotiationTests {
 	func saslMechanismsNumericDrivesARetry() throws {
 		let session = session(password: "hunter2")
 		defer { session.stopAllTimers() }
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		try receive("CAP * LS :sasl=SCRAM-SHA-256,PLAIN", on: session)
 		try receive("CAP me ACK :sasl", on: session)
 

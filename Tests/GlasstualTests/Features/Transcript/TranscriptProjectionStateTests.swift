@@ -68,6 +68,74 @@ struct TranscriptProjectionStateTests {
 		#expect(state.beginReplay().map(\.lineNumber) == [second.uniqueIdentifier])
 	}
 
+	@Test("The document owns active rows and supplies only a temporary replay snapshot")
+	func activeRowsAreNotRetainedTwice() {
+		let first = projectionResult(for: projectionLine("first"))
+		let second = projectionResult(for: projectionLine("second"))
+		var state = TranscriptProjectionState(capacity: 10)
+		_ = state.record(first)
+		_ = state.beginReplay()
+		_ = state.finishReplay(displaying: [first.lineNumber])
+
+		#expect(state.lineCount == 0)
+		#expect(!state.containsLine(withIdentifier: first.lineNumber))
+		if case .append = state.record(second) {} else {
+			Issue.record("An active print must go straight to the document")
+		}
+		#expect(state.lineCount == 0)
+
+		let replay = state.beginReplay(displaying: [first.transcriptLine, second.transcriptLine])
+		#expect(replay.map(\.lineNumber) == [first.lineNumber, second.lineNumber])
+		_ = state.finishReplay(displaying: Set(replay.map(\.lineNumber)))
+		#expect(state.lineCount == 0)
+	}
+
+	@Test("An active receipt is kept until the document applies it")
+	func activeReceiptIsTemporary() throws {
+		let line = projectionResult(for: projectionLine("pending"))
+		var state = TranscriptProjectionState(capacity: 10)
+		_ = state.record(line)
+		_ = state.beginReplay()
+		_ = state.finishReplay(displaying: [line.lineNumber])
+
+		let received = state.updateDelivery(
+			lineNumber: line.lineNumber, state: .delivered,
+			messageIdentifier: "server-id", reason: nil, isDisplayed: true
+		)
+		let update = try #require(received)
+		#expect(state.containsMessage(withIdentifier: "server-id"))
+		state.deliveryWasApplied(update)
+		#expect(state.deliveryUpdates.isEmpty)
+		#expect(!state.containsMessage(withIdentifier: "server-id"))
+		#expect(state.lineCount == 0)
+
+		_ = state.updateDelivery(
+			lineNumber: line.lineNumber, state: .failed,
+			messageIdentifier: "another-id", reason: "rejected", isDisplayed: true
+		)
+		state.retireDisplayedLines([line.lineNumber])
+		#expect(state.deliveryUpdates.isEmpty)
+		#expect(!state.containsMessage(withIdentifier: "another-id"))
+	}
+
+	@Test("A later delivery state keeps the message identifier from its acknowledgement")
+	func deliveryStateKeepsAcknowledgedIdentifier() throws {
+		let line = projectionResult(for: projectionLine("pending"))
+		var state = TranscriptProjectionState(capacity: 10)
+		_ = state.record(line)
+		_ = state.updateDelivery(
+			lineNumber: line.lineNumber, state: .delivered,
+			messageIdentifier: "server-id", reason: nil
+		)
+		let received = state.updateDelivery(
+			lineNumber: line.lineNumber, state: .failed,
+			messageIdentifier: nil, reason: "later failure"
+		)
+		let failed = try #require(received)
+		#expect(failed.messageIdentifier == "server-id")
+		#expect(state.containsMessage(withIdentifier: "server-id"))
+	}
+
 	/** A delivery receipt can arrive after the line was written to storage, so
 	 the state has to hold on to it: the stored row the same replay reads back
 	 still says "pending", and the receipt is folded into the row on its way to

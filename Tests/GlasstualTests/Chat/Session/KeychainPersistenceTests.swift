@@ -263,7 +263,7 @@ struct KeychainPersistenceTests {
 		#expect(session.pendingEndpoint == nil)
 		#expect(session.server == (request == .configured || request == .stsUpgrade ? origin : nil))
 		#expect(session.socket == nil)
-		let preparation = try #require(session.pendingCredentialTask)
+		let preparation = try #require(session.startup.credentialTask)
 		session.disconnect()
 		releaseSecond.finish()
 		await preparation.value
@@ -315,7 +315,7 @@ struct KeychainPersistenceTests {
 		#expect(session.socket == nil)
 		#expect(session.server?.serverAddress == "new.example")
 		#expect(session.sessionNicknamePassword == nil)
-		let preparation = try #require(session.pendingCredentialTask)
+		let preparation = try #require(session.startup.credentialTask)
 		session.disconnect()
 		releaseSecond.finish()
 		await preparation.value
@@ -338,7 +338,7 @@ struct KeychainPersistenceTests {
 			return Dictionary(items.map { ($0, "stale") }, uniquingKeysWith: { _, newest in newest })
 		}
 		session.connect()
-		let preparation = try #require(session.pendingCredentialTask)
+		let preparation = try #require(session.startup.credentialTask)
 		var iterator = started.makeAsyncIterator()
 		_ = await iterator.next()
 		#expect(session.isConnecting)

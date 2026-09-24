@@ -71,7 +71,7 @@ struct ServerSessionAutojoinIdentificationTests {
 	private func registeredIdentificationSession() throws -> TestServerSession {
 		let session = TestServerSession(configDictionary: ["loginCommands": ["msg NickServ IDENTIFY secret"]])
 		session.userNickname = "swift-user"
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		session.forwardsProcessedMessages = true
 		_ = try #require(session.findConversationOrCreate("#swift"))
 		try receive(":irc.example.org 001 swift-user :Welcome", on: session)
@@ -108,8 +108,8 @@ struct ServerSessionAutojoinIdentificationTests {
 	func welcomeDuringDisconnectIsIgnored() throws {
 		let session = TestServerSession(configDictionary: ["loginCommands": ["msg NickServ IDENTIFY secret"]])
 		session.userNickname = "swift-user"
-		session.isConnected = true
-		session.isDisconnecting = true
+		session.setConnectionTransportForTesting(.connected)
+		session.setConnectionShutdownForTesting(.disconnecting)
 		try receive(":irc.example.org 001 swift-user :Welcome", on: session)
 		#expect(!session.isLoggedIn)
 		#expect(!session.didPerformConnectCommands)
@@ -178,7 +178,7 @@ struct ServerSessionAutojoinIdentificationTests {
 		let session = makeSession()
 		session.isLoggedIn = false
 		session.cancelConnectCommandSettling()
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		_ = try #require(session.findConversationOrCreate("#swift"))
 		try receive(Self.loggedInNumeric, on: session)
 		#expect(!session.isAutojoined)
@@ -194,7 +194,7 @@ struct ServerSessionAutojoinIdentificationTests {
 		let session = TestServerSession(configDictionary: ["loginCommands": [command]])
 		session.userNickname = "swift-user"
 		session.forwardsProcessedMessages = true
-		session.isConnected = true
+		session.setConnectionTransportForTesting(.connected)
 		_ = try #require(session.findConversationOrCreate("#swift"))
 		try receive(":irc.example.org 001 swift-user :Welcome", on: session)
 		#expect(joinLines(of: session).isEmpty)

@@ -99,14 +99,14 @@ struct ConfigRemovalTests {
 		let presentation = RemovalPresentation()
 		session.presentation = presentation
 		session.config.pendingNicknamePassword = .set("fixture-nickname")
-		session.isConnected = true
-		session.isQuitting = true
+		session.setConnectionTransportForTesting(.connected)
+		session.setConnectionShutdownForTesting(.quitting)
 
 		fixture.chatSession.destroySession(session, preservingLocalData: true)
 		#expect(fixture.chatSession.sessions == [session])
 		#expect(session.disconnectCallbacks.count == 1)
 		#expect(presentation.preservedRemovals == 0)
-		session.isConnected = false
+		session.setConnectionTransportForTesting(.idle)
 		session.invokeDisconnectCallbacks()
 
 		#expect(fixture.chatSession.sessions.isEmpty)
@@ -137,7 +137,7 @@ struct ConfigRemovalTests {
 			return Dictionary(items.map { ($0, "late credential") }, uniquingKeysWith: { _, newest in newest })
 		}
 		session.connect()
-		let preparation = try #require(session.pendingCredentialTask)
+		let preparation = try #require(session.startup.credentialTask)
 		var iterator = started.makeAsyncIterator()
 		_ = await iterator.next()
 		var disconnects = 0
@@ -151,7 +151,7 @@ struct ConfigRemovalTests {
 
 		#expect(fixture.chatSession.sessions.isEmpty)
 		#expect(session.isTerminating)
-		#expect(session.pendingCredentialTask == nil)
+		#expect(session.startup.credentialTask == nil)
 		#expect(preparation.isCancelled)
 		#expect(disconnects == 1)
 		#expect(session.disconnectCallbacks.isEmpty)
@@ -186,7 +186,7 @@ struct ConfigRemovalTests {
 			return Dictionary(items.map { ($0, "old credential") }, uniquingKeysWith: { _, newest in newest })
 		}
 		session.connect()
-		let oldPreparation = try #require(session.pendingCredentialTask)
+		let oldPreparation = try #require(session.startup.credentialTask)
 		var iterator = started.makeAsyncIterator()
 		#expect(await iterator.next() == 1)
 		var disconnects = 0
@@ -205,14 +205,14 @@ struct ConfigRemovalTests {
 
 		#expect(disconnects == 1)
 		#expect(await iterator.next() == 2)
-		let newPreparation = try #require(session.pendingCredentialTask)
+		let newPreparation = try #require(session.startup.credentialTask)
 		let newSession = session.startup.identifier
 		releaseOld.finish()
 		await oldPreparation.value
 		#expect(session.isConnecting)
 		#expect(session.startup.identifier == newSession)
 		#expect(session.server?.serverAddress == "new.example.test")
-		#expect(session.pendingCredentialTask != nil)
+		#expect(session.startup.credentialTask != nil)
 		#expect(!newPreparation.isCancelled)
 		#expect(session.socket == nil)
 		#expect(session.sessionNicknamePassword == nil)

@@ -88,8 +88,14 @@ class ServerSession: ChatItem {
 	 was still connected to one of them. They are removed once the connection
 	 ends, so the live connection keeps its password until then. */
 	var retiredServerKeychainItems: Set<KeychainItem> = []
-	var isConnecting = false
-	var isConnected = false
+	var connectionState = SessionConnectionState()
+	var isConnecting: Bool {
+		connectionState.isConnecting
+	}
+
+	var isConnected: Bool {
+		connectionState.isConnected
+	}
 
 	/// KVO: `ServerChannelList` watches this through `publisher(for:)`
 	/// to end a listing when the connection drops.
@@ -107,8 +113,14 @@ class ServerSession: ChatItem {
 		}
 	}
 
-	var isQuitting = false
-	var isDisconnecting = false
+	var isQuitting: Bool {
+		connectionState.isQuitting
+	}
+
+	var isDisconnecting: Bool {
+		connectionState.isDisconnecting
+	}
+
 	var userIsIRCop = false
 	/// Whether the user is present, and the nickname and message that stand in
 	/// for them while they are not.
@@ -142,7 +154,6 @@ class ServerSession: ChatItem {
 	 cannot have a stale block act on the new session. */
 	var pendingDisconnectTask: Task<Void, Never>?
 	var pendingConnectionTask: Task<Void, Never>?
-	var pendingCredentialTask: Task<Void, Never>?
 	var credentialLoader: @Sendable ([KeychainItem]) async -> [KeychainItem: String] = {
 		await KeychainSecretLoader.passwords(for: $0)
 	}
@@ -152,6 +163,31 @@ class ServerSession: ChatItem {
 	var rejoinTasks: [String: Task<Void, Never>] = [:]
 	var pendingConfirmationTasks: [UUID: Task<Void, Never>] = [:]
 	var renderAdmission = RenderAdmission()
+	/// Member ordering and native-list presentation for one bounded inbound read
+	/// turn. Lists enroll only when they change; protocol lookups remain immediate.
+	private var inboundMemberPresentationLists: [ObjectIdentifier: ConversationMembers]?
+
+	func beginInboundMemberPresentationUpdates() {
+		precondition(inboundMemberPresentationLists == nil)
+		inboundMemberPresentationLists = [:]
+	}
+
+	func finishInboundMemberPresentationUpdates() {
+		guard let lists = inboundMemberPresentationLists else { return }
+		inboundMemberPresentationLists = nil
+		for list in lists.values {
+			list.endPresentationUpdates()
+		}
+	}
+
+	func deferMemberPresentation(_ list: ConversationMembers) {
+		guard inboundMemberPresentationLists != nil else { return }
+		let identifier = ObjectIdentifier(list)
+		guard inboundMemberPresentationLists?[identifier] == nil else { return }
+		inboundMemberPresentationLists?[identifier] = list
+		list.beginInboundPresentationUpdates()
+	}
+
 	var outboundTextProducer: OutboundTextProducer?
 	var connectType: SessionConnectMode = .normal
 	var disconnectType: SessionDisconnectMode = .normal
@@ -350,7 +386,6 @@ class ServerSession: ChatItem {
 		sasl.scramTask?.cancel()
 		pendingDisconnectTask?.cancel()
 		pendingConnectionTask?.cancel()
-		pendingCredentialTask?.cancel()
 		outboundTextProducer?.cancel()
 		notifications.cancelAll()
 		[

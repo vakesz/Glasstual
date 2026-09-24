@@ -252,7 +252,7 @@ struct SidebarOutlineViewTests {
 		fixture.other.config.sidebarIdentity = ServerIdentityStyle(color: .purple, icon: .people)
 		fixture.model.toggleFavorite(fixture.channels[0])
 		fixture.model.toggleFavorite(fixture.channels[2])
-		fixture.session.isConnected = true
+		fixture.session.setConnectionTransportForTesting(.connected)
 		for channel in fixture.channels.prefix(3) {
 			channel.activate()
 		}
