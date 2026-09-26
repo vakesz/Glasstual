@@ -55,6 +55,29 @@ struct UserCommandTests {
 		session.cancelPendingSessionTasks()
 	}
 
+	@Test("SERVER sends a typed request to the session's connection handler")
+	func serverUsesInjectedConnectionHandler() {
+		let session = TestServerSession()
+		var requests: [ServerConnectionRequest] = []
+		session.environment.services.connectToServer = { requests.append($0) }
+		session.sendCommand("SERVER -TLS irc.example.test:6697 secret", completeTarget: false, target: nil)
+		#expect(requests == [ServerConnectionRequest(
+			serverAddress: "irc.example.test", serverPort: 6697, serverPassword: "secret",
+			connectSecurely: true, channels: [],
+			options: ServerConnectionOptions(
+				connectWhenCreated: true, mergeConnectionIfPossible: false, selectFirstChannelAdded: false
+			)
+		)])
+		#expect(session.sentLines.count == 0)
+	}
+
+	@Test("SERVER rejects malformed endpoints before invoking its connection handler")
+	func serverRejectsInvalidEndpoint() {
+		let session = TestServerSession()
+		session.environment.services.connectToServer = { _ in Issue.record("Invalid endpoint reached connection handler") }
+		session.sendCommand("SERVER irc.example.test:99999", completeTarget: false, target: nil)
+	}
+
 	private func parsed(_ input: String) throws -> ParsedUserCommand {
 		try #require(ParsedUserCommand(input))
 	}
@@ -89,9 +112,9 @@ struct UserCommandTests {
 		#expect(command.arguments.rest == "argument")
 	}
 
-	@Test
-	func rejectsAnEmptyLine() {
-		#expect(ParsedUserCommand("") == nil)
+	@Test(arguments: ["", " ", "\t", "/", "/ \t"])
+	func rejectsAnEmptyCommand(input: String) {
+		#expect(ParsedUserCommand(input) == nil)
 	}
 
 	/// The index marks a handful of commands developer-only. The flag has to
@@ -109,6 +132,23 @@ struct UserCommandTests {
 
 @MainActor
 struct CommandArgumentsTests {
+	@Test("Argument text and formatting remain a snapshot after the editor changes", arguments: [false, true])
+	func snapshotsMutableInput(consumesTarget: Bool) throws {
+		let key = NSAttributedString.Key("CommandArgumentsTest")
+		let source = NSMutableAttributedString(string: "target hello", attributes: [key: true])
+		var arguments = CommandArguments(source)
+		if consumesTarget {
+			#expect(arguments.next() == "target")
+		}
+		source.setAttributedString(NSAttributedString(string: "changed"))
+		let expected = consumesTarget ? "hello" : "target hello"
+		#expect(arguments.rest == expected)
+		let remainder = arguments.attributedRest
+		#expect(remainder.string == expected)
+		try #require(remainder.length > 0)
+		#expect(remainder.attribute(key, at: 0, effectiveRange: nil) as? Bool == true)
+	}
+
 	@Test
 	func walksTokensLeftToRightWithoutDestroyingTheLine() {
 		var arguments = CommandArguments("#channel alice bye now")

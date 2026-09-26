@@ -10,7 +10,7 @@ import Testing
 @Suite("Message rule export")
 struct MessageRuleExportTests {
 	@Test("Export writes a property list the file importer reopens without losing a field")
-	func exportedRuleRoundTripsThroughFile() throws {
+	func exportedRuleRoundTripsThroughFile() async throws {
 		var filter = MessageRule()
 		filter.id = "export-round-trip"
 		filter.title = "Export fixture"
@@ -41,7 +41,7 @@ struct MessageRuleExportTests {
 		#expect(dictionary["title"] == .string("Export fixture"))
 		#expect(dictionary["ageLimit"] == .integer(3600))
 		#expect(dictionary["limitedChannelIDs"]?.stringArray == ["channel-one", "channel-two"])
-		let reopened = try MessageRule(contentsOf: url)
+		let reopened = try await MessageRule.read(from: url)
 		#expect(reopened.dictionaryValue == filter.dictionaryValue)
 	}
 

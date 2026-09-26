@@ -17,8 +17,7 @@ nonisolated struct ServerConnectionOptions: Equatable, Sendable {
 	let selectFirstChannelAdded: Bool
 }
 
-/// One endpoint to open, as a link or a command asked for it. A value: parsing
-/// produces it and resolution reads it, and neither needs a window.
+/// A parsed endpoint and channels requested by a link or command.
 nonisolated struct ServerConnectionRequest: Equatable, Sendable {
 	private static let logger = Logger(
 		subsystem: LogSubsystem.current,
@@ -32,7 +31,7 @@ nonisolated struct ServerConnectionRequest: Equatable, Sendable {
 	let channels: [String]
 	let options: ServerConnectionOptions
 
-	/// Legacy command adapter for `[-SSL] host[:port] [password]`.
+	/// Parses `[-SSL|-TLS] host[:port] [port] [password]`.
 	/// URL requests bypass this tokenizer entirely.
 	static func parse(
 		_ serverInfo: String,
@@ -68,6 +67,7 @@ nonisolated struct ServerConnectionRequest: Equatable, Sendable {
 				return nil
 			}
 			portSuffix = String(addressAndPort[addressAndPort.index(after: closingBracket)...])
+			guard portSuffix.isEmpty || portSuffix.hasPrefix(":") else { return nil }
 		} else if openingBracket == nil, closingBracket == nil {
 			if let colon = addressAndPort.firstIndex(of: ":") {
 				parsedAddress = String(addressAndPort[..<colon])

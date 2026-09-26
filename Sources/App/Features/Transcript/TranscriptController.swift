@@ -626,9 +626,7 @@ extension TranscriptController {
 		/* The link parser's scheme set is user-extensible, so an address that
 		 became clickable is not necessarily one the inline-content service can
 		 handle. It only ever fetches over HTTP, and aborts on a file: URL. */
-		guard let url = URL(string: address),
-		      let scheme = url.scheme?.lowercased(),
-		      scheme == "http" || scheme == "https"
+		guard let url = URL(string: address), LinkSchemeRules.isWebURL(url)
 		else {
 			return nil
 		}

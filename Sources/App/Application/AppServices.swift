@@ -62,3 +62,45 @@ extension KeychainPersistence {
 		KeychainAlerts.showFailure(error, retry: retry)
 	})
 }
+
+extension ChatServices {
+	static let shared = ChatServices(
+		certificates: CertificatePresenter(),
+		connectToServer: ServerConnection.connect(using:)
+	)
+}
+
+extension STSPolicyStore {
+	static let applicationStore = STSPolicyStore(userDefaults: GlasstualUserDefaults.container)
+}
+
+extension Scrollback {
+	static let shared = Scrollback()
+}
+
+extension ScrollbackSession {
+	static let shared = ScrollbackSession()
+}
+
+extension InlineImageLoader {
+	static let shared = InlineImageLoader()
+}
+
+extension InlineImageBudget {
+	static let shared = InlineImageBudget()
+}
+
+extension SettingsTransferSession {
+	static let shared = SettingsTransferSession()
+}
+
+extension SettingsSaveQueue {
+	static let shared = SettingsSaveQueue()
+}
+
+extension ChatEnvironment {
+	/// Live setting values against the application's services.
+	static var application: ChatEnvironment {
+		ChatEnvironment(settings: .current(), services: ChatServices.shared)
+	}
+}

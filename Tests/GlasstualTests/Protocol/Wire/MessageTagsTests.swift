@@ -8,40 +8,21 @@ import Testing
 
 /// IRCv3 typing notifications, replies, and reactions.
 @MainActor
-@Suite("IRCv3 message tags", .serialized)
-final class MessageTagsTests {
-	private nonisolated static let typingSettingsKey = SettingsKeys.Connection.sendTypingNotifications.name
-	private let originalTypingSetting: Bool?
-
-	init() {
-		let defaults = GlasstualUserDefaults.container
-		originalTypingSetting = defaults
-			.persistedObject(forKey: Self.typingSettingsKey) as? Bool
-		defaults.set(true, forKey: Self.typingSettingsKey)
-	}
-
-	isolated deinit {
-		let defaults = GlasstualUserDefaults.container
-		if let originalTypingSetting {
-			defaults.set(originalTypingSetting, forKey: Self.typingSettingsKey)
-		} else {
-			defaults.removeObject(forKey: Self.typingSettingsKey)
-		}
-	}
-
+@Suite("IRCv3 message tags")
+struct MessageTagsTests {
 	@Test("An active typing tag is sent at most once every three seconds")
 	func typingActiveIsThrottledToEveryThreeSeconds() throws {
 		let session = makeMessageTagsSession()
 		let channel = try addChannel(named: "#chat", to: session)
 		let start = Date()
 
-		session.noteLocalUserTyping("h", in: channel, at: start)
-		session.noteLocalUserTyping("he", in: channel, at: start.addingTimeInterval(1))
-		session.noteLocalUserTyping("hel", in: channel, at: start.addingTimeInterval(2.9))
+		session.typingSender.noteText("h", in: channel, at: start)
+		session.typingSender.noteText("he", in: channel, at: start.addingTimeInterval(1))
+		session.typingSender.noteText("hel", in: channel, at: start.addingTimeInterval(2.9))
 
 		#expect(sentLines(of: session) == ["@+typing=active TAGMSG #chat"])
 
-		session.noteLocalUserTyping("hell", in: channel, at: start.addingTimeInterval(3))
+		session.typingSender.noteText("hell", in: channel, at: start.addingTimeInterval(3))
 
 		#expect(session.sentLines.count == 2)
 		#expect(sentLines(of: session).last == "@+typing=active TAGMSG #chat")
@@ -53,15 +34,15 @@ final class MessageTagsTests {
 		let channel = try addChannel(named: "#chat", to: session)
 		let start = Date()
 
-		session.noteLocalUserTyping("h", in: channel, at: start)
-		session.typingPauseTimerFired(channel)
+		session.typingSender.noteText("h", in: channel, at: start)
+		session.typingSender.pause(in: channel, at: start.addingTimeInterval(5))
 
 		#expect(sentLines(of: session) == [
 			"@+typing=active TAGMSG #chat",
 			"@+typing=paused TAGMSG #chat",
 		])
 
-		session.noteLocalUserTyping("he", in: channel, at: start.addingTimeInterval(0.5))
+		session.typingSender.noteText("he", in: channel, at: start.addingTimeInterval(8))
 
 		#expect(sentLines(of: session).last == "@+typing=active TAGMSG #chat")
 		#expect(session.sentLines.count == 3)
@@ -71,21 +52,22 @@ final class MessageTagsTests {
 	func typingDoneWhenTextClearedOrSent() throws {
 		let session = makeMessageTagsSession()
 		let channel = try addChannel(named: "#chat", to: session)
+		let start = Date()
 
-		session.noteLocalUserTyping("h", in: channel, at: Date())
-		session.noteLocalUserTyping("", in: channel, at: Date())
+		session.typingSender.noteText("h", in: channel, at: start)
+		session.typingSender.noteText("", in: channel, at: start.addingTimeInterval(3))
 
 		#expect(sentLines(of: session) == [
 			"@+typing=active TAGMSG #chat",
 			"@+typing=done TAGMSG #chat",
 		])
 
-		session.noteLocalUserTyping("", in: channel, at: Date())
+		session.typingSender.noteText("", in: channel, at: start.addingTimeInterval(4))
 
 		#expect(session.sentLines.count == 2)
 
-		session.noteLocalUserTyping("x", in: channel, at: Date())
-		session.localUserSentMessage(in: channel)
+		session.typingSender.noteText("x", in: channel, at: start.addingTimeInterval(6))
+		session.typingSender.finish(in: channel, at: start.addingTimeInterval(9))
 
 		#expect(sentLines(of: session).last == "@+typing=done TAGMSG #chat")
 		#expect(session.sentLines.count == 4)
@@ -95,14 +77,15 @@ final class MessageTagsTests {
 	func typingIsNotSentForCommands() throws {
 		let session = makeMessageTagsSession()
 		let channel = try addChannel(named: "#chat", to: session)
+		let start = Date()
 
-		session.noteLocalUserTyping("/", in: channel, at: Date())
-		session.noteLocalUserTyping("/me", in: channel, at: Date())
+		session.typingSender.noteText("/", in: channel, at: Date())
+		session.typingSender.noteText("/me", in: channel, at: Date())
 
 		#expect(session.sentLines.count == 0)
 
-		session.noteLocalUserTyping("h", in: channel, at: Date())
-		session.noteLocalUserTyping("/h", in: channel, at: Date())
+		session.typingSender.noteText("h", in: channel, at: start)
+		session.typingSender.noteText("/h", in: channel, at: start.addingTimeInterval(3))
 
 		#expect(sentLines(of: session) == [
 			"@+typing=active TAGMSG #chat",
@@ -116,24 +99,24 @@ final class MessageTagsTests {
 		session.markAsLoggedIn()
 		let channel = try addChannel(named: "#chat", to: session)
 
-		session.noteLocalUserTyping("h", in: channel, at: Date())
-		session.noteLocalUserTyping("h", in: nil, at: Date())
+		session.typingSender.noteText("h", in: channel, at: Date())
+		session.typingSender.noteText("h", in: nil, at: Date())
 
 		#expect(session.sentLines.count == 0)
 
 		let tagged = makeMessageTagsSession()
-		tagged.noteLocalUserTyping("h", in: nil, at: Date())
+		tagged.typingSender.noteText("h", in: nil, at: Date())
 
 		#expect(tagged.sentLines.count == 0)
 	}
 
 	@Test("Nothing is sent while the typing notification preference is off")
 	func typingRespectsSetting() throws {
-		GlasstualUserDefaults.container.set(false, forKey: Self.typingSettingsKey)
 		let session = makeMessageTagsSession()
+		session.environment.settings.sendTypingNotifications = false
 		let channel = try addChannel(named: "#chat", to: session)
 
-		session.noteLocalUserTyping("h", in: channel, at: Date())
+		session.typingSender.noteText("h", in: channel, at: Date())
 
 		#expect(session.sentLines.count == 0)
 	}
@@ -258,15 +241,8 @@ final class MessageTagsTests {
 	}
 
 	private func makeMessageTagsSession() -> TestServerSession {
-		let configuration: NSDictionary = [
-			"nickname": "me",
-			"username": "me",
-		]
-		guard let configuration = configuration as? [String: Any] else {
-			preconditionFailure("Test configuration must bridge to a Swift dictionary")
-		}
-		let session = TestServerSession(configDictionary: configuration)
-
+		let session = TestServerSession(configDictionary: ["nickname": "me", "username": "me"])
+		session.environment.settings.sendTypingNotifications = true
 		session.enableCapability(.messageTags)
 		session.markAsLoggedIn()
 

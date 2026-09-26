@@ -336,8 +336,7 @@ extension ServerSession {
 		trackedUserPopulationTask = nil
 		rejoinTasks.values.forEach { $0.cancel() }
 		rejoinTasks.removeAll()
-		typingPauseTasks.values.forEach { $0.cancel() }
-		typingPauseTasks.removeAll()
+		typingSender.removeAll()
 	}
 
 	func cancelReconnect() {
@@ -350,7 +349,7 @@ extension ServerSession {
 
 	func presentCertificateTrustInformation() {
 		guard isSecured else { return }
-		socket?.openSecuredConnectionCertificateModal()
+		socket?.showCertificateDetails()
 	}
 
 	private func scheduleConnection(after delay: UInt, action: @escaping @MainActor () -> Void) {
@@ -392,10 +391,7 @@ extension ServerSession {
 	func resetAllPropertyValues() {
 		batchMessages.dequeueEntries()
 		typingTracker.removeAll()
-		typingStateSent.removeAll()
-		typingActiveSentAt.removeAll()
-		typingPauseTasks.values.forEach { $0.cancel() }
-		typingPauseTasks.removeAll()
+		typingSender.removeAll()
 
 		nextLineReplyToMessageIdentifier = nil
 		nextMessageReplyIdentifier = nil

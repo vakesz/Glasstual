@@ -44,6 +44,7 @@ final class InputTypingNotice {
 		isObserving = observed
 
 		guard observed else {
+			finish(unlessIn: nil)
 			notifications.cancelAll()
 			return
 		}
@@ -63,7 +64,7 @@ final class InputTypingNotice {
 			return
 		}
 
-		session.noteLocalUserTyping(text, in: conversation)
+		session.typingSender.noteText(text, in: conversation)
 		typingConversation = text.isEmpty || text.hasPrefix("/") ? nil : conversation
 	}
 
@@ -76,7 +77,7 @@ final class InputTypingNotice {
 	 so the old one never heard that typing stopped. */
 	func finish(unlessIn conversation: Conversation?) {
 		guard let typingConversation, typingConversation !== conversation else { return }
-		typingConversation.associatedSession?.localUserClearedText(in: typingConversation)
+		typingConversation.associatedSession?.typingSender.finish(in: typingConversation)
 		self.typingConversation = nil
 	}
 

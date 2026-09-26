@@ -72,7 +72,9 @@ final class OnboardingModel {
 	let settings: OnboardingSettings
 	let networkPicker: OnboardingNetworkPickerModel
 	private let notificationAuthorization: OnboardingNotificationAuthorization
-	private var authorizationTask: Task<Void, Never>?
+	@ObservationIgnored private var authorizationTask: Task<Void, Never>?
+
+	isolated deinit { authorizationTask?.cancel() }
 
 	/// What the accepted steps chose. Everything onboarding applies on the way
 	/// out is read from here and nowhere else.
@@ -262,7 +264,9 @@ final class OnboardingModel {
 	}
 
 	func refreshNotificationPermission() async {
+		guard !finished, !Task.isCancelled else { return }
 		let authorizationStatus = await notificationAuthorization.currentStatus()
+		guard !finished, !Task.isCancelled else { return }
 
 		switch authorizationStatus {
 		case .authorized, .provisional:
@@ -301,13 +305,19 @@ final class OnboardingModel {
 	}
 
 	private func requestNotificationAuthorization() {
-		guard settings.notifications.notifyAboutMentions else { return }
-
-		authorizationTask = Task {
+		guard !finished, settings.notifications.notifyAboutMentions, authorizationTask == nil else { return }
+		let authorization = notificationAuthorization
+		authorizationTask = Task { [weak self] in
+			defer { self?.authorizationTask = nil }
+			guard !Task.isCancelled else { return }
 			do {
-				_ = try await notificationAuthorization.request()
-				await refreshNotificationPermission()
+				_ = try await authorization.request()
+				guard !Task.isCancelled else { return }
+				await self?.refreshNotificationPermission()
+			} catch is CancellationError {
+				// Leaving onboarding cancels its pending work.
 			} catch {
+				guard !Task.isCancelled else { return }
 				onboardingLogger.error(
 					"Notifications failed to authorize: \(error.localizedDescription, privacy: .public)"
 				)
@@ -358,8 +368,10 @@ final class OnboardingModel {
 	func setUpLater() {
 		guard finished == false else { return }
 
-		markCompleted()
 		finished = true
+		authorizationTask?.cancel()
+		authorizationTask = nil
+		markCompleted()
 	}
 
 	/// The connection the accepted steps describe, and whether to connect it at

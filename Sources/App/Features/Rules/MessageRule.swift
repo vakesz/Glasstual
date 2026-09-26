@@ -4,7 +4,7 @@
 import CocoaExtensions
 import Foundation
 
-enum MessageRuleDestination: UInt, CaseIterable, Identifiable {
+nonisolated enum MessageRuleDestination: UInt, CaseIterable, Identifiable, Sendable {
 	case unrestricted
 	case channels
 	case privateMessages
@@ -15,7 +15,7 @@ enum MessageRuleDestination: UInt, CaseIterable, Identifiable {
 	}
 }
 
-enum MessageRuleAgeComparator: UInt, CaseIterable, Identifiable {
+nonisolated enum MessageRuleAgeComparator: UInt, CaseIterable, Identifiable, Sendable {
 	case none
 	case lessThan
 	case greaterThan
@@ -25,7 +25,7 @@ enum MessageRuleAgeComparator: UInt, CaseIterable, Identifiable {
 	}
 }
 
-struct MessageRuleEvent: OptionSet {
+nonisolated struct MessageRuleEvent: OptionSet, Sendable {
 	let rawValue: UInt
 
 	static let plainTextMessage = Self(rawValue: 1 << 1)
@@ -82,7 +82,9 @@ nonisolated extension [String: PropertyListValue] {
 /// One complete, independently editable message rule. The stored property list
 /// names every field after the property it sets; everything above it works with
 /// typed Swift state.
-struct MessageRule: Identifiable {
+nonisolated struct MessageRule: Identifiable, Sendable {
+	static let maximumDocumentBytes = 16 * 1024 * 1024
+
 	var ignoresContent = false
 	var ignoresOperators = true
 	var logsMatch = false
@@ -136,13 +138,31 @@ struct MessageRule: Identifiable {
 		}
 	}
 
-	init(contentsOf url: URL) throws {
-		let data = try Data(contentsOf: url)
+	/// Reads one regular file under the import limit, holding sandbox access
+	/// for the read. Cancellation prevents a dismissed pane from opening an editor.
+	@concurrent
+	static func read(from url: URL) async throws -> MessageRule {
+		try Task.checkCancellation()
+		let access = url.startAccessingSecurityScopedResource()
+		defer {
+			if access {
+				url.stopAccessingSecurityScopedResource()
+			}
+		}
+		let attributes = try url.resourceValues(forKeys: [.isRegularFileKey, .fileSizeKey])
+		guard attributes.isRegularFile == true else { throw CocoaError(.fileReadCorruptFile) }
+		guard let size = attributes.fileSize, size <= maximumDocumentBytes else { throw CocoaError(.fileReadTooLarge) }
+		let handle = try FileHandle(forReadingFrom: url)
+		defer { try? handle.close() }
+		let data = try handle.read(upToCount: maximumDocumentBytes + 1) ?? Data()
+		guard data.count <= maximumDocumentBytes else { throw CocoaError(.fileReadTooLarge) }
+		try Task.checkCancellation()
 		let propertyList = try PropertyListSerialization.propertyList(from: data, format: nil)
 		guard let dictionary = [String: PropertyListValue](propertyList: propertyList) else {
 			throw CocoaError(.fileReadCorruptFile)
 		}
-		self.init(dictionary: dictionary)
+		try Task.checkCancellation()
+		return MessageRule(dictionary: dictionary)
 	}
 
 	var description: String {

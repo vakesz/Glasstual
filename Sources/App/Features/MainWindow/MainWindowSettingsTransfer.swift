@@ -20,7 +20,7 @@ final class MainWindowSettingsTransferModel {
 	fileprivate var importRequest = PendingFileRequest<Void>()
 	fileprivate var isChoosingExportOptions = false
 	fileprivate var isExportingArchive = false
-	fileprivate var archiveDocument: SettingsPropertyListDocument?
+	fileprivate var archiveData: Data?
 
 	func requestImport() {
 		guard importRequest.request == nil, session.canStart else { return }
@@ -47,8 +47,7 @@ final class MainWindowSettingsTransferModel {
 	fileprivate func export(includeConnectCommands: Bool) {
 		Task { @MainActor in
 			do {
-				let data = try await session.exportData(includeConnectCommands: includeConnectCommands)
-				archiveDocument = SettingsPropertyListDocument(data: data)
+				archiveData = try await session.exportData(includeConnectCommands: includeConnectCommands)
 				isExportingArchive = true
 			} catch {
 				session.report(error)
@@ -57,7 +56,7 @@ final class MainWindowSettingsTransferModel {
 	}
 
 	fileprivate func completeExport(_ result: Result<URL, Error>) {
-		archiveDocument = nil
+		archiveData = nil
 		session.completeExport(result)
 	}
 }
@@ -79,10 +78,11 @@ private struct MainWindowSettingsTransferPresentation: ViewModifier {
 			}
 			.fileExporter(
 				isPresented: $model.isExportingArchive,
-				document: model.archiveDocument,
-				contentType: .propertyList,
+				item: model.archiveData.map(PropertyListExport.init(data:)),
+				contentTypes: [.propertyList],
 				defaultFilename: SettingsArchive.defaultArchiveFilename,
-				onCompletion: model.completeExport
+				onCompletion: model.completeExport,
+				onCancellation: { model.completeExport(.failure(CocoaError(.userCancelled))) }
 			)
 			.modifier(SettingsTransferPresentation(session: model.session, host: .mainWindow))
 			.modifier(SettingsExportOptionsPresentation(

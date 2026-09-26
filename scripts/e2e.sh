@@ -6,9 +6,10 @@ umask 077
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 E2E_REPO_ROOT="$(cd -- "$script_dir/.." && pwd)"
 export E2E_REPO_ROOT
-export E2E_DERIVED_DATA="${DERIVED_DATA:-$E2E_REPO_ROOT/DerivedData}"
-export E2E_APP="${E2E_APP:-$E2E_DERIVED_DATA/Build/Products/Debug/Glasstual.app}"
-export E2E_HELPER="${E2E_HELPER:-$E2E_DERIVED_DATA/Build/Products/Debug/GlasstualE2EHarness}"
+source "$script_dir/build-paths.sh"
+export E2E_DERIVED_DATA="${DERIVED_DATA:-}"
+export E2E_APP="${E2E_APP:-$BUILD_PRODUCTS/Glasstual.app}"
+export E2E_HELPER="${E2E_HELPER:-$BUILD_PRODUCTS/GlasstualE2EHarness}"
 export E2E_FIXTURE="$E2E_REPO_ROOT/Tests/Corpora/E2E/Startup.plist"
 export E2E_DISPOSABLE_USER_CONSENT="${E2E_DISPOSABLE_USER_CONSENT:-NO}"
 
@@ -20,7 +21,7 @@ if [[ ! -x "$E2E_HELPER" ]]; then
 	printf '%s\n' 'e2e: setup failure: build GlasstualE2E for testing first to provision the stable supervisor/helper' >&2
 	exit 2
 fi
-E2E_OUTPUT="${E2E_OUTPUT:-$E2E_REPO_ROOT/build/e2e}"
+E2E_OUTPUT="${E2E_OUTPUT:-$BUILD_LOGS/e2e}"
 export E2E_OUTPUT
 mkdir -p "$E2E_OUTPUT"
 E2E_RUN_DIRECTORY="$(mktemp -d "$E2E_OUTPUT/run-$(date -u +%Y%m%dT%H%M%SZ)-XXXXXX")"

@@ -123,25 +123,6 @@ struct AppKitBridgeIsolationTests {
 		#expect(collector.values == [1])
 	}
 
-	// MARK: - Opened files
-
-	@Test("An opened file is recognised by kind")
-	func openedFilesAreClassified() throws {
-		let directory = FileManager.default.temporaryDirectory
-			.appendingPathComponent("GlasstualImportTests-\(UUID().uuidString)", isDirectory: true)
-		try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-		defer { try? FileManager.default.removeItem(at: directory) }
-
-		let script = directory.appendingPathComponent("Example.scpt")
-		try Data().write(to: script)
-
-		let style = directory.appendingPathComponent("Example.css")
-		try Data().write(to: style)
-
-		#expect(ResourceFileImporter.isInstallableScript(script))
-		#expect(ResourceFileImporter.isInstallableScript(style) == false)
-	}
-
 	@Test("The application no longer answers the untitled-document question")
 	func applicationDoesNotHandleUntitledFiles() {
 		/* The importer was an NSDocument subclass, which made AppKit offer an

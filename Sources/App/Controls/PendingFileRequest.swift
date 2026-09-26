@@ -4,17 +4,8 @@
 import Foundation
 import SwiftUI
 
-/** One file panel at a time, with a completion that cannot be applied twice.
-
- A `fileImporter` reports its result to whichever closure the view is holding
- when the panel closes, and SwiftUI keeps that closure alive across a rebuild.
- Without an identity, a result meant for a panel the user already dismissed
- lands on whatever request replaced it. Every request here carries its own, and
- completing one consumes it.
-
- Dismissal and completion stay separate: closing the panel lowers the
- presentation flag but leaves the request, so a completion still in flight can
- be matched against it. */
+/// Identifies one picker and consumes its completion once. Dismissal keeps the
+/// request available because SwiftUI can deliver the result after closing the panel.
 struct PendingFileRequest<Kind> {
 	struct Request: Identifiable {
 		let id = UUID()
@@ -63,11 +54,12 @@ extension PendingFileRequest {
 	/// Binds the panel's presentation to this request alone: a flag lowered for
 	/// an older request cannot close the one now on screen.
 	static func presentation(_ pending: Binding<Self>) -> Binding<Bool> {
-		Binding(
-			get: { pending.wrappedValue.isPresented },
+		let requestID = pending.wrappedValue.request?.id
+		return Binding(
+			get: { pending.wrappedValue.request?.id == requestID && pending.wrappedValue.isPresented },
 			set: { isPresented in
-				guard isPresented == false, let id = pending.wrappedValue.request?.id else { return }
-				pending.wrappedValue.dismiss(id)
+				guard isPresented == false, let requestID else { return }
+				pending.wrappedValue.dismiss(requestID)
 			}
 		)
 	}

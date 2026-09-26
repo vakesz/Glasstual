@@ -18,6 +18,7 @@ final class StartupState {
 	var joining = Joining.pending
 	var requiresAuthentication = false
 	var credentialTask: Task<Void, Never>?
+	var channelCredentialTasks: [KeychainItem: Task<Void, Never>] = [:]
 	var settlingTask: Task<Void, Never>?
 	var authenticationTask: Task<Void, Never>?
 
@@ -27,17 +28,17 @@ final class StartupState {
 
 	func cancel() {
 		credentialTask?.cancel()
+		channelCredentialTasks.values.forEach { $0.cancel() }
 		settlingTask?.cancel()
 		authenticationTask?.cancel()
 		credentialTask = nil
+		channelCredentialTasks.removeAll()
 		settlingTask = nil
 		authenticationTask = nil
 	}
 
 	isolated deinit {
-		credentialTask?.cancel()
-		settlingTask?.cancel()
-		authenticationTask?.cancel()
+		cancel()
 	}
 }
 

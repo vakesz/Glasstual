@@ -130,7 +130,7 @@ struct ApplicationLinkTests {
 		var created: [ServerConnectionRequest] = []
 		await ServerConnectionResolution.resolve(
 			using: request,
-			sessions: [session],
+			sessions: { [session] },
 			confirmMerge: { candidate, address, channels in
 				#expect(candidate === session)
 				#expect(address == request.serverAddress)
@@ -168,7 +168,7 @@ struct ApplicationLinkTests {
 		var created = 0
 		await ServerConnectionResolution.resolve(
 			using: request,
-			sessions: [session],
+			sessions: { [session] },
 			confirmMerge: { _, _, _ in
 				Issue.record("Mismatched connection offered")
 				return .useExisting
@@ -196,7 +196,7 @@ struct ApplicationLinkTests {
 		try #require(session.canJoin(channel))
 		await ServerConnectionResolution.resolve(
 			using: request,
-			sessions: [session],
+			sessions: { [session] },
 			confirmMerge: { _, _, _ in .useExisting },
 			createConnection: { _ in Issue.record("Expected reuse") }
 		)
@@ -212,7 +212,7 @@ struct ApplicationLinkTests {
 		))
 		await ServerConnectionResolution.resolve(
 			using: command,
-			sessions: [session],
+			sessions: { [session] },
 			confirmMerge: { _, _, _ in .useExisting },
 			createConnection: { _ in Issue.record("Expected reuse") }
 		)
@@ -230,7 +230,7 @@ struct ApplicationLinkTests {
 		var created = false
 		await ServerConnectionResolution.resolve(
 			using: request,
-			sessions: [session],
+			sessions: { [session] },
 			confirmMerge: { _, _, _ in
 				session.config.serverList[0].serverAddress = "replacement.invalid"
 				return choice
@@ -239,6 +239,37 @@ struct ApplicationLinkTests {
 			createConnection: { _ in created = true }
 		)
 		#expect(created == (choice == .createNew))
+	}
+
+	@Test("Removing a server while a reuse prompt is open cancels the merge")
+	func removedSessionInvalidatesConfirmation() async throws {
+		let request = try #require(connectionIntent(for: "ircs://irc.example.test/chat"))
+		let session = TestServerSession()
+		session.config.serverList = [ServerEndpoint(
+			serverAddress: "irc.example.test", serverPort: 6697, prefersSecuredConnection: true
+		)]
+		var sessions: [ServerSession] = [session]
+		await ServerConnectionResolution.resolve(
+			using: request,
+			sessions: { sessions },
+			confirmMerge: { _, _, _ in
+				sessions.removeAll()
+				return .useExisting
+			},
+			mergeConnection: { _, _ in Issue.record("Removed server was reused") },
+			createConnection: { _ in Issue.record("Cancelled merge created a new server") }
+		)
+	}
+
+	@Test("Terminating sessions cannot be reused by server-only links")
+	func terminatingSessionIsNotReused() throws {
+		let request = try #require(connectionIntent(for: "ircs://irc.example.test"))
+		let session = TestServerSession()
+		session.config.serverList = [ServerEndpoint(
+			serverAddress: "irc.example.test", serverPort: 6697, prefersSecuredConnection: true
+		)]
+		session.isTerminating = true
+		#expect(!ServerConnectionResolution.canReuse(session, for: request))
 	}
 
 	@Test("A matching saved endpoint cannot hide a different live socket")
@@ -258,23 +289,22 @@ struct ApplicationLinkTests {
 		#expect(ServerConnectionResolution.canReuse(session, for: request) == false)
 	}
 
-	@Test("Server info that is empty, malformed or out of port range is rejected")
-	func serverInfoParserRejectsGarbage() {
-		#expect(ServerConnectionRequest.parse(
-			"",
-			channels: nil,
-			options: externalLinkOptions
-		) == nil)
-		#expect(ServerConnectionRequest.parse(
-			"[not-an-ipv6]:6667",
-			channels: nil,
-			options: externalLinkOptions
-		) == nil)
-		#expect(ServerConnectionRequest.parse(
-			"irc.example.test:99999",
-			channels: nil,
-			options: externalLinkOptions
-		) == nil)
+	@Test("Malformed server commands are rejected", arguments: [
+		"", "[not-an-ipv6]:6667", "irc.example.test:99999", "[::1]junk", "[::1]junk 6667",
+		"[::1]:", "[::1]:0", "[::1]:99999",
+	])
+	func serverInfoParserRejectsGarbage(input: String) {
+		#expect(ServerConnectionRequest.parse(input, channels: nil, options: externalLinkOptions) == nil)
+	}
+
+	@Test("Bracketed IPv6 commands preserve their port and password", arguments: [
+		"-TLS [::1]:6697 secret", "[::1] +6697 secret"
+	])
+	func bracketedIPv6Command(input: String) {
+		#expect(ServerConnectionRequest.parse(input, channels: nil, options: externalLinkOptions) == ServerConnectionRequest(
+			serverAddress: "::1", serverPort: 6697, serverPassword: "secret", connectSecurely: true,
+			channels: [], options: externalLinkOptions
+		))
 	}
 
 	/// A link naming only a server skipped the search for a saved one, so each
@@ -290,7 +320,7 @@ struct ApplicationLinkTests {
 
 		await ServerConnectionResolution.resolve(
 			using: request,
-			sessions: [session],
+			sessions: { [session] },
 			confirmMerge: { _, _, _ in
 				Issue.record("A link with no channel to add has nothing to confirm")
 				return .cancel

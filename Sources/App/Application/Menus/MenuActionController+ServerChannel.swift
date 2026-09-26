@@ -60,7 +60,7 @@ extension MenuActionController {
 			guard let self else { return }
 			defer { serverDuplicationTasks[identifier] = nil }
 			guard !Task.isCancelled, isRunning, let session, !session.isTerminating, let chatSession else { return }
-			config.connectionName = MenuServerNamePolicy.duplicateName(of: config.connectionName)
+			config.connectionName = ApplicationStrings.duplicatedName(config.connectionName)
 			let newSession = chatSession.createSession(with: config)
 			if newSession.config.sidebarItemExpanded {
 				mainWindow.expandSession(newSession)

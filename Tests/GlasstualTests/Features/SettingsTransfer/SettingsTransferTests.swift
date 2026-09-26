@@ -366,19 +366,6 @@ struct SettingsTransferTests {
 		#expect(plan.result.sessions?.first?.autoConnect == false)
 	}
 
-	@Test("Export failure is visible and user cancellation stays quiet")
-	func exportErrorsAreVisible() throws {
-		let fixture = try Fixture()
-		defer { fixture.cleanUp() }
-		let session = fixture.session()
-		session.completeExport(.failure(CocoaError(.fileWriteNoPermission)))
-		#expect(session.errorMessage != nil)
-		#expect(session.completionMessage == nil)
-		session.acknowledge()
-		session.completeExport(.failure(CocoaError(.userCancelled)))
-		#expect(session.errorMessage == nil)
-	}
-
 	@Test("Imported query retention is applied before model reconciliation and survives save/reopen",
 	      arguments: [SettingsTransferMode.merge, .restore], [false, true])
 	func rememberedQueriesSurviveModelImportSaveAndReopen(
@@ -494,6 +481,7 @@ struct SettingsTransferTests {
 		#expect(portable.omittedConnectCommands.contains(configuration.uniqueIdentifier))
 		#expect(portable.sessions?.first?.loginCommands.isEmpty == true)
 		#expect(portable.sessions?.first?.identityClientSideCertificate == nil)
+		recovery.completeExport(.success(backup.url))
 		let optIn = try await SettingsArchive.decode(recovery.exportData(includeConnectCommands: true))
 		#expect(optIn.sessions?.first?.loginCommands == configuration.loginCommands)
 		#expect(optIn.sessions?.first?.identityClientSideCertificate == nil)

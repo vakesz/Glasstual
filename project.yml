@@ -349,7 +349,6 @@ targets:
           # Notes for whoever edits the catalogues; not a shipped resource.
           - LocalizationCatalogNotices.md
       - path: Sources/App/Protocol
-      - path: Sources/App/Services
       - path: Sources/App/SettingsKeys
       # Sources/Shared holds the declarations the connection host shares, and
       # only those; the IRCConnectionHost target globs the same folder.

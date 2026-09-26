@@ -12,8 +12,6 @@ import Foundation
  ``ScrollbackSession``, which runs it in the order it was asked for. */
 @MainActor
 final class Scrollback {
-	static let shared = Scrollback()
-
 	/// What every view has stored, as far as this process knows. Read
 	/// synchronously by the IRC layer when it decides whether a replayed history
 	/// line is one it already has.

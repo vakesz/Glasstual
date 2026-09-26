@@ -160,15 +160,16 @@ extension ServerSession {
 
 		case .server:
 			guard requireArguments(arguments, for: parsed.command) else { return }
-			ServerConnection.connect(
-				to: arguments.rest,
+			guard let request = ServerConnectionRequest.parse(
+				arguments.rest,
 				channels: nil,
 				options: ServerConnectionOptions(
 					connectWhenCreated: true,
 					mergeConnectionIfPossible: false,
 					selectFirstChannelAdded: false
 				)
-			)
+			) else { return }
+			environment.services.connectToServer(request)
 
 		case .sslcontext:
 			presentCertificateTrustInformation()

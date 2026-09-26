@@ -12,14 +12,6 @@ final class STSPolicyStore {
 	private let userDefaults: UserDefaults?
 	private var policies: [String: STSPolicy] = [:]
 
-	/** The store the running application hands every session through its
-	 services.
-
-	 A policy names a host rather than a session, so one table serves every
-	 connection. Sessions reach it through `ChatServices.stsPolicies`, never
-	 statically, which is what lets a test drive the STS path with its own. */
-	static let applicationStore = STSPolicyStore(userDefaults: GlasstualUserDefaults.container)
-
 	init(userDefaults: UserDefaults?) {
 		self.userDefaults = userDefaults
 

@@ -35,9 +35,10 @@
 set -uo pipefail
 
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-repo_root="$(cd -- "$script_dir/.." && pwd)"
-
-APP="${APP:-$repo_root/DerivedData/Build/Products/Debug/Glasstual.app}"
+if [[ -z "${APP:-}" ]]; then
+	source "$script_dir/build-paths.sh" || exit 2
+	APP="$BUILD_PRODUCTS/Glasstual.app"
+fi
 SUITE="${SUITE:-com.vakesz.glasstual.repro}"
 BUNDLE_ID="${BUNDLE_ID:-com.vakesz.glasstual}"
 GROUP_ID="${GROUP_ID:-group.H8W5DK3FN2.com.vakesz.glasstual}"

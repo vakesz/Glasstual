@@ -307,15 +307,17 @@ struct ServerSessionNegotiationTests {
 	@Test("Typing notifications are unavailable where the server denies the typing tag")
 	func typingNotificationsFollowClientTagDeny() throws {
 		let session = TestServerSession()
+		session.environment.settings.sendTypingNotifications = true
 		session.markAsLoggedIn()
 		session.enableCapability(.messageTags)
 		let channel = try #require(session.findConversationOrCreate("#c"))
+		channel.activate()
 
-		#expect(session.typingNotificationsAvailable(for: channel))
+		#expect(session.typingSender.isAvailable(in: channel))
 
 		session.supportInfo.processConfigurationData("CLIENTTAGDENY=typing")
 
-		#expect(session.typingNotificationsAvailable(for: channel) == false)
+		#expect(session.typingSender.isAvailable(in: channel) == false)
 	}
 
 	@Test("Tags are dropped from a command until message tags are negotiated")

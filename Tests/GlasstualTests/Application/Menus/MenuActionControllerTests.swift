@@ -153,13 +153,6 @@ struct MenuActionControllerTests {
 		#expect(MenuWindowPolicy.appearance(for: nil) == nil)
 	}
 
-	/// The name says a copy, not a truncated original: the connection used to
-	/// be called "Libera_".
-	@Test("A duplicated connection is named the way a duplicated file is")
-	func duplicateConnectionNamePreservesTheOriginal() {
-		#expect(MenuServerNamePolicy.duplicateName(of: "Libera") == "Libera copy")
-	}
-
 	/// The window menu's "reset suppressed warnings" command finds them by
 	/// prefix, so it has to read the prefix the flags are written under rather
 	/// than one of its own.

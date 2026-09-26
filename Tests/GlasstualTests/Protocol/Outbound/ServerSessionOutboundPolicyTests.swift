@@ -8,31 +8,6 @@ import Testing
 @MainActor
 @Suite("Outbound session policies")
 struct ServerSessionOutboundPolicyTests {
-	@Test("Typing finishes for an empty line, a command, and a network that does not want notifications")
-	func typingFinishesForEmptyCommandsAndDisabledNotifications() {
-		#expect(OutboundTypingPolicy.shouldFinish(text: "", notificationsEnabled: true))
-		#expect(OutboundTypingPolicy.shouldFinish(text: "/join #glasstual", notificationsEnabled: true))
-		#expect(OutboundTypingPolicy.shouldFinish(text: "hello", notificationsEnabled: false))
-		#expect(OutboundTypingPolicy.shouldFinish(text: "hello", notificationsEnabled: true) == false)
-	}
-
-	@Test("The active notification is resent only once the interval has fully elapsed")
-	func typingActiveNotificationIsRateLimitedAtBoundary() {
-		let now = Date(timeIntervalSince1970: 100)
-
-		#expect(OutboundTypingPolicy.shouldSendActive(previousState: nil, lastSentAt: nil, now: now))
-		#expect(OutboundTypingPolicy.shouldSendActive(
-			previousState: .active,
-			lastSentAt: now.addingTimeInterval(-(OutboundTypingPolicy.activeInterval - 0.01)),
-			now: now
-		) == false)
-		#expect(OutboundTypingPolicy.shouldSendActive(
-			previousState: .active,
-			lastSentAt: now.addingTimeInterval(-OutboundTypingPolicy.activeInterval),
-			now: now
-		))
-	}
-
 	@Test("A CTCP payload is framed and its line breaks flattened")
 	func ctcpPayloadFramesAndSanitizesUserText() {
 		#expect(

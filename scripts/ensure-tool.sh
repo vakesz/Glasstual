@@ -1,14 +1,6 @@
 #!/bin/bash
-# Make a pinned developer tool available to the Makefile.
-#
-# The quality gate has to mean the same thing on every machine and on every CI
-# run, so each tool is pinned to one release and one SHA-256. A copy already on
-# PATH at the pinned version is used as it is; otherwise the release artifact is
-# downloaded, checked against its digest and unpacked under build/tools. Either
-# way the tool ends up behind a wrapper in build/tools/bin, and the Makefile
-# runs that wrapper by its full path: Apple's GNU Make 3.81 (/usr/bin/make on
-# the CI runner) ignores a PATH exported from the Makefile when it execs a
-# recipe line itself. Nothing is installed system-wide.
+# Use the pinned tool on PATH or cache a verified release under Library/Caches.
+# Absolute wrappers let Apple's Make 3.81 invoke tools without relying on PATH.
 #
 # Usage
 #   scripts/ensure-tool.sh <swiftformat|swiftlint|actionlint|shellcheck|xcodegen>
@@ -20,9 +12,7 @@
 set -euo pipefail
 umask 022
 
-script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-repo_root="$(cd -- "$script_dir/.." && pwd)"
-tools_root="${GLASSTUAL_TOOLS_DIR:-$repo_root/build/tools}"
+tools_root="${GLASSTUAL_TOOLS_DIR:-$HOME/Library/Caches/Glasstual/Tools}"
 
 fail() {
 	echo "ensure-tool: $*" >&2

@@ -7,7 +7,11 @@ import Foundation
 
 @MainActor
 extension ServerSession {
-	func sendCommand(_ input: Any, completeTarget: Bool = true, target targetName: String? = nil) {
+	func sendCommand(_ input: String, completeTarget: Bool = true, target targetName: String? = nil) {
+		sendCommand(NSAttributedString(string: input), completeTarget: completeTarget, target: targetName)
+	}
+
+	func sendCommand(_ input: NSAttributedString, completeTarget: Bool = true, target targetName: String? = nil) {
 		guard let parsed = ParsedUserCommand(input) else { return }
 		guard allowsDeveloperModeCommand(parsed) else { return }
 

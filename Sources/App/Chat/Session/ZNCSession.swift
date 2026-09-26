@@ -87,7 +87,7 @@ extension ServerSession {
 			return
 		}
 
-		environment.services.certificateTrust.presentChain(
+		environment.services.certificates?.presentChain(
 			trust,
 			title: networkName ?? serverAddress ?? "",
 			closeButton: String(localized: .Bouncer.closeButton)

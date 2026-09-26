@@ -18,11 +18,3 @@ struct MenuServerActionRules {
 		canCancelReconnect = available && session?.isReconnecting == true
 	}
 }
-
-/// What a duplicated connection is called. A trailing underscore read as a
-/// truncated name; "copy" is the word the Finder uses for the same idea.
-nonisolated enum MenuServerNamePolicy {
-	static func duplicateName(of name: String) -> String {
-		ApplicationStrings.duplicatedName(name)
-	}
-}

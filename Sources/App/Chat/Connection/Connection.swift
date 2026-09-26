@@ -151,9 +151,8 @@ final class Connection {
 		clientShim
 	}
 
-	/// What answers a pending trust request once the user has decided. Stored
-	/// here, and read and written only by ConnectionTrustPrompt.swift.
-	var trustResponse: TrustDecisionHandler?
+	/// Only this connection may finish or dismiss its pending certificate prompt.
+	var certificateTrustRequest: CertificateTrustRequest?
 
 	convenience init(config: ConnectionConfig, onSession session: ServerSession) {
 		self.init(config: config, onSession: session, closeClock: .continuous)
@@ -181,6 +180,7 @@ final class Connection {
 	}
 
 	isolated deinit {
+		certificateTrustRequest?.cancel()
 		closeDeadlineTask?.cancel()
 		serviceConnection?.invalidate()
 		eventContinuation.finish()
@@ -278,7 +278,7 @@ final class Connection {
 			 the acknowledgement follows the last line. */
 			break
 		case let .requestInsecureCertificateTrust(response):
-			openInsecureCertificateTrustPanel(response)
+			requestCertificateTrust(response)
 		case let .willSend(data):
 			willWrite(data)
 		case .didSendData:
@@ -414,7 +414,7 @@ final class Connection {
 	func close() {
 		guard terminal == false, isDisconnecting == false else { return }
 		beginCloseDeadline()
-		closeInsecureCertificateTrustPanel()
+		cancelCertificateTrustRequest()
 
 		if isConnecting || isConnected {
 			isDisconnecting = true
@@ -464,7 +464,7 @@ final class Connection {
 		closeDeadlineTask?.cancel()
 		closeDeadlineTask = nil
 		invalidateProcess()
-		closeInsecureCertificateTrustPanel()
+		cancelCertificateTrustRequest()
 		resetState()
 		if session?.socket === self {
 			session?.connectionDidDisconnect(error: error)

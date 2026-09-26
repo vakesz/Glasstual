@@ -65,6 +65,7 @@ struct RulesPane: View {
 	@State private var exportData: Data?
 	@State private var showsExporter = false
 	@State private var failure: RuleEditorFailure?
+	@State private var importURL: URL?
 
 	var body: some View {
 		Section {
@@ -114,15 +115,31 @@ struct RulesPane: View {
 			allowsMultipleSelection: false,
 			onCompletion: importRule
 		)
+		.task(id: importURL) {
+			guard let importURL else { return }
+			do {
+				var rule = try await MessageRule.read(from: importURL)
+				try Task.checkCancellation()
+				rule.id = UUID().uuidString
+				editor = RuleEditorPresentation(rule: rule, replacingIdentifier: nil)
+			} catch {
+				guard !Task.isCancelled, !(error is CancellationError) else { return }
+				failure = RuleEditorFailure(operation: .importing, reason: error.localizedDescription)
+			}
+			self.importURL = nil
+		}
+		.onDisappear { importURL = nil }
 		.fileExporter(
 			isPresented: $showsExporter,
-			item: exportData,
+			item: exportData.map(PropertyListExport.init(data:)),
 			contentTypes: [.propertyList],
 			defaultFilename: "filter.plist"
 		) { result in
 			if case let .failure(error) = result {
 				failure = RuleEditorFailure(operation: .exporting, reason: error.localizedDescription)
 			}
+			exportData = nil
+		} onCancellation: {
 			exportData = nil
 		}
 		.alert(
@@ -231,17 +248,9 @@ struct RulesPane: View {
 
 	private func importRule(_ result: Result<[URL], any Error>) {
 		do {
-			guard let url = try result.get().first else { return }
-			let canAccess = url.startAccessingSecurityScopedResource()
-			defer {
-				if canAccess {
-					url.stopAccessingSecurityScopedResource()
-				}
-			}
-			var rule = try MessageRule(contentsOf: url)
-			rule.id = UUID().uuidString
-			editor = RuleEditorPresentation(rule: rule, replacingIdentifier: nil)
+			importURL = try result.get().first
 		} catch {
+			guard (error as? CocoaError)?.code != .userCancelled else { return }
 			failure = RuleEditorFailure(operation: .importing, reason: error.localizedDescription)
 		}
 	}

@@ -3,11 +3,7 @@
 
 import Foundation
 
-/** Every date the application formats or parses, in one place.
-
- These were `@_cdecl` C entry points for the Objective-C half of the
- application, which no longer exists, so they took `NSDate` and `NSString` and
- came in `Any` and `AnyObject` pairs. Every caller is Swift now. */
+/// Shared wire timestamps, user-defined timestamp patterns and localized dates.
 nonisolated enum DateFormatting {
 	// MARK: - ISO 8601
 

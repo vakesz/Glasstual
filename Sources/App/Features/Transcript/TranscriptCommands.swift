@@ -283,7 +283,7 @@ final class TranscriptCommands: NSObject {
 			openInBackground.toggle()
 		}
 
-		if LinkParser.opensDirectly(url) {
+		if LinkSchemeRules.opensDirectly(url) {
 			OpenLink.open(url: url, inBackground: openInBackground)
 			return
 		}

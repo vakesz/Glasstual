@@ -12,13 +12,7 @@ enum SupportChannel: String, Sendable {
 	static let serverInfo = "irc.libera.chat +6697"
 }
 
-/** How the shell asks for a connection: a link, a menu item or a command hands
- one of these entry points what it knows, and the answer to "which connection
- does this mean" comes back from ``ServerConnectionResolution``.
-
- What stays here is what only the shell can do: keeping the requests in flight
- cancellable across termination, and asking the reader the one question the
- resolution cannot answer on its own. */
+/// Presents merge choices and cancels pending connection requests at termination.
 @MainActor
 enum ServerConnection {
 	private static var pendingRequests: [UUID: Task<Void, Never>] = [:]
@@ -55,7 +49,13 @@ enum ServerConnection {
 		let identifier = UUID()
 		pendingRequests[identifier] = Task {
 			defer { pendingRequests.removeValue(forKey: identifier) }
-			await ServerConnectionResolution.resolve(using: request, confirmMerge: mergeChoice)
+			guard let chatSession = ChatServices.shared.chatSession else { return }
+			await ServerConnectionResolution.resolve(
+				using: request,
+				sessions: { chatSession.sessions },
+				confirmMerge: mergeChoice,
+				createConnection: chatSession.createSession(for:)
+			)
 		}
 	}
 

@@ -5,93 +5,59 @@
 import CocoaExtensions
 import Foundation
 
-/** What the user is asked about the peer's certificate, and what is done with
- the answer.
-
- The connection host blocks its handshake on that answer, so every path out of
- here answers exactly once — including the ones where the connection is going
- away before the user has looked at the panel. */
 extension Connection {
-	/// Where the user is asked about a certificate. Reached through the
-	/// environment so that nothing here presents AppKit itself.
-	private var trustPanel: CertificateTrustPanel? {
-		session?.environment.services.certificateTrust
+	private var certificatePresenter: (any CertificatePresenting)? {
+		session?.environment.services.certificates
 	}
 
-	func openSecuredConnectionCertificateModal() {
-		exportSecureConnectionInformation { [weak self] information in
-			/* The hop comes first, and the `SecTrust` is rebuilt on the other
-			 side of it. What crosses is `SecureConnectionInformation`, which is
-			 `Sendable` and already carries the DER chain. */
+	private var canDecideCertificateTrust: Bool {
+		!terminal && !isDisconnecting && session?.isTerminating == false && session?.socket === self
+	}
+
+	func showCertificateDetails() {
+		remoteObjectProxy()?.exportSecureConnectionInformation { [weak self] information in
 			Task { @MainActor [weak self] in
-				self?.trustPanel?.presentSummary(for: information)
+				self?.certificatePresenter?.presentSummary(for: information)
 			}
 		}
 	}
 
-	/// Puts a certificate the system would not vouch for in front of the user.
-	/// Called from the event loop in Connection.swift.
-	func openInsecureCertificateTrustPanel(_ response: @escaping TrustDecisionHandler) {
-		guard terminal == false, isDisconnecting == false, session?.isTerminating == false,
-		      let trustPanel, trustPanel.reserve()
+	func requestCertificateTrust(_ response: @escaping TrustDecisionHandler) {
+		guard
+			canDecideCertificateTrust, certificateTrustRequest == nil,
+			let request = certificatePresenter?.beginTrustRequest(decided: { [weak self] trusted in
+				let canTrust = self?.canDecideCertificateTrust == true
+				self?.certificateTrustRequest = nil
+				response(trusted && canTrust)
+			})
 		else {
 			response(false)
 			return
 		}
-
-		trustResponse = response
-
-		/* Reaching this panel means the chain did not validate. Whatever the
-		 user answers, this connection is no longer one whose certificate the
-		 system vouched for, and policies that outlive it must not be taken
-		 from it. */
+		certificateTrustRequest = request
+		// User approval cannot turn a failed certificate validation into a trusted STS source.
 		noteCertificateTrustOverridden()
-
-		exportSecureConnectionInformation { [weak self] information in
-			Task { @MainActor [weak self] in
-				/* Only a deallocated connection cannot answer, and that has
-				 already invalidated the service the handshake belongs to. */
-				guard let self else { return }
-
-				guard terminal == false, isDisconnecting == false, session?.socket === self else {
-					trustPanel.cancelReservation()
-					resolveTrust(false)
+		guard let proxy = remoteObjectProxy(errorHandler: { [weak request] _ in
+			Task { @MainActor [weak request] in request?.cancel() }
+		}) else {
+			request.cancel()
+			return
+		}
+		proxy.exportSecureConnectionInformation { [weak self, weak request] information in
+			Task { @MainActor [weak self, weak request] in
+				guard let request else { return }
+				guard let self, canDecideCertificateTrust, certificateTrustRequest === request else {
+					request.cancel()
 					return
 				}
-
-				guard trustResponse != nil else {
-					trustPanel.cancelReservation()
-					return
-				}
-
-				let presented = trustPanel.present(for: information) { [weak self] trusted in
-					guard let self else { return }
-
-					resolveTrust(trusted && terminal == false && isDisconnecting == false)
-				}
-
-				if presented == false {
-					resolveTrust(false)
-				}
+				request.present(information)
 			}
 		}
 	}
 
-	/// Answers whatever was waiting on the panel with a refusal and takes it
-	/// down: the connection is going away, and the host is still blocked.
-	/// Called from the close and disconnect paths in Connection.swift.
-	func closeInsecureCertificateTrustPanel() {
-		resolveTrust(false)
-		trustPanel?.close()
-	}
-
-	private func resolveTrust(_ trusted: Bool) {
-		let response = trustResponse
-		trustResponse = nil
-		response?(trusted)
-	}
-
-	private func exportSecureConnectionInformation(_ receiver: @escaping SecureConnectionInformationReceiver) {
-		remoteObjectProxy()?.exportSecureConnectionInformation(receiver)
+	func cancelCertificateTrustRequest() {
+		let request = certificateTrustRequest
+		certificateTrustRequest = nil
+		request?.cancel()
 	}
 }

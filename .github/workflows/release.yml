@@ -71,7 +71,6 @@ jobs:
       SCHEME: Glasstual
       CONFIGURATION: Release
       TEAM_ID: H8W5DK3FN2
-      ARCHIVE_PATH: build/Glasstual.xcarchive
       VERSION: ${{ needs.validate.outputs.version }}
       BUILD_VERSION: ${{ needs.validate.outputs.build_version }}
 
@@ -104,12 +103,11 @@ jobs:
       - name: Build signed archive
         run: |
           set -euo pipefail
-          mkdir -p build
           xcodebuild archive \
             -project "${PROJECT}" \
             -scheme "${SCHEME}" \
             -configuration "${CONFIGURATION}" \
-            -archivePath "${ARCHIVE_PATH}" \
+            -archivePath "${RUNNER_TEMP}/Glasstual.xcarchive" \
             -destination 'platform=macOS,arch=arm64' \
             MARKETING_VERSION="${VERSION}" \
             CODE_SIGN_IDENTITY="Developer ID Application" \
@@ -121,13 +119,13 @@ jobs:
       - name: Verify archived version
         run: |
           set -euo pipefail
-          APP="${ARCHIVE_PATH}/Products/Applications/Glasstual.app"
+          APP="${RUNNER_TEMP}/Glasstual.xcarchive/Products/Applications/Glasstual.app"
           bash scripts/release-validation.sh archive "${APP}" "${VERSION}" "${BUILD_VERSION}"
 
       - name: Verify Developer ID signature
         run: |
           set -euo pipefail
-          APP="${ARCHIVE_PATH}/Products/Applications/Glasstual.app"
+          APP="${RUNNER_TEMP}/Glasstual.xcarchive/Products/Applications/Glasstual.app"
           codesign --verify --deep --strict --verbose=2 "${APP}"
           codesign --display --verbose=4 "${APP}" 2>&1 \
             | grep -E 'Authority|TeamIdentifier|Identifier'
@@ -146,10 +144,10 @@ jobs:
             fi
           done
 
-          APP="${ARCHIVE_PATH}/Products/Applications/Glasstual.app"
+          APP="${RUNNER_TEMP}/Glasstual.xcarchive/Products/Applications/Glasstual.app"
           KEY_DIR="${RUNNER_TEMP}/private_keys"
           KEY_PATH="${KEY_DIR}/AuthKey.p8"
-          SUBMIT_ZIP="build/Glasstual-notarize.zip"
+          SUBMIT_ZIP="${RUNNER_TEMP}/Glasstual-notarize.zip"
           mkdir -p "${KEY_DIR}"
           echo -n "${NOTARY_KEY_P8}" | base64 --decode > "${KEY_PATH}"
           chmod 600 "${KEY_PATH}"
@@ -183,12 +181,12 @@ jobs:
         id: package
         run: |
           set -euo pipefail
-          APP="${ARCHIVE_PATH}/Products/Applications/Glasstual.app"
+          APP="${RUNNER_TEMP}/Glasstual.xcarchive/Products/Applications/Glasstual.app"
           ARCHIVE_NAME="Glasstual-${VERSION}.zip"
-          OUT="build/${ARCHIVE_NAME}"
+          OUT="${RUNNER_TEMP}/${ARCHIVE_NAME}"
           CHECKSUM="${OUT}.sha256"
           ditto -c -k --sequesterRsrc --keepParent "${APP}" "${OUT}"
-          (cd build && shasum -a 256 "${ARCHIVE_NAME}") > "${CHECKSUM}"
+          (cd "${RUNNER_TEMP}" && shasum -a 256 "${ARCHIVE_NAME}") > "${CHECKSUM}"
           {
             echo "path=${OUT}"
             echo "name=${ARCHIVE_NAME}"

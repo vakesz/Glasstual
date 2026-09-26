@@ -322,7 +322,7 @@ final class TranscriptTopicBar: NSView {
 		 counts the control codes too, and every range after the first one is
 		 then a few characters out. */
 		for link in LinkParser.locateLinks(in: result.string)
-			where LinkParser.isPermittedLink(link.stringValue)
+			where LinkSchemeRules.current().permits(link: link.stringValue)
 		{
 			guard let url = URL(string: link.stringValue), NSMaxRange(link.range) <= result.length else {
 				continue

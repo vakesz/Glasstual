@@ -293,7 +293,7 @@ nonisolated struct TranscriptRenderer {
 			let text = source.substring(with: range)
 			let action: TranscriptRunAction? = if let link = attributes[RendererFormatting.url]
 				as? LinkParserResult,
-				LinkParser.isPermittedLink(link.stringValue, allowing: policy.linkSchemes),
+				policy.linkSchemes.permits(link: link.stringValue),
 				let url = URL(string: link.stringValue)
 			{
 				.link(url)

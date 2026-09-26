@@ -74,14 +74,6 @@ final class ChannelSpotlightModel {
 		reloadResults()
 	}
 
-	private func populate() {
-		var admitted: Set<ChannelSpotlightSearchResult.ID> = []
-		allResults = conversations()
-			.map(ChannelSpotlightSearchResult.init(conversation:))
-			.filter { admitted.insert($0.id).inserted }
-		refreshDisplayedResults()
-	}
-
 	private func updateSessionRestriction() {
 		if SettingsKeys.Appearance.conversationNavigationIsServerSpecific.value {
 			restrictedSessionID = selectedSessionID() ?? ""
@@ -128,7 +120,10 @@ final class ChannelSpotlightModel {
 	}
 
 	func reloadResults() {
-		populate()
+		var admitted: Set<ChannelSpotlightSearchResult.ID> = []
+		allResults = conversations()
+			.map(ChannelSpotlightSearchResult.init(conversation:))
+			.filter { admitted.insert($0.id).inserted }
 		updateSessionRestriction()
 	}
 

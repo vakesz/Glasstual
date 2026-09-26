@@ -1,122 +1,72 @@
-<p align="center">
-  <img src=".github/website/assets/app-icon.png" width="160" alt="Glasstual app icon">
-</p>
+# Glasstual
 
-<h1 align="center">Glasstual</h1>
+An IRC client for macOS 26 and later on Apple Silicon, built with Swift 6,
+SwiftUI and AppKit.
 
-<p align="center">
-  A native IRC client for macOS 26 and later.
-</p>
-
-Glasstual is an Apple Silicon IRC client written in Swift 6. Its interface is
-SwiftUI-first, its transcript is rendered natively, and its network connection
-runs in a sandboxed XPC host.
-
-## Features
-
-- IRCv3 support, including SASL, server-time, typing notifications, replies,
-  reactions, read markers, labeled responses and chat history.
-- Native Lines and Bubbles transcript themes with light and dark appearances.
-- Multiple servers, channel and member management, notifications, file
-  transfers, local scrollback and transcript logging.
-- Favorites across networks, Unread and Mentions sidebar filters, and server
-  colors and icons under Server Properties → General.
-- Slash-command suggestions with descriptions, syntax and argument hints.
-- Message rules and user command scripts.
-- Strict concurrency checking and typed settings throughout the app.
-
-## Screenshots
+[Download a release](https://github.com/vakesz/Glasstual/releases).
+Updates are installed manually.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset=".github/website/assets/main-window-dark.png">
-  <img src=".github/website/assets/main-window-light.png" alt="The Glasstual main window showing servers, a conversation and the member list">
+  <img src=".github/website/assets/main-window-light.png" alt="Glasstual showing servers, a conversation and the member list">
 </picture>
 
-<details>
-<summary>First launch</summary>
+## Features
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset=".github/website/assets/welcome-dark.png">
-  <img src=".github/website/assets/welcome-light.png" alt="The Glasstual first-launch welcome screen">
-</picture>
+- Multiple servers, favorites, unread filters and mentions.
+- IRCv3 support, including SASL, typing notifications, replies, reactions,
+  read markers and chat history.
+- Lines and Bubbles transcript styles with light and dark appearances.
+- Notifications, file transfers, local history and transcript logging.
+- Slash-command suggestions, message rules and user scripts.
 
-</details>
+## Build
 
-## Building
+Requires an Apple Silicon Mac running macOS 26 or later and Xcode 27.
 
-Glasstual runs on macOS 26 or later on an Apple Silicon Mac. Building it takes
-Xcode 27, the version CI and the release workflow use. The Makefile pins
-XcodeGen, SwiftFormat, SwiftLint, actionlint and ShellCheck, and runs each
-one through a wrapper under `build/tools/bin`. A pinned version already on
-`PATH` is used as it is; otherwise `make` downloads that release, checks its
-SHA-256 and unpacks it under `build/tools`.
+Set `DEVELOPMENT_TEAM` in `project.yml` for your signing team. Use your own
+`GLASSTUAL_BUNDLE_IDENTIFIER` when building under another identity. Signing
+must support the app's sandbox, app group and embedded XPC service.
 
-`project.yml` is the source of truth for targets, build settings, signing,
-entitlements and generated metadata. Do not edit target settings or generated
-files in `Glasstual.xcodeproj` by hand.
+```sh
+make build
+make run
+```
 
-1. Set `DEVELOPMENT_TEAM` in `project.yml`. Change
-   `GLASSTUAL_BUNDLE_IDENTIFIER` too when building under another identity.
-2. Generate and build the project:
+`make build` generates the Xcode project from `project.yml`. Edit that file
+for build settings, targets and entitlements. Generated project files stay
+untracked. The Makefile installs pinned tools when needed and verifies their
+checksums. Builds, test results and archives use Xcode's configured locations.
+Tools are cached in `~/Library/Caches/Glasstual`; E2E logs go to
+`~/Library/Logs/Glasstual`.
 
-   ```sh
-   make generate
-   make build
-   ```
+## Check changes
 
-3. Run the complete checks before submitting a change:
+```sh
+make generate
+make build
+make test
+make e2e-fixtures
+make lint
+```
 
-   ```sh
-   make test
-   make e2e-fixtures
-   make lint
-   ```
+`make e2e-fixtures` checks loopback peers without launching the app.
+`make e2e` runs the Accessibility tests in a disposable GUI login.
+Use `make tsan` and `make smoke` for concurrency changes.
+Run `make help` for all commands.
 
-`make help` lists the build, archive, coverage, formatting, smoke-test and
-Thread Sanitizer entry points. A valid local signature is recommended because
-sandbox groups and XPC embedding depend on signing identity.
+## Contribute
 
-## Architecture
+Read [AGENTS.md](AGENTS.md) for repository rules and
+[Sources/App/README.md](Sources/App/README.md) for code ownership.
 
-Application code is organized by feature under `Sources/App`; the current
-ownership and dependency rules are documented in
-[`Sources/App/README.md`](Sources/App/README.md). `project.yml` declares the app,
-framework, tests and the single IRC connection XPC host.
-
-The source tree is Swift-only. SwiftUI owns user-facing layout and scene
-presentation. Small AppKit adapters remain only where a macOS capability has no
-complete SwiftUI interface: the main-window responder and restoration shell,
-TextKit rich text, a transcript-anchored reaction popover, the dock tile and a
-blocking alert used before SwiftUI scenes exist. Those adapters do not own
-feature state.
-
-`Cocoa Extensions` is maintained as vendored source. Its exact upstream
-revision and preservation requirements are recorded in
-[`Sources/CocoaExtensions/PROVENANCE.md`](Sources/CocoaExtensions/PROVENANCE.md).
-
-## Distribution
-
-The app and its XPC host are sandboxed and use the hardened runtime. Library
-validation remains enabled, so nothing outside the app's own signature loads
-into it. Cryptography is provided by macOS system frameworks. The release
-workflow produces a signed and notarized direct-download archive.
-
-Glasstual has no in-app updater. Releases are published through this
-repository's GitHub Releases page.
-
-## Relationship to Textual
+## Credits and license
 
 Glasstual is an independent fork of
-[Textual](https://github.com/Codeux-Software/Textual). It is not published,
-endorsed or supported by Codeux Software, LLC.
+[Textual](https://github.com/Codeux-Software/Textual). Codeux Software, LLC
+does not publish, endorse or support it.
 
-Copyright, license and attribution notices from Textual, LimeChat and vendored
-components are preserved in the source and in
-[`Acknowledgements.pdf`](Sources/App/Resources/Documentation/Acknowledgements.pdf).
-
-## Licenses
-
-The BSD notices for code originating in LimeChat and Textual are collected in
-[`LICENSE`](LICENSE). Additional third-party notices are preserved in
-[`Acknowledgements.pdf`](Sources/App/Resources/Documentation/Acknowledgements.pdf)
-and alongside vendored source.
+See [LICENSE](LICENSE),
+[Acknowledgements.pdf](Sources/App/Resources/Documentation/Acknowledgements.pdf)
+and the [Cocoa Extensions provenance record](Sources/CocoaExtensions/PROVENANCE.md)
+for copyright, license and attribution notices.
