@@ -46,7 +46,7 @@ enum OpenLink {
 		 registered the scheme, so the same allowlist that decides what becomes
 		 clickable also decides what may be opened: no caller is trusted to have
 		 filtered already. */
-		guard let scheme = url.scheme, LinkParser.isPermittedScheme(scheme) else {
+		guard let scheme = url.scheme, LinkSchemeRules.current().permits(scheme: scheme) else {
 			openLinkLogger.info("Refused to open URL with scheme '\(url.scheme ?? "(none)", privacy: .public)'")
 
 			return

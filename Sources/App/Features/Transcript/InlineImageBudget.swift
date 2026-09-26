@@ -11,8 +11,6 @@ import Foundation
  drew it goes. */
 @MainActor
 final class InlineImageBudget {
-	static let shared = InlineImageBudget()
-
 	private struct Reservation {
 		let view: String
 		var bytes: Int

@@ -80,7 +80,7 @@ struct CommandArguments {
 	let arity: CommandArity
 
 	init(_ source: NSAttributedString, arity: CommandArity = .none) {
-		self.source = source
+		self.source = NSAttributedString(attributedString: source)
 		self.arity = arity
 		tokenizer = CommandTokenizer(source.string)
 	}
@@ -163,19 +163,11 @@ struct ParsedUserCommand {
 		localCommand?.isDeveloperModeOnly ?? false
 	}
 
-	init?(_ input: Any) {
-		let source: NSAttributedString
+	init?(_ input: String) {
+		self.init(NSAttributedString(string: input))
+	}
 
-		if let string = input as? String {
-			source = NSAttributedString(string: string)
-		} else if let attributed = input as? NSAttributedString {
-			source = attributed
-		} else {
-			assertionFailure("Command input must be String or NSAttributedString")
-
-			return nil
-		}
-
+	init?(_ source: NSAttributedString) {
 		guard source.length > 0 else {
 			return nil
 		}
@@ -188,6 +180,7 @@ struct ParsedUserCommand {
 
 		var tokenizer = CommandTokenizer(line.string)
 		let name = tokenizer.nextToken()
+		guard !name.isEmpty else { return nil }
 		let remainder = line.attributedSubstring(
 			from: NSRange(
 				location: tokenizer.consumedUTF16Length,

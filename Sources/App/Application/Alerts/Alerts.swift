@@ -27,12 +27,13 @@ enum Alerts {
 		guard !Task.isCancelled else {
 			return AlertOutcome(response: request.escapeButton, isSuppressed: false)
 		}
-		guard case let .show(prepared, suppressionKey) = prepare(request) else {
-			return suppressedOutcome(for: request)
+		switch prepare(request) {
+		case let .suppressed(response):
+			return AlertOutcome(response: response, isSuppressed: true)
+		case let .show(prepared, suppressionKey):
+			let result = await presenter.present(prepared, in: presentation)
+			return finish(result, suppressionKey: suppressionKey)
 		}
-
-		let result = await presenter.present(prepared, in: presentation)
-		return finish(result, suppressionKey: suppressionKey)
 	}
 
 	@MainActor
@@ -56,13 +57,6 @@ enum Alerts {
 		}
 
 		return .show(request, suppressionKey: resolvedKey)
-	}
-
-	@MainActor
-	private static func suppressedOutcome(for request: AlertRequest) -> AlertOutcome {
-		let response = request.suppressionKey
-			.flatMap { AlertSuppression.suppressedResponse(baseKey: $0) } ?? .default
-		return AlertOutcome(response: response, isSuppressed: true)
 	}
 
 	@MainActor

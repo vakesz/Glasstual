@@ -30,7 +30,7 @@ final nonisolated class InlineImageTransfer: NSObject, Sendable { // nonisolated
 	                     protocolClasses: [URLProtocol.Type]) async throws -> Data
 	{
 		try Task.checkCancellation()
-		guard LinkParser.isWebURL(url) else { throw InlineImageError.unsupportedContent }
+		guard LinkSchemeRules.isWebURL(url) else { throw InlineImageError.unsupportedContent }
 		guard limits.workingByteCount != nil else { throw InlineImageError.resourceLimit }
 		let configuration = URLSessionConfiguration.ephemeral
 		configuration.urlCache = nil
@@ -84,7 +84,7 @@ nonisolated extension InlineImageTransfer: URLSessionDataDelegate { // nonisolat
 		completionHandler: @escaping @Sendable (URLSession.ResponseDisposition) -> Void
 	) {
 		let failure: InlineImageError? = if let response = response as? HTTPURLResponse,
-		                                    let url = response.url, LinkParser.isWebURL(url),
+		                                    let url = response.url, LinkSchemeRules.isWebURL(url),
 		                                    (200 ..< 300).contains(response.statusCode)
 		{
 			if response.mimeType?.lowercased().hasPrefix("image/") != true {
@@ -140,7 +140,7 @@ nonisolated extension InlineImageTransfer: URLSessionDataDelegate { // nonisolat
 	) {
 		let allowed = state.withLock { state in
 			state.redirects += 1
-			return state.redirects <= 5 && request.url.map(LinkParser.isWebURL) == true
+			return state.redirects <= 5 && request.url.map(LinkSchemeRules.isWebURL) == true
 		}
 		completionHandler(allowed ? request : nil)
 	}

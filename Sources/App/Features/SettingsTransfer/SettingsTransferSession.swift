@@ -109,6 +109,8 @@ enum SettingsTransferState {
 	/// Reading and planning a file, or encoding an export. The workflow has
 	/// nothing of its own on screen yet.
 	case preparing
+	/// The encoded export is waiting for its Save panel to finish.
+	case exporting
 	/// A prepared plan on screen, waiting for the user to accept or cancel it.
 	case previewing(SettingsTransferPreview)
 	/// The accepted plan is being applied. The preview stays up, disabled.
@@ -126,8 +128,6 @@ enum SettingsTransferState {
 @MainActor
 @Observable
 final class SettingsTransferSession {
-	static let shared = SettingsTransferSession()
-
 	/** How long the QUIT barrier waits for the connections an import closes.
 
 	 The transport gives a socket five seconds after QUIT before it invalidates
@@ -174,7 +174,7 @@ final class SettingsTransferSession {
 	/// Work is in flight, so the window that owns it stays disabled.
 	var isBusy: Bool {
 		switch state {
-		case .preparing, .committing: true
+		case .preparing, .exporting, .committing: true
 		case .idle, .previewing, .finished, .failed: false
 		}
 	}
@@ -184,7 +184,7 @@ final class SettingsTransferSession {
 		switch state {
 		case let .previewing(preview), let .committing(preview): preview
 		case let .failed(_, preview): preview
-		case .idle, .preparing, .finished: nil
+		case .idle, .preparing, .exporting, .finished: nil
 		}
 	}
 
@@ -236,7 +236,7 @@ final class SettingsTransferSession {
 				title: String(localized: .SettingsTransfer.configurationTransferComplete),
 				body: outcome.summary
 			)
-		case .idle, .preparing, .previewing, .committing:
+		case .idle, .preparing, .exporting, .previewing, .committing:
 			nil
 		}
 	}
@@ -253,7 +253,7 @@ final class SettingsTransferSession {
 		switch state {
 		case .finished: state = .idle
 		case let .failed(_, preview): state = preview.map(SettingsTransferState.previewing) ?? .idle
-		case .idle, .preparing, .previewing, .committing: break
+		case .idle, .preparing, .exporting, .previewing, .committing: break
 		}
 	}
 
@@ -324,12 +324,16 @@ final class SettingsTransferSession {
 		}
 	}
 
+	/// Keeps the workflow reserved until the Save panel calls `completeExport`.
 	func exportData(includeConnectCommands: Bool = false) async throws -> Data {
 		guard canStart else { throw SettingsTransferError.busy }
 		state = .preparing
 		defer { finishPreparing() }
 		let snapshot = try liveSnapshot()
-		return try await SettingsTransferPreparation.export(snapshot, includeConnectCommands: includeConnectCommands)
+		let data = try await SettingsTransferPreparation.export(snapshot, includeConnectCommands: includeConnectCommands)
+		try Task.checkCancellation()
+		state = .exporting
+		return data
 	}
 
 	/// Leaves the preparing state without disturbing whatever replaced it.
@@ -391,6 +395,14 @@ final class SettingsTransferSession {
 	func report(_ error: any Error) {
 		// A closed file panel is the user saying "nothing", not a failure.
 		guard (error as? CocoaError)?.code != .userCancelled else { return }
+		if case SettingsTransferError.busy = error {
+			return
+		}
+		// A background read or another panel must not replace the active operation.
+		guard !isBusy else {
+			transferLogger.error("Configuration error during an active transfer: \(error.localizedDescription, privacy: .public)")
+			return
+		}
 		/* The alert says a value was refused; which one is a question for
 		 whoever is looking at the file, so the name goes to the log rather
 		 than into a sentence full of defaults spelling. */
@@ -401,6 +413,8 @@ final class SettingsTransferSession {
 	}
 
 	func completeExport(_ result: Result<URL, any Error>) {
+		guard case .exporting = state else { return }
+		state = .idle
 		switch result {
 		case .success: state = .finished(.exported)
 		case let .failure(error): report(error)

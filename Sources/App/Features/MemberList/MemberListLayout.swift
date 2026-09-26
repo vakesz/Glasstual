@@ -8,9 +8,14 @@ import CoreGraphics
 /// `UIListMetrics`; only the avatar and the profile popover are its own.
 nonisolated enum MemberListLayout {
 	/// What the column may be dragged between, and where a reset puts it.
-	static let minimumWidth: CGFloat = 160
-	static let idealWidth: CGFloat = 200
-	static let maximumWidth: CGFloat = 260
+	static let minimumWidth: CGFloat = .init(SettingsKeys.MainWindow.memberListWidthRange.lowerBound)
+	static let idealWidth: CGFloat = .init(SettingsKeys.MainWindow.memberListWidth.defaultValue)
+	static let maximumWidth: CGFloat = .init(SettingsKeys.MainWindow.memberListWidthRange.upperBound)
+	/// Dragging, keyboard resizing and reset all use the stored width bounds.
+	static func clampedWidth(_ candidate: CGFloat) -> CGFloat {
+		min(maximumWidth, max(minimumWidth, candidate))
+	}
+
 	/// The draggable width of the edge between conversation and member list.
 	static let handleWidth: CGFloat = 7
 	/// One press of an arrow key on the focused resize handle.

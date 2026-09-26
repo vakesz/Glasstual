@@ -12,9 +12,6 @@ import Foundation
  go. */
 @MainActor
 final class SettingsSaveQueue {
-	/// The queue the editors and termination share.
-	static let shared = SettingsSaveQueue()
-
 	private var saves: [UUID: Task<Void, Never>] = [:]
 	/// Changes whenever a save reports failure, so a waiter that started before
 	/// one can tell that it happened.

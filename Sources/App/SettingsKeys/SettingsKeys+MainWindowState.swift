@@ -27,12 +27,14 @@ nonisolated extension SettingsKeys {
 			traits: [.unregistered, .excludedFromExport]
 		)
 
+		static let memberListWidthRange = 160.0 ... 260.0
+
 		/// Where the user last left the member list's edge, in points.
 		static let memberListWidth = SettingsKey(
 			group + "Member List Width",
 			default: 200.0,
 			traits: [.unregistered, .excludedFromExport],
-			validation: { MemberListWidthPolicy.clamped(CGFloat($0)) == CGFloat($0) }
+			validation: { memberListWidthRange.contains($0) }
 		)
 
 		/// The transcript zoom the View menu last left, so Increase and

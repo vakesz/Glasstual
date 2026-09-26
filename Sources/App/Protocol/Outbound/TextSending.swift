@@ -170,13 +170,13 @@ extension ServerSession {
 	}
 
 	@MainActor
-	func inputText(_ input: Any, destination: ChatItem) {
-		inputText(input, as: .privmsg, destination: destination)
+	func inputText(_ input: String, as command: RemoteCommand = .privmsg, destination: ChatItem) {
+		inputText(NSAttributedString(string: input), as: command, destination: destination)
 	}
 
 	@MainActor
-	func inputText(_ input: Any, as command: RemoteCommand, destination: ChatItem) {
-		guard isTerminating == false, let text = attributedInput(input), text.length > 0 else { return }
+	func inputText(_ text: NSAttributedString, as command: RemoteCommand = .privmsg, destination: ChatItem) {
+		guard isTerminating == false, text.length > 0 else { return }
 		guard OutboundMessageOptions(remoteCommand: command) != nil else {
 			assertionFailure("Unsupported outbound text command")
 			return
@@ -229,7 +229,7 @@ extension ServerSession {
 				return true
 			}
 
-			guard let conversation = (destination as AnyObject) as? Conversation else {
+			guard let conversation = destination as? Conversation else {
 				assertionFailure("A sidebar destination is either the session itself or a conversation")
 				return false
 			}
@@ -259,7 +259,7 @@ extension ServerSession {
 		}
 		guard let policy = OutboundMessageOptions(remoteCommand: command) else { return }
 
-		localUserSentMessage(in: conversation)
+		typingSender.finish(in: conversation)
 		var replyIdentifier = nextMessageReplyIdentifier
 		nextMessageReplyIdentifier = nil
 		if isCapabilityEnabled(.messageTags) == false {
@@ -363,17 +363,6 @@ extension ServerSession {
 			}
 			return false
 		}
-	}
-
-	private func attributedInput(_ input: Any) -> NSAttributedString? {
-		if let text = input as? String {
-			return NSAttributedString(string: text)
-		}
-		if let text = input as? NSAttributedString {
-			return text
-		}
-		assertionFailure("Input must be String or NSAttributedString")
-		return nil
 	}
 
 	/** The confirmation for a message large enough to flood the conversation.

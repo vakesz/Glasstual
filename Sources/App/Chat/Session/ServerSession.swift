@@ -306,6 +306,7 @@ class ServerSession: ChatItem {
 	var hiddenCommandResponsesConsole: Conversation?
 	var lastWhoRequestConversationListIndex: UInt = 0
 	lazy var typingTracker = TypingTracker(session: self)
+	lazy var typingSender = TypingSender(session: self)
 	var nextMessageReplyIdentifier: String?
 	var nextLineDeliveryState: ChatLineDeliveryState = .none
 	var nextLineReplyToMessageIdentifier: String?
@@ -317,12 +318,6 @@ class ServerSession: ChatItem {
 	private let notifications = NotificationSubscriptions()
 	/// The messages whose labelled answer has not arrived yet.
 	var labeledResponses = LabeledResponseRegistry()
-	/// The typing state last sent to the server, keyed by conversation identifier.
-	var typingStateSent: [String: TypingState] = [:]
-	/// When `.active` was last sent, keyed by conversation identifier.
-	var typingActiveSentAt: [String: Date] = [:]
-	/// The pending "paused" notification per conversation, keyed by identifier.
-	var typingPauseTasks: [String: Task<Void, Never>] = [:]
 	let trackedUsers = AddressBookUserTrackingContainer()
 	/// Users the session has seen, keyed by their casefolded nickname.
 	var userIndex = CasefoldedIndex<User>()

@@ -159,16 +159,25 @@ final class SettingsModel {
 	var showsFontPicker = false
 	/// The read and import of a chosen theme file, for whoever needs to wait
 	/// for its outcome; the view does not.
-	@ObservationIgnored var themeImportTask: Task<Void, Never>?
+	@ObservationIgnored private(set) var themeImportTask: Task<Void, Never>?
+	private let readThemeDocument: @Sendable (URL) async throws -> Data
 
 	@ObservationIgnored
 	private lazy var notifications = NotificationSubscriptions()
 	@ObservationIgnored
 	private var notificationsAreActive = false
 
-	init(themeStore: ThemeStore = AppServices.theme) {
+	init(
+		themeStore: ThemeStore = AppServices.theme,
+		readThemeDocument: @escaping @Sendable (URL) async throws -> Data = { try await SettingsDocumentReader.read(from: $0) }
+	) {
 		self.themeStore = themeStore
+		self.readThemeDocument = readThemeDocument
 		destinations = SettingsDestination.builtIn
+	}
+
+	isolated deinit {
+		themeImportTask?.cancel()
 	}
 
 	// MARK: - Scene lifecycle
@@ -186,6 +195,7 @@ final class SettingsModel {
 	}
 
 	func deactivate() {
+		cancelThemeImport()
 		notifications.cancelAll()
 		notificationsAreActive = false
 		SettingsReload.perform([.highlightKeywords, .settingsChanged])
@@ -321,6 +331,7 @@ extension SettingsModel {
 	}
 
 	func resetTranscriptTheme() {
+		cancelThemeImport()
 		themeStore.reset()
 	}
 
@@ -387,14 +398,27 @@ extension SettingsModel {
 	 main actor under the same regular-file check and 16 MB cap an imported
 	 configuration gets, and takes its own security-scoped access. */
 	private func importTranscriptTheme(from url: URL) {
-		themeImportTask = Task { @MainActor in
+		cancelThemeImport()
+		themeImportTask = Task { [weak self, readThemeDocument] in
+			defer {
+				if !Task.isCancelled {
+					self?.themeImportTask = nil
+				}
+			}
 			do {
-				let data = try await SettingsDocumentReader.read(from: url)
-				try themeStore.importTheme(from: data)
+				let data = try await readThemeDocument(url)
+				try Task.checkCancellation()
+				try self?.themeStore.importTheme(from: data)
 			} catch {
-				report(error, from: .importTranscriptTheme)
+				guard !Task.isCancelled, !(error is CancellationError) else { return }
+				self?.report(error, from: .importTranscriptTheme)
 			}
 		}
+	}
+
+	private func cancelThemeImport() {
+		themeImportTask?.cancel()
+		themeImportTask = nil
 	}
 
 	/// Bookmarking a chosen folder needs the panel's security-scoped access for

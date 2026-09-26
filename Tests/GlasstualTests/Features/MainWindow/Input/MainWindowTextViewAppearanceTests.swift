@@ -8,6 +8,34 @@ import Testing
 @MainActor
 @Suite("Main window text view")
 struct MainWindowTextViewAppearanceTests {
+	@Test("Native appearance changes refresh plain text and preserve IRC colors and selection",
+	      arguments: [NSAppearance.Name.aqua, .darkAqua])
+	func nativeAppearanceChangesPreserveEditingState(appearanceName: NSAppearance.Name) throws {
+		let host = NSWindow(
+			contentRect: NSRect(x: 0, y: 0, width: 400, height: 100),
+			styleMask: .borderless, backing: .buffered, defer: false
+		)
+		host.appearance = NSAppearance(named: appearanceName == .aqua ? .darkAqua : .aqua)
+		let textView = InputField(frame: NSRect(x: 0, y: 0, width: 400, height: 40))
+		host.contentView?.addSubview(textView)
+		textView.preferredFontColor = .systemRed
+		let formatterKey = NSAttributedString.Key(TextFormatterAttributeName.foregroundColorAttributeName.rawValue)
+		let text = NSMutableAttributedString(string: "plain colored", attributes: [.foregroundColor: NSColor.systemRed])
+		text.addAttributes([.foregroundColor: NSColor.systemBlue, formatterKey: 4], range: NSRange(location: 6, length: 7))
+		textView.attributedStringValue = text
+		let selection = NSRange(location: 2, length: 8)
+		textView.setSelectedRange(selection)
+
+		host.appearance = NSAppearance(named: appearanceName)
+
+		let storage = try #require(textView.textStorage)
+		#expect(textView.preferredFontColor == .labelColor)
+		#expect(storage.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor == .labelColor)
+		#expect(storage.attribute(.foregroundColor, at: 6, effectiveRange: nil) as? NSColor == .systemBlue)
+		#expect(textView.selectedRange() == selection)
+		#expect(textView.string == "plain colored")
+	}
+
 	@Test("Text with no IRC colour of its own is drawn in the preferred colour")
 	func attributedValueUsesPreferredColorForUnformattedText() {
 		let textView = InputField(frame: .zero)

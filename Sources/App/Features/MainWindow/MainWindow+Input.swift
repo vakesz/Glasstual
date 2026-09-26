@@ -215,11 +215,7 @@ extension MainWindow {
 		inputTextField.attributedStringValue = NSAttributedString(string: "")
 		inputHistory.add(value)
 		inputTextField.consumeReply(into: selectedSession)
-		inputText(value, asCommand: command)
-	}
-
-	func inputText(_ string: Any, asCommand command: RemoteCommand) {
 		guard let destination = selectedItem, let session = destination.associatedSession else { return }
-		session.inputText(string, as: command, destination: destination)
+		session.inputText(value, as: command, destination: destination)
 	}
 }

@@ -148,7 +148,7 @@ struct OpenLinkSchemeCorpusTests {
 	private static func permitsOpening(_ url: URL) -> Bool {
 		guard let scheme = url.scheme else { return false }
 
-		return LinkParser.isPermittedScheme(scheme)
+		return LinkSchemeRules.current().permits(scheme: scheme)
 	}
 
 	@Test(arguments: [

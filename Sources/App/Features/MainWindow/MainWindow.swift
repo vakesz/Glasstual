@@ -202,9 +202,6 @@ extension MainWindow {
 		notifications.observe(.applicationAppearanceChanged) { [weak self] _ in
 			self?.updateAppearance()
 		}
-		notifications.observe(.systemAppearanceChanged) { [weak self] _ in
-			self?.notifySystemAppearanceChanged()
-		}
 		notifications.observe(.themeAppearanceChanged) { [weak self] _ in
 			self?.reloadTheme()
 		}
@@ -234,12 +231,6 @@ extension MainWindow {
 
 	private func notifyMainWindowAppearanceChanged() {
 		columnModel.appearanceRevision &+= 1
-		contentView?.superview?.notifyApplicationAppearanceChanged()
-		if styleMask.contains(.titled) {
-			for controller in titlebarAccessoryViewControllers {
-				controller.view.notifyApplicationAppearanceChanged()
-			}
-		}
 		NotificationCenter.default.post(name: .mainWindowAppearanceChanged, object: self)
 	}
 

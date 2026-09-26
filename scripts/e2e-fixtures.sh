@@ -5,13 +5,15 @@ umask 077
 
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd -- "$script_dir/.." && pwd)"
-helper="${E2E_HELPER:-$repo_root/DerivedData/Build/Products/Debug/GlasstualE2EHarness}"
+source "$script_dir/build-paths.sh"
+helper="${E2E_HELPER:-$BUILD_PRODUCTS/GlasstualE2EHarness}"
 [[ -x "$helper" ]] || {
 	printf '%s\n' 'Build the GlasstualE2E scheme first.' >&2
 	exit 2
 }
-mkdir -p "$repo_root/build/e2e-fixtures"
-run="$(mktemp -d "$repo_root/build/e2e-fixtures/run-XXXXXX")"
+output="${E2E_OUTPUT:-$BUILD_LOGS/e2e-fixtures}"
+mkdir -p "$output"
+run="$(mktemp -d "$output/run-XXXXXX")"
 export E2E_FIXTURE="$repo_root/Tests/Corpora/E2E/Startup.plist"
 export E2E_RUN_DIRECTORY="$run"
 unset E2E_DISPOSABLE_USER_CONSENT

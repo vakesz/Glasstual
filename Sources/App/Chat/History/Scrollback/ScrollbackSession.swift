@@ -19,8 +19,6 @@ private nonisolated let scrollbackSessionLogger = Logger(
  what was asked before it. Below this, ``ScrollbackStore`` owns the Core Data
  transaction and nothing else. */
 actor ScrollbackSession {
-	static let shared = ScrollbackSession()
-
 	/// One change to stored history, run in its turn.
 	private typealias Change = @Sendable () async -> Void
 

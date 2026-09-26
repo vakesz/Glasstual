@@ -4,40 +4,28 @@
 import CocoaExtensions
 import Foundation
 
-/// What the reader chose when a link named a server they are already connected
-/// to. Cancel is a real answer: a link that opens an alert with no way out is a
-/// link that makes a connection whether or not it was wanted.
+/// The response to adding channels to an existing connection.
 enum ServerConnectionMergeChoice: Sendable {
 	case useExisting
 	case createNew
 	case cancel
 }
 
-/** Which connection a request means: one already saved, or a new one.
-
- The decision is the connection layer's -- it compares endpoints, TLS policy and
- stored passwords -- while the question it may have to ask the reader is the
- shell's. `confirmMerge` is that question, handed in rather than raised here. */
+/// Reuses a compatible session or creates one through the supplied handler.
 @MainActor
 enum ServerConnectionResolution {
-	/// Resolves `request` against the saved connections and acts on the answer.
-	///
-	/// `sessions` is the list to search; the application's chat session answers when
-	/// nothing is supplied.
+	/// Reads the current session directory again after asynchronous confirmation.
 	static func resolve(
 		using request: ServerConnectionRequest,
-		sessions: [ServerSession]? = nil,
+		sessions: @MainActor () -> [ServerSession],
 		confirmMerge: @MainActor (ServerSession, String, [String]) async -> ServerConnectionMergeChoice,
 		mergeConnection: @MainActor (ServerConnectionRequest, ServerSession) -> Void = merge,
-		createConnection: @MainActor (ServerConnectionRequest) -> Void = createSession
+		createConnection: @MainActor (ServerConnectionRequest) -> Void
 	) async {
 		guard !Task.isCancelled else { return }
 		var existingSession: ServerSession?
-		/* Whether or not the link names a channel. A link to a server alone
-		 used to skip this, so every one added another saved copy of a server
-		 the reader already had. */
 		if request.options.mergeConnectionIfPossible {
-			for candidate in sessions ?? ChatServices.shared.chatSession?.sessions ?? []
+			for candidate in sessions()
 				where await credentialsAllowReuse(candidate, for: request)
 			{
 				existingSession = candidate
@@ -46,9 +34,7 @@ enum ServerConnectionResolution {
 		}
 		guard !Task.isCancelled else { return }
 
-		/* The question is about adding channels to that connection. With no
-		 channel to add there is nothing to ask, and the existing connection is
-		 the one the link means. */
+		// Only adding channels requires confirmation. A server-only link selects its session.
 		if let matchedSession = existingSession, request.channels.isEmpty == false {
 			let startupIdentifier = matchedSession.startup.identifier
 			let connection = matchedSession.socket?.uniqueIdentifier
@@ -66,11 +52,12 @@ enum ServerConnectionResolution {
 			      matchedSession.startup.identifier == startupIdentifier,
 			      matchedSession.socket?.uniqueIdentifier == connection,
 			      stillMatches,
-			      (sessions ?? ChatServices.shared.chatSession?.sessions ?? []).contains(where: { $0 === matchedSession })
+			      sessions().contains(where: { $0 === matchedSession })
 			else { return }
 		}
 
 		if let existingSession {
+			guard sessions().contains(where: { $0 === existingSession }), canReuse(existingSession, for: request) else { return }
 			mergeConnection(request, existingSession)
 		} else {
 			createConnection(request)
@@ -79,7 +66,7 @@ enum ServerConnectionResolution {
 
 	static func canReuse(_ session: ServerSession, for request: ServerConnectionRequest) -> Bool {
 		let config = session.config
-		guard config.serverAddress?.caseInsensitiveCompare(request.serverAddress) == .orderedSame,
+		guard !session.isTerminating, config.serverAddress?.caseInsensitiveCompare(request.serverAddress) == .orderedSame,
 		      config.serverPort == request.serverPort,
 		      config.prefersSecuredConnection == request.connectSecurely,
 		      config.cipherSuites == .system,
@@ -128,8 +115,10 @@ enum ServerConnectionResolution {
 			session.output?.select(session)
 		}
 	}
+}
 
-	private static func createSession(for request: ServerConnectionRequest) {
+extension ChatSession {
+	func createSession(for request: ServerConnectionRequest) {
 		var config = ServerConfig()
 		config.connectionName = request.serverAddress
 
@@ -142,10 +131,8 @@ enum ServerConnectionResolution {
 		config.serverList = [server]
 		config.conversationList = request.channels.map(ConversationConfig.seed(withName:))
 
-		guard let session = ChatServices.shared.chatSession?.createSession(with: config) else {
-			return
-		}
-		ChatServices.shared.chatSession?.save()
+		let session = createSession(with: config)
+		save()
 
 		if request.options.connectWhenCreated {
 			session.connect()

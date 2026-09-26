@@ -10,14 +10,14 @@ struct SettingsRecoverySection: View {
 	@Bindable var session = SettingsTransferSession.shared
 	@State private var importRequest = PendingFileRequest<Void>()
 	@State private var choosingExportOptions = false
-	@State private var document: SettingsPropertyListDocument?
+	@State private var exportData: Data?
 
 	private var exporting: Binding<Bool> {
 		Binding(
-			get: { document != nil },
+			get: { exportData != nil },
 			set: {
 				if $0 == false {
-					document = nil
+					exportData = nil
 				}
 			}
 		)
@@ -38,7 +38,7 @@ struct SettingsRecoverySection: View {
 			}
 			.disabled(
 				session.canStart == false || importRequest.request != nil
-					|| document != nil || choosingExportOptions
+					|| exportData != nil || choosingExportOptions
 			)
 			ForEach(session.backups) { backup in
 				HStack {
@@ -70,8 +70,7 @@ struct SettingsRecoverySection: View {
 			export: { includeCommands in
 				Task {
 					do {
-						document = try await SettingsPropertyListDocument(data: session
-							.exportData(includeConnectCommands: includeCommands))
+						exportData = try await session.exportData(includeConnectCommands: includeCommands)
 					} catch { session.report(error) }
 				}
 			}
@@ -86,11 +85,14 @@ struct SettingsRecoverySection: View {
 			case let .failure(error): session.report(error)
 			}
 		}
-		.fileExporter(isPresented: exporting, document: document, contentType: .propertyList,
+		.fileExporter(isPresented: exporting, item: exportData.map(PropertyListExport.init(data:)), contentTypes: [.propertyList],
 		              defaultFilename: SettingsArchive.defaultArchiveFilename)
 		{ result in
-			document = nil
+			exportData = nil
 			session.completeExport(result)
+		} onCancellation: {
+			exportData = nil
+			session.completeExport(.failure(CocoaError(.userCancelled)))
 		}
 	}
 }

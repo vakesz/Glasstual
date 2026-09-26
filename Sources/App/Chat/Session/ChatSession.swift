@@ -206,6 +206,9 @@ final class ChatSession {
 
 		for session in sessions {
 			session.environment.settings = settings
+			if !settings.sendTypingNotifications {
+				session.typingSender.removeAll()
+			}
 		}
 
 		return true
@@ -387,10 +390,10 @@ final class ChatSession {
 	) -> Conversation {
 		let conversation = Conversation(config: config)
 		conversation.associatedSession = session
-		session.resolveSecretKey(for: config)
 
 		if add {
 			session.add(conversation)
+			session.resolveSecretKey(for: conversation)
 		}
 
 		if reload, let index = session.conversationList.firstIndex(where: { $0 === conversation }) {

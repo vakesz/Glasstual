@@ -29,8 +29,6 @@ nonisolated enum InlineImageError: Error, Sendable {
 /// must release a line's reservations when it discards that line's attachments.
 @MainActor
 final class InlineImageLoader {
-	static let shared = InlineImageLoader()
-
 	private struct Key: Hashable {
 		let view: String
 		let line: String
@@ -78,7 +76,7 @@ final class InlineImageLoader {
 		completion: @escaping @MainActor (Result<TranscriptInlineImage, Error>) -> Void
 	) -> UUID? {
 		let key = Key(view: viewIdentifier, line: lineNumber, link: linkIdentifier)
-		guard LinkParser.isWebURL(url) else {
+		guard LinkSchemeRules.isWebURL(url) else {
 			completion(.failure(InlineImageError.unsupportedContent))
 			return nil
 		}

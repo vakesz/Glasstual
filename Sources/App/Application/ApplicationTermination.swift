@@ -305,12 +305,9 @@ final class ApplicationTermination {
 			logDrainDidFinish()
 		}
 
-		Scrollback.shared
-			.prepareForApplicationTermination { [weak self] in
-				Task { @MainActor in
-					self?.logDrainDidFinish()
-				}
-			}
+		Scrollback.shared.prepareForApplicationTermination { [weak self] in
+			self?.logDrainDidFinish()
+		}
 	}
 
 	private func logDrainDidFinish() {

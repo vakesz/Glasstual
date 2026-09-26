@@ -89,6 +89,57 @@ struct SidebarOutlineViewTests {
 		}
 	}
 
+	@Test("Native focus changes keep both departing and selected rows neutral", arguments: [false, true])
+	func selectionStaysNeutralDuringFocusChanges(dark: Bool) throws {
+		let fixture = Fixture()
+		defer { fixture.close() }
+		fixture.window.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
+		fixture.model.select(fixture.channels[0])
+		fixture.apply()
+		let previousIndex = fixture.outline.selectedRow
+		let previous = try #require(fixture.outline.rowView(atRow: previousIndex, makeIfNecessary: true))
+		#expect(fixture.window.makeFirstResponder(fixture.outline))
+		// AppKit emphasizes the old selection when the sidebar takes focus,
+		// before it moves selection to the clicked row.
+		previous.isEmphasized = true
+		#expect(previous.isSelected)
+		#expect(!previous.isEmphasized)
+		let next = try #require(fixture.outline.tree.node(withItemIdentifier: fixture.channels[1].uniqueIdentifier))
+		let nextIndex = fixture.outline.row(forItem: next)
+		fixture.outline.selectRowIndexes(IndexSet(integer: nextIndex), byExtendingSelection: false)
+		let selected = try #require(fixture.outline.rowView(atRow: nextIndex, makeIfNecessary: true))
+		selected.isEmphasized = true
+		#expect(!previous.isSelected)
+		#expect(!previous.isEmphasized)
+		#expect(selected.isSelected)
+		#expect(!selected.isEmphasized)
+		#expect(fixture.model.selectedItem === fixture.channels[1])
+		#expect(fixture.window.firstResponder === fixture.outline)
+		try checkSelectedCellStyle(in: fixture.outline, foreground: .secondaryLabelColor)
+	}
+
+	@Test("An older refresh cannot reselect the previous channel after native selection changes")
+	func staleRefreshKeepsCurrentSelection() throws {
+		let fixture = Fixture()
+		defer { fixture.close() }
+		fixture.model.select(fixture.channels[0])
+		fixture.apply()
+		fixture.channels[3].unreadCount = 1
+		fixture.model.filterText = ""
+		let pending = SidebarOutlineSnapshot(model: fixture.model)
+		let next = try #require(fixture.outline.tree.node(withItemIdentifier: fixture.channels[1].uniqueIdentifier))
+		let nextIndex = fixture.outline.row(forItem: next)
+		fixture.outline.selectRowIndexes(IndexSet(integer: nextIndex), byExtendingSelection: false)
+		#expect(fixture.model.selectedItem === fixture.channels[1])
+
+		// Deliver the refresh captured before the click, as the deferred renderer does.
+		fixture.outline.apply(pending)
+		#expect(fixture.outline.selectedRow == nextIndex)
+		#expect(fixture.outline.rowView(atRow: nextIndex, makeIfNecessary: true)?.isSelected == true)
+		let previous = try #require(fixture.outline.tree.node(withItemIdentifier: fixture.channels[0].uniqueIdentifier))
+		#expect(fixture.outline.rowView(atRow: fixture.outline.row(forItem: previous), makeIfNecessary: true)?.isSelected == false)
+	}
+
 	@Test("Filtering hides the selected row without changing the conversation or discarding its identity")
 	func filterKeepsSelectionAndIdentity() throws {
 		let fixture = Fixture()
@@ -403,17 +454,15 @@ struct SidebarOutlineViewTests {
 		#expect(cell.leadingImage.alphaValue == 1)
 	}
 
-	private func checkSelectedCellStyle(in outline: SidebarOutlineView) throws {
+	private func checkSelectedCellStyle(in outline: SidebarOutlineView, foreground expected: NSColor = .labelColor) throws {
 		let row = try #require(outline.rowView(atRow: outline.selectedRow, makeIfNecessary: true))
 		let cell = try #require(outline.view(atColumn: 0, row: outline.selectedRow, makeIfNecessary: true) as? SidebarCellView)
-		let originalEmphasis = row.isEmphasized
-		defer { row.isEmphasized = originalEmphasis }
-		// The inactive hosted runner de-emphasizes source-list backing layers.
-		// Verify native selection styling separately from the geometry capture;
-		// forcing only the row's emphasis cannot simulate an active window.
+		// Exercise the emphasis requests AppKit sends when focus changes.
+		// The native row and every nested control must keep the neutral style.
 		for emphasized in [true, false] {
 			row.isEmphasized = emphasized
-			let style: NSView.BackgroundStyle = emphasized ? .emphasized : .normal
+			let style: NSView.BackgroundStyle = .normal
+			#expect(!row.isEmphasized)
 			#expect(cell.backgroundStyle == style)
 			#expect(cell.titleField.cell?.backgroundStyle == style)
 			#expect(cell.leadingImage.cell?.backgroundStyle == style)
@@ -423,12 +472,8 @@ struct SidebarOutlineViewTests {
 				at: 0,
 				effectiveRange: nil
 			) as? NSColor)
-			let expected: NSColor = emphasized ? .alternateSelectedControlTextColor : .labelColor
 			cell.effectiveAppearance.performAsCurrentDrawingAppearance {
 				#expect(foreground.usingColorSpace(.deviceRGB) == expected.usingColorSpace(.deviceRGB))
-				if emphasized {
-					#expect(foreground.contrastRatio(against: .selectedContentBackgroundColor) > 3)
-				}
 			}
 		}
 	}

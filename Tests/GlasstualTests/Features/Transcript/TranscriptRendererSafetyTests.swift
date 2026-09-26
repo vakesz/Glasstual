@@ -17,7 +17,7 @@ struct TranscriptRendererSafetyTests {
 		]
 	)
 	func permittedSchemesRender(location: String) {
-		#expect(LinkParser.isPermittedLink(location))
+		#expect(LinkSchemeRules.current().permits(link: location))
 	}
 
 	/// `LinkParser`'s permitted set is user-configurable, so the native renderer
@@ -36,7 +36,7 @@ struct TranscriptRendererSafetyTests {
 		]
 	)
 	func refusedSchemesDoNotRender(location: String) {
-		#expect(LinkParser.isPermittedLink(location) == false)
+		#expect(LinkSchemeRules.current().permits(link: location) == false)
 	}
 
 	@Test(
@@ -51,7 +51,7 @@ struct TranscriptRendererSafetyTests {
 		]
 	)
 	func schemelessLocationsAreRefused(location: String) {
-		#expect(LinkParser.isPermittedLink(location) == false)
+		#expect(LinkSchemeRules.current().permits(link: location) == false)
 	}
 
 	/// An invalid pattern would make the filter a silent no-op, which is

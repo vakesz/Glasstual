@@ -40,6 +40,9 @@ class Conversation: ChatItem {
 			guard status != oldValue else {
 				return
 			}
+			if status != .joined {
+				associatedSession?.typingSender.remove(in: self)
+			}
 
 			performActionOnStatusChange()
 		}
@@ -100,6 +103,9 @@ class Conversation: ChatItem {
 			return
 		}
 
+		if self.config.name != config.name {
+			associatedSession?.typingSender.remove(in: self)
+		}
 		self.config = config
 		persistSecretKey()
 

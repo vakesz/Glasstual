@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 import SwiftUI
-import UniformTypeIdentifiers
 
 struct SettingsTransferPresentation: ViewModifier {
 	@Bindable var session: SettingsTransferSession
@@ -33,29 +32,6 @@ struct SettingsTransferPresentation: ViewModifier {
 				message: ownsPresentation ? session.pendingMessage : nil,
 				acknowledge: session.acknowledge
 			))
-	}
-}
-
-/// A property-list payload presented through SwiftUI's native file exporter.
-/// The owning feature remains responsible for encoding and interpreting it.
-struct SettingsPropertyListDocument: FileDocument {
-	static let readableContentTypes: [UTType] = [.propertyList]
-
-	let data: Data
-
-	init(data: Data) {
-		self.data = data
-	}
-
-	init(configuration: ReadConfiguration) throws {
-		guard let data = configuration.file.regularFileContents else {
-			throw CocoaError(.fileReadCorruptFile)
-		}
-		self.data = data
-	}
-
-	func fileWrapper(configuration _: WriteConfiguration) throws -> FileWrapper {
-		FileWrapper(regularFileWithContents: data)
 	}
 }
 

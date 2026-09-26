@@ -61,7 +61,6 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 	private var receivedInitialPath = false
 
 	let notifications = NotificationSubscriptions()
-	private lazy var resourceFileImporter = ResourceFileImporter()
 
 	/// IUO preserves the established launch-time contract while allowing nil in tests.
 	var mainWindow: MainWindow!
@@ -337,7 +336,7 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 	 alert on screen; this delegate method is isolated by declaration. */
 	func application(_: NSApplication, open urls: [URL]) {
 		guard applicationIsTerminating == false else { return }
-		resourceFileImporter.open(urls)
+		ScriptFileImporter.open(urls)
 	}
 
 	func applicationDockMenu(_: NSApplication) -> NSMenu? {

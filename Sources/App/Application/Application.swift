@@ -3,13 +3,6 @@
 
 import AppKit
 
-/// Handles a key-down event before AppKit's own dispatch gets it. The key
-/// window and its first responder are each offered the event in turn.
-@MainActor
-protocol CustomKeyboardEventResponder: AnyObject {
-	func performedCustomKeyboardEvent(_ event: NSEvent) -> Bool
-}
-
 @objc(GlasstualApplication)
 final class Application: NSApplication, CustomKeyboardEventResponder {
 	private var applicationController: ApplicationDelegate!

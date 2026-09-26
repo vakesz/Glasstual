@@ -90,7 +90,11 @@ final class SidebarOutlineView: NSOutlineView, NSOutlineViewDataSource, NSOutlin
 
 	/// Called outside view creation and delegate callbacks. The guard separates
 	/// AppKit notifications caused by projection from actual user interactions.
-	func apply(_ next: SidebarOutlineSnapshot) {
+	func apply(_ proposed: SidebarOutlineSnapshot) {
+		// A click can change selection while a SwiftUI refresh is queued.
+		// Rebuild that stale snapshot before it can reselect the previous row.
+		let next = proposed.selectedIdentifier == model.selectedItemIdentifier
+			? proposed : SidebarOutlineSnapshot(model: model)
 		guard snapshot != next else { return }
 		let previousSelection = snapshot?.selectedIdentifier
 		let previousNode = node(at: selectedRow)
@@ -118,7 +122,10 @@ final class SidebarOutlineView: NSOutlineView, NSOutlineViewDataSource, NSOutlin
 		}
 		let selected = selectionNode(identifier: next.selectedIdentifier, previous: previousNode)
 		let selectedIndex = selected.map { row(forItem: $0) } ?? -1
-		selectRowIndexes(selectedIndex >= 0 ? IndexSet(integer: selectedIndex) : [], byExtendingSelection: false)
+		let selection = selectedIndex >= 0 ? IndexSet(integer: selectedIndex) : []
+		if selectedRowIndexes != selection {
+			selectRowIndexes(selection, byExtendingSelection: false)
+		}
 		if contentChanged {
 			refreshVisibleRows()
 		}
@@ -180,6 +187,14 @@ final class SidebarOutlineView: NSOutlineView, NSOutlineViewDataSource, NSOutlin
 
 	func outlineView(_: NSOutlineView, isItemExpandable item: Any) -> Bool {
 		(item as? SidebarOutlineNode)?.children.isEmpty == false
+	}
+
+	func outlineView(_: NSOutlineView, rowViewForItem _: Any) -> NSTableRowView? {
+		let identifier = NSUserInterfaceItemIdentifier("sidebar-row")
+		let row = makeView(withIdentifier: identifier, owner: self) as? SidebarRowView
+			?? SidebarRowView(frame: .zero)
+		row.identifier = identifier
+		return row
 	}
 
 	func outlineView(_: NSOutlineView, viewFor _: NSTableColumn?, item: Any) -> NSView? {
@@ -427,4 +442,16 @@ struct SidebarOutlineMove: Equatable {
 private struct SidebarMenuMove {
 	let identity: SidebarNodeID
 	let upward: Bool
+}
+
+/// Keep native selection grey while focus moves between the sidebar and input.
+/// AppKit still owns selection drawing, accessibility and keyboard focus.
+private final class SidebarRowView: NSTableRowView {
+	override var isEmphasized: Bool {
+		get { false }
+		set {
+			guard newValue || super.isEmphasized else { return }
+			super.isEmphasized = false
+		}
+	}
 }

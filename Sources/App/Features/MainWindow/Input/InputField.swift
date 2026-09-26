@@ -12,7 +12,7 @@ import Observation
  `NSTextView`'s own behaviours, and keeps the bar's height in step with the text.
  Who is typing is ``InputTypingNotice``'s and the prompt an empty field draws is
  ``InputFieldPlaceholder``'s. */
-final class InputField: FormattedTextView, AppearanceObserving {
+final class InputField: FormattedTextView {
 	/// How much of the window the input bar may take before it stops growing.
 	static let maximumWindowHeightFraction: CGFloat = 0.45
 
@@ -129,10 +129,7 @@ final class InputField: FormattedTextView, AppearanceObserving {
 
 		guard window != nil else { return }
 
-		/* The field is put together before it joins the window, so the appearance
-		 walk the window runs while it configures itself passes it by. Asking
-		 again on the way in is what gives the field its appearance at all. */
-		applicationAppearanceChanged()
+		updateAppearance()
 		placeholder.update(in: self)
 	}
 
@@ -179,7 +176,13 @@ final class InputField: FormattedTextView, AppearanceObserving {
 
 	// MARK: - Appearance
 
-	func applicationAppearanceChanged() {
+	override func viewDidChangeEffectiveAppearance() {
+		super.viewDidChangeEffectiveAppearance()
+		guard window != nil else { return }
+		updateAppearance()
+	}
+
+	private func updateAppearance() {
 		contentView?.needsDisplay = true
 		textContainerInset = InputBarLayout.fieldInset
 		preferredFontColor = .labelColor

@@ -85,7 +85,7 @@ struct MemberListResizeHandle: View {
 	}
 
 	private func apply(_ candidate: CGFloat, persist: Bool) {
-		width = MemberListWidthPolicy.clamped(candidate)
+		width = MemberListLayout.clampedWidth(candidate)
 		if persist {
 			persistWidth()
 		}

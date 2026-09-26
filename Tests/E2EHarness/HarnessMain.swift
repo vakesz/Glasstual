@@ -243,11 +243,14 @@ enum HarnessSupervisor {
 		let repo = try HarnessFiles.required("E2E_REPO_ROOT")
 		let app = try HarnessFiles.required("E2E_APP")
 		let helper = try HarnessFiles.required("E2E_HELPER")
-		var arguments = try [
+		var arguments = [
 			"-project", repo + "/Glasstual.xcodeproj", "-scheme", "GlasstualE2E",
 			"-configuration", "Debug", "-destination", "platform=macOS,arch=arm64",
-			"-derivedDataPath", HarnessFiles.required("E2E_DERIVED_DATA"), "-parallel-testing-enabled", "NO",
+			"-parallel-testing-enabled", "NO",
 		]
+		if let derivedData = ProcessInfo.processInfo.environment["E2E_DERIVED_DATA"], !derivedData.isEmpty {
+			arguments += ["-derivedDataPath", derivedData]
+		}
 		// Only values that are identical on every run may become build settings:
 		// a per-run value changes the build description and forces a full rebuild.
 		// The test bundle reads the run directory from $E2E_OUTPUT/current-run.

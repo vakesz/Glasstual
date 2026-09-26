@@ -31,24 +31,40 @@ extension ServerSession {
 	 Opening a connection resolves every channel's key in one batch, and nothing
 	 reads a key before there is a connection to JOIN on, so the only channel
 	 needing one of its own is one that arrived after that. */
-	func resolveSecretKey(for config: ConversationConfig) {
+	func resolveSecretKey(for conversation: Conversation) {
+		let config = conversation.config
 		let item = config.keychainItem
-		guard isConnecting || isConnected,
+		guard !isTerminating, !isQuitting, !isDisconnecting,
+		      isConnecting || isConnected,
+		      conversation.associatedSession === self,
+		      conversationList.contains(where: { $0 === conversation }),
 		      config.pendingSecretKey == .unchanged,
-		      sessionCredentials.hasResolved(item) == false
+		      sessionCredentials.hasResolved(item) == false,
+		      startup.channelCredentialTasks[item] == nil
 		else { return }
 
-		Task { [weak self] in
-			let stored = await KeychainSecretLoader.passwords(for: [item])
-			// An edit that landed while the read was in flight resolved the item
-			// already, and it is the newer answer.
-			guard let self, sessionCredentials.hasResolved(item) == false else { return }
+		let loadCredentials = credentialLoader
+		let attempt = startup
+		attempt.channelCredentialTasks[item] = Task { [weak self, weak conversation, weak attempt] in
+			guard !Task.isCancelled else { return }
+			let stored = await loadCredentials([item])
+			guard !Task.isCancelled, let self, let attempt, startup === attempt else { return }
+			defer { attempt.channelCredentialTasks[item] = nil }
+			guard !isTerminating, !isQuitting, !isDisconnecting, isConnecting || isConnected,
+			      let conversation, conversation.associatedSession === self,
+			      conversationList.contains(where: { $0 === conversation }),
+			      conversation.config.pendingSecretKey == .unchanged,
+			      sessionCredentials.hasResolved(item) == false
+			else { return }
 
 			sessionCredentials.apply([item: stored[item].map { .set($0) } ?? .cleared])
 		}
 	}
 
 	func remove(_ conversation: Conversation) {
+		guard conversationListPrivate.contains(where: { $0 === conversation }) else { return }
+		startup.channelCredentialTasks.removeValue(forKey: conversation.config.keychainItem)?.cancel()
+		typingSender.remove(in: conversation)
 		conversationListPrivate.removeAll { $0 === conversation }
 		updateStoredConversationList()
 	}

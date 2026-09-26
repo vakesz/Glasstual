@@ -51,7 +51,7 @@ struct MemberListRenderedFixtureTests {
 		let png = try #require(bitmap.representation(using: .png, properties: [:]))
 		#expect(png.count > 1000)
 		// The hosted test is sandboxed. The review runner can copy these artifacts
-		// from its disposable application-support directory into build/review-fixtures.
+		// from its disposable application-support directory when inspecting a run.
 		let support = try #require(ApplicationPaths.applicationSupportURL)
 		let directory = support.appendingPathComponent("review-fixtures", isDirectory: true)
 		try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)

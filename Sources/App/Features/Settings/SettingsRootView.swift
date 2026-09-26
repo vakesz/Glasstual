@@ -127,11 +127,13 @@ struct SettingsRootView: View {
 		.onDisappear { model.fileRequest.reset() }
 		.fileExporter(
 			isPresented: exportIsPresented,
-			document: model.exportedThemeData.map(SettingsPropertyListDocument.init(data:)),
-			contentType: .propertyList,
+			item: model.exportedThemeData.map(PropertyListExport.init(data:)),
+			contentTypes: [.propertyList],
 			defaultFilename: model.exportedThemeFilename
 		) { result in
 			model.completeExport(result)
+		} onCancellation: {
+			model.completeExport(.failure(CocoaError(.userCancelled)))
 		}
 		.alert(
 			model.presentationFailure?.title ?? "",
