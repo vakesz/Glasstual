@@ -38,7 +38,9 @@ private final class CompletingPresentation: ChatItemPresenting {
 		)
 		context.isDisplayed = isDisplayed
 		let complete = { @MainActor [self] in
-			renderedDate = max(renderedDate ?? .distantPast, chatLine.receivedAt)
+			if let timestamp = chatLine.readMarkerTimestamp {
+				renderedDate = max(renderedDate ?? .distantPast, timestamp)
+			}
 			completionBlock(context)
 		}
 		if defersCompletions {
@@ -543,6 +545,32 @@ struct ServerSessionJoinBurstTests {
 			#expect(channel.unreadCount == 0)
 			#expect(channel.dockUnreadCount == 0)
 			#expect(channel.isUnread == false)
+		}
+	}
+
+	@Test("Read markers use the time tag independently of msgid", arguments: [true, false], [true, false])
+	func onlyTimeTaggedMessagesAdvanceReadMarker(_ hasTime: Bool, _ hasMessageIdentifier: Bool) throws {
+		try withNotificationsSilenced {
+			let session = makeSession()
+			defer { session.stopAllTimers() }
+			let presentation = CompletingPresentation()
+			let timestamp = Date(timeIntervalSince1970: 1_725_000_000)
+			let channel = try joinedChannel(on: session, at: timestamp.addingTimeInterval(-60), drawnInto: presentation)
+			session.recordedOutput.isKeyWindow = true
+			session.recordedOutput.visibleItems = [channel]
+			var tags: [String] = []
+			if hasTime {
+				tags.append("time=\(stamp(timestamp))")
+			}
+			if hasMessageIdentifier {
+				tags.append("msgid=message")
+			}
+			let prefix = tags.isEmpty ? "" : "@" + tags.joined(separator: ";") + " "
+			try session.receivePrivmsgAndNotice(message("\(prefix):bob!u@h PRIVMSG #chat :hello", on: session))
+
+			let line = try #require(presentation.printedLines.last)
+			#expect(line.serverTimestamp == (hasTime ? timestamp : nil))
+			#expect(session.readMarkers.pendingConversations[channel.uniqueIdentifier] == (hasTime ? timestamp : nil))
 		}
 	}
 

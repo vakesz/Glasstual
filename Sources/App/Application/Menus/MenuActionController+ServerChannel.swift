@@ -86,14 +86,13 @@ extension MenuActionController {
 		/* Delete/Cancel, not Yes/No: the default button says what it does, which
 		 is what makes a destructive confirmation readable at a glance. The
 		 Return key still belongs to Cancel — see `AlertRequest`. */
-		Alerts.alert(
+		Alerts.present(AlertRequest(
 			title: PromptStrings.Deletion.confirmationTitle(named: session.name),
 			body: PromptStrings.Deletion.warning(for: .server),
 			defaultButton: PromptStrings.Action.delete,
 			alternateButton: PromptStrings.Action.cancel,
-			destructiveButton: .default,
-			completion: completion
-		)
+			destructiveButton: .default
+		), on: .anyVisibleWindow, completion: completion)
 	}
 
 	@objc func joinChannel(_: Any?) {
@@ -137,15 +136,14 @@ extension MenuActionController {
 			chatSession.destroyConversation(conversation)
 			chatSession.save()
 		}
-		Alerts.alert(
+		Alerts.present(AlertRequest(
 			title: PromptStrings.Deletion.confirmationTitle(named: conversation.name),
 			body: PromptStrings.Deletion.warning(for: .channel),
 			defaultButton: PromptStrings.Action.delete,
 			alternateButton: PromptStrings.Action.cancel,
 			destructiveButton: .default,
-			suppressionKey: MenuServerSuppressionKey.deleteChannel.rawValue,
-			completion: completion
-		)
+			suppressionKey: MenuServerSuppressionKey.deleteChannel.rawValue
+		), on: .anyVisibleWindow, completion: completion)
 	}
 
 	@objc func copyUniqueIdentifier(_: Any?) {

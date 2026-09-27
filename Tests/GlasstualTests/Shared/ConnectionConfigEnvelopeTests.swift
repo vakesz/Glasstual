@@ -19,6 +19,7 @@ struct ConnectionConfigEnvelopeTests {
 		config.connectionPrefersSecuredConnection = true
 		config.cipherSuites = .intermediate
 		config.connectionShouldValidateCertificateChain = true
+		config.connectionRequiresTrustedCertificate = true
 		config.identityClientSideCertificate = Data([0x01, 0x02, 0x03])
 		config.proxyType = .socks5
 		config.proxyAddress = "proxy.example.test"

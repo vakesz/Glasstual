@@ -14,7 +14,7 @@ private nonisolated let transcriptControllerLogger = Logger(
 
 /// What a print's render job hands back: the row to draw, and the line already
 /// archived for the view's store.
-private nonisolated struct PrintedLineRender: Sendable {
+nonisolated struct PrintedLineRender: Sendable {
 	let result: TranscriptRenderResult
 	let scrollbackEntry: ScrollbackEntry?
 }
@@ -197,9 +197,11 @@ final class TranscriptController: ChatItemPresenting, ServerHistoryPresenting {
 		setUp()
 	}
 
-	init(conversation: Conversation, in window: MainWindow, commands: TranscriptCommandSink = .menuController()) {
+	init(conversation: Conversation, in window: MainWindow, scrollback: Scrollback = .shared,
+	     commands: TranscriptCommandSink = .menuController())
+	{
 		inlineImageLoader = .shared
-		scrollback = .shared
+		self.scrollback = scrollback
 		commandSink = commands
 		let storage = scrollback
 		historyPageFetcher = { await storage.fetchOutcome($0) }
@@ -455,7 +457,7 @@ final class TranscriptController: ChatItemPresenting, ServerHistoryPresenting {
 
 	/// Convenience for work that has nothing to do off the main actor. It still
 	/// takes its turn in the pipeline, which is what keeps it in order.
-	private func enqueueMainActorWork(
+	func enqueueMainActorWork(
 		isStandalone: Bool = false,
 		_ work: @escaping @MainActor () -> Void
 	) {
@@ -713,9 +715,7 @@ extension TranscriptController {
 	func applyingCurrentState(to input: TranscriptRow) -> TranscriptRow {
 		var line = input
 		if let update = transcriptProjection.deliveryUpdates[line.lineNumber] {
-			line.deliveryState = update.state
-			line.messageIdentifier = update.messageIdentifier ?? line.messageIdentifier
-			line.deliveryFailureReason = update.reason
+			line = update.applying(to: line)
 		}
 		if let identifier = line.messageIdentifier, let delta = reactions.reactions(forMessage: identifier) {
 			line.mergeReactions(delta)
@@ -866,7 +866,7 @@ extension TranscriptController {
 		transcriptProjection.phase != .active
 			|| backingView?.document.ordinals(ofMessage: identifier) != nil
 			|| transcriptProjection.containsMessage(withIdentifier: identifier)
-			|| linesAwaitingRender.contains { $0.messageIdentifier == identifier }
+			|| linesAwaitingRender.contains { MessageIdentifierKey.equal($0.messageIdentifier, identifier) }
 	}
 
 	/// The view trimmed the last rows of these messages.
@@ -878,48 +878,10 @@ extension TranscriptController {
 		forgetReactions(for: transcriptProjection.takeRetiredMessageIdentifiers())
 	}
 
-	private func forgetReactions(for identifiers: [String]) {
+	func forgetReactions(for identifiers: [String]) {
 		reactions.forget(identifiers) { [self] identifier in
 			backingView?.document.ordinals(ofMessage: identifier) != nil
 				|| transcriptProjection.containsMessage(withIdentifier: identifier)
-		}
-	}
-
-	func updateDeliveryState(
-		forLineNumber lineNumber: String,
-		state: ChatLineDeliveryState,
-		messageIdentifier: String?,
-		reason: String?
-	) {
-		guard let update = transcriptProjection.updateDelivery(
-			lineNumber: lineNumber,
-			state: state,
-			messageIdentifier: messageIdentifier,
-			reason: reason,
-			isDisplayed: backingView?.containsLine(identifier: lineNumber) == true
-		) else { return }
-		forgetRetiredProjectionMessages()
-		guard transcriptProjection.phase == .active else {
-			return
-		}
-		enqueueMainActorWork { [weak self] in
-			guard let self else { return }
-			let previousIdentifier: String? = if let backingView, let index = backingView.document.index(ofLine: update.lineNumber) {
-				backingView.document[index].messageIdentifier
-			} else {
-				nil
-			}
-			backingView?.updateDelivery(update)
-			transcriptProjection.deliveryWasApplied(update)
-			forgetRetiredProjectionMessages()
-			if let previousIdentifier, previousIdentifier != update.messageIdentifier {
-				forgetReactions(for: [previousIdentifier])
-			}
-			if let identifier = update.messageIdentifier,
-			   let merged = reactions.reactions(forMessage: identifier)
-			{
-				backingView?.updateReactions(merged, messageIdentifier: identifier)
-			}
 		}
 	}
 }
@@ -966,9 +928,7 @@ extension TranscriptController {
 	}
 
 	func lastRenderedLineDate() -> Date? {
-		backingView?.displayedLines.filter {
-			ChatHistoryPolicy.marksReadPosition(lineType: $0.lineType, messageIdentifier: $0.messageIdentifier)
-		}.map(\.receivedAt).max()
+		backingView?.displayedLines.filter(\.lineType.isConversation).compactMap(\.serverTimestamp).max()
 	}
 
 	/** Both conversation seams answer from the union of what the view is showing

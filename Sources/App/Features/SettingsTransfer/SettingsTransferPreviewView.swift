@@ -59,7 +59,9 @@ struct SettingsTransferPreviewView: View {
 			Text(verbatim: preview.filename).foregroundStyle(.secondary)
 			Picker(selection: $session.previewMode) {
 				Text(.SettingsTransfer.merge).tag(SettingsTransferMode.merge)
+					.disabled(preview.supports(.merge) == false)
 				Text(.SettingsTransfer.restore).tag(SettingsTransferMode.restore)
+					.disabled(preview.supports(.restore) == false)
 			} label: { Text(.SettingsTransfer.mode) }
 				.pickerStyle(.segmented)
 			Text(preview.mode == .restore ? .SettingsTransfer.restoreNotice : .SettingsTransfer

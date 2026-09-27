@@ -24,14 +24,6 @@ private struct WorkspaceWillPowerOffMessage: NotificationCenter.MainActorMessage
 	}
 }
 
-/// What a network path update means for the sessions that watch it.
-enum ReachabilityPathEvent {
-	/// Nothing to report: the first path, or one that repeats the last.
-	case none
-	case becameReachable
-	case becameUnreachable
-}
-
 @MainActor
 final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 	private static let logger = Logger(
@@ -53,12 +45,8 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 	}
 
 	private var reachabilityTask: Task<Void, Never>?
-	private var isNetworkReachable = false
-	/** Seeded once per process rather than per monitor. The monitor is stopped on
-	 sleep and started again on wake, and resetting the seed there made every
-	 restart discard its first update, so a connectivity change across the sleep
-	 was never reported. */
-	private var receivedInitialPath = false
+	/// Kept across monitor restarts so a change during sleep is reported on wake.
+	private var reachability = NetworkReachability()
 
 	let notifications = NotificationSubscriptions()
 
@@ -121,17 +109,23 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 		window.setAccessibilityLabel(AccessibilityStrings.mainWindow)
 		mainWindow = window
 		SheetPresentation.install(window)
-		window.configure()
-	}
-
-	func applicationWakeStepOne() {
 		chatSession = ChatSession()
+		window.configure()
+		AppServices.theme.reload()
+		menuController?.prepareInitialState()
+		// Install both observers before restoring the sessions that publish their rows.
+		installSessionServices()
+		chatSession.setupConfiguration()
+		window.restoreSessionSelection()
+		DockIcon.drawWithoutCount()
+		window.observeNotifications()
+		startApplicationServices()
 	}
 
 	/** Hands the IRC layer the window, the menus and this controller, and makes
 	 both of the first two observers of the chat session. Everything the connection code
 	 used to reach for through `AppServices.delegate` arrives this way. */
-	func installSessionServices() {
+	private func installSessionServices() {
 		let services = ChatServices.shared
 		services.output = mainWindow
 		services.menu = menuController
@@ -154,7 +148,7 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 		}
 	}
 
-	func applicationWakeStepTwo() {
+	private func startApplicationServices() {
 		SystemSleepState.beginObserving()
 
 		startWatchingNetworkPath()
@@ -225,16 +219,8 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 			for await path in NWPathMonitor() {
 				guard let self else { return }
 
-				let event = Self.evaluatePathChange(
-					reachable: path.status == .satisfied,
-					currentlyReachable: &isNetworkReachable,
-					receivedInitialPath: &receivedInitialPath
-				)
-
-				switch event {
-				case .none: break
-				case .becameReachable: chatSession?.noteReachabilityChanged(true)
-				case .becameUnreachable: chatSession?.noteReachabilityChanged(false)
+				if let reachable = reachability.update(isReachable: path.status == .satisfied) {
+					chatSession?.noteReachabilityChanged(reachable)
 				}
 			}
 		}
@@ -243,31 +229,6 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 	func stopWatchingNetworkPath() {
 		reachabilityTask?.cancel()
 		reachabilityTask = nil
-	}
-
-	/// What one path update means, given what the last one said.
-	nonisolated static func evaluatePathChange( // nonisolated: pure
-		reachable: Bool,
-		currentlyReachable: inout Bool,
-		receivedInitialPath: inout Bool
-	) -> ReachabilityPathEvent {
-		let wasReachable = currentlyReachable
-
-		currentlyReachable = reachable
-
-		/* The first path update describes the state at launch rather than a
-		 change. Seed from it without reporting one. */
-		if receivedInitialPath == false {
-			receivedInitialPath = true
-
-			return .none
-		}
-
-		if reachable == wasReachable {
-			return .none
-		}
-
-		return reachable ? .becameReachable : .becameUnreachable
 	}
 
 	// MARK: - NSApplication Delegate

@@ -59,6 +59,7 @@ struct ChatLineTests {
 		line.isEncrypted = true
 		line.isFirstForDay = true
 		line.receivedAt = receivedAt
+		line.serverTimestamp = receivedAt
 		line.nickname = "alice"
 		line.messageBody = "hello"
 		line.command = "PRIVMSG"
@@ -77,6 +78,7 @@ struct ChatLineTests {
 		#expect(decoded.isEncrypted)
 		#expect(decoded.isFirstForDay)
 		#expect(decoded.receivedAt == receivedAt)
+		#expect(decoded.serverTimestamp == receivedAt)
 		#expect(decoded.nickname == "alice")
 		#expect(decoded.messageBody == "hello")
 		#expect(decoded.command == "PRIVMSG")
@@ -120,6 +122,7 @@ struct ChatLineTests {
 		#expect(line.messageBody == "hello from the fixture")
 		#expect(line.command == "PRIVMSG")
 		#expect(line.messageIdentifier == "fixture-message")
+		#expect(line.serverTimestamp == nil)
 		#expect(line.replyToMessageIdentifier == "fixture-parent")
 		#expect(line.reactions == ["👍": ["bob", "carol"]])
 		#expect(line.lineType == .privateMessage)
@@ -153,7 +156,8 @@ struct ChatLineTests {
 		let encodedLine = try #require(encoded["line"] as? [String: Any])
 
 		#expect(Set(encodedLine.keys) == Set(fixtureLine.keys))
-		#expect(Set(encodedLine.keys) == Set(ChatLine.CodingKeys.allCases.map(\.rawValue)))
+		// Optional additions remain absent when re-encoding an older row.
+		#expect(Set(encodedLine.keys).union(["serverTimestamp"]) == Set(ChatLine.CodingKeys.allCases.map(\.rawValue)))
 	}
 
 	@Test("The renderer's names for the line and member types are the ones the templates read")

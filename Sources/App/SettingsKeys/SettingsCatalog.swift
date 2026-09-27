@@ -16,9 +16,7 @@ nonisolated extension SettingsKeys {
 		Internals.all, LinkSchemes.all,
 	]
 
-	static let allKeys: [any AnySettingsKey] = allDomains.reduce(into: []) { keys, domain in
-		keys.append(contentsOf: domain)
-	}
+	static let allKeys: [any AnySettingsKey] = allDomains.flatMap(\.self)
 
 	static let allFamilies: [SettingsKeyFamily] = Families.all
 
@@ -101,9 +99,7 @@ nonisolated extension SettingsKeys {
 			return true
 		}
 
-		// A key declared `.uncatalogued` is still catalogued when a family
-		// covers it: the per-event notification settings are declared one by one
-		// so they carry defaults, but the catalogue lists them by prefix.
+		// A family can catalogue a name that an individual declaration omits.
 		return allFamilies.contains { $0.isCatalogued && $0.matches(name) }
 	}
 

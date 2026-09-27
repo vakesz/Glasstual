@@ -12,6 +12,13 @@ import Foundation
 enum AlertSuppression {
 	private static let suppressionPrefix = SettingsKeys.Families.alertSuppression.pattern
 
+	/// Removes both flags and recorded responses while preserving unrelated preferences.
+	static func resetAll(in defaults: UserDefaults = GlasstualUserDefaults.container) {
+		for key in defaults.dictionaryRepresentation().keys where key.hasPrefix(suppressionPrefix) {
+			defaults.removeObject(forKey: key)
+		}
+	}
+
 	/// Distinguishes the flag from the response recorded beside it.
 	private static var responseSuffix: String {
 		" -> Response"

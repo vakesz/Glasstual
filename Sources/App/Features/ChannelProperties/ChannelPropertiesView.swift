@@ -46,6 +46,7 @@ struct ChannelPropertiesView: View {
 			)
 		}
 		.disabled(model.isSaving)
+		.interactiveDismissDisabled(model.isSaving)
 		.frame(
 			minWidth: 560,
 			idealWidth: 620,

@@ -47,7 +47,7 @@ struct TranscriptDocument {
 
 	/// The ordinals of the lines that carry each message identifier, oldest
 	/// first, for the reactions addressed to a message.
-	private(set) var messageLineOrdinals: [String: [Int]] = [:]
+	private(set) var messageLineOrdinals: [MessageIdentifierKey: [Int]] = [:]
 
 	/// The ordinal of `lines[0]`.
 	private(set) var firstLineOrdinal = 0
@@ -97,7 +97,7 @@ struct TranscriptDocument {
 	}
 
 	func ordinals(ofMessage identifier: String) -> [Int]? {
-		messageLineOrdinals[identifier]
+		messageLineOrdinals[MessageIdentifierKey(identifier)]
 	}
 
 	/// Where a line begins in the text storage. `lines.count` names the end of
@@ -119,7 +119,7 @@ struct TranscriptDocument {
 	/// The characters one message drew, across every row it is spread over, or
 	/// nothing where no row of it is in the document.
 	func range(ofMessage identifier: String) -> NSRange? {
-		guard let ordinals = messageLineOrdinals[identifier] else { return nil }
+		guard let ordinals = messageLineOrdinals[MessageIdentifierKey(identifier)] else { return nil }
 		let indices = ordinals.map { $0 - firstLineOrdinal }.filter { lines.indices.contains($0) }
 		guard let first = indices.min(), let last = indices.max() else { return nil }
 		let start = location(ofLineAt: first)
@@ -248,7 +248,7 @@ struct TranscriptDocument {
 				lineOrdinals.removeValue(forKey: identifier)
 			}
 			unindexMessage(of: line, ordinal: ordinal)
-			if let messageIdentifier = line.messageIdentifier, messageLineOrdinals[messageIdentifier] == nil {
+			if let messageIdentifier = line.messageIdentifier, messageLineOrdinals[MessageIdentifierKey(messageIdentifier)] == nil {
 				retiredMessageIdentifiers.append(messageIdentifier)
 			}
 			inlineImages.removeValue(forKey: line.lineNumber)
@@ -304,13 +304,14 @@ struct TranscriptDocument {
 	/// has to redraw it.
 	mutating func updateDelivery(_ update: TranscriptDeliveryUpdate) -> Int? {
 		guard let index = index(ofLine: update.lineNumber) else { return nil }
-		if let messageIdentifier = update.messageIdentifier, messageIdentifier != lines[index].messageIdentifier {
-			unindexMessage(of: lines[index], ordinal: firstLineOrdinal + index)
-			lines[index].messageIdentifier = messageIdentifier
-			indexMessage(of: lines[index], ordinal: firstLineOrdinal + index)
+		unindexMessage(of: lines[index], ordinal: firstLineOrdinal + index)
+		highlightedLineCount -= lines[index].body.isHighlight ? 1 : 0
+		lines[index] = update.applying(to: lines[index])
+		highlightedLineCount += lines[index].body.isHighlight ? 1 : 0
+		indexMessage(of: lines[index], ordinal: firstLineOrdinal + index)
+		if update.replacement != nil {
+			inlineImages.removeValue(forKey: update.lineNumber)
 		}
-		lines[index].deliveryState = update.state
-		lines[index].deliveryFailureReason = update.reason
 		return index
 	}
 
@@ -318,7 +319,7 @@ struct TranscriptDocument {
 	/// answers with the indices the caller has to redraw.
 	mutating func mergeReactions(_ reactions: [String: [String]], messageIdentifier: String) -> [Int] {
 		var changed: [Int] = []
-		for ordinal in messageLineOrdinals[messageIdentifier] ?? [] {
+		for ordinal in messageLineOrdinals[MessageIdentifierKey(messageIdentifier)] ?? [] {
 			let index = ordinal - firstLineOrdinal
 			guard lines.indices.contains(index) else { continue }
 			lines[index].mergeReactions(reactions)
@@ -371,17 +372,17 @@ struct TranscriptDocument {
 	private mutating func indexMessage(of line: TranscriptRow, ordinal: Int, inFront: Bool = false) {
 		guard let identifier = line.messageIdentifier else { return }
 		if inFront {
-			messageLineOrdinals[identifier, default: []].insert(ordinal, at: 0)
+			messageLineOrdinals[MessageIdentifierKey(identifier), default: []].insert(ordinal, at: 0)
 		} else {
-			messageLineOrdinals[identifier, default: []].append(ordinal)
+			messageLineOrdinals[MessageIdentifierKey(identifier), default: []].append(ordinal)
 		}
 	}
 
 	private mutating func unindexMessage(of line: TranscriptRow, ordinal: Int) {
 		guard let identifier = line.messageIdentifier else { return }
-		messageLineOrdinals[identifier]?.removeAll { $0 == ordinal }
-		if messageLineOrdinals[identifier]?.isEmpty == true {
-			messageLineOrdinals.removeValue(forKey: identifier)
+		messageLineOrdinals[MessageIdentifierKey(identifier)]?.removeAll { $0 == ordinal }
+		if messageLineOrdinals[MessageIdentifierKey(identifier)]?.isEmpty == true {
+			messageLineOrdinals.removeValue(forKey: MessageIdentifierKey(identifier))
 		}
 	}
 

@@ -78,7 +78,7 @@ struct MainWindowSidebar: View {
 					MenuCommand.memberListTitle(isVisible: columns.isMemberListVisible),
 					systemImage: columns.isMemberListVisible ? "sidebar.squares.trailing" : "sidebar.trailing"
 				) {
-					animatingColumnChange { columns.toggleMemberList() }
+					MainWindowColumnAnimation.run { columns.toggleMemberList() }
 				}
 				.disabled(columns.isMemberListAvailable == false)
 				Button(String(localized: .MainWindow.toolbarInputBarAccessibilitySettings), systemImage: "gear") {

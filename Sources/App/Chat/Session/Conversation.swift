@@ -313,6 +313,7 @@ class Conversation: ChatItem {
 	}
 
 	func deactivate() {
+		associatedSession?.typingTracker.removeAll(in: self)
 		statusChangedByAction = true
 		resetStatus(.parted)
 	}

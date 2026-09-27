@@ -16,17 +16,31 @@ struct ServerHistoryHandshake {
 	var request: ServerHistoryRequest?
 	/// The cursor the server has already answered for. Asking for it again would
 	/// bring the same page back, so it is asked for once.
-	private(set) var completedBefore: Date?
+	private var completedCursor: Cursor?
+	var completedBefore: Date? {
+		completedCursor?.date
+	}
+
 	/// The cursor the server said it has nothing before.
-	private(set) var exhaustedBefore: Date?
+	private var exhaustedCursor: Cursor?
+	var exhaustedBefore: Date? {
+		exhaustedCursor?.date
+	}
+
+	private struct Cursor: Equatable {
+		let date: Date
+		let lineNumber: String?
+	}
+
 	/// Whether the last answer was a refusal, which is what the banner offers
 	/// Retry Server History for, and what the server said about it.
 	private(set) var failed = false
 	private(set) var failureReason: String?
 
 	/// Whether the page before `cursor` is one the server has not answered yet.
-	func canAsk(before cursor: Date) -> Bool {
-		request == nil && exhaustedBefore != cursor && completedBefore != cursor
+	func canAsk(before date: Date, lineNumber: String? = nil) -> Bool {
+		let cursor = Cursor(date: date, lineNumber: lineNumber)
+		return request == nil && exhaustedCursor != cursor && completedCursor != cursor
 	}
 
 	/// Whether `candidate` is the page still in flight.
@@ -49,17 +63,19 @@ struct ServerHistoryHandshake {
 	mutating func retire(forgettingAnsweredCursor: Bool = false) {
 		request = nil
 		if forgettingAnsweredCursor {
-			completedBefore = nil
+			completedCursor = nil
 		}
 	}
 
 	/// The server answered the page before `cursor`. Where `extent` says it has
 	/// nothing left, `oldestCursor` is where it is exhausted — which the caller
 	/// reads from what the transcript now begins with, and which can be nothing.
-	mutating func noteAnswered(before cursor: Date, extent: ServerHistoryPageExtent, oldestCursor: Date?) {
-		completedBefore = cursor
+	mutating func noteAnswered(before date: Date, extent: ServerHistoryPageExtent, oldestCursor: Date?,
+	                           lineNumber: String? = nil, oldestLineNumber: String? = nil)
+	{
+		completedCursor = Cursor(date: date, lineNumber: lineNumber)
 		if case .exhausted = extent {
-			exhaustedBefore = oldestCursor
+			exhaustedCursor = oldestCursor.map { Cursor(date: $0, lineNumber: oldestLineNumber) }
 		}
 	}
 
@@ -67,7 +83,7 @@ struct ServerHistoryHandshake {
 	/// nothing about what is stored behind it.
 	mutating func noteFailed(reason: String?) {
 		request = nil
-		completedBefore = nil
+		completedCursor = nil
 		failed = true
 		failureReason = reason
 	}
@@ -75,8 +91,8 @@ struct ServerHistoryHandshake {
 	/// Forgets which cursors have been answered, so the page the reader asks for
 	/// again is asked for again.
 	mutating func forgetAnsweredCursors() {
-		completedBefore = nil
-		exhaustedBefore = nil
+		completedCursor = nil
+		exhaustedCursor = nil
 	}
 
 	/// Everything about a transcript that is being replaced, since nothing is

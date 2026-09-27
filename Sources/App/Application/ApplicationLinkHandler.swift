@@ -115,6 +115,7 @@ nonisolated enum ApplicationLink: Equatable {
 @MainActor
 enum ApplicationLinkHandler {
 	static func open(_ location: String) {
+		guard ChatServices.shared.applicationState?.applicationIsTerminating != true else { return }
 		switch ApplicationLink.parse(location) {
 		case let .applicationAction(action, source):
 			perform(action, source: source)

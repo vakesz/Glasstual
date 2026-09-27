@@ -28,11 +28,26 @@ struct LabeledResponseTests {
 		#expect(session.deliveryState(forLabel: label) == .none)
 	}
 
+	@Test("Labels work without message-tags while unrelated client tags stay off the wire")
+	func labelTagHasItsOwnCapability() throws {
+		let session = TestServerSession()
+		session.enableCapability([.batch, .labeledResponse])
+		let label = try #require(session.registerPendingDelivery(for: nil))
+		defer { session.failPendingDeliveriesForDisconnect() }
+
+		session.sendCommand(.privmsg, arguments: ["#chat", "hello"], tags: [
+			"label": label,
+			"+draft/reply": "earlier",
+		])
+
+		#expect(session.sentLines.compactMap { $0 as? String } == ["@label=\(label) PRIVMSG #chat :hello"])
+	}
+
 	private func sessionWithLabeledResponse() -> TestServerSession {
 		let session = TestServerSession()
 		session.enableCapability(.messageTags)
 		session.enableCapability(.echoMessage)
-		session.enableCapability(.labeledResponse)
+		session.enableCapability([.batch, .labeledResponse])
 		return session
 	}
 

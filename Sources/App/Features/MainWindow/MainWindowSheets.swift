@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 import AppKit
+import CocoaExtensions
 import Observation
 import os
 import SwiftUI
@@ -25,7 +26,7 @@ final class MainWindowSheetModel {
 	/// The outermost sheet the window is showing; each one holds whatever it
 	/// raised on top of itself.
 	private(set) var presentedSheet: MainWindowSheet?
-	var inputPrompt: InputPromptPresentation?
+	private(set) var inputPrompt: InputPromptPresentation?
 	var isChoosingTransferFiles = false
 	let settingsTransfer = MainWindowSettingsTransferModel()
 
@@ -72,20 +73,17 @@ final class MainWindowSheetModel {
 		_ request: InputPromptRequest,
 		completion: @escaping @MainActor (InputPromptOutcome) -> Void
 	) {
-		inputPrompt?.finish(.cancelled)
+		let previous = inputPrompt
 		inputPrompt = InputPromptPresentation(request: request, completion: completion)
+		previous?.finish(.cancelled)
 	}
 
-	func completeInputPrompt(_ outcome: InputPromptOutcome) {
-		guard let inputPrompt else { return }
-		inputPrompt.finish(outcome)
-		self.inputPrompt = nil
-	}
-
-	func inputPromptDidDismiss() {
-		guard let inputPrompt else { return }
-		inputPrompt.finish(.cancelled)
-		self.inputPrompt = nil
+	/// Consume the current presentation before calling back, so completion can
+	/// open another prompt. A delayed dismissal only applies to its own prompt.
+	func completeInputPrompt(_ outcome: InputPromptOutcome, for presentation: InputPromptPresentation) {
+		guard inputPrompt === presentation else { return }
+		inputPrompt = nil
+		presentation.finish(outcome)
 	}
 
 	// MARK: - Choosing files to send
@@ -96,10 +94,12 @@ final class MainWindowSheetModel {
 	}
 
 	func completeTransferFileSelection(_ result: Result<[URL], Error>) {
-		defer { transferFileSelection = nil }
+		let completion = transferFileSelection
+		transferFileSelection = nil
+		isChoosingTransferFiles = false
 		switch result {
 		case let .success(urls):
-			transferFileSelection?(urls)
+			completion?(urls)
 		case let .failure(error):
 			mainWindowSheetLogger.error("Choosing files to transfer failed: \(error)")
 		}

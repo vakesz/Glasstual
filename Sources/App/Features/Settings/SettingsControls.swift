@@ -115,6 +115,7 @@ struct SettingsFolderPicker: View {
 						Image(nsImage: NSWorkspace.shared.icon(forFile: folder.path))
 							.resizable()
 							.frame(width: 16, height: 16)
+							.accessibilityHidden(true)
 						Text(verbatim: folder.lastPathComponent)
 					} else {
 						Text(emptyTitle)
@@ -122,6 +123,8 @@ struct SettingsFolderPicker: View {
 				}
 			}
 			.accessibilityLabel(Text(accessibilityLabel))
+			.accessibilityValue(folder.map { Text(verbatim: $0.path) } ?? Text(emptyTitle))
+			.help(folder.map { Text(verbatim: $0.path) } ?? Text(emptyTitle))
 		} label: {
 			Text(label)
 		}

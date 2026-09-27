@@ -23,6 +23,20 @@ struct ScrollbackDuplicateIndexTests {
 		return line
 	}
 
+	@Test("Only server timestamps survive as stored read positions and pruning withdraws them")
+	func storedReadPositionUsesServerTime() {
+		let index = ScrollbackDuplicateIndex()
+		let timestamp = Date(timeIntervalSince1970: 100)
+		var stamped = chatLine(body: "server time without msgid", messageIdentifier: "", at: timestamp)
+		stamped.serverTimestamp = timestamp
+		let local = chatLine(body: "msgid without time", messageIdentifier: "identified", at: timestamp.addingTimeInterval(60))
+		index.indexChatLines([stamped, local], forView: "read-position")
+		#expect(index.newestReadMarkerTimestamp(forView: "read-position") == timestamp)
+		index.forgetLines([stamped.uniqueIdentifier], inView: "read-position")
+		#expect(index.newestReadMarkerTimestamp(forView: "read-position") == nil)
+		#expect(index.newestConversationLineDate(forView: "read-position") == local.receivedAt)
+	}
+
 	@Test("A pruned line is withdrawn from the index it was added to")
 	func pruningWithdrawsTheLine() {
 		let history = Scrollback.shared

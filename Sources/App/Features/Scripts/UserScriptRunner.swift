@@ -4,12 +4,7 @@
 
 import Darwin
 import Foundation
-import os
 
-private let scriptExecutionLogger = Logger(
-	subsystem: LogSubsystem.current,
-	category: "UserScriptRunner"
-)
 private nonisolated let appleScriptSuite = AEEventClass(0x6173_6372)
 private nonisolated let appleScriptSubroutineEvent = AEEventID(0x7073_6272)
 private nonisolated let appleScriptSubroutineName = AEKeyword(0x736E_616D)

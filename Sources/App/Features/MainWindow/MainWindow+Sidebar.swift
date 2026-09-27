@@ -45,7 +45,8 @@ extension MainWindow {
 		sidebar.select(first.conversationList.first ?? first)
 	}
 
-	func setupSidebar() {
+	/// Restores expansion and selection after the application has loaded its sessions.
+	func restoreSessionSelection() {
 		restoreExpandedSessions()
 		restoreSelectionDuringSetup()
 		sidebarSelectionDidChange()

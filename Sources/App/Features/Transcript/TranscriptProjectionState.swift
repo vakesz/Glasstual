@@ -19,6 +19,28 @@ nonisolated struct TranscriptDeliveryUpdate: Equatable, Sendable {
 	let state: ChatLineDeliveryState
 	let messageIdentifier: String?
 	let reason: String?
+	var replacement: TranscriptRow?
+
+	static func == (lhs: Self, rhs: Self) -> Bool {
+		lhs.lineNumber == rhs.lineNumber && lhs.state == rhs.state && lhs.reason == rhs.reason
+			&& MessageIdentifierKey.equal(lhs.messageIdentifier, rhs.messageIdentifier)
+			&& lhs.replacement == rhs.replacement
+	}
+
+	func applying(to original: TranscriptRow) -> TranscriptRow {
+		var line = replacement ?? original
+		line.markers = original.markers
+		line.historyCursor = original.historyCursor
+		if MessageIdentifierKey.equal(messageIdentifier ?? line.messageIdentifier, original.messageIdentifier) {
+			line.mergeReactions(original.reactions)
+		} else {
+			line.reactions = replacement?.reactions ?? [:]
+		}
+		line.deliveryState = state
+		line.messageIdentifier = messageIdentifier ?? line.messageIdentifier
+		line.deliveryFailureReason = reason
+		return line
+	}
 }
 
 /** Owns rendered rows until the native document can own them.
@@ -51,7 +73,7 @@ nonisolated struct TranscriptProjectionState: Sendable {
 	/// than a walk.
 	private var recentLineNumbers: Set<String> = []
 	/// How many buffered rows or in-flight receipts carry each message identifier.
-	private var recentMessageIdentifiers: [String: Int] = [:]
+	private var recentMessageIdentifiers: [MessageIdentifierKey: Int] = [:]
 	/// Message identifiers no retained row carries any longer, since the owner
 	/// last took them.
 	private var retiredMessageIdentifiers: [String] = []
@@ -63,7 +85,7 @@ nonisolated struct TranscriptProjectionState: Sendable {
 
 	/// Whether a retained row carries `identifier` as its message identifier.
 	func containsMessage(withIdentifier identifier: String) -> Bool {
-		recentMessageIdentifiers[identifier] != nil
+		recentMessageIdentifiers[MessageIdentifierKey(identifier)] != nil
 	}
 
 	/// The message identifiers that left with trimmed rows, for state kept per
@@ -145,7 +167,7 @@ nonisolated struct TranscriptProjectionState: Sendable {
 		/* The document now answers whether each message survived the replay.
 		 Offer every projected identifier for retirement, and let its owner keep
 		 those whose rows are actually displayed. */
-		retiredMessageIdentifiers.append(contentsOf: recentMessageIdentifiers.keys)
+		retiredMessageIdentifiers.append(contentsOf: recentMessageIdentifiers.keys.map(\.rawValue))
 		recentResults.removeAll(keepingCapacity: false)
 		recentLineNumbers.removeAll(keepingCapacity: false)
 		recentMessageIdentifiers.removeAll(keepingCapacity: false)
@@ -179,7 +201,8 @@ nonisolated struct TranscriptProjectionState: Sendable {
 		state: ChatLineDeliveryState,
 		messageIdentifier: String?,
 		reason: String?,
-		isDisplayed: Bool = false
+		isDisplayed: Bool = false,
+		replacement: TranscriptRow? = nil
 	) -> TranscriptDeliveryUpdate? {
 		/* A later state transition need not repeat the acknowledgement's
 		 identifier. Keep the identifier already assigned to this line. */
@@ -188,7 +211,8 @@ nonisolated struct TranscriptProjectionState: Sendable {
 			lineNumber: lineNumber,
 			state: state,
 			messageIdentifier: identifier,
-			reason: reason
+			reason: reason,
+			replacement: replacement ?? deliveryUpdates[lineNumber]?.replacement
 		)
 		/* An ack can arrive after its line has been trimmed away. Record one
 		 only while a buffered or displayed row can receive it. A buffered row
@@ -202,7 +226,7 @@ nonisolated struct TranscriptProjectionState: Sendable {
 		 the row carries. */
 		let previous = deliveryUpdates[lineNumber]?.messageIdentifier
 		deliveryUpdates[lineNumber] = update
-		if let identifier, identifier != previous {
+		if let identifier, !MessageIdentifierKey.equal(identifier, previous) {
 			retainMessage(identifier)
 			if let previous {
 				releaseMessage(previous)
@@ -254,16 +278,16 @@ nonisolated struct TranscriptProjectionState: Sendable {
 	}
 
 	private mutating func retainMessage(_ identifier: String) {
-		recentMessageIdentifiers[identifier, default: 0] += 1
+		recentMessageIdentifiers[MessageIdentifierKey(identifier), default: 0] += 1
 	}
 
 	private mutating func releaseMessage(_ identifier: String) {
-		guard let count = recentMessageIdentifiers[identifier] else { return }
+		guard let count = recentMessageIdentifiers[MessageIdentifierKey(identifier)] else { return }
 		if count <= 1 {
-			recentMessageIdentifiers.removeValue(forKey: identifier)
+			recentMessageIdentifiers.removeValue(forKey: MessageIdentifierKey(identifier))
 			retiredMessageIdentifiers.append(identifier)
 		} else {
-			recentMessageIdentifiers[identifier] = count - 1
+			recentMessageIdentifiers[MessageIdentifierKey(identifier)] = count - 1
 		}
 	}
 }

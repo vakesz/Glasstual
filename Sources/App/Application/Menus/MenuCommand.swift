@@ -342,6 +342,16 @@ extension NSMenu {
 }
 
 extension MenuCommand {
+	/// The preference selected by an appearance command, shared by validation and execution.
+	var preferredAppearance: PreferredAppearance? {
+		switch self {
+		case .appearanceSystem: .inherited
+		case .appearanceLight: .light
+		case .appearanceDark: .dark
+		default: nil
+		}
+	}
+
 	/// The Window menu's server-list item names what the click will do, so its
 	/// title flips with the sidebar's state.
 	static func sidebarTitle(isVisible: Bool) -> String {

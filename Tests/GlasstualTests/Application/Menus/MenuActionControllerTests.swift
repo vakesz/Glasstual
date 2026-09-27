@@ -146,19 +146,9 @@ struct MenuActionControllerTests {
 
 	@Test("Each appearance menu item names the appearance it selects")
 	func appearanceItemsNameOneAppearanceEach() {
-		#expect(MenuWindowPolicy.appearance(for: .appearanceSystem) == .inherited)
-		#expect(MenuWindowPolicy.appearance(for: .appearanceLight) == .light)
-		#expect(MenuWindowPolicy.appearance(for: .appearanceDark) == .dark)
-		#expect(MenuWindowPolicy.appearance(for: .about) == nil)
-		#expect(MenuWindowPolicy.appearance(for: nil) == nil)
-	}
-
-	/// The window menu's "reset suppressed warnings" command finds them by
-	/// prefix, so it has to read the prefix the flags are written under rather
-	/// than one of its own.
-	@Test("Resetting suppressed warnings uses the declared suppression prefix")
-	func suppressedWarningPolicyReadsTheDeclaredPrefix() {
-		#expect(MenuWindowPolicy.alertSuppressionPrefix == SettingsKeys.Families.alertSuppression.pattern)
-		#expect(MenuWindowPolicy.alertSuppressionPrefix == "Alerts -> ")
+		#expect(MenuCommand.appearanceSystem.preferredAppearance == .inherited)
+		#expect(MenuCommand.appearanceLight.preferredAppearance == .light)
+		#expect(MenuCommand.appearanceDark.preferredAppearance == .dark)
+		#expect(MenuCommand.about.preferredAppearance == nil)
 	}
 }

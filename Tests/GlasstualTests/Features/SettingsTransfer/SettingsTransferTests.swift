@@ -102,19 +102,23 @@ struct SettingsTransferTests {
 		defer { fixture.cleanUp() }
 		let session = fixture.session()
 		let before = try session.liveSnapshot()
-		for invalid: [String: PropertyListValue] in [
-			[SettingsKeys.Messages.showJoinLeave.name: false, SettingsKeys.Logging.scrollbackSaveLimit.name: "-7"],
-			[SettingsKeys.Messages.showJoinLeave.name: false, SettingsKeys.FileTransfers.portRangeStart.name: 6000,
-			 SettingsKeys.FileTransfers.portRangeEnd.name: 5000],
-			[
-				SettingsKeys.Messages.showJoinLeave.name: false,
-				SettingsKeys.Sessions.serverSessions.name: .array([.dictionary([
-					"uniqueIdentifier": "invalid", "serverList": "not an array",
-				])]),
-			],
-		] {
+		let invalidPayloads: [(preferences: [String: PropertyListValue], clients: PropertyListValue)] = [
+			([SettingsKeys.Logging.scrollbackSaveLimit.name: "-7"], .array([])),
+			([SettingsKeys.FileTransfers.portRangeStart.name: 6000,
+			  SettingsKeys.FileTransfers.portRangeEnd.name: 5000], .array([])),
+			([:], .array([.dictionary(["uniqueIdentifier": "invalid", "serverList": "not an array"])])),
+		]
+		for payload in invalidPayloads {
+			var preferences = before.values
+			preferences[SettingsKeys.Messages.showJoinLeave.name] = false
+			preferences.merge(payload.preferences) { _, invalid in invalid }
+			let document: [String: PropertyListValue] = [
+				"format": .string(SettingsArchive.format), "version": .integer(SettingsArchive.version),
+				"preferences": .dictionary(preferences), "unset": .init(before.unset.sorted()),
+				"clients": payload.clients,
+			]
 			let data = try PropertyListSerialization.data(
-				fromPropertyList: invalid.propertyListObject,
+				fromPropertyList: document.propertyListObject,
 				format: .xml,
 				options: 0
 			)

@@ -405,9 +405,8 @@ actor ConnectionSocket {
 				port: NWEndpoint.Port(integerLiteral: config.serverPort)
 			)
 			if config.connectionPrefersSecuredConnection {
-				let parameters = NWParametersBuilder.parameters {
-					constructedTLS(offeringLegacyCipherSuites: offering)
-				}
+				let tls = try constructedTLS(offeringLegacyCipherSuites: offering)
+				let parameters = NWParametersBuilder.parameters { tls }
 				try ConnectionParameters.applyProxy(config, to: parameters.parameters, uniqueIdentifier: uniqueIdentifier)
 
 				try await withNetworkConnection(
@@ -730,10 +729,10 @@ private extension ConnectionSocket {
 
 	 The validator is the same on both dials. A downgrade to the legacy suites
 	 changes what is negotiated and nothing about who the peer has to be. */
-	func constructedTLS(offeringLegacyCipherSuites: Bool) -> TLS {
+	func constructedTLS(offeringLegacyCipherSuites: Bool) throws -> TLS {
 		let generation = dialGeneration
 
-		return ConnectionParameters.tls(
+		return try ConnectionParameters.tls(
 			for: config,
 			offeringLegacyCipherSuites: offeringLegacyCipherSuites
 		).certificateValidator { [weak self] _, trust in
@@ -813,6 +812,7 @@ private extension ConnectionSocket {
 		}
 
 		let serverAddress = config.serverAddress
+		guard !config.connectionRequiresTrustedCertificate else { return false }
 
 		guard config.connectionShouldValidateCertificateChain else {
 			ConnectionHostLog.connection.error(

@@ -93,12 +93,3 @@ struct MainWindowConnectionRow: View {
 		}
 	}
 }
-
-enum MainWindowMemberRail {
-	/// A narrow window borrows the rail's space without overwriting its saved width or visibility.
-	static func effectiveWidth(preferred: CGFloat, available: CGFloat) -> CGFloat? {
-		let capacity = available - MainWindowConstants.conversationMinimumWidth - MemberListLayout.handleWidth
-		guard capacity >= MemberListLayout.minimumWidth else { return nil }
-		return min(capacity, min(MemberListLayout.maximumWidth, max(MemberListLayout.minimumWidth, preferred)))
-	}
-}

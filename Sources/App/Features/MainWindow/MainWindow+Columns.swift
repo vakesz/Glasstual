@@ -39,6 +39,12 @@ extension MainWindow {
 		MainWindowColumnAnimation.run { columnModel.toggleMemberList() }
 	}
 
+	/// Keep typing in the conversation when its focused member table disappears.
+	func prepareToHideMemberList() {
+		guard firstResponder is MemberListNativeTable else { return }
+		inputContentView.textView.focus()
+	}
+
 	/** Hides the AppKit views under the loading overlay, or shows them again.
 
 	 SwiftUI's `disabled` and `accessibilityHidden` stop at the representables,

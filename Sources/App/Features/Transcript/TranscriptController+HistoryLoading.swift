@@ -222,7 +222,7 @@ private extension TranscriptController {
 		}
 		forgetRetiredProjectionMessages()
 		for (identifier, merged) in reactions.all {
-			backingView?.updateReactions(merged, messageIdentifier: identifier)
+			backingView?.updateReactions(merged, messageIdentifier: identifier.rawValue)
 		}
 		switch transcriptProjection.mark {
 		case .none:
@@ -368,11 +368,12 @@ extension TranscriptController {
 		      let session = associatedSession,
 		      session.chatHistoryIsAvailable(for: conversation),
 		      let oldestDate = backingView?.displayedLines.first?.receivedAt,
-		      serverHistory.canAsk(before: oldestDate)
+		      serverHistory.canAsk(before: oldestDate, lineNumber: oldestLineNumber)
 		else {
 			return
 		}
-		let request = ServerHistoryRequest(id: UUID(), before: oldestDate, oldestLineNumber: oldestLineNumber)
+		let request = ServerHistoryRequest(id: UUID(), before: oldestDate, oldestLineNumber: oldestLineNumber,
+		                                   messageIdentifier: backingView?.displayedLines.first?.messageIdentifier)
 		serverHistory.request = request
 		if session.requestServerHistory(request, in: conversation, presentation: self) {
 			serverHistory.noteAdmitted()
@@ -394,7 +395,8 @@ extension TranscriptController {
 			serverHistory.noteAdmitted()
 			guard !lines.isEmpty else {
 				serverHistory.retire()
-				serverHistory.noteAnswered(before: request.before, extent: extent, oldestCursor: request.before)
+				serverHistory.noteAnswered(before: request.before, extent: extent, oldestCursor: request.before,
+				                           lineNumber: request.oldestLineNumber, oldestLineNumber: request.oldestLineNumber)
 				return
 			}
 			prependEarlierChatLines(
@@ -415,7 +417,8 @@ extension TranscriptController {
 					serverHistory.noteAnswered(
 						before: request.before,
 						extent: extent,
-						oldestCursor: backingView?.displayedLines.first?.receivedAt
+						oldestCursor: backingView?.displayedLines.first?.receivedAt,
+						lineNumber: request.oldestLineNumber, oldestLineNumber: oldestLineNumber
 					)
 				}
 			}
@@ -435,7 +438,10 @@ extension TranscriptController {
 		guard !terminating, serverHistory.request == nil,
 		      let session = associatedSession, let conversation = associatedConversation
 		else { return false }
-		return session.canRetryServerHistory(for: conversation)
+		guard let oldest = backingView?.displayedLines.first else { return false }
+		let request = ServerHistoryRequest(id: UUID(), before: oldest.receivedAt, oldestLineNumber: oldest.lineNumber,
+		                                   messageIdentifier: oldest.messageIdentifier)
+		return session.canRetryServerHistory(for: conversation, request: request)
 	}
 
 	/// Copies the answer into the observable recovery state the banner draws

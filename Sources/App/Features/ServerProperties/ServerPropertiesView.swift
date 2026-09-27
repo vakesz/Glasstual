@@ -26,6 +26,7 @@ struct ServerPropertiesView: View {
 		 maxima are what let the user drag its edges: without them the content
 		 refuses to grow and the sheet has nothing to resize into. */
 		.disabled(model.isSaving)
+		.interactiveDismissDisabled(model.isSaving)
 		.frame(
 			minWidth: 820,
 			idealWidth: 900,

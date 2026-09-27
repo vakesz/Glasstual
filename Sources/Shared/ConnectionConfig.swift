@@ -48,6 +48,8 @@ nonisolated struct ConnectionConfig: Codable, Sendable, Equatable {
 
 	var connectionPrefersSecuredConnection = false
 	var connectionShouldValidateCertificateChain = false
+	/// STS requires system trust with no disabled-validation or user override path.
+	var connectionRequiresTrustedCertificate = false
 	var cipherSuites = CipherSuiteCollection.system
 	var identityClientSideCertificate: Data?
 
@@ -83,6 +85,7 @@ nonisolated struct ConnectionConfig: Codable, Sendable, Equatable {
 		case addressType
 		case connectionPrefersSecuredConnection
 		case connectionShouldValidateCertificateChain
+		case connectionRequiresTrustedCertificate
 		case cipherSuites
 		case identityClientSideCertificate
 		case proxyType
@@ -138,6 +141,11 @@ nonisolated struct ConnectionConfig: Codable, Sendable, Equatable {
 			forKey: .connectionShouldValidateCertificateChain,
 			default: false
 		)
+		connectionRequiresTrustedCertificate = container.decode(
+			Bool.self,
+			forKey: .connectionRequiresTrustedCertificate,
+			default: false
+		)
 		cipherSuites = CipherSuiteCollection(
 			rawValue: container.decode(
 				UInt.self,
@@ -176,6 +184,7 @@ nonisolated struct ConnectionConfig: Codable, Sendable, Equatable {
 			connectionShouldValidateCertificateChain,
 			forKey: .connectionShouldValidateCertificateChain
 		)
+		try container.encode(connectionRequiresTrustedCertificate, forKey: .connectionRequiresTrustedCertificate)
 		try container.encode(cipherSuites.rawValue, forKey: .cipherSuites)
 		try container.encodeIfPresent(identityClientSideCertificate, forKey: .identityClientSideCertificate)
 		try container.encode(proxyType.rawValue, forKey: .proxyType)

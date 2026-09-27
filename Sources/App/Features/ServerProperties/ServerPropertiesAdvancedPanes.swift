@@ -56,7 +56,7 @@ struct ServerPropertiesClientCertificatePane: View {
 					Button(.ServerProperties.resetCertificate, role: .destructive) {
 						commands?.resetCertificate()
 					}
-					.disabled(model.certificate == nil)
+					.disabled(model.config.identityClientSideCertificate == nil)
 				}
 			} footer: {
 				Text(.ServerProperties.selectACertificateToSendWhen)
@@ -196,14 +196,10 @@ struct ServerPropertiesProxyServerPane: View {
 				Section {
 					TextField(.ServerProperties.proxyAddress, text: $model.proxyAddress)
 					TextField(.ServerProperties.proxyPort, text: $model.proxyPort)
-					if model.config.proxyType == .socks5 {
-						TextField(.ServerProperties.proxyUsername, text: $model.proxyUsername)
-						SecureField(.ServerProperties.proxyPassword, text: $model.proxyPassword)
-					}
+					TextField(.ServerProperties.proxyUsername, text: $model.proxyUsername)
+					SecureField(.ServerProperties.proxyPassword, text: $model.proxyPassword)
 				} footer: {
-					if model.config.proxyType == .socks5 {
-						Text(.ServerProperties.proxyPasswordHelp)
-					}
+					Text(.ServerProperties.proxyPasswordHelp)
 				}
 			} else if model.config.proxyType == .automatic {
 				Section {

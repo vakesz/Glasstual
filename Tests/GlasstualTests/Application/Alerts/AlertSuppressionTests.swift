@@ -27,4 +27,21 @@ struct AlertSuppressionTests {
 
 		#expect(AlertSuppression.isSuppressed(baseKey: baseKey))
 	}
+
+	@Test("Reset removes suppression flags and responses without changing other settings")
+	func resetRemovesOnlySuppressionValues() throws {
+		let suite = "AlertSuppressionTests.\(UUID().uuidString)"
+		let defaults = try #require(UserDefaults(suiteName: suite))
+		defer { defaults.removePersistentDomain(forName: suite) }
+		let key = AlertSuppression.suppressionKey(withBase: "confirmation")
+		defaults.set(true, forKey: key)
+		defaults.set(AlertResponse.alternate.rawValue, forKey: key + " -> Response")
+		defaults.set("keep", forKey: "unrelated")
+
+		AlertSuppression.resetAll(in: defaults)
+
+		#expect(defaults.object(forKey: key) == nil)
+		#expect(defaults.object(forKey: key + " -> Response") == nil)
+		#expect(defaults.string(forKey: "unrelated") == "keep")
+	}
 }

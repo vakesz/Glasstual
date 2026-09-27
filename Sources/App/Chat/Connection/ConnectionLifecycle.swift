@@ -51,6 +51,12 @@ private func cipherSuiteText(protocolName: String, cipherName: String, legacy: B
 }
 
 extension ServerSession {
+	/// Application shutdown starts while accepted settings saves are still
+	/// draining, before each session begins its own teardown.
+	var canContinueConnecting: Bool {
+		!isTerminating && environment.services.applicationState?.applicationIsTerminating != true
+	}
+
 	func connect() {
 		connect(.normal)
 	}
@@ -64,7 +70,7 @@ extension ServerSession {
 	}
 
 	private func connect(_ mode: SessionConnectMode, bypassProxy: Bool, retryingServerIdentifier: String?) {
-		guard isTerminating == false else { return }
+		guard canContinueConnecting else { return }
 		guard connectionState.canConnect else {
 			return
 		}
@@ -103,6 +109,7 @@ extension ServerSession {
 		socketConfig.addressType = config.addressType
 		socketConfig.cipherSuites = config.cipherSuites
 		socketConfig.connectionShouldValidateCertificateChain = config.validateServerCertificateChain
+			|| socketConfig.connectionRequiresTrustedCertificate
 		socketConfig.identityClientSideCertificate = config.identityClientSideCertificate
 		if bypassProxy == false {
 			socketConfig.proxyType = config.proxyType
@@ -125,6 +132,11 @@ extension ServerSession {
 		startup.credentialTask = Task { [weak self] in
 			let stored = await loadCredentials(items)
 			guard !Task.isCancelled, let self, !isTerminating, isConnecting, startup.identifier == startupIdentifier else { return }
+			guard canContinueConnecting else {
+				cancelReconnect()
+				disconnect()
+				return
+			}
 			guard config == configurationSnapshot else {
 				// Refresh the same attempt. Endpoint selection has already consumed
 				// an explicit target or advanced the configured-server rotation.
@@ -176,7 +188,8 @@ extension ServerSession {
 			secured = selected.prefersSecuredConnection
 			server = selected
 		}
-		if let enforcedPort = environment.services.stsPolicies.enforcedPort(forHost: host) {
+		let enforcedPort = environment.services.stsPolicies.enforcedPort(forHost: host)
+		if let enforcedPort {
 			if enforcedPort != port || secured == false {
 				printDebugInformation(toConsole: String(localized: .IRC.strictTransportSecurityPolicy(String(enforcedPort))))
 			}
@@ -187,6 +200,7 @@ extension ServerSession {
 		connectionConfig.serverAddress = host
 		connectionConfig.serverPort = port
 		connectionConfig.connectionPrefersSecuredConnection = secured
+		connectionConfig.connectionRequiresTrustedCertificate = enforcedPort != nil || endpoint?.reason == .stsUpgrade
 		return connectionConfig
 	}
 
@@ -389,6 +403,13 @@ extension SessionDisconnectMode {
 
 extension ServerSession {
 	func resetAllPropertyValues() {
+		if let policy = activeSTSPolicy {
+			activeSTSPolicy = nil
+			_ = environment.services.stsPolicies.applyCapabilityValues(
+				policy.values, forHost: policy.host, connectedPort: policy.port,
+				secured: true, certificateChainValidated: true
+			)
+		}
 		batchMessages.dequeueEntries()
 		typingTracker.removeAll()
 		typingSender.removeAll()
@@ -518,7 +539,11 @@ extension ServerSession {
 	}
 
 	func connectionDidConnect() {
-		guard !isTerminating else { return }
+		guard canContinueConnecting else {
+			cancelReconnect()
+			disconnect()
+			return
+		}
 
 		startRetryTimer()
 		if let connectedAddress = socket?.connectedAddress, socket?.config.serverAddress.isIPAddress == false {

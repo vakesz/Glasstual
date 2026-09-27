@@ -108,7 +108,7 @@ struct LabeledResponseRetirementTests {
 		let session = TestServerSession()
 		session.enableCapability(.messageTags)
 		session.enableCapability(.echoMessage)
-		session.enableCapability(.labeledResponse)
+		session.enableCapability([.batch, .labeledResponse])
 		return session
 	}
 
@@ -180,6 +180,40 @@ struct LabeledResponseRetirementTests {
 		let bodies = session.printedLines.compactMap { ($0 as? [String: Any])?["messageBody"] as? String }
 		#expect(bodies == ["first", "second"])
 		#expect(session.batchMessages.queuedEntries.isEmpty)
+	}
+
+	@Test("Labeled numerics settle delivery and retain their normal display", arguments: [301, 401, 404, 499])
+	func numericResponseSettlesDelivery(_ numeric: Int) throws {
+		let session = sessionWithLabeledResponse()
+		let label = try #require(session.registerPendingDelivery(for: nil))
+		let delivery = try #require(session.labeledResponses.pending[label])
+		let response = try #require(Message(line: "@label=\(label) :server \(numeric) me #chat :Explanation", on: session))
+
+		#expect(session.resolveLabeledResponse(for: response) == false)
+		#expect(delivery.state == (numeric == 301 ? .delivered : .failed))
+		#expect(session.labeledResponses.pending[label] == nil)
+	}
+
+	@Test("A numeric error in a labeled batch wins over an echo", arguments: [401, 404, 499])
+	func batchNumericFailureWinsOverEcho(_ numeric: Int) throws {
+		let session = sessionWithLabeledResponse()
+		session.setConnectionTransportForTesting(.connected)
+		session.forwardsProcessedMessages = true
+		session.socket = Connection(config: ConnectionConfig(), onSession: session)
+		let label = try #require(session.registerPendingDelivery(for: nil))
+		let delivery = try #require(session.labeledResponses.pending[label])
+
+		for line in [
+			"@label=\(label) BATCH +reply labeled-response",
+			"@batch=reply :server \(numeric) me #chat :Not delivered",
+			"@batch=reply;msgid=echo :me!u@h PRIVMSG #chat :sent",
+		] {
+			session.connectionDidReceive(line)
+		}
+		#expect(delivery.state == .pending)
+		session.connectionDidReceive("BATCH -reply")
+		#expect(delivery.state == .failed)
+		#expect(session.labeledResponses.pending[label] == nil)
 	}
 
 	@Test("A disconnect fails every delivery still waiting instead of leaving it pending")

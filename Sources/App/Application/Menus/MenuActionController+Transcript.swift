@@ -123,11 +123,11 @@ extension MenuActionController {
 			NSWorkspace.shared.open(url)
 			return
 		}
-		Alerts.alert(
+		Alerts.present(AlertRequest(
 			title: PromptStrings.Logging.noLogsTitle,
 			body: PromptStrings.Logging.emptyAlertBody,
 			defaultButton: PromptStrings.Action.confirmation
-		)
+		), on: .anyVisibleWindow)
 	}
 
 	private func sendReaction(_ emoji: String?, messageIdentifier: String?) {

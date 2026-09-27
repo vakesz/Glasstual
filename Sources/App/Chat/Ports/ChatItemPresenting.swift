@@ -22,7 +22,7 @@ protocol ChatItemPresenting: AnyObject {
 	 there. */
 	func lastPrintedLine() -> ChatLine?
 	/// The newest line on screen a read marker may be placed at: a conversation
-	/// line the server stamped, per ``ChatHistoryPolicy/marksReadPosition(lineType:messageIdentifier:)``.
+	/// line carrying an explicit server timestamp.
 	func lastRenderedLineDate() -> Date?
 	/** The newest line a person wrote that this view knows about, ignoring the
 	 events the session narrates — a join, a mode, a topic. A line printed in this
@@ -39,6 +39,7 @@ protocol ChatItemPresenting: AnyObject {
 	func mark()
 	func mark(at date: Date)
 	func noteReaction(_ emoji: String, fromNickname nickname: String, toMessageIdentifier identifier: String)
+	func replacePendingLine(_ line: ChatLine, reason: String?)
 	func updateDeliveryState(
 		forLineNumber lineNumber: String,
 		state: ChatLineDeliveryState,
@@ -58,11 +59,13 @@ protocol ChatItemPresenting: AnyObject {
 }
 
 extension ChatItemPresenting {
+	func replacePendingLine(_ line: ChatLine, reason: String?) {
+		updateDeliveryState(forLineNumber: line.uniqueIdentifier, state: line.deliveryState,
+		                    messageIdentifier: line.messageIdentifier, reason: reason)
+	}
+
 	func lastRenderedLineDate() -> Date? {
-		lastPrintedLine().flatMap {
-			ChatHistoryPolicy.marksReadPosition(lineType: $0.lineType, messageIdentifier: $0.messageIdentifier)
-				? $0.receivedAt : nil
-		}
+		lastPrintedLine()?.readMarkerTimestamp
 	}
 
 	/// A presentation that keeps no history of its own answers from the last line

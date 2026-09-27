@@ -2,6 +2,7 @@
 // Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
 // SPDX-License-Identifier: BSD-3-Clause
 
+import CocoaExtensions
 import Foundation
 import Observation
 import os
@@ -195,6 +196,7 @@ final class SettingsModel {
 	}
 
 	func deactivate() {
+		SettingsEditingSession.shared.finishEditing()
 		cancelThemeImport()
 		notifications.cancelAll()
 		notificationsAreActive = false
@@ -246,6 +248,7 @@ final class SettingsModel {
 		guard let row = destinations.first(where: { $0.panes.contains(pane) }), row.id != selection else {
 			return false
 		}
+		SettingsEditingSession.shared.finishEditing()
 		selection = row.id
 		selectionChanged(to: row.id)
 		return true
@@ -322,6 +325,7 @@ extension SettingsModel {
 	}
 
 	func exportTranscriptTheme() {
+		SettingsEditingSession.shared.finishEditing()
 		do {
 			exportedThemeData = try themeStore.exportTheme()
 			exportedThemeFilename = "\(themeStore.name).plist"
@@ -331,6 +335,7 @@ extension SettingsModel {
 	}
 
 	func resetTranscriptTheme() {
+		SettingsEditingSession.shared.finishEditing()
 		cancelThemeImport()
 		themeStore.reset()
 	}
@@ -398,6 +403,7 @@ extension SettingsModel {
 	 main actor under the same regular-file check and 16 MB cap an imported
 	 configuration gets, and takes its own security-scoped access. */
 	private func importTranscriptTheme(from url: URL) {
+		SettingsEditingSession.shared.finishEditing()
 		cancelThemeImport()
 		themeImportTask = Task { [weak self, readThemeDocument] in
 			defer {
@@ -443,6 +449,7 @@ extension SettingsModel {
 
 	private func setTranscriptFolder(_ bookmark: Data?) {
 		ApplicationPaths.setTranscriptFolderURL(bookmark)
+		AppServices.chatSession?.refreshEnvironmentSettings()
 		SettingsReload.perform(.logTranscripts)
 		refreshFolders()
 	}

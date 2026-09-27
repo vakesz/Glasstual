@@ -43,7 +43,7 @@ extension ServerSession {
 		let viewedDate = if let presentation = conversation.presentation {
 			presentation.lastRenderedLineDate()
 		} else {
-			Scrollback.shared.duplicates.newestConversationLineDate(forView: conversation.uniqueIdentifier)
+			Scrollback.shared.duplicates.newestReadMarkerTimestamp(forView: conversation.uniqueIdentifier)
 		}
 		guard let date = viewedDate else { return }
 		scheduleReadMarker(for: conversation, date: date)

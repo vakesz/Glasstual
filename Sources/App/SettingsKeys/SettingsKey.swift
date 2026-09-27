@@ -175,59 +175,32 @@ nonisolated struct UntypedSettingsKey: AnySettingsKey {
 	}
 }
 
-/** A family of keys sharing a prefix or suffix — per-notification settings,
- per-window frames, per-theme setting stores. The individual names are made at
- runtime, so the catalogue matches them by pattern.
-
- A family carries the same import contract a declaration does: `coerce` decides
- what shape a name in the family may hold, so an imported file cannot write an
- arbitrary property list under a name nothing declares one by one. The default
- refuses every container, which is what a family of scalar settings wants. */
+/** Scalar settings whose names share a prefix, such as saved window frames
+ and alert suppression choices. Each name is made at runtime, so the catalogue
+ matches its prefix instead of declaring it individually. */
 nonisolated struct SettingsKeyFamily: Sendable {
-	enum Match: UInt, Sendable {
-		case exact = 0
-		case prefix = 1
-		case suffix = 2
-	}
-
 	let pattern: String
-	let match: Match
 	let storage: SettingStorage
 	let traits: SettingTraits
-	private let coercion: @Sendable (String, PropertyListValue) -> PropertyListValue?
 
 	init(
 		_ pattern: String,
-		match: Match = .prefix,
 		storage: SettingStorage = .container,
-		traits: SettingTraits = [],
-		coerce: @escaping @Sendable (String, PropertyListValue) -> PropertyListValue? = Self.scalar
+		traits: SettingTraits = []
 	) {
 		self.pattern = pattern
-		self.match = match
 		self.storage = storage
 		self.traits = traits
-		coercion = coerce
 	}
 
 	func matches(_ name: String) -> Bool {
-		switch match {
-		case .exact: name == pattern
-		case .prefix: name.hasPrefix(pattern)
-		case .suffix: name.hasSuffix(pattern)
-		}
+		name.hasPrefix(pattern)
 	}
 
-	/// Validates and coerces an imported value for one name in the family, or
-	/// returns `nil` to reject it.
+	/// Family settings accept scalars and reject containers or opaque data.
 	func coerce(_ name: String, _ value: PropertyListValue) -> PropertyListValue? {
 		guard matches(name) else { return nil }
-		return coercion(name, value)
-	}
-
-	/// The default shape: one scalar, never a container or an opaque blob.
-	static let scalar: @Sendable (String, PropertyListValue) -> PropertyListValue? = { _, value in
-		switch value {
+		return switch value {
 		case .string, .boolean, .integer, .double: value
 		case .date, .data, .array, .dictionary: nil
 		}

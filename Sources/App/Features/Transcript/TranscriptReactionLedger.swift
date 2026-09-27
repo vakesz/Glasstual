@@ -24,15 +24,15 @@ nonisolated struct TranscriptReactionLedger: Sendable {
 	/// How many people one reaction on one message records.
 	static let maximumReactorsPerReaction = 256
 
-	private var reactionsByMessage: [String: ReactionsByEmoji] = [:]
+	private var reactionsByMessage: [MessageIdentifierKey: ReactionsByEmoji] = [:]
 
 	/// Everything recorded, as a render job reads it.
-	var all: [String: ReactionsByEmoji] {
+	var all: [MessageIdentifierKey: ReactionsByEmoji] {
 		reactionsByMessage
 	}
 
 	func reactions(forMessage messageIdentifier: String) -> ReactionsByEmoji? {
-		reactionsByMessage[messageIdentifier]
+		reactionsByMessage[MessageIdentifierKey(messageIdentifier)]
 	}
 
 	/** Records `wireEmoji` from `nickname`, and returns every reaction the
@@ -51,23 +51,23 @@ nonisolated struct TranscriptReactionLedger: Sendable {
 		else {
 			return nil
 		}
-		var reactions = reactionsByMessage[messageIdentifier] ?? [:]
+		var reactions = reactionsByMessage[MessageIdentifierKey(messageIdentifier)] ?? [:]
 		var nicknames = reactions[emoji] ?? []
 		guard nicknames.count < Self.maximumReactorsPerReaction || nicknames.contains(nickname) else { return nil }
 		if !nicknames.contains(nickname) {
 			nicknames.append(nickname)
 		}
 		reactions[emoji] = nicknames
-		reactionsByMessage[messageIdentifier] = reactions
+		reactionsByMessage[MessageIdentifierKey(messageIdentifier)] = reactions
 		return reactions
 	}
 
 	/// Drops what `identifiers` recorded, except where the transcript still
 	/// holds a row for the message.
 	mutating func forget(_ identifiers: [String], stillHeld: (String) -> Bool) {
-		for identifier in identifiers where reactionsByMessage[identifier] != nil {
+		for identifier in identifiers where reactionsByMessage[MessageIdentifierKey(identifier)] != nil {
 			guard stillHeld(identifier) == false else { continue }
-			reactionsByMessage.removeValue(forKey: identifier)
+			reactionsByMessage.removeValue(forKey: MessageIdentifierKey(identifier))
 		}
 	}
 

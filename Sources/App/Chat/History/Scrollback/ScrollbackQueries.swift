@@ -1,6 +1,7 @@
 // Copyright (c) 2016 - 2018 Codeux Software, LLC & respective contributors.
 // SPDX-License-Identifier: BSD-3-Clause
 
+import CocoaExtensions
 import CoreData
 import Foundation
 import os
@@ -198,6 +199,23 @@ nonisolated enum ScrollbackQueries {
 			forKey: ScrollbackAttribute.sessionID.rawValue
 		)
 		return true
+	}
+
+	static func replace(_ entry: ScrollbackEntry, in context: NSManagedObjectContext) -> ScrollbackReplacementOutcome {
+		let request = NSFetchRequest<NSManagedObject>(entityName: entityName)
+		request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
+			NSPredicate(format: "%K == %@", ScrollbackAttribute.viewID.rawValue, entry.viewIdentifier),
+			NSPredicate(format: "%K == %@", ScrollbackAttribute.lineID.rawValue, entry.uniqueIdentifier),
+		])
+		do {
+			let rows = try context.fetch(request)
+			guard !rows.isEmpty else { return .missing }
+			for row in rows {
+				// Preserve physical cursors and insertion order already handed to views.
+				row.setValue(entry.data, forKey: ScrollbackAttribute.lineData.rawValue)
+			}
+			return .replaced
+		} catch { return .failed(error.localizedDescription) }
 	}
 
 	@discardableResult

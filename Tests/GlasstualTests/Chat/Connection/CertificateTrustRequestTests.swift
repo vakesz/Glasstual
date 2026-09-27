@@ -144,4 +144,26 @@ struct CertificateTrustRequestTests {
 		let next = try #require(panel.beginTrustRequest(decided: { _ in }))
 		next.cancel()
 	}
+
+	@Test("Shutdown and strict TLS refuse certificate overrides before requesting a prompt", arguments: [false, true])
+	func refusesOverridesWhenProhibited(applicationIsTerminating: Bool) {
+		let application = RecordingApplicationState()
+		application.applicationIsTerminating = applicationIsTerminating
+		let panel = CertificatePresenter()
+		let session = ServerSession(config: ServerConfig(), environment: ChatEnvironment(
+			settings: .current(), services: ChatServices(applicationState: application, certificates: panel)
+		))
+		var config = ConnectionConfig()
+		config.connectionRequiresTrustedCertificate = !applicationIsTerminating
+		let connection = Connection(config: config, onSession: session)
+		session.socket = connection
+		defer { session.socket = nil }
+		let decisions = Mutex<[Bool]>([])
+
+		connection.requestCertificateTrust { trusted in decisions.withLock { $0.append(trusted) } }
+
+		#expect(decisions.withLock { $0 } == [false])
+		#expect(connection.certificateTrustWasOverridden == false)
+		#expect(connection.certificateTrustRequest == nil)
+	}
 }

@@ -48,14 +48,4 @@ struct MainWindowConnectionPresentationTests {
 		#expect(first.isReconnecting)
 		#expect(second.isReconnecting)
 	}
-
-	@Test("A narrow member rail yields space and restores its preferred width")
-	func railFitsAvailableSpace() {
-		let minimum = MainWindowConstants.conversationMinimumWidth + MemberListLayout.handleWidth
-		#expect(MainWindowMemberRail.effectiveWidth(preferred: 260, available: minimum + 159) == nil)
-		#expect(MainWindowMemberRail.effectiveWidth(preferred: 260, available: minimum + 160) == 160)
-		#expect(MainWindowMemberRail.effectiveWidth(preferred: 260, available: minimum + 210) == 210)
-		#expect(MainWindowMemberRail.effectiveWidth(preferred: 260, available: minimum + 400) == 260)
-		#expect(MainWindowMemberRail.effectiveWidth(preferred: 100, available: minimum + 400) == 160)
-	}
 }

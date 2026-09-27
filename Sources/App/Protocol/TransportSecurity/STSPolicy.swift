@@ -74,8 +74,8 @@ nonisolated struct STSPolicy: Sendable, Equatable {
 
 /** The `sts` capability's parsed key/value list.
 
- A value: capability negotiation parses one, the policy store reads it, and
- nothing keeps it past the negotiation that built it. */
+ Capability negotiation parses the offer; an authenticated connection retains
+ its last persistence offer to renew the policy when it closes. */
 struct STSCapabilityValues: Hashable, Sendable, CustomStringConvertible {
 	private(set) var port: UInt16 = 0
 	private(set) var hasDuration = false
@@ -103,7 +103,9 @@ struct STSCapabilityValues: Hashable, Sendable, CustomStringConvertible {
 			case "duration":
 				if isDecimalNumber(keyValue), let duration = Double(keyValue) {
 					result.hasDuration = true
-					result.duration = duration
+					// The wire integer has no upper bound. Keep an overflowing
+					// offer enforceable without persisting a non-finite expiry.
+					result.duration = min(duration, .greatestFiniteMagnitude)
 				}
 
 				recognizedKey = true

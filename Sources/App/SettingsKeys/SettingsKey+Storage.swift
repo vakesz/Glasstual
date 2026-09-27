@@ -19,9 +19,7 @@ nonisolated extension UserDefaults { // nonisolated: guarded
 		set { self[stored: key] = newValue }
 	}
 
-	/** The stored value, or `nil` when nothing has been written and no default
-	 was registered. Reading through this is how a setting whose "unset" state is
-	 meaningful keeps it distinguishable from its default. */
+	/// Reads persisted or registered values without substituting the declaration's default.
 	subscript<Value>(stored key: SettingsKey<Value>) -> Value? {
 		get {
 			guard let object = store(for: key.storage).object(forKey: key.name) else {
@@ -39,9 +37,7 @@ nonisolated extension UserDefaults { // nonisolated: guarded
 			}
 
 			guard let object = newValue.settingObject else {
-				/* A value with no stored representation leaves what is already
-				 there alone. Writing a placeholder would discard the setting
-				 and shadow the declared default with something unreadable. */
+				// Keep the existing value when conversion cannot produce a storable value.
 				return
 			}
 
@@ -63,8 +59,7 @@ nonisolated extension UserDefaults { // nonisolated: guarded
 		store(for: key.storage).removeObject(forKey: key.name)
 	}
 
-	/** The stored value of a key whose shape belongs to the subsystem that
-	 writes it, narrowed out of the `Any` `UserDefaults` returns. */
+	/// Reads a property-list value whose structure is defined by its owning subsystem.
 	func propertyListValue(for key: some AnySettingsKey) -> PropertyListValue? {
 		store(for: key.storage).object(forKey: key.name)
 			.flatMap(PropertyListValue.init(propertyList:))
@@ -75,54 +70,33 @@ nonisolated extension UserDefaults { // nonisolated: guarded
 	}
 }
 
-extension SettingsKeys {
-	/** The shared store, which the main actor keeps for the lifetime of the
-	 process so bindings observe one object and a read costs nothing. */
-	@MainActor
-	static var defaults: GlasstualUserDefaults {
-		GlasstualUserDefaults.container
-	}
-}
-
 extension SettingsKey {
 	/// The effective value in the shared store: what the user chose, or the
 	/// declared default.
 	@MainActor
 	var value: Value {
-		get { SettingsKeys.defaults[self] }
-		nonmutating set { SettingsKeys.defaults[self] = newValue }
+		get { GlasstualUserDefaults.container[self] }
+		nonmutating set { GlasstualUserDefaults.container[self] = newValue }
 	}
 
 	/// The stored value, or `nil` when nothing has been written and no default
 	/// was registered.
 	@MainActor
 	var storedValue: Value? {
-		get { SettingsKeys.defaults[stored: self] }
-		nonmutating set { SettingsKeys.defaults[stored: self] = newValue }
+		get { GlasstualUserDefaults.container[stored: self] }
+		nonmutating set { GlasstualUserDefaults.container[stored: self] = newValue }
 	}
 }
 
-/** ``SettingsKey/value`` and ``SettingsKey/storedValue`` through a private
- handle on the store, for code that runs outside the main actor.
-
- Every access builds a handle, and there is no shared one to hand out instead:
- `UserDefaults` is not `Sendable`, so nothing outside an actor may hold one for
- the process. Code that reads in a loop — a sort comparator, a rendered line, a
- member row — takes one `GlasstualUserDefaults.suite()` into a local and
- subscripts that with the keys it needs.
-
- An extension of its own, marked as a whole, rather than two unmarked members
- beside the main-actor ones above: the key is a value type, and every access
- here goes through `GlasstualUserDefaults`, a handle on a suite Foundation
- synchronizes. `UntypedSettingsKey` carries the same pair below for the same
- reason. */
+/// Accesses the Foundation-synchronized suite through a new handle per call.
+/// For repeated reads, keep one local `GlasstualUserDefaults.suite()` handle.
 nonisolated extension SettingsKey {
 	var detachedValue: Value {
 		get { GlasstualUserDefaults.suite()[self] }
 		nonmutating set { GlasstualUserDefaults.suite()[self] = newValue }
 	}
 
-	/// ``detachedValue``, but `nil` where nothing has been written.
+	/// Reads persisted or registered values without substituting the declaration's default.
 	var detachedStoredValue: Value? {
 		get { GlasstualUserDefaults.suite()[stored: self] }
 		nonmutating set { GlasstualUserDefaults.suite()[stored: self] = newValue }
@@ -130,29 +104,20 @@ nonisolated extension SettingsKey {
 }
 
 extension AnySettingsKey {
-	/// The stored value, for the handful of keys whose value shape belongs to
-	/// the subsystem that writes it.
+	/// The property-list value defined by the key's owning subsystem.
 	@MainActor
 	var propertyListValue: PropertyListValue? {
-		get { SettingsKeys.defaults.propertyListValue(for: self) }
-		nonmutating set { SettingsKeys.defaults.setPropertyListValue(newValue, for: self) }
+		get { GlasstualUserDefaults.container.propertyListValue(for: self) }
+		nonmutating set { GlasstualUserDefaults.container.setPropertyListValue(newValue, for: self) }
 	}
 
 	@MainActor
 	func reset() {
-		SettingsKeys.defaults.removeValue(for: self)
+		GlasstualUserDefaults.container.removeValue(for: self)
 	}
 }
 
-/** ``AnySettingsKey/propertyListValue`` through the private handle on the
- store, for code that runs outside the main actor.
-
- It lives on the untyped key rather than on the `AnySettingsKey` extension
- above, whose members are main-actor: a lone `nonisolated` member there would be
- an isolation claim about a protocol requirement, where `UntypedSettingsKey` is
- a value type whose extension is nonisolated as a whole — as the typed key's
- detached pair is. Every access goes through `GlasstualUserDefaults`, a handle on
- a suite Foundation synchronizes. */
+/// Reads subsystem-defined property-list values through a new local suite handle.
 nonisolated extension UntypedSettingsKey {
 	var detachedPropertyListValue: PropertyListValue? {
 		get { GlasstualUserDefaults.suite().propertyListValue(for: self) }

@@ -2,6 +2,7 @@
 // Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
 // SPDX-License-Identifier: BSD-3-Clause
 
+import CocoaExtensions
 import Foundation
 import os
 
@@ -75,6 +76,6 @@ extension Connection {
 	private func convertToCommonEncoding(_ string: String) -> Data? {
 		guard let session else { return nil }
 
-		return session.convert(toCommonEncoding: string)
+		return session.encodeIRCLine(string)
 	}
 }

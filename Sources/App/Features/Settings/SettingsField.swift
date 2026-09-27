@@ -3,27 +3,20 @@
 
 import SwiftUI
 
-/** What a field that writes on completion edits: the stored value as text,
- and a write that says whether the store took the entry.
-
- The store is the judge of what it accepts, and only it knows: comparing what
- reads back with what was typed calls `08` or `+5` a rejection when the store
- simply wrote `8` and `5`. */
+/// Provides the stored text and a write operation that reports validation success.
+/// The write result distinguishes rejected input from accepted normalization, such as `08` to `8`.
 struct SettingsFieldValue {
 	let text: () -> String
 	let write: (String) -> Bool
 }
 
-/** What a field that writes on completion is holding.
-
- Nothing reaches the store while an entry is being typed, and the store is the
- judge of what it accepts: an entry it refused is one the field reports and
- then forgets. */
+/// Holds uncommitted text and the result of the last validation attempt.
 struct SettingsFieldDraft {
+	let identifier = UUID()
 	private var edited: String?
 	private(set) var wasRejected = false
 
-	/// What the field shows: the entry in progress, or the stored value.
+	/// Shows the draft until completion, then the current stored value.
 	func displayed(_ stored: String) -> String {
 		edited ?? stored
 	}
@@ -47,14 +40,11 @@ struct SettingsFieldDraft {
 	}
 }
 
-/** A field that writes when editing ends rather than as it is typed.
-
- A value written per keystroke reaches a store that validates it, and a store
- that refuses "2" on the way to "2000" snaps the field back mid-word. */
+/// Validates when editing ends so incomplete input, such as `2` on the way to `2000`, remains editable.
 struct SettingsCommittedField: View {
 	let title: LocalizedStringResource
 	let value: SettingsFieldValue
-	/// Shown under the field when the store refused the last entry.
+	/// Shown when validation rejects the last entry.
 	var rejectionMessage: LocalizedStringResource?
 
 	@State private var draft = SettingsFieldDraft()
@@ -75,16 +65,18 @@ private struct SettingsCommittedInput: View {
 
 	var body: some View {
 		VStack(alignment: .leading, spacing: UISpacing.tight) {
-			TextField("", text: Binding(get: { draft.displayed(value.text()) }, set: { draft.edit($0) }))
+			TextField("", text: Binding(get: { draft.displayed(value.text()) }, set: edit))
 				.labelsHidden()
 				.accessibilityLabel(Text(title))
 				.focused($isFocused)
-				.onSubmit { draft.commit(to: value) }
+				.onSubmit(finishEditing)
 				.onChange(of: isFocused) { _, hasFocus in
 					if hasFocus == false {
-						draft.commit(to: value)
+						finishEditing()
 					}
 				}
+				// A pane can leave the hierarchy before focus changes are delivered.
+				.onDisappear(perform: finishEditing)
 
 			if draft.wasRejected, let rejectionMessage {
 				Text(rejectionMessage)
@@ -93,15 +85,23 @@ private struct SettingsCommittedInput: View {
 			}
 		}
 	}
+
+	private func edit(_ text: String) {
+		SettingsEditingSession.shared.track(draft.identifier) { draft.commit(to: value) }
+		draft.edit(text)
+	}
+
+	private func finishEditing() {
+		SettingsEditingSession.shared.finishEditing(for: draft.identifier)
+	}
 }
 
-/// A field the user can type into, with the values the application ships
-/// reachable from the pop-up beside it.
+/// An editable field with a preset menu.
 struct SettingsComboField: View {
 	private enum Storage {
 		/// Every keystroke is stored.
 		case live(Binding<String>)
-		/// A partially typed entry has to be finished before it is stored.
+		/// Store the value when editing ends.
 		case committed(SettingsFieldValue, rejectionMessage: LocalizedStringResource?)
 	}
 
@@ -155,6 +155,8 @@ struct SettingsComboField: View {
 			.menuStyle(.borderlessButton)
 			.menuIndicator(.hidden)
 			.fixedSize()
+			.accessibilityLabel(Text(title))
+			.accessibilityHint(Text(.Settings.comboPresetsHelp))
 			.help(Text(.Settings.comboPresetsHelp))
 		}
 	}
@@ -162,7 +164,9 @@ struct SettingsComboField: View {
 	private func choose(_ preset: String) {
 		switch storage {
 		case let .live(text): text.wrappedValue = preset
-		case let .committed(value, _): draft.choose(preset, for: value)
+		case let .committed(value, _):
+			draft.choose(preset, for: value)
+			SettingsEditingSession.shared.finishEditing(for: draft.identifier)
 		}
 	}
 }

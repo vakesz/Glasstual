@@ -38,11 +38,15 @@ private actor LoopbackTLSServer {
 	private var peer: NWConnection?
 	private var received = Data()
 
-	init() throws {
+	init(protocolVersion: tls_protocol_version_t? = nil) throws {
 		let identity = try Self.identity()
 		let options = NWProtocolTLS.Options()
 
 		sec_protocol_options_set_local_identity(options.securityProtocolOptions, identity)
+		if let protocolVersion {
+			sec_protocol_options_set_min_tls_protocol_version(options.securityProtocolOptions, protocolVersion)
+			sec_protocol_options_set_max_tls_protocol_version(options.securityProtocolOptions, protocolVersion)
+		}
 
 		listener = try NWListener(using: NWParameters(tls: options))
 	}
@@ -116,6 +120,15 @@ private actor LoopbackTLSServer {
 			try await Task.sleep(for: .milliseconds(10))
 		}
 		return []
+	}
+
+	func serverName() async throws -> String? {
+		let peer = try await readyPeer()
+		guard let metadata = peer.metadata(definition: NWProtocolTLS.definition) as? NWProtocolTLS.Metadata,
+		      let name = sec_protocol_metadata_copy_server_name(metadata.securityProtocolMetadata)
+		else { return nil }
+		defer { free(UnsafeMutableRawPointer(mutating: name)) }
+		return String(cString: name)
 	}
 
 	private func readyPeer() async throws -> NWConnection {
@@ -278,6 +291,23 @@ nonisolated struct AsyncCertificateValidationLoopbackTests {
 		#expect(SecureTransportSupport.description(forCipherSuite: secured.cipherSuite) != "Unknown")
 	}
 
+	@Test("TLS 1.2 and 1.3 both report the negotiated version", arguments: [tls_protocol_version_t.TLSv12, .TLSv13])
+	@concurrent
+	func supportedProtocolVersions(protocolVersion: tls_protocol_version_t) async throws {
+		let outcome = try await Self.driveHandshake(answering: true, serverProtocolVersion: protocolVersion)
+		#expect(outcome.secured?.protocolVersion == protocolVersion)
+		#expect(outcome.registration == ["CAP LS 302", "NICK tester", "USER tester 0 * :Tester"])
+	}
+
+	@Test("A DNS endpoint supplies the TLS server name and certificate policy host")
+	@concurrent
+	func dnsEndpointPreservesServerIdentity() async throws {
+		let outcome = try await Self.driveHandshake(answering: true, serverAddress: "localhost")
+		#expect(outcome.serverName == "localhost")
+		#expect(outcome.policyName == "localhost")
+		#expect(outcome.secured != nil)
+	}
+
 	@Test("Registration and certificate export do not depend on a pending TLS send")
 	@concurrent
 	func registrationAndTrustExportRemainLive() async throws {
@@ -299,6 +329,33 @@ nonisolated struct AsyncCertificateValidationLoopbackTests {
 		#expect(outcome.connectedBeforeTrust == false)
 	}
 
+	@Test("STS refuses an untrusted certificate without offering an override", arguments: [false, true])
+	@concurrent
+	func strictTrustCannotBeOverridden(validatesCertificateChain: Bool) async throws {
+		let outcome = try await Self.driveHandshake(
+			answering: true, requiresTrustedCertificate: true,
+			validatesCertificateChain: validatesCertificateChain
+		)
+		#expect(outcome.disconnected)
+		#expect(outcome.trustRequested == false)
+		#expect(outcome.received.isEmpty)
+		#expect(outcome.secured == nil)
+		let error = try #require(outcome.disconnectError as NSError?)
+		#expect(error.domain == connectionErrorDomain)
+		#expect(error.code == Int(ConnectionErrorCode.badCertificate.rawValue))
+	}
+
+	@Test("A missing configured client identity fails instead of connecting anonymously")
+	@concurrent
+	func missingClientIdentityFailsClosed() async throws {
+		let outcome = try await Self.driveHandshake(answering: true, clientCertificateReference: Data([0, 1, 2]))
+		#expect(outcome.disconnected)
+		#expect(outcome.disconnectError != nil)
+		#expect(outcome.trustRequested == false)
+		#expect(outcome.secured == nil)
+		#expect(outcome.registration.isEmpty)
+	}
+
 	// MARK: - The harness
 
 	struct Secured: Sendable {
@@ -314,20 +371,33 @@ nonisolated struct AsyncCertificateValidationLoopbackTests {
 		var connectedBeforeTrust = false
 		var registration: [String] = []
 		var disconnected = false
+		var trustRequested = false
+		var policyName: String?
+		var serverName: String?
 	}
 
 	/** Connects the real service to the loopback listener, sends
 	 answers the trust prompt, sends ``testLines`` after an accepted handshake,
 	 and collects what the application was told. */
-	static func driveHandshake(answering trusted: Bool, closeDuringTrust: Bool = false) async throws -> Outcome {
-		let server = try LoopbackTLSServer()
+	static func driveHandshake(
+		answering trusted: Bool,
+		closeDuringTrust: Bool = false,
+		requiresTrustedCertificate: Bool = false,
+		validatesCertificateChain: Bool = true,
+		clientCertificateReference: Data? = nil,
+		serverProtocolVersion: tls_protocol_version_t? = nil,
+		serverAddress: String = "127.0.0.1"
+	) async throws -> Outcome {
+		let server = try LoopbackTLSServer(protocolVersion: serverProtocolVersion)
 		let port = try await server.start()
 
 		var config = ConnectionConfig()
-		config.serverAddress = "127.0.0.1"
+		config.serverAddress = serverAddress
 		config.serverPort = port
 		config.connectionPrefersSecuredConnection = true
-		config.connectionShouldValidateCertificateChain = true
+		config.connectionShouldValidateCertificateChain = validatesCertificateChain
+		config.connectionRequiresTrustedCertificate = requiresTrustedCertificate
+		config.identityClientSideCertificate = clientCertificateReference
 
 		let (events, continuation) = AsyncStream<HostEvent>.makeStream()
 		let shim = HostSessionShim(events: continuation)
@@ -368,11 +438,13 @@ nonisolated struct AsyncCertificateValidationLoopbackTests {
 		for await event in events {
 			switch event {
 			case let .requestInsecureCertificateTrust(answer):
+				outcome.trustRequested = true
 				host.exportSecureConnectionInformation { information in
 					continuation.yield(.exportedTrust(information, answer))
 				}
 			case let .exportedTrust(information, answer):
 				outcome.exportedCertificate = information.certificateChain.isEmpty == false
+				outcome.policyName = information.policyName
 				if closeDuringTrust {
 					host.close()
 					break
@@ -408,6 +480,7 @@ nonisolated struct AsyncCertificateValidationLoopbackTests {
 
 		if trusted, outcome.secured != nil {
 			outcome.registration = try await server.registrationLines()
+			outcome.serverName = try await server.serverName()
 		}
 		host.close()
 

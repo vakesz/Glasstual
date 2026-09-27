@@ -70,6 +70,49 @@ struct ScrollbackRetentionTests {
 		)
 	}
 
+	@Test("A cancelled retention pass cannot clear its replacement", .timeLimit(.minutes(1)))
+	func cancelledPassPreservesReplacement() async throws {
+		let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+		try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+		defer { try? FileManager.default.removeItem(at: directory) }
+		let scheduledCount = Mutex(0)
+		let (started, didStart) = AsyncStream<Void>.makeStream()
+		let (gate, release) = AsyncStream<Void>.makeStream()
+		defer {
+			didStart.finish()
+			release.finish()
+		}
+		let store = ScrollbackStore(
+			filenameSetting: ScrollbackFilenameFixture().store,
+			resizeDelay: {
+				scheduledCount.withLock { count in
+					count += 1
+					return count == 1 ? .zero : .seconds(1800)
+				}
+			},
+			willPerform: { operation in
+				guard operation == .resize else { return }
+				didStart.yield(())
+				for await _ in gate {}
+			}
+		)
+		#expect(await store.openDatabase(inDirectory: directory.path).isOpen)
+		for index in 0 ..< 8 {
+			#expect(await store.writeChatLine(entry("line-\(index)")) == .accepted)
+		}
+		await store.setMaximumLineCount(6)
+		var iterator = started.makeAsyncIterator()
+		_ = await iterator.next()
+
+		await store.setMaximumLineCount(3)
+		#expect(scheduledCount.withLock { $0 } == 2)
+		release.finish()
+		// The write waits behind the cancelled pass and must reuse its replacement.
+		#expect(await store.writeChatLine(entry("line-8")) == .accepted)
+		#expect(scheduledCount.withLock { $0 } == 2)
+		#expect(await store.close() == .saved)
+	}
+
 	/** A server-history page is written after the live lines it is older than,
 	 so its rows carry the highest insertion identifiers. Retention has to agree
 	 with the reads about which lines are oldest, or it prunes the conversation

@@ -116,8 +116,7 @@ struct IRCSpecTransportSecurityTests {
 	}
 
 	/// `sts`: over a validated secure connection the policy is stored for the
-	/// advertised duration, pinned to the advertised port — or, when none is
-	/// given, to the port the session is already on.
+	/// advertised duration, pinned to the port the session is already on.
 	@Test("sts: a validated offer stores a policy")
 	func validatedOffersStoreAPolicy() throws {
 		let policyStore = store()
@@ -150,6 +149,18 @@ struct IRCSpecTransportSecurityTests {
 		)
 
 		#expect(action == .stored(port: 7000))
+	}
+
+	@Test("sts: a secure connection ignores a different advertised upgrade port")
+	func secureOffersIgnoreUpgradePort() throws {
+		let policyStore = store()
+		let action = try policyStore.applyCapabilityValues(
+			values("duration=300,port=6697"),
+			forHost: "irc.example.net", connectedPort: 7000,
+			secured: true, certificateChainValidated: true
+		)
+		#expect(action == .stored(port: 7000))
+		#expect(policyStore.enforcedPort(forHost: "irc.example.net") == 7000)
 	}
 
 	/// `sts`: "A duration of 0 means the policy expires immediately", which is
@@ -195,14 +206,15 @@ struct IRCSpecTransportSecurityTests {
 		#expect(policyStore.policy(forHost: "irc.example.net") == nil)
 	}
 
-	/// `duration` is otherwise unbounded, so a server that speaks for a host
-	/// once could pin it for centuries. The stored lifetime is capped.
-	@Test("sts: an absurd duration is capped")
-	func absurdDurationsAreCapped() throws {
+	/// Expiring sooner than advertised can permit a plaintext reconnect while
+	/// the authenticated server's policy still requires TLS.
+	@Test("sts: long advertised durations are not shortened", arguments: [63_072_000, 999_999_999])
+	func longDurationsArePreserved(duration: Int) throws {
 		let policyStore = store()
+		let receivedAt = Date()
 
 		_ = try policyStore.applyCapabilityValues(
-			values("duration=999999999,port=6697"),
+			values("duration=\(duration),port=6697"),
 			forHost: "irc.example.net",
 			connectedPort: 6697,
 			secured: true,
@@ -210,9 +222,9 @@ struct IRCSpecTransportSecurityTests {
 		)
 
 		let policy = try #require(policyStore.policy(forHost: "irc.example.net"))
-		let cap = STSPolicyStore.maximumPolicyDuration
 
-		#expect(policy.expiresAt.timeIntervalSinceNow <= cap + 1)
+		#expect(policy.expiresAt >= receivedAt.addingTimeInterval(TimeInterval(duration)))
+		#expect(policy.expiresAt <= Date(timeIntervalSinceNow: TimeInterval(duration)))
 	}
 
 	/// Host names are case-insensitive, so a policy stored for one spelling

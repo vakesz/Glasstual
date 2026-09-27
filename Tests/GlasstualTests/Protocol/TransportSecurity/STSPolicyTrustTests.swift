@@ -65,4 +65,50 @@ struct STSPolicyTrustTests {
 
 		#expect(action == .upgrade(port: 6697))
 	}
+
+	@Test("A stored STS policy requires trusted TLS even when verification was disabled")
+	func cachedPolicyForcesTrustedTLS() throws {
+		let policyStore = store()
+		policyStore.setPolicy(STSPolicy(port: 6697, expiresAt: .distantFuture, preload: false), forHost: "irc.example.net")
+		let services = ChatServices(stsPolicies: policyStore)
+		var config = ServerConfig()
+		config.serverList = [ServerEndpoint(serverAddress: "irc.example.net", serverPort: 6667)]
+		config.validateServerCertificateChain = false
+		let session = ServerSession(config: config, environment: ChatEnvironment(settings: .current(), services: services))
+		let connection = try #require(session.takeConnectionEndpoint())
+		#expect(connection.serverPort == 6697)
+		#expect(connection.connectionPrefersSecuredConnection)
+		#expect(connection.connectionRequiresTrustedCertificate)
+	}
+
+	@Test("An STS upgrade requires trusted TLS before a persistence policy exists")
+	func upgradeRequiresTrustedTLS() throws {
+		let services = ChatServices(stsPolicies: store())
+		var config = ServerConfig()
+		config.serverList = [ServerEndpoint(serverAddress: "irc.example.net", serverPort: 6667)]
+		let session = ServerSession(config: config, environment: ChatEnvironment(settings: .current(), services: services))
+		session.pendingEndpoint = PendingIRCEndpoint(
+			host: "irc.example.net", port: 6697, secured: true, origin: nil, reason: .stsUpgrade
+		)
+		let connection = try #require(session.takeConnectionEndpoint())
+		#expect(connection.connectionRequiresTrustedCertificate)
+	}
+
+	@Test("Closing a long-lived secure connection renews its last advertised STS duration")
+	func disconnectRenewsExpiredPersistenceOffer() throws {
+		let policyStore = store()
+		let services = ChatServices(stsPolicies: policyStore)
+		let session = ServerSession(config: ServerConfig(), environment: ChatEnvironment(settings: .current(), services: services))
+		let offer = try values(["duration=300", "port=6697"])
+		policyStore.setPolicy(STSPolicy(port: 7000, expiresAt: .distantPast, preload: false), forHost: "irc.example.net")
+		session.activeSTSPolicy = STSConnectionPolicy(host: "irc.example.net", port: 7000, values: offer)
+		let closedAt = Date()
+
+		session.resetAllPropertyValues()
+
+		let renewed = try #require(policyStore.policy(forHost: "irc.example.net"))
+		#expect(renewed.port == 7000)
+		#expect(renewed.expiresAt >= closedAt.addingTimeInterval(300))
+		#expect(session.activeSTSPolicy == nil)
+	}
 }

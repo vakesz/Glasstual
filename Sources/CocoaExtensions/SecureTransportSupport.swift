@@ -215,6 +215,43 @@ public enum SecureTransportSupport {
 		return certificates.map { SecCertificateCopyData($0) as Data }
 	}
 
+	/// Builds the client chain from supplied certificates and local keychains.
+	/// This prepares the identity for presentation; the peer decides whether it
+	/// trusts it. Self-signed IRC identities do not need a locally trusted root.
+	public static func localIdentity(
+		_ identity: SecIdentity,
+		certificateChain: [SecCertificate] = []
+	) throws -> sec_identity_t {
+		var certificate: SecCertificate?
+		let certificateStatus = SecIdentityCopyCertificate(identity, &certificate)
+		guard certificateStatus == errSecSuccess, let certificate else {
+			throw NSError(domain: NSOSStatusErrorDomain, code: Int(certificateStatus == errSecSuccess ? errSecDecode : certificateStatus))
+		}
+
+		var trust: SecTrust?
+		let trustStatus = SecTrustCreateWithCertificates(
+			([certificate] + certificateChain) as CFArray, SecPolicyCreateBasicX509(), &trust
+		)
+		guard trustStatus == errSecSuccess, let trust else {
+			throw NSError(domain: NSOSStatusErrorDomain, code: Int(trustStatus == errSecSuccess ? errSecDecode : trustStatus))
+		}
+		let fetchStatus = SecTrustSetNetworkFetchAllowed(trust, false)
+		guard fetchStatus == errSecSuccess else {
+			throw NSError(domain: NSOSStatusErrorDomain, code: Int(fetchStatus))
+		}
+		_ = SecTrustEvaluateWithError(trust, nil)
+		guard let chain = SecTrustCopyCertificateChain(trust) as? [SecCertificate], !chain.isEmpty else {
+			throw NSError(domain: NSOSStatusErrorDomain, code: Int(errSecCreateChainFailed))
+		}
+
+		// Network.framework already sends the leaf from SecIdentity. Its extra
+		// certificate array must start with the issuer, never repeat the leaf.
+		guard let result = sec_identity_create_with_certificates(identity, Array(chain.dropFirst()) as CFArray) else {
+			throw NSError(domain: NSOSStatusErrorDomain, code: Int(errSecInternalComponent))
+		}
+		return result
+	}
+
 	public static func policyName(in trust: SecTrust) -> String? {
 		var policies: CFArray?
 		guard SecTrustCopyPolicies(trust, &policies) == errSecSuccess,

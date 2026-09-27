@@ -108,6 +108,82 @@ struct ConnectionTerminationTests {
 		#expect(!report.localCloseRequested)
 		#expect(session.socket == nil)
 	}
+
+	@Test("Shutdown closes a late connection callback before registration or credentials", arguments: [false, true])
+	func shutdownRefusesLateStartupCallback(secured: Bool) async throws {
+		let session = TestServerSession()
+		session.setConnectionTransportForTesting(.connecting)
+		session.reconnect.isEnabled = true
+		session.server = ServerEndpoint(serverAddress: "irc.example.test", pendingServerPassword: .set("private-password"))
+		let recorder = TerminationRecorder()
+		let connection = Connection(config: ConnectionConfig(), onSession: session, closeClock: .continuous,
+		                            recordTermination: recorder.record)
+		session.socket = connection
+		session.fixture.applicationState.applicationIsTerminating = true
+		let receiver = connection.callbackReceiver
+
+		if secured {
+			receiver.didSecureConnection(withProtocolType: .TLSv13, cipherSuite: tlsCipherSuiteUnknown)
+		} else {
+			receiver.didConnect(toHost: "127.0.0.1")
+		}
+		_ = try await recorder.next()
+
+		#expect(session.sentCapabilityCommands.count == 0)
+		#expect(session.sentLines.count == 0)
+		#expect(session.socket == nil)
+		#expect(!connection.isConnected)
+		#expect(!connection.isSecured)
+		#expect(!session.reconnect.timer.isActive)
+		#expect(recorder.reports.count == 1)
+		#expect(recorder.reports.first?.localCloseRequested == true)
+	}
+
+	@Test("Shutdown during capability negotiation discards and acknowledges the pending read")
+	func shutdownRefusesRegistrationRead() async throws {
+		let session = TestServerSession()
+		session.setConnectionTransportForTesting(.connected)
+		session.reconnect.isEnabled = true
+		let recorder = TerminationRecorder()
+		let connection = Connection(config: ConnectionConfig(), onSession: session, closeClock: .continuous,
+		                            recordTermination: recorder.record)
+		session.socket = connection
+		session.fixture.applicationState.applicationIsTerminating = true
+		let (acknowledgements, acknowledge) = AsyncStream<Void>.makeStream()
+		connection.callbackReceiver.didReceive([Data("CAP * LS :sasl=PLAIN".utf8)]) {
+			acknowledge.yield()
+			acknowledge.finish()
+		}
+		_ = try await recorder.next()
+		var iterator = acknowledgements.makeAsyncIterator()
+		#expect(await iterator.next() != nil)
+		#expect(session.sentCapabilityCommands.count == 0)
+		#expect(session.sentLines.count == 0)
+		#expect(session.processedMessages.isEmpty)
+		#expect(session.socket == nil)
+		#expect(!session.reconnect.timer.isActive)
+	}
+
+	@Test("Shutdown refuses opening the service before session teardown")
+	func shutdownRefusesServiceStartup() {
+		let session = TestServerSession()
+		var serviceCreated = false
+		let connection = Connection(
+			config: ConnectionConfig(), onSession: session, closeClock: .continuous,
+			makeService: {
+				serviceCreated = true
+				return NSXPCConnection(serviceName: "test.glasstual.unavailable-service")
+			}
+		)
+		session.socket = connection
+		defer { session.socket = nil }
+		session.fixture.applicationState.applicationIsTerminating = true
+
+		connection.open()
+
+		#expect(!serviceCreated)
+		#expect(!connection.isConnecting)
+	}
 }
 
 @MainActor

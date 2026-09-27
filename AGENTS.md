@@ -1,17 +1,16 @@
 # Repository rules
 
-Glasstual targets arm64 macOS 26+. It uses Swift 6, complete strict concurrency
-and main-actor default isolation. All source code is Swift.
+Glasstual targets arm64 macOS 26+ with Swift 6, complete strict concurrency
+and main-actor default isolation. Write all source code in Swift.
 
 ## Ownership and UI
 
 - Before adding or moving app files, read [Sources/App/README.md](Sources/App/README.md).
-  Group code by feature. Name files after their primary type or concern.
-  Keep coupled behavior together; split at an independently changing concern.
+  Follow its ownership and file organization rules.
 - SwiftUI owns layout, navigation, forms, sheets and scenes. Feature models
   own domain state. AppKit adapters own native views, reuse and interaction.
 - Keep these AppKit adapters: main-window responder and restoration shell,
-  `NSMenu` command graph, TextKit input and transcript, reaction popover,
+  `NSMenu` commands, TextKit input and transcript, reaction popover,
   sidebar outline, member and channel tables, search-window geometry probe,
   dock tile and blocking alerts before scene creation.
 - Adapter changes must preserve keyboard commands, focus, selection, drag and
@@ -47,7 +46,7 @@ value that does not escape. Pass `Sendable` snapshots across isolation boundarie
 | `// nonisolated: immutable` | Final class with only `let Sendable` state, including `let Mutex<Value>`. |
 | `// nonisolated: guarded` | Mutable state protected by `Mutex<Value>` or a synchronizing store. |
 
-Keep isolation lint findings at zero. Fix ownership instead of suppressing findings.
+Keep isolation lint findings at zero by fixing ownership.
 
 ## Settings and content
 
@@ -80,6 +79,8 @@ Keep isolation lint findings at zero. Fix ownership instead of suppressing findi
   reason. Do not add path exclusions, baselines, inline disables or blanket
   suppressions.
 - Preserve unrelated changes. Commit only when asked, without AI attribution.
+- Keep Markdown concise and about current behavior. Preserve license notices
+  and provenance; omit change histories and migration narratives.
 - Write new tests with Swift Testing in `Tests/GlasstualTests`, named after
   their subject. Test decisions and runtime contracts. Test runtime names only
   when archives, saved window frames, KVO or protocol constants depend on them.
@@ -94,7 +95,7 @@ Keep isolation lint findings at zero. Fix ownership instead of suppressing findi
 
 Use repository skills under `.agents/skills`. These rules override conflicting
 skill examples. Use macOS 26 APIs directly and verify unfamiliar APIs against
-the installed SDK. Change `project.yml`, never generated Xcode files.
+the installed SDK.
 For slow-type-check diagnostics only, set `SWIFT_TREAT_WARNINGS_AS_ERRORS=NO`.
 Web quality checks apply only to `.github/website`; header-only checks such as
 CSP and HSTS are out of scope on GitHub Pages.

@@ -171,30 +171,3 @@ nonisolated enum ModeParser {
 		return results
 	}
 }
-
-extension ServerSession {
-	func compileListOfModeChanges(
-		forModeSymbol modeSymbol: String,
-		modeIsSet: Bool,
-		parameterString: String
-	) -> [ModeChangeGroup] {
-		compileListOfModeChanges(
-			forModeSymbol: modeSymbol,
-			modeIsSet: modeIsSet,
-			modeParameters: parameterString.components(separatedBy: .whitespaces)
-		)
-	}
-
-	func compileListOfModeChanges(
-		forModeSymbol modeSymbol: String,
-		modeIsSet: Bool,
-		modeParameters: [String]
-	) -> [ModeChangeGroup] {
-		ModeParser.compileModeChanges(
-			symbol: modeSymbol,
-			isSet: modeIsSet,
-			parameters: modeParameters,
-			maximumModes: supportInfo.maximumModeCount
-		)
-	}
-}

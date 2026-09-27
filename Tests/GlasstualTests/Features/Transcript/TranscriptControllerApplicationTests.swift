@@ -39,6 +39,7 @@ struct TranscriptControllerApplicationTests {
 		line.lineType = .privateMessage
 		line.nickname = "alice"
 		line.receivedAt = Date(timeIntervalSince1970: date)
+		line.serverTimestamp = line.receivedAt
 		line.messageIdentifier = UUID().uuidString
 		return line
 	}
@@ -64,25 +65,6 @@ struct TranscriptControllerApplicationTests {
 		controller.print(message) { results.append($0.isDuplicate) }
 		await controller.drainRenderJobs()
 		#expect(results == [false, true])
-	}
-
-	@Test("Buffered rendering is not a viewed timestamp until the transcript is displayed")
-	func bufferedRenderingIsNotViewed() async {
-		let session = ServerSession(config: ServerConfig())
-		let window = window()
-		let controller = TranscriptController(session: session, in: window)
-		defer { controller.tearDown(.permanentRemoval) }
-		controller.historyPageFetcher = { _ in .page([]) }
-		controller.loadsHistoryLazily = { false }
-		let message = line("waiting for the view")
-		var wasDisplayed: Bool?
-		controller.print(message) { wasDisplayed = $0.isDisplayed }
-		await controller.drainRenderJobs()
-		#expect(wasDisplayed == false)
-		#expect(controller.lastRenderedLineDate() == nil)
-		_ = controller.ensureBackingView()
-		await controller.drainRenderJobs()
-		#expect(controller.lastRenderedLineDate() == message.receivedAt)
 	}
 
 	/** A read marker is answered in the turn the line was printed in, before the
@@ -623,8 +605,31 @@ struct TranscriptControllerApplicationTests {
 		#expect(view.displayedLines.last?.body.mentionedNicknames.isEmpty == true)
 	}
 
+	@Test("A msgid-only server can page backward from the displayed message")
+	func messageIdentifierHistoryPage() async throws {
+		try await withServerHistoryController(labeled: true, messageReferenceTypes: "msgid") { session, _, controller in
+			let first = try #require(controller.backingView?.displayedLines.first)
+			let identifier = try #require(first.messageIdentifier)
+			#expect(session.sentLines.compactMap { $0 as? String }.last?.contains("BEFORE #history msgid=\(identifier) 100") == true)
+			let label = try #require(try outgoingHistoryLabel(on: session))
+			session.connectionDidReceive("@label=\(label) BATCH +older chathistory #history")
+			session
+				.connectionDidReceive(
+					"@batch=older;msgid=older-\(identifier);time=1970-01-01T00:01:40.000Z :alice!u@h PRIVMSG #history :earlier"
+				)
+			session.connectionDidReceive("BATCH -older")
+			await controller.drainRenderJobs()
+			#expect(controller.backingView?.displayedLines.first?.body.plainText == "earlier")
+			#expect(controller.serverHistory.request == nil)
+			controller.loadOlderHistory()
+			await controller.drainRenderJobs()
+			#expect(session.sentLines.compactMap { $0 as? String }.last?.contains("BEFORE #history msgid=older-\(identifier) 100") == true)
+		}
+	}
+
 	private func withServerHistoryController(
 		labeled: Bool,
+		messageReferenceTypes: String? = nil,
 		_ body: (TestServerSession, Conversation, TranscriptController) async throws -> Void
 	) async throws {
 		var settings = ChatSettings()
@@ -634,6 +639,9 @@ struct TranscriptControllerApplicationTests {
 		session.enableCapability([.batch, .serverTime, .messageTags, .chatHistory])
 		if labeled {
 			session.enableCapability(.labeledResponse)
+		}
+		if let messageReferenceTypes {
+			session.supportInfo.processConfigurationData("MSGREFTYPES=\(messageReferenceTypes)")
 		}
 		let channel = try #require(session.findConversationOrCreate("#history"))
 		session.setConnectionTransportForTesting(.connected)

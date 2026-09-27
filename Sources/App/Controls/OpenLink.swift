@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 import AppKit
+import CocoaExtensions
 import Foundation
 import os
 

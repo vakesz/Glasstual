@@ -98,6 +98,10 @@ extension SettingsSaveQueue {
 	static let shared = SettingsSaveQueue()
 }
 
+extension SettingsEditingSession {
+	static let shared = SettingsEditingSession()
+}
+
 extension ChatEnvironment {
 	/// Live setting values against the application's services.
 	static var application: ChatEnvironment {

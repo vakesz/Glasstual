@@ -4,12 +4,11 @@
 
 Copyright (c) 2024 Codeux Software, LLC
 
-`SystemInformation.xcstrings`, which was `XRSystemInformation.xcstrings`,
-retains the following attribution:
+`SystemInformation.xcstrings` retains the following attribution:
 
 Copyright (c) 2015 - 2018 Codeux Software, LLC
 
-Please see `ACKNOWLEDGEMENT.txt` for additional information.
+Please see [ACKNOWLEDGEMENT.txt](ACKNOWLEDGEMENT.txt) for additional information.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:

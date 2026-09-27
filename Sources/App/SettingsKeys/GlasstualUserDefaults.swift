@@ -12,24 +12,15 @@ nonisolated extension Notification.Name {
 	)
 }
 
-/** The `userInfo` of ``Notification/Name/userDefaultsDidChange``.
-
- Declared beside the store that posts it so an observer matches the spelling the
- poster writes rather than repeating a literal that nothing checks. */
+/// Shared `userInfo` keys for `Notification.Name.userDefaultsDidChange`.
 nonisolated enum SettingsChangeNotification {
 	/// The name of the setting that changed.
 	static let changedKeyUserInfoKey = "changedKey"
 }
 
-/** The application's settings store.
-
- Nonisolated because a setting is read from both sides of the connection host,
- from the transcript renderer and from the scrollback actor:
- `SettingsKey.detachedValue` takes its own handle through
- ``suite()``, so the type cannot move onto the main actor. Nothing is shared
- across a domain to make it safe -- `UserDefaults` is not `Sendable`, and each
- domain holds a handle of its own -- and the values behind the handles are one
- suite, which Foundation synchronizes. */
+/// The main actor, transcript renderer and scrollback actor use separate
+/// `UserDefaults` handles to one Foundation-synchronized settings suite.
+/// Handles remain in their owning isolation domain; the connection host reads no settings.
 final nonisolated class GlasstualUserDefaults: UserDefaults { // nonisolated: guarded
 	private static let storageSuiteName: String = {
 		#if DEBUG
@@ -60,13 +51,7 @@ final nonisolated class GlasstualUserDefaults: UserDefaults { // nonisolated: gu
 		}()
 	#endif
 
-	/** The handle the main actor keeps for the lifetime of the process, so the
-	 setting reads on every render path do not build one per access.
-
-	 Foundation marks `UserDefaults` non-Sendable, which is why this is not a
-	 process-wide global. It does not need to be one: a suite is a file, and a
-	 second `UserDefaults` over the same suite reads and writes the same values.
-	 Code outside the main actor takes its own handle from ``suite()``. */
+	/// Reuses one handle for main-actor reads. Other isolation domains use `suite()`.
 	@MainActor
 	static let container: GlasstualUserDefaults = {
 		#if DEBUG
@@ -89,13 +74,7 @@ final nonisolated class GlasstualUserDefaults: UserDefaults { // nonisolated: gu
 		self.init(storageSuiteName: Self.storageSuiteName)
 	}
 
-	/** A private handle on the store, for code that is not on the main actor.
-
-	 One suite is one file, so this reads and writes exactly what ``container``
-	 does. Only object identity differs, and identity matters to nothing but KVO
-	 and the `object` a notification is posted with -- neither of which anything
-	 outside the main actor looks at. A caller that reads in a loop should hold
-	 the handle rather than ask for one per read. */
+	/// Creates a handle for the caller's isolation domain. Reuse it within a read loop.
 	static func suite() -> GlasstualUserDefaults {
 		#if DEBUG
 			_ = prepareReviewSettings
@@ -104,21 +83,8 @@ final nonisolated class GlasstualUserDefaults: UserDefaults { // nonisolated: gu
 		return GlasstualUserDefaults(storageSuiteName: storageSuiteName)
 	}
 
-	func setObjectWithoutNotification(_ value: Any?, forKey defaultName: String) {
-		super.set(value, forKey: defaultName)
-	}
-
-	override func set(_ value: Any?, forKey defaultName: String) {
-		set(value, forKey: defaultName, postNotification: true)
-	}
-
-	/** What the suite has persisted for `defaultName`, with no fall-through to
-	 the registration domain.
-
-	 Read straight from the current-user, any-host source, which is the one a
-	 suite writes to. `persistentDomain(forName:)` answers the same question but
-	 also opens the any-user, by-host source, which cfprefsd refuses for an app
-	 group container and detaches from with a warning on every write. */
+	/// Reads persisted data without registration defaults. The current-user,
+	/// any-host source avoids the unsupported app-group lookup performed by `persistentDomain(forName:)`.
 	func persistedObject(forKey defaultName: String) -> Any? {
 		CFPreferencesCopyValue(
 			defaultName as CFString,
@@ -128,12 +94,9 @@ final nonisolated class GlasstualUserDefaults: UserDefaults { // nonisolated: gu
 		)
 	}
 
-	func set(_ value: Any?, forKey defaultName: String, postNotification: Bool) {
-		/* Compared against the persisted value, not `object(forKey:)`: the
-		 latter falls through to the registration domain, so writing a value that
-		 happened to equal the shipped default returned early and nothing was
-		 persisted. The user's explicit choice then looked like "never touched"
-		 and would silently follow a change to the default in a later release. */
+	override func set(_ value: Any?, forKey defaultName: String) {
+		// Compare persisted values so an explicit choice equal to the registered
+		// default is still saved and survives future changes to that default.
 		let oldValue = persistedObject(forKey: defaultName)
 		if let oldValue = oldValue as? NSObject, oldValue.isEqual(value) {
 			return
@@ -141,11 +104,10 @@ final nonisolated class GlasstualUserDefaults: UserDefaults { // nonisolated: gu
 
 		willChangeValue(forKey: defaultName)
 		if value != nil || oldValue != nil {
-			setObjectWithoutNotification(value, forKey: defaultName)
+			super.set(value, forKey: defaultName)
 		}
 		didChangeValue(forKey: defaultName)
 
-		guard postNotification else { return }
 		NotificationCenter.default.post(
 			name: .userDefaultsDidChange,
 			object: self,
@@ -177,12 +139,7 @@ final nonisolated class GlasstualUserDefaults: UserDefaults { // nonisolated: gu
 		set(nil, forKey: defaultName)
 	}
 
-	func registerDefault(_ value: NSCopying, forKey defaultName: String) {
-		register(defaults: [defaultName: value])
-	}
-
-	/// The registration domain, narrowed out of the `Any` the volatile domain
-	/// hands back.
+	/// Registered defaults represented as property-list values.
 	var registeredDefaults: [String: PropertyListValue] {
 		[String: PropertyListValue](
 			propertyList: volatileDomain(forName: UserDefaults.registrationDomain)

@@ -46,10 +46,12 @@ enum ServerConnection {
 	}
 
 	static func connect(using request: ServerConnectionRequest) {
+		guard ChatServices.shared.applicationState?.applicationIsTerminating != true else { return }
 		let identifier = UUID()
 		pendingRequests[identifier] = Task {
 			defer { pendingRequests.removeValue(forKey: identifier) }
-			guard let chatSession = ChatServices.shared.chatSession else { return }
+			guard ChatServices.shared.applicationState?.applicationIsTerminating != true,
+			      let chatSession = ChatServices.shared.chatSession else { return }
 			await ServerConnectionResolution.resolve(
 				using: request,
 				sessions: { chatSession.sessions },

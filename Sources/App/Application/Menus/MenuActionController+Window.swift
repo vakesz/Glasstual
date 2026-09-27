@@ -63,7 +63,7 @@ extension MenuActionController {
 	@objc func sortConversationList(_: Any?) {
 		guard let chatSession else { return }
 		for session in chatSession.sessions {
-			let sorted = session.conversationList.sorted(by: MenuWindowPolicy.channelsOrderedBeforeDirectConversations)
+			let sorted = session.conversationList.sorted(by: ConversationOrdering.channelsFirst)
 			chatSession.setConversationList(sorted, on: session)
 		}
 		chatSession.save()
@@ -94,7 +94,7 @@ extension MenuActionController {
 	}
 
 	@objc func changeAppearance(_ sender: NSMenuItem?) {
-		guard let appearance = MenuWindowPolicy.appearance(for: sender?.command) else { return }
+		guard let appearance = sender?.command?.preferredAppearance else { return }
 		SettingsKeys.Appearance.preferredAppearance.value = appearance
 		SettingsReload.perform(.appearance)
 	}
@@ -112,12 +112,7 @@ extension MenuActionController {
 	}
 
 	@objc func resetSuppressedWarnings(_: Any?) {
-		let defaults = GlasstualUserDefaults.container
-		for key in defaults.dictionaryRepresentation().keys
-			where key.hasPrefix(MenuWindowPolicy.alertSuppressionPrefix)
-		{
-			defaults.set(false, forKey: key)
-		}
+		AlertSuppression.resetAll()
 	}
 
 	func setNotificationsMuted(_ muted: Bool) {
@@ -156,5 +151,15 @@ extension MenuActionController {
 
 	@objc func connectToGlasstualTestingChannel(_: Any?) {
 		ServerConnection.connect(to: .testing)
+	}
+}
+
+/// The order requested by the conversation-sort command.
+enum ConversationOrdering {
+	static func channelsFirst(_ lhs: Conversation, _ rhs: Conversation) -> Bool {
+		if lhs.isChannel != rhs.isChannel {
+			return lhs.isChannel
+		}
+		return lhs.name.lowercased().compare(rhs.name.lowercased()) == .orderedAscending
 	}
 }

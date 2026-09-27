@@ -1,20 +1,13 @@
-## What changed
+## Changes
 
-<!-- One paragraph. Link the issue if there is one. -->
+<!-- State the problem and resulting behavior. Link an issue if relevant. -->
 
-## How to test
+## Validation
 
-<!-- Steps a reviewer can follow. Mention the network or server software if it matters. -->
+<!-- Give reproducible checks and any untested network, signing or release behavior. -->
 
-## Checklist
-
-- [ ] `make lint` and `make format-check` pass
-- [ ] `make test` passes
-- [ ] The app builds and launches in Debug
-- [ ] Changes to `project.yml` were followed by `make generate`
-- [ ] New or migrated Swift is organized by domain or feature under `Sources/`
-- [ ] No Objective-C or C source or headers were added
-- [ ] AppKit is limited to a documented macOS capability adapter with no feature state
-- [ ] UI changes preserve native commands, focus, keyboard behavior, accessibility and restoration
-- [ ] Source moves and rewrites preserve upstream licenses, acknowledgements, and provenance
-- [ ] New user-facing strings are in a feature- or table-namespaced String Catalog and use generated typed resources
+- [ ] `make generate`, `make build`, `make test`, `make e2e-fixtures` and `make lint` pass.
+- [ ] Concurrency changes pass `make tsan` and `make smoke`, when applicable.
+- [ ] UI changes preserve commands, focus, selection, accessibility and restoration.
+- [ ] User-facing text uses feature String Catalogs and generated symbols.
+- [ ] Source changes preserve licenses, attribution and provenance.

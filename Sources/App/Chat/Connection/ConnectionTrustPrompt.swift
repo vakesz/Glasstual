@@ -11,7 +11,7 @@ extension Connection {
 	}
 
 	private var canDecideCertificateTrust: Bool {
-		!terminal && !isDisconnecting && session?.isTerminating == false && session?.socket === self
+		!terminal && !isDisconnecting && session?.canContinueConnecting == true && session?.socket === self
 	}
 
 	func showCertificateDetails() {
@@ -24,6 +24,7 @@ extension Connection {
 
 	func requestCertificateTrust(_ response: @escaping TrustDecisionHandler) {
 		guard
+			!config.connectionRequiresTrustedCertificate,
 			canDecideCertificateTrust, certificateTrustRequest == nil,
 			let request = certificatePresenter?.beginTrustRequest(decided: { [weak self] trusted in
 				let canTrust = self?.canDecideCertificateTrust == true

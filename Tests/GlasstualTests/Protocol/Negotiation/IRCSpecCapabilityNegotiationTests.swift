@@ -51,19 +51,19 @@ struct IRCSpecCapabilityNegotiationTests {
 		}
 		receive(":server 005 me MONITOR=100 :supported")
 		receive("CAP * LS :sasl=PLAIN")
-		receive("CAP me ACK :batch message-tags server-time chathistory labeled-response sasl example/unknown")
+		receive("CAP me ACK :batch message-tags server-time draft/chathistory labeled-response sasl example/unknown")
 		receive(":server 903 me :Authenticated")
 		#expect(session.isCapabilityEnabled(.chatHistory))
 		#expect(session.enabledCapabilitiesStringValue.contains("example/unknown"))
-		receive("CAP me DEL :message-tags sasl")
+		receive("CAP me DEL :message-tags batch sasl")
 		#expect(session.isCapabilityEnabled(.chatHistory) == false)
 		#expect(session.isCapabilityEnabled(.labeledResponse) == false)
 		#expect(session.isCapabilityEnabled(.monitorCommand))
 		#expect(session.isCapabilityEnabled(.isIdentifiedWithSASL))
 		#expect(session.isCapabilityEnabled(.saslGeneric) == false)
 		#expect(session.enabledCapabilityNames.contains("sasl") == false)
-		receive("CAP me NEW :message-tags")
-		receive("CAP me ACK :message-tags")
+		receive("CAP me NEW :message-tags batch")
+		receive("CAP me ACK :message-tags batch")
 		#expect(session.isCapabilityEnabled(.chatHistory))
 		#expect(session.isCapabilityEnabled(.labeledResponse))
 	}
@@ -102,24 +102,24 @@ struct IRCSpecCapabilityNegotiationTests {
 		func receive(_ line: String) {
 			session.connectionDidReceive(line)
 		}
-		receive("CAP me NEW :message-tags")
-		// `labeled-response` needs an acknowledged `message-tags`, so it waits.
+		receive("CAP me NEW :batch")
+		// `labeled-response` needs an acknowledged `batch`, so it waits.
 		receive("CAP me NEW :labeled-response")
-		#expect(capabilityCommands(of: session) == ["REQ message-tags"])
+		#expect(capabilityCommands(of: session) == ["REQ batch"])
 
-		receive("CAP me DEL :message-tags")
+		receive("CAP me DEL :batch")
 		#expect(session.capabilityNegotiation.outstandingRequests.isEmpty)
-		#expect(capabilityCommands(of: session) == ["REQ message-tags"])
+		#expect(capabilityCommands(of: session) == ["REQ batch"])
 
 		// The answer to the withdrawn request arrives late and changes nothing.
-		receive("CAP me ACK :message-tags")
-		#expect(session.isCapabilityEnabled(.messageTags) == false)
-		#expect(capabilityCommands(of: session) == ["REQ message-tags"])
+		receive("CAP me ACK :batch")
+		#expect(session.isCapabilityEnabled(.batch) == false)
+		#expect(capabilityCommands(of: session) == ["REQ batch"])
 
-		receive("CAP me NEW :message-tags")
-		#expect(capabilityCommands(of: session) == ["REQ message-tags", "REQ message-tags"])
-		receive("CAP me ACK :message-tags")
-		#expect(session.isCapabilityEnabled(.messageTags))
+		receive("CAP me NEW :batch")
+		#expect(capabilityCommands(of: session) == ["REQ batch", "REQ batch"])
+		receive("CAP me ACK :batch")
+		#expect(session.isCapabilityEnabled(.batch))
 		#expect(capabilityCommands(of: session).last == "REQ labeled-response")
 		receive("CAP me ACK :labeled-response")
 		#expect(session.labeledResponseTrackingEnabled())
@@ -209,10 +209,10 @@ struct IRCSpecCapabilityNegotiationTests {
 	@Test("A NAK dependency blocks its dependents and CAP END is emitted only once")
 	func rejectedDependencyDoesNotDeadlockOrRepeatEnd() throws {
 		let session = session()
-		try receive("CAP * LS :message-tags labeled-response", on: session)
-		try receive("CAP * NAK :message-tags", on: session)
+		try receive("CAP * LS :batch labeled-response", on: session)
+		try receive("CAP * NAK :batch", on: session)
 		try receive("CAP * DEL :labeled-response", on: session)
-		#expect(capabilityCommands(of: session) == ["REQ message-tags", "END"])
+		#expect(capabilityCommands(of: session) == ["REQ batch", "END"])
 		#expect(session.capabilityNegotiation.outstandingRequests.isEmpty)
 	}
 
@@ -343,19 +343,17 @@ struct IRCSpecCapabilityNegotiationTests {
 	func aliasRemovalProjectsRemainingCapabilities(_ removeStableFirst: Bool) throws {
 		let session = session()
 		session.enableCapability(.monitorCommand)
-		try receive("CAP me ACK :server-time znc.in/server-time-iso read-marker draft/read-marker", on: session)
-		let first = removeStableFirst ? "server-time read-marker" : "znc.in/server-time-iso draft/read-marker"
-		let last = removeStableFirst ? "znc.in/server-time-iso draft/read-marker" : "server-time read-marker"
+		try receive("CAP me ACK :server-time znc.in/server-time-iso", on: session)
+		let first = removeStableFirst ? "server-time" : "znc.in/server-time-iso"
+		let last = removeStableFirst ? "znc.in/server-time-iso" : "server-time"
 
 		try receive("CAP me DEL :\(first)", on: session)
 		#expect(session.isCapabilityEnabled(.serverTime))
-		#expect(session.isCapabilityEnabled(.readMarker))
 		#expect(session.isCapabilityEnabled(.zncServerTimeISO) == removeStableFirst)
 		#expect(session.isCapabilityEnabled(.monitorCommand))
 
 		try receive("CAP me ACK :-" + last.replacingOccurrences(of: " ", with: " -"), on: session)
 		#expect(session.isCapabilityEnabled(.serverTime) == false)
-		#expect(session.isCapabilityEnabled(.readMarker) == false)
 		#expect(session.isCapabilityEnabled(.zncServerTimeISO) == false)
 		#expect(session.isCapabilityEnabled(.monitorCommand))
 	}
@@ -381,15 +379,15 @@ struct IRCSpecCapabilityNegotiationTests {
 		)
 		session.markAsLoggedIn()
 		try receive("CAP me ACK :batch message-tags \(serverTimeName)", on: session)
-		try receive("CAP me NEW :chathistory", on: session)
-		#expect(capabilityCommands(of: session) == ["REQ chathistory"])
+		try receive("CAP me NEW :draft/chathistory", on: session)
+		#expect(capabilityCommands(of: session) == ["REQ draft/chathistory"])
 
 		/* Withdrawing the dependency stops the re-offer: `chathistory` itself is
 		 withdrawn too so that the request is weighed afresh, not skipped for
 		 being outstanding already. */
-		try receive("CAP me DEL :message-tags chathistory", on: session)
+		try receive("CAP me DEL :message-tags draft/chathistory", on: session)
 		session.sentCapabilityCommands.removeAllObjects()
-		try receive("CAP me NEW :chathistory", on: session)
+		try receive("CAP me NEW :draft/chathistory", on: session)
 		#expect(capabilityCommands(of: session).isEmpty)
 	}
 

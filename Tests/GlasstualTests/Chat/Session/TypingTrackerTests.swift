@@ -122,3 +122,69 @@ struct TypingTrackerTests {
 		return channel
 	}
 }
+
+@MainActor
+@Suite("Typing state follows received messages and membership")
+struct TypingReceiptTests {
+	private struct Fixture {
+		let session: TestServerSession
+		let first: Conversation
+		let second: Conversation
+
+		init() throws {
+			let session = TestServerSession(configDictionary: ["nickname": "me"])
+			session.enableCapability(.messageTags)
+			let first = try #require(session.findConversationOrCreate("#one"))
+			let second = try #require(session.findConversationOrCreate("#two"))
+			let alice = session.findUserOrCreate("Alice")
+			for conversation in [first, second] {
+				conversation.addUser(alice)
+				session.typingTracker.noteTypingState(.paused, fromNickname: "Alice", in: conversation)
+			}
+			self.session = session
+			self.first = first
+			self.second = second
+		}
+	}
+
+	@Test("A live message clears only its target's indicator", arguments: [
+		"PRIVMSG #one :hello", "NOTICE #one :hello", "TAGMSG #one",
+	], [true, false])
+	func receivingMessage(_ command: String, _ replayed: Bool) throws {
+		let fixture = try Fixture()
+		let session = fixture.session
+		defer { session.typingTracker.removeAll() }
+		var message = try #require(Message(line: ":Alice!u@h \(command)", on: session))
+		message.isReplayed = replayed
+		session.processIncomingMessageOnMainActor(message)
+		#expect(session.typingTracker.typingNicknames(in: fixture.first) == (replayed ? ["Alice"] : []))
+		#expect(session.typingTracker.typingNicknames(in: fixture.second) == ["Alice"])
+	}
+
+	@Test("Departures clear the affected scope and nick changes retire the old name", arguments: [
+		":Alice!u@h PART #one :left", ":operator!u@h KICK #one Alice :left",
+		":Alice!u@h QUIT :left", ":Alice!u@h QUIT", ":Alice!u@h NICK Alicia",
+		":server KILL Alice :left",
+	], [true, false])
+	func membershipChange(_ line: String, _ printOnly: Bool) throws {
+		let fixture = try Fixture()
+		let session = fixture.session
+		defer { session.typingTracker.removeAll() }
+		var message = try #require(Message(line: line, on: session))
+		message.isPrintOnlyMessage = printOnly
+		session.processIncomingMessageOnMainActor(message)
+		let affectsAll = message.remoteCommand == .quit || message.remoteCommand == .nick || message.remoteCommand == .kill
+		#expect(session.typingTracker.typingNicknames(in: fixture.first) == (printOnly ? ["Alice"] : []))
+		#expect(session.typingTracker.typingNicknames(in: fixture.second) == (!printOnly && affectsAll ? [] : ["Alice"]))
+	}
+
+	@Test("Leaving a conversation clears every remaining typing indicator")
+	func ownDepartureClearsConversation() throws {
+		let fixture = try Fixture()
+		let session = fixture.session
+		defer { session.typingTracker.removeAll() }
+		fixture.first.deactivate()
+		#expect(session.typingTracker.typingNicknames(in: fixture.first).isEmpty)
+		#expect(session.typingTracker.typingNicknames(in: fixture.second) == ["Alice"])
+	}
+}

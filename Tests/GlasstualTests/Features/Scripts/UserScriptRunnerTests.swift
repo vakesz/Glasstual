@@ -10,6 +10,20 @@ import Testing
 struct UserScriptRunnerTests {
 	private static let subroutineNameKeyword = AEKeyword(0x736E_616D)
 
+	@Test("Script results are discarded as soon as application shutdown begins")
+	func applicationShutdownDiscardsOutput() {
+		let session = TestServerSession()
+		session.setConnectionTransportForTesting(.connected)
+		let invocation = ScriptInvocation(session: session, target: nil)
+		#expect(session.scriptInvocationIsCurrent(invocation))
+		session.fixture.applicationState.applicationIsTerminating = true
+
+		session.sendGlasstualCmdScriptResult("/raw PRIVMSG #scripts :late result", to: invocation)
+
+		#expect(session.scriptInvocationIsCurrent(invocation) == false)
+		#expect(session.sentLines.count == 0)
+	}
+
 	@Test("Delayed script output cannot target a replacement connection or channel")
 	func staleScriptDestination() throws {
 		let session = TestServerSession()

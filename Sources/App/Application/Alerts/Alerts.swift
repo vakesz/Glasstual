@@ -69,80 +69,15 @@ enum Alerts {
 	}
 }
 
-// MARK: - Convenience wrappers
-
 extension Alerts {
-	/// A non-blocking alert shown wherever the application can host one. The
-	/// arguments are `AlertRequest`'s own, so the call reads as the request it
-	/// builds.
-	@MainActor
-	static func alert(
-		title: String,
-		body: String,
-		defaultButton: String,
-		alternateButton: String? = nil,
-		otherButton: String? = nil,
-		destructiveButton: AlertDestructiveButton? = nil,
-		cancelButton: AlertResponse? = nil,
-		suppressionKey: String? = nil,
-		suppressionText: String? = nil,
-		completion: AlertCompletion? = nil
-	) {
-		let request = AlertRequest(
-			title: title,
-			body: body,
-			defaultButton: defaultButton,
-			alternateButton: alternateButton,
-			otherButton: otherButton,
-			destructiveButton: destructiveButton,
-			cancelButton: cancelButton,
-			suppressionKey: suppressionKey,
-			suppressionText: suppressionText
-		)
-
-		Task { @MainActor in
-			let outcome = await run(request, on: .anyVisibleWindow)
-			completion?(outcome)
-		}
-	}
-
-	/// A non-blocking sheet on the main window.
-	@MainActor
-	static func alertSheet(
-		title: String,
-		body: String,
-		defaultButton: String,
-		alternateButton: String? = nil,
-		otherButton: String? = nil,
-		destructiveButton: AlertDestructiveButton? = nil,
-		cancelButton: AlertResponse? = nil,
-		suppressionKey: String? = nil,
-		suppressionText: String? = nil,
-		completion: AlertCompletion? = nil
-	) {
-		let request = AlertRequest(
-			title: title,
-			body: body,
-			defaultButton: defaultButton,
-			alternateButton: alternateButton,
-			otherButton: otherButton,
-			destructiveButton: destructiveButton,
-			cancelButton: cancelButton,
-			suppressionKey: suppressionKey,
-			suppressionText: suppressionText
-		)
-
-		alertSheet(request: request, completion: completion)
-	}
-
-	/// The same sheet, taking the request whole. What a caller that already has
-	/// an `AlertRequest` — the protocol layer, through `ServerSessionPresenting` — needs.
-	static func alertSheet(
-		request: AlertRequest,
+	/// Presents a request from a synchronous action and delivers its answer on the main actor.
+	static func present(
+		_ request: AlertRequest,
+		on presentation: AlertPresentation = .mainWindow,
 		completion: AlertCompletion? = nil
 	) {
 		Task { @MainActor in
-			let outcome = await run(request, on: .mainWindow)
+			let outcome = await run(request, on: presentation)
 			completion?(outcome)
 		}
 	}
@@ -179,7 +114,7 @@ enum KeychainAlerts {
 	}
 
 	static func showFailure(_ error: any Error, retry: (() -> Void)? = nil) {
-		Alerts.alertSheet(request: failureAlert(error, canRetry: retry != nil)) { outcome in
+		Alerts.present(failureAlert(error, canRetry: retry != nil)) { outcome in
 			if outcome.response == .default {
 				retry?()
 			}
@@ -197,11 +132,11 @@ enum FileLogAlerts {
 
 	static func reportNoSpace(at now: Date = Date()) {
 		guard !FileLogger.isTerminating, noSpaceAlert.begin(at: now) else { return }
-		Alerts.alert(
+		Alerts.present(AlertRequest(
 			title: PromptStrings.Logging.disabledForLowStorageTitle,
 			body: PromptStrings.Logging.resumeAfterLowStorageBody,
 			defaultButton: PromptStrings.Action.confirmation
-		) { _ in
+		), on: .anyVisibleWindow) { _ in
 			noSpaceAlert.dismiss()
 		}
 	}

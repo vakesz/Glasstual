@@ -221,7 +221,7 @@ struct IRCSpecBatchTests {
 
 		session.enableCapability(.messageTags)
 		session.enableCapability(.echoMessage)
-		session.enableCapability(.labeledResponse)
+		session.enableCapability([.batch, .labeledResponse])
 
 		return session
 	}
@@ -304,22 +304,21 @@ struct IRCSpecBatchTests {
 		#expect(session.deliveryState(forLabel: label) == .none)
 	}
 
-	/// A label can only go out on a `label` tag, so `labeled-response` needs
-	/// `message-tags`; without either there is nothing to correlate with.
-	@Test("labeled-response: no label is issued without message-tags")
+	/// Multi-message responses require the batch capability.
+	@Test("labeled-response: no label is issued without batch")
 	func noLabelWithoutTheCapabilities() throws {
 		let bare = TestServerSession(configDictionary: ["nickname": "me"])
 		let bareChannel = try #require(bare.findConversationOrCreate("#chan"))
 
 		#expect(bare.registerPendingDelivery(for: bareChannel) == nil)
 
-		let untagged = TestServerSession(configDictionary: ["nickname": "me"])
+		let unbatched = TestServerSession(configDictionary: ["nickname": "me"])
 
-		untagged.enableCapability(.labeledResponse)
+		unbatched.enableCapability(.labeledResponse)
 
-		let untaggedChannel = try #require(untagged.findConversationOrCreate("#chan"))
+		let unbatchedChannel = try #require(unbatched.findConversationOrCreate("#chan"))
 
-		#expect(untagged.registerPendingDelivery(for: untaggedChannel) == nil)
+		#expect(unbatched.registerPendingDelivery(for: unbatchedChannel) == nil)
 	}
 
 	/// `labeled-response` does not need `echo-message`: when the server has no
@@ -331,7 +330,7 @@ struct IRCSpecBatchTests {
 		let session = TestServerSession(configDictionary: ["nickname": "me"])
 
 		session.enableCapability(.messageTags)
-		session.enableCapability(.labeledResponse)
+		session.enableCapability([.batch, .labeledResponse])
 
 		#expect(session.labeledResponseTrackingEnabled())
 
@@ -353,8 +352,7 @@ struct IRCSpecBatchTests {
 	func groupedMessagesCarryOneLabel() throws {
 		let session = TestServerSession(configDictionary: ["nickname": "me", "username": "me"])
 
-		session.enableCapability(.messageTags)
-		session.enableCapability(.labeledResponse)
+		session.enableCapability([.batch, .labeledResponse])
 		session.userHostmask = "me!user@example.org"
 		session.supportInfo.processConfigurationData("TARGMAX=PRIVMSG:4")
 
@@ -431,7 +429,8 @@ struct IRCSpecBatchTests {
 		#expect(LabeledResponsePolicy.responseKind(command: RemoteCommand(wireName: "ack")) == .acknowledgement)
 		// A command whose name merely starts the same way is not one of them.
 		#expect(LabeledResponsePolicy.responseKind(command: .note) == .unrelated)
-		// A numeric reply carries no remote command at all.
-		#expect(LabeledResponsePolicy.responseKind(command: nil) == .unrelated)
+		// An away reply still acknowledges that the server handled the command.
+		#expect(LabeledResponsePolicy.responseKind(command: nil, numeric: 401) == .failure)
+		#expect(LabeledResponsePolicy.responseKind(command: nil, numeric: 301) == .acknowledgement)
 	}
 }

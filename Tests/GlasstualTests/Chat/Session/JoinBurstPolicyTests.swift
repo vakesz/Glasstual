@@ -95,15 +95,18 @@ struct ConversationReadMarkerTests {
 	/// The marker is sent at a line's time, so only a line the server stamped
 	/// may place it.
 	@Test("Only a conversation line the server delivered places the read marker", arguments: [
-		(lineType: ChatLineKind.privateMessage, messageIdentifier: "abc" as String?, marks: true),
-		(lineType: ChatLineKind.privateMessage, messageIdentifier: nil as String?, marks: false),
-		(lineType: ChatLineKind.join, messageIdentifier: "abc" as String?, marks: false),
+		(lineType: ChatLineKind.privateMessage, serverTimestamp: Date(timeIntervalSince1970: 100) as Date?, marks: true),
+		(lineType: ChatLineKind.privateMessage, serverTimestamp: nil as Date?, marks: false),
+		(lineType: ChatLineKind.join, serverTimestamp: Date(timeIntervalSince1970: 100) as Date?, marks: false),
 	])
 	func onlyServerStampedConversationLinesPlaceTheMarker(
 		lineType: ChatLineKind,
-		messageIdentifier: String?,
+		serverTimestamp: Date?,
 		marks: Bool
 	) {
-		#expect(ChatHistoryPolicy.marksReadPosition(lineType: lineType, messageIdentifier: messageIdentifier) == marks)
+		var line = ChatLine()
+		line.lineType = lineType
+		line.serverTimestamp = serverTimestamp
+		#expect((line.readMarkerTimestamp != nil) == marks)
 	}
 }

@@ -52,19 +52,6 @@ enum ChatHistoryPolicy {
 	static func shouldAdvanceMarker(candidate: Date, previous: Date?) -> Bool {
 		previous == nil || candidate > previous ?? .distantFuture
 	}
-
-	/** Whether a read marker may be placed at `line`'s time.
-
-	 A marker is a server timestamp, and it is compared with the server time of
-	 every line that arrives after it. Only a line the server delivered — a
-	 conversation line carrying its `msgid` — is stamped on that clock; the
-	 session's own events and a message it printed before any echo are stamped by
-	 the local one. A marker taken from those sat wherever the local clock was,
-	 and a clock running ahead silenced the lines the server sent until it
-	 caught up. */
-	static func marksReadPosition(lineType: ChatLineKind, messageIdentifier: String?) -> Bool {
-		lineType.isConversation && messageIdentifier != nil
-	}
 }
 
 @MainActor
@@ -114,22 +101,35 @@ extension ServerSession {
 	/// outbound transport is what builds the line and attaches the message tags
 	/// a labelled request needs.
 	func chatHistoryLatestArguments(target: String, since date: Date?) -> [String] {
-		["LATEST", target, date.map(chatHistoryTimestamp(for:)) ?? "*", String(chatHistoryRequestLimit())]
+		let reference = supportInfo.chatHistorySupportsTimestamps ? date.map(chatHistoryTimestamp(for:)) : nil
+		return ["LATEST", target, reference ?? "*", String(chatHistoryRequestLimit())]
 	}
 
 	func chatHistoryBeforeArguments(target: String, date: Date) -> [String] {
 		["BEFORE", target, chatHistoryTimestamp(for: date), String(chatHistoryRequestLimit())]
 	}
 
-	func newestKnownLineDate(for conversation: Conversation) -> Date? {
-		let viewDate = conversation.lastLine?.receivedAt
-		let storeDate = Scrollback.shared.duplicates.newestLineDate(forView: conversation.uniqueIdentifier)
+	func chatHistoryBeforeArguments(target: String, request: ServerHistoryRequest) -> [String]? {
+		if supportInfo.chatHistorySupportsMessageIdentifiers,
+		   let identifier = request.messageIdentifier, !identifier.isEmpty,
+		   !identifier.hasPrefix(":"),
+		   !identifier.utf8.contains(where: { $0 == 0 || $0 == 10 || $0 == 13 || $0 == 32 })
+		{
+			return ["BEFORE", target, "msgid=\(identifier)", String(chatHistoryRequestLimit())]
+		}
+		guard supportInfo.chatHistorySupportsTimestamps else { return nil }
+		return chatHistoryBeforeArguments(target: target, date: request.before)
+	}
+
+	func newestKnownServerTimestamp(for conversation: Conversation) -> Date? {
+		let viewDate = conversation.lastLine?.serverTimestamp
+		let storeDate = Scrollback.shared.duplicates.newestReadMarkerTimestamp(forView: conversation.uniqueIdentifier)
 		return [viewDate, storeDate].compactMap(\.self).max()
 	}
 
 	/** The newest line a person wrote in `conversation`, on screen or in storage.
 
-	 A read marker is answered against this rather than ``newestKnownLineDate``:
+	 A read marker is answered against this rather than the most recent local event:
 	 joining prints a join line, a topic and a mode stamped now, and a marker
 	 older than that burst does not mean anything in it went unread. */
 	func newestKnownConversationLineDate(for conversation: Conversation) -> Date? {
@@ -151,7 +151,7 @@ extension ServerSession {
 			.chathistory,
 			arguments: chatHistoryLatestArguments(
 				target: conversation.name,
-				since: newestKnownLineDate(for: conversation)
+				since: newestKnownServerTimestamp(for: conversation)
 			)
 		)
 	}

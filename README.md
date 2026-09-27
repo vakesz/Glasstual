@@ -33,12 +33,10 @@ make build
 make run
 ```
 
-`make build` generates the Xcode project from `project.yml`. Edit that file
-for build settings, targets and entitlements. Generated project files stay
-untracked. The Makefile installs pinned tools when needed and verifies their
-checksums. Builds, test results and archives use Xcode's configured locations.
-Tools are cached in `~/Library/Caches/Glasstual`; E2E logs go to
-`~/Library/Logs/Glasstual`.
+Edit `project.yml` for build settings, targets and entitlements. `make build`
+generates the untracked Xcode project and installs pinned, checksum-verified
+tools as needed. Build artifacts use Xcode's configured locations. Tools use
+`~/Library/Caches/Glasstual`; E2E logs use `~/Library/Logs/Glasstual`.
 
 ## Check changes
 
@@ -51,7 +49,8 @@ make lint
 ```
 
 `make e2e-fixtures` checks loopback peers without launching the app.
-`make e2e` runs the Accessibility tests in a disposable GUI login.
+`make e2e` runs Accessibility tests in a disposable GUI login with consent
+and an Accessibility grant.
 Use `make tsan` and `make smoke` for concurrency changes.
 Run `make help` for all commands.
 

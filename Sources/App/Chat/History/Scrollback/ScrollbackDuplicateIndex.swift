@@ -20,10 +20,11 @@ private nonisolated struct ScrollbackViewIndex: Sendable {
 	/// What one indexed line contributed, so the contribution can be withdrawn
 	/// when the line goes. `nil` where the line carried no such value.
 	struct Contribution: Sendable {
-		var messageIdentifier: String?
+		var messageIdentifier: MessageIdentifierKey?
 		var fallbackKey: String?
 		var receivedAt: Date
 		var isConversation: Bool
+		var readMarkerTimestamp: Date?
 	}
 
 	private struct Entry: Sendable {
@@ -31,7 +32,7 @@ private nonisolated struct ScrollbackViewIndex: Sendable {
 		let generation: UUID
 	}
 
-	private(set) var messageIdentifiers: [String: Int] = [:]
+	private(set) var messageIdentifiers: [MessageIdentifierKey: Int] = [:]
 	private(set) var fallbackKeys: [String: Int] = [:]
 	private var contributions: [String: Entry] = [:]
 	private var generation = UUID()
@@ -42,6 +43,7 @@ private nonisolated struct ScrollbackViewIndex: Sendable {
 	 channel prints a topic, a mode and a join line stamped now, and none of them
 	 is news the badge should count. */
 	private(set) var newestConversationDate: Date?
+	private(set) var newestReadMarkerTimestamp: Date?
 
 	/// Records what `uniqueIdentifier` contributes, and reports whether this
 	/// call added it. A line the index already holds is left alone: the same
@@ -62,6 +64,18 @@ private nonisolated struct ScrollbackViewIndex: Sendable {
 		if contribution.isConversation {
 			newestConversationDate = max(newestConversationDate ?? contribution.receivedAt, contribution.receivedAt)
 		}
+		if let timestamp = contribution.readMarkerTimestamp {
+			newestReadMarkerTimestamp = max(newestReadMarkerTimestamp ?? timestamp, timestamp)
+		}
+		return true
+	}
+
+	mutating func replace(_ contribution: Contribution, for identifier: String) -> Bool {
+		guard let previous = contributions[identifier] else { return false }
+		remove(identifier, updateDates: false)
+		contributions[identifier] = Entry(contribution: contribution, generation: previous.generation)
+		retain(contribution)
+		refreshDates()
 		return true
 	}
 
@@ -86,7 +100,10 @@ private nonisolated struct ScrollbackViewIndex: Sendable {
 		guard let contribution = contributions.removeValue(forKey: uniqueIdentifier)?.contribution else { return }
 		Self.release(contribution.messageIdentifier, from: &messageIdentifiers)
 		Self.release(contribution.fallbackKey, from: &fallbackKeys)
-		if updateDates, contribution.receivedAt == newestDate || contribution.receivedAt == newestConversationDate {
+		if updateDates,
+		   contribution.receivedAt == newestDate || contribution.receivedAt == newestConversationDate
+		   || (contribution.readMarkerTimestamp != nil && contribution.readMarkerTimestamp == newestReadMarkerTimestamp)
+		{
 			refreshDates()
 		}
 	}
@@ -95,6 +112,7 @@ private nonisolated struct ScrollbackViewIndex: Sendable {
 		newestDate = contributions.values.map(\.contribution.receivedAt).max()
 		newestConversationDate = contributions.values.filter(\.contribution.isConversation)
 			.map(\.contribution.receivedAt).max()
+		newestReadMarkerTimestamp = contributions.values.compactMap(\.contribution.readMarkerTimestamp).max()
 	}
 
 	private mutating func retain(_ contribution: Contribution) {
@@ -106,7 +124,7 @@ private nonisolated struct ScrollbackViewIndex: Sendable {
 		}
 	}
 
-	private static func release(_ key: String?, from counts: inout [String: Int]) {
+	private static func release<Key: Hashable>(_ key: Key?, from counts: inout [Key: Int]) {
 		guard let key, let count = counts[key] else { return }
 		if count <= 1 {
 			counts.removeValue(forKey: key)
@@ -151,20 +169,22 @@ final class ScrollbackDuplicateIndex {
 	/// added it rather than finding it already there.
 	@discardableResult
 	func indexChatLine(_ chatLine: ChatLine, forView viewIdentifier: String) -> Bool {
-		let messageIdentifier = chatLine.messageIdentifier
+		viewIndexes[viewIdentifier, default: ScrollbackViewIndex()].add(
+			Self.contribution(of: chatLine), for: chatLine.uniqueIdentifier
+		)
+	}
 
-		return viewIndexes[viewIdentifier, default: ScrollbackViewIndex()].add(
-			ScrollbackViewIndex.Contribution(
-				messageIdentifier: messageIdentifier?.isEmpty == false ? messageIdentifier : nil,
-				fallbackKey: Self.fallbackKey(
-					for: chatLine.receivedAt,
-					nickname: chatLine.nickname,
-					messageBody: chatLine.messageBody
-				),
-				receivedAt: chatLine.receivedAt,
-				isConversation: chatLine.lineType.isConversation
-			),
-			for: chatLine.uniqueIdentifier
+	@discardableResult
+	func replaceChatLine(_ chatLine: ChatLine, forView viewIdentifier: String) -> Bool {
+		viewIndexes[viewIdentifier]?.replace(Self.contribution(of: chatLine), for: chatLine.uniqueIdentifier) ?? false
+	}
+
+	private static func contribution(of line: ChatLine) -> ScrollbackViewIndex.Contribution {
+		ScrollbackViewIndex.Contribution(
+			messageIdentifier: line.messageIdentifier?.isEmpty == false ? line.messageIdentifier.map { MessageIdentifierKey($0) } : nil,
+			fallbackKey: fallbackKey(for: line.receivedAt, nickname: line.nickname, messageBody: line.messageBody),
+			receivedAt: line.receivedAt, isConversation: line.lineType.isConversation,
+			readMarkerTimestamp: line.readMarkerTimestamp
 		)
 	}
 
@@ -182,7 +202,7 @@ final class ScrollbackDuplicateIndex {
 	}
 
 	func containsMessageIdentifier(_ messageIdentifier: String, forView viewIdentifier: String) -> Bool {
-		viewIndexes[viewIdentifier]?.messageIdentifiers[messageIdentifier] != nil
+		viewIndexes[viewIdentifier]?.messageIdentifiers[MessageIdentifierKey(messageIdentifier)] != nil
 	}
 
 	func containsLine(
@@ -212,6 +232,11 @@ final class ScrollbackDuplicateIndex {
 	/// against; `newestLineDate` is what a history request asks from.
 	func newestConversationLineDate(forView viewIdentifier: String) -> Date? {
 		viewIndexes[viewIdentifier]?.newestConversationDate
+	}
+
+	/// Only timestamps actually supplied by the server can be sent as MARKREAD.
+	func newestReadMarkerTimestamp(forView viewIdentifier: String) -> Date? {
+		viewIndexes[viewIdentifier]?.newestReadMarkerTimestamp
 	}
 
 	// MARK: - Deletion

@@ -10,6 +10,42 @@ import Testing
 @MainActor
 @Suite("Server properties sheet")
 struct ServerPropertiesSheetTests {
+	@Test("Reset removes an unresolved client certificate and cancels a pending replacement", .timeLimit(.minutes(1)))
+	func resetUnavailableCertificate() async throws {
+		let sheet = ServerPropertiesSheet(session: nil) { _ in }
+		sheet.model.replace(with: Self.configuration(withSecrets: false))
+		sheet.model.config.identityClientSideCertificate = Data([1])
+		#expect(sheet.model.certificate == nil)
+		let (gate, release) = AsyncStream<Void>.makeStream()
+		let loading = Task { for await _ in gate {}; return Data([2]) }
+		sheet.certificateSelection.resolveReference(using: { await loading.value }, apply: { reference in
+			sheet.model.config.identityClientSideCertificate = reference
+		})
+		let pending = try #require(sheet.certificateSelection.task)
+		sheet.resetCertificate()
+		release.finish()
+		await pending.value
+		#expect(!sheet.certificateSelection.isResolvingReference)
+		#expect(try #require(sheet.model.submittedConfig()).identityClientSideCertificate == nil)
+	}
+
+	@Test("Explicit proxy credentials survive the editor and retain keychain edit intent",
+	      arguments: [ConnectionProxyKind.socks5, .HTTP])
+	func explicitProxyCredentials(proxyType: ConnectionProxyKind) throws {
+		let model = ServerPropertiesModel(config: Self.configuration(withSecrets: false))
+		model.config.proxyType = proxyType
+		model.proxyAddress = "proxy.example.test"
+		model.proxyPort = "8080"
+		model.proxyUsername = "proxy-user"
+		model.proxyPassword = "proxy-secret"
+		let submitted = try #require(model.submittedConfig())
+		#expect(submitted.proxyType == proxyType)
+		#expect(submitted.proxyAddress == "proxy.example.test")
+		#expect(submitted.proxyPort == 8080)
+		#expect(submitted.proxyUsername == "proxy-user")
+		#expect(submitted.pendingProxyPassword == .set("proxy-secret"))
+	}
+
 	@Test("Closing the sheet suppresses identity enumeration that finishes late", .timeLimit(.minutes(1)))
 	func closedCertificateLookupCannotPresent() async throws {
 		let sheet = ServerPropertiesSheet(session: nil) { _ in }
@@ -54,8 +90,9 @@ struct ServerPropertiesSheetTests {
 		#expect(!selection.isResolvingReference)
 	}
 
-	@Test("Save includes a chosen certificate whose keychain reference is still loading", .timeLimit(.minutes(1)))
-	func saveAwaitsSelectedCertificate() async throws {
+	@Test("Save includes a chosen certificate whose keychain reference is still loading", .timeLimit(.minutes(1)),
+	      arguments: [false, true])
+	func saveAwaitsSelectedCertificate(sheetCloses: Bool) async throws {
 		let (saved, didSave) = AsyncStream<ServerConfig>.makeStream()
 		let recorder = CertificateSaveRecorder(saved: didSave)
 		let sheet = ServerPropertiesSheet(session: nil, onSave: recorder.record)
@@ -72,6 +109,12 @@ struct ServerPropertiesSheetTests {
 		sheet.submit()
 		#expect(sheet.model.isSaving)
 		#expect(recorder.savedCount == 0)
+		sheet.cancel()
+		#expect(sheet.model.isSaving)
+		if sheetCloses {
+			sheet.sheetDidEnd()
+		}
+		#expect(saves.hasPendingSaves)
 		let quit = saves.waitForSaves()
 		release.finish()
 		var iterator = saved.makeAsyncIterator()

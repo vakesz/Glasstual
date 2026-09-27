@@ -34,6 +34,11 @@ struct SettingsTransferPreview: Identifiable {
 		self.archive = archive
 		self.current = current
 		self.plans = plans
+		mode = plans[.merge] == nil ? .restore : .merge
+	}
+
+	func supports(_ mode: SettingsTransferMode) -> Bool {
+		plans[mode] != nil
 	}
 
 	/// The plan for the selected mode, or `nil` when the file cannot be applied
@@ -142,6 +147,7 @@ final class SettingsTransferSession {
 	let recoveryStore: SettingsRecoveryStore
 	private let stores: SettingsStores
 	private let sessionSource: SettingsTransferSessionSource
+	private let editing: SettingsEditingSession?
 
 	private var chatSession: ChatSession? {
 		switch sessionSource {
@@ -161,11 +167,18 @@ final class SettingsTransferSession {
 	private let closeWait: Duration
 
 	init(stores: SettingsStores = .live, recoveryDirectory: URL? = nil,
-	     sessionSource: SettingsTransferSessionSource = .application, closeWait: Duration = closeWait)
+	     sessionSource: SettingsTransferSessionSource = .application, closeWait: Duration = closeWait,
+	     editing: SettingsEditingSession? = nil)
 	{
 		self.stores = stores
 		self.sessionSource = sessionSource
 		self.closeWait = closeWait
+		let applicationEditing: SettingsEditingSession? = if case .application = sessionSource {
+			.shared
+		} else {
+			nil
+		}
+		self.editing = editing ?? applicationEditing
 		recoveryStore = SettingsRecoveryStore(directory: recoveryDirectory ?? SettingsRecoveryStore.defaultDirectory)
 	}
 
@@ -193,7 +206,7 @@ final class SettingsTransferSession {
 	var previewMode: SettingsTransferMode {
 		get { preview?.mode ?? .merge }
 		set {
-			guard case var .previewing(preview) = state else { return }
+			guard case var .previewing(preview) = state, preview.supports(newValue) else { return }
 			preview.mode = newValue
 			state = .previewing(preview)
 		}
@@ -274,6 +287,8 @@ final class SettingsTransferSession {
 	}
 
 	func liveSnapshot() throws -> SettingsArchive {
+		// Include the field still being edited, even when focus has not moved.
+		editing?.finishEditing()
 		let sessions: [ServerConfig]
 		if let chatSession {
 			sessions = chatSession.sessions.map { session in
@@ -429,11 +444,19 @@ private nonisolated enum SettingsTransferPreparation {
 	                  current: SettingsArchive) async throws -> [SettingsTransferMode: SettingsTransferPlan]
 	{
 		try Task.checkCancellation()
-		let plans: [SettingsTransferMode: SettingsTransferPlan] = try [
-			.merge: SettingsTransferPlan(archive: archive, current: current, mode: .merge),
-			.restore: SettingsTransferPlan(archive: archive, current: current, mode: .restore),
-		]
+		var plans: [SettingsTransferMode: SettingsTransferPlan] = [:]
+		var firstFailure: (any Error)?
+		for mode in SettingsTransferMode.allCases {
+			do {
+				plans[mode] = try SettingsTransferPlan(archive: archive, current: current, mode: mode)
+			} catch {
+				if firstFailure == nil {
+					firstFailure = error
+				}
+			}
+		}
 		try Task.checkCancellation()
+		guard plans.isEmpty == false else { throw firstFailure ?? SettingsTransferError.invalidDocument }
 		return plans
 	}
 

@@ -103,20 +103,13 @@ final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, CustomK
 		columnModel.attach(to: self)
 	}
 
-	/// Completes the programmatic window graph and starts the application.
+	/// Installs the native adapters and restores the window's own presentation state.
 	func configure() {
 		guard hasConfigured == false else {
 			return
 		}
 
 		hasConfigured = true
-		finishConfiguration()
-	}
-
-	private func finishConfiguration() {
-		let controller: ApplicationDelegate = AppServices.delegate
-		controller.applicationWakeStepOne()
-
 		inputContentView.configure()
 
 		delegate = self
@@ -129,17 +122,7 @@ final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, CustomK
 		updateAppearance()
 		reloadLoadingScreen()
 		loadWindowState()
-		AppServices.theme.reload()
-		controller.menuController?.prepareInitialState()
 		registerKeyHandlers()
-		/* Both have to be listening before the stored sessions are restored:
-		 that restore is what publishes the rows they draw. */
-		controller.installSessionServices()
-		controller.chatSession.setupConfiguration()
-		setupSidebar()
-		DockIcon.drawWithoutCount()
-		observeNotifications()
-		controller.applicationWakeStepTwo()
 	}
 
 	/// The connections the window draws. It is `nil` until the application
@@ -198,7 +181,7 @@ private extension MainWindow {
 // MARK: - Appearance and lifecycle
 
 extension MainWindow {
-	private func observeNotifications() {
+	func observeNotifications() {
 		notifications.observe(.applicationAppearanceChanged) { [weak self] _ in
 			self?.updateAppearance()
 		}

@@ -9,26 +9,11 @@ import Foundation
 /// and servers differ, so this is the widest any network is known to allow.
 nonisolated let defaultHostmaskNicknameLength = 50
 
-/** The longest nickname a name read on `session` may have.
-
- ISUPPORT `NICKLEN` is how long a nickname the server lets *this* session
- register, and it says nothing binding about the names it relays: services, a
- bouncer's module users and other servers' users across a link routinely exceed
- it. Used as a hard limit, a longer nickname failed to parse as a user and the
- whole prefix was read as a server. So the advertised length only ever widens
- the default, never narrows it. */
-@MainActor
-func maximumHostmaskNicknameLength(on session: ServerSession?) -> Int {
-	let advertised = session?.supportInfo.maximumNicknameLength ?? 0
-	return max(Int(clamping: advertised), defaultHostmaskNicknameLength)
-}
-
 /** The string-level questions the protocol layer asks about a name.
 
  Every one of these reads a name the server sent or the user typed and says
- what kind of name it is, or takes it apart. The forms that take a session ask
- the narrower question the connection can answer from ISUPPORT; the ones
- without ask what the grammar alone allows. */
+ what kind of name it is, or takes it apart. These queries use the grammar
+ alone; session-specific ISUPPORT queries live in Chat/Session/SessionNameSyntax. */
 nonisolated extension String { // nonisolated: pure
 	var isValidInternetAddress: Bool {
 		guard isEmpty == false else {
@@ -142,38 +127,5 @@ nonisolated extension String { // nonisolated: pure
 		}
 
 		return CharacterSet.asciiLetters.contains(scalar)
-	}
-}
-
-/** The same questions, narrowed by what one connection advertised.
-
- Each of these reads ISUPPORT off the session, so none is a pure function of its
- arguments and none belongs in the `nonisolated` extension above. */
-extension String {
-	/// The receiver parsed as a hostmask, bounding the nickname by whatever
-	/// length `session` advertised in its ISUPPORT.
-	func hostmask(on session: ServerSession?) -> Hostmask? {
-		Hostmask(
-			parsing: self,
-			maximumNicknameLength: maximumHostmaskNicknameLength(on: session)
-		)
-	}
-
-	func isHostmaskNickname(on session: ServerSession?) -> Bool {
-		Hostmask.isValidNickname(
-			self,
-			maximumLength: maximumHostmaskNicknameLength(on: session)
-		)
-	}
-
-	func isChannelName(on session: ServerSession) -> Bool {
-		guard isEmpty == false else {
-			return false
-		}
-
-		let channelNamePrefixes = session.supportInfo.channelNamePrefixes
-		let firstCharacter = String(prefix(1))
-
-		return hasPrefix("~#") || channelNamePrefixes.contains(firstCharacter)
 	}
 }

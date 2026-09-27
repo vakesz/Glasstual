@@ -1,6 +1,7 @@
 // Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
 // SPDX-License-Identifier: BSD-3-Clause
 
+import CocoaExtensions
 import Foundation
 import os
 

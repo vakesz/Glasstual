@@ -204,6 +204,8 @@ final class ApplicationTermination {
 			return
 		}
 		stage = .finishingSettings
+		SettingsEditingSession.shared.finishEditing()
+		ServerConnection.cancelPendingRequests()
 		var acceptedSaves = SettingsSaveQueue.shared.waitForSaves()
 		settingsTask = Task { [weak self] in
 			while true {
@@ -231,7 +233,6 @@ final class ApplicationTermination {
 		Self.logger.debug("Step one entry")
 
 		stage = .disconnecting
-		ServerConnection.cancelPendingRequests()
 
 		AppServices.appearance.prepareForApplicationTermination()
 
@@ -334,6 +335,8 @@ final class ApplicationTermination {
 
 	private func performStepThree() {
 		Self.logger.debug("Step three entry")
+		// A field may have changed while asynchronous shutdown work was pending.
+		SettingsEditingSession.shared.finishEditing()
 
 		stage = .finished
 

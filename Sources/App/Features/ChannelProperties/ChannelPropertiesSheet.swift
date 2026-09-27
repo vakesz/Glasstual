@@ -12,7 +12,6 @@ final class ChannelPropertiesSheet: SheetSession, ChannelScoped {
 
 	let model: ChannelPropertiesModel
 	private let notifications = NotificationSubscriptions()
-	private var saveTask: Task<Void, Never>?
 	var credentialPersistence = KeychainPersistence.shared
 	var settingsSaves = SettingsSaveQueue.shared
 
@@ -70,7 +69,7 @@ final class ChannelPropertiesSheet: SheetSession, ChannelScoped {
 		}
 		model.isSaving = true
 		let write = credentialPersistence.enqueue(submitted.pendingKeychainEdits, retainsFailureForTermination: false)
-		saveTask = settingsSaves.submit { [self] in
+		settingsSaves.submit { [self] in
 			do {
 				try await write.value
 				let edits = submitted.pendingKeychainEdits
@@ -81,7 +80,6 @@ final class ChannelPropertiesSheet: SheetSession, ChannelScoped {
 				return true
 			} catch {
 				model.isSaving = false
-				saveTask = nil
 				KeychainAlerts.showFailure(error)
 				return false
 			}
@@ -89,7 +87,6 @@ final class ChannelPropertiesSheet: SheetSession, ChannelScoped {
 	}
 
 	private func finishSaving(_ submitted: ConversationConfig) {
-		saveTask = nil
 		model.isSaving = false
 		removeConfigurationObserver()
 		model.config = submitted
@@ -99,9 +96,6 @@ final class ChannelPropertiesSheet: SheetSession, ChannelScoped {
 
 	override func cancel() {
 		guard !model.isSaving else { return }
-		saveTask?.cancel()
-		saveTask = nil
-		model.isSaving = false
 		removeConfigurationObserver()
 		super.cancel()
 	}
@@ -125,13 +119,13 @@ final class ChannelPropertiesSheet: SheetSession, ChannelScoped {
 	 destructive answer, because it throws those edits away. */
 	private func underlyingConfigurationChanged(_ notification: Notification) {
 		guard let channel = notification.object as? Conversation else { return }
-		Alerts.alertSheet(
+		Alerts.present(AlertRequest(
 			title: String(localized: .ChannelProperties.thisChannelsConfigurationHasChangedDo),
 			body: String(localized: .ChannelProperties.youWillLooseUnsavedChangesIf),
 			defaultButton: PromptStrings.Action.cancel,
 			alternateButton: String(localized: .ChannelProperties.reloadButton),
 			destructiveButton: .alternate
-		) { [weak self] outcome in
+		)) { [weak self] outcome in
 			guard let self, outcome.response == .alternate else { return }
 			model.replace(with: channel.config)
 		}

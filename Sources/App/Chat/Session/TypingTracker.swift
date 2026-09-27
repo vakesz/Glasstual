@@ -213,3 +213,19 @@ final class TypingTracker {
 		)
 	}
 }
+
+@MainActor
+extension ServerSession {
+	/// Receiving a message ends that sender's typing state in its destination.
+	/// History cannot clear a live indicator, and an echo belongs to its target.
+	func clearTyping(for message: Message) {
+		guard !message.isReplayed, !message.isPrintOnlyMessage, !message.senderIsServer,
+		      let sender = message.senderNickname, var target = message.params.first else { return }
+		if !supportInfo.extractStatusMessagePrefix(fromTargetNamed: target).isEmpty {
+			target.removeFirst()
+		}
+		let destination = stringIsChannelName(target) || nicknameIsMyself(sender) ? target : sender
+		guard let conversation = findConversation(destination) else { return }
+		typingTracker.noteTypingState(.done, fromNickname: sender, in: conversation)
+	}
+}

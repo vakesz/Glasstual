@@ -64,6 +64,7 @@ struct HighlightsPane: View {
 /// remove buttons.
 struct SettingsKeywordList: View {
 	private static let listHeight = 140.0
+	@Environment(\.isEnabled) private var isEnabled
 
 	let title: LocalizedStringResource
 	let addLabel: LocalizedStringResource
@@ -110,6 +111,7 @@ struct SettingsKeywordList: View {
 			}
 			.frame(height: Self.listHeight)
 			.accessibilityLabel(Text(title))
+			.onDeleteCommand(perform: deleteSelection)
 			.onChange(of: keywords.count, initial: true) { _, count in
 				rowIdentities.match(count: count)
 			}
@@ -136,6 +138,11 @@ struct SettingsKeywordList: View {
 				.disabled(selection == nil)
 			}
 		}
+	}
+
+	private var deleteSelection: (() -> Void)? {
+		guard isEnabled, selection != nil else { return nil }
+		return { remove() }
 	}
 
 	/// The keyword at `index` is reported where it is typed, rather than

@@ -43,3 +43,11 @@ nonisolated enum ScrollbackDeletionOutcome: Sendable {
 	case unavailable
 	case failed(String)
 }
+
+/// Replacing an acknowledged line must never recreate a cleared or pruned row.
+nonisolated enum ScrollbackReplacementOutcome: Equatable, Sendable {
+	case replaced
+	case missing
+	case unavailable
+	case failed(String)
+}

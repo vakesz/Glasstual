@@ -82,6 +82,9 @@ extension TranscriptView {
 	func updateDelivery(_ update: TranscriptDeliveryUpdate) {
 		performEditingBatch {
 			guard let index = document.updateDelivery(update) else { return }
+			if update.replacement != nil {
+				inlineImageLoader.cancelLoads(forView: viewIdentifier, lineNumber: update.lineNumber)
+			}
 			refresh(at: index)
 		}
 	}

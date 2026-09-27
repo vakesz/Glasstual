@@ -230,7 +230,7 @@ struct MenuItemValidator {
 			item.title = MenuCommand.memberListTitle(isVisible: mainWindow.columnModel.isMemberListVisible)
 			return mainWindow.isMainWindow && conversation?.isChannel == true && session?.isLoggedIn == true
 		case .appearanceSystem, .appearanceLight, .appearanceDark:
-			let appearance = MenuWindowPolicy.appearance(for: item.command)
+			let appearance = item.command?.preferredAppearance
 			item.state = appearance == SettingsKeys.Appearance.preferredAppearance.value ? .on : .off
 			return true
 		case .sortChannelList, .centerWindow, .resetWindow:

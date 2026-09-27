@@ -215,6 +215,22 @@ actor ScrollbackSession {
 		}
 	}
 
+	/// Replacement follows its original write and any clear already requested.
+	nonisolated func replace( // nonisolated: pure
+		_ entry: ScrollbackEntry,
+		completion: @escaping @MainActor @Sendable (ScrollbackReplacementOutcome) -> Void
+	) {
+		changes.yield { [self] in
+			let outcome = await replaceEntry(entry)
+			await completion(outcome)
+		}
+	}
+
+	private func replaceEntry(_ entry: ScrollbackEntry) async -> ScrollbackReplacementOutcome {
+		guard await ensureLoaded(), !isTerminating else { return .unavailable }
+		return await store.replaceChatLine(entry)
+	}
+
 	/// Queues a view's removal behind the writes already asked for it, and reports
 	/// whether the queue took it.
 	nonisolated func removeHistory( // nonisolated: pure

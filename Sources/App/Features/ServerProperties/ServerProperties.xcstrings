@@ -1934,25 +1934,25 @@
       }
     },
     "proxy-type-http" : {
-      "comment" : "Proxy option for an anonymous HTTP proxy.",
+      "comment" : "Proxy option for an HTTP CONNECT proxy, with optional credentials.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "HTTP Proxy (Anonymous)"
+            "value" : "HTTP Proxy"
           }
         },
         "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "HTTP-proxy (névtelen)"
+            "value" : "HTTP-proxy"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "HTTP-Proxy (anonym)"
+            "value" : "HTTP-Proxy"
           }
         }
       }

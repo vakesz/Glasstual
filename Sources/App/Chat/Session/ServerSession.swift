@@ -212,6 +212,7 @@ class ServerSession: ChatItem {
 	var sasl: SASLSession
 	var pendingEndpoint: PendingIRCEndpoint?
 	var performedSTSUpgrade = false
+	var activeSTSPolicy: STSConnectionPolicy?
 	var sidebarItemIsExpanded = false {
 		didSet { markConfigurationStaleIfChanged(from: oldValue, to: sidebarItemIsExpanded) }
 	}
@@ -308,7 +309,6 @@ class ServerSession: ChatItem {
 	lazy var typingTracker = TypingTracker(session: self)
 	lazy var typingSender = TypingSender(session: self)
 	var nextMessageReplyIdentifier: String?
-	var nextLineDeliveryState: ChatLineDeliveryState = .none
 	var nextLineReplyToMessageIdentifier: String?
 	/// The chat history this session has asked for and is still waiting on.
 	var chatHistory = ChatHistorySession()

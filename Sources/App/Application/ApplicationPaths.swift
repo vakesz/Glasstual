@@ -313,11 +313,11 @@ nonisolated enum ApplicationPaths {
 			return
 		}
 
-		Alerts.alert(
+		Alerts.present(AlertRequest(
 			title: PromptStrings.Logging.staleLocationTitle,
 			body: PromptStrings.Logging.staleLocationBody,
 			defaultButton: PromptStrings.Action.confirmation
-		)
+		), on: .anyVisibleWindow)
 	}
 
 	private static func firstSearchPath(

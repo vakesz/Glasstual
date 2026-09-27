@@ -26,11 +26,15 @@ actor ScrollbackStore {
 	typealias ResizeDelay = @Sendable () -> Duration
 
 	private enum Lifecycle { case closed, open, closing }
+	private struct ScheduledResize {
+		let identifier: UUID
+		let task: Task<Void, Never>
+	}
+
 	private struct ViewState {
-		var generation = UUID()
 		var totalLineCount: UInt
 		var maximumIdentifier: UInt
-		var resizeTask: Task<Void, Never>?
+		var resize: ScheduledResize?
 	}
 
 	private var lifecycle = Lifecycle.closed
@@ -130,7 +134,7 @@ actor ScrollbackStore {
 		defer { closingCount -= 1; leave() }
 		await willPerform?(.close)
 		for state in views.values {
-			state.resizeTask?.cancel()
+			state.resize?.task.cancel()
 		}
 		guard let context else { lifecycle = .closed; return .saved }
 		let outcome = await context.perform { ScrollbackQueries.quickSave(context) }
@@ -143,7 +147,7 @@ actor ScrollbackStore {
 			// No reset: unsaved objects remain available to saveData or a later close.
 			lifecycle = closingCount == 1 ? .open : .closing
 			for identifier in views.keys {
-				views[identifier]?.resizeTask = nil
+				views[identifier]?.resize = nil
 			}
 			/* Admission cancelled the periodic save. A store that stays open has
 			 to keep saving on its own, or the rows the next writes add wait for a
@@ -165,8 +169,8 @@ actor ScrollbackStore {
 			 due for another half hour. Retiring it is what lets the new limit
 			 arm a pass of its own. */
 			if lowered {
-				views[identifier]?.resizeTask?.cancel()
-				views[identifier]?.resizeTask = nil
+				views[identifier]?.resize?.task.cancel()
+				views[identifier]?.resize = nil
 			}
 			scheduleResize(identifier)
 		}
@@ -204,6 +208,14 @@ actor ScrollbackStore {
 		} catch { return .failed(error.localizedDescription) }
 	}
 
+	func replaceChatLine(_ entry: ScrollbackEntry) async -> ScrollbackReplacementOutcome {
+		guard lifecycle == .open else { return .unavailable }
+		await enter()
+		defer { leave() }
+		guard let context else { return .unavailable }
+		return await context.perform { ScrollbackQueries.replace(entry, in: context) }
+	}
+
 	@discardableResult
 	func forgetView(_ identifier: String) async -> ScrollbackDeletionOutcome {
 		await removeHistory(identifier, forget: true)
@@ -224,13 +236,12 @@ actor ScrollbackStore {
 			ScrollbackQueries.deleteOutcome(.everything, in: context, viewIdentifier: identifier)
 		}
 		if case let .deleted(result) = outcome {
-			views[identifier]?.resizeTask?.cancel()
+			views[identifier]?.resize?.task.cancel()
 			if forget {
 				views.removeValue(forKey: identifier)
 			} else {
-				views[identifier]?.generation = UUID()
 				views[identifier]?.totalLineCount = 0
-				views[identifier]?.resizeTask = nil
+				views[identifier]?.resize = nil
 			}
 			// The one-way notification completes before a newer view generation can enter.
 			if !result.uniqueIdentifiers.isEmpty {
@@ -289,44 +300,44 @@ actor ScrollbackStore {
 	}
 
 	private func scheduleResize(_ identifier: String) {
-		guard lifecycle == .open, let state = views[identifier], state.resizeTask == nil,
+		guard lifecycle == .open, let state = views[identifier], state.resize == nil,
 		      state.totalLineCount > maximumLineCount else { return }
 		let delay = resizeDelay()
-		views[identifier]?.resizeTask = Task { [weak self] in
+		let requestIdentifier = UUID()
+		let task = Task { [weak self] in
 			try? await Task.sleep(for: delay)
 			guard !Task.isCancelled else { return }
-			_ = await self?.resize(identifier, generation: state.generation)
+			_ = await self?.resize(identifier, requestIdentifier: requestIdentifier)
 		}
+		views[identifier]?.resize = ScheduledResize(identifier: requestIdentifier, task: task)
 	}
 
-	/** Hands the view's scheduled-pass slot back, so a later pass can be armed.
-
-	 The slot is the only thing ``scheduleResize`` checks before it arms one, so
-	 a pass that returns without releasing it leaves the view over its limit
-	 until something else replaces the whole view state. A newer generation owns
-	 its own slot and must not have it cleared from under it. */
-	private func releaseResizeSlot(_ identifier: String, generation: UUID?) {
-		guard generation == nil || generation == views[identifier]?.generation else { return }
-		views[identifier]?.resizeTask = nil
+	/// A cancelled pass can finish after a replacement is scheduled for the same view.
+	private func releaseResizeSlot(_ identifier: String, requestIdentifier: UUID?) {
+		guard requestIdentifier == nil || requestIdentifier == views[identifier]?.resize?.identifier else { return }
+		if requestIdentifier == nil {
+			views[identifier]?.resize?.task.cancel()
+		}
+		views[identifier]?.resize = nil
 	}
 
 	@discardableResult
-	func resize(_ identifier: String, generation: UUID? = nil) async -> ScrollbackDeletionOutcome {
+	func resize(_ identifier: String, requestIdentifier: UUID? = nil) async -> ScrollbackDeletionOutcome {
 		guard lifecycle == .open else { return .unavailable }
 		await enter()
 		defer { leave() }
 		await willPerform?(.resize)
-		guard !Task.isCancelled, generation == nil || generation == views[identifier]?.generation,
+		guard !Task.isCancelled, requestIdentifier == nil || requestIdentifier == views[identifier]?.resize?.identifier,
 		      let context
 		else {
-			releaseResizeSlot(identifier, generation: generation)
+			releaseResizeSlot(identifier, requestIdentifier: requestIdentifier)
 			return .unavailable
 		}
 		let limit = maximumLineCount
 		let outcome = await context.perform {
 			ScrollbackQueries.deleteOutcome(.retainingNewest(count: limit), in: context, viewIdentifier: identifier)
 		}
-		releaseResizeSlot(identifier, generation: generation)
+		releaseResizeSlot(identifier, requestIdentifier: requestIdentifier)
 		if case let .deleted(result) = outcome, result.deletedCount > 0 {
 			if let count = views[identifier]?.totalLineCount {
 				views[identifier]?.totalLineCount = count - min(count, result.deletedCount)

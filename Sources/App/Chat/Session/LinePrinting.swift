@@ -44,6 +44,7 @@ struct LinePrintRequest {
 	let escapeMessage: Bool
 	let referenceMessage: Message?
 	let completionBlock: PrintedLineCompletion?
+	var deliveryLabel: String?
 }
 
 extension ServerSession {
@@ -65,6 +66,7 @@ extension ServerSession {
 		isEncrypted: Bool = false,
 		escapeMessage: Bool = true,
 		referenceMessage: Message? = nil,
+		deliveryLabel: String? = nil,
 		completionBlock: PrintedLineCompletion? = nil
 	) {
 		let request = LinePrintRequest(
@@ -77,7 +79,8 @@ extension ServerSession {
 			isEncrypted: isEncrypted,
 			escapeMessage: escapeMessage,
 			referenceMessage: referenceMessage,
-			completionBlock: completionBlock
+			completionBlock: completionBlock,
+			deliveryLabel: deliveryLabel
 		)
 		#if DEBUG
 			if let linePrintObserver {
@@ -172,8 +175,7 @@ private extension ServerSession {
 		var chatLine = ChatLine()
 		chatLine.command = command.lowercased()
 		chatLine.messageIdentifier = request.referenceMessage?.messageIdentifier
-		chatLine.deliveryState = nextLineDeliveryState
-		nextLineDeliveryState = .none
+		chatLine.deliveryState = request.deliveryLabel == nil ? .none : .pending
 
 		let messageReplyIdentifier = request.referenceMessage?.messageTags?["+draft/reply"]
 		let replyIdentifier = messageReplyIdentifier?.isEmpty == false
@@ -201,6 +203,14 @@ private extension ServerSession {
 			previousDate: previousLine?.receivedAt
 		)
 		chatLine.receivedAt = request.receivedAt
+		if let reference = request.referenceMessage, reference.hasServerTime {
+			chatLine.serverTimestamp = reference.receivedAt
+		}
+
+		if let label = request.deliveryLabel {
+			labeledResponses.pending[label]?.printedLine = chatLine
+			labeledResponses.pending[label]?.lineNumber = chatLine.uniqueIdentifier
+		}
 
 		guard let conversation else {
 			printAndLog(chatLine, completionBlock: request.completionBlock)
@@ -227,14 +237,16 @@ private extension ServerSession {
 		let readGeneration = conversation.readStateGeneration
 		let connectionIdentifier = socket?.uniqueIdentifier
 		let isPlayback = lineIsJoinBurst(request.referenceMessage, in: conversation)
+		let readMarkerTimestamp = chatLine.readMarkerTimestamp
 		conversation.print(chatLine) { [weak self, weak conversation] context in
 			request.completionBlock?(context)
 			guard let self, let conversation, !isTerminating,
 			      socket?.uniqueIdentifier == connectionIdentifier,
 			      conversation.associatedSession === self else { return }
 			guard context.isDisplayed, !context.isDuplicate, !isPlayback, conversation.readStateGeneration == readGeneration,
-			      self.output?.isKeyWindow == true, self.output?.isItemVisible(conversation) == true else { return }
-			scheduleReadMarker(for: conversation, date: request.receivedAt)
+			      self.output?.isKeyWindow == true, self.output?.isItemVisible(conversation) == true,
+			      let readMarkerTimestamp else { return }
+			scheduleReadMarker(for: conversation, date: readMarkerTimestamp)
 		}
 	}
 }

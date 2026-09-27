@@ -10,7 +10,7 @@ import AppKit
  that already existed; the seam is what keeps the caller from knowing that. */
 extension MainWindow: ServerSessionPresenting {
 	func presentAlertSheet(_ request: AlertRequest, completion: @escaping AlertCompletion) {
-		Alerts.alertSheet(request: request, completion: completion)
+		Alerts.present(request, completion: completion)
 	}
 
 	func confirm(_ request: AlertRequest) async -> Bool {

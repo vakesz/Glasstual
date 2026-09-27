@@ -91,12 +91,12 @@ nonisolated struct TranscriptRenderContext: Sendable {
 	var members: RenderedMemberDirectory = []
 	/// The server's casemapping, which decides what spells the same name.
 	var caseMapping = ISupportCaseMapping.rfc1459
-	var sessionReactions: [String: ReactionsByEmoji] = [:]
+	var sessionReactions: [MessageIdentifierKey: ReactionsByEmoji] = [:]
 
 	func reactions(for line: ChatLineSnapshot) -> ReactionsByEmoji {
 		let archived = line.reactions ?? [:]
 		guard let identifier = line.messageIdentifier,
-		      let session = sessionReactions[identifier],
+		      let session = sessionReactions[MessageIdentifierKey(identifier)],
 		      session.isEmpty == false
 		else {
 			return archived
@@ -118,6 +118,7 @@ nonisolated struct ChatLineSnapshot: Sendable {
 	var messageBody = ""
 	var command = ""
 	var receivedAt = Date()
+	var serverTimestamp: Date?
 	var lineType = ChatLineKind.undefined
 	var memberType = ChatLineMemberKind.normal
 	var nickname: String?
@@ -148,6 +149,7 @@ nonisolated struct ChatLineSnapshot: Sendable {
 		messageBody = chatLine.messageBody
 		command = chatLine.command
 		receivedAt = chatLine.receivedAt
+		serverTimestamp = chatLine.serverTimestamp
 		lineType = chatLine.lineType
 		memberType = chatLine.memberType
 		nickname = chatLine.nickname

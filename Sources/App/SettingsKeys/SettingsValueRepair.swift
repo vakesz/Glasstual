@@ -98,23 +98,24 @@ nonisolated enum SettingsValueRepair {
 		case .ignoresContent, .ignoresOperators, .limitedToMyself, .logsMatch:
 			return value.boolean == nil ? nil : value
 		case .destination:
-			return integer(value, in: 0 ... 3)
+			guard case let .integer(number) = value, let rawValue = UInt(exactly: number),
+			      MessageRuleDestination(rawValue: rawValue) != nil else { return nil }
+			return value
 		case .ageComparator:
-			return integer(value, in: 0 ... 2)
+			guard case let .integer(number) = value, let rawValue = UInt(exactly: number),
+			      MessageRuleAgeComparator(rawValue: rawValue) != nil else { return nil }
+			return value
 		case .events:
 			// Bits outside the known events mean nothing to the engine, so a
 			// repair clears them rather than losing the events that are known.
 			guard case let .integer(number) = value, number >= 0 else { return nil }
-			return .integer(number & knownRuleEvents)
+			return .integer(number & Int(MessageRuleEvent.all.rawValue))
 		case .ageLimit, .actionFloodControlInterval:
 			return integer(value, in: 0 ... Int.max)
 		case nil:
 			return value
 		}
 	}
-
-	/// Bits 1 through 12: plain text through channel mode changes.
-	private static let knownRuleEvents = 8190
 
 	private static func integer(_ value: PropertyListValue, in range: ClosedRange<Int>) -> PropertyListValue? {
 		guard case let .integer(number) = value, range.contains(number) else { return nil }

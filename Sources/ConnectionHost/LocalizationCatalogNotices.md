@@ -3,7 +3,8 @@
 The following notice and license apply to `ConnectionErrors.xcstrings`:
 
 Copyright (c) 2018 Codeux Software, LLC & respective contributors.
-Please see `Acknowledgements.pdf` for additional information.
+Please see [Acknowledgements.pdf](../App/Resources/Documentation/Acknowledgements.pdf)
+for additional information.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:

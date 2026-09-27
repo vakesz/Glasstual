@@ -15,18 +15,10 @@ final class ServerPropertiesSheet: SheetSession, SessionScoped, ServerProperties
 	let model: ServerPropertiesModel
 
 	private let notifications = NotificationSubscriptions()
-	private var saveTask: Task<Void, Never>?
 	var credentialPersistence = KeychainPersistence.shared
 	var settingsSaves = SettingsSaveQueue.shared
 	let certificateSelection = ClientCertificateSelection()
 	private var certificatePanelRequest: UUID?
-	/* Weak: the window's presentation chain owns a sheet while it is up, so a
-	 child that has been dismissed reads as `nil` here without a callback to
-	 clear it. These four exist only to take the children down with the parent. */
-	private weak var addressBookSheet: AddressBookEntrySheet?
-	private weak var channelSheet: ChannelPropertiesSheet?
-	private weak var highlightSheet: HighlightRuleSheet?
-	private weak var serverEndpointSheet: ServerEndpointListSheet?
 	private weak var clientCertificatePanel: SFChooseIdentityPanel?
 
 	/// The configuration the person accepted.
@@ -87,11 +79,10 @@ final class ServerPropertiesSheet: SheetSession, SessionScoped, ServerProperties
 			certificateSelection.cancel()
 		}
 		model.isSaving = true
-		saveTask = settingsSaves.submit { [self] in
+		settingsSaves.submit { [self] in
 			await pendingCertificate?.value
 			guard let submitted = model.submittedConfig() else {
 				model.isSaving = false
-				saveTask = nil
 				return false
 			}
 			let write = credentialPersistence.enqueue(submitted.pendingKeychainEdits, retainsFailureForTermination: false)
@@ -103,13 +94,12 @@ final class ServerPropertiesSheet: SheetSession, SessionScoped, ServerProperties
 				session?.sessionCredentials.apply(edits)
 				model.config = saved
 				removeConfigurationDidChangeObserver()
-				closeChildSheets()
+				cancelCertificateSelection()
 				onSave(saved)
 				finishSaving()
 				return true
 			} catch {
 				model.isSaving = false
-				saveTask = nil
 				KeychainAlerts.showFailure(error)
 				return false
 			}
@@ -117,18 +107,14 @@ final class ServerPropertiesSheet: SheetSession, SessionScoped, ServerProperties
 	}
 
 	private func finishSaving() {
-		saveTask = nil
 		model.isSaving = false
 		super.submit()
 	}
 
 	override func cancel() {
 		guard !model.isSaving else { return }
-		saveTask?.cancel()
-		saveTask = nil
-		model.isSaving = false
 		removeConfigurationDidChangeObserver()
-		closeChildSheets()
+		cancelCertificateSelection()
 		super.cancel()
 	}
 
@@ -138,7 +124,6 @@ final class ServerPropertiesSheet: SheetSession, SessionScoped, ServerProperties
 			self?.model.applyServerList(serverList)
 		}
 		sheet.start(with: servers)
-		serverEndpointSheet = sheet
 	}
 
 	func addChannel() {
@@ -164,7 +149,6 @@ final class ServerPropertiesSheet: SheetSession, SessionScoped, ServerProperties
 		}
 		sheet.window = window
 		sheet.startSheet()
-		channelSheet = sheet
 	}
 
 	func deleteChannel() {
@@ -198,7 +182,6 @@ final class ServerPropertiesSheet: SheetSession, SessionScoped, ServerProperties
 		}
 		sheet.window = window
 		sheet.startSheet()
-		highlightSheet = sheet
 	}
 
 	func deleteHighlight() {
@@ -253,7 +236,6 @@ final class ServerPropertiesSheet: SheetSession, SessionScoped, ServerProperties
 	private func presentAddressBookSheet(_ sheet: AddressBookEntrySheet) {
 		sheet.window = window
 		sheet.startSheet()
-		addressBookSheet = sheet
 	}
 
 	func deleteAddressBookEntry() {
@@ -293,11 +275,11 @@ final class ServerPropertiesSheet: SheetSession, SessionScoped, ServerProperties
 
 	private func presentCertificatePicker(_ identities: [SecIdentity]) {
 		guard !identities.isEmpty else {
-			Alerts.alertSheet(
+			Alerts.present(AlertRequest(
 				title: String(localized: .ServerProperties.noCertificatesAvailable),
 				body: String(localized: .ServerProperties.thereAreNoCertificates),
 				defaultButton: PromptStrings.Action.confirmation
-			)
+			))
 			return
 		}
 		guard let panel = SFChooseIdentityPanel.shared() else { return }
@@ -359,13 +341,13 @@ final class ServerPropertiesSheet: SheetSession, SessionScoped, ServerProperties
 	 reloading is the destructive answer, because it throws those edits away. */
 	private func underlyingConfigurationChanged(_ notification: Notification) {
 		guard let session = notification.object as? ServerSession else { return }
-		Alerts.alertSheet(
+		Alerts.present(AlertRequest(
 			title: String(localized: .ServerProperties.thisConnectionsConfigurationHasChangedDo),
 			body: String(localized: .ServerProperties.youWillLooseUnsavedChangesIf),
 			defaultButton: PromptStrings.Action.cancel,
 			alternateButton: String(localized: .ServerProperties.reloadButton),
 			destructiveButton: .alternate
-		) { [weak self] outcome in
+		)) { [weak self] outcome in
 			guard outcome.response == .alternate, let self else { return }
 			cancelCertificateSelection()
 			session.updateStoredConfiguration()
@@ -382,16 +364,11 @@ final class ServerPropertiesSheet: SheetSession, SessionScoped, ServerProperties
 		}
 	}
 
-	private func closeChildSheets() {
-		cancelCertificateSelection()
-		addressBookSheet?.cancel()
-		channelSheet?.cancel()
-		highlightSheet?.cancel()
-		serverEndpointSheet?.cancel()
-	}
-
 	override func sheetDidEnd() {
-		closeChildSheets()
+		// An accepted save owns its pending reference even after the sheet closes.
+		if !model.isSaving {
+			cancelCertificateSelection()
+		}
 		removeConfigurationDidChangeObserver()
 	}
 }

@@ -2,6 +2,7 @@
 // Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
 // SPDX-License-Identifier: BSD-3-Clause
 
+import CocoaExtensions
 import Foundation
 import os
 
@@ -47,7 +48,8 @@ extension ServerSession {
 	}
 
 	func scriptInvocationIsCurrent(_ invocation: ScriptInvocation) -> Bool {
-		guard !isTerminating, !isQuitting, !isDisconnecting,
+		guard environment.services.applicationState?.applicationIsTerminating != true,
+		      !isTerminating, !isQuitting, !isDisconnecting,
 		      startup.identifier == invocation.sessionIdentifier,
 		      socket?.uniqueIdentifier == invocation.connectionIdentifier else { return false }
 		guard invocation.targetName != nil else { return true }

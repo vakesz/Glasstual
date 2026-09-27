@@ -38,6 +38,30 @@ struct STSPolicyTests {
 		#expect(STSCapabilityValues.values(fromCapabilityValues: ["vendor=thing"]) == nil)
 	}
 
+	@Test("An overflowing duration persists the largest finite expiry and still requires TLS")
+	func overflowingDurationRemainsEnforced() throws {
+		let values = try #require(STSCapabilityValues.values(fromCapabilityValues: [
+			"duration=" + String(repeating: "9", count: 400),
+		]))
+		#expect(values.hasDuration)
+		#expect(values.duration == .greatestFiniteMagnitude)
+
+		let suiteName = "STSPolicyTests.\(UUID().uuidString)"
+		let userDefaults = try #require(UserDefaults(suiteName: suiteName))
+		defer { userDefaults.removePersistentDomain(forName: suiteName) }
+		let store = STSPolicyStore(userDefaults: userDefaults)
+		#expect(store.applyCapabilityValues(
+			values, forHost: "irc.example.net", connectedPort: 6697,
+			secured: true, certificateChainValidated: true
+		) == .stored(port: 6697))
+
+		let reloadedStore = STSPolicyStore(userDefaults: userDefaults)
+		let policy = try #require(reloadedStore.policy(forHost: "irc.example.net"))
+		#expect(policy.expiresAt.timeIntervalSince1970.isFinite)
+		#expect(policy.expiresAt.timeIntervalSince1970 == .greatestFiniteMagnitude)
+		#expect(reloadedStore.enforcedPort(forHost: "irc.example.net") == 6697)
+	}
+
 	@Test("A policy written to user defaults is read back by a fresh store")
 	func policyPersistsAndReloadsFromUserDefaults() throws {
 		let suiteName = "STSPolicyTests.\(UUID().uuidString)"

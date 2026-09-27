@@ -47,14 +47,5 @@ struct RegularExpressionSafetyTests {
 		#expect(
 			RegularExpression.firstMatch(of: "needle", in: subject, inputLimit: 64) == .unmatched
 		)
-		#expect(
-			RegularExpression.matches(
-				in: subject,
-				withRegex: "needle",
-				withoutCase: false,
-				substringGroups: false,
-				inputLimit: 64
-			).isEmpty
-		)
 	}
 }

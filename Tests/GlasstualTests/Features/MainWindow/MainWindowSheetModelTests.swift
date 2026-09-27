@@ -57,4 +57,76 @@ struct MainWindowSheetModelTests {
 		#expect(model.presentedSheet?.owner === firstOwner)
 		#expect(model.presentedSheet?.child == nil)
 	}
+
+	@Test("Completing a prompt preserves the next prompt opened by its callback")
+	func completingPromptCanPresentAnother() throws {
+		let model = MainWindowSheetModel()
+		var outcomes: [InputPromptOutcome] = []
+		model.presentInputPrompt(promptRequest("First")) { outcome in
+			outcomes.append(outcome)
+			model.presentInputPrompt(promptRequest("Next")) { _ in }
+		}
+		let first = try #require(model.inputPrompt)
+
+		model.completeInputPrompt(.submitted("answer"), for: first)
+		model.completeInputPrompt(.cancelled, for: first)
+
+		#expect(outcomes == [.submitted("answer")])
+		#expect(model.inputPrompt?.request.title == "Next")
+	}
+
+	@Test("Replacing a prompt cancels it once and ignores its delayed dismissal")
+	func replacingPromptCancelsOnlyPreviousPresentation() throws {
+		let model = MainWindowSheetModel()
+		var outcomes: [InputPromptOutcome] = []
+		model.presentInputPrompt(promptRequest("First")) { outcomes.append($0) }
+		let first = try #require(model.inputPrompt)
+		model.presentInputPrompt(promptRequest("Next")) { _ in }
+
+		model.completeInputPrompt(.cancelled, for: first)
+
+		#expect(outcomes == [.cancelled])
+		#expect(model.inputPrompt?.request.title == "Next")
+	}
+
+	@Test("Cancelling a prompt completes once after removing its presentation")
+	func cancellingPromptConsumesPresentationBeforeCallback() throws {
+		let model = MainWindowSheetModel()
+		var outcomes: [InputPromptOutcome] = []
+		model.presentInputPrompt(promptRequest("Prompt")) { outcome in
+			#expect(model.inputPrompt == nil)
+			outcomes.append(outcome)
+		}
+		let prompt = try #require(model.inputPrompt)
+
+		model.completeInputPrompt(.cancelled, for: prompt)
+		model.completeInputPrompt(.cancelled, for: prompt)
+
+		#expect(outcomes == [.cancelled])
+		#expect(model.inputPrompt == nil)
+	}
+
+	private func promptRequest(_ title: String) -> InputPromptRequest {
+		InputPromptRequest(title: title, message: "", submitButtonTitle: "Submit", cancelButtonTitle: "Cancel")
+	}
+
+	@Test("A completed transfer file chooser can open the next chooser")
+	func completingTransferFileSelectionPreservesNextRequest() {
+		let model = MainWindowSheetModel()
+		let firstURL = URL(fileURLWithPath: "/tmp/first.txt")
+		let secondURL = URL(fileURLWithPath: "/tmp/second.txt")
+		var selections: [[URL]] = []
+		model.chooseTransferFiles { urls in
+			#expect(model.isChoosingTransferFiles == false)
+			selections.append(urls)
+			model.chooseTransferFiles { selections.append($0) }
+		}
+
+		model.completeTransferFileSelection(.success([firstURL]))
+		#expect(model.isChoosingTransferFiles)
+		model.completeTransferFileSelection(.success([secondURL]))
+
+		#expect(selections == [[firstURL], [secondURL]])
+		#expect(model.isChoosingTransferFiles == false)
+	}
 }

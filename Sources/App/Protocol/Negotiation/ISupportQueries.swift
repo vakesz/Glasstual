@@ -72,10 +72,10 @@ extension ISupport {
 			if entry == "*" {
 				denied = true
 			} else if entry.hasPrefix("-") {
-				if entry.dropFirst().caseInsensitiveCompare(tagName) == .orderedSame {
+				if entry.dropFirst() == tagName {
 					return false
 				}
-			} else if entry.caseInsensitiveCompare(tagName) == .orderedSame {
+			} else if entry == tagName {
 				denied = true
 			}
 		}

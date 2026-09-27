@@ -14,6 +14,14 @@ struct ServerHistoryRequest: Equatable {
 	let id: UUID
 	let before: Date
 	let oldestLineNumber: String?
+	let messageIdentifier: String?
+
+	init(id: UUID, before: Date, oldestLineNumber: String?, messageIdentifier: String? = nil) {
+		self.id = id
+		self.before = before
+		self.oldestLineNumber = oldestLineNumber
+		self.messageIdentifier = messageIdentifier
+	}
 }
 
 /// Whether the server has more to give before this page.
@@ -81,7 +89,8 @@ extension ServerSession {
 	func requestServerHistory(_ request: ServerHistoryRequest, in conversation: Conversation,
 	                          presentation: (any ServerHistoryPresenting)? = nil) -> Bool
 	{
-		guard serverHistoryRequestIsAdmissible(for: conversation) else { return false }
+		guard serverHistoryRequestIsAdmissible(for: conversation),
+		      let arguments = chatHistoryBeforeArguments(target: conversation.name, request: request) else { return false }
 		let requestLabel = ChatHistoryPolicy.requestLabelPrefix + request.id.uuidString
 		let label = labeledResponseTrackingEnabled() ? requestLabel : nil
 		let pending = PendingServerHistoryRequest(
@@ -96,7 +105,7 @@ extension ServerSession {
 		}
 		sendCommand(
 			.chathistory,
-			arguments: chatHistoryBeforeArguments(target: conversation.name, date: request.before),
+			arguments: arguments,
 			tags: label.map { ["label": $0] }
 		)
 		return true
@@ -109,8 +118,10 @@ extension ServerSession {
 	 answer to the request that timed out, so a retry would be answered by
 	 whichever arrived first. The transcript asks this before it offers a Retry
 	 the session would silently drop. */
-	func canRetryServerHistory(for conversation: Conversation) -> Bool {
-		serverHistoryRequestIsAdmissible(for: conversation)
+	func canRetryServerHistory(for conversation: Conversation, request: ServerHistoryRequest? = nil) -> Bool {
+		serverHistoryRequestIsAdmissible(for: conversation) && (request.map {
+			chatHistoryBeforeArguments(target: conversation.name, request: $0) != nil
+		} ?? supportInfo.chatHistorySupportsTimestamps)
 	}
 
 	private func serverHistoryRequestIsAdmissible(for conversation: Conversation) -> Bool {

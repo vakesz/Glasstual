@@ -19,13 +19,4 @@ nonisolated struct ModeInfo: Hashable, Sendable {
 		self.modeIsSet = modeIsSet
 		self.modeParameter = modeParameter
 	}
-
-	@MainActor
-	func isModeForChangingMemberMode(on session: ServerSession) -> Bool {
-		guard modeParameter?.isEmpty == false else {
-			return false
-		}
-
-		return session.supportInfo.modeSymbolIsUserPrefix(modeSymbol)
-	}
 }

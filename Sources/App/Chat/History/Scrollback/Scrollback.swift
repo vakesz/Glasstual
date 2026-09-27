@@ -92,6 +92,19 @@ final class Scrollback {
 		}
 	}
 
+	/// Updates a confirmed outgoing message without inserting a second history row.
+	func replaceEntry(_ entry: ScrollbackEntry, for line: ChatLine) {
+		duplicates.replaceChatLine(line, forView: entry.viewIdentifier)
+		session.replace(entry) { [weak self] outcome in
+			guard let self else { return }
+			switch outcome {
+			case .replaced, .missing: break
+			case .unavailable: recovery.storageFailure = PromptStrings.Logging.scrollbackFailureBody
+			case let .failed(reason): recovery.storageFailure = reason
+			}
+		}
+	}
+
 	/// Drops a view's history. `forget` also drops what the store remembers
 	/// about the view itself, which is what a conversation being removed asks for;
 	/// clearing a conversation the reader is still in does not.

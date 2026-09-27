@@ -216,7 +216,12 @@ final class Connection {
 		defer { batchingSession?.finishInboundMemberPresentationUpdates() }
 
 		for (index, line) in lines.enumerated() {
-			guard let session else { return }
+			guard let session, !terminal, session.socket === self else { return }
+			if !session.isLoggedIn, !session.canContinueConnecting {
+				session.cancelReconnect()
+				close()
+				return
+			}
 			/* A renderer at capacity must be allowed to drain. Finish the native
 			 list snapshot before giving the main actor away. The same boundary is
 			 used every 64 lines and before the host's acknowledgement. */
@@ -226,6 +231,11 @@ final class Connection {
 				await session.renderAdmission.waitForCapacity()
 			}
 			guard !Task.isCancelled, terminal == false, session.socket === self else { return }
+			if !session.isLoggedIn, !session.canContinueConnecting {
+				session.cancelReconnect()
+				close()
+				return
+			}
 			if batchingSession == nil {
 				session.beginInboundMemberPresentationUpdates()
 				batchingSession = session
@@ -259,12 +269,22 @@ final class Connection {
 			session?.connectionWillConnect(toProxy: host, port: port)
 		case let .didConnect(host):
 			guard isDisconnecting == false else { return }
+			guard session?.canContinueConnecting == true else {
+				session?.cancelReconnect()
+				close()
+				return
+			}
 			connectedAddress = host
 			isConnecting = false
 			isConnected = true
 			session?.connectionDidConnect()
 		case let .didSecure(protocolType, cipherSuite):
 			guard isDisconnecting == false else { return }
+			guard session?.canContinueConnecting == true else {
+				session?.cancelReconnect()
+				close()
+				return
+			}
 			isSecured = true
 			isConnectedWithClientSideCertificate = config.identityClientSideCertificate != nil
 			session?.connectionDidSecure(protocolType: protocolType, cipherSuite: cipherSuite)
@@ -392,7 +412,7 @@ final class Connection {
 	}
 
 	func open() {
-		guard terminal == false, session?.isTerminating == false,
+		guard terminal == false, session?.canContinueConnecting == true,
 		      isConnecting == false, isConnected == false, isDisconnecting == false else { return }
 		config.diagnostics?.record(.serviceRequested)
 		warmProcessIfNeeded()
@@ -439,7 +459,7 @@ final class Connection {
 	private func convertFromCommonEncoding(_ data: Data) -> String? {
 		guard let session else { return nil }
 
-		return session.convert(fromCommonEncoding: data)
+		return session.decodeIRCLine(data)
 	}
 
 	private func didDisconnect(with error: Error?, trigger: ConnectionTermination.Trigger) {

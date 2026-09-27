@@ -219,6 +219,13 @@ struct CapabilityRegistryTests {
 		#expect(registry.capability(named: "plan.io/playback") == nil)
 	}
 
+	@Test("Draft extensions cannot negotiate their reserved future capability names", arguments: ["chathistory", "read-marker"])
+	func draftCapabilityNamesRemainPrefixed(_ name: String) {
+		let registry = CapabilityRegistry.defaultRegistry
+		#expect(registry.capability(named: name) == nil)
+		#expect(registry.capability(named: "draft/" + name) != nil)
+	}
+
 	@Test("SASL has typed negotiation and vendor variants set the generic bit")
 	func defaultRegistryVendorVariantsCarryTheGenericBit() throws {
 		let registry = CapabilityRegistry.defaultRegistry

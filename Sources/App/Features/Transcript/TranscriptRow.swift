@@ -66,6 +66,7 @@ nonisolated struct TranscriptRow: Equatable, Sendable {
 	var body: TranscriptBody
 	var modeSymbol = ""
 	var historyCursor: ScrollbackRowCursor?
+	var serverTimestamp: Date?
 
 	/** Whether `identifier` names this row.
 

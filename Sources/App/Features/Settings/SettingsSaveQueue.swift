@@ -22,7 +22,7 @@ final class SettingsSaveQueue {
 	}
 
 	/// Owns an accepted editor save from preparation to commit.
-	func submit(_ operation: @escaping @MainActor () async -> Bool) -> Task<Void, Never> {
+	func submit(_ operation: @escaping @MainActor () async -> Bool) {
 		let identifier = UUID()
 		let task = Task {
 			let succeeded = await operation()
@@ -32,7 +32,6 @@ final class SettingsSaveQueue {
 			saves[identifier] = nil
 		}
 		saves[identifier] = task
-		return task
 	}
 
 	/// Includes saves accepted while an earlier save is still suspended. A

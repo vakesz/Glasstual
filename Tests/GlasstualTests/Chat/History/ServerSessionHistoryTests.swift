@@ -74,6 +74,7 @@ struct ServerSessionHistoryTests {
 		line.nickname = nickname
 		line.messageBody = text
 		line.receivedAt = date
+		line.serverTimestamp = date
 
 		return line
 	}
@@ -136,7 +137,7 @@ struct ServerSessionHistoryTests {
 
 		let complete = TestServerSession()
 		let completeList = try message(
-			":irc.example.net CAP * LS :batch server-time message-tags chathistory read-marker",
+			":irc.example.net CAP * LS :batch server-time message-tags draft/chathistory draft/read-marker",
 			on: complete
 		)
 
@@ -145,10 +146,10 @@ struct ServerSessionHistoryTests {
 		/* `chathistory` waits: its dependencies are offered but not yet
 		 acknowledged, so only the four that stand on their own go out. */
 		#expect(capabilityCommands(of: complete) == [
-			"REQ message-tags batch read-marker server-time",
+			"REQ message-tags batch draft/read-marker server-time",
 		])
 
-		let acknowledgement = try message(":irc.example.net CAP me ACK :chathistory", on: complete)
+		let acknowledgement = try message(":irc.example.net CAP me ACK :draft/chathistory", on: complete)
 
 		complete.handleCapabilityOrAuthenticationRequest(acknowledgement)
 
@@ -157,6 +158,22 @@ struct ServerSessionHistoryTests {
 			":irc.example.net CAP me ACK :batch server-time message-tags", on: complete
 		))
 		#expect(complete.isCapabilityEnabled(.chatHistory))
+	}
+
+	@Test("A msgid-only history server receives LATEST * and no unsupported timestamp request")
+	func historyHonorsMessageReferenceTypes() throws {
+		let session = makeHistorySession()
+		session.supportInfo.processConfigurationData("MSGREFTYPES=msgid")
+		try withChannel(named: "#chat", on: session) { channel in
+			let date = Date(timeIntervalSince1970: 1_725_000_000)
+			index(chatLine(messageIdentifier: "known", nickname: "alice", text: "hello", date: date), for: channel)
+			session.requestChatHistory(for: channel)
+			let request = ServerHistoryRequest(id: UUID(), before: date, oldestLineNumber: nil)
+			#expect(session.requestServerHistory(request, in: channel) == false)
+			#expect(session.canRetryServerHistory(for: channel) == false)
+			#expect(session.chatHistory.serverRequests.isEmpty)
+			#expect(sentLines(of: session) == ["CHATHISTORY LATEST #chat * 100"])
+		}
 	}
 
 	@Test("The request limit comes from ISUPPORT, in either of its spellings")

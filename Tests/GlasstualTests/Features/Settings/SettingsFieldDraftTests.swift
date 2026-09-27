@@ -7,6 +7,18 @@ import Testing
 @MainActor
 @Suite("Settings field draft")
 struct SettingsFieldDraftTests {
+	@Test("Ending editing stores a draft once even when focus loss and removal both finish it")
+	func completionConsumesPendingDraft() {
+		let store = Store()
+		var draft = SettingsFieldDraft()
+		draft.edit("03000")
+		draft.commit(to: store.value)
+		draft.commit(to: store.value)
+		#expect(store.text == "3000")
+		#expect(store.writes == ["03000"])
+		#expect(draft.displayed(store.text) == "3000")
+	}
+
 	@Test("Selecting a preset replaces an unfinished draft and later completion writes nothing")
 	func presetDiscardsPendingDraft() {
 		let store = Store()

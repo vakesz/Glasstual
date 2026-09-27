@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 import Foundation
-import SwiftUI
 
 enum TypingRedirect {
 	/** Where AppKit puts the keys that are not characters.
@@ -30,28 +29,5 @@ enum TypingRedirect {
 
 	private static func isTypable(_ scalar: Unicode.Scalar) -> Bool {
 		CharacterSet.controlCharacters.contains(scalar) == false && functionKeys.contains(scalar) == false
-	}
-}
-
-private struct MainWindowTypingRedirectModifier: ViewModifier {
-	let action: (String) -> Void
-
-	func body(content: Content) -> some View {
-		content.onKeyPress { press in
-			guard let text = TypingRedirect.text(
-				for: press.characters,
-				commandIsPressed: press.modifiers.contains(.command),
-				controlIsPressed: press.modifiers.contains(.control)
-			) else { return .ignored }
-
-			action(text)
-			return .handled
-		}
-	}
-}
-
-extension View {
-	func redirectsPrintableInput(to action: @escaping (String) -> Void) -> some View {
-		modifier(MainWindowTypingRedirectModifier(action: action))
 	}
 }

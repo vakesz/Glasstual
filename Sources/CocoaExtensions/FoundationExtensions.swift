@@ -31,7 +31,25 @@
  *
  *********************************************************************** */
 
+import Darwin
 import Foundation
+
+public extension FileManager {
+	class var pathOfHomeDirectoryOutsideSandbox: String {
+		guard let password = getpwuid(getuid()), let directory = password.pointee.pw_dir else {
+			return NSHomeDirectory()
+		}
+		return String(cString: directory)
+	}
+
+	class var URLOfHomeDirectoryOutsideSandbox: URL {
+		URL(fileURLWithPath: pathOfHomeDirectoryOutsideSandbox, isDirectory: true)
+	}
+
+	func fileExists(at url: URL) -> Bool {
+		fileExists(atPath: url.path)
+	}
+}
 
 /// `CharacterSet` is a `Sendable` value type, so these need no isolation
 /// annotation and no `NSCharacterSet` bridging at the point of use.

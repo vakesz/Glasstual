@@ -8,10 +8,10 @@ import Security
 
 /** The Network.framework parameters a configuration asks for.
 
- Everything here is a pure function of `ConnectionConfig`: which IP versions to
- dial, which protocol versions and cipher suites the handshake offers, which
- identity it presents, and which proxy the parameters route through. None of it
- needs the socket, so none of it is on the actor that owns one. */
+ The configuration determines which IP versions to dial, which protocol versions
+ and cipher suites the handshake offers, and which proxy routes the connection.
+ A configured client identity is resolved from the keychain during construction;
+ an unavailable identity fails the connection before any traffic is sent. */
 nonisolated enum ConnectionParameters {
 	private static let torProxyAddress = "127.0.0.1"
 	private static let torProxyPort: UInt16 = 9150
@@ -53,11 +53,11 @@ nonisolated enum ConnectionParameters {
 	 ones, so a server that has anything better still picks it. Everything else
 	 about the handshake -- the minimum protocol version, the client identity,
 	 the certificate validation the socket adds -- is the same on both dials. */
-	static func tls(for config: ConnectionConfig, offeringLegacyCipherSuites: Bool) -> TLS {
+	static func tls(for config: ConnectionConfig, offeringLegacyCipherSuites: Bool) throws -> TLS {
 		var tls = TLS { tcp(for: config) }
 			.version(min: SecureTransportSupport.minimumProtocolType)
 
-		if let identity = clientIdentity(for: config) {
+		if let identity = try clientIdentity(for: config) {
 			tls = tls.localIdentity(identity)
 		}
 
@@ -136,10 +136,9 @@ nonisolated enum ConnectionParameters {
 
 	/** The client-side identity this connection presents, when one is configured.
 
-	 A pure function of the configuration — the keychain lookup depends on
-	 nothing else — so it is done where the handshake needs it rather than
-	 cached on an object. */
-	private static func clientIdentity(for config: ConnectionConfig) -> sec_identity_t? {
+	 Resolving the keychain reference for each handshake also catches an identity
+	 that was removed or whose private key is no longer accessible. */
+	private static func clientIdentity(for config: ConnectionConfig) throws -> sec_identity_t? {
 		guard let certificateData = config.identityClientSideCertificate else {
 			return nil
 		}
@@ -157,13 +156,13 @@ nonisolated enum ConnectionParameters {
 		if status != errSecSuccess {
 			ConnectionHostLog.connection.error("Client certificate lookup failed: \(status, privacy: .public)")
 
-			return nil
+			throw NSError(domain: NSOSStatusErrorDomain, code: Int(status))
 		}
 
 		guard let certificateObject,
 		      CFGetTypeID(certificateObject) == SecCertificateGetTypeID()
 		else {
-			return nil
+			throw NSError(domain: NSOSStatusErrorDomain, code: Int(errSecDecode))
 		}
 		// Security exposes the typed certificate through a CFTypeRef result.
 		let certificate = unsafeDowncast(certificateObject, to: SecCertificate.self)
@@ -175,9 +174,9 @@ nonisolated enum ConnectionParameters {
 		guard status == noErr, let identity else {
 			ConnectionHostLog.connection.error("Client identity lookup failed: \(status, privacy: .public)")
 
-			return nil
+			throw NSError(domain: NSOSStatusErrorDomain, code: Int(status == errSecSuccess ? errSecItemNotFound : status))
 		}
 
-		return sec_identity_create_with_certificates(identity, [certificate] as CFArray)
+		return try SecureTransportSupport.localIdentity(identity)
 	}
 }

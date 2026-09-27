@@ -62,6 +62,7 @@ nonisolated enum ISupportToken: String, CaseIterable, Sendable {
 	case maxtargets = "MAXTARGETS"
 	case modes = "MODES"
 	case monitor = "MONITOR"
+	case msgreftypes = "MSGREFTYPES"
 	case namesx = "NAMESX"
 	case network = "NETWORK"
 	case nicklen = "NICKLEN"
@@ -97,7 +98,7 @@ nonisolated enum ISupportToken: String, CaseIterable, Sendable {
 	 more than the bare token does. */
 	var readsAnEmptyValueAsNone: Bool {
 		switch self {
-		case .chantypes, .prefix, .statusmsg: true
+		case .chantypes, .msgreftypes, .prefix, .statusmsg: true
 		default: false
 		}
 	}
@@ -172,6 +173,10 @@ final class ISupport {
 	private var advertisedChannelModeKinds: [Character: ChannelModeKind] = [:] {
 		didSet { updateChannelModeKinds() }
 	}
+
+	/// Missing MSGREFTYPES means both standard reference types are available.
+	private(set) var chatHistorySupportsTimestamps = true
+	private(set) var chatHistorySupportsMessageIdentifiers = true
 
 	/// `CHANLIMIT`, keyed by channel prefix.
 	private(set) var channelLimits: [Character: UInt] = [:]
@@ -307,7 +312,7 @@ final class ISupport {
 		case .bot, .callerid, .casemapping, .chanmodes, .chantypes, .deaf,
 		     .excepts, .invex, .prefix, .statusmsg:
 			resetModeSetting(token)
-		case .chanlimit, .clienttagdeny, .elist, .extban, .maxlist, .network, .targmax:
+		case .chanlimit, .clienttagdeny, .elist, .extban, .maxlist, .msgreftypes, .network, .targmax:
 			resetCollection(token)
 		case .monitor, .namesx, .safelist, .uhnames, .utf8only, .watch, .whox:
 			resetAnnouncement(token, into: &effects)
@@ -387,6 +392,9 @@ final class ISupport {
 			extendedBanTypes = []
 		case .maxlist:
 			maximumListEntries = [:]
+		case .msgreftypes:
+			chatHistorySupportsTimestamps = true
+			chatHistorySupportsMessageIdentifiers = true
 		case .network:
 			networkName = nil
 			networkNameFormatted = nil
@@ -539,6 +547,10 @@ private extension ISupport {
 			channelLimits = ISupportTokenParser.channelLimits(from: value)
 		case .clienttagdeny:
 			clientTagDenyList = value.components(separatedBy: ",")
+		case .msgreftypes:
+			let references = value.split(separator: ",")
+			chatHistorySupportsTimestamps = references.contains("timestamp")
+			chatHistorySupportsMessageIdentifiers = references.contains("msgid")
 		case .elist:
 			extendedListTokens = value.uppercased().map(String.init)
 		case .extban:

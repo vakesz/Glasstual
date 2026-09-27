@@ -1,18 +1,13 @@
-# Loopback TLS identity
+# Loopback TLS identities
 
-`LoopbackTestIdentity.p12` is a throwaway self-signed RSA-2048 identity, kept so
-that `AsyncCertificateValidationLoopbackTests` can stand up a TLS listener on
-`127.0.0.1` and drive the real connection service against it. A self-signed
-chain exercises the async certificate validator: the system will not trust it,
-the failure is recoverable, and the service asks the application what to do.
+`LoopbackTestIdentity.p12` is a self-signed RSA-2048 test identity for
+`127.0.0.1` and `localhost`. `AsyncCertificateValidationLoopbackTests` uses it
+to test certificate validation through the connection service.
+The E2E loopback peer loads it from `../TLS/LoopbackTestIdentity.p12`
+relative to `E2E_FIXTURE`.
 
-`Tests/E2EHarness`'s loopback peer serves the same identity for the TLS E2E
-fixtures, resolving it as `../TLS/LoopbackTestIdentity.p12` from the directory
-holding `E2E_FIXTURE`.
-
-It is not a secret. The passphrase is `glasstual`, it is checked in on purpose,
-and it names no host anyone owns. Only the test bundle and the E2E harness load
-it, both with `kSecImportToMemoryOnly`, so it never reaches a keychain.
+The public test passphrase is `glasstual`. Both test loaders use
+`kSecImportToMemoryOnly`; they do not write the identity to a keychain.
 
 Regenerate it with:
 
@@ -25,5 +20,52 @@ openssl pkcs12 -export -legacy -out LoopbackTestIdentity.p12 \
     -name "Glasstual Loopback Test"
 ```
 
-`-legacy` matters: `SecPKCS12Import` does not read the AES/PBKDF2 encryption
-OpenSSL 3 writes by default.
+`-legacy` selects PKCS#12 encryption supported by `SecPKCS12Import`.
+
+## Client certificate chain
+
+`ClientChainTestIdentity.p12` contains a generated RSA-2048 client identity,
+its intermediate CA and its self-signed root CA. The client certificate has
+the TLS client-authentication extended key usage. All three certificates use
+SHA-256 signatures and expire in 2126. These are public test credentials,
+generated for this repository; the passphrase is `glasstual`.
+
+`TLSClientIdentityTests` imports the bundle into memory and verifies mutual
+TLS over loopback for TLS 1.2 and TLS 1.3. The peer trusts only the fixture
+root. Tests also cover a missing intermediate and duplicated-leaf prevention.
+No fixture is installed in the user's keychain or trust store.
+
+Regenerate in an empty temporary directory:
+
+```sh
+openssl req -x509 -newkey rsa:2048 -nodes -days 36500 \
+    -keyout root.key -out root.pem -subj '/CN=Glasstual mTLS Test Root'
+openssl req -new -newkey rsa:2048 -nodes -keyout intermediate.key \
+    -out intermediate.csr -subj '/CN=Glasstual mTLS Test Intermediate'
+cat > intermediate.ext <<'EOF'
+basicConstraints=critical,CA:TRUE,pathlen:0
+keyUsage=critical,keyCertSign,cRLSign
+subjectKeyIdentifier=hash
+authorityKeyIdentifier=keyid,issuer
+EOF
+openssl x509 -req -in intermediate.csr -CA root.pem -CAkey root.key \
+    -set_serial 2 -days 36500 -extfile intermediate.ext -out intermediate.pem
+openssl req -new -newkey rsa:2048 -nodes -keyout client.key \
+    -out client.csr -subj '/CN=Glasstual mTLS Test Client'
+cat > client.ext <<'EOF'
+basicConstraints=critical,CA:FALSE
+keyUsage=critical,digitalSignature,keyEncipherment
+extendedKeyUsage=clientAuth
+subjectKeyIdentifier=hash
+authorityKeyIdentifier=keyid,issuer
+EOF
+openssl x509 -req -in client.csr -CA intermediate.pem -CAkey intermediate.key \
+    -set_serial 3 -days 36500 -extfile client.ext -out client.pem
+cat intermediate.pem root.pem > chain.pem
+openssl pkcs12 -export -legacy -out ClientChainTestIdentity.p12 \
+    -inkey client.key -in client.pem -certfile chain.pem \
+    -passout pass:glasstual -name 'Glasstual mTLS Test Client'
+```
+
+Only the `.p12` file belongs in the corpus; it does not contain either CA's
+private key.

@@ -19,7 +19,7 @@ struct KeychainPersistenceTests {
 		let (stages, stage) = AsyncStream<Int>.makeStream()
 		var configurationSaved = false
 		var quitFinished = false
-		let save = saves.submit {
+		saves.submit {
 			stage.yield(1)
 			for await _ in preparation {}
 			let item = KeychainItem.nicknamePassword(UUID().uuidString)
@@ -49,21 +49,21 @@ struct KeychainPersistenceTests {
 		committed.finish()
 		#expect(await quit.value)
 		#expect(configurationSaved)
-		await save.value
+		#expect(saves.hasPendingSaves == false)
 	}
 
 	@Test("An active settings failure cancels quit without poisoning a later quit")
 	func settingsSaveFailurePreventsTermination() async {
 		let saves = SettingsSaveQueue()
 		let (gate, release) = AsyncStream<Void>.makeStream()
-		let save = saves.submit {
+		saves.submit {
 			for await _ in gate {}
 			return false
 		}
 		let quit = saves.waitForSaves()
 		release.finish()
 		#expect(await !quit.value)
-		await save.value
+		#expect(saves.hasPendingSaves == false)
 		#expect(await saves.waitForSaves().value)
 	}
 
@@ -72,20 +72,25 @@ struct KeychainPersistenceTests {
 		let saves = SettingsSaveQueue()
 		let (firstGate, releaseFirst) = AsyncStream<Void>.makeStream()
 		let (secondGate, releaseSecond) = AsyncStream<Void>.makeStream()
-		let first = saves.submit {
+		let (secondFinished, didFinishSecond) = AsyncStream<Void>.makeStream()
+		saves.submit {
 			for await _ in firstGate {}
 			return true
 		}
 		let quit = saves.waitForSaves()
-		let second = saves.submit {
+		saves.submit {
 			for await _ in secondGate {}
+			didFinishSecond.yield(())
+			didFinishSecond.finish()
 			return false
 		}
 		releaseSecond.finish()
-		await second.value
+		var completion = secondFinished.makeAsyncIterator()
+		_ = await completion.next()
+		#expect(saves.hasPendingSaves)
 		releaseFirst.finish()
-		await first.value
 		#expect(await !quit.value)
+		#expect(saves.hasPendingSaves == false)
 	}
 
 	@Test("A failed editor attempt is not retried without its configuration at termination")

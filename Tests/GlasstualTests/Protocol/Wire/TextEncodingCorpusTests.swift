@@ -114,6 +114,32 @@ struct TextEncodingCorpusTests {
 		#expect(decoded == testCase.text)
 	}
 
+	@Test("IRC tags remain UTF-8 beside legacy-encoded message text")
+	func ircTagsUseUTF8Independently() throws {
+		let policy = Self.policy(primary: .isoLatin1, fallback: .ascii)
+		let line = "@+example/label=é;+draft/react=👍 PRIVMSG #chat :café"
+		var wire = Data("@+example/label=é;+draft/react=👍 ".utf8)
+		try wire.append(#require("PRIVMSG #chat :café".data(using: .isoLatin1)))
+
+		#expect(policy.encodeIRCLine(line) == wire)
+		#expect(policy.decodeIRCLine(wire) == line)
+		let untagged = try #require(policy.encode("PRIVMSG #chat :café"))
+		#expect(policy.decodeIRCLine(untagged) == "PRIVMSG #chat :café")
+	}
+
+	@Test("Invalid UTF-8 tag values cannot become colliding replacement identifiers")
+	func invalidTagValuesAreOmitted() throws {
+		let policy = Self.policy(primary: .isoLatin1, fallback: .ascii)
+		var wire = Data("@msgid=earlier;msgid=".utf8)
+		wire.append(0xFF)
+		wire.append(contentsOf: ";time=2026-09-26T10:00:00.000Z PRIVMSG #chat :hello".utf8)
+		let decoded = try #require(policy.decodeIRCLine(wire))
+		let parsed = try #require(Message(line: decoded))
+		#expect(parsed.messageIdentifier == nil)
+		#expect(parsed.messageTags?["time"] == "2026-09-26T10:00:00.000Z")
+		#expect(parsed.params.last == "hello")
+	}
+
 	// MARK: - UTF8ONLY
 
 	nonisolated struct EncodingPair: Sendable {

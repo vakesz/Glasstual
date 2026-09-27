@@ -137,29 +137,6 @@ public enum RegularExpression {
 		return outcome
 	}
 
-	/// Every match of `needle` in `haystack`, or every capture group of every
-	/// match when `substringGroups` is set, with the same bound on the subject as
-	/// ``firstMatch(of:in:withoutCase:inputLimit:budget:)``.
-	public static func matches(
-		in haystack: String,
-		withRegex needle: String,
-		withoutCase caseless: Bool,
-		substringGroups: Bool,
-		inputLimit: Int = inputLengthLimit
-	) -> [String] {
-		let subject = boundedInput(haystack, limit: inputLimit)
-		guard let expression = Self.expression(for: needle, caseless: caseless) else { return [] }
-
-		return expression.matches(in: subject, range: subject.fullRange).flatMap { result in
-			let ranges = substringGroups ? (0 ..< result.numberOfRanges) : (0 ..< 1)
-			return ranges.compactMap { index -> String? in
-				let range = result.range(at: index)
-				guard range.location != NSNotFound, let swiftRange = Range(range, in: subject) else { return nil }
-				return String(subject[swiftRange])
-			}
-		}
-	}
-
 	/// `haystack` cut to at most `limit` characters, so a user-authored pattern
 	/// is bounded in what it is allowed to do on remote input. Cutting by
 	/// characters rather than by code units keeps a subject from ending in half

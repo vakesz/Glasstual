@@ -9,6 +9,24 @@ import Testing
 @MainActor
 @Suite("Main window state")
 struct MainWindowPersistenceTests {
+	@Test("Native inspector visibility changes preserve the preference on unavailable selections")
+	func inspectorVisibilityTracksAvailableSelection() {
+		let model = MainWindowColumnModel()
+		model.setMemberListVisible(false)
+		#expect(model.userPrefersMemberList)
+		model.applyMemberListAvailability(true)
+		#expect(model.isMemberListVisible)
+		model.setMemberListVisible(false)
+		#expect(model.isMemberListVisible == false)
+		model.applyMemberListAvailability(false)
+		model.setMemberListVisible(true)
+		#expect(model.userPrefersMemberList == false)
+		model.applyMemberListAvailability(true)
+		#expect(model.isMemberListVisible == false)
+		model.setMemberListVisible(true)
+		#expect(model.isMemberListVisible)
+	}
+
 	@Test("A window that has never been laid out shows both lists")
 	func mainWindowStateStoreUsesVisibleDefaults() throws {
 		let suiteName = "MainWindowPersistenceTests.\(UUID().uuidString)"
@@ -109,6 +127,20 @@ struct MainWindowPersistenceTests {
 
 		model.applyMemberListAvailability(true)
 		#expect(model.isMemberListVisible == false)
+	}
+
+	@Test("Restoring an open member list waits until a channel is available", arguments: [false, true])
+	func restoredMemberListRespectsAvailability(_ isAvailable: Bool) {
+		let model = MainWindowColumnModel()
+		#expect(model.isMemberListVisible == false)
+		model.applyMemberListAvailability(isAvailable)
+
+		model.restoreColumns(MainWindowLayoutState(isSidebarVisible: true, isMemberListVisible: true))
+
+		#expect(model.userPrefersMemberList)
+		#expect(model.isMemberListVisible == isAvailable)
+		model.applyMemberListAvailability(true)
+		#expect(model.isMemberListVisible)
 	}
 
 	@Test("Corrupt and off-screen frames are repaired without moving valid windows")

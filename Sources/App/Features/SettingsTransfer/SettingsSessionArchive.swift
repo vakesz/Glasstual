@@ -72,8 +72,6 @@ nonisolated enum SettingsSessionArchive {
 			      config.floodControlDelayTimerInterval <= ServerConfigDefaults.maximumFloodDelay,
 			      config.floodControlMaximumMessages >= ServerConfigDefaults.minimumFloodMessages,
 			      config.floodControlMaximumMessages <= ServerConfigDefaults.maximumFloodMessages,
-			      config.autojoinDelayAfterConnectCommands >= 0,
-			      config.autojoinDelayAfterConnectCommands <= ServerConfigDefaults.maximumAutojoinConnectCommandDelay,
 			      config.lastMessageServerTime.isFinite,
 			      config.highlightList.count == archivedHighlightCount(in: validated),
 			      Set(config.conversationList.map(\.name)).count == config.conversationList.count
@@ -140,6 +138,10 @@ nonisolated enum SettingsSessionArchive {
 		let valid: Bool = switch kind {
 		case .session:
 			(unsigned("dictionaryVersion") ?? 0) <= ServerConfigDefaults.dictionaryVersion
+				// Validate the archive before the legacy decoder clamps this delay.
+				&& values[ServerConfig.CodingKeys.autojoinDelayAfterConnectCommands.rawValue]?.double.map {
+					(0 ... ServerConfigDefaults.maximumAutojoinConnectCommandDelay).contains($0)
+				} != false
 				&& values[ServerConfig.CodingKeys.sidebarColor.rawValue]?.string.map {
 					ServerIdentityStyle.Color(rawValue: $0) != nil
 				} != false

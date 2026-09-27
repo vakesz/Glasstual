@@ -200,8 +200,35 @@ struct ISupportTests {
 		let supportInfo = supportInfoWithConfiguration("CLIENTTAGDENY=*,-draft/typing,-example/allowed")
 
 		#expect(supportInfo.isClientTagDenied("example/other"))
-		#expect(supportInfo.isClientTagDenied("DRAFT/TYPING") == false)
+		#expect(supportInfo.isClientTagDenied("draft/typing") == false)
+		#expect(supportInfo.isClientTagDenied("DRAFT/TYPING"))
 		#expect(supportInfo.isClientTagDenied("example/allowed") == false)
+	}
+
+	@Test("MSGREFTYPES restricts timestamp requests and resets with its advertisement", arguments: [
+		("timestamp", true), ("msgid,timestamp", true), ("msgid", false),
+		("unknown,timestamp", true), ("unknown", false), ("", false),
+	])
+	func historyReferenceTypes(_ advertised: String, _ supportsTimestamps: Bool) {
+		let supportInfo = SupportInfo()
+		#expect(supportInfo.chatHistorySupportsTimestamps)
+		supportInfo.processConfigurationData("MSGREFTYPES=\(advertised)")
+		#expect(supportInfo.chatHistorySupportsTimestamps == supportsTimestamps)
+		supportInfo.processConfigurationData("-MSGREFTYPES")
+		#expect(supportInfo.chatHistorySupportsTimestamps)
+		supportInfo.processConfigurationData("MSGREFTYPES=msgid")
+		supportInfo.reset()
+		#expect(supportInfo.chatHistorySupportsTimestamps)
+	}
+
+	@Test("CLIENTTAGDENY matches opaque case-sensitive tag names")
+	func clientTagDenialIsCaseSensitive() {
+		let blocked = supportInfoWithConfiguration("CLIENTTAGDENY=typing")
+		#expect(blocked.isClientTagDenied("typing"))
+		#expect(blocked.isClientTagDenied("Typing") == false)
+		let exempted = supportInfoWithConfiguration("CLIENTTAGDENY=*,-typing")
+		#expect(exempted.isClientTagDenied("typing") == false)
+		#expect(exempted.isClientTagDenied("Typing"))
 	}
 
 	@Test("EXTBAN splits into its prefix and the types the server offers")

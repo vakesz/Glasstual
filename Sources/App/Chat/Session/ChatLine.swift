@@ -78,6 +78,9 @@ nonisolated struct ChatLine: Codable, Hashable, Sendable, CustomStringConvertibl
 	var isEncrypted = false
 	var isFirstForDay = false
 	var receivedAt = Date()
+	/// Present only when the server supplied the timestamp. Message identifiers
+	/// and later delivery acknowledgements do not establish a server clock.
+	var serverTimestamp: Date?
 	var messageBody = ""
 	var command = ChatLineFormat.defaultCommand
 	var messageIdentifier: String?
@@ -108,6 +111,7 @@ nonisolated struct ChatLine: Codable, Hashable, Sendable, CustomStringConvertibl
 		case isEncrypted
 		case isFirstForDay
 		case receivedAt
+		case serverTimestamp
 		case messageBody
 		case command
 		case messageIdentifier
@@ -121,6 +125,10 @@ nonisolated struct ChatLine: Codable, Hashable, Sendable, CustomStringConvertibl
 		case nickname
 		case sessionIdentifier
 		case uniqueIdentifier
+	}
+
+	var readMarkerTimestamp: Date? {
+		lineType.isConversation ? serverTimestamp : nil
 	}
 
 	init() {
