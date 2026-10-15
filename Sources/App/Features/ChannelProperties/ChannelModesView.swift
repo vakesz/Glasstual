@@ -34,7 +34,7 @@ struct ChannelModesView: View {
 	}
 
 	var body: some View {
-		VStack(spacing: UISpacing.wide) {
+		VStack(spacing: 0) {
 			Form {
 				Section {
 					ForEach(ChannelMode.booleanModes, id: \.self) { mode in
@@ -84,18 +84,13 @@ struct ChannelModesView: View {
 			}
 			.formStyle(.grouped)
 
-			HStack(spacing: UISpacing.regular) {
-				Spacer()
-
-				Button(PromptStrings.Action.cancel, action: cancel)
-					.keyboardShortcut(.cancelAction)
-
-				Button(.ChannelProperties.changeModesButton, action: submit)
-					.keyboardShortcut(.defaultAction)
-					.disabled(model.fitsKeyLengthLimit == false)
-			}
+			SheetActions(
+				confirmTitle: Text(.ChannelProperties.changeModesButton),
+				confirmIsDisabled: model.fitsKeyLengthLimit == false,
+				confirm: submit,
+				cancel: cancel
+			)
 		}
-		.padding(SheetMetrics.margin)
 		.frame(minWidth: 420, idealWidth: 460, minHeight: 440, idealHeight: 470)
 	}
 

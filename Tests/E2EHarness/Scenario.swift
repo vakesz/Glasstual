@@ -220,6 +220,9 @@ enum Scenario {
 		} else if kind.messaging {
 			try await driver.typeAndSend("/join #e2e")
 			try await driver.waitForTranscript("E2E_CHANNEL_READY")
+			if kind == .channelMessaging {
+				try await MainWindowColumnsCheck.run(driver: driver)
+			}
 			try await driver.typeAndSend("E2E_TYPED_MESSAGE")
 			try await driver.waitForTranscript("E2E_SERVER_REPLY")
 			try await driver.typeAndSend("fixture: E2E_TYPED_REPLY")

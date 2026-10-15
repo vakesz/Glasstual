@@ -7,16 +7,36 @@ nonisolated extension SettingsKeys {
 	/// The identity a new connection is seeded with.
 	enum Identity {
 		private static let group = "Identity -> "
+		/// Bounds imported free text: a multi-megabyte nickname would persist,
+		/// render and re-send on the wire.
+		private static let maximumIdentityLength = 512
 
-		static let nickname = SettingsKey(group + "Nickname", default: "Guest")
-		static let awayNickname = SettingsKey(group + "Away Nickname", default: "")
-		static let username = SettingsKey(group + "Username", default: "glasstual")
-		static let realName = SettingsKey(group + "Real Name", default: "Glasstual User")
+		static let nickname = SettingsKey(
+			group + "Nickname",
+			default: "Guest",
+			validation: { $0.count <= maximumIdentityLength }
+		)
+		static let awayNickname = SettingsKey(
+			group + "Away Nickname",
+			default: "",
+			validation: { $0.count <= maximumIdentityLength }
+		)
+		static let username = SettingsKey(
+			group + "Username",
+			default: "glasstual",
+			validation: { $0.count <= maximumIdentityLength }
+		)
+		static let realName = SettingsKey(
+			group + "Real Name",
+			default: "Glasstual User",
+			validation: { $0.count <= maximumIdentityLength }
+		)
 
 		static let ctcpVersionMasquerade = SettingsKey(
 			group + "CTCP Version Masquerade",
 			default: "",
-			traits: .unregistered
+			traits: .unregistered,
+			validation: { $0.count <= maximumIdentityLength }
 		)
 
 		static let onboardingCompleted = SettingsKey(group + "Onboarding Completed", default: false)

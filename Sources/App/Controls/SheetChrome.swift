@@ -37,6 +37,7 @@ struct SheetHeading: View {
 		VStack(alignment: .leading, spacing: SheetMetrics.headingSpacing) {
 			title
 				.font(.title2.weight(.semibold))
+				.accessibilityAddTraits(.isHeader)
 			if let subtitle {
 				subtitle
 					.foregroundStyle(.secondary)

@@ -42,35 +42,35 @@ enum TranscriptFormattedText {
 		var result: [NSAttributedString.Key: Any] = [:]
 		let defaultColor = attributes.preferredFontColor
 		var font = attributes.preferredFont
-		if runAttributes[RendererFormatting.monospace] != nil, let current = font {
-			font = NSFontManager.shared.convert(current, toFamily: "Menlo")
+		if runAttributes[IRCFormattingAttribute.monospace] != nil, let current = font {
+			font = NSFont.monospacedSystemFont(ofSize: current.pointSize, weight: .regular)
 			result[NSAttributedString.Key(TextFormatterAttributeName.monospaceAttributeName.rawValue)] = true
 		}
-		if runAttributes[RendererFormatting.bold] != nil, let current = font {
+		if runAttributes[IRCFormattingAttribute.bold] != nil, let current = font {
 			font = NSFontManager.shared.convert(current, toHaveTrait: .boldFontMask)
 			result[NSAttributedString.Key(TextFormatterAttributeName.boldAttributeName.rawValue)] = true
 		}
-		if runAttributes[RendererFormatting.italic] != nil, let current = font {
+		if runAttributes[IRCFormattingAttribute.italic] != nil, let current = font {
 			font = NSFontManager.shared.convert(current, toHaveTrait: .italicFontMask)
 			result[NSAttributedString.Key(TextFormatterAttributeName.italicAttributeName.rawValue)] = true
 		}
 		result[.font] = font
-		if runAttributes[RendererFormatting.strikethrough] != nil {
+		if runAttributes[IRCFormattingAttribute.strikethrough] != nil {
 			result[.strikethroughStyle] = NSUnderlineStyle.single.rawValue
 			result[NSAttributedString.Key(TextFormatterAttributeName.strikethroughAttributeName.rawValue)] = true
 		}
-		if runAttributes[RendererFormatting.underline] != nil {
+		if runAttributes[IRCFormattingAttribute.underline] != nil {
 			result[.underlineStyle] = NSUnderlineStyle.single.rawValue
 			result[NSAttributedString.Key(TextFormatterAttributeName.underlineAttributeName.rawValue)] = true
 		}
-		if let foreground = runAttributes[RendererFormatting.foregroundColor] {
+		if let foreground = runAttributes[IRCFormattingAttribute.foregroundColor] {
 			result[.foregroundColor] = mapColor(foreground)
 			result[NSAttributedString.Key(TextFormatterAttributeName.foregroundColorAttributeName.rawValue)] =
 				foreground
 		} else if let defaultColor {
 			result[.foregroundColor] = defaultColor
 		}
-		if let background = runAttributes[RendererFormatting.backgroundColor] {
+		if let background = runAttributes[IRCFormattingAttribute.backgroundColor] {
 			result[.backgroundColor] = mapColor(background)
 			result[NSAttributedString.Key(TextFormatterAttributeName.backgroundColorAttributeName.rawValue)] =
 				background

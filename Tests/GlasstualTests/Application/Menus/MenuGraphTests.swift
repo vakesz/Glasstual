@@ -481,14 +481,22 @@ struct MenuGraphTests {
 		#expect(shared.isEmpty, "Shortcuts with more than one command: \(shared)")
 	}
 
-	/// The Channel and Query menus hang in the menu bar, where macOS draws no
-	/// images, and the symbol pass drew them there anyway.
-	@Test("The menu bar's Channel and Query menus carry no symbols")
-	func menuBarChannelAndQueryMenusAreDrawnPlain() throws {
+	/// The Channel and Query menus hang in the menu bar and take the same
+	/// symbols as every other menu there.
+	@Test("The menu bar carries symbols on mapped commands")
+	func menuBarCarriesSymbolsOnMappedCommands() throws {
 		let controller = try #require(AppServices.delegate?.menuController)
 
 		for menu in [controller.mainMenuChannelMenu, controller.mainMenuDirectMenu] {
-			#expect(allItems(of: menu).allSatisfy { $0.image == nil })
+			let commandItems = allItems(of: menu).filter { $0.command?.symbolName != nil }
+			#expect(commandItems.isEmpty == false)
+			#expect(commandItems.allSatisfy { $0.image != nil })
 		}
+
+		let bar = MenuGraph.builtMainMenu(for: controller)
+		MenuPresentation.apply(to: bar)
+		let items = allItems(of: bar)
+		#expect(items.first { $0.command == .settings }?.image != nil)
+		#expect(items.first { $0.command == .toggleSidebar }?.image != nil)
 	}
 }

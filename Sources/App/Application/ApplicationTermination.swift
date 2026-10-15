@@ -72,7 +72,7 @@ final class ApplicationTermination {
 				return
 			}
 
-			Task { [weak self] in
+			Task { @MainActor [weak self] in
 				self?.terminatingSessionsDidFinish()
 			}
 		}
@@ -136,8 +136,7 @@ final class ApplicationTermination {
 	func presentConfirmation() {
 		stage = .confirming
 
-		NSApp.activate()
-		delegate.mainWindow.makeKeyAndOrderFront(nil)
+		ApplicationForeground.bringForward(delegate.mainWindow)
 
 		let request = AlertRequest(
 			title: PromptStrings.Application.quitTitle,
@@ -207,7 +206,7 @@ final class ApplicationTermination {
 		SettingsEditingSession.shared.finishEditing()
 		ServerConnection.cancelPendingRequests()
 		var acceptedSaves = SettingsSaveQueue.shared.waitForSaves()
-		settingsTask = Task { [weak self] in
+		settingsTask = Task { @MainActor [weak self] in
 			while true {
 				let saved = await acceptedSaves.value
 				guard let self else { return }
@@ -286,6 +285,7 @@ final class ApplicationTermination {
 		}
 
 		stage = .savingLogs
+		// One per drain below: the transcript files and the scrollback store.
 		pendingLogDrains = 2
 
 		Self.logger.debug("All sessions finished; saving history and draining transcript files")
@@ -325,7 +325,7 @@ final class ApplicationTermination {
 		scrollbackSaveDeadline?.stop()
 		scrollbackSaveDeadline = nil
 		stage = .savingCredentials
-		credentialTask = Task { [weak self] in
+		credentialTask = Task { @MainActor [weak self] in
 			await KeychainPersistence.shared.finishForTermination(confirmRetry: KeychainAlerts.confirmTerminationRetry)
 			guard let self else { return }
 			credentialTask = nil

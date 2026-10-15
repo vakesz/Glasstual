@@ -7,9 +7,13 @@ import AppKit
 /// Owns the visual policy for AppKit menu symbols. Keeping this policy in one
 /// place stops the contextual menus assembled at runtime from drifting apart.
 ///
-/// Only contextual menus get symbols. macOS draws no images beside its own
-/// menu-bar commands, so this application draws none there either. That
-/// includes the Channel and Query menus, which hang in the menu bar.
+/// Contextual menus and the menu bar both get symbols, following the macOS 26
+/// convention: an actionable command with a clear symbol carries it, and a
+/// command without one stays blank. Items AppKit owns -- Services, the Hide
+/// and Quit commands, Minimize, Zoom, Bring All to Front -- have no mapping
+/// and are left to the system. The Channel and Query menus hang in the menu
+/// bar and take the same symbols as their contextual copies. Whether a symbol
+/// is drawn is AppKit's call, which follows the running release.
 @MainActor
 enum MenuPresentation {
 	private static let symbolConfiguration = NSImage.SymbolConfiguration(
@@ -30,6 +34,8 @@ enum MenuPresentation {
 				item.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: item.title)
 			}
 
+			/* Visibility stays automatic: AppKit decides per release and
+			 system setting whether menu images are drawn. */
 			item.image = item.image?.withSymbolConfiguration(symbolConfiguration) ?? item.image
 
 			if item.hasSubmenu {
@@ -66,7 +72,6 @@ enum MenuPresentation {
 		)
 
 		let react = NSMenuItem(title: String(localized: .MainWindow.messageContextMenuRepliesReact), action: nil, keyEquivalent: "")
-		react.command = .transcriptReact
 		react.image = NSImage(systemSymbolName: "face.smiling", accessibilityDescription: react.title)
 
 		let reactMenu = NSMenu(title: react.title)

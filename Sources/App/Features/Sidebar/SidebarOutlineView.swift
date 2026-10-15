@@ -71,7 +71,7 @@ final class SidebarOutlineView: NSOutlineView, NSOutlineViewDataSource, NSOutlin
 	func enqueue(_ next: SidebarOutlineSnapshot) {
 		pendingSnapshot = next
 		guard updateTask == nil else { return }
-		updateTask = Task { [weak self] in
+		updateTask = Task { @MainActor [weak self] in
 			guard let self, !Task.isCancelled else { return }
 			updateTask = nil
 			guard let latest = pendingSnapshot else { return }
@@ -220,6 +220,7 @@ final class SidebarOutlineView: NSOutlineView, NSOutlineViewDataSource, NSOutlin
 	func outlineView(_: NSOutlineView, heightOfRowByItem item: Any) -> CGFloat {
 		guard let node = item as? SidebarOutlineNode else { return rowHeight }
 		if case .favorite = node.identity {
+			// A favorite draws two lines; measured for the source-list style.
 			return 40
 		}
 		return rowHeight

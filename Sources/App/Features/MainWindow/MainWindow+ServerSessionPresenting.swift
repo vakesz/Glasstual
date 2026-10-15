@@ -133,16 +133,4 @@ extension MainWindow: ServerSessionPresenting {
 	func destroyInputHistory(for item: ChatItem) {
 		inputHistory.destroy(item)
 	}
-
-	func notifyAllViewsAppearanceDidChange() {
-		for session in chatSession?.sessions ?? [] {
-			transcriptControllers.existingController(for: session)?
-				.reloadTheme()
-
-			for conversation in session.conversationList {
-				transcriptControllers.existingController(for: conversation)?
-					.reloadTheme()
-			}
-		}
-	}
 }

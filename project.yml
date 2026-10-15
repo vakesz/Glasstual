@@ -499,13 +499,18 @@ schemes:
       # hold the scrollback database, caches, scripts and extensions, into
       # "UI Reviews/GlasstualTests". The pre-action empties both before every
       # run, from Xcode or from `make test`. Keep its arguments equal to the
-      # two values below.
+      # two values below. GLASSTUAL_UNIT_TEST_HOST keeps that launch in the
+      # background: no activation, no windows raised or restored, no welcome
+      # flow. Smoke and E2E runs launch the app without it.
       environmentVariables:
         - variable: GLASSTUAL_UI_REVIEW_SUITE
           value: com.vakesz.glasstual.tests
           isEnabled: true
         - variable: GLASSTUAL_UI_REVIEW_DIRECTORY
           value: GlasstualTests
+          isEnabled: true
+        - variable: GLASSTUAL_UNIT_TEST_HOST
+          value: "1"
           isEnabled: true
       preActions:
         - name: Clear test scratch state

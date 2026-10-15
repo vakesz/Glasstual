@@ -235,6 +235,9 @@ final class UserNotificationController: NSObject, UserNotificationPresenting {
 			defer { self?.deliveries.complete(request.identifier) }
 			await self?.requestAuthorizationIfNeeded()
 			guard !Task.isCancelled else { return }
+			if await UNUserNotificationCenter.current().notificationSettings().authorizationStatus == .denied {
+				return
+			}
 			do {
 				let center = UNUserNotificationCenter.current()
 				try await center.add(request)
@@ -375,8 +378,7 @@ extension UserNotificationController: UNUserNotificationCenterDelegate {
 			return
 		}
 
-		NSApp.activate()
-		AppServices.delegate.mainWindow.makeKeyAndOrderFront(nil)
+		ApplicationForeground.bringForward(AppServices.delegate.mainWindow)
 
 		guard let sessionId = payload.sessionIdentifier else {
 			return
@@ -463,7 +465,7 @@ extension UserNotificationController: UNUserNotificationCenterDelegate {
 		/* The transfer may have been cleared before the click arrived. The click
 		 still asked for the transfer list, so the list still opens. */
 		_ = center.respondToNotification(for: identifier, sessionIdentifier: sessionIdentifier, accept: accept)
-		NSApp.activate()
+		ApplicationForeground.activate()
 		center.present()
 	}
 }

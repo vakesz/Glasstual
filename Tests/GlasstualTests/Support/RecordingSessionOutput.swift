@@ -158,6 +158,4 @@ final class RecordingSessionOutput: ServerSessionPresenting {
 	}
 
 	func destroyInputHistory(for _: ChatItem) {}
-
-	func notifyAllViewsAppearanceDidChange() {}
 }

@@ -19,6 +19,14 @@ struct MainWindowRootView: View {
 	let commands: MenuActionController?
 
 	@FocusState private var isSearchFieldFocused: Bool
+	/// The restored column widths, read once. An ideal that tracks the live
+	/// value re-proposes the column mid-drag, so the divider springs back.
+	@State private var sidebarIdealWidth = CGFloat(SettingsKeys.MainWindow.sidebarWidth.value)
+	@State private var memberListIdealWidth = CGFloat(SettingsKeys.MainWindow.memberListWidth.value)
+	@State private var sidebarWidthWriter = ColumnWidthWriter(SettingsKeys.MainWindow.sidebarWidth)
+	@State private var memberListWidthWriter = ColumnWidthWriter(SettingsKeys.MainWindow.memberListWidth)
+	/// The window's content width, which bounds what the columns may take.
+	@State private var contentWidth = MainWindowConstants.minimumContentSize.width
 
 	var body: some View {
 		ZStack {
@@ -30,10 +38,21 @@ struct MainWindowRootView: View {
 					commands: commands,
 					redirectTyping: redirectTyping
 				)
+				/* The width modifiers have to stay outermost: wrapped in
+				 `onGeometryChange`, the split view no longer sees them and the
+				 columns open at SwiftUI's own default widths. */
+				.onGeometryChange(for: CGFloat.self) { geometry in
+					geometry.size.width.rounded()
+				} action: { width in
+					// A closing column passes through widths nobody chose.
+					guard columns.isSidebarVisible else { return }
+					columns.recordSidebarWidth(width)
+					sidebarWidthWriter.record(width)
+				}
 				.navigationSplitViewColumnWidth(
 					min: MainWindowConstants.sidebarMinimumWidth,
-					ideal: MainWindowConstants.sidebarIdealWidth,
-					max: MainWindowConstants.sidebarMaximumWidth
+					ideal: min(sidebarIdealWidth, sidebarMaximumWidth),
+					max: sidebarMaximumWidth
 				)
 				// Automatic placement keeps the filter in the sidebar toolbar.
 				.toolbar {
@@ -58,21 +77,26 @@ struct MainWindowRootView: View {
 				.background(columns.conversationBackground.ignoresSafeArea(.container, edges: .top))
 				.inspector(isPresented: memberListVisibility) {
 					MemberListView(model: memberList, redirectTyping: redirectTyping)
-						.inspectorColumnWidth(
-							min: MemberListLayout.minimumWidth,
-							ideal: CGFloat(SettingsKeys.MainWindow.memberListWidth.value),
-							max: MemberListLayout.maximumWidth
-						)
 						.onGeometryChange(for: CGFloat.self) { geometry in
 							geometry.size.width.rounded()
 						} action: { width in
-							let key = SettingsKeys.MainWindow.memberListWidth
-							guard key.accepts(Double(width)), key.value != Double(width) else { return }
-							key.value = Double(width)
+							guard columns.isMemberListVisible else { return }
+							columns.recordMemberListWidth(width)
+							memberListWidthWriter.record(width)
 						}
+						.inspectorColumnWidth(
+							min: MemberListLayout.minimumWidth,
+							ideal: min(memberListIdealWidth, memberListMaximumWidth),
+							max: memberListMaximumWidth
+						)
 				}
 			}
 			.navigationSplitViewStyle(.balanced)
+			.onGeometryChange(for: CGFloat.self) { geometry in
+				geometry.size.width.rounded()
+			} action: { width in
+				contentWidth = width
+			}
 			// Attach search to the split view to place it in the window toolbar.
 			.searchable(
 				text: $sidebar.filterText,
@@ -105,6 +129,12 @@ struct MainWindowRootView: View {
 				.disabled(columns.isMemberListAvailable == false)
 				.help(MenuCommand.memberListTitle(isVisible: columns.isMemberListVisible))
 			}
+			/* Left to itself the field is laid out across the sidebar divider,
+			 which draws a second material over the sidebar's own. The trailing
+			 group is where the rest of the system keeps a search field. A fixed
+			 spacer keeps it out of the member-list button's glass group. */
+			ToolbarSpacer(.fixed, placement: .primaryAction)
+			DefaultToolbarItem(kind: .search, placement: .primaryAction)
 		}
 		// Synchronize menu requests and user-driven search focus.
 		.onChange(of: chrome.isSearchFieldFocused, adoptRequestedSearchFocus)
@@ -154,6 +184,21 @@ struct MainWindowRootView: View {
 		.accessibilityValue(Text(sidebar.filter.title))
 		.accessibilityIdentifier("sidebar-filter")
 		.help(String(localized: .Sidebar.filterLabel))
+	}
+
+	/** No column may be offered more than the window holds beside the
+	 others: SwiftUI never narrows the window's other columns to make room,
+	 and a split view that cannot fit ends AppKit's constraint passes with an
+	 exception. */
+	private var sidebarMaximumWidth: CGFloat {
+		MainWindowConstants.sidebarMaximumWidth(inContentWidth: contentWidth, memberListOpen: columns.isMemberListVisible)
+	}
+
+	private var memberListMaximumWidth: CGFloat {
+		MainWindowConstants.memberListMaximumWidth(
+			inContentWidth: contentWidth,
+			sidebar: columns.isSidebarVisible ? columns.sidebarWidth : nil
+		)
 	}
 
 	private var sidebarVisibility: Binding<NavigationSplitViewVisibility> {

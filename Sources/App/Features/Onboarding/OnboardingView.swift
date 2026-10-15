@@ -142,6 +142,7 @@ struct OnboardingView: View {
 				.buttonStyle(.borderless)
 				.disabled(model.currentStep.isSkippable == false)
 				.opacity(model.currentStep.isSkippable ? 1 : 0)
+				.accessibilityHidden(model.currentStep.isSkippable == false)
 
 			Spacer()
 
@@ -156,6 +157,7 @@ struct OnboardingView: View {
 			Button(.Onboarding.windowChromeBack, action: model.moveBack)
 				.disabled(model.isFirstStep)
 				.opacity(model.isFirstStep ? 0 : 1)
+				.accessibilityHidden(model.isFirstStep)
 				.keyboardShortcut(.leftArrow, modifiers: .command)
 
 			Button(model.primaryButtonTitle, action: advance)
@@ -200,7 +202,7 @@ private struct OnboardingPageIndicator: View {
 		HStack(spacing: UISpacing.regular) {
 			ForEach(0 ..< stepCount, id: \.self) { step in
 				Circle()
-					.fill(step == currentStep ? Color.accentColor : Color.secondary.opacity(0.25))
+					.fill(step == currentStep ? AnyShapeStyle(Color.accentColor) : AnyShapeStyle(.quaternary))
 					.frame(width: 7, height: 7)
 			}
 		}

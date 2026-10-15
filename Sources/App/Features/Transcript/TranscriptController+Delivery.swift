@@ -26,7 +26,7 @@ extension TranscriptController {
 		}
 	}
 
-	private func applyDeliveryUpdate(_ update: TranscriptDeliveryUpdate) {
+	func applyDeliveryUpdate(_ update: TranscriptDeliveryUpdate) {
 		let previousIdentifier: String? = if let backingView, let index = backingView.document.index(ofLine: update.lineNumber) {
 			backingView.document[index].messageIdentifier
 		} else {
@@ -36,6 +36,11 @@ extension TranscriptController {
 		transcriptProjection.deliveryWasApplied(update)
 		forgetRetiredProjectionMessages()
 		if let previousIdentifier, !MessageIdentifierKey.equal(previousIdentifier, update.messageIdentifier) {
+			/* The ledger is what a replay or re-render draws reactions from, so
+			 the ones the row showed under its old identity follow it. */
+			if let identifier = update.messageIdentifier {
+				reactions.carry(from: previousIdentifier, to: identifier)
+			}
 			forgetReactions(for: [previousIdentifier])
 		}
 		if let identifier = update.messageIdentifier, let merged = reactions.reactions(forMessage: identifier) {

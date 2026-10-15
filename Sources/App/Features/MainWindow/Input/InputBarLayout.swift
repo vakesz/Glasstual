@@ -14,10 +14,6 @@ enum InputBarLayout {
 	static let bottomPadding: CGFloat = 6
 	static let replyBannerHeight: CGFloat = 30
 	static let typingRowHeight: CGFloat = 18
-	/// What SwiftUI proposes for the field's host view; the field's own height
-	/// constraint moves within it as the text grows.
-	static let minimumHostHeight: CGFloat = 35
-	static let idealHostHeight: CGFloat = 44
 
 	/* The same capsule measured from the AppKit side: the container the field's
 	 scroll view sits in, inset from the host view, and the scroll view's own

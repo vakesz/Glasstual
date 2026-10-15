@@ -57,11 +57,6 @@ final class TranscriptControllerRegistry {
 		return controller
 	}
 
-	/// The controller drawing `item` if one has already been made.
-	func existingController(for item: ChatItem) -> TranscriptController? {
-		controllers[item.uniqueIdentifier]
-	}
-
 	func controller(withIdentifier identifier: String) -> TranscriptController? {
 		controllers[identifier]
 	}

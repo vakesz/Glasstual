@@ -20,6 +20,18 @@ extension MainWindow {
 		columnModel.restoreColumns(stateStore.loadLayout())
 	}
 
+	/** Stops the reader from narrowing the window past its open columns.
+
+	 SwiftUI keeps each column's width while the window narrows. Columns wider
+	 than the window would be laid out past its edges, and a split view that
+	 cannot fit at all ends AppKit's constraint passes with an exception.
+	 Opening columns are kept to what the window holds by the widths
+	 `MainWindowRootView` offers them; this never resizes the window. */
+	func updateMinimumContentSize() {
+		// The setter raises the window's own minimum to the columns'.
+		contentMinSize = MainWindowConstants.minimumContentSize
+	}
+
 	func toggleSidebarVisibility() {
 		MainWindowColumnAnimation.run { columnModel.isSidebarVisible.toggle() }
 	}

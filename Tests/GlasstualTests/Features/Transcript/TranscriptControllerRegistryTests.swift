@@ -43,7 +43,7 @@ struct TranscriptControllerRegistryTests {
 	func lookupsStartEmpty() {
 		let context = RegistryFixture()
 
-		#expect(context.registry.existingController(for: context.session) == nil)
+		#expect(context.registry.controller(withIdentifier: context.session.uniqueIdentifier) == nil)
 		#expect(context.session.presentation == nil)
 		#expect(context.registry.count == 0)
 	}
@@ -54,7 +54,7 @@ struct TranscriptControllerRegistryTests {
 
 		let controller = context.registry.controller(for: context.session)
 
-		#expect(context.registry.existingController(for: context.session) === controller)
+		#expect(context.registry.controller(withIdentifier: context.session.uniqueIdentifier) === controller)
 		#expect(context.session.presentation === controller)
 		#expect(context.session.transcriptController === controller)
 		#expect(controller.backingView == nil)
@@ -128,7 +128,7 @@ struct TranscriptControllerRegistryTests {
 
 		context.registry.forget(channel)
 
-		#expect(context.registry.existingController(for: channel) == nil)
+		#expect(context.registry.controller(withIdentifier: channel.uniqueIdentifier) == nil)
 		#expect(channel.presentation == nil)
 	}
 

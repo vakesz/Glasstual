@@ -276,12 +276,21 @@ struct SidebarOutlineViewTests {
 		#expect(filteredEntry.accessibilityCustomActions()?.isEmpty == true)
 	}
 
-	@Test("Either the app preference or Reduce Transparency makes the entire sidebar opaque")
-	func opaqueSidebarPolicy() {
-		#expect(!SidebarAppearance.usesOpaqueBackground(translucencyDisabled: false, reducesTransparency: false))
-		#expect(SidebarAppearance.usesOpaqueBackground(translucencyDisabled: true, reducesTransparency: false))
-		#expect(SidebarAppearance.usesOpaqueBackground(translucencyDisabled: false, reducesTransparency: true))
-		#expect(SidebarAppearance.usesOpaqueBackground(translucencyDisabled: true, reducesTransparency: true))
+	@Test("Only the app preference covers the system sidebar material", arguments: [false, true])
+	func opaqueSidebarFollowsPreference(translucencyDisabled: Bool) {
+		let defaults = GlasstualUserDefaults.container
+		let key = SettingsKeys.Appearance.disableSidebarTranslucency.name
+		let original = defaults.persistedObject(forKey: key)
+		defer {
+			if let original {
+				defaults.set(original, forKey: key)
+			} else {
+				defaults.removeObject(forKey: key)
+			}
+		}
+		defaults.set(translucencyDisabled, forKey: key)
+
+		#expect(SidebarAppearance().isOpaque == translucencyDisabled)
 	}
 
 	@Test(

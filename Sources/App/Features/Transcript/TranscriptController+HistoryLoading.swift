@@ -6,6 +6,12 @@ import AppKit
 import CocoaExtensions
 import Foundation
 
+/** One page of local scrollback the transcript pulls in. Shared so the initial
+ replay and the older-page fetch cannot drift apart. */
+nonisolated enum HistoryFetch {
+	static let pageSize: UInt = 100
+}
+
 /** Everything that puts older lines into a transcript: the initial replay from
  local storage, the scrollback pages the reader pulls in, and the server-history
  handshake behind them. The controller's own file owns live printing and the
@@ -52,12 +58,12 @@ private extension TranscriptController {
 		let viewIdentifier = associatedItem.uniqueIdentifier
 		let replayedResults = transcriptProjection.beginReplay(displaying: backingView?.displayedLines ?? [])
 		let context = makeHistoryRenderContext()
-		let generation = renderGeneration
+		let generation = renderScheduler.generation
 		let fetch = historyPageFetcher
 		let limitDate = Date(timeIntervalSince1970: viewLoadedTimestamp)
 		let request = ScrollbackFetchRequest(
 			viewIdentifier: viewIdentifier,
-			kind: .rowPage(before: nil, fetchLimit: 100, limitToDate: limitDate)
+			kind: .rowPage(before: nil, fetchLimit: HistoryFetch.pageSize, limitToDate: limitDate)
 		)
 		/* Everything the render needs is a value, so the fetch is awaited inside
 		 the job rather than before it. The job is standalone, so later prints do
@@ -173,7 +179,7 @@ private extension TranscriptController {
 		isReload: Bool,
 		completion: @escaping @MainActor () -> Void
 	) {
-		let generation = renderGeneration
+		let generation = renderScheduler.generation
 		var applications: [@MainActor () -> Void] = []
 		for start in stride(from: 0, to: results.count, by: 32) {
 			let chunk = Array(results[start ..< min(start + 32, results.count)])
@@ -186,7 +192,7 @@ private extension TranscriptController {
 			guard let self, acceptsRenderGeneration(generation) else { return }
 			completion()
 		}
-		pendingApplications.insert(contentsOf: applications, at: 0)
+		renderScheduler.prioritize(applications)
 	}
 
 	private func continueHistoryReplay(fetchSucceeded: Bool) {
@@ -211,14 +217,12 @@ private extension TranscriptController {
 		if viewIsVisible, let associatedItem {
 			attachedWindow?.noteItemWasViewed(associatedItem)
 		}
-		pendingApplications.insert(contentsOf: deferredPrepends, at: 0)
-		deferredPrepends.removeAll()
+		renderScheduler.releaseHeldApplications()
 	}
 
 	private func restoreTranscriptProjectionState() {
 		for update in Array(transcriptProjection.deliveryUpdates.values) {
-			backingView?.updateDelivery(update)
-			transcriptProjection.deliveryWasApplied(update)
+			applyDeliveryUpdate(update)
 		}
 		forgetRetiredProjectionMessages()
 		for (identifier, merged) in reactions.all {
@@ -245,7 +249,7 @@ extension TranscriptController {
 			return
 		}
 		guard !historyRecovery.isReloading else { return }
-		let generation = renderGeneration
+		let generation = renderScheduler.generation
 		let storage = scrollback
 		/* The banner outlives the controller, so the recovery state is held
 		 strongly and cleared on every exit: a retry whose controller died
@@ -309,11 +313,11 @@ extension TranscriptController {
 		}
 		historyRecovery.beginOlderPage()
 		historyRecovery.olderFailure = nil
-		let generation = renderGeneration
+		let generation = renderScheduler.generation
 		let fetch = historyPageFetcher
 		let viewIdentifier = associatedItem.uniqueIdentifier
 		let kind: ScrollbackFetchRequest.Kind
-		let limit = UInt(min(100, backingView.displayedBounds.remainingCapacity))
+		let limit = UInt(min(Int(HistoryFetch.pageSize), backingView.displayedBounds.remainingCapacity))
 		if let cursor = backingView.displayedLines.first?.historyCursor {
 			kind = .rowPage(before: cursor, fetchLimit: limit, limitToDate: nil)
 		} else {
@@ -491,7 +495,7 @@ extension TranscriptController {
 			)
 		} apply: { [weak self] (rendered: (results: [TranscriptRenderResult], entries: [ScrollbackEntry])) in
 			guard let self else { return }
-			let generation = renderGeneration
+			let generation = renderScheduler.generation
 			let apply: @MainActor () -> Void = { [weak self] in
 				guard let self, acceptsRenderGeneration(generation) else { return }
 				let accepted = applyPrependedLines(
@@ -503,7 +507,7 @@ extension TranscriptController {
 				completion?(accepted, rendered.entries)
 			}
 			if historyRecovery.isReloading {
-				deferredPrepends.append(apply)
+				renderScheduler.hold(apply)
 			} else {
 				apply()
 			}

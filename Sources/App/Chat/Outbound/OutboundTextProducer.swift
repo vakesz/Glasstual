@@ -50,9 +50,7 @@ final class OutboundTextProducer {
 		task?.cancel()
 		task = nil
 		producers.removeAll()
-		if nestedInsertionIndex != nil {
-			nestedInsertionIndex = 0
-		}
+		nestedInsertionIndex = nil
 	}
 
 	private func drain() {

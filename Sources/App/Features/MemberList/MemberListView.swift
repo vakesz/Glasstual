@@ -48,6 +48,13 @@ struct MemberListView: View {
 				redirectTyping: redirectTyping
 			)
 		}
+		// No glass here: the member column is flat and opaque, so the
+		// inspector's material never shows through the table's clear rows.
+		.background {
+			Rectangle()
+				.fill(.windowBackground)
+				.ignoresSafeArea(.container, edges: .top)
+		}
 		.onDisappear { model.hideProfile() }
 	}
 

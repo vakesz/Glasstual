@@ -22,7 +22,11 @@ private nonisolated let highlightExpressionLogger = Logger(
  Rendering runs off the main actor on several lines at a time, so the cache is
  a `Mutex` around a value this type never lets out. What it holds are
  `NSRegularExpression`s, which Foundation documents as immutable and safe to
- match from several threads; nothing here mutates one. */
+ match from several threads; nothing here mutates one.
+
+ The application keeps one, composed in `AppServices.swift`, and each
+ transcript carries it into its render context. Patterns come from the reader's
+ own settings, so there is nothing per view to keep apart. */
 final nonisolated class TranscriptHighlightExpressions: Sendable { // nonisolated: immutable
 	/// Enough for the keyword lists people actually keep, and small enough that
 	/// a channel-specific list cannot grow the cache without bound.
@@ -48,10 +52,6 @@ final nonisolated class TranscriptHighlightExpressions: Sendable { // nonisolate
 	}
 
 	private let cache = Mutex(Cache())
-
-	/// The one cache the renderer uses. Patterns come from the reader's own
-	/// settings, so there is nothing per view to keep apart.
-	static let shared = TranscriptHighlightExpressions()
 
 	/// The compiled form of `pattern`, or `nil` when it does not compile.
 	func expression(for pattern: String) -> NSRegularExpression? {

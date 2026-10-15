@@ -69,6 +69,15 @@ public let unicodeReplacementCharacter = "\u{FFFD}"
 /// `NAME_MAX` on APFS and HFS+.
 private let maximumFilenameBytes = 255
 
+/// Format and invisible controls that spoof filenames (`U+202E`, isolates,
+/// `U+200B`, `U+FEFF`). `CharacterSet.controlCharacters` covers `Cc` only,
+/// not `Cf`, so these are listed explicitly.
+private let filenameFormatControls = CharacterSet(charactersIn:
+	"\u{200B}\u{200C}\u{200D}\u{FEFF}\u{202A}\u{202B}\u{202C}\u{202D}")
+
+private let filenameFormatControlsContinued = CharacterSet(charactersIn:
+	"\u{202E}\u{2066}\u{2067}\u{2068}\u{2069}")
+
 /// Space characters that IRC peers use interchangeably with U+0020.
 private let spaceLikeScalars: CharacterSet = {
 	var set = CharacterSet()
@@ -100,10 +109,15 @@ public extension String {
 			return self
 		}
 
-		let disallowed = CharacterSet(charactersIn: "/:").union(.controlCharacters)
-		let substituted = trimmingCharacters(in: .whitespacesAndNewlines).unicodeScalars.map {
-			disallowed.contains($0) ? Unicode.Scalar("_") : $0
-		}
+		let disallowed = CharacterSet(charactersIn: "/:")
+			.union(.controlCharacters)
+			.union(.illegalCharacters)
+			.union(filenameFormatControls)
+			.union(filenameFormatControlsContinued)
+		let substituted = trimmingCharacters(in: .whitespacesAndNewlines)
+			.unicodeScalars.map {
+				disallowed.contains($0) ? Unicode.Scalar("_") : $0
+			}
 
 		var result = String(String.UnicodeScalarView(substituted))
 

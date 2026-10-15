@@ -11,16 +11,14 @@ struct TranscriptJumpToLatestButton: View {
 	var body: some View {
 		Button(action: action) {
 			Image(systemName: "arrow.down.to.line")
-				.font(.system(size: 12, weight: .semibold))
+				.font(.body.weight(.semibold))
 				.frame(
 					width: TranscriptMetrics.jumpToLatestButtonSize,
 					height: TranscriptMetrics.jumpToLatestButtonSize
 				)
-				.contentShape(Circle())
 		}
-		.buttonStyle(.plain)
-		.background(.thinMaterial, in: Circle())
-		.overlay(Circle().strokeBorder(.separator))
+		.buttonStyle(.glass)
+		.buttonBorderShape(.circle)
 		.accessibilityLabel(Text(.Transcript.menuNavigationJumpToPresent))
 		.help(Text(.Transcript.menuNavigationJumpToPresent))
 	}

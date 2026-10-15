@@ -10,9 +10,11 @@ import AppKit
 /// are ``MemberListLayout`` -- and what is here is what the window itself has
 /// to leave room for.
 nonisolated enum MainWindowConstants {
-	static let sidebarMinimumWidth: CGFloat = 180
-	static let sidebarIdealWidth: CGFloat = 220
-	static let sidebarMaximumWidth: CGFloat = 280
+	/// The sidebar's initial width and resize bounds, shared with the stored
+	/// width so a restored value always fits the column.
+	static let sidebarMinimumWidth: CGFloat = .init(SettingsKeys.MainWindow.sidebarWidthRange.lowerBound)
+	static let sidebarIdealWidth: CGFloat = .init(SettingsKeys.MainWindow.sidebarWidth.defaultValue)
+	static let sidebarMaximumWidth: CGFloat = .init(SettingsKeys.MainWindow.sidebarWidthRange.upperBound)
 	static let conversationMinimumWidth: CGFloat = 360
 	static let minimumSplitViewSlack: CGFloat = 60
 	/// The member list's own metrics belong to the member list; its narrowest
@@ -22,6 +24,37 @@ nonisolated enum MainWindowConstants {
 			+ minimumSplitViewSlack,
 		height: 500
 	)
+	/** The narrowest content that holds columns of these widths, `nil` for
+	 a closed column.
+
+	 The detail column runs under the sidebar and keeps the sidebar's width
+	 as its inset. SwiftUI lays it out no narrower than that inset, so the
+	 conversation beside the sidebar is never narrower than the sidebar. */
+	static func minimumContentWidth(sidebar: CGFloat?, memberList: CGFloat?) -> CGFloat {
+		max(minimumContentSize.width, columnsWidth(sidebar: sidebar ?? 0) + (memberList ?? 0))
+	}
+
+	/// The sidebar and the conversation beside it.
+	private static func columnsWidth(sidebar: CGFloat) -> CGFloat {
+		sidebar + max(sidebar, conversationMinimumWidth)
+	}
+
+	/** The widest the sidebar may be in content `width` points wide, leaving
+	 the member list, when it is open, room for its narrowest width. */
+	static func sidebarMaximumWidth(inContentWidth width: CGFloat, memberListOpen: Bool) -> CGFloat {
+		let room = width - (memberListOpen ? MemberListLayout.minimumWidth : 0)
+		// `columnsWidth` grows twice as fast once the sidebar passes the conversation's minimum.
+		let widest = room >= 2 * conversationMinimumWidth ? room / 2 : room - conversationMinimumWidth
+		return min(max(widest.rounded(.down), sidebarMinimumWidth), sidebarMaximumWidth)
+	}
+
+	/** The widest the member list may be in content `width` points wide
+	 beside a sidebar `sidebar` points wide, `nil` when it is closed. */
+	static func memberListMaximumWidth(inContentWidth width: CGFloat, sidebar: CGFloat?) -> CGFloat {
+		let widest = width - columnsWidth(sidebar: sidebar ?? 0)
+		return min(max(widest.rounded(.down), MemberListLayout.minimumWidth), MemberListLayout.maximumWidth)
+	}
+
 	static let minimumRestoredVisibleSize = NSSize(width: 80, height: 40)
 	/// The size Reset Window gives back, before ``minimumContentSize`` is
 	/// applied.

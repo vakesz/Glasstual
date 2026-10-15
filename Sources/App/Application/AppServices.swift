@@ -86,6 +86,11 @@ extension InlineImageLoader {
 	static let shared = InlineImageLoader()
 }
 
+extension TranscriptHighlightExpressions {
+	/// The compiled highlight keywords every transcript renders with.
+	static let shared = TranscriptHighlightExpressions()
+}
+
 extension InlineImageBudget {
 	static let shared = InlineImageBudget()
 }

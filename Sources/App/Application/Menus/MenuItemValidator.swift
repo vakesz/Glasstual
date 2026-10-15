@@ -148,7 +148,7 @@ struct MenuItemValidator {
 		/* Connect and Disconnect are one command in two states, so only the one
 		 that applies is shown; the proxy-free variant is Connect's Option
 		 alternate and follows it. */
-		let isConnected = session.map { $0.isConnected || $0.isConnecting } == true
+		let isConnected = policy.isConnected
 
 		switch item.command {
 		case .connect, .connectWithoutProxy:
@@ -170,7 +170,9 @@ struct MenuItemValidator {
 		case .duplicateServer, .serverProperties:
 			return session != nil
 		case .deleteServer:
-			return session.map { $0.isConnecting == false && $0.isConnected == false } == true
+			guard let session else { return false }
+			let rules = MenuServerActionRules(session: session)
+			return rules.canDeleteServer
 		default:
 			return true
 		}
@@ -371,17 +373,19 @@ struct MenuItemValidator {
 
 	private func validateCloseWindow(_ item: NSMenuItem) -> Bool {
 		let action = SettingsKeys.Input.commandWKeyAction.value
-		if action == .closeWindow || mainWindow.isKeyWindow == false {
-			item.title = ApplicationStrings.closeWindow
-			return true
-		}
-		guard let session else {
+		guard let behavior = CloseWindowBehavior.resolve(
+			action: action,
+			isKeyWindow: mainWindow.isKeyWindow,
+			hasSession: session != nil
+		) else {
 			item.title = ApplicationStrings.closeWindow
 			return false
 		}
-
-		switch action {
-		case .closeConversation:
+		switch behavior {
+		case .performClose:
+			item.title = ApplicationStrings.closeWindow
+			return true
+		case .partConversation:
 			guard let conversation else {
 				item.title = ApplicationStrings.closeWindow
 				return false
@@ -389,12 +393,14 @@ struct MenuItemValidator {
 			item.title = conversation.isChannel ? ApplicationStrings.leaveChannel : ApplicationStrings.closeQuery
 			return conversation.isChannel == false || conversation.isActive
 		case .disconnect:
+			guard let session else {
+				item.title = ApplicationStrings.closeWindow
+				return false
+			}
 			item.title = ApplicationStrings.disconnect(from: session.networkNameAlt)
 			return MenuServerActionRules(session: session).canDisconnect
 		case .terminate:
 			item.title = ApplicationStrings.quitApplication
-			return true
-		default:
 			return true
 		}
 	}

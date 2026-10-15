@@ -73,17 +73,26 @@ struct RulesPane: View {
 				ForEach(controller.rules) { rule in
 					Text(rule.description)
 						.tag(rule.id)
-						.contentShape(.rect)
-						.onTapGesture(count: 2) {
-							editor = RuleEditorPresentation(
-								rule: rule,
-								replacingIdentifier: rule.id
-							)
-						}
 				}
 				.onMove(perform: controller.move)
 			}
-			.frame(height: Self.listHeight)
+			.contextMenu(forSelectionType: MessageRule.ID.self) { ids in
+				if ids.count == 1 {
+					Button(String(localized: .Rules.editFilterButton)) {
+						controller.selection = ids.first
+						editSelection()
+					}
+					Button(String(localized: .Rules.deleteFilterButton), role: .destructive) {
+						controller.selection = ids.first
+						showsDeleteConfirmation = true
+					}
+				}
+			} primaryAction: { ids in
+				guard ids.count == 1 else { return }
+				controller.selection = ids.first
+				editSelection()
+			}
+			.frame(minHeight: Self.listHeight)
 			.overlay {
 				if controller.rules.isEmpty {
 					ContentUnavailableView(
@@ -160,7 +169,7 @@ struct RulesPane: View {
 			Button(String(localized: .Rules.deleteFilterButton), role: .destructive) {
 				controller.removeSelection()
 			}
-			Button(String(localized: .Rules.cancelButton), role: .cancel) {}
+			Button(PromptStrings.Action.cancel, role: .cancel) {}
 		} message: {
 			Text(String(localized: .Rules.deleteFilterMessage))
 		}

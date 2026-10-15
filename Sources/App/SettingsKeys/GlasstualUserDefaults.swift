@@ -98,6 +98,9 @@ final nonisolated class GlasstualUserDefaults: UserDefaults { // nonisolated: gu
 		// Compare persisted values so an explicit choice equal to the registered
 		// default is still saved and survives future changes to that default.
 		let oldValue = persistedObject(forKey: defaultName)
+		if oldValue == nil, value == nil {
+			return
+		}
 		if let oldValue = oldValue as? NSObject, oldValue.isEqual(value) {
 			return
 		}

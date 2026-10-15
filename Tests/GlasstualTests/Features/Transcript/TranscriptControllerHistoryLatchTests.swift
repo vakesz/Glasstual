@@ -148,10 +148,11 @@ struct TranscriptControllerHistoryLatchTests {
 
 	/// The banner offers Retry Server History only while both sides can ask
 	/// for another page: the view has no request in flight and is not retired,
-	/// and the session would admit a request for that channel. A server console
-	/// has no channel to ask about, so it never offers the button.
+	/// and the session would admit a request for that channel before the oldest
+	/// line the view shows. A view with no line has nothing to ask before, and
+	/// a server console has no channel to ask about, so neither offers it.
 	@Test("Retry Server History is offered only while the view can ask again")
-	func serverHistoryRetryAvailability() {
+	func serverHistoryRetryAvailability() async {
 		let session = TestServerSession()
 		session.enableCapability(.batch)
 		session.enableCapability(.serverTime)
@@ -164,7 +165,18 @@ struct TranscriptControllerHistoryLatchTests {
 		let window = window()
 		let controller = TranscriptController(conversation: channel, in: window)
 		defer { controller.tearDown(.permanentRemoval) }
+		controller.historyPageFetcher = { _ in .page([]) }
+		controller.loadsHistoryLazily = { false }
+		controller.ensureBackingView()
+		await controller.drainRenderJobs()
+		#expect(controller.serverHistoryRetryIsAvailable == false)
 
+		var line = ChatLine()
+		line.messageBody = "oldest shown"
+		line.lineType = .privateMessage
+		line.nickname = "alice"
+		controller.print(line)
+		await controller.drainRenderJobs()
 		#expect(controller.serverHistoryRetryIsAvailable)
 
 		controller.serverHistory.request = ServerHistoryRequest(

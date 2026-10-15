@@ -21,21 +21,23 @@ struct MainWindowSidebar: View {
 			Divider()
 			sidebarFooter
 		}
+		// The split view supplies the sidebar material; this only covers it.
 		.background {
-			SidebarBackgroundView(isOpaque: appearance.isOpaque)
-				.ignoresSafeArea(.container, edges: .top)
+			if appearance.isOpaque {
+				Rectangle()
+					.fill(.windowBackground)
+					.ignoresSafeArea(.container, edges: .top)
+			}
 		}
 	}
 
 	/** Two icon-only controls at the sidebar's foot.
 
-	 The `plus` is Notes' New Folder button: a press adds a channel, a press and
-	 hold offers the whole list. It used to be a plain menu with the indicator
-	 hidden, which reads as an immediate action and then is not one. The
-	 overflow menu keeps its indicator hidden -- `ellipsis.circle` already says
-	 there is more behind it -- and neither icon is permanently dimmed any
-	 longer: secondary foreground on a control that is not disabled reads as
-	 disabled. */
+	 Both are single circular menu buttons: the `plus` offers adding a server
+	 or a channel, and the overflow menu keeps its indicator hidden --
+	 `ellipsis.circle` already says there is more behind it -- and neither
+	 icon is permanently dimmed any longer: secondary foreground on a control
+	 that is not disabled reads as disabled. */
 	private var sidebarFooter: some View {
 		HStack(spacing: UISpacing.tight) {
 			Menu {
@@ -47,10 +49,9 @@ struct MainWindowSidebar: View {
 				}
 			} label: {
 				footerIcon("plus", titled: String(localized: .MainWindow.addServerOrChannel))
-			} primaryAction: {
-				commands?.addChannel(nil)
 			}
 			.sidebarFooterMenu()
+			.menuIndicator(.hidden)
 			.help(String(localized: .MainWindow.addServerOrChannel))
 
 			Spacer(minLength: UISpacing.regular)
@@ -104,17 +105,19 @@ struct MainWindowSidebar: View {
 			.labelStyle(.iconOnly)
 			.font(.callout.weight(.medium))
 			.frame(width: MainWindowConstants.footerIconSize, height: MainWindowConstants.footerIconSize)
-			.contentShape(Rectangle())
+			.contentShape(Circle())
 	}
 }
 
 private extension View {
 	/// A footer control: a bare icon as the label, with the accessory bar's
 	/// hover and pressed treatment so it answers the pointer the way the rows
-	/// above it do. The label style is left alone so the menu's own items keep
-	/// their titles.
+	/// above it do. The circular border matches the sidebar filter and the
+	/// jump-to-latest button. The label style is left alone so the menu's own
+	/// items keep their titles.
 	func sidebarFooterMenu() -> some View {
 		menuStyle(.button)
 			.buttonStyle(.accessoryBar)
+			.buttonBorderShape(.circle)
 	}
 }

@@ -45,7 +45,7 @@ nonisolated struct TranscriptReactionLedger: Sendable {
 		from nickname: String,
 		forMessage messageIdentifier: String
 	) -> ReactionsByEmoji? {
-		let emoji = TranscriptTextSanitizer.singleLine(wireEmoji)
+		let emoji = ControlCharacterDisposition.singleLine(wireEmoji)
 		guard !emoji.isEmpty, emoji.utf16.count <= Self.maximumReactionLength,
 		      !nickname.isEmpty, !messageIdentifier.isEmpty
 		else {
@@ -60,6 +60,28 @@ nonisolated struct TranscriptReactionLedger: Sendable {
 		reactions[emoji] = nicknames
 		reactionsByMessage[MessageIdentifierKey(messageIdentifier)] = reactions
 		return reactions
+	}
+
+	/** Copies what `previousIdentifier` recorded onto `messageIdentifier`, for a
+	 row whose identity changed — a local echo the server acknowledged under
+	 its own identifier. The earlier reactors come first, as they were drawn,
+	 and each reaction keeps the per-reaction cap. The previous entry stays
+	 until `forget(_:stillHeld:)` finds no row left for it. */
+	mutating func carry(from previousIdentifier: String, to messageIdentifier: String) {
+		let previousKey = MessageIdentifierKey(previousIdentifier)
+		let key = MessageIdentifierKey(messageIdentifier)
+		guard previousKey != key, !messageIdentifier.isEmpty,
+		      let previous = reactionsByMessage[previousKey]
+		else {
+			return
+		}
+		var reactions = reactionsByMessage[key] ?? [:]
+		for (emoji, earlier) in previous {
+			let later = reactions[emoji] ?? []
+			let merged = earlier + later.filter { !earlier.contains($0) }
+			reactions[emoji] = Array(merged.prefix(Self.maximumReactorsPerReaction))
+		}
+		reactionsByMessage[key] = reactions
 	}
 
 	/// Drops what `identifiers` recorded, except where the transcript still

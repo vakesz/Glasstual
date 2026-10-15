@@ -12,6 +12,8 @@ struct MainWindowStateDefaultsTests {
 		SettingsKeys.MainWindow.sidebarVisible.name,
 		SettingsKeys.MainWindow.memberListVisible.name,
 		SettingsKeys.MainWindow.sidebarSelection.name,
+		SettingsKeys.MainWindow.sidebarWidth.name,
+		SettingsKeys.MainWindow.memberListWidth.name,
 		SettingsKeys.MainWindow.textSizeMultiplier.name,
 	]
 

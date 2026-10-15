@@ -92,6 +92,11 @@ nonisolated struct TranscriptRenderContext: Sendable {
 	/// The server's casemapping, which decides what spells the same name.
 	var caseMapping = ISupportCaseMapping.rfc1459
 	var sessionReactions: [MessageIdentifierKey: ReactionsByEmoji] = [:]
+	/** The compiled highlight keywords the body renderer matches with. A
+	 reference the application shares between every transcript, so a pattern
+	 compiles once however many views render it; it is immutable from here,
+	 and its cache is guarded by its own lock. */
+	var highlightExpressions = TranscriptHighlightExpressions()
 
 	func reactions(for line: ChatLineSnapshot) -> ReactionsByEmoji {
 		let archived = line.reactions ?? [:]

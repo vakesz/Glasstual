@@ -19,6 +19,10 @@ struct STSConnectionPolicy {
 final class STSPolicyStore {
 	private let userDefaults: UserDefaults?
 	private var policies: [String: STSPolicy] = [:]
+	/// Plaintext upgrades that failed, to avoid looping against a dead TLS port.
+	private var failedUpgrades: [String: (port: UInt16, date: Date)] = [:]
+	/// How long a failed upgrade suppresses another to the same endpoint.
+	static let failedUpgradeCooldown: TimeInterval = 5 * 60
 
 	init(userDefaults: UserDefaults?) {
 		self.userDefaults = userDefaults
@@ -71,7 +75,16 @@ final class STSPolicyStore {
 		certificateChainValidated: Bool
 	) -> STSPolicyAction {
 		if secured == false {
+			// An explicit `duration=0` withdraws the policy and never upgrades.
+			// A port-only offer without a duration still upgrades, as before.
+			if values.hasDuration, values.duration <= 0 {
+				return .none
+			}
 			guard values.port > 0 else {
+				return .none
+			}
+
+			if upgradeRecentlyFailed(host: host, port: values.port) {
 				return .none
 			}
 
@@ -111,6 +124,28 @@ final class STSPolicyStore {
 		setPolicy(policy, forHost: host)
 
 		return .stored(port: policyPort)
+	}
+
+	/// Records that a plaintext-to-TLS upgrade to `port` failed, so the next
+	/// offer within the cooldown stays on plaintext instead of looping.
+	func noteUpgradeFailed(host: String, port: UInt16) {
+		failedUpgrades[key(forHost: host)] = (port, Date())
+	}
+
+	/// Clears the failure record, e.g. after a successful TLS connection.
+	func noteUpgradeSucceeded(host: String) {
+		failedUpgrades.removeValue(forKey: key(forHost: host))
+	}
+
+	private func upgradeRecentlyFailed(host: String, port: UInt16) -> Bool {
+		guard let record = failedUpgrades[key(forHost: host)], record.port == port else {
+			return false
+		}
+		if Date().timeIntervalSince(record.date) > Self.failedUpgradeCooldown {
+			failedUpgrades.removeValue(forKey: key(forHost: host))
+			return false
+		}
+		return true
 	}
 
 	/** The key one host's policy is stored under.

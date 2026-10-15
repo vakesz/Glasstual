@@ -33,16 +33,18 @@ nonisolated struct LinkParserResult: Sendable, Hashable {
  `NSDataDetector` and `NSRegularExpression` are references, so a value cannot
  hold them and go on calling itself one. They are built once, never mutated,
  and Foundation matches with them from any thread, which is what a holder of
- `let`s says. */
-private final nonisolated class LinkParserExpressions: Sendable { // nonisolated: immutable
-	static let shared = LinkParserExpressions()
+ `let`s says.
 
+ Compiled from fixed patterns and read by nothing but ``LinkParser``, they are
+ a constant of the parser rather than a service: no setting reaches them and
+ nothing about them differs between callers, so there is nothing to compose. */
+private final nonisolated class LinkParserExpressions: Sendable { // nonisolated: immutable
 	let detector: NSDataDetector
 	/// Matches that `NSDataDetector` does not produce on its own, paired with
 	/// whether the match carries a scheme.
 	let supplementary: [(expression: NSRegularExpression, hasScheme: Bool)]
 
-	private init() {
+	init() {
 		do {
 			detector = try NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue)
 		} catch {
@@ -86,7 +88,7 @@ nonisolated enum LinkParser {
 
 		var candidates: [(range: NSRange, hasScheme: Bool)] = []
 
-		for match in LinkParserExpressions.shared.detector.matches(in: string, range: fullRange) {
+		for match in expressions.detector.matches(in: string, range: fullRange) {
 			guard let url = match.url, let scheme = url.scheme?.lowercased() else {
 				continue
 			}
@@ -108,7 +110,7 @@ nonisolated enum LinkParser {
 			candidates.append((match.range, explicitScheme))
 		}
 
-		for (expression, hasScheme) in LinkParserExpressions.shared.supplementary {
+		for (expression, hasScheme) in expressions.supplementary {
 			for match in expression.matches(in: string, range: fullRange) {
 				candidates.append((match.range, hasScheme))
 			}
@@ -170,6 +172,8 @@ nonisolated enum LinkParser {
 		].compactMap(\.self)
 
 	// MARK: - Configuration
+
+	private static let expressions = LinkParserExpressions()
 
 	private static let minimumLength = 4
 

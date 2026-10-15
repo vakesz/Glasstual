@@ -100,7 +100,7 @@ nonisolated struct TranscriptRow: Equatable, Sendable {
 		guard let wireNickname = nickname else { return (timestamp, "") }
 		/* A name is wire text like a message body, and is held to one line the
 		 same way. */
-		let nickname = TranscriptTextSanitizer.singleLine(wireNickname)
+		let nickname = ControlCharacterDisposition.singleLine(wireNickname)
 		let formattedNickname: String = switch lineType {
 		case .action: String(format: ChatLineFormat.actionNickname, nickname)
 		case .notice: String(format: ChatLineFormat.noticeNickname, nickname)

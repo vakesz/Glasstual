@@ -156,7 +156,6 @@ struct SettingsComboField: View {
 			.menuIndicator(.hidden)
 			.fixedSize()
 			.accessibilityLabel(Text(title))
-			.accessibilityHint(Text(.Settings.comboPresetsHelp))
 			.help(Text(.Settings.comboPresetsHelp))
 		}
 	}

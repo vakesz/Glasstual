@@ -269,6 +269,18 @@ final nonisolated class ConnectionConfigEnvelope: NSObject, NSSecureCoding { // 
 		super.init()
 	}
 
+	/// Round-trips the envelope through secure coding, reporting whether the
+	/// host would be able to read it. Lets the caller fail fast instead of
+	/// waiting for a callback that never comes.
+	static func roundTrip(_ envelope: ConnectionConfigEnvelope) -> ConnectionConfig? {
+		guard let data = try? NSKeyedArchiver.archivedData(withRootObject: envelope, requiringSecureCoding: true),
+		      let decoded = try? NSKeyedUnarchiver.unarchivedObject(ofClass: ConnectionConfigEnvelope.self, from: data)
+		else {
+			return nil
+		}
+		return decoded.config
+	}
+
 	static var supportsSecureCoding: Bool {
 		true
 	}

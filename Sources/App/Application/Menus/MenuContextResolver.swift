@@ -264,6 +264,8 @@ final class MenuContextResolver {
 	 no supermenu; a submenu does. */
 	func beginMenuSession(for menu: NSMenu) {
 		guard menu.supermenu == nil else { return }
+		selectionResetTask?.cancel()
+		selectionResetTask = nil
 		menuIsOpen = true
 		pointedSession = mainWindow.selectedSession
 		pointedConversation = mainWindow.selectedConversation
@@ -278,7 +280,7 @@ final class MenuContextResolver {
 		 Deferring to the next main-actor turn preserves the click-time
 		 selection until that action has run. */
 		selectionResetTask?.cancel()
-		selectionResetTask = Task { [weak self] in
+		selectionResetTask = Task { @MainActor [weak self] in
 			guard let self, Task.isCancelled == false else {
 				return
 			}

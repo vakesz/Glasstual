@@ -144,7 +144,7 @@ extension MainWindow {
 		registerInput(key: .enter, modifiers: .control) { $0.sendControlEnterMessageMaybe($1) }
 		registerInput(key: .returnKey, modifiers: .command) { $0.sendMessageAsAction($1) }
 		registerInput(key: .enter, modifiers: .command) { $0.sendMessageAsAction($1) }
-		/* Control+Command+T, beside Control+Command+S for the server list:
+		/* Control+Command+T, beside Control+Command+S for the sidebar:
 		 Option+Command+L is the Window menu's File Transfers, and
 		 Option+Command+T is the system's Show/Hide Toolbar. */
 		registerInput(character: "t", modifiers: [.control, .command]) { $0.focusTranscript($1) }

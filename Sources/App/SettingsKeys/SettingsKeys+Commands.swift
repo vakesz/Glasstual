@@ -7,6 +7,7 @@ nonisolated extension SettingsKeys {
 	/// Command defaults and the "apply to all connections" switches.
 	enum Commands {
 		private static let group = "Commands -> "
+		private static let maximumCommandMessageLength = 1024
 
 		static let amsgAllConnections = SettingsKey(group + "Amsg All Connections", default: false)
 		static let awayAllConnections = SettingsKey(group + "Away All Connections", default: false)
@@ -15,20 +16,27 @@ nonisolated extension SettingsKeys {
 
 		static let kickMessage = SettingsKey(
 			group + "Kick Message",
-			default: "Your behavior is not conducive to the desired environment."
+			default: "Your behavior is not conducive to the desired environment.",
+			validation: { $0.count <= maximumCommandMessageLength }
 		)
 
 		static let irCopGlineMessage = SettingsKey(
 			group + "IRCop G:Line Message",
-			default: "35d Your behavior is not conducive to the desired environment."
+			default: "35d Your behavior is not conducive to the desired environment.",
+			validation: { $0.count <= maximumCommandMessageLength }
 		)
 
 		static let irCopKillMessage = SettingsKey(
 			group + "IRCop Kill Message",
-			default: "Your behavior is not conducive to the desired environment."
+			default: "Your behavior is not conducive to the desired environment.",
+			validation: { $0.count <= maximumCommandMessageLength }
 		)
 
-		static let irCopShunMessage = SettingsKey(group + "IRCop Shun Message", default: "1d Shunned.")
+		static let irCopShunMessage = SettingsKey(
+			group + "IRCop Shun Message",
+			default: "1d Shunned.",
+			validation: { $0.count <= maximumCommandMessageLength }
+		)
 
 		static let banFormat = SettingsKey(group + "Ban Format", default: HostmaskBanFormat.whainn)
 

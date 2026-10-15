@@ -52,11 +52,12 @@ nonisolated struct Hostmask: Equatable, Sendable {
 	}
 
 	static func isValidNickname(_ value: String, maximumLength: Int = 50) -> Bool {
+		// NICKLEN is a byte budget on the wire, so multibyte names count UTF-8.
+		guard value != "*", !value.isEmpty, value.utf8.count <= maximumLength else {
+			return false
+		}
 		let source = value as NSString
-		return value != "*"
-			&& source.length > 0
-			&& source.length <= maximumLength
-			&& source.containsHostmaskForbiddenCharacters(includingSeparators: true) == false
+		return source.containsHostmaskForbiddenCharacters(includingSeparators: true) == false
 	}
 
 	static func isValidUsername(_ value: String) -> Bool {

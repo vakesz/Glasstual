@@ -234,6 +234,10 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 	// MARK: - NSApplication Delegate
 
 	func applicationWillFinishLaunching(_: Notification) {
+		/* Before anything else: the policy decides whether the activation the
+		 launch asked for happens at all. */
+		ApplicationForeground.prepareForLaunch(NSApp)
+
 		/* A second copy used to be met with a modal warning that the
 		 settings "may become corrupted". `LSMultipleInstancesProhibited`
 		 means there is never a second copy to warn about: Launch Services
@@ -249,8 +253,12 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 	}
 
 	func applicationDidFinishLaunching(_: Notification) {
+		/* The test host lays the main window out without showing it, and
+		 shows no welcome flow over it. */
+		guard ApplicationForeground.mode.takesForeground else { return }
+
 		mainWindow.makeMain()
-		mainWindow.makeKeyAndOrderFront(nil)
+		ApplicationForeground.raise(mainWindow)
 		presentOnboardingIfNeeded()
 	}
 
@@ -282,12 +290,15 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 		AppServices.scripts.refreshCommands()
 	}
 
-	func applicationShouldHandleReopen(_: NSApplication, hasVisibleWindows _: Bool) -> Bool {
+	func applicationShouldHandleReopen(_: NSApplication, hasVisibleWindows: Bool) -> Bool {
 		if applicationIsTerminating {
 			return false
 		}
+		guard hasVisibleWindows == false else {
+			return true
+		}
 
-		mainWindow.makeKeyAndOrderFront(nil)
+		ApplicationForeground.raise(mainWindow)
 		return true
 	}
 

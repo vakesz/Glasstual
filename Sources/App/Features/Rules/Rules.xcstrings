@@ -148,30 +148,6 @@
         }
       }
     },
-    "cancel-button": {
-      "comment": "Button that cancels deleting or editing a chat filter.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cancel"
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mégse"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Abbrechen"
-          }
-        }
-      }
-    },
     "delete-filter-button": {
       "comment": "Destructive button that confirms deleting a chat filter.",
       "extractionState": "manual",
@@ -1560,30 +1536,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nur private Nachrichten"
-          }
-        }
-      }
-    },
-    "save-button": {
-      "comment": "Button that saves an edited chat filter.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Save"
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mentés"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sichern"
           }
         }
       }

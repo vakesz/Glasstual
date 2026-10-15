@@ -71,6 +71,14 @@ struct SystemAlertPresenter: AlertPresenter {
 			return AlertPresenterResult(response: request.escapeButton, suppressionChecked: false)
 		}
 
+		// The unit-test host never takes the foreground, so a main-window alert
+		// would fall through to a blocking modal and hang the suite.
+		if ApplicationForeground.mode.takesForeground == false, presentation == .mainWindow,
+		   SheetPresentation.hostWindow?.isVisible != true
+		{
+			return AlertPresenterResult(response: request.escapeButton, suppressionChecked: false)
+		}
+
 		guard let parent = sheetParent(for: presentation) else {
 			return presentModal(request)
 		}
@@ -103,8 +111,7 @@ struct SystemAlertPresenter: AlertPresenter {
 				|| NSApp.windows.contains(where: \.isVisible) == false
 
 			if revealMainWindow {
-				host.makeKeyAndOrderFront(nil)
-				NSApp.activate()
+				ApplicationForeground.bringForward(host)
 			}
 		}
 

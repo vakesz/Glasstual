@@ -35,12 +35,11 @@ extension TranscriptView {
 			                    range: NSRange(location: start, length: result.length - start))
 		}
 		let theme = controller.theme
-		let paragraph = NSMutableParagraphStyle()
-		paragraph.lineSpacing = theme.lineSpacing
-		paragraph.paragraphSpacing = theme.messageSpacing
-		paragraph.firstLineHeadIndent = theme.horizontalPadding
-		paragraph.headIndent = theme.horizontalPadding
-		paragraph.tailIndent = -theme.horizontalPadding
+		let paragraph = TranscriptMetrics.transcriptParagraph(
+			lineSpacing: theme.lineSpacing,
+			messageSpacing: theme.messageSpacing,
+			horizontalPadding: theme.horizontalPadding
+		)
 
 		let metadata = metadataAttributes(for: line, paragraph: paragraph)
 		result.append(NSAttributedString(string: "\(header.timestamp)  ", attributes: metadata.merging([
@@ -55,7 +54,7 @@ extension TranscriptView {
 			 popover is anchored to the name alone. */
 			var separatorAttributes = attributes
 			separatorAttributes.removeValue(forKey: .transcriptAction)
-			TranscriptTextSanitizer.appendIsolated(
+			TranscriptIsolate.appendIsolated(
 				NSAttributedString(string: header.nickname, attributes: attributes),
 				to: result,
 				isolateAttributes: separatorAttributes
@@ -74,7 +73,7 @@ extension TranscriptView {
 				attributes: runAttributes(run, line: line, paragraph: paragraph)
 			))
 		}
-		TranscriptTextSanitizer.appendIsolated(body, to: result, isolateAttributes: metadata)
+		TranscriptIsolate.appendIsolated(body, to: result, isolateAttributes: metadata)
 		result.addAttribute(.transcriptSelectionSegment, value: "body",
 		                    range: NSRange(location: bodyStart, length: result.length - bodyStart))
 		let detailsStart = result.length
@@ -306,8 +305,8 @@ extension TranscriptView {
 		piece.addAttributes(attributes, range: NSRange(location: 0, length: piece.length))
 		if line.deliveryState == .failed, let reason = line.deliveryFailureReason, reason.isEmpty == false {
 			piece.append(NSAttributedString(string: " ", attributes: attributes))
-			TranscriptTextSanitizer.appendIsolated(
-				NSAttributedString(string: TranscriptTextSanitizer.singleLine(reason), attributes: attributes),
+			TranscriptIsolate.appendIsolated(
+				NSAttributedString(string: ControlCharacterDisposition.singleLine(reason), attributes: attributes),
 				to: piece,
 				isolateAttributes: attributes
 			)
@@ -354,8 +353,8 @@ extension TranscriptView {
 			var padding = attributes
 			padding[.transcriptPadding] = true
 			result.append(NSAttributedString(string: "\u{2009}", attributes: padding))
-			TranscriptTextSanitizer.appendIsolated(
-				NSAttributedString(string: TranscriptTextSanitizer.singleLine(emoji), attributes: attributes),
+			TranscriptIsolate.appendIsolated(
+				NSAttributedString(string: ControlCharacterDisposition.singleLine(emoji), attributes: attributes),
 				to: result,
 				isolateAttributes: attributes
 			)
@@ -370,11 +369,10 @@ extension TranscriptView {
 		paragraph: NSParagraphStyle
 	) {
 		let image = inlineImage.image
+		let availableWidth = max(0, textView.bounds.width - TranscriptMetrics.inlineImageSideInset)
+		let boxWidth = min(TranscriptMetrics.inlineImageBox.width, availableWidth)
 		let maxSize = NSSize(
-			width: min(
-				TranscriptMetrics.inlineImageBox.width,
-				max(120, textView.bounds.width - TranscriptMetrics.inlineImageSideInset)
-			),
+			width: max(boxWidth, min(availableWidth, 120)),
 			height: TranscriptMetrics.inlineImageBox.height
 		)
 		let size = inlineImage.originalSize

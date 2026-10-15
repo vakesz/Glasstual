@@ -8,7 +8,6 @@ import Foundation
 import SwiftUI
 
 extension Notification.Name {
-	static let mainWindowAppearanceChanged = Notification.Name("Glasstual.mainWindowAppearanceChanged")
 	/// The one declaration of the selection notification; an observer that
 	/// spells the name itself is watching a name nobody posts.
 	static let mainWindowSelectionChanged = Notification.Name("Glasstual.mainWindowSelectionChanged")
@@ -30,6 +29,18 @@ final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, CustomK
 	let sheetModel = MainWindowSheetModel()
 	let chrome = MainWindowChrome()
 	private var hostingController: NSHostingController<MainWindowRootView>?
+
+	/// Never lower than the open columns need, whoever sets it: the hosting
+	/// view resets the minimum as it lays the columns out.
+	override var contentMinSize: NSSize {
+		get { super.contentMinSize }
+		set {
+			super.contentMinSize = NSSize(
+				width: max(newValue.width, columnModel.minimumContentWidth),
+				height: max(newValue.height, MainWindowConstants.minimumContentSize.height)
+			)
+		}
+	}
 
 	/// The input field is built by its content view so it can use TextKit 2.
 	var inputTextField: InputField! {
@@ -172,6 +183,9 @@ private extension MainWindow {
 			commands: AppServices.delegate.menuController
 		)
 		let hostingController = NSHostingController(rootView: rootView)
+		/* The window sizes itself. Given the minimum size, SwiftUI widens the
+		 window to present the member list instead of narrowing the
+		 conversation; `fitContentToColumns()` keeps the window wide enough. */
 		hostingController.sizingOptions = []
 		contentViewController = hostingController
 		self.hostingController = hostingController
@@ -198,23 +212,17 @@ extension MainWindow {
 		}
 	}
 
-	/** Adopts a new application appearance, when there is a new one to adopt.
+	/** Adopts the application's appearance override, if any.
 
-	 This runs for every appearance notification and every screen change, and
-	 it bumps `appearanceRevision`, which rebuilds the whole transcript
-	 representable. The application's appearance snapshot is a value, so
-	 comparing it answers whether there is anything to rebuild. */
+	 Only the window's `NSAppearance` follows here. The transcripts and the
+	 conversation background resolve theme colours, and `ThemeStore` announces
+	 those through `.themeAppearanceChanged` and its observed snapshot, so they
+	 update in place. */
 	private func updateAppearance() {
 		let properties = AppServices.appearance.properties
 		guard appearanceSnapshot != properties else { return }
 		appearanceSnapshot = properties
 		appearance = properties.appKitAppearance
-		notifyMainWindowAppearanceChanged()
-	}
-
-	private func notifyMainWindowAppearanceChanged() {
-		columnModel.appearanceRevision &+= 1
-		NotificationCenter.default.post(name: .mainWindowAppearanceChanged, object: self)
 	}
 
 	private func loadWindowState() {

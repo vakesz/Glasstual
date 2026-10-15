@@ -320,19 +320,19 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hide Server List"
+            "value" : "Hide Sidebar"
           }
         },
         "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kiszolgálólista elrejtése"
+            "value" : "Oldalsáv elrejtése"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Serverliste ausblenden"
+            "value" : "Seitenleiste ausblenden"
           }
         }
       }
@@ -4850,19 +4850,19 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "View Logs"
+            "value" : "Show Logs in Finder"
           }
         },
         "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Naplók megtekintése"
+            "value" : "Naplók megjelenítése a Finderben"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Protokolle anzeigen"
+            "value" : "Protokolle im Finder anzeigen"
           }
         }
       }
@@ -5114,19 +5114,19 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Show Server List"
+            "value" : "Show Sidebar"
           }
         },
         "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kiszolgálólista megjelenítése"
+            "value" : "Oldalsáv megjelenítése"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Serverliste einblenden"
+            "value" : "Seitenleiste einblenden"
           }
         }
       }

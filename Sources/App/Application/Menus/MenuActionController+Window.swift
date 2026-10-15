@@ -16,13 +16,17 @@ private let menuWindowLogger = Logger(
 extension MenuActionController {
 	@objc func closeWindow(_ sender: Any?) {
 		let action = SettingsKeys.Input.commandWKeyAction.value
-		if action == .closeWindow || mainWindow.isKeyWindow == false {
+		guard let behavior = CloseWindowBehavior.resolve(
+			action: action,
+			isKeyWindow: mainWindow.isKeyWindow,
+			hasSession: context.selectedSession != nil
+		) else { return }
+		switch behavior {
+		case .performClose:
 			(NSApp.keyWindow ?? NSApp.mainWindow)?.performClose(sender)
 			return
-		}
-		guard let session = context.selectedSession else { return }
-		switch action {
-		case .closeConversation:
+		case .partConversation:
+			guard let session = context.selectedSession else { return }
 			guard let conversation = context.selectedConversation else { return }
 			if conversation.isChannel {
 				guard conversation.isActive else { return }
@@ -31,19 +35,16 @@ extension MenuActionController {
 				chatSession?.destroyConversation(conversation)
 			}
 		case .disconnect:
-			guard session.isConnecting || session.isConnected else { return }
+			guard let session = context.selectedSession,
+			      session.isConnecting || session.isConnected else { return }
 			session.quit()
 		case .terminate:
 			NSApp.terminate(sender)
-		case .closeWindow:
-			break
-		@unknown default:
-			break
 		}
 	}
 
 	@objc func showMainWindow(_ sender: Any?) {
-		mainWindow.makeKeyAndOrderFront(sender)
+		ApplicationForeground.raise(mainWindow, sender: sender)
 	}
 
 	@objc func centerMainWindow(_: Any?) {
@@ -151,15 +152,5 @@ extension MenuActionController {
 
 	@objc func connectToGlasstualTestingChannel(_: Any?) {
 		ServerConnection.connect(to: .testing)
-	}
-}
-
-/// The order requested by the conversation-sort command.
-enum ConversationOrdering {
-	static func channelsFirst(_ lhs: Conversation, _ rhs: Conversation) -> Bool {
-		if lhs.isChannel != rhs.isChannel {
-			return lhs.isChannel
-		}
-		return lhs.name.lowercased().compare(rhs.name.lowercased()) == .orderedAscending
 	}
 }

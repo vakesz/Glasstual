@@ -158,7 +158,9 @@ run_bounded() {
 find "$HOME/Library/Logs/DiagnosticReports" -name 'Glasstual*' 2> /dev/null | sort > "$crash_reports_before"
 
 started_at="$(date '+%Y-%m-%d %H:%M:%S')"
-open -n "$APP" \
+# -g: launch behind the active application. Nothing here needs focus: the probe
+# and the quit command both go through the accessibility API.
+open -g -n "$APP" \
 	--env "GLASSTUAL_UI_REVIEW_SUITE=$SUITE" \
 	--env "GLASSTUAL_UI_REVIEW_DIRECTORY=$review_directory" ||
 	fail "the app would not launch"
@@ -214,9 +216,11 @@ done
 
 if kill -0 "$pid" 2> /dev/null; then
 	quit_started="$(date +%s)"
+	# Press the application menu's ⌘Q item over the accessibility API. A
+	# keystroke would need the app frontmost, and would quit whichever
+	# application the person had brought forward instead.
 	run_bounded 15 osascript \
-		-e "tell application \"System Events\" to tell $process_ref to set frontmost to true" \
-		-e "tell application \"System Events\" to tell $process_ref to keystroke \"q\" using command down" \
+		-e "tell application \"System Events\" to tell $process_ref to click (first menu item of menu 1 of menu bar item 2 of menu bar 1 whose value of attribute \"AXMenuItemCmdChar\" is \"Q\")" \
 		> /dev/null 2>&1
 	for _ in $(seq 1 10); do
 		kill -0 "$pid" 2> /dev/null || break

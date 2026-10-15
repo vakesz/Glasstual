@@ -134,9 +134,6 @@ final class ChatSession {
 			.observe(.userDefaultsDidChange) { [weak self] notification in
 				self?.userDefaultsDidChange(notification)
 			}
-		notifications.observe(.mainWindowAppearanceChanged) { [weak self] notification in
-			self?.mainWindowAppearanceChanged(notification)
-		}
 	}
 
 	private var serverConfigs: [[String: PropertyListValue]] {
@@ -212,10 +209,6 @@ final class ChatSession {
 		}
 
 		return true
-	}
-
-	private func mainWindowAppearanceChanged(_: Notification) {
-		environment.output?.notifyAllViewsAppearanceDidChange()
 	}
 
 	// MARK: - Lifecycle

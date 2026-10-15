@@ -24,6 +24,22 @@ final class Application: NSApplication, CustomKeyboardEventResponder {
 		fatalError("Application does not support decoding")
 	}
 
+	/// The funnel for every restored window. The test host restores none, so a
+	/// saved window cannot come on screen in front of the person's work.
+	override func restoreWindow(
+		withIdentifier identifier: NSUserInterfaceItemIdentifier,
+		state: NSCoder,
+		completionHandler: @escaping (NSWindow?, (any Error)?) -> Void
+	) -> Bool {
+		guard ApplicationForeground.mode.restoresWindows else {
+			assert(ApplicationForeground.mode == .unitTestHost, "Only the test host suppresses restoration")
+			completionHandler(nil, nil)
+			return true
+		}
+
+		return super.restoreWindow(withIdentifier: identifier, state: state, completionHandler: completionHandler)
+	}
+
 	override func sendEvent(_ event: NSEvent) {
 		if performedCustomKeyboardEvent(event) {
 			return

@@ -67,6 +67,26 @@ enum SettingsLaunchRepair {
 				removed.insert(key.name)
 			}
 		}
+		// Runtime-family names (window frames, alert suppressions) are declared
+		// by prefix, so sweep the persisted domains for them too.
+		for storage in [SettingStorage.container, SettingStorage.standard] {
+			for (name, object) in persisted[storage] ?? [:] {
+				guard values[name] == nil, !removed.contains(name), SettingsKeys.key(named: name) == nil else {
+					continue
+				}
+				guard let value = PropertyListValue(propertyList: object),
+				      SettingsKeys.allFamilies.contains(where: { $0.matches(name) })
+				else {
+					continue
+				}
+				if let coerced = SettingsKeys.coerce(value, forKey: name) {
+					values[name] = coerced
+				} else {
+					originals[name] = object
+					removed.insert(name)
+				}
+			}
+		}
 		guard originals.isEmpty == false else { return SettingsStoredValueRepair() }
 
 		let backup: URL

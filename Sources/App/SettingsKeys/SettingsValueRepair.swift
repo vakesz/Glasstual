@@ -91,8 +91,13 @@ nonisolated enum SettingsValueRepair {
 	 written it, and the engine reads rules by the names it knows. */
 	private static func repairedRuleField(_ name: String, _ value: PropertyListValue) -> PropertyListValue? {
 		switch RuleField(rawValue: name) {
-		case .uniqueIdentifier, .action, .forwardDestination, .match, .notes, .senderMatch, .title:
+		case .uniqueIdentifier, .forwardDestination, .match, .notes, .senderMatch, .title:
 			return value.string == nil ? nil : value
+		case .action:
+			// An action runs per inbound line when flood control is off, so a
+			// multi-megabyte hand edit would amplify into a command flood.
+			guard let text = value.string, text.count <= 4096 else { return nil }
+			return value
 		case .limitedChannelIDs, .limitedSessionIDs, .additionalCommands:
 			return value.stringArray == nil ? nil : value
 		case .ignoresContent, .ignoresOperators, .limitedToMyself, .logsMatch:

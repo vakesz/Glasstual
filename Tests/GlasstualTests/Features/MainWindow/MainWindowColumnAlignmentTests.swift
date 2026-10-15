@@ -12,7 +12,7 @@ import Testing
 @Suite("Main window column alignment")
 struct MainWindowColumnAlignmentTests {
 	@Test("Hiding the focused member table returns typing to the message field", arguments: [false, true])
-	func hidingFocusedMemberListRestoresInput(selectionChanged: Bool) {
+	func hidingFocusedMemberListRestoresInput(selectionChanged: Bool) throws {
 		let window = MainWindow(
 			contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
 			styleMask: [.titled],
@@ -20,12 +20,16 @@ struct MainWindowColumnAlignmentTests {
 			defer: false
 		)
 		let table = MemberListNativeTable(frame: NSRect(x: 600, y: 0, width: 200, height: 600))
+		/* A table with no column refuses first responder, and the window then
+		 takes the focus itself, so the member column is load-bearing. */
+		table.addTableColumn(NSTableColumn(identifier: NSUserInterfaceItemIdentifier("member")))
 		window.contentView?.addSubview(table)
 		window.inputContentView.frame = NSRect(x: 0, y: 0, width: 400, height: 40)
 		window.contentView?.addSubview(window.inputContentView)
 		window.inputContentView.configure()
 		window.columnModel.applyMemberListAvailability(true)
 		#expect(window.makeFirstResponder(table))
+		try #require(window.firstResponder === table)
 
 		if selectionChanged {
 			window.columnModel.applyMemberListAvailability(false)

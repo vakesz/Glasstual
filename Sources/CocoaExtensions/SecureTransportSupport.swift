@@ -205,9 +205,13 @@ public enum SecureTransportSupport {
 		guard certificates.isEmpty == false else { return nil }
 		let policy = SecPolicyCreateSSL(true, policyName as CFString)
 		var trust: SecTrust?
-		guard SecTrustCreateWithCertificates(certificates as CFArray, policy, &trust) == errSecSuccess
+		guard SecTrustCreateWithCertificates(certificates as CFArray, policy, &trust) == errSecSuccess,
+		      let result = trust
 		else { return nil }
-		return trust
+		// Trust evaluation happens on the calling queue; never hit the network
+		// for OCSP/AIA from there.
+		_ = SecTrustSetNetworkFetchAllowed(result, false)
+		return result
 	}
 
 	public static func certificates(in trust: SecTrust) -> [Data]? {

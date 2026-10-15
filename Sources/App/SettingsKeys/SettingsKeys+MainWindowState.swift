@@ -27,7 +27,17 @@ nonisolated extension SettingsKeys {
 			traits: [.unregistered, .excludedFromExport]
 		)
 
-		static let memberListWidthRange = 160.0 ... 260.0
+		static let sidebarWidthRange = 180.0 ... 400.0
+
+		/// Where the user last left the sidebar's edge, in points.
+		static let sidebarWidth = SettingsKey(
+			group + "Sidebar Width",
+			default: 220.0,
+			traits: [.unregistered, .excludedFromExport],
+			validation: { sidebarWidthRange.contains($0) }
+		)
+
+		static let memberListWidthRange = 160.0 ... 500.0
 
 		/// Where the user last left the member list's edge, in points.
 		static let memberListWidth = SettingsKey(
@@ -47,8 +57,8 @@ nonisolated extension SettingsKeys {
 		)
 
 		static let all: [any AnySettingsKey] = [
-			sidebarVisible, memberListVisible, sidebarSelection, memberListWidth,
-			textSizeMultiplier,
+			sidebarVisible, memberListVisible, sidebarSelection, sidebarWidth,
+			memberListWidth, textSizeMultiplier,
 		]
 	}
 }

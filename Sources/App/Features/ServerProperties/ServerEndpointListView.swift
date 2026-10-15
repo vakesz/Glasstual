@@ -35,33 +35,33 @@ struct ServerEndpointListView: View {
 				cancel: cancel
 			) {
 				Button(action: model.addEntry) {
-					Image(systemName: "plus")
+					Label(String(localized: .ServerProperties.addServer), systemImage: "plus")
+						.labelStyle(.iconOnly)
 				}
 				.help(.ServerProperties.addServer)
-				.accessibilityLabel(.ServerProperties.addServer)
 
 				Button(role: .destructive, action: model.removeSelection) {
-					Image(systemName: "minus")
+					Label(String(localized: .ServerProperties.removeServer), systemImage: "minus")
+						.labelStyle(.iconOnly)
 				}
 				.disabled(model.selectedID == nil)
 				.help(.ServerProperties.removeServer)
-				.accessibilityLabel(.ServerProperties.removeServer)
 
 				Divider().frame(height: 18)
 
 				Button { model.moveSelection(by: -1) } label: {
-					Image(systemName: "arrow.up")
+					Label(String(localized: .ServerProperties.moveUp), systemImage: "arrow.up")
+						.labelStyle(.iconOnly)
 				}
 				.disabled(model.canMoveSelectionUp == false)
 				.help(.ServerProperties.moveUp)
-				.accessibilityLabel(.ServerProperties.moveUp)
 
 				Button { model.moveSelection(by: 1) } label: {
-					Image(systemName: "arrow.down")
+					Label(String(localized: .ServerProperties.moveDown), systemImage: "arrow.down")
+						.labelStyle(.iconOnly)
 				}
 				.disabled(model.canMoveSelectionDown == false)
 				.help(.ServerProperties.moveDown)
-				.accessibilityLabel(.ServerProperties.moveDown)
 			}
 		}
 		.frame(

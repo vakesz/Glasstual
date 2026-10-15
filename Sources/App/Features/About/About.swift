@@ -32,6 +32,11 @@ struct AboutView: View {
 	let applicationIcon: Image
 	let openAcknowledgements: () -> Void
 
+	/// The project's published policy page, which the website serves.
+	private static let privacyPolicyURL = URL(string: "https://vakesz.github.io/Glasstual/privacy.html")!
+	/// The project's published support page, which the website serves.
+	private static let supportURL = URL(string: "https://vakesz.github.io/Glasstual/support.html")!
+
 	/// `NSHumanReadableCopyright`, the same line the standard About panel
 	/// shows. It already carries the project's attribution, so the panel says it
 	/// once rather than twice.
@@ -75,10 +80,10 @@ struct AboutView: View {
 			.padding(.top, 18)
 
 			HStack(spacing: 16) {
-				Link(destination: URL(string: "https://vakesz.github.io/Glasstual/privacy.html")!) {
+				Link(destination: Self.privacyPolicyURL) {
 					Text(.About.privacyPolicyLink)
 				}
-				Link(destination: URL(string: "https://vakesz.github.io/Glasstual/support.html")!) {
+				Link(destination: Self.supportURL) {
 					Text(.About.supportLink)
 				}
 			}

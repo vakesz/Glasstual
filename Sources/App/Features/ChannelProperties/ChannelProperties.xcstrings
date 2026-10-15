@@ -734,19 +734,19 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "When you give a channel a label, that label will appear in the Server List in lieu of the channel name."
+            "value" : "When you give a channel a label, that label will appear in the Sidebar in lieu of the channel name."
           }
         },
         "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ha címkét adsz egy csatornának, a kiszolgálólistában ez jelenik meg a csatorna neve helyett."
+            "value" : "Ha címkét adsz egy csatornának, az oldalsávban ez jelenik meg a csatorna neve helyett."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wenn du einem Kanal eine Beschriftung gibst, erscheint sie in der Serverliste anstelle des Kanalnamens."
+            "value" : "Wenn du einem Kanal eine Beschriftung gibst, erscheint sie in der Seitenleiste anstelle des Kanalnamens."
           }
         }
       }
@@ -1395,30 +1395,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Deine ungesicherten Änderungen werden verworfen."
-          }
-        }
-      }
-    },
-    "cancel-button" : {
-      "comment" : "Title of the button that dismisses the channel topic sheet without changing the topic.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cancel"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mégse"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Abbrechen"
           }
         }
       }

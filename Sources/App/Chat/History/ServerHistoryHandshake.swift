@@ -17,9 +17,6 @@ struct ServerHistoryHandshake {
 	/// The cursor the server has already answered for. Asking for it again would
 	/// bring the same page back, so it is asked for once.
 	private var completedCursor: Cursor?
-	var completedBefore: Date? {
-		completedCursor?.date
-	}
 
 	/// The cursor the server said it has nothing before.
 	private var exhaustedCursor: Cursor?

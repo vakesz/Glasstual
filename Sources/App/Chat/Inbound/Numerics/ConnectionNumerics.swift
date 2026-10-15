@@ -117,7 +117,7 @@ extension ServerSession {
 			}
 			return
 		}
-		guard message.params.count == 4 else { return }
+		guard message.params.count >= 3 else { return }
 		let serverAddress = message.params[1]
 		let serverPort = message.params[2]
 		disconnectType = .serverRedirect

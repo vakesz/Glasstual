@@ -150,6 +150,14 @@ extension AccessibilityDriver {
 		return AXValueGetValue(value, .cgPoint, &result) ? result : nil
 	}
 
+	/// The element's frame in screen coordinates, top-left origin.
+	func frame(_ element: AXUIElement, deadline: Double) throws -> CGRect? {
+		guard let origin = try point(element, attribute: kAXPositionAttribute, deadline: deadline),
+		      let size = try size(element, attribute: kAXSizeAttribute, deadline: deadline)
+		else { return nil }
+		return CGRect(origin: origin, size: size)
+	}
+
 	private func size(_ element: AXUIElement, attribute: String, deadline: Double) throws -> CGSize? {
 		guard let raw = try value(element, attribute, deadline: deadline),
 		      CFGetTypeID(raw) == AXValueGetTypeID()

@@ -213,15 +213,9 @@ final class Appearance: NSObject {
 				|| oldProperties.mode != mode
 				|| oldProperties.overridesAppKitAppearance != overridesAppKitAppearance
 
-		var systemChanged = systemChanged
-
-		if changeAppearance == false {
-			if systemChanged == false {
-				return
-			}
-		} else {
-			systemChanged = false
-		}
+		let needsNotify = changeAppearance || systemChanged
+		guard needsNotify else { return }
+		let isSystemOnly = changeAppearance == false && systemChanged
 
 		properties = ResolvedAppearance(
 			mode: mode,
@@ -237,7 +231,7 @@ final class Appearance: NSObject {
 			)
 		}
 
-		if systemChanged {
+		if isSystemOnly {
 			notifySystemAppearanceChanged()
 		} else {
 			notifyApplicationAppearanceChanged()

@@ -98,8 +98,6 @@ protocol ServerSessionPresenting: AnyObject {
 
 	func clearContents(of item: ChatItem)
 	func destroyInputHistory(for item: ChatItem)
-	/// Tells every view that the window's appearance changed.
-	func notifyAllViewsAppearanceDidChange()
 }
 
 /** The menus the protocol layer raises. Kept apart from `ServerSessionPresenting` because

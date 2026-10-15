@@ -64,7 +64,8 @@ extension TranscriptController {
 			highlightKeywords: line.highlightKeywords ?? [],
 			excludedKeywords: line.excludeKeywords ?? [],
 			textPolicy: request.context.textPolicy,
-			caseMapping: request.context.caseMapping
+			caseMapping: request.context.caseMapping,
+			highlightExpressions: request.context.highlightExpressions
 		)
 
 		let body = TranscriptRenderer.renderNativeBody(

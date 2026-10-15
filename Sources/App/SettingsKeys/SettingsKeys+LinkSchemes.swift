@@ -11,6 +11,14 @@ nonisolated extension SettingsKeys {
 	 connection host has no use for it. */
 	enum LinkSchemes {
 		private static let group = "Link Schemes -> "
+		private static let maximumSchemeLength = 64
+
+		static func isValidScheme(_ scheme: String) -> Bool {
+			guard scheme.count <= maximumSchemeLength, let first = scheme.first, first.isLetter else {
+				return false
+			}
+			return scheme.allSatisfy { $0.isLetter || $0.isNumber || $0 == "+" || $0 == "-" || $0 == "." }
+		}
 
 		static let permittedDefault = SettingsKey(
 			group + "Permitted Default",
@@ -18,14 +26,16 @@ nonisolated extension SettingsKeys {
 				"feed", "ftp", "gopher", "irc", "ircs", "itms", "sftp", "ssh",
 				"telnet", "glasstual", "webcal", "x-man-page",
 			],
-			storage: .standard
+			storage: .standard,
+			validation: { $0.allSatisfy(isValidScheme) }
 		)
 
 		static let permitted = SettingsKey(
 			group + "Permitted",
 			default: [String](),
 			storage: .standard,
-			traits: .unregistered
+			traits: .unregistered,
+			validation: { $0.allSatisfy(isValidScheme) }
 		)
 
 		/// Makes every scheme a link. A decision this Mac's user makes for

@@ -19,8 +19,7 @@ nonisolated enum MenuPasteTarget: Sendable {
  Paste asked whether the main window was key and then validated against the
  chat input, so it read as enabled while the caret was in the toolbar's search
  field or a sheet's field. */
-@MainActor
-enum MenuResponderCommandPolicy {
+nonisolated enum MenuResponderCommandPolicy { // nonisolated: pure
 	/** Paste is a property of the responder that will receive it.
 
 	 The menu item and the action ask the same question of the same three

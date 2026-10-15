@@ -87,20 +87,15 @@ struct SettingsFontPicker: View {
 					.padding(.horizontal, SettingsWindowMetrics.sheetInset)
 					.padding(.vertical, UISpacing.loose)
 
-				Divider()
-
-				HStack(spacing: UISpacing.regular) {
-					Spacer()
-					Button(PromptStrings.Action.cancel) { dismiss() }
-						.keyboardShortcut(.cancelAction)
-					Button(.Settings.styleFontPickerChoose) {
+				SheetActions(
+					confirmTitle: Text(.Settings.styleFontPickerChoose),
+					confirmIsDisabled: canApply == false,
+					confirm: {
 						apply(fontName, CGFloat(fontSize))
 						dismiss()
-					}
-					.keyboardShortcut(.defaultAction)
-					.disabled(canApply == false)
-				}
-				.padding(SettingsWindowMetrics.sheetInset)
+					},
+					cancel: { dismiss() }
+				)
 			}
 			.navigationTitle(Text(.Settings.styleFontPickerTitle))
 		}

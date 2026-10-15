@@ -61,7 +61,12 @@ extension Connection {
 	 flood control was thrown away and the user's quit message never reached
 	 anyone. */
 	static func bypassesFloodControl(_ line: String) -> Bool {
-		line.hasPrefix("PONG") || line.hasPrefix("QUIT")
+		let body = if line.hasPrefix("@"), let space = line.firstIndex(of: " ") {
+			String(line[line.index(after: space)...])
+		} else {
+			line
+		}
+		return body.hasPrefix("PONG") || body.hasPrefix("QUIT")
 	}
 
 	func clearSendQueue() {

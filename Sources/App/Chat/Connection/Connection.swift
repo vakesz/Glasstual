@@ -422,13 +422,20 @@ final class Connection {
 			handleServiceInvalidation(trigger: .serviceFailure)
 			return
 		}
-		proxy.open(with: ConnectionConfigEnvelope(config: config))
+		// Validate the XPC envelope locally so a coding failure retries promptly
+		// instead of waiting for the reconnect timer.
+		let envelope = ConnectionConfigEnvelope(config: config)
+		guard ConnectionConfigEnvelope.roundTrip(envelope) != nil else {
+			handleServiceInvalidation(trigger: .serviceFailure)
+			return
+		}
+		proxy.open(with: envelope)
 
 		if SettingsKeys.Internals.appSleepDisabled.value {
-			remoteObjectProxy()?.disableAppNap()
+			proxy.disableAppNap()
 		}
 
-		remoteObjectProxy()?.disableSuddenTermination()
+		proxy.disableSuddenTermination()
 	}
 
 	func close() {

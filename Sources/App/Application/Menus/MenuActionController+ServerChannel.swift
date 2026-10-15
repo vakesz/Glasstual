@@ -56,29 +56,31 @@ extension MenuActionController {
 		let snapshot = session.config
 		let identifier = UUID()
 		serverDuplicationTasks[identifier] = Task { [weak self, weak session, weak chatSession] in
-			var config = await KeychainSecretLoader.duplicate(snapshot)
-			guard let self else { return }
-			defer { serverDuplicationTasks[identifier] = nil }
-			guard !Task.isCancelled, isRunning, let session, !session.isTerminating, let chatSession else { return }
-			config.connectionName = ApplicationStrings.duplicatedName(config.connectionName)
-			let newSession = chatSession.createSession(with: config)
-			if newSession.config.sidebarItemExpanded {
-				mainWindow.expandSession(newSession)
+			// Keychain I/O off the main actor; session state is re-checked after the hop.
+			let duplicated = await KeychainSecretLoader.duplicate(snapshot)
+			await MainActor.run { [weak self, weak session, weak chatSession] in
+				guard let self else { return }
+				defer { self.serverDuplicationTasks[identifier] = nil }
+				guard !Task.isCancelled, isRunning, let session, !session.isTerminating, let chatSession else { return }
+				var config = duplicated
+				config.connectionName = ApplicationStrings.duplicatedName(config.connectionName)
+				let newSession = chatSession.createSession(with: config)
+				if newSession.config.sidebarItemExpanded {
+					mainWindow.expandSession(newSession)
+				}
+				chatSession.save()
 			}
-			chatSession.save()
 		}
 	}
 
 	@objc func deleteServer(_: Any?) {
 		guard isRunning, let session = context.selectedSession,
 		      let chatSession,
-		      session.isConnecting == false,
-		      session.isConnected == false
+		      MenuServerActionRules(session: session).canDeleteServer
 		else { return }
 		let completion: AlertCompletion = { outcome in
 			guard outcome.response == .default,
-			      session.isConnecting == false,
-			      session.isConnected == false
+			      MenuServerActionRules(session: session).canDeleteServer
 			else { return }
 			chatSession.destroySession(session)
 			chatSession.save()
@@ -132,7 +134,7 @@ extension MenuActionController {
 			return
 		}
 		let completion: AlertCompletion = { outcome in
-			guard outcome.response == .default else { return }
+			guard outcome.response == .default, self.isRunning else { return }
 			chatSession.destroyConversation(conversation)
 			chatSession.save()
 		}

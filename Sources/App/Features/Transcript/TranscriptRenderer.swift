@@ -14,7 +14,7 @@ private nonisolated let rendererLogger = Logger(
 
 private nonisolated enum RendererPatterns {
 	static let combiningMarks = compile("[\\p{InCombining_Diacritical_Marks}]{3,}")
-	static let channelName = compile("#([a-zA-Z0-9\\#\\-]+)")
+	static let channelName = compile("#([A-Za-z0-9_\\^\\{\\}\\|\\`\\-\\#]+)")
 
 	private static func compile(_ pattern: String) -> NSRegularExpression? {
 		do {
@@ -26,19 +26,12 @@ private nonisolated enum RendererPatterns {
 	}
 }
 
-/** The marks the formatting parser leaves on the string it hands the renderer.
+/** The marks the renderer adds to the string the formatting parser returns.
 
  They live on a transient `NSMutableAttributedString` that never leaves this
  file's call chain: nothing persists them and the names carry no compatibility
- requirement. */
+ requirement. The parser's own marks are ``IRCFormattingAttribute``. */
 nonisolated enum RendererFormatting {
-	static let foregroundColor = NSAttributedString.Key("GlasstualRendererForegroundColor")
-	static let backgroundColor = NSAttributedString.Key("GlasstualRendererBackgroundColor")
-	static let bold = NSAttributedString.Key("GlasstualRendererBold")
-	static let italic = NSAttributedString.Key("GlasstualRendererItalic")
-	static let monospace = NSAttributedString.Key("GlasstualRendererMonospace")
-	static let strikethrough = NSAttributedString.Key("GlasstualRendererStrikethrough")
-	static let underline = NSAttributedString.Key("GlasstualRendererUnderline")
 	static let channelName = NSAttributedString.Key("GlasstualRendererChannelName")
 	static let conversationTracking = NSAttributedString.Key("GlasstualRendererConversationTracking")
 	static let keywordHighlight = NSAttributedString.Key("GlasstualRendererKeywordHighlight")
@@ -224,7 +217,7 @@ nonisolated struct TranscriptRenderer {
 	 unbounded in shape. The cap is far past any real message and far short of
 	 anything that could stall a render. */
 	private func ranges(ofRegularExpression pattern: String) -> [NSRange] {
-		guard let expression = TranscriptHighlightExpressions.shared.expression(for: pattern) else { return [] }
+		guard let expression = configuration.highlightExpressions.expression(for: pattern) else { return [] }
 		return ranges(
 			of: expression,
 			matchedLength: min((body as NSString).length, TranscriptHighlightExpressions.maximumMatchedLength)
@@ -239,27 +232,26 @@ nonisolated struct TranscriptRenderer {
 	}
 
 	private func isSurroundedByNonAlphanumerics(_ range: NSRange) -> Bool {
-		let source = body as NSString
-		guard range.length > 0, range.location < source.length, NSMaxRange(range) <= source.length else { return false }
+		guard range.length > 0, let stringRange = Range(range, in: body) else { return false }
 		/** `Unicode.Scalar.Properties` carries the current tables. The hand-written
 		 range tables this replaced were generated around 2007 and stopped at
 		 U+1D7CB, so every script added since was classified as non-alphabetic. */
-		func isAlphanumeric(_ character: UniChar) -> Bool {
-			character >= 48 && character <= 57
-				|| Unicode.Scalar(character)?.properties.isAlphabetic == true
+		func isAlphanumeric(_ scalar: Unicode.Scalar) -> Bool {
+			(scalar.value >= 48 && scalar.value <= 57) || scalar.properties.isAlphabetic
 		}
-		if range.location > 0,
-		   isAlphanumeric(source.character(at: range.location)),
-		   isAlphanumeric(source.character(at: range.location - 1))
-		{
-			return false
+		if stringRange.lowerBound > body.startIndex {
+			let left = body[..<stringRange.lowerBound].unicodeScalars.last
+			let first = body[stringRange].unicodeScalars.first
+			if let left, let first, isAlphanumeric(left), isAlphanumeric(first) {
+				return false
+			}
 		}
-		let right = NSMaxRange(range)
-		if right < source.length,
-		   isAlphanumeric(source.character(at: right - 1)),
-		   isAlphanumeric(source.character(at: right))
-		{
-			return false
+		if stringRange.upperBound < body.endIndex {
+			let last = body[stringRange].unicodeScalars.last
+			let right = body[stringRange.upperBound...].unicodeScalars.first
+			if let last, let right, isAlphanumeric(last), isAlphanumeric(right) {
+				return false
+			}
 		}
 		return true
 	}
@@ -271,19 +263,19 @@ nonisolated struct TranscriptRenderer {
 			in: NSRange(location: 0, length: attributedBody.length)
 		) { attributes, range, _ in
 			var traits = TranscriptTextTraits()
-			if attributes[RendererFormatting.bold] != nil {
+			if attributes[IRCFormattingAttribute.bold] != nil {
 				traits.insert(.bold)
 			}
-			if attributes[RendererFormatting.italic] != nil {
+			if attributes[IRCFormattingAttribute.italic] != nil {
 				traits.insert(.italic)
 			}
-			if attributes[RendererFormatting.monospace] != nil {
+			if attributes[IRCFormattingAttribute.monospace] != nil {
 				traits.insert(.monospace)
 			}
-			if attributes[RendererFormatting.strikethrough] != nil {
+			if attributes[IRCFormattingAttribute.strikethrough] != nil {
 				traits.insert(.strikethrough)
 			}
-			if attributes[RendererFormatting.underline] != nil {
+			if attributes[IRCFormattingAttribute.underline] != nil {
 				traits.insert(.underline)
 			}
 			if attributes[RendererFormatting.keywordHighlight] != nil {
@@ -308,8 +300,8 @@ nonisolated struct TranscriptRenderer {
 			runs.append(TranscriptTextRun(
 				text: text,
 				traits: traits,
-				foreground: Self.nativeColor(attributes[RendererFormatting.foregroundColor]),
-				background: Self.nativeColor(attributes[RendererFormatting.backgroundColor]),
+				foreground: Self.nativeColor(attributes[IRCFormattingAttribute.foregroundColor]),
+				background: Self.nativeColor(attributes[IRCFormattingAttribute.backgroundColor]),
 				action: action
 			))
 		}
@@ -452,4 +444,6 @@ nonisolated struct TranscriptRenderOptions: Sendable {
 	var textPolicy = TranscriptTextRules()
 	/// The server's casemapping for member nickname references.
 	var caseMapping = ISupportCaseMapping.rfc1459
+	/// The compiled Regular Expression keywords, kept between renders.
+	var highlightExpressions = TranscriptHighlightExpressions()
 }

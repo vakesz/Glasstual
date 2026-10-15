@@ -9,7 +9,7 @@ import Foundation
 /// sequences change formatting state or how many UTF-16 units they occupy.
 ///
 /// Every other control character is settled in the same pass, the way
-/// ``TranscriptTextSanitizer`` says: a line separator is drawn as a space and
+/// ``ControlCharacterDisposition`` says: a line separator is drawn as a space and
 /// the rest are dropped, so no formatted string can break out of its line.
 nonisolated enum FormattingParser {
 	static func parse(_ source: String) -> NSMutableAttributedString {
@@ -38,7 +38,7 @@ nonisolated enum FormattingParser {
 
 			while inputIndex < inputCharacters.count {
 				let character = inputCharacters[inputIndex]
-				guard character < 0x20 || TranscriptTextSanitizer.disposition(of: character) != .keep else {
+				guard character < 0x20 || ControlCharacterDisposition(of: character) != .keep else {
 					inputIndex += 1
 					continue
 				}
@@ -55,16 +55,16 @@ nonisolated enum FormattingParser {
 		private mutating func consume(_ character: UniChar, at position: Int) -> Int {
 			switch character {
 			case TextFormatterControlCharacter.bold:
-				return toggle(RendererFormatting.bold, at: position)
+				return toggle(IRCFormattingAttribute.bold, at: position)
 			case TextFormatterControlCharacter.italic,
 			     TextFormatterControlCharacter.legacyItalic:
-				return toggle(RendererFormatting.italic, at: position)
+				return toggle(IRCFormattingAttribute.italic, at: position)
 			case TextFormatterControlCharacter.monospace:
-				return toggle(RendererFormatting.monospace, at: position)
+				return toggle(IRCFormattingAttribute.monospace, at: position)
 			case TextFormatterControlCharacter.strikethrough:
-				return toggle(RendererFormatting.strikethrough, at: position)
+				return toggle(IRCFormattingAttribute.strikethrough, at: position)
 			case TextFormatterControlCharacter.underline:
-				return toggle(RendererFormatting.underline, at: position)
+				return toggle(IRCFormattingAttribute.underline, at: position)
 			case TextFormatterControlCharacter.colorDigit,
 			     TextFormatterControlCharacter.colorHex:
 				return consumeColor(character, at: position)
@@ -73,7 +73,7 @@ nonisolated enum FormattingParser {
 				result.deleteCharacters(in: NSRange(location: position, length: 1))
 				return 1
 			default:
-				switch TranscriptTextSanitizer.disposition(of: character) {
+				switch ControlCharacterDisposition(of: character) {
 				case .keep:
 					return 0
 				case .space:
@@ -107,8 +107,8 @@ nonisolated enum FormattingParser {
 			 whether the foreground was named is what kept an old background
 			 alive through \u{3}04,99: the code did name a background, and what
 			 it named was the absence of one. */
-			apply(components.foreground, key: RendererFormatting.foregroundColor, at: position)
-			apply(components.background, key: RendererFormatting.backgroundColor, at: position)
+			apply(components.foreground, key: IRCFormattingAttribute.foregroundColor, at: position)
+			apply(components.background, key: IRCFormattingAttribute.backgroundColor, at: position)
 
 			let consumedCount = max(components.charactersConsumed, 1)
 			result.deleteCharacters(in: NSRange(location: position, length: consumedCount))

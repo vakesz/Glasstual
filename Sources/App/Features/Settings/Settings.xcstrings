@@ -3728,19 +3728,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Server List Colors"
+            "value": "Sidebar Colors"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kiszolgálólista színei"
+            "value": "Az oldalsáv színei"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Farben der Serverliste"
+            "value": "Farben der Seitenleiste"
           }
         }
       }

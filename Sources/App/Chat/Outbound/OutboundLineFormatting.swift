@@ -99,12 +99,7 @@ extension LineBudget {
 		overhead += 2
 		overhead += 2
 
-		var maximum = 510
-		let serverLineLength = Int(session.supportInfo.maximumLineLength)
-
-		if serverLineLength > (overhead + 2) {
-			maximum = serverLineLength - 2
-		}
+		let maximum = ProtocolLimits.bodyLimit(forAdvertisedLineLength: Int(session.supportInfo.maximumLineLength))
 
 		return LineBudget(overhead: overhead, maximum: maximum)
 	}

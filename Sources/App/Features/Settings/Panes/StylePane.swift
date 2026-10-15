@@ -176,7 +176,7 @@ struct StylePane: View {
 			verticalSpacing: UISpacing.regular
 		) {
 			GridRow {
-				Color.clear.frame(width: 0, height: 0)
+				Color.clear.gridCellUnsizedAxes([.horizontal, .vertical])
 				columnHeader(.TranscriptTheme.light)
 				columnHeader(.TranscriptTheme.dark)
 			}

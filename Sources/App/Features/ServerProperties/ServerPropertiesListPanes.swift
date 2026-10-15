@@ -118,11 +118,11 @@ struct ServerPropertiesAddressBookPane: View {
 					Button(.ServerProperties.addUserIgnoreEntry) { commands?.addIgnoreEntry() }
 					Button(.ServerProperties.addUserTrackingEntry) { commands?.addTrackingEntry() }
 				} label: {
-					Image(systemName: "plus")
+					Label(String(localized: ServerPropertiesListKind.addressBook.addLabel), systemImage: "plus")
+						.labelStyle(.iconOnly)
 				}
 				.menuIndicator(.hidden)
 				.help(ServerPropertiesListKind.addressBook.addLabel)
-				.accessibilityLabel(ServerPropertiesListKind.addressBook.addLabel)
 
 				ServerPropertiesListEditButtons(
 					kind: .addressBook,
@@ -158,9 +158,11 @@ private struct ServerPropertiesListButtons: View {
 
 	var body: some View {
 		HStack {
-			Button { kind.add(with: commands) } label: { Image(systemName: "plus") }
-				.help(kind.addLabel)
-				.accessibilityLabel(kind.addLabel)
+			Button { kind.add(with: commands) } label: {
+				Label(String(localized: kind.addLabel), systemImage: "plus")
+					.labelStyle(.iconOnly)
+			}
+			.help(kind.addLabel)
 			ServerPropertiesListEditButtons(kind: kind, hasSelection: hasSelection, commands: commands)
 			Spacer()
 		}
@@ -173,22 +175,26 @@ private struct ServerPropertiesListButtons: View {
 /** Edit and remove the selected row.
 
  Every button under these lists is an icon and nothing else, so each one carries
- the name of what it does -- as a help tag for the pointer and as a label for
- VoiceOver. */
+ the name of what it does -- as a help tag for the pointer and, through its
+ icon-only label, for VoiceOver. */
 private struct ServerPropertiesListEditButtons: View {
 	let kind: ServerPropertiesListKind
 	let hasSelection: Bool
 	weak var commands: (any ServerPropertiesCommands)?
 
 	var body: some View {
-		Button { kind.edit(with: commands) } label: { Image(systemName: "pencil") }
-			.disabled(hasSelection == false)
-			.help(kind.editLabel)
-			.accessibilityLabel(kind.editLabel)
-		Button(role: .destructive) { kind.remove(with: commands) } label: { Image(systemName: "minus") }
-			.disabled(hasSelection == false)
-			.help(kind.removeLabel)
-			.accessibilityLabel(kind.removeLabel)
+		Button { kind.edit(with: commands) } label: {
+			Label(String(localized: kind.editLabel), systemImage: "pencil")
+				.labelStyle(.iconOnly)
+		}
+		.disabled(hasSelection == false)
+		.help(kind.editLabel)
+		Button(role: .destructive) { kind.remove(with: commands) } label: {
+			Label(String(localized: kind.removeLabel), systemImage: "minus")
+				.labelStyle(.iconOnly)
+		}
+		.disabled(hasSelection == false)
+		.help(kind.removeLabel)
 	}
 }
 

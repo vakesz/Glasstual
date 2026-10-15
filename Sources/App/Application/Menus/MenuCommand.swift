@@ -100,7 +100,7 @@ enum MenuCommand: String, CaseIterable, Sendable {
 	case minimize // Minimize
 	case zoom // Zoom
 	case toggleMemberList // Hide Member List
-	case toggleSidebar // Hide Server List
+	case toggleSidebar // Hide Sidebar
 	case appearanceSystem // Match System
 	case appearanceLight // Light
 	case appearanceDark // Dark
@@ -109,7 +109,7 @@ enum MenuCommand: String, CaseIterable, Sendable {
 	case resetWindow // Reset Window to Default Size
 	case mainWindow // Main Window
 	case addressBook // Address Book
-	case viewLogs // View Logs
+	case viewLogs // Show Logs in Finder
 	case highlightList // Highlight List
 	case fileTransfers // File Transfers
 	case bringAllToFront // Bring All to Front
@@ -269,12 +269,11 @@ extension MenuCommand {
 extension MenuCommand {
 	/// The SF Symbol drawn next to the command, if it takes one.
 	///
-	/// Contextual menus only. The menu bar is plain, because macOS draws no
-	/// images beside its own commands, and a column of symbols next to Cut,
-	/// Copy and Quit reads as decoration rather than as meaning. A command that
-	/// hangs in both -- Copy, Paste, Mute Notifications -- carries its symbol
-	/// here and is drawn with it only where ``MenuPresentation/apply(to:)``
-	/// runs, which is never the menu bar.
+	/// Menu bar and contextual menus share one map, so a command that hangs in
+	/// both -- Copy, Paste, Mute Notifications -- looks the same in each.
+	/// ``MenuPresentation/apply(to:)`` draws it. Commands AppKit owns, such as
+	/// Quit, Hide, Minimize and Zoom, and state-only choices such as the
+	/// appearance radio items, take none.
 	var symbolName: String? {
 		Self.symbolNames[self]
 	}
@@ -303,6 +302,32 @@ extension MenuCommand {
 		.ban: "nosign", .kick: "person.fill.xmark", .kickban: "nosign",
 		.ctcp: "arrow.left.arrow.right", .ircOperator: "shield",
 		.changeColor: "paintpalette",
+		// Application, File and Edit menus.
+		.settings: "gearshape", .printLog: "printer",
+		.importSettings: "square.and.arrow.down", .exportSettings: "square.and.arrow.up",
+		.closeWindow: "xmark", .undo: "arrow.uturn.backward", .redo: "arrow.uturn.forward",
+		.cut: "scissors", .delete: "trash", .selectAll: "selection.pin.in.out",
+		.find: "magnifyingglass",
+		// View and Navigation menus.
+		.toggleSidebar: "sidebar.left", .toggleMemberList: "sidebar.right",
+		.setUnreadMarker: "bookmark", .gotoUnreadMarker: "bookmark.circle",
+		.markAllRead: "checkmark.circle", .clearScrollback: "eraser",
+		.increaseFont: "textformat.size.larger", .decreaseFont: "textformat.size.smaller",
+		.actualSize: "textformat.size",
+		.enterFullScreen: "arrow.up.left.and.arrow.down.right",
+		.navigationServers: "server.rack", .navigationChannels: "number",
+		.moveBackward: "chevron.backward", .moveForward: "chevron.forward",
+		.jumpToPresent: "arrow.down.to.line",
+		.searchChannels: "line.3.horizontal.decrease", .channelSpotlight: "magnifyingglass",
+		// Channel menu.
+		.banExceptions: "checkmark.shield", .inviteExceptions: "envelope.open",
+		.quiets: "speaker.slash",
+		// Window and Help menus.
+		.sortChannelList: "arrow.up.arrow.down", .centerWindow: "rectangle.center.inset.filled",
+		.resetWindow: "arrow.counterclockwise", .mainWindow: "macwindow",
+		.addressBook: "book.closed", .viewLogs: "folder", .highlightList: "bell.badge",
+		.fileTransfers: "tray.and.arrow.down",
+		.connectToHelpChannel: "questionmark.bubble", .connectToTestingChannel: "checkmark.bubble",
 	]
 }
 
@@ -352,7 +377,7 @@ extension MenuCommand {
 		}
 	}
 
-	/// The Window menu's server-list item names what the click will do, so its
+	/// The sidebar item names what the click will do, so its
 	/// title flips with the sidebar's state.
 	static func sidebarTitle(isVisible: Bool) -> String {
 		isVisible

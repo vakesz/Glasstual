@@ -143,12 +143,11 @@ extension TranscriptView {
 	) -> NSMutableAttributedString {
 		let result = renderFoldMarkers(line)
 		let theme = AppServices.theme.theme
-		let paragraph = NSMutableParagraphStyle()
-		paragraph.lineSpacing = theme.lineSpacing
-		paragraph.paragraphSpacing = theme.messageSpacing
-		paragraph.firstLineHeadIndent = theme.horizontalPadding
-		paragraph.headIndent = theme.horizontalPadding
-		paragraph.tailIndent = -theme.horizontalPadding
+		let paragraph = TranscriptMetrics.transcriptParagraph(
+			lineSpacing: theme.lineSpacing,
+			messageSpacing: theme.messageSpacing,
+			horizontalPadding: theme.horizontalPadding
+		)
 		var attributes: [NSAttributedString.Key: Any] = [
 			.font: effectiveFont(AppServices.theme),
 			.foregroundColor: themeColor(theme.palette.eventText),
@@ -171,9 +170,9 @@ extension TranscriptView {
 		case (.generalEvents, false):
 			String(localized: .Transcript.expandGeneralEvents(count))
 		case let (.mutedUser(_, nickname), true):
-			String(localized: .Transcript.collapseMutedMessages(count, TranscriptTextSanitizer.singleLine(nickname)))
+			String(localized: .Transcript.collapseMutedMessages(count, ControlCharacterDisposition.singleLine(nickname)))
 		case let (.mutedUser(_, nickname), false):
-			String(localized: .Transcript.expandMutedMessages(count, TranscriptTextSanitizer.singleLine(nickname)))
+			String(localized: .Transcript.expandMutedMessages(count, ControlCharacterDisposition.singleLine(nickname)))
 		}
 		result.append(NSAttributedString(string: caption, attributes: attributes))
 		attributes.removeValue(forKey: .link)

@@ -9,6 +9,8 @@ struct SlashCommandDiscoveryView: View {
 	let model: SlashCommandDiscoveryModel
 	let insert: (SlashCommandSuggestion) -> Void
 
+	@Environment(\.colorSchemeContrast) private var contrast
+
 	static let rowHeight: CGFloat = 32
 	private static let detailHeight: CGFloat = 84
 	private static let footerHeight: CGFloat = 22
@@ -93,7 +95,7 @@ struct SlashCommandDiscoveryView: View {
 			.padding(.horizontal, UISpacing.regular)
 			.frame(height: Self.rowHeight)
 			.frame(maxWidth: .infinity, alignment: .leading)
-			.background(selected ? Color.accentColor.opacity(0.16) : .clear)
+			.background(selected ? Color.accentColor.opacity(contrast == .increased ? 0.32 : 0.16) : .clear)
 			.contentShape(.rect)
 		}
 		.buttonStyle(.plain)

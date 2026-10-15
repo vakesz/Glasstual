@@ -50,7 +50,7 @@ struct SettingsExportFilterTests {
 	/// back to, so its absence is what the file has to carry.
 	@Test("A key with nothing written and nothing registered is listed as unset")
 	func unwrittenKeysAreListedAsUnset() {
-		let key = SettingsKeys.FileTransfers.manuallyEnteredIPAddress
+		let key = SettingsKeys.LinkSchemes.permitted
 		let original = key.storedValue
 		defer { key.storedValue = original }
 		key.reset()
@@ -58,6 +58,18 @@ struct SettingsExportFilterTests {
 		#expect(key.registeredDefault == nil)
 		#expect(snapshot.values[key.name] == nil)
 		#expect(snapshot.unset.contains(key.name))
+	}
+
+	@Test("Machine-local DCC addresses stay out of exports")
+	func machineLocalDCCKeysAreExcluded() {
+		for key in [
+			SettingsKeys.FileTransfers.manuallyEnteredIPAddress.name,
+			SettingsKeys.FileTransfers.ipAddressInterfaceName.name,
+		] {
+			#expect(SettingsKeys.isExcludedFromExport(key))
+			#expect(snapshot.values[key] == nil)
+			#expect(snapshot.unset.contains(key) == false)
+		}
 	}
 
 	/// A family's exclusion used the "equal" comparator while the real names

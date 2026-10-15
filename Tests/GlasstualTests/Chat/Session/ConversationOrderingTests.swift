@@ -7,7 +7,7 @@ import Testing
 
 @MainActor
 @Suite("Channel list sort ordering")
-struct MenuChannelOrderingTests {
+struct ConversationOrderingTests {
 	private func makeChannel(named name: String, isQuery: Bool) -> Conversation {
 		Conversation(
 			config: ConversationConfig(name: name, type: isQuery ? .direct : .channel)
@@ -53,5 +53,14 @@ struct MenuChannelOrderingTests {
 		let channel = makeChannel(named: "#chat", isQuery: false)
 
 		#expect(ConversationOrdering.channelsFirst(channel, channel) == false)
+	}
+
+	@Test("Names differing only by case are tied in both directions")
+	func caseOnlyDifferencesTie() {
+		let lower = makeChannel(named: "#chat", isQuery: false)
+		let upper = makeChannel(named: "#CHAT", isQuery: false)
+
+		#expect(ConversationOrdering.channelsFirst(lower, upper) == false)
+		#expect(ConversationOrdering.channelsFirst(upper, lower) == false)
 	}
 }

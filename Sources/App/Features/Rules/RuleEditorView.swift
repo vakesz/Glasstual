@@ -132,19 +132,14 @@ struct RuleEditorView: View {
 			}
 			.padding(SheetMetrics.margin)
 
-			Divider()
-
-			HStack {
-				Spacer()
-				Button(String(localized: .Rules.cancelButton), action: onCancel)
-					.keyboardShortcut(.cancelAction)
-				Button(String(localized: .Rules.saveButton), action: save)
-					.keyboardShortcut(.defaultAction)
-					.disabled(model.canSave == false)
-			}
-			.padding(UISpacing.loose)
+			SheetActions(
+				confirmTitle: Text(PromptStrings.Action.save),
+				confirmIsDisabled: model.canSave == false,
+				confirm: save,
+				cancel: onCancel
+			)
 		}
-		.frame(width: 680, height: 560)
+		.frame(minWidth: 680, idealWidth: 680, minHeight: 560, idealHeight: 560)
 	}
 
 	private func save() {

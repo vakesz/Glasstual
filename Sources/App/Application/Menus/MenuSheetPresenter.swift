@@ -28,15 +28,15 @@ enum MenuSheetPresenter {
 		_ make: @autoclosure () -> Sheet,
 		start: (Sheet) -> Void
 	) {
-		let window = Self.window
+		guard let window = AppServices.delegate?.mainWindow else { return }
 		window.sheetModel.dismissPresentedSheet()
 		let sheet = make()
 		sheet.window = window
 		start(sheet)
 	}
 
-	private static var window: MainWindow {
-		AppServices.delegate.mainWindow
+	private static var window: MainWindow? {
+		AppServices.delegate?.mainWindow
 	}
 
 	/** Opens the connection sheet, on an existing connection or on a new one.
@@ -53,16 +53,16 @@ enum MenuSheetPresenter {
 			guard let directory = AppServices.chatSession else { return }
 			guard let session else {
 				let created = directory.createSession(with: config)
-				window.expandSession(created)
+				window?.expandSession(created)
 				directory.save()
 				return
 			}
 			let encodingChanged = config.primaryEncoding != session.config.primaryEncoding
 			session.updateConfig(config)
 			if encodingChanged {
-				window.reloadTheme()
+				window?.reloadTheme()
 			}
-			window.reloadChatItemGroup(session)
+			window?.reloadChatItemGroup(session)
 			directory.save()
 		}) { $0.start(at: destination) }
 	}
@@ -74,7 +74,7 @@ enum MenuSheetPresenter {
 			guard let directory = AppServices.chatSession, let session else { return }
 			guard let channel else {
 				_ = directory.createConversation(with: config, on: session)
-				window.expandSession(session)
+				window?.expandSession(session)
 				return
 			}
 			channel.updateConfig(config)
@@ -126,12 +126,12 @@ enum MenuSheetPresenter {
 
 	static func presentNicknameColor(for nickname: String) {
 		present(NicknameColorSheet(nickname: nickname) {
-			window.reloadTheme()
+			window?.reloadTheme()
 			/* The transcript is redrawn by the theme reload; the member list's
 			 avatars take their pinned colours from a snapshot the list reads
 			 when its presentation is invalidated, and nothing else invalidates
 			 it here. */
-			window.memberList.invalidatePresentation()
+			window?.memberList.invalidatePresentation()
 		}) { $0.startSheet() }
 	}
 }

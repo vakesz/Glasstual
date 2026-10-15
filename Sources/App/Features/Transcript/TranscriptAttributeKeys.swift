@@ -50,12 +50,3 @@ nonisolated extension NSAttributedString.Key { // nonisolated: constants
 	nonisolated static let transcriptRuleInset =
 		NSAttributedString.Key("GlasstualTranscriptRuleInset")
 }
-
-struct CachedTranscriptImage {
-	let linkIdentifier: String
-	/// Where the image came from, so its run can offer the link it stands for.
-	let sourceURL: URL
-	let image: NSImage
-	let originalSize: NSSize
-	let attachment: NSTextAttachment
-}

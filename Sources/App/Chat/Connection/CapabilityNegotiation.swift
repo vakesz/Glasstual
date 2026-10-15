@@ -172,6 +172,7 @@ extension ServerSession {
 				origin: origin,
 				reason: .stsUpgrade
 			)
+			lastSTSUpgradeAttempt = endpoint
 			addDisconnectCallback { [weak self] in
 				guard let self else { return }
 				pendingEndpoint = endpoint

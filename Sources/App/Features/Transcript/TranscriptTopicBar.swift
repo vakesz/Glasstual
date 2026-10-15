@@ -93,7 +93,7 @@ final class TranscriptTopicBar: NSView {
 		let displayed = NSMutableAttributedString()
 		/* Isolated, so the topic's own direction cannot carry the caption after
 		 it along. */
-		TranscriptTextSanitizer.appendIsolated(
+		TranscriptIsolate.appendIsolated(
 			topic,
 			to: displayed,
 			isolateAttributes: topic.length > 0 ? topic.attributes(at: 0, effectiveRange: nil) : [:]
@@ -317,7 +317,7 @@ final class TranscriptTopicBar: NSView {
 			])
 		/* Anybody allowed to set the topic can put a line break or a reversal
 		 in it; the bar is one line of text, in the reading order it is given. */
-		TranscriptTextSanitizer.sanitize(result)
+		ControlCharacterDisposition.sanitize(result)
 		/* The links are located in the text as drawn: a scan of the wire form
 		 counts the control codes too, and every range after the first one is
 		 then a few characters out. */
@@ -366,6 +366,10 @@ extension TranscriptTopicBar: NSMenuItemValidation {
  the window grew to the topic's length on every corner drag. The height still
  comes from the label, wrapped at `preferredMaxLayoutWidth`. */
 final class TopicLabel: NSTextView, NSTextViewDelegate {
+	/// The body text style's font, for a label that has not been given the
+	/// scaled one yet.
+	private static let defaultFont = NSFont.preferredFont(forTextStyle: .body)
+
 	var onOpenLink: (@MainActor (URL) -> Void)?
 	var maximumNumberOfLines = 1 {
 		didSet {
@@ -402,13 +406,13 @@ final class TopicLabel: NSTextView, NSTextViewDelegate {
 		textContainer?.maximumNumberOfLines = 1
 		textContainer?.lineBreakMode = .byTruncatingTail
 		delegate = self
-		attributedStringValue = NSAttributedString(string: text, attributes: [.font: NSFont.systemFont(ofSize: 13)])
+		attributedStringValue = NSAttributedString(string: text, attributes: [.font: Self.defaultFont])
 	}
 
 	override var intrinsicContentSize: NSSize {
 		let text = attributedStringValue
 		let font = text.length > 0 ? text.attribute(.font, at: 0, effectiveRange: nil) as? NSFont : nil
-		let lineHeight = TextLineMetrics.lineHeight(for: font ?? NSFont.systemFont(ofSize: 13))
+		let lineHeight = TextLineMetrics.lineHeight(for: font ?? Self.defaultFont)
 		let width = preferredMaxLayoutWidth > 0 ? preferredMaxLayoutWidth : max(bounds.width, 1)
 		let height = text.boundingRect(with: NSSize(width: width, height: .greatestFiniteMagnitude),
 		                               options: [.usesLineFragmentOrigin, .usesFontLeading]).height
@@ -443,7 +447,7 @@ struct TopicDisclosureButton: View {
 	var body: some View {
 		Button(action: action) {
 			Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-				.font(.system(size: 11, weight: .semibold))
+				.font(.caption.weight(.semibold))
 				.foregroundStyle(.secondary)
 				/* The glyph is a sidebar glyph's width; what the pointer has to
 				 hit is the square around it, which a chevron drawn at its own

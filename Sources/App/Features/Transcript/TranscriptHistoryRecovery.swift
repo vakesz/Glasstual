@@ -121,13 +121,13 @@ struct TranscriptHistoryRecoveryView: View {
 				Image(systemName: "exclamationmark.triangle.fill")
 					.foregroundStyle(.orange)
 					.accessibilityLabel(String(localized: .Transcript.warningAccessibility))
-				VStack(alignment: .leading, spacing: 4) {
+				VStack(alignment: .leading, spacing: UISpacing.tight) {
 					Text(serverFailed && message == nil ?
 						String(localized: .Transcript.serverHistoryCouldNotBeLoaded) :
 						String(localized: .Transcript.localHistoryNeedsAttention))
 						.font(.headline)
 					if let detail = message ?? history?.serverFailureReason {
-						Text(detail).font(.caption).textSelection(.enabled)
+						Text(verbatim: detail).font(.caption).textSelection(.enabled)
 					}
 				}
 				Spacer()
@@ -155,7 +155,7 @@ struct TranscriptHistoryRecoveryView: View {
 						.accessibilityIdentifier("server-history-retry")
 				}
 			}
-			.padding(10)
+			.padding(UISpacing.regular)
 			.background(.bar)
 			.accessibilityElement(children: .contain)
 			.accessibilityIdentifier("history-recovery")

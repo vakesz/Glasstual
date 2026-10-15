@@ -12,13 +12,6 @@ private nonisolated let transcriptControllerLogger = Logger(
 	category: "TranscriptController"
 )
 
-/// What a print's render job hands back: the row to draw, and the line already
-/// archived for the view's store.
-nonisolated struct PrintedLineRender: Sendable {
-	let result: TranscriptRenderResult
-	let scrollbackEntry: ScrollbackEntry?
-}
-
 @MainActor
 final class TranscriptController: ChatItemPresenting, ServerHistoryPresenting {
 	private(set) var backingView: TranscriptView?
@@ -76,20 +69,15 @@ final class TranscriptController: ChatItemPresenting, ServerHistoryPresenting {
 
 	private let memberRenderCache = TranscriptMemberDirectoryCache()
 	let inlineImageLoader: InlineImageLoader
+	let highlightExpressions: TranscriptHighlightExpressions
 	let scrollback: Scrollback
 	private(set) var scrollbackMutationTask: Task<Void, Never>?
 
-	private var lastVisitedHighlight: String?
+	var highlightCursor = TranscriptHighlightCursor()
 	/// Whether any line on screen is a highlight. Cheap: the transcript counts
 	/// them as it is edited, and menu validation asks for this on every pass.
 	var hasHighlightedLines: Bool {
 		backingView?.hasHighlightedLines == true
-	}
-
-	/// The highlights in the order they are drawn, for the commands that step
-	/// through them. Walked on demand, once per keystroke.
-	private var highlightedLineNumbers: [String] {
-		backingView?.displayedLines.compactMap { $0.body.isHighlight ? $0.lineNumber : nil } ?? []
 	}
 
 	/** The reactions that arrived this session, by the message they answer.
@@ -97,7 +85,7 @@ final class TranscriptController: ChatItemPresenting, ServerHistoryPresenting {
 	 Only for messages this controller still holds, in the view or in its
 	 projection, or is about to: a reaction for anything else has no row to be
 	 drawn on. Retired with the last row of their message. */
-	private(set) var reactions = TranscriptReactionLedger()
+	var reactions = TranscriptReactionLedger()
 	private(set) var viewLoadedTimestamp: TimeInterval = 0
 	var lastLineStorage: ChatLine?
 	/** The lines handed to `print` that have not been applied to the view yet.
@@ -114,26 +102,12 @@ final class TranscriptController: ChatItemPresenting, ServerHistoryPresenting {
 	 ``ChatItemPresenting`` — `newestConversationLineDate()` and
 	 `conversationLineCount(after:)` — and `holdsMessage(withIdentifier:)` are the
 	 only readers. */
-	var linesAwaitingRender: ArraySlice<ChatLine> {
-		awaitingRender.lines
-	}
-
-	private var awaitingRender = PendingLineQueue()
+	var awaitingRender = PendingLineQueue()
 	var transcriptProjection = TranscriptProjectionState()
 	var transcriptSessionBoundary = TranscriptSessionBoundaryState()
 
-	/** This view's render pipeline, and the task that drains it. Replaced
-	 wholesale when the view is cleared: dropping the stream is how queued work
-	 is cancelled. */
-	private var pipeline = TranscriptRenderPipeline()
-	private var pipelineTask: Task<Void, Never>?
-	/** Bumped whenever queued work is cancelled. A job that was already
-	 rendering checks it before it applies, which is the synchronous half of
-	 cancellation — the pipeline drops the rest asynchronously. */
-	private(set) var renderGeneration = 0
-	var pendingApplications: [@MainActor () -> Void] = []
-	var deferredPrepends: [@MainActor () -> Void] = []
-	private var applicationTask: Task<Void, Never>?
+	/// This view's render pipeline and the applications it hands back.
+	let renderScheduler = TranscriptRenderScheduler()
 
 	/** The item this view draws, fixed when the controller is made.
 
@@ -185,9 +159,11 @@ final class TranscriptController: ChatItemPresenting, ServerHistoryPresenting {
 
 	init(
 		session: ServerSession, in window: MainWindow, inlineImageLoader: InlineImageLoader,
+		highlightExpressions: TranscriptHighlightExpressions = .shared,
 		scrollback: Scrollback = .shared, commands: TranscriptCommandSink = .menuController()
 	) {
 		self.inlineImageLoader = inlineImageLoader
+		self.highlightExpressions = highlightExpressions
 		self.scrollback = scrollback
 		commandSink = commands
 		historyPageFetcher = { await scrollback.fetchOutcome($0) }
@@ -197,10 +173,12 @@ final class TranscriptController: ChatItemPresenting, ServerHistoryPresenting {
 		setUp()
 	}
 
-	init(conversation: Conversation, in window: MainWindow, scrollback: Scrollback = .shared,
-	     commands: TranscriptCommandSink = .menuController())
+	init(conversation: Conversation, in window: MainWindow,
+	     highlightExpressions: TranscriptHighlightExpressions = .shared,
+	     scrollback: Scrollback = .shared, commands: TranscriptCommandSink = .menuController())
 	{
 		inlineImageLoader = .shared
+		self.highlightExpressions = highlightExpressions
 		self.scrollback = scrollback
 		commandSink = commands
 		let storage = scrollback
@@ -214,15 +192,19 @@ final class TranscriptController: ChatItemPresenting, ServerHistoryPresenting {
 
 	private func setUp() {
 		transcriptProjection.setCapacity(bufferPolicy.hardLimit)
-		startPipeline()
+		renderScheduler.start { [weak self] edits in
+			if let backingView = self?.backingView {
+				backingView.performEditingBatch(edits)
+			} else {
+				edits()
+			}
+		}
 	}
 
 	isolated deinit {
 		associatedSession?.renderAdmission.retire(view: uniqueIdentifier)
 		historyRetryTask?.cancel()
-		pipelineTask?.cancel()
 		olderHistoryTask?.cancel()
-		applicationTask?.cancel()
 		backingView?.clearLines()
 		inlineImageLoader.cancelLoads(forView: uniqueIdentifier)
 	}
@@ -245,54 +227,29 @@ final class TranscriptController: ChatItemPresenting, ServerHistoryPresenting {
 		return view
 	}
 
-	private func startPipeline() {
-		let pipeline = pipeline
-		pipelineTask = Task {
-			await pipeline.run()
-		}
-	}
-
-	private func stopPipeline() {
-		associatedSession?.renderAdmission.retire(view: uniqueIdentifier)
-		let retired = pipeline
-		Task { await retired.stop() }
-		pipelineTask?.cancel()
-		pipelineTask = nil
-	}
-
 	/** Drops everything this view has queued and starts a fresh pipeline.
 
-	 Bumping the generation first is what makes the cancellation take effect
-	 immediately: a job that is already rendering finds its generation stale and
-	 applies nothing. Retiring the whole pipeline is what drops the jobs that had
-	 not started; nothing waits for it. */
+	 Invalidating first is what makes the cancellation take effect immediately:
+	 a job that is already rendering finds its generation stale and applies
+	 nothing, including one the history cancellation below answers. */
 	private func cancelRenderJobs() {
 		guard terminating == false else {
 			return
 		}
-		renderGeneration += 1
+		renderScheduler.invalidate()
 		cancelOlderHistory()
-		pendingApplications.removeAll()
 		awaitingRender.removeAll()
-		deferredPrepends.removeAll()
-		applicationTask?.cancel()
-		applicationTask = nil
 		/* The dropped jobs include whatever was going to finish the replay, so
 		 the latch has to be released here rather than waiting for a completion
 		 that is never going to arrive. */
 		historyRecovery.cancelReload()
-		stopPipeline()
-		pipeline = TranscriptRenderPipeline()
-		startPipeline()
+		associatedSession?.renderAdmission.retire(view: uniqueIdentifier)
+		renderScheduler.restart()
 	}
 
 	func drainRenderJobs() async {
 		await olderHistoryTask?.value
-		await pipeline.barrier()
-		while !pendingApplications.isEmpty {
-			applyPendingBatch()
-			await Task.yield()
-		}
+		await renderScheduler.drain()
 	}
 
 	private func cancelOlderHistory() {
@@ -310,7 +267,7 @@ final class TranscriptController: ChatItemPresenting, ServerHistoryPresenting {
 	}
 
 	func acceptsRenderGeneration(_ generation: Int) -> Bool {
-		renderGeneration == generation && !terminating
+		renderScheduler.generation == generation && !terminating
 	}
 
 	private func forgetScrollback() {
@@ -345,21 +302,18 @@ final class TranscriptController: ChatItemPresenting, ServerHistoryPresenting {
 			let identifier = uniqueIdentifier
 			transcriptControllerLogger.debug("Preparing view controller: \(identifier, privacy: .public)")
 		}
-		renderGeneration += 1
+		renderScheduler.invalidate()
 		terminating = true
 		awaitingRender.removeAll()
 		refreshServerRetryAvailability()
 		cancelOlderHistory()
-		pendingApplications.removeAll()
-		deferredPrepends.removeAll()
-		applicationTask?.cancel()
-		applicationTask = nil
+		renderScheduler.stop()
 		viewIsLoaded = false
 		reactions.removeAll()
 		backingView?.clearLines()
 		backingView = nil
 		inlineImageLoader.cancelLoads(forView: uniqueIdentifier)
-		stopPipeline()
+		associatedSession?.renderAdmission.retire(view: uniqueIdentifier)
 		switch reason {
 		case .applicationTermination: closeScrollback()
 		case .permanentRemoval: forgetScrollback()
@@ -391,10 +345,10 @@ final class TranscriptController: ChatItemPresenting, ServerHistoryPresenting {
 		guard acceptsRenderJobs else {
 			return false
 		}
-		let generation = renderGeneration
+		let generation = renderScheduler.generation
 		let admission = associatedSession?.renderAdmission
 		let ticket = admission?.submit(for: uniqueIdentifier)
-		pipeline.submissions.yield(TranscriptRenderSubmission(isStandalone: isStandalone) { [weak self] in
+		renderScheduler.submit(isStandalone: isStandalone) { [weak self] in
 			let output = await render()
 			return {
 				guard let self, let output, self.acceptsRenderGeneration(generation) else {
@@ -412,46 +366,18 @@ final class TranscriptController: ChatItemPresenting, ServerHistoryPresenting {
 					apply(output)
 				}
 			}
-		})
+		}
 		return true
 	}
 
-	/** Queues one finished render for application, and starts the drain if it is
-	 not already running.
+	/** Queues one finished render for application.
 
 	 The generation is checked once more where it can have moved: the queued work
 	 runs after a `Task.yield`, and the check the caller made ran before it. */
 	private func queueApplication(generation: Int, _ apply: @escaping @MainActor () -> Void) {
-		pendingApplications.append { [weak self] in
+		renderScheduler.enqueue { [weak self] in
 			guard let self, acceptsRenderGeneration(generation) else { return }
 			apply()
-		}
-		guard applicationTask == nil else { return }
-		applicationTask = Task { @MainActor [weak self] in
-			await Task.yield()
-			while let self, !Task.isCancelled {
-				guard !pendingApplications.isEmpty else {
-					applicationTask = nil
-					return
-				}
-				applyPendingBatch()
-				await Task.yield()
-			}
-		}
-	}
-
-	private func applyPendingBatch() {
-		let count = min(32, pendingApplications.count)
-		let batch = Array(pendingApplications.prefix(count))
-		pendingApplications.removeFirst(count)
-		if let backingView {
-			backingView.performEditingBatch { for apply in batch {
-				apply()
-			} }
-		} else {
-			for apply in batch {
-				apply()
-			}
 		}
 	}
 
@@ -479,60 +405,9 @@ final class TranscriptController: ChatItemPresenting, ServerHistoryPresenting {
 			textPolicy: .current(),
 			members: includingMembers ? memberRenderCache.members(in: conversation) : [],
 			caseMapping: associatedSession?.supportInfo.caseMapping ?? .rfc1459,
-			sessionReactions: reactions.all
+			sessionReactions: reactions.all,
+			highlightExpressions: highlightExpressions
 		)
-	}
-
-	private func setInitialTopic() {
-		setTopicNow(associatedConversation?.topic)
-	}
-
-	func setTopic(_ topic: String?) {
-		setTopicNow(topic)
-	}
-
-	private func setTopicNow(_ topic: String?) {
-		guard !terminating else { return }
-		backingView?.setTopic(topic?.isEmpty == false ? topic : nil)
-	}
-
-	/** Redraws the topic bar's mode caption from the channel as it stands now.
-
-	 The modes are not pushed to the view the way the topic is: nothing in the
-	 IRC layer addresses one transcript when they change. The bar is refreshed
-	 where the change already surfaces — the mode line landing in this view, the
-	 view coming back on screen, and the window retitling this item. */
-	func refreshTopicBar() {
-		guard !terminating else { return }
-		backingView?.refreshTopicBar()
-	}
-
-	func mark() {
-		let mark = (newestLineNumber ?? lastLineStorage?.uniqueIdentifier).map(UnreadMarker.line) ?? .latest
-		transcriptProjection.setMark(mark)
-		backingView?.setUnreadMarker(mark)
-	}
-
-	func mark(at date: Date) {
-		transcriptProjection.setMark(.after(date))
-		backingView?.setUnreadMarker(.after(date))
-	}
-
-	func goToMark() {
-		switch transcriptProjection.mark {
-		case .none: break
-		case .latest: jumpToPresent()
-		case let .line(identifier):
-			jump(toLine: backingView?.displayedLines
-				.first(where: { $0.matches(identifier: identifier) })?.lineNumber
-				?? oldestLineNumber ?? identifier)
-		case let .after(date):
-			if let line = backingView?.displayedLines
-				.first(where: { $0.receivedAt >= date && $0.lineType.isConversation })?.lineNumber
-			{
-				jump(toLine: line)
-			}
-		}
 	}
 
 	func applyReloadedLines(_ results: [TranscriptRenderResult], isReload: Bool) {
@@ -552,138 +427,6 @@ final class TranscriptController: ChatItemPresenting, ServerHistoryPresenting {
 }
 
 extension TranscriptController {
-	func reloadTheme() {
-		if !terminating {
-			backingView?.applyTheme()
-		}
-	}
-
-	func jumpToCurrentSession() {
-		for lineNumber in [transcriptSessionBoundary.firstCurrentSessionLineNumber,
-		                   newestLineNumberFromPreviousSession, oldestLineNumber].compactMap(\.self)
-			where backingView?.jump(to: lineNumber) == true
-		{
-			return
-		}
-	}
-
-	func jumpToPresent() {
-		backingView?.scrollToBottom()
-	}
-
-	func jump(toLine lineNumber: String, completionHandler: ((Bool) -> Void)? = nil) {
-		let successful = backingView?.jump(to: lineNumber) == true
-		completionHandler?(successful)
-	}
-
-	func notifyDidBecomeVisible() {
-		refreshTopicBar()
-		maybeReloadHistory()
-	}
-
-	func updateTextScale() {
-		guard let attachedWindow else {
-			return
-		}
-		backingView?.setTextScale(attachedWindow.textSizeMultiplier)
-	}
-
-	func changeScrollbackLimit() {
-		let policy = bufferPolicy
-		transcriptProjection.setCapacity(policy.hardLimit)
-		backingView?.setBufferLimit(policy.hardLimit)
-		forgetRetiredProjectionMessages()
-	}
-
-	/// The view dropped these lines. Only the highlight the reader last jumped
-	/// to is addressed by line number, so it is the only cursor a removal can
-	/// leave pointing at nothing.
-	func notifyLinesWereRemoved(_ lineNumbers: [String]) {
-		guard !terminating else {
-			return
-		}
-		transcriptProjection.retireDisplayedLines(lineNumbers)
-		forgetRetiredProjectionMessages()
-		if let lastVisitedHighlight, lineNumbers.contains(lastVisitedHighlight) {
-			self.lastVisitedHighlight = nil
-		}
-	}
-
-	func processInlineMedia(_ links: [LinkParserResult], atLineNumber lineNumber: String) {
-		for link in links {
-			processInlineMediaAtAddress(
-				link.stringValue,
-				withUniqueIdentifier: link.uniqueIdentifier,
-				atLineNumber: lineNumber
-			)
-		}
-	}
-
-	@discardableResult
-	func processInlineMediaAtAddress(
-		_ address: String,
-		withUniqueIdentifier linkIdentifier: String,
-		atLineNumber lineNumber: String
-	) -> UUID? {
-		/* The link parser's scheme set is user-extensible, so an address that
-		 became clickable is not necessarily one the inline-content service can
-		 handle. It only ever fetches over HTTP, and aborts on a file: URL. */
-		guard let url = URL(string: address), LinkSchemeRules.isWebURL(url)
-		else {
-			return nil
-		}
-
-		guard backingView?.containsLine(identifier: lineNumber) == true else { return nil }
-		let generation = renderGeneration
-		let loader = inlineImageLoader
-		// Only admission failures run synchronously; successful callbacks receive the assigned token.
-		var requestIdentifier: UUID?
-		requestIdentifier = loader.load(
-			url: url,
-			viewIdentifier: uniqueIdentifier,
-			lineNumber: lineNumber,
-			linkIdentifier: linkIdentifier
-		) { [weak self] result in
-			switch result {
-			case let .success(image):
-				guard let self, acceptsRenderGeneration(generation), backingView?.addInlineImage(image) == true else {
-					if let requestIdentifier {
-						loader.cancelLoad(requestIdentifier)
-					}
-					return
-				}
-			case let .failure(error):
-				let reason = (error as? InlineImageError)?.logDescription ?? error.localizedDescription
-				transcriptControllerLogger.error(
-					"Inline image request failed for '\(address, privacy: .public)': \(reason, privacy: .public)"
-				)
-			}
-		}
-		return requestIdentifier
-	}
-
-	func nextHighlight() {
-		visitHighlight(offset: 1)
-	}
-
-	func previousHighlight() {
-		visitHighlight(offset: -1)
-	}
-
-	private func visitHighlight(offset: Int) {
-		guard viewIsLoaded, !terminating else {
-			return
-		}
-		let highlights = highlightedLineNumbers
-		guard highlights.isEmpty == false else { return }
-		let current = lastVisitedHighlight.flatMap(highlights.firstIndex(of:))
-		let index = current.map { ($0 + offset + highlights.count) % highlights.count }
-			?? (offset > 0 ? 0 : highlights.count - 1)
-		let target = highlights[index]
-		lastVisitedHighlight = target
-		jump(toLine: target)
-	}
-
 	/// Empties the transcript and the history behind it, and starts the view
 	/// over from an empty store.
 	func clear() {
@@ -697,7 +440,7 @@ extension TranscriptController {
 		transcriptSessionBoundary.reset()
 		newestLineNumberFromPreviousSession = nil
 		reactions.removeAll()
-		lastVisitedHighlight = nil
+		highlightCursor.reset()
 		lastLineStorage = nil
 		historyRecovery.clearLoadedHistory()
 		backingView?.clearLines()
@@ -725,168 +468,6 @@ extension TranscriptController {
 }
 
 extension TranscriptController {
-	func print(
-		_ chatLine: ChatLine,
-		completionBlock postPrintBlock: PrintedLineCompletion? = nil
-	) {
-		guard !terminating else {
-			return
-		}
-		if chatLine.lineType == .mode {
-			refreshTopicBar()
-		}
-		lastLineStorage = chatLine
-		let context = makeRenderContext(includingMembers: chatLine.lineType.mentionsMembers)
-		let conversation = associatedConversation
-		let senderMark = conversation?.isChannel == true
-			? chatLine.nickname.flatMap { conversation?.findMember($0)?.mark } ?? ""
-			: ""
-		let line = ChatLineSnapshot(chatLine, in: context, modeSymbol: senderMark)
-		let viewIdentifier = associatedItem?.uniqueIdentifier
-		let enqueued = enqueueRenderJob {
-			/* Archived here, beside the render, so the main actor that applies
-			 the line only hands the store a finished entry. */
-			PrintedLineRender(
-				result: Self.renderJob(TranscriptRenderRequest(line: line, context: context)),
-				scrollbackEntry: viewIdentifier.map { chatLine.scrollbackEntry(forView: $0) }
-			)
-		} apply: { [weak self] (rendered: PrintedLineRender) in
-			self?.applyPrintedLine(chatLine, rendered: rendered, completionBlock: postPrintBlock)
-		}
-		/* Only a line the pipeline took can be applied, and only an applied line
-		 is withdrawn again: a job refused because the application is quitting
-		 would otherwise stay awaiting a render that never comes. */
-		if enqueued {
-			awaitingRender.append(chatLine)
-		}
-	}
-
-	private func applyPrintedLine(
-		_ chatLine: ChatLine,
-		rendered: PrintedLineRender,
-		completionBlock postPrintBlock: PrintedLineCompletion?
-	) {
-		let result = rendered.result
-		/* Withdrawn before any guard below, so a line one of them drops is not
-		 left counted as a line that is still on its way to the view. */
-		awaitingRender.withdraw(chatLine)
-		guard !terminating else {
-			return
-		}
-		/* The session can be torn down between enqueueing the line and printing
-		 it; there is nothing left to attribute the line to if it has been. */
-		guard let session = associatedSession, let associatedItem else {
-			return
-		}
-		let lineNumber = result.lineNumber
-		let conversation = associatedConversation
-		let alreadyDisplayed = backingView?.containsLine(identifier: lineNumber) == true
-		/* The same line printed again, as opposed to a different line carrying
-		 a message identifier the view has already seen. It was stored when it
-		 was first printed, and a second row under one line identifier is a
-		 cursor history can no longer page from. */
-		let alreadyPrinted = alreadyDisplayed || transcriptProjection
-			.containsLine(withIdentifier: chatLine.uniqueIdentifier)
-		let isDuplicate = alreadyPrinted
-			|| chatLine.messageIdentifier.map { scrollback.duplicates.containsMessageIdentifier(
-				$0,
-				forView: associatedItem.uniqueIdentifier
-			) } == true
-		if result.isHighlight, !isDuplicate {
-			if let conversation {
-				session.cacheHighlight(in: conversation, with: chatLine)
-			}
-		}
-		let projectionAction = transcriptProjection.record(result)
-		forgetRetiredProjectionMessages()
-		if case .append = projectionAction, !alreadyDisplayed {
-			var displayedLine = applyingCurrentState(to: result.transcriptLine)
-			if transcriptSessionBoundary.consumePendingMarker(for: result) {
-				displayedLine.markers.insert(
-					.currentSession(String(localized: .Transcript.currentSession)),
-					at: 0
-				)
-			}
-			backingView?.appendLines([displayedLine])
-		}
-		if case .append = projectionAction, !alreadyDisplayed, result.processesInlineMedia {
-			processInlineMedia(result.links, atLineNumber: lineNumber)
-		}
-		if alreadyPrinted == false {
-			scrollback.writeNewEntry(
-				rendered.scrollbackEntry ?? chatLine.scrollbackEntry(forView: associatedItem.uniqueIdentifier),
-				for: chatLine
-			)
-		}
-		/* The body was scanned against the member snapshot the line rendered
-		 with; the conversation weight belongs to whoever is in it now. */
-		if let conversation {
-			let direction: MemberConversationDirection = chatLine.memberType == .localUser ? .outgoing : .mention
-			for nickname in result.mentionedNicknames where conversation.findMember(nickname) != nil {
-				conversation.recordConversation(with: nickname, direction: direction)
-			}
-		}
-		var context = PrintedLineContext(
-			session: session,
-			conversation: conversation,
-			highlight: result.isHighlight,
-			chatLine: chatLine,
-			lineNumber: lineNumber
-		)
-		context.isDuplicate = isDuplicate
-		context.isDisplayed = alreadyDisplayed || backingView?.displayedLines.last?
-			.matches(identifier: lineNumber) == true
-		postPrintBlock?(context)
-	}
-
-	func noteReaction(
-		_ wireEmoji: String,
-		fromNickname nickname: String,
-		toMessageIdentifier messageIdentifier: String
-	) {
-		guard holdsMessage(withIdentifier: messageIdentifier),
-		      let merged = reactions.record(wireEmoji, from: nickname, forMessage: messageIdentifier)
-		else {
-			return
-		}
-		/* A view that is still replaying history has not drawn the line yet; the
-		 reactions are handed to it when the replay finishes. */
-		guard transcriptProjection.phase == .active else {
-			return
-		}
-		enqueueMainActorWork { [weak self] in
-			self?.backingView?.updateReactions(merged, messageIdentifier: messageIdentifier)
-		}
-	}
-
-	/** Whether a reaction to `identifier` has a row to be drawn on, now or once
-	 what is on its way arrives: a row the view shows or the projection keeps,
-	 a printed line still rendering, or a replay that is still loading. */
-	private func holdsMessage(withIdentifier identifier: String) -> Bool {
-		transcriptProjection.phase != .active
-			|| backingView?.document.ordinals(ofMessage: identifier) != nil
-			|| transcriptProjection.containsMessage(withIdentifier: identifier)
-			|| linesAwaitingRender.contains { MessageIdentifierKey.equal($0.messageIdentifier, identifier) }
-	}
-
-	/// The view trimmed the last rows of these messages.
-	func transcriptDidRetireMessages(_ identifiers: [String]) {
-		forgetReactions(for: identifiers)
-	}
-
-	func forgetRetiredProjectionMessages() {
-		forgetReactions(for: transcriptProjection.takeRetiredMessageIdentifiers())
-	}
-
-	func forgetReactions(for identifiers: [String]) {
-		reactions.forget(identifiers) { [self] identifier in
-			backingView?.document.ordinals(ofMessage: identifier) != nil
-				|| transcriptProjection.containsMessage(withIdentifier: identifier)
-		}
-	}
-}
-
-extension TranscriptController {
 	private func finishLoading(_ view: TranscriptView) {
 		guard !viewIsLoaded,
 		      let associatedSession,
@@ -899,7 +480,7 @@ extension TranscriptController {
 			viewLoadedTimestamp = Date().timeIntervalSince1970
 			view.setBufferLimit(bufferPolicy.hardLimit)
 			view.setTextScale(attachedWindow.textSizeMultiplier)
-			setInitialTopic()
+			setTopic(associatedConversation?.topic)
 			reloadHistory()
 		}
 	}
@@ -910,46 +491,5 @@ extension TranscriptController {
 
 	func transcriptViewReceivedDrop(withFile filename: String) {
 		commandSink.sendDroppedFiles([filename])
-	}
-}
-
-/** What the IRC layer sees of a transcript. Every requirement is answered by
- the controller's own state; the protocol is what lets a chat item hold one
- without depending on the concrete `TranscriptController`. */
-extension TranscriptController {
-	var presentationIdentifier: String {
-		uniqueIdentifier
-	}
-
-	/// The newest line this view printed. The IRC layer consults it when it
-	/// decides what history to ask the server for.
-	func lastPrintedLine() -> ChatLine? {
-		lastLineStorage
-	}
-
-	func lastRenderedLineDate() -> Date? {
-		backingView?.displayedLines.filter(\.lineType.isConversation).compactMap(\.serverTimestamp).max()
-	}
-
-	/** Both conversation seams answer from the union of what the view is showing
-	 and what it has been handed but not applied yet. A line moves from the second
-	 to the first synchronously on the main actor, so neither holds it twice.
-
-	 Lines loaded from storage are in neither list, which is why
-	 `newestKnownConversationLineDate(for:)` combines this with the scrollback's
-	 duplicate index: history seeding fills that index synchronously, so it already
-	 accounts for the scrollback. */
-	func newestConversationLineDate() -> Date? {
-		let displayed = backingView?.displayedLines.filter(\.lineType.isConversation).map(\.receivedAt) ?? []
-		let awaiting = linesAwaitingRender.filter(\.lineType.isConversation).map(\.receivedAt)
-
-		return (displayed + awaiting).max()
-	}
-
-	func conversationLineCount(after date: Date) -> Int {
-		let displayed = backingView?.displayedLines
-			.count { $0.lineType.isConversation && $0.receivedAt > date } ?? 0
-
-		return displayed + linesAwaitingRender.count { $0.lineType.isConversation && $0.receivedAt > date }
 	}
 }

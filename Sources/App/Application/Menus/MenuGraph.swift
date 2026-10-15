@@ -93,6 +93,8 @@ enum MenuGraph {
 		mainMenu.item(for: .channelMenu)?.submenu = controller.mainMenuChannelMenu
 		mainMenu.item(for: .queryMenu)?.submenu = controller.mainMenuDirectMenu
 
+		MenuPresentation.apply(to: mainMenu)
+
 		NSApp.mainMenu = mainMenu
 		NSApp.servicesMenu = mainMenu.item(for: .services)?.submenu
 		NSApp.helpMenu = mainMenu.item(for: .helpMenu)?.submenu

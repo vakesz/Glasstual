@@ -128,7 +128,7 @@ struct NicknameColorView: View {
 				.frame(maxWidth: .infinity, alignment: .leading)
 				.padding(.vertical, UISpacing.regular)
 				.padding(.horizontal, UISpacing.wide)
-				.background(.quaternary, in: RoundedRectangle(cornerRadius: 6))
+				.background(.quaternary, in: .rect(cornerRadius: 6))
 				.accessibilityLabel(.MemberList.previewAccessibilityLabel(model.nickname))
 
 			HStack(spacing: UISpacing.wide) {

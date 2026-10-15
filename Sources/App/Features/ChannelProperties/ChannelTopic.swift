@@ -94,7 +94,7 @@ struct ChannelTopicView: View {
 	let cancel: @MainActor () -> Void
 
 	var body: some View {
-		VStack(spacing: UISpacing.wide) {
+		VStack(spacing: 0) {
 			Form {
 				Section {
 					ChannelTopicEditor(
@@ -118,18 +118,13 @@ struct ChannelTopicView: View {
 			}
 			.formStyle(.grouped)
 
-			HStack(spacing: UISpacing.regular) {
-				Spacer()
-
-				Button(.ChannelProperties.cancelButton, action: cancel)
-					.keyboardShortcut(.cancelAction)
-
-				Button(.ChannelProperties.changeTopicButton, action: submit)
-					.keyboardShortcut(.defaultAction)
-					.disabled(model.fitsLengthLimit == false)
-			}
+			SheetActions(
+				confirmTitle: Text(.ChannelProperties.changeTopicButton),
+				confirmIsDisabled: model.fitsLengthLimit == false,
+				confirm: submit,
+				cancel: cancel
+			)
 		}
-		.padding(SheetMetrics.margin)
 		.frame(minWidth: 480, idealWidth: 600, minHeight: 260, idealHeight: 280)
 	}
 }

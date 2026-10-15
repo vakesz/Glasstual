@@ -110,8 +110,8 @@ struct UIShellLocalizationCatalogTests {
 				== "\(1234.formatted(.number)) members"
 		)
 		#expect(String(localized: .MainWindow.awayNickname("alice")) == "alice (away)")
-		#expect(MenuCommand.sidebarTitle(isVisible: false) == "Show Server List")
-		#expect(MenuCommand.sidebarTitle(isVisible: true) == "Hide Server List")
+		#expect(MenuCommand.sidebarTitle(isVisible: false) == "Show Sidebar")
+		#expect(MenuCommand.sidebarTitle(isVisible: true) == "Hide Sidebar")
 		#expect(MenuCommand.memberListTitle(isVisible: false) == "Show Member List")
 		#expect(MenuCommand.memberListTitle(isVisible: true) == "Hide Member List")
 		#expect(String(localized: .MainWindow.dockIconBadgeShown("9,999")) == "9,999+")

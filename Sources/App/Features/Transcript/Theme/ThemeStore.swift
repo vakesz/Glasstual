@@ -46,19 +46,9 @@ nonisolated enum LiveThemeSnapshot {
 		published.withLock { $0 }
 	}
 
-	/// Publishes `snapshot`, reporting whether it moved so a caller can skip
-	/// announcing a change that is not one.
-	@discardableResult
-	static func publish(_ snapshot: ThemeSnapshot) -> Bool {
-		published.withLock { published in
-			guard published != snapshot else {
-				return false
-			}
-
-			published = snapshot
-
-			return true
-		}
+	/// Publishes `snapshot` for the next render away from the main actor.
+	static func publish(_ snapshot: ThemeSnapshot) {
+		published.withLock { $0 = snapshot }
 	}
 }
 
@@ -72,9 +62,23 @@ final class ThemeStore {
 		category: "ThemeStore"
 	)
 
-	private(set) var theme = TranscriptTheme.lines
+	/// The theme with the appearance and contrast its colours resolve
+	/// against. It is the store's one observed value: a view that reads a
+	/// resolved colour redraws when the theme, the appearance or the contrast
+	/// moves, and only then.
+	private(set) var snapshot = ThemeSnapshot(
+		transcript: .lines,
+		isDarkAppearance: false,
+		increasesContrast: false
+	)
+
 	private let stores: SettingsStores
+	private let readAppearance: @MainActor () -> ThemeAppearance
 	private let notifications = NotificationSubscriptions()
+
+	var theme: TranscriptTheme {
+		snapshot.transcript
+	}
 
 	var name: String {
 		theme.name
@@ -93,8 +97,12 @@ final class ThemeStore {
 		self.init(stores: .live)
 	}
 
-	init(stores: SettingsStores) {
+	init(
+		stores: SettingsStores,
+		readAppearance: @escaping @MainActor () -> ThemeAppearance = ThemeAppearance.current
+	) {
 		self.stores = stores
+		self.readAppearance = readAppearance
 
 		/* The snapshot carries the appearance the colours off the main actor are
 		 resolved against, and the system's own light/dark switch never passes
@@ -180,16 +188,17 @@ final class ThemeStore {
 		NotificationCenter.default.post(name: .themeAppearanceChanged, object: self)
 	}
 
+	/// Resolves `color` against the published appearance, so a colour drawn
+	/// on the main actor agrees with one drawn off it.
 	func resolved(_ color: AdaptiveTranscriptColor) -> NSColor {
 		color.resolved(
-			isDark: AppServices.appearance.properties.isDarkAppearance,
-			increasesContrast: NSWorkspace.shared.accessibilityDisplayShouldIncreaseContrast
+			isDark: snapshot.isDarkAppearance,
+			increasesContrast: snapshot.increasesContrast
 		)
 	}
 
 	private func publish(_ newTheme: TranscriptTheme, persist: Bool) {
-		theme = newTheme
-		publishSnapshot()
+		publishSnapshot(transcript: newTheme)
 
 		if persist {
 			do {
@@ -207,13 +216,36 @@ final class ThemeStore {
 	/// Reports whether the snapshot moved, so a caller can skip announcing a
 	/// change that is not one.
 	@discardableResult
-	private func publishSnapshot() -> Bool {
-		let snapshot = ThemeSnapshot(
-			transcript: theme,
-			isDarkAppearance: AppServices.appearance.properties.isDarkAppearance,
-			increasesContrast: NSWorkspace.shared.accessibilityDisplayShouldIncreaseContrast
+	private func publishSnapshot(transcript: TranscriptTheme? = nil) -> Bool {
+		let appearance = readAppearance()
+		let next = ThemeSnapshot(
+			transcript: transcript ?? theme,
+			isDarkAppearance: appearance.isDark,
+			increasesContrast: appearance.increasesContrast
 		)
 
-		return LiveThemeSnapshot.publish(snapshot)
+		LiveThemeSnapshot.publish(next)
+		/* Compared before it is written: an unchanged write still invalidates
+		 every view that reads a resolved colour. */
+		guard snapshot != next else {
+			return false
+		}
+
+		snapshot = next
+		return true
+	}
+}
+
+/// What a theme's colours resolve against besides the theme itself.
+struct ThemeAppearance: Equatable, Sendable {
+	var isDark: Bool
+	var increasesContrast: Bool
+
+	/// The application's resolved appearance and the system's contrast setting.
+	static func current() -> ThemeAppearance {
+		ThemeAppearance(
+			isDark: AppServices.appearance.properties.isDarkAppearance,
+			increasesContrast: NSWorkspace.shared.accessibilityDisplayShouldIncreaseContrast
+		)
 	}
 }

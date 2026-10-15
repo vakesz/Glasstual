@@ -30,12 +30,12 @@ actor SettingsRecoveryStore {
 	func backups() throws -> [SettingsRecoveryBackup] {
 		guard FileManager.default.fileExists(atPath: directory.path) else { return [] }
 		return try FileManager.default.contentsOfDirectory(
-			at: directory, includingPropertiesForKeys: [.creationDateKey, .isRegularFileKey],
+			at: directory, includingPropertiesForKeys: [.creationDateKey, .isRegularFileKey, .isSymbolicLinkKey],
 			options: [.skipsHiddenFiles]
 		).filter { $0.pathExtension == "plist" && $0.lastPathComponent.hasPrefix("Configuration-") }
 			.compactMap { url in
-				let values = try url.resourceValues(forKeys: [.creationDateKey, .isRegularFileKey])
-				guard values.isRegularFile == true else { return nil }
+				let values = try url.resourceValues(forKeys: [.creationDateKey, .isRegularFileKey, .isSymbolicLinkKey])
+				guard values.isSymbolicLink != true, values.isRegularFile == true else { return nil }
 				return SettingsRecoveryBackup(url: url, created: values.creationDate ?? .distantPast)
 			}
 			.sorted(by: Self.newestFirst)
@@ -70,6 +70,10 @@ actor SettingsRecoveryStore {
 		      url.lastPathComponent.hasPrefix("Configuration-"), url.pathExtension == "plist"
 		else {
 			throw SettingsTransferError.invalidDocument
+		}
+		let linkValues = try url.resourceValues(forKeys: [.isSymbolicLinkKey])
+		guard linkValues.isSymbolicLink != true else {
+			throw CocoaError(.fileReadNoPermission)
 		}
 		let files = FileManager.default
 		let folderAttributes = try files.attributesOfItem(atPath: directory.path)

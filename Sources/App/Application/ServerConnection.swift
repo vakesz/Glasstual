@@ -67,7 +67,13 @@ enum ServerConnection {
 		channels: [String]
 	) async -> ServerConnectionMergeChoice {
 		let hasMultipleChannels = channels.count > 1
-		let channelNames = hasMultipleChannels ? channels.joined(separator: ", ") : channels[0]
+		let channelNames = if hasMultipleChannels {
+			channels.joined(separator: ", ")
+		} else if let first = channels.first {
+			first
+		} else {
+			address
+		}
 
 		/* Three buttons, because the question has three answers. Making
 		 "Create New Connection" the Escape button meant dismissing the alert

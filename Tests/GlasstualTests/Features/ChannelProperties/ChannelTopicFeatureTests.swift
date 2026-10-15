@@ -17,7 +17,6 @@ struct ChannelTopicFeatureTests {
 				== "Edit the topic. IRC text formatting is preserved."
 		)
 		#expect(String(localized: .ChannelProperties.changeTopicButton) == "Change Topic")
-		#expect(String(localized: .ChannelProperties.cancelButton) == "Cancel")
 	}
 
 	/// The sheet counts down beside the editor instead of raising an alert on

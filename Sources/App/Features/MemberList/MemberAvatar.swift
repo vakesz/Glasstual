@@ -28,13 +28,18 @@ struct MemberAvatar: View {
 	 under white initials. */
 	private static let fillLightness = 0.45
 
+	/// The initial's point size as a share of the avatar's diameter. It scales
+	/// with the avatar rather than with Dynamic Type: the circle is the
+	/// letter's whole frame.
+	private static let initialScale: CGFloat = 0.48
+
 	var body: some View {
 		let fill = Self.fill(for: nickname, overrides: overrides)
 		Circle()
 			.fill(Color(nsColor: fill))
 			.overlay {
 				Text(Self.initial(for: nickname))
-					.font(.system(size: round(size * 0.48), weight: .semibold))
+					.font(.system(size: round(size * Self.initialScale), weight: .semibold))
 					.foregroundStyle(Color(nsColor: fill.legibleForeground))
 			}
 			.frame(width: size, height: size)

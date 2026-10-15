@@ -10,18 +10,18 @@ import Testing
 struct MenuPresentationTests {
 	/// That every mapped symbol exists in the system catalogue is stated once,
 	/// in `MenuCommandTests.symbolNamesResolve`; what this adds is that the
-	/// symbols belong to the contextual menus and to nothing else.
-	@Test("Only the commands contextual menus carry take a symbol")
-	func symbolsBelongToContextualMenusOnly() {
+	/// symbols go to actionable commands and not to the ones AppKit owns.
+	@Test("Actionable commands take a symbol and system-owned ones do not")
+	func symbolsBelongToActionableCommands() {
 		#expect(MenuCommand.connect.symbolName == "bolt")
 		#expect(MenuCommand.whois.symbolName == "info.circle")
-		/* The menu bar draws no images: macOS draws none beside its own
-		 commands, and a column of symbols next to Cut, Copy and Quit reads as
-		 decoration. */
-		#expect(MenuCommand.settings.symbolName == nil)
+		#expect(MenuCommand.settings.symbolName == "gearshape")
+		#expect(MenuCommand.toggleSidebar.symbolName == "sidebar.left")
 		#expect(MenuCommand.quit.symbolName == nil)
-		#expect(MenuCommand.selectAll.symbolName == nil)
+		#expect(MenuCommand.hideApplication.symbolName == nil)
+		#expect(MenuCommand.services.symbolName == nil)
 		#expect(MenuCommand.zoom.symbolName == nil)
+		#expect(MenuCommand.minimize.symbolName == nil)
 	}
 
 	@Test("The symbol pass adds an image without touching the item's command or key equivalent")

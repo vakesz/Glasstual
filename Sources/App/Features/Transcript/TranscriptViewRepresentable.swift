@@ -92,7 +92,7 @@ final class TranscriptHostView: NSView {
 	 every move of the field, and that is safe because it writes no SwiftUI
 	 state: the transcript ignores an unchanged inset, and a changed one
 	 dirties the transcript alone, not this view. A field that is not in this
-	 window yet -- it is re-hosted when the appearance changes -- keeps the
+	 window yet -- as while the hierarchy is first assembled -- keeps the
 	 inset it had rather than pulling the transcript under the bar and back. */
 	private func updateBottomInset() {
 		guard let transcriptView, let inputField, let window, inputField.window === window else { return }

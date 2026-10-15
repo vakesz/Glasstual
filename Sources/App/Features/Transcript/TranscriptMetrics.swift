@@ -1,6 +1,7 @@
 // Copyright (c) 2026 Codeux Software, LLC & respective contributors.
 // SPDX-License-Identifier: BSD-3-Clause
 
+import AppKit
 import CoreGraphics
 
 /** What the transcript is spaced and sized by.
@@ -47,4 +48,16 @@ enum TranscriptMetrics {
 	/// What an inline image keeps clear of the column's trailing edge, so a
 	/// picture never runs under the scroller.
 	static let inlineImageSideInset: CGFloat = 40
+
+	/// One paragraph style for transcript lines, shared by the document and
+	/// the fold summaries so spacing cannot drift between them.
+	static func transcriptParagraph(lineSpacing: CGFloat, messageSpacing: CGFloat, horizontalPadding: CGFloat) -> NSMutableParagraphStyle {
+		let paragraph = NSMutableParagraphStyle()
+		paragraph.lineSpacing = lineSpacing
+		paragraph.paragraphSpacing = messageSpacing
+		paragraph.firstLineHeadIndent = horizontalPadding
+		paragraph.headIndent = horizontalPadding
+		paragraph.tailIndent = -horizontalPadding
+		return paragraph
+	}
 }

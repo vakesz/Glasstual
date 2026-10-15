@@ -29,7 +29,6 @@ struct MainWindowConversation: View {
 					) + SlashCommandDiscoveryView.height(for: inputContentView.textView.commandDiscovery),
 					isObscured: columns.isConversationObscured
 				)
-				.id(columns.appearanceRevision)
 
 				inputBar
 			}
@@ -52,11 +51,11 @@ struct MainWindowConversation: View {
 				// Align the reply text with the field's text inset.
 				.padding(.horizontal, UISpacing.loose)
 
+				/* The field's own height constraint is the capsule's height. A
+				 SwiftUI frame around it let a short column squeeze the capsule
+				 below the field: the field overflowed the glass, and the
+				 transcript's inset, measured from the field, missed the bar. */
 				MainWindowInputRepresentable(contentView: inputContentView)
-					.frame(
-						minHeight: InputBarLayout.minimumHostHeight,
-						idealHeight: InputBarLayout.idealHostHeight
-					)
 					.padding(.horizontal, UISpacing.regular)
 					.padding(.vertical, InputBarLayout.fieldVerticalPadding)
 					.glassEffect(.regular, in: .capsule)

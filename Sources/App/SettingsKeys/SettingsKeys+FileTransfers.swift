@@ -58,13 +58,14 @@ nonisolated extension SettingsKeys {
 		static let manuallyEnteredIPAddress = SettingsKey(
 			group + "Manually Entered IP Address",
 			default: "",
-			traits: .unregistered
+			traits: [.unregistered, .excludedFromExport],
+			validation: { $0.isEmpty || $0.isIPAddress }
 		)
 
 		static let ipAddressInterfaceName = SettingsKey(
 			group + "IP Address Interface Name",
 			default: "",
-			traits: .unregistered
+			traits: [.unregistered, .excludedFromExport]
 		)
 
 		/// A security-scoped bookmark, meaningless in another user account.

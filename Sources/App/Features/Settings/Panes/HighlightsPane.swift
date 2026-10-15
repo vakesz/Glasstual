@@ -125,16 +125,16 @@ struct SettingsKeywordList: View {
 
 			HStack(spacing: UISpacing.regular) {
 				Button(action: add) {
-					Image(systemName: "plus")
+					Label(String(localized: addLabel), systemImage: "plus")
+						.labelStyle(.iconOnly)
 				}
 				.help(Text(addLabel))
-				.accessibilityLabel(Text(addLabel))
 
 				Button(role: .destructive, action: remove) {
-					Image(systemName: "minus")
+					Label(String(localized: removeLabel), systemImage: "minus")
+						.labelStyle(.iconOnly)
 				}
 				.help(Text(removeLabel))
-				.accessibilityLabel(Text(removeLabel))
 				.disabled(selection == nil)
 			}
 		}

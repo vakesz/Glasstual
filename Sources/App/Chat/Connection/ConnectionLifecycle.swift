@@ -518,6 +518,10 @@ extension ServerSession {
 
 	func connectionDidSecure(protocolType: tls_protocol_version_t, cipherSuite: tls_ciphersuite_t) {
 		performedSTSUpgrade = false
+		if let attempt = lastSTSUpgradeAttempt {
+			environment.services.stsPolicies.noteUpgradeSucceeded(host: attempt.host)
+			lastSTSUpgradeAttempt = nil
+		}
 		output?.reloadChatItem(self)
 		output?.updateTitle(for: self)
 		let isLegacy = SecureTransportSupport.isCipherSuiteLegacy(cipherSuite)
@@ -573,6 +577,12 @@ extension ServerSession {
 	}
 
 	func connectionDidDisconnect(error disconnectError: Error?) {
+		if let attempt = lastSTSUpgradeAttempt, disconnectError != nil, socket?.isSecured != true {
+			environment.services.stsPolicies.noteUpgradeFailed(host: attempt.host, port: attempt.port)
+			lastSTSUpgradeAttempt = nil
+		} else if socket?.isSecured == true {
+			lastSTSUpgradeAttempt = nil
+		}
 		changeStateOff(withError: disconnectError)
 		invokeDisconnectCallbacks()
 		NotificationCenter.default.post(name: .serverSessionDidDisconnect, object: self)

@@ -3,6 +3,7 @@
 
 import AppKit
 import CocoaExtensions
+import os
 
 nonisolated enum ApplicationInfo {
 	static func applicationName() -> String {
@@ -25,7 +26,9 @@ nonisolated enum ApplicationInfo {
 
 	static func applicationBundleIdentifier() -> String {
 		guard let identifier = Bundle.main.bundleIdentifier, !identifier.isEmpty else {
-			preconditionFailure("The generated Info.plist is missing CFBundleIdentifier")
+			Logger(subsystem: LogSubsystem.current, category: "ApplicationInfo")
+				.fault("The generated Info.plist is missing CFBundleIdentifier")
+			return "com.vakesz.glasstual.fallback"
 		}
 
 		return identifier
