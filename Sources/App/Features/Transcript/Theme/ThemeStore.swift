@@ -93,6 +93,13 @@ final class ThemeStore {
 		resolved(theme.palette.background)
 	}
 
+	/// The ground behind the sidebar and the member list. The columns are
+	/// opaque by design and keep the system's label colours for their rows,
+	/// which is what the chrome contrast tests hold this ground to.
+	var chromeBackground: NSColor {
+		resolved(theme.palette.chromeBackground)
+	}
+
 	convenience init() {
 		self.init(stores: .live)
 	}

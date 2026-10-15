@@ -67,6 +67,30 @@ struct ThemeStoreTests {
 		#expect(store.resolved(link) == link.resolved(isDark: false, increasesContrast: true))
 	}
 
+	/// The columns stand on the theme's chrome ground rather than on a
+	/// material, so the store resolves it like any other role.
+	@Test("The chrome ground resolves the palette's chrome role")
+	func chromeFollowsTheme() throws {
+		let fixture = try SettingsTransferFixture()
+		let source = ThemeAppearanceSource()
+		let store = source.makeStore(fixture)
+		defer {
+			fixture.cleanUp()
+			AppServices.theme.appearanceDidChange()
+		}
+
+		#expect(store.chromeBackground == TranscriptTheme.lines.palette.chromeBackground.resolved(
+			isDark: false,
+			increasesContrast: false
+		))
+		source.appearance.isDark = true
+		store.appearanceDidChange()
+		#expect(store.chromeBackground == TranscriptTheme.lines.palette.chromeBackground.resolved(
+			isDark: true,
+			increasesContrast: false
+		))
+	}
+
 	/// An announcement that is not news would rebuild every transcript.
 	@Test("Only a moved appearance invalidates and announces")
 	func unchangedAppearanceIsQuiet() throws {

@@ -65,26 +65,3 @@ private struct SidebarOutlineRepresentable: NSViewRepresentable {
 		CGSize(width: proposal.width ?? MainWindowConstants.sidebarIdealWidth, height: proposal.height ?? 300)
 	}
 }
-
-/// One setting makes the whole sidebar, footer included, opaque. Otherwise the
-/// split view's own sidebar material shows through, and that material already
-/// answers the system's Reduce Transparency preference.
-@Observable
-final class SidebarAppearance {
-	private(set) var isOpaque = false
-	@ObservationIgnored private let notifications = NotificationSubscriptions()
-
-	init() {
-		refresh()
-		notifications.observe(UserDefaults.didChangeNotification, object: GlasstualUserDefaults.container) { [weak self] _ in
-			self?.refresh()
-		}
-	}
-
-	private func refresh() {
-		let isOpaque = SettingsKeys.Appearance.disableSidebarTranslucency.value
-		// Observation reports a write, not a change, and any defaults write lands here.
-		guard isOpaque != self.isOpaque else { return }
-		self.isOpaque = isOpaque
-	}
-}

@@ -204,7 +204,6 @@ enum SettingsPaneKeys {
 	private static let hiddenKeys: [SettingsBoundKey] = [
 		.init(SettingsKeys.Internals.appSleepDisabled, .Settings.hiddenAppNap),
 		.init(SettingsKeys.Logging.loadHistoryLazily, .Settings.hiddenLoadHistoryLazily),
-		.init(SettingsKeys.Appearance.disableSidebarTranslucency, .Settings.hiddenSidebarTranslucency),
 		.init(SettingsKeys.Logging.scrollbackVisibleLimit, .Settings.hiddenScrollbackVisibleLimit),
 	]
 

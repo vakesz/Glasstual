@@ -154,6 +154,32 @@ struct TranscriptThemeStoreTests {
 		}
 	}
 
+	/// A version-3 document has no window-chrome ground: it upgrades with the
+	/// chrome standing on its transcript ground, which is what the columns
+	/// stood on before they had a colour of their own.
+	@Test("A version-3 document upgrades its chrome from its background")
+	func version3DocumentGainsChromeFromBackground() throws {
+		let fixture = try SettingsTransferFixture()
+		defer { fixture.cleanUp() }
+		let controller = makeController(fixture)
+		var legacy = TranscriptTheme.bubbles
+		legacy.formatVersion = 3
+		var format: PropertyListSerialization.PropertyListFormat = .xml
+		var document = try PropertyListSerialization.propertyList(from: encoded(legacy), options: [], format: &format) as? [String: Any]
+		var palette = try #require(document?["palette"] as? [String: Any])
+		palette.removeValue(forKey: "chromeBackground")
+		document?["palette"] = palette
+		document?["formatVersion"] = 3
+		let data = try PropertyListSerialization.data(fromPropertyList: document ?? [:], format: .xml, options: 0)
+
+		try controller.importTheme(from: data)
+
+		var expected = TranscriptTheme.bubbles
+		expected.formatVersion = TranscriptTheme.currentFormatVersion
+		#expect(controller.theme == expected)
+		#expect(controller.theme.palette.chromeBackground == controller.theme.palette.background)
+	}
+
 	/// A stored document this build cannot read leaves the shipped theme in
 	/// place, and is left on disk rather than overwritten.
 	@Test("A stored document of an older version falls back to the shipped theme")

@@ -13,7 +13,6 @@ struct MainWindowSidebar: View {
 	/// is a route from any subview to the application delegate.
 	let commands: MenuActionController?
 	let redirectTyping: (String) -> Void
-	@State private var appearance = SidebarAppearance()
 
 	var body: some View {
 		VStack(spacing: 0) {
@@ -21,13 +20,12 @@ struct MainWindowSidebar: View {
 			Divider()
 			sidebarFooter
 		}
-		// The split view supplies the sidebar material; this only covers it.
+		// The theme's own chrome ground, opaque: the sidebar never shows the
+		// desktop through a material, so a preset carries the whole window.
 		.background {
-			if appearance.isOpaque {
-				Rectangle()
-					.fill(.windowBackground)
-					.ignoresSafeArea(.container, edges: .top)
-			}
+			Rectangle()
+				.fill(Color(nsColor: AppServices.theme.chromeBackground))
+				.ignoresSafeArea(.container, edges: .top)
 		}
 	}
 

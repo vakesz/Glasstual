@@ -73,6 +73,30 @@
         }
       }
     },
+    "custom-theme": {
+      "comment": "Shown when the transcript theme differs from every shipped theme.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Custom"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Egyéni"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Angepasst"
+          }
+        }
+      }
+    },
     "dark": {
       "comment": "Dark appearance color column.",
       "extractionState": "manual",
@@ -553,6 +577,30 @@
         }
       }
     },
+    "replace-theme-confirmation": {
+      "comment": "Title of the alert confirming a customized transcript theme will be replaced by a preset.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replace your customized theme with %@?"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lecseréled az egyéni témádat erre: %@?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dein angepasstes Design durch %@ ersetzen?"
+          }
+        }
+      }
+    },
     "role-color-note": {
       "comment": "Footer explaining how a transcript theme stores its colors, below the list of color roles.",
       "extractionState": "manual",
@@ -625,6 +673,30 @@
         }
       }
     },
+    "sidebar-background": {
+      "comment": "Transcript theme color role for the sidebar and member list grounds.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sidebar background"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oldalsáv háttere"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seitenleistenhintergrund"
+          }
+        }
+      }
+    },
     "theme-name": {
       "comment": "Transcript theme name field label.",
       "extractionState": "manual",
@@ -645,6 +717,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Designname"
+          }
+        }
+      }
+    },
+    "theme-preset": {
+      "comment": "Transcript theme preset menu label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Theme preset"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Téma-előbeállítás"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Theme-Voreinstellung"
           }
         }
       }

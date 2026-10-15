@@ -3073,30 +3073,6 @@
         }
       }
     },
-    "hidden-sidebar-translucency": {
-      "comment": "Checkbox in the Hidden pane.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Server sidebar appears transparent"
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Átlátszó kiszolgáló-oldalsáv"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Serverseitenleiste transparent darstellen"
-          }
-        }
-      }
-    },
     "hidden-warning": {
       "comment": "Footer of the Hidden section, warning that the settings above are unsupported.",
       "extractionState": "manual",

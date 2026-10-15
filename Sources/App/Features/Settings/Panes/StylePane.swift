@@ -12,6 +12,7 @@ private struct TranscriptThemeColorRole: Identifiable {
 
 	static let all = [
 		Self(id: "background", title: .TranscriptTheme.background, keyPath: \.background),
+		Self(id: "chromeBackground", title: .TranscriptTheme.sidebarBackground, keyPath: \.chromeBackground),
 		Self(id: "primaryText", title: .TranscriptTheme.primaryText, keyPath: \.primaryText),
 		Self(id: "secondaryText", title: .TranscriptTheme.secondaryText, keyPath: \.secondaryText),
 		Self(id: "timestampText", title: .TranscriptTheme.timestampText, keyPath: \.timestampText),
@@ -38,7 +39,7 @@ struct StylePane: View {
 	/// The non-key controls this form exposes to Settings search. Colour roles
 	/// come from the same table that draws their wells, so new roles are found.
 	static var searchLabels: [LocalizedStringResource] {
-		[.TranscriptTheme.themeName, .TranscriptTheme.layout, .TranscriptTheme.lines,
+		[.TranscriptTheme.themeName, .TranscriptTheme.themePreset, .TranscriptTheme.layout, .TranscriptTheme.lines,
 		 .TranscriptTheme.bubbles, .TranscriptTheme.importTheme, .TranscriptTheme.exportTheme,
 		 .TranscriptTheme.colors, .TranscriptTheme.light, .TranscriptTheme.dark,
 		 .TranscriptTheme.lineSpacing, .TranscriptTheme.messageSpacing, .TranscriptTheme.horizontalPadding,
@@ -64,6 +65,8 @@ struct StylePane: View {
 
 	let model: SettingsModel
 	@State private var confirmsThemeReset = false
+	@State private var confirmsPresetReplace = false
+	@State private var pendingPreset: TranscriptThemePreset?
 
 	var body: some View {
 		Section {
@@ -72,6 +75,7 @@ struct StylePane: View {
 			} label: {
 				Text(.TranscriptTheme.themeName)
 			}
+			presetRow
 			Picker(selection: themeLayout) {
 				Text(.TranscriptTheme.lines).tag(TranscriptThemeLayout.lines)
 				Text(.TranscriptTheme.bubbles).tag(TranscriptThemeLayout.bubbles)
@@ -210,6 +214,72 @@ struct StylePane: View {
 			)))
 	}
 
+	/// The shipped theme the stored theme matches, or the row saying it is
+	/// a customization. A menu rather than a picker: a picker needs a
+	/// selection the customized theme cannot give it.
+	private var presetRow: some View {
+		LabeledContent {
+			Menu {
+				ForEach(TranscriptThemePreset.allCases) { preset in
+					Button(preset.title) {
+						requestPreset(preset)
+					}
+				}
+			} label: {
+				Text(currentPresetName)
+			}
+			.confirmationDialog(
+				Text(pendingPresetTitle),
+				isPresented: $confirmsPresetReplace
+			) {
+				Button(.Settings.interfaceResetToDefaults, role: .destructive) {
+					applyPendingPreset()
+				}
+				Button(PromptStrings.Action.cancel, role: .cancel) {}
+			} message: {
+				Text(.Settings.interfaceResetThemeConfirmationBody)
+			}
+		} label: {
+			Text(.TranscriptTheme.themePreset)
+		}
+	}
+
+	/// Applies `preset`, asking first when the stored theme is a
+	/// customization that the preset would replace for good.
+	private func requestPreset(_ preset: TranscriptThemePreset) {
+		guard hasCustomTranscriptTheme else {
+			model.applyTranscriptPreset(preset)
+			return
+		}
+		pendingPreset = preset
+		confirmsPresetReplace = true
+	}
+
+	private func applyPendingPreset() {
+		guard let preset = pendingPreset else { return }
+		pendingPreset = nil
+		model.applyTranscriptPreset(preset)
+	}
+
+	private var pendingPresetTitle: String {
+		guard let preset = pendingPreset else { return "" }
+		return String(localized: .TranscriptTheme.replaceThemeConfirmation(preset.title))
+	}
+
+	private var currentPresetName: String {
+		let theme = model.transcriptTheme
+		if theme == .lines {
+			return String(localized: .TranscriptTheme.lines)
+		}
+		if theme == .bubbles {
+			return String(localized: .TranscriptTheme.bubbles)
+		}
+		if let preset = TranscriptThemePreset.allCases.first(where: { $0.theme() == theme }) {
+			return preset.title
+		}
+		return String(localized: .TranscriptTheme.customTheme)
+	}
+
 	private var fontRow: some View {
 		LabeledContent {
 			HStack {
@@ -284,8 +354,7 @@ struct StylePane: View {
 	}
 
 	private var hasCustomTranscriptTheme: Bool {
-		let theme = model.transcriptTheme
-		return theme != (theme.layout == .bubbles ? .bubbles : .lines)
+		TranscriptThemePreset.allShippedThemes.contains(model.transcriptTheme) == false
 	}
 
 	/// A theme with an empty name is rejected, so a blank entry restores the

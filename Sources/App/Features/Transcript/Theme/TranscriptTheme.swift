@@ -93,8 +93,12 @@ nonisolated enum TranscriptThemeLayout: String, Codable, CaseIterable, Sendable 
 	case bubbles
 }
 
-/// Every colour the native transcript draws, named by purpose rather than by
-/// where a former stylesheet happened to use it.
+/// Every colour the native transcript and its window chrome draw, named by
+/// purpose rather than by where a former stylesheet happened to use it.
+///
+/// The transcript reads every role but the last; the sidebar and the member
+/// list draw their grounds from `chromeBackground` and keep the system's
+/// own label colours for what sits on them.
 nonisolated struct TranscriptThemePalette: Codable, Equatable, Sendable {
 	var background: AdaptiveTranscriptColor
 	var primaryText: AdaptiveTranscriptColor
@@ -113,13 +117,17 @@ nonisolated struct TranscriptThemePalette: Codable, Equatable, Sendable {
 	var bubbleOutgoing: AdaptiveTranscriptColor
 	var unreadMarker: AdaptiveTranscriptColor
 	var failure: AdaptiveTranscriptColor
+	/// The ground behind the sidebar and the member list. Opaque by design:
+	/// the columns never show the desktop through a material, so a preset
+	/// carries the whole window with it.
+	var chromeBackground: AdaptiveTranscriptColor
 
 	/// Every colour role, so a pass over the palette cannot miss one.
 	static var roles: [WritableKeyPath<Self, AdaptiveTranscriptColor>] {
 		[
 			\.background, \.primaryText, \.secondaryText, \.timestampText, \.eventText, \.link,
 			\.localNickname, \.remoteNickname, \.highlightBackground, \.highlightText,
-			\.bubbleIncoming, \.bubbleOutgoing, \.unreadMarker, \.failure,
+			\.bubbleIncoming, \.bubbleOutgoing, \.unreadMarker, \.failure, \.chromeBackground,
 		]
 	}
 
@@ -142,8 +150,12 @@ nonisolated struct TranscriptTheme: Codable, Equatable, Sendable {
 	 document says 1 or 2, and keeping the count ahead of both is what makes the
 	 version check refuse them. Its high-contrast fields are optional, so a
 	 version-1 document would otherwise pass and draw bracketed nicknames with
-	 no increased-contrast pair. */
-	static let currentFormatVersion = 3
+	 no increased-contrast pair.
+
+	 Version 4 adds the window-chrome ground. A version-3 document decodes with
+	 the chrome copied from its transcript ground, which is what the columns
+	 stood on before they had a colour of their own. */
+	static let currentFormatVersion = 4
 
 	var formatVersion = currentFormatVersion
 	var name: String
@@ -156,6 +168,89 @@ nonisolated struct TranscriptTheme: Codable, Equatable, Sendable {
 	var messageSpacing: Double
 	var horizontalPadding: Double
 	var palette: TranscriptThemePalette
+
+	private enum CodingKeys: String, CodingKey {
+		case formatVersion
+		case name
+		case layout
+		case fontName
+		case fontSize
+		case timestampFormat
+		case nicknameFormat
+		case lineSpacing
+		case messageSpacing
+		case horizontalPadding
+		case palette
+	}
+
+	/** The palette as a version-3 document stores it: every role but the
+	 window-chrome ground version 4 added. */
+	private struct PaletteV3: Decodable {
+		var background: AdaptiveTranscriptColor
+		var primaryText: AdaptiveTranscriptColor
+		var secondaryText: AdaptiveTranscriptColor
+		var timestampText: AdaptiveTranscriptColor
+		var eventText: AdaptiveTranscriptColor
+		var link: AdaptiveTranscriptColor
+		var localNickname: AdaptiveTranscriptColor
+		var remoteNickname: AdaptiveTranscriptColor
+		var highlightBackground: AdaptiveTranscriptColor
+		var highlightText: AdaptiveTranscriptColor
+		var bubbleIncoming: AdaptiveTranscriptColor
+		var bubbleOutgoing: AdaptiveTranscriptColor
+		var unreadMarker: AdaptiveTranscriptColor
+		var failure: AdaptiveTranscriptColor
+
+		/// The columns stood on the transcript ground before they had a
+		/// colour of their own, so an upgraded theme keeps standing on it.
+		func withChromeFromBackground() -> TranscriptThemePalette {
+			TranscriptThemePalette(
+				background: background,
+				primaryText: primaryText,
+				secondaryText: secondaryText,
+				timestampText: timestampText,
+				eventText: eventText,
+				link: link,
+				localNickname: localNickname,
+				remoteNickname: remoteNickname,
+				highlightBackground: highlightBackground,
+				highlightText: highlightText,
+				bubbleIncoming: bubbleIncoming,
+				bubbleOutgoing: bubbleOutgoing,
+				unreadMarker: unreadMarker,
+				failure: failure,
+				chromeBackground: background
+			)
+		}
+	}
+
+	/** Decodes a stored theme, upgrading a version-3 document on the way in.
+
+	 A version-3 palette carries no window-chrome ground and fails the
+	 version-4 decode for the missing key, so one is read through the
+	 version-3 shape first. Anything else that fails to decode is refused
+	 by the caller as before. */
+	init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		formatVersion = try container.decode(Int.self, forKey: .formatVersion)
+		name = try container.decode(String.self, forKey: .name)
+		layout = try container.decode(TranscriptThemeLayout.self, forKey: .layout)
+		fontName = try container.decode(String.self, forKey: .fontName)
+		fontSize = try container.decode(Double.self, forKey: .fontSize)
+		timestampFormat = try container.decode(String.self, forKey: .timestampFormat)
+		nicknameFormat = try container.decode(String.self, forKey: .nicknameFormat)
+		lineSpacing = try container.decode(Double.self, forKey: .lineSpacing)
+		messageSpacing = try container.decode(Double.self, forKey: .messageSpacing)
+		horizontalPadding = try container.decode(Double.self, forKey: .horizontalPadding)
+		if formatVersion == 3,
+		   let legacy = try? container.decode(PaletteV3.self, forKey: .palette)
+		{
+			palette = legacy.withChromeFromBackground()
+			formatVersion = Self.currentFormatVersion
+		} else {
+			palette = try container.decode(TranscriptThemePalette.self, forKey: .palette)
+		}
+	}
 
 	init(
 		name: String,
@@ -231,10 +326,11 @@ nonisolated struct TranscriptTheme: Codable, Equatable, Sendable {
 		bubbleIncoming: pair(light: 0xE9E9EB, dark: 0x363638, contrastLight: 0xDCDCDE, contrastDark: 0x48484A),
 		bubbleOutgoing: pair(light: 0xD8ECFF, dark: 0x164A73, contrastLight: 0xC3E1FF, contrastDark: 0x1A5080),
 		unreadMarker: pair(light: 0xD70015, dark: 0xFF6961, contrastLight: 0xA30010, contrastDark: 0xFF8A80),
-		failure: pair(light: 0xB00020, dark: 0xFF8A80, contrastLight: 0x8B0016, contrastDark: 0xFF9E96)
+		failure: pair(light: 0xB00020, dark: 0xFF8A80, contrastLight: 0x8B0016, contrastDark: 0xFF9E96),
+		chromeBackground: pair(light: 0xFFFFFF, dark: 0x1E1E1E, contrastLight: 0xFFFFFF, contrastDark: 0x000000)
 	)
 
-	private static func pair(
+	static func pair(
 		light: UInt32,
 		dark: UInt32,
 		contrastLight: UInt32,
@@ -248,7 +344,7 @@ nonisolated struct TranscriptTheme: Codable, Equatable, Sendable {
 		)
 	}
 
-	private static func color(_ value: UInt32) -> TranscriptThemeColor {
+	static func color(_ value: UInt32) -> TranscriptThemeColor {
 		TranscriptThemeColor(
 			red: Double((value >> 16) & 0xFF) / 255,
 			green: Double((value >> 8) & 0xFF) / 255,

@@ -98,3 +98,87 @@ struct ThemePaletteContrastTests {
 		}
 	}
 }
+
+/** The system's label colours on every shipped chrome ground.
+
+ The columns keep the label colours for their rows, so the chrome has to
+ carry them: primary labels hold the same AAA floor as the increased-contrast
+ transcript, while secondary labels hold the 3:1 floor WCAG asks of large
+ text — secondary content is exempt from the body-text minimum by design,
+ here and in Apple's own palettes. Both are measured composited, because the
+ label colours are translucent and read as what they composite to, not as
+ what their components say. */
+@MainActor
+@Suite("Window chrome contrast")
+struct TranscriptThemeChromeContrastTests {
+	@Test("System labels clear contrast on every shipped chrome ground", arguments: [false, true])
+	func chromeLabelsClearContrast(isDark: Bool) throws {
+		let appearance = try #require(NSAppearance(named: isDark ? .darkAqua : .aqua))
+		var measured: [ChromeMeasurement] = []
+		appearance.performAsCurrentDrawingAppearance {
+			for (title, palette) in Self.grounds {
+				for highContrast in [false, true] {
+					let ground = Self.srgb(palette.chromeBackground.resolved(
+						isDark: isDark,
+						increasesContrast: highContrast
+					))
+					measured.append(ChromeMeasurement(
+						title: title,
+						highContrast: highContrast,
+						primary: Self.compositedRatio(Self.srgb(.labelColor), over: ground),
+						secondary: Self.compositedRatio(Self.srgb(.secondaryLabelColor), over: ground)
+					))
+				}
+			}
+		}
+		for result in measured {
+			let mode = "\(result.title) \(isDark ? "dark" : "light")\(result.highContrast ? " high-contrast" : "")"
+			#expect(result.primary >= 7, "\(mode) primary label: \(result.primary)")
+			#expect(result.secondary >= 3, "\(mode) secondary label: \(result.secondary)")
+		}
+	}
+
+	private struct ChromeMeasurement {
+		var title: String
+		var highContrast: Bool
+		var primary: Double
+		var secondary: Double
+	}
+
+	private static var grounds: [(String, TranscriptThemePalette)] {
+		[("Default", TranscriptTheme.defaultPalette)]
+			+ TranscriptThemePreset.allCases.map { ($0.title, $0.theme().palette) }
+	}
+
+	private static func srgb(_ color: NSColor) -> SRGBColor {
+		let resolved = color.usingColorSpace(.sRGB) ?? color
+		return SRGBColor(
+			red: Double(resolved.redComponent),
+			green: Double(resolved.greenComponent),
+			blue: Double(resolved.blueComponent),
+			alpha: Double(resolved.alphaComponent)
+		)
+	}
+
+	private struct SRGBColor {
+		var red: Double
+		var green: Double
+		var blue: Double
+		var alpha: Double
+	}
+
+	/// The WCAG ratio of `foreground` source-over `ground`, in sRGB.
+	private static func compositedRatio(_ foreground: SRGBColor, over ground: SRGBColor) -> Double {
+		func channel(_ value: Double) -> Double {
+			value <= 0.03928 ? value / 12.92 : pow((value + 0.055) / 1.055, 2.4)
+		}
+		let mixed = (
+			foreground.alpha * foreground.red + (1 - foreground.alpha) * ground.red,
+			foreground.alpha * foreground.green + (1 - foreground.alpha) * ground.green,
+			foreground.alpha * foreground.blue + (1 - foreground.alpha) * ground.blue
+		)
+		let first = 0.2126 * channel(mixed.0) + 0.7152 * channel(mixed.1) + 0.0722 * channel(mixed.2)
+		let second = 0.2126 * channel(ground.red) + 0.7152 * channel(ground.green) + 0.0722 * channel(ground.blue)
+		return (max(first, second) + 0.05) / (min(first, second) + 0.05)
+	}
+}

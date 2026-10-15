@@ -276,23 +276,6 @@ struct SidebarOutlineViewTests {
 		#expect(filteredEntry.accessibilityCustomActions()?.isEmpty == true)
 	}
 
-	@Test("Only the app preference covers the system sidebar material", arguments: [false, true])
-	func opaqueSidebarFollowsPreference(translucencyDisabled: Bool) {
-		let defaults = GlasstualUserDefaults.container
-		let key = SettingsKeys.Appearance.disableSidebarTranslucency.name
-		let original = defaults.persistedObject(forKey: key)
-		defer {
-			if let original {
-				defaults.set(original, forKey: key)
-			} else {
-				defaults.removeObject(forKey: key)
-			}
-		}
-		defaults.set(translucencyDisabled, forKey: key)
-
-		#expect(SidebarAppearance().isOpaque == translucencyDisabled)
-	}
-
 	@Test(
 		"Long labels, failed joins and unread counts stay within native rows in both appearances",
 		arguments: [false, true],

@@ -340,6 +340,14 @@ extension SettingsModel {
 		themeStore.reset()
 	}
 
+	/// Writes a shipped preset over the stored theme. The caller confirms
+	/// first when the stored theme is a customization.
+	func applyTranscriptPreset(_ preset: TranscriptThemePreset) {
+		SettingsEditingSession.shared.finishEditing()
+		cancelThemeImport()
+		_ = themeStore.apply(preset.theme())
+	}
+
 	func selectTranscriptFont() {
 		showsFontPicker = true
 	}

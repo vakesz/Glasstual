@@ -44,12 +44,6 @@ struct AdvancedPane: View {
 				title: .Settings.hiddenLoadHistoryLazily,
 				isOn: model.settings.binding(for: SettingsKeys.Logging.loadHistoryLazily)
 			)
-			SettingsToggle(
-				title: .Settings.hiddenSidebarTranslucency,
-				isOn: model.settings.invertedBinding(
-					for: SettingsKeys.Appearance.disableSidebarTranslucency
-				)
-			)
 			scrollbackLimitRow
 		} header: {
 			Text(SettingsPane.hidden.title)

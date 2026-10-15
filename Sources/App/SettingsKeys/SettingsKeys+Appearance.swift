@@ -13,10 +13,6 @@ nonisolated extension SettingsKeys {
 			default: PreferredAppearance.inherited
 		)
 
-		static let disableSidebarTranslucency = SettingsKey(
-			group + "Disable Sidebar Translucency",
-			default: false
-		)
 		static let memberListNoModeSymbol = SettingsKey(group + "Member List No Mode Symbol", default: true)
 		static let memberListSortFavorsServerStaff = SettingsKey(
 			group + "Member List Sort Favors Server Staff",
@@ -69,7 +65,7 @@ nonisolated extension SettingsKeys {
 		)
 
 		static let all: [any AnySettingsKey] = [
-			preferredAppearance, disableSidebarTranslucency, memberListNoModeSymbol,
+			preferredAppearance, memberListNoModeSymbol,
 			memberListSortFavorsServerStaff, memberListUpdatesPopoverOnScroll,
 			conversationTrackingIncludesModeSymbol, trackUserAwayStatusMaximumChannelSize,
 			conversationNavigationIsServerSpecific, connectOnDoubleClick, disconnectOnDoubleClick,
