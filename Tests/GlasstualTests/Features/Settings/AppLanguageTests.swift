@@ -22,7 +22,9 @@ struct AppLanguageTests {
 		#expect(AppLanguage(override: ["de-DE"]) == .german)
 		#expect(AppLanguage(override: ["hu-HU"]) == .hungarian)
 		#expect(AppLanguage(override: ["en-GB"]) == .english)
-		#expect(AppLanguage(override: ["fr", "hu"]) == .hungarian)
+		#expect(AppLanguage(override: ["fr", "hu"]) == .french)
+		#expect(AppLanguage(override: ["pt-BR"]) == .brazilianPortuguese)
+		#expect(AppLanguage(override: ["pt-PT"]) == .brazilianPortuguese)
 	}
 
 	@Test("Language overrides use the app domain without registering or exporting a default")

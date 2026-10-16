@@ -22,6 +22,30 @@
             "state" : "translated",
             "value" : "Das Kontopasswort wurde nicht gesendet: Diese Verbindung sollte verschlüsselt sein, ist es aber nicht."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "La contraseña de la cuenta no se envió: se esperaba que esta conexión estuviera encriptada, pero no lo está."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Le mot de passe du compte n'a pas été envoyé : cette connexion devait être chiffrée mais ce n'est pas le cas."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "アカウントのパスワードが送信されませんでした：この接続は暗号化されることが期待されていましたが、暗号化されていません。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "A senha da conta não foi enviada: esta conexão deveria estar criptografada, mas não está."
+          }
         }
       }
     },
@@ -45,6 +69,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Direkte Chatanfrage von %1$@ abgelehnt: Dieser Client stellt keine Verbindung zu %2$@ her."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Se rechazó una solicitud de chat directo de %1$@: %2$@ no es una dirección a la que se conectará este cliente."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "A refusé une demande de chat direct de %1$@ : %2$@ n'est pas une adresse à laquelle ce client se connectera."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%1$@からのダイレクトチャットリクエストを拒否しました：%2$@は、このクライアントが接続するアドレスではありません。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Recusado um pedido de chat direto de %1$@: %2$@ não é um endereço a este cliente conectará."
           }
         }
       }
@@ -70,6 +118,30 @@
             "state" : "translated",
             "value" : "%1$@ möchte von %2$@ aus einen direkten Chat mit dir starten. Dabei entsteht eine direkte Verbindung zwischen euch, die nicht über den IRC-Server läuft. Die andere Person erfährt dadurch deine IP-Adresse."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%1$@ quiere iniciar un chat directo contigo desde %2$@. Un chat directo es una conexión entre los dos que no pasa por el servidor IRC, por lo que la otra persona conocerá tu dirección IP."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%1$@ souhaite commencer un chat direct avec vous depuis %2$@. Un chat direct est une connexion entre vous deux qui ne passe pas par le serveur IRC, de sorte que l'autre personne apprendra votre adresse IP."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%1$@は、%2$@からあなたとダイレクトチャットを開始したいと考えています。ダイレクトチャットは、IRCサーバーを経由せず、あなた方二人の間の接続であり、相手はあなたのIPアドレスを知ることになります。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%1$@ quer iniciar um chat direto com você de %2$@. Um chat direto é uma conexão entre vocês dois que não passa pelo servidor IRC, portanto a outra pessoa aprenderá seu endereço IP."
+          }
         }
       }
     },
@@ -93,6 +165,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dateiangebot von %@ ignoriert: Es sind bereits zu viele Downloads aufgelistet. Entferne abgeschlossene Übertragungen und bitte um erneutes Senden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Se ignoró una oferta de transferencia de archivos de %@: ya se han enumerado demasiadas descargas. Elimine las terminadas y pídales que la envíen de nuevo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Offre de transfert de fichier ignorée de %@ : trop de téléchargements sont déjà listés. Supprimez ceux qui sont terminés et demandez-leur de le renvoyer."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%@からのファイル転送オファーを無視しました：すでにダウンロード数が多すぎます。完了したものは削除し、再度送信するように依頼してください。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ignorado uma oferta de transferência de arquivo de %@: há downloads listados demais já. Apague os concluídos e peça para eles enviá-lo novamente."
           }
         }
       }
@@ -118,6 +214,30 @@
             "state" : "translated",
             "value" : "Eine ausgehende Zeile mit %1$ld Byte wurde auf die vom Server akzeptierten %2$ld Byte gekürzt. Der Rest wurde nicht gesendet."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Una línea saliente de bytes %1$ld se recortó hasta %2$ld que este servidor acepta; el resto no se envió."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Une ligne sortante de octets %1$ld a été tronquée à %2$ld que ce serveur accepte ; le reste n'a pas été envoyé."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%1$ldバイトの送信ラインが、このサーバーが受け入れる%2$ldに切り詰められ、残りは送信されませんでした。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Uma linha de saída de bytes %1$ld foi recortada para o %2$ld que este servidor aceita; o resto não foi enviado."
+          }
         }
       }
     },
@@ -142,6 +262,30 @@
             "state" : "translated",
             "value" : "Der Server hat nicht rechtzeitig auf die SASL-Authentifizierungsanfrage geantwortet."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "El servidor no respondió a la solicitud de autenticación SASL a tiempo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Le serveur n'a pas répondu à la demande d'authentification SASL dans les délais."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "サーバーはSASL認証リクエストに時間内に応答しませんでした。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "O servidor não respondeu ao pedido de autenticação SASL a tempo."
+          }
         }
       }
     },
@@ -165,6 +309,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Der SASL-Benutzername oder das Passwort enthält ein Nullzeichen, das nicht gesendet werden kann."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "El nombre de usuario o contraseña SASL contiene un carácter nulo, que no se puede enviar."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Le nom d'utilisateur ou le mot de passe SASL contient un caractère nul, qui ne peut pas être envoyé."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "SASLのユーザー名またはパスワードには、送信できないヌル文字が含まれています。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "O nome de usuário ou senha SASL contém um caractere nulo, que não pode ser enviado."
           }
         }
       }

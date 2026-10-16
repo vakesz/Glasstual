@@ -23,6 +23,30 @@
             "state": "translated",
             "value": "(keine Eingabe)"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "(sin entrada)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "(pas d'entrée)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "（入力なし）"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "(sem entrada)"
+          }
         }
       }
     },
@@ -47,6 +71,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Die Skriptausgabe überschreitet 1 MiB. Es wurden keine Befehle ausgeführt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "El script devolvió más de 1 MiB de salida. No se ejecutaron comandos."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Le script a renvoyé plus de 1 Mo de sortie. Aucune commande n'a été exécutée."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "スクリプトは1 MiB以上の出力を返しました。コマンドは実行されませんでした。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "O script retornou mais de 1 MiB de saída. Nenhum comando foi executado."
           }
         }
       }
@@ -73,6 +121,30 @@
             "state": "translated",
             "value": "Die Skriptausgabe ist kein gültiges UTF-8. Es wurden keine Befehle ausgeführt."
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "La salida del script no es válida UTF-8. No se ejecutaron comandos."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "La sortie du script n'est pas valide UTF-8. Aucune commande n'a été exécutée."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "スクリプトの出力が有効ではありません UTF-8。コマンドは実行されませんでした。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "A saída do script não é válida UTF-8. Nenhuma comanda foi executada."
+          }
         }
       }
     },
@@ -97,6 +169,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dieses Skript ist nicht mehr verfügbar. Aktualisiere die Skriptliste und versuche es erneut."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Este guion ya no está disponible. Actualice la lista de guiones e inténtelo de nuevo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ce script n'est plus disponible. Actualisez la liste des scripts et réessayez."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "このスクリプトは利用できません。スクリプトリストを更新してもう一度お試しください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Este script não está mais disponível. Atualize a lista de scripts e tente novamente."
           }
         }
       }
@@ -123,6 +219,30 @@
             "state": "translated",
             "value": "Das Add-on konnte nicht installiert werden"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No se pudo instalar el complemento"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "L'extension n'a pas pu être installée"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "アドオンをインストールできませんでした。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "O complemento não pôde ser instalado"
+          }
         }
       }
     },
@@ -147,6 +267,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Diese Datei ist kein lesbares AppleScript. Die installierte Kopie wurde nicht geändert."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Este archivo no es un AppleScript legible. La copia instalada no se ha modificado."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ce fichier n'est pas un AppleScript lisible. La copie installée n'a pas été modifiée."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "このファイルは読み取れないAppleScriptです。インストールされたコピーは変更されていません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Este arquivo não é um AppleScript legível. A cópia instalada não foi alterada."
           }
         }
       }
@@ -173,6 +317,30 @@
             "state": "translated",
             "value": "Kopiere das Skript mit dem Finder nach %@. Erstelle den Ordner im Finder, falls er noch nicht vorhanden ist. Glasstual kann nicht in diesen Ordner schreiben. Kehre nach dem Kopieren zu Glasstual zurück, um die Skriptliste zu aktualisieren."
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Utiliza Finder para copiar el script en %@. Si la carpeta no existe, créala en Finder. Glasstual no puede escribir en esta carpeta. Vuelve a Glasstual después de copiar para actualizar la lista de scripts."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Utilisez Finder pour copier le script dans %@. Si le dossier n'existe pas, créez-le dans Finder. Glasstual ne peut pas écrire dans ce dossier. Retournez à Glasstual après la copie pour actualiser la liste des scripts."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Finderを使用してスクリプトを%@にコピーします。フォルダが存在しない場合は、Finderで作成してください。Glasstualはこのフォルダに書き込めません。コピーした後、Glasstualに戻ってスクリプトリストを更新してください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Use o Finder para copiar o script para %@. Se a pasta não existir, crie-a no Finder. O Glasstual não pode escrever nesta pasta. Volte ao Glasstual após a cópia para atualizar a lista de scripts."
+          }
         }
       }
     },
@@ -197,6 +365,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Skript im Finder installieren"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Instalar el script en el Finder"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Installer le script dans le Navigateur"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Finderにスクリプトをインストールする"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Instalar o Script no Finder"
           }
         }
       }

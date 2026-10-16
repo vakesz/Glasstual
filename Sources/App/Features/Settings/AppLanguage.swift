@@ -9,6 +9,10 @@ nonisolated enum AppLanguage: String, CaseIterable, Sendable {
 	case english = "en"
 	case hungarian = "hu"
 	case german = "de"
+	case spanish = "es"
+	case french = "fr"
+	case japanese = "ja"
+	case brazilianPortuguese = "pt-BR"
 
 	/// The language codes the application ships, which is what a stored
 	/// override is matched against. Adding a case is the whole change.
@@ -33,6 +37,10 @@ nonisolated enum AppLanguage: String, CaseIterable, Sendable {
 		case .english: .Settings.languageEnglish
 		case .hungarian: .Settings.languageHungarian
 		case .german: .Settings.languageGerman
+		case .spanish: .Settings.languageSpanish
+		case .french: .Settings.languageFrench
+		case .japanese: .Settings.languageJapanese
+		case .brazilianPortuguese: .Settings.languageBrazilianPortuguese
 		}
 	}
 }

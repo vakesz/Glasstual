@@ -23,6 +23,30 @@
             "state": "translated",
             "value": "Alle Kanäle ausgewählt"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Todos los canales seleccionados"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Tous les canaux sélectionnés"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "すべてのチャンネルが選択されました"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Todos os canais selecionados"
+          }
         }
       }
     },
@@ -47,6 +71,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Einige Kanäle ausgewählt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Algunos canales seleccionados"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Certains canaux sélectionnés"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "一部のチャンネルが選択されました"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Alguns canais selecionados"
           }
         }
       }
@@ -73,6 +121,30 @@
             "state": "translated",
             "value": "Keine Kanäle ausgewählt"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ningún canal seleccionado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Aucun canal sélectionné"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "チャンネルが選択されていません"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nenhum canal selecionado"
+          }
         }
       }
     },
@@ -96,6 +168,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Aktion des Filters \"%1$@\" für Benutzer \"%2$@\" wird ausgeführt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Realizando una acción definida por el filtro “%1$@” contra el usuario “%2$@”"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Exécution d'une action définie par le filtre « %1$@ » contre l'utilisateur « %2$@ »"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "フィルター「%1$@」によって定義されたアクションを実行し、「%2$@」ユーザーに対して行われています。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Executando ação definida pelo filtro “%1$@“ contra o usuário “%2$@“"
           }
         }
       }
@@ -121,6 +217,30 @@
             "state": "translated",
             "value": "Aktion des Filters \"%1$@\" für Benutzer \"%2$@\" im Kanal \"%3$@\" wird ausgeführt"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Realizando una acción definida por el filtro “%1$@” contra el usuario “%2$@” en el canal “%3$@”"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Exécution d'une action définie par le filtre « %1$@ » contre l'utilisateur « %2$@ » dans le canal « %3$@ »"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "チャンネル「%3$@」におけるユーザー「%2$@」に対して、フィルター「%1$@」で定義されたアクションを実行しています。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Executando ação definida pelo filtro “%1$@“ contra o usuário “%2$@“ no canal “%3$@“"
+          }
         }
       }
     },
@@ -144,6 +264,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Filter hinzufügen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Añadir filtro"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ajouter un filtre"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "フィルターを追加する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Adicionar Filtro"
           }
         }
       }
@@ -169,6 +313,30 @@
             "state": "translated",
             "value": "Filter löschen"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Eliminar filtro"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Supprimer le filtre"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "フィルターを削除する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Excluir Filtro"
+          }
         }
       }
     },
@@ -192,6 +360,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dies kann nicht rückgängig gemacht werden. Alle Daten dieses Filters werden gelöscht."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No hay deshacer y todos los datos relacionados con este filtro serán borrados."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Il n'y a pas d'annulation et toutes les données liées à ce filtre seront effacées."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "取り消しはありません。このフィルターに関連するすべてのデータは消去されます。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Não há desfecho e todos os dados relacionados a este filtro serão apagados."
           }
         }
       }
@@ -217,6 +409,30 @@
             "state": "translated",
             "value": "Diesen Filter löschen?"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "¿Eliminar este filtro?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Supprimer ce filtre ?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "このフィルターを削除しますか？"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Excluir este filtro?"
+          }
         }
       }
     },
@@ -240,6 +456,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Filter duplizieren"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Filtro de duplicados"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Filtre de duplication"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "重複フィルター"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Filtrar duplicados"
           }
         }
       }
@@ -265,6 +505,30 @@
             "state": "translated",
             "value": "%@ (Kopie)"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ (Duplicado)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ (Duplicata)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@（重複）"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ (Duplicado)"
+          }
         }
       }
     },
@@ -288,6 +552,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Filter bearbeiten"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Editar filtro"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Modifier le filtre"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "フィルターを編集する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Editar Filtro"
           }
         }
       }
@@ -313,6 +601,30 @@
             "state": "translated",
             "value": "Dieser Filter ist nicht mehr vorhanden. Deine Änderungen wurden nicht gesichert."
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Este filtro ya no existe. Tus cambios no se han guardado."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ce filtre n'existe plus. Vos modifications n'ont pas été enregistrées."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "このフィルターは存在しません。変更は保存されませんでした。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Este filtro não existe mais. Suas alterações não foram salvas."
+          }
         }
       }
     },
@@ -336,6 +648,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nachricht (%1$@): %2$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mensaje(%1$@): %2$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Message(%1$@) : %2$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "メッセージ(%1$@): %2$@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mensagem(%1$@): %2$@"
           }
         }
       }
@@ -361,6 +697,30 @@
             "state": "translated",
             "value": "Der Filter konnte nicht gesichert werden"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "El filtro no se pudo guardar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Le filtre n'a pas pu être sauvegardé"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "フィルターを保存できませんでした。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "O filtro não pôde ser salvo"
+          }
         }
       }
     },
@@ -384,6 +744,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Filter exportieren…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Filtrar exportación..."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Filtrer l'exportation..."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "エクスポートフィルター…"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Filtrar Exportar..."
           }
         }
       }
@@ -409,6 +793,30 @@
             "state": "translated",
             "value": "Der Filter konnte nicht exportiert werden"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "El filtro no pudo ser exportado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Le filtre n'a pas pu être exporté"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "フィルターをエクスポートできませんでした。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "O filtro não pôde ser exportado"
+          }
         }
       }
     },
@@ -432,6 +840,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Wähle einen beschreibbaren Ordner und versuche es erneut."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Elige una carpeta en la que puedas escribirlo e inténtalo de nuevo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Choisissez un dossier sur lequel vous pouvez écrire et réessayez."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "書き込むことができるフォルダを選択して、もう一度お試しください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Escolha uma pasta para escrever e tente novamente."
           }
         }
       }
@@ -457,6 +889,30 @@
             "state": "translated",
             "value": "Filter \"%@\""
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Filtrar \"%@\""
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Filtrer « %@ »"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "フィルター「%@」"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Filtrar \"%@\""
+          }
         }
       }
     },
@@ -480,6 +936,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Filter importieren…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Filtrar importación..."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Filtrer l'importation..."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "インポートフィルター…"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Filtrar Importar..."
           }
         }
       }
@@ -505,6 +985,30 @@
             "state": "translated",
             "value": "Der Filter konnte nicht importiert werden"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "El filtro no pudo importarse"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Le filtre n'a pas pu être importé"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "フィルターをインポートできませんでした。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "O filtro não pôde ser importado"
+          }
         }
       }
     },
@@ -528,6 +1032,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Wähle eine vom Chatfilter exportierte Filterdatei."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Elige un archivo de filtro que haya exportado el Filtro de Chat."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Choisissez un fichier de filtre que le filtre de chat a exporté."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Chat Filterでエクスポートされたフィルターファイルを選択します。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Escolha um arquivo de filtro que o Filtro de Chat exportou."
           }
         }
       }
@@ -553,6 +1081,30 @@
             "state": "translated",
             "value": "Weitere Aktionen"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Más acciones"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Plus d'actions"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "その他のアクション"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mais ações"
+          }
         }
       }
     },
@@ -576,6 +1128,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Füge einen Filter hinzu, um passende Nachrichten auszublenden, weiterzuleiten oder Aktionen auszuführen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Añade un filtro para ocultar, reenviar o actuar sobre los mensajes coincidentes."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ajoutez un filtre pour masquer, transmettre ou agir sur les messages correspondants."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "一致するメッセージを非表示にする、転送する、またはアクションを実行するためにフィルターを追加します。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Adicione um filtro para ocultar, encaminhar ou agir em mensagens correspondentes."
           }
         }
       }
@@ -601,6 +1177,30 @@
             "state": "translated",
             "value": "Keine Filter"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sin filtros"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Pas de filtres"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "フィルターなし"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sem Filtros"
+          }
         }
       }
     },
@@ -623,6 +1223,30 @@
         "de": {
           "stringUnit": {
             "state": "translated",
+            "value": "OK"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Vale"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "OK"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "OK"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
             "value": "OK"
           }
         }
@@ -649,6 +1273,30 @@
             "state": "translated",
             "value": "Chatfilter"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Filtro de chat"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Filtre de chat"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "チャットフィルター"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Filtro de bate-papo"
+          }
         }
       }
     },
@@ -672,6 +1320,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Aktionsnachricht"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mensaje de acción"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Message d'action"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "アクションメッセージ"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mensagem de ação"
           }
         }
       }
@@ -697,6 +1369,30 @@
             "state": "translated",
             "value": "Gib durch Kommas getrennte Befehlsnamen oder numerische Antworten von 1 bis 999 ein, die oben nicht aufgeführt sind."
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Añade comandos nombrados separados por comas o números del 1 al 999 que no se enumeran arriba."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ajoutez des commandes nommées ou des nombres séparés par des virgules de 1 à 999 qui ne figurent pas ci-dessus."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "上記のリストにない、カンマで区切られた名前付きコマンドまたは1から999までの数値を追加します。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Adicione comandos nomeados separados por vírgulas ou números de 1 a 999 que não estão listados acima."
+          }
         }
       }
     },
@@ -720,6 +1416,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Weitere Befehle und numerische Antworten"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Comandos y números adicionales"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Commandes et numéros supplémentaires"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "追加のコマンドと数値"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Comandos adicionais e números"
           }
         }
       }
@@ -745,6 +1465,30 @@
             "state": "translated",
             "value": "Weitere Befehle"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Comandos adicionales"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Commandes supplémentaires"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "追加コマンド"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Comandos adicionais"
+          }
         }
       }
     },
@@ -768,6 +1512,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Erweitert"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Avanzado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "avancé"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "高度な"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "avançado"
           }
         }
       }
@@ -793,6 +1561,30 @@
             "state": "translated",
             "value": "Dauer der Mitgliedschaft vergleichen"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Comparar la edad de la membresía"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Comparer l'âge de l'adhésion"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "会員年齢を比較する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Compare a idade da associação"
+          }
         }
       }
     },
@@ -816,6 +1608,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dauer in Sekunden"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Edad en segundos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Âge en secondes"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "秒単位の年齢"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Idade em segundos"
           }
         }
       }
@@ -841,6 +1657,30 @@
             "state": "translated",
             "value": "Kanalmodus geändert"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Modo de canal cambiado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mode de canal modifié"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "チャンネルモードが変更されました"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Modo do canal mudado"
+          }
         }
       }
     },
@@ -864,6 +1704,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kanalmodus empfangen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Modo de canal recibido"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mode de canal reçu"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "チャンネルモードを受信しました"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Modo de Canal Recebido"
           }
         }
       }
@@ -889,6 +1753,30 @@
             "state": "translated",
             "value": "Kanalthema geändert"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "El tema del canal ha cambiado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Le sujet de la chaîne a changé"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "チャンネルのトピックが変更されました"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Assunto do canal mudado"
+          }
         }
       }
     },
@@ -912,6 +1800,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kanalthema empfangen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Tema del canal recibido"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sujet de canal reçu"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "チャンネルトピックを受信しました"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Assunto do canal recebido"
           }
         }
       }
@@ -937,6 +1849,30 @@
             "state": "translated",
             "value": "Nur Kanäle"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Solo canales"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Canaux uniquement"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "チャンネルのみ"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Apenas Canais"
+          }
         }
       }
     },
@@ -960,6 +1896,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kanäle"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Canales"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Chaînes"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "チャンネル"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Canais"
           }
         }
       }
@@ -985,6 +1945,30 @@
             "state": "translated",
             "value": "Ereignisse"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Eventos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Événements"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "イベント"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Eventos"
+          }
         }
       }
     },
@@ -1008,6 +1992,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Filteraktion"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Acción de filtrado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Action de filtrage"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "フィルターアクション"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ação de Filtro"
           }
         }
       }
@@ -1033,6 +2041,30 @@
             "state": "translated",
             "value": "Nachrichtenmuster"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Combinación de filtro"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Correspondance du filtre"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "フィルターマッチ"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Correspondência de filtro"
+          }
         }
       }
     },
@@ -1056,6 +2088,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Filter"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Filtrar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "filtre"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "フィルター"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "filtro"
           }
         }
       }
@@ -1081,6 +2137,30 @@
             "state": "translated",
             "value": "Filtername"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Título del filtro"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Titre du filtre"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "フィルタタイトル"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Título do filtro"
+          }
         }
       }
     },
@@ -1104,6 +2184,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Flood-Schutz"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Control de inundaciones"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "prévention des inondations"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "洪水制御"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "controle de inundação"
           }
         }
       }
@@ -1129,6 +2233,30 @@
             "state": "translated",
             "value": "Mindestabstand zwischen Aktionen in Sekunden"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Control de inundaciones en segundos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Contrôle des inondations en quelques secondes"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "数秒で洪水対策"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Controle de Inundações em Segundos"
+          }
         }
       }
     },
@@ -1152,6 +2280,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Weiterleitungsziel"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Destino de envío"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Destination de destination"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "転送先"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Destino de Envio"
           }
         }
       }
@@ -1177,6 +2329,30 @@
             "state": "translated",
             "value": "Weiterleitungsziel"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Destino de envío"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Destination de destination"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "転送先"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Destino de Envio"
+          }
         }
       }
     },
@@ -1200,6 +2376,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Größer als"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mayor que"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Plus grand que"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "大きい"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Maior que"
           }
         }
       }
@@ -1225,6 +2425,30 @@
             "state": "translated",
             "value": "Originalnachricht ausblenden"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ocultar el mensaje original"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Masquer le message original"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "元のメッセージを非表示にする"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Esconder Mensagem Original"
+          }
         }
       }
     },
@@ -1248,6 +2472,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kanaloperatoren ignorieren"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ignorar a los operadores de canales"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ignorer les opérateurs de canaux"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "チャンネルオペレーターを無視する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ignorar Operadores de Canal"
           }
         }
       }
@@ -1273,6 +2521,30 @@
             "state": "translated",
             "value": "Platzhalter einfügen"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Insertar espacio reservado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Insérer un espace réservé"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "プレースホルダーを挿入する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Inserir espaço reservado"
+          }
         }
       }
     },
@@ -1296,6 +2568,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kleiner als"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Menos que"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Moins que"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "それより少ない"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Menos que"
           }
         }
       }
@@ -1321,6 +2617,30 @@
             "state": "translated",
             "value": "Filter beschränken auf"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Limitar el filtro a"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Limiter le filtre à"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "フィルターを以下に制限する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Limitar Filtro Para"
+          }
         }
       }
     },
@@ -1344,6 +2664,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Filtertreffer und Aktion protokollieren"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Combinación y acción del filtro de registros"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Correspondance et action du filtre de journal"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ログフィルターのマッチングとアクション"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Correspondência e ação do filtro de logs"
           }
         }
       }
@@ -1369,6 +2713,30 @@
             "state": "translated",
             "value": "Dauer der Mitgliedschaft"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Edad de membresía"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Âge d'adhésion"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "会員年齢"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Idade da associação"
+          }
         }
       }
     },
@@ -1392,6 +2760,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Keine verbundenen Server"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sin servidores conectados"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Aucun serveur connecté"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "接続されたサーバーはありません"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nenhum servidor conectado"
           }
         }
       }
@@ -1417,6 +2809,30 @@
             "state": "translated",
             "value": "Notizen"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Notas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Notes"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "メモ"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Notas"
+          }
         }
       }
     },
@@ -1440,6 +2856,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Notizen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Notas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Notes"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "メモ"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Notas"
           }
         }
       }
@@ -1465,6 +2905,30 @@
             "state": "translated",
             "value": "Hinweismeldung"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mensaje de notificación"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Message d'avis"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "通知メッセージ"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mensagem de Aviso"
+          }
         }
       }
     },
@@ -1488,6 +2952,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nur meine Nachrichten"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Solo mis mensajes"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Seuls mes messages"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "私のメッセージだけ"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Apenas minhas mensagens"
           }
         }
       }
@@ -1513,6 +3001,30 @@
             "state": "translated",
             "value": "Einfache Textnachricht"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mensaje de texto simple"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Message texte simple"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "プレーンテキストメッセージ"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mensagem de texto simples"
+          }
         }
       }
     },
@@ -1536,6 +3048,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nur private Nachrichten"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Solo mensajes privados"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Messages privés uniquement"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "プライベートメッセージのみ"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Apenas Mensagens Privadas"
           }
         }
       }
@@ -1561,6 +3097,30 @@
             "state": "translated",
             "value": "Absendermuster"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Combinación del remitente"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Correspondance de l'expéditeur"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "送信者マッチ"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Correspondência do remetente"
+          }
         }
       }
     },
@@ -1584,6 +3144,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Absender"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Remitente"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "expéditeur"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "送信者"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "remetente"
           }
         }
       }
@@ -1609,6 +3193,30 @@
             "state": "translated",
             "value": "Bestimmte Einträge"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Artículos específicos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Articles spécifiques"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "特定の項目"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Itens específicos"
+          }
         }
       }
     },
@@ -1632,6 +3240,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bestimmte Server und Kanäle"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Servidores y canales específicos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Serveurs et canaux spécifiques"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "特定のサーバーとチャンネル"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Servidores e Canais específicos"
           }
         }
       }
@@ -1657,6 +3289,30 @@
             "state": "translated",
             "value": "Standardereignisse"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Eventos estándar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Événements standards"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "標準イベント"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Eventos Padrão"
+          }
         }
       }
     },
@@ -1680,6 +3336,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Unbeschränkt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sin restricciones"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "illimité"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "制限なし"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "irrestrito"
           }
         }
       }
@@ -1705,6 +3385,30 @@
             "state": "translated",
             "value": "Benutzer hat Nicknamen geändert"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "El usuario cambió el apodo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "L'utilisateur a changé de surnom"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ユーザーがニックネームを変更しました"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Usuário mudou o apelido"
+          }
         }
       }
     },
@@ -1728,6 +3432,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Benutzer getrennt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Usuario desconectado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Utilisateur déconnecté"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ユーザーが接続解除されました"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Usuário desconectado"
           }
         }
       }
@@ -1753,6 +3481,30 @@
             "state": "translated",
             "value": "Benutzer ist dem Kanal beigetreten"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Usuario se unió al canal"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "L'utilisateur a rejoint la chaîne"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ユーザーがチャンネルに参加しました"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Usuário ingressou no canal"
+          }
         }
       }
     },
@@ -1776,6 +3528,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Benutzer wurde aus dem Kanal geworfen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Usuario expulsado del canal"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Utilisateur expulsé du canal"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ユーザーがチャンネルから追放されました"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Usuário chutado do canal"
           }
         }
       }
@@ -1801,6 +3577,30 @@
             "state": "translated",
             "value": "Benutzer hat den Kanal verlassen"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "El usuario dejó el canal"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Canal utilisateur gauche"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ユーザーがチャンネルを離れた"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Usuário saiu do canal"
+          }
         }
       }
     },
@@ -1824,6 +3624,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Null deaktiviert dieses Limit."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Cero desactiva este límite."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Zéro désactive cette limite."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ゼロはこの制限を無効にします。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Zero desativa este limite."
           }
         }
       }
@@ -1849,6 +3673,30 @@
             "state": "translated",
             "value": "Gib eine korrekt formatierte Befehlsliste ein.\n\n• Trenne Befehle durch Kommas (,).\n• Befehle dürfen nur a-z, A-Z und 0-9 enthalten.\n• Numerische Antworten müssen ganze Zahlen größer als null (0) und höchstens 999 sein."
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Por favor, introduzca una lista de comandos correctamente formateada.\n\n• Los comandos deben ser una lista separada por comas (,)\n• Los comandos solo deben contener los caracteres: a-z, A-Z, 0-9\n• Los números deben ser números enteros que sean mayores que cero (0) y menores o iguales a 999."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Veuillez saisir une liste de commandes correctement formatée.\n\n• Les commandes doivent être une liste séparée par des virgules (,)\n• Les commandes ne doivent contenir que les caractères : a-z, A-Z, 0-9\n• Les nombres doivent être des nombres entiers supérieurs à zéro (0) et inférieurs ou égaux à 999."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "適切にフォーマットされたコマンドのリストを入力してください。\n\n• コマンドはカンマ（、）で区切られたリストである必要があります。\n• コマンドには、a-z、A-Z、0-9 の文字のみを含める必要があります。\n• 数字は0より大きく999以下である整数である必要があります。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Por favor, insira uma lista de comandos corretamente formatada.\n\n• Os comandos devem ser uma lista separada por vírgula (,)\n• Os comandos devem conter apenas os caracteres: a-z, A-Z, 0-9\n• Os números devem ser números inteiros que sejam maiores que zero (0) e menores ou iguais a 999."
+          }
         }
       }
     },
@@ -1872,6 +3720,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gib ein korrekt formatiertes Ziel ein.\n\nErlaubte Zeichen: a-z, A-Z, 0-9, Bindestriche (-), Unterstriche (_) und Leerzeichen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Por favor, introduzca un destino correctamente formateado.\n\nCaracteres aceptados: a-z, A-Z, 0-9, guiones (-), guiones bajos (_) y espacios."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Veuillez saisir une destination correctement formatée.\n\nCaractères acceptés : a-z, A-Z, 0-9, tirets (-), tirets souscripteurs (_) et espaces."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "適切にフォーマットされた目的地を入力してください。\n\n受け入れられる文字：a-z、A-Z、0-9、ハイフン（-）、アンダースコア（_）、スペース。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Por favor, insira um destino corretamente formatado.\n\nCaractere aceitos: a-z, A-Z, 0-9, traços de quebra (-), sublinhados (_), e espaços."
           }
         }
       }
@@ -1897,6 +3769,30 @@
             "state": "translated",
             "value": "Gib ein kürzeres Ziel ein"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Por favor, introduzca un destino más corto"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Veuillez saisir une destination plus courte"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "目的地を短くしてください"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Por favor, insira um destino mais curto"
+          }
         }
       }
     },
@@ -1920,6 +3816,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gib einen gültigen regulären Ausdruck ein.\n\n%@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Por favor, introduzca una expresión regular válida.\n\n%@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Veuillez saisir une expression régulière valide.\n\n%@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "有効な正規表現を入力してください。\n\n%@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Por favor, insira uma expressão regular válida.\n\n%@"
           }
         }
       }
@@ -1945,6 +3865,30 @@
             "state": "translated",
             "value": "Muster werden mit höchstens den ersten %@ Byte einer Nachricht verglichen. Muster, deren Auswertung sehr lange dauern kann, können nicht gesichert werden. Dauert eine Auswertung zu lange, wird das Muster bis zur Änderung der Filter übersprungen."
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Los patrones se comparan con como máximo los primeros %@ bytes de un mensaje. Un patrón que puede tardar mucho tiempo en coincidir no se puede guardar, y uno que tarda demasiado tiempo mientras se realiza la coincidencia se salta hasta que los filtros cambian."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Les motifs sont comparés au maximum aux premiers octets %@ d'un message. Un motif qui peut prendre très longtemps pour être comparé ne peut pas être enregistré, et celui qui s'exécute trop longtemps pendant la comparaison est ignoré jusqu'à ce que les filtres changent."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "パターンはメッセージの最初の%@バイトまででマッチされます。マッチに非常に時間がかかるパターンは保存できず、マッチ中に長時間実行されるパターンはフィルターが変更されるまでスキップされます。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Os padrões são comparados com no máximo os primeiros %@ bytes de uma mensagem. Um padrão que pode levar muito tempo para ser comparado não pode ser salvo, e um que executa por muito tempo durante a comparação é pego de lado até que os filtros mudem."
+          }
         }
       }
     },
@@ -1968,6 +3912,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dieses Muster wiederholt eine Gruppe, die auf mehrere Arten auf denselben Text passen kann, etwa (a+)+ oder (.|\\s)*. Die Auswertung kann sehr lange dauern, daher kann es nicht gesichert werden. Schreibe es ohne verschachtelte Wiederholungen oder überlappende Alternativen um."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Este patrón repite un grupo que puede coincidir con el mismo texto de más de una manera, como (a+)+ o (.|\\s)*. Un patrón de esa forma puede tardar mucho tiempo en coincidir, por lo que no se puede guardar. Redescríbelo sin la repetición anidada ni las alternativas superpuestas."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ce motif répète un groupe qui peut correspondre au même texte de plus d'une manière, comme (a+)+ ou (.|\\s)*. Un motif de cette forme peut prendre très longtemps à correspondre, il ne peut donc pas être enregistré. Réécrivez-le sans la répétition imbriquée ni les alternatives superposées."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "このパターンは、(a+)+ や (.|\\s)* など、同じテキストを複数の方法で一致させることができるグループを繰り返します。そのような形状のパターンは一致に非常に時間がかかるため、保存できません。内包的な繰り返しや重なる代替案を削除して書き直してください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Este padrão repete um grupo que pode corresponder ao mesmo texto de mais de uma maneira, como (a+)+ ou (.|\\s)*. Um padrão dessa forma pode levar muito tempo para corresponder, portanto não pode ser salvo. Reescreva-o sem a repetição aninhada ou as alternativas sobrepostas."
           }
         }
       }
@@ -1993,6 +3961,30 @@
             "state": "translated",
             "value": "Kanalname"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nombre del canal"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nom de la chaîne"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "チャンネル名"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nome do canal"
+          }
         }
       }
     },
@@ -2016,6 +4008,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mein Nickname"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mi apodo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mon surnom"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "私のニックネーム"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Meu apelido"
           }
         }
       }
@@ -2041,6 +4057,30 @@
             "state": "translated",
             "value": "Netzwerkname"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nombre de la red"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nom du réseau"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ネットワーク名"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nome da rede"
+          }
         }
       }
     },
@@ -2064,6 +4104,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Originalnachricht"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mensaje original"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Message original"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "元のメッセージ"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mensagem original"
           }
         }
       }
@@ -2089,6 +4153,30 @@
             "state": "translated",
             "value": "Parameter Nr. 1"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Parámetro #1"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Paramètre n°1"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "パラメータ#1"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Parâmetro #1"
+          }
         }
       }
     },
@@ -2112,6 +4200,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Parameter Nr. 2"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Parámetro #2"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Paramètre n°2"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "パラメータ#2"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Parâmetro #2"
           }
         }
       }
@@ -2137,6 +4249,30 @@
             "state": "translated",
             "value": "Parameter Nr. 3"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Parámetro #3"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Paramètre n°3"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "パラメータ#3"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Parâmetro #3"
+          }
         }
       }
     },
@@ -2160,6 +4296,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Parameter Nr. 4"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Parámetro #4"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Paramètre n°4"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "パラメータ#4"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Parâmetro #4"
           }
         }
       }
@@ -2185,6 +4345,30 @@
             "state": "translated",
             "value": "Parameter Nr. 5"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Parámetro #5"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Paramètre n°5"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "パラメータ#5"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Parâmetro #5"
+          }
         }
       }
     },
@@ -2208,6 +4392,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Parameter Nr. 6"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Parámetro #6"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Paramètre n°6"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "パラメータ#6"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Parâmetro #6"
           }
         }
       }
@@ -2233,6 +4441,30 @@
             "state": "translated",
             "value": "Parameter Nr. 7"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Parámetro #7"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Paramètre n°7"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "パラメータ#7"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Parâmetro #7"
+          }
         }
       }
     },
@@ -2256,6 +4488,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Parameter Nr. 8"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Parámetro #8"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Paramètre n°8"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "パラメータ#8"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Parâmetro #8"
           }
         }
       }
@@ -2281,6 +4537,30 @@
             "state": "translated",
             "value": "Parameter Nr. 9"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Parámetro #9"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Paramètre n°9"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "パラメータ#9"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Parâmetro #9"
+          }
         }
       }
     },
@@ -2304,6 +4584,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Absenderadresse"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Dirección del remitente"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Adresse de l'expéditeur"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "送信者住所"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Endereço do remetente"
           }
         }
       }
@@ -2329,6 +4633,30 @@
             "state": "translated",
             "value": "Hostmaske des Absenders"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Máscara de anfitrión del remitente"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Masque d'hôte de l'expéditeur"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "送信者ホストマスク"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Máscara de hospedeiro do remet"
+          }
         }
       }
     },
@@ -2352,6 +4680,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nickname des Absenders"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Apodo del remitente"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Pseudonyme de l'expéditeur"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "送信者のニックネーム"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Apelido do remetente"
           }
         }
       }
@@ -2377,6 +4729,30 @@
             "state": "translated",
             "value": "Benutzername des Absenders"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nombre de usuario del remitente"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nom d'utilisateur de l'expéditeur"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "送信者ユーザー名"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nome de usuário do remetente"
+          }
         }
       }
     },
@@ -2400,6 +4776,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Serveradresse"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Dirección del servidor"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Adresse du serveur"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "サーバーアドレス"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Endereço do servidor"
           }
         }
       }

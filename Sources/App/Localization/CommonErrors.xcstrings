@@ -22,6 +22,30 @@
             "state" : "translated",
             "value" : "Gib eine ganze Zahl zwischen 1 und 65.535 ein."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Introduzca un número entero entre 1 y 65.535."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Entrez un nombre entier entre 1 et 65 535."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "1と65,535の間の整数を入力してください。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Digite um número inteiro entre 1 e 65.535."
+          }
         }
       }
     },
@@ -82,6 +106,90 @@
               }
             }
           }
+        },
+        "es" : {
+          "variations" : {
+            "plural" : {
+              "many" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "La longitud máxima es %ld bytes."
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "La longitud máxima es %ld de bytes."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "La longitud máxima es %ld bytes."
+                }
+              }
+            }
+          }
+        },
+        "fr" : {
+          "variations" : {
+            "plural" : {
+              "many" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "La longueur maximale est de %ld octets."
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "La longueur maximale est de %ld octets."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "La longueur maximale est de %ld octets."
+                }
+              }
+            }
+          }
+        },
+        "ja" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "最大長さは%ldバイトです。"
+                }
+              }
+            }
+          }
+        },
+        "pt-BR" : {
+          "variations" : {
+            "plural" : {
+              "many" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "O comprimento máximo é %ld bytes."
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "O comprimento máximo é %ld byte."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "O comprimento máximo é %ld bytes."
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -105,6 +213,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ein Nickname darf Buchstaben, Ziffern und - [ ] \\ ` _ ^ { | } enthalten und nicht mit einer Ziffer beginnen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Un apodo puede contener letras, dígitos y - [ ] \\ ` _ ^ { | } y no puede comenzar con un dígito."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Un surnom peut contenir des lettres, des chiffres et - [ ] \\ ` _ ^ { | } et ne peut pas commencer par un chiffre."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ニックネームには文字、数字、- [ ] \\ ` _ ^ { | }が含まれ、数字で始まらないでください。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Um apelido pode conter letras, números e - [ ] \\ ` _ ^ { | } e não pode começar com um número."
           }
         }
       }
@@ -130,6 +262,30 @@
             "state" : "translated",
             "value" : "Gib deinen echten Namen in einer Zeile ein."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Introduzca un nombre real en una línea."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Entrez un vrai nom sur une seule ligne."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "1行に実名を入力してください。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Digite um nome real em uma linha."
+          }
         }
       }
     },
@@ -154,6 +310,30 @@
             "state" : "translated",
             "value" : "Gib einen Hostnamen wie irc.libera.chat ein oder wähle ein Netzwerk aus der Liste."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Introduce un nombre de host como irc.libera.chat o elige una red de la lista."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Saisissez un nom d’hôte tel que irc.libera.chat, ou choisissez un réseau dans la liste."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "irc.libera.chatなどのホスト名を入力するか、リストからネットワークを選択します。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Digite um nome de hospedeiro, como irc.libera.chat, ou escolha uma rede na lista."
+          }
         }
       }
     },
@@ -177,6 +357,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Darf nicht mehr als eine Zeile enthalten."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "No puede contener más de una línea."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ne peut contenir plus d'une ligne."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "1行以上は含めることができません。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Não pode conter mais de uma linha."
           }
         }
       }

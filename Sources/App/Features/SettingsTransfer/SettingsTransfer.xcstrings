@@ -15,13 +15,37 @@
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Alkalmazza a fájlban lévő beállításokat, és hozzáadja vagy frissíti a kiszolgálókat. A többi kiszolgáló és beállítás megmarad. A frissített kiszolgálók kapcsolata megszakad. Először helyreállítási mentés készül."
+            "value": "Alkalmazd a fájlban lévő beállításokat, és add hozzá vagy frissítsd a kiszolgálókat. A többi kiszolgáló és beállítás megmarad. A frissített kiszolgálók kapcsolata megszakad. Először helyreállítási mentés készül."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wendet die Einstellungen dieser Datei an und fügt deren Server hinzu oder aktualisiert sie. Andere Server und Einstellungen bleiben erhalten. Aktualisierte Server werden getrennt. Zuerst wird eine Wiederherstellungssicherung erstellt."
+            "value": "Wende die Einstellungen aus dieser Datei an und füge die darin enthaltenen Server hinzu oder aktualisiere sie. Andere Server und Einstellungen bleiben erhalten. Aktualisierte Server werden getrennt. Zuerst wird eine Wiederherstellungssicherung erstellt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Aplica la configuración de este archivo y añade o actualiza sus servidores. Mantén los demás servidores y configuraciones. Los servidores que se estén actualizando se desconectarán. Se guarda primero una copia de seguridad de recuperación."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Appliquez les paramètres de ce fichier et ajoutez ou mettez à jour ses serveurs. Conservez les autres serveurs et paramètres. Les serveurs en cours de mise à jour seront déconnectés. Une sauvegarde de récupération est d'abord sauvegardée."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "このファイルの設定を適用し、サーバーを追加または更新します。他のサーバーや設定は保持します。更新中のサーバーは接続が切断されます。最初にリカバリバックアップが保存されます。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Aplique as configurações neste arquivo e adicione ou atualize seus servidores. Mantenha outros servidores e configurações. Os servidores que estiverem sendo atualizados serão desconectados. Uma cópia de segurança de recuperação é salva primeiro."
           }
         }
       }
@@ -48,6 +72,30 @@
             "state": "translated",
             "value": "Die fünf neuesten geschützten lokalen Sicherungen bleiben hier erhalten. Sie enthalten Verbindungsbefehle und Zertifikatsverweise, damit entfernte Server wiederhergestellt werden können. Schlüsselbundpasswörter und Zertifikatsobjekte werden nicht kopiert. Ordnerzugriffsrechte sind nicht enthalten."
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Se conservan aquí las cinco copias de seguridad locales protegidas más recientes. Conservan los comandos de conexión y las referencias a certificados para que se puedan recuperar los servidores eliminados. Las contraseñas de la cartera de llaves y los objetos de certificado no se copian. El acceso a carpetas no está incluido."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Les cinq sauvegardes locales protégées les plus récentes sont conservées ici. Elles conservent les commandes de connexion et les références aux certificats afin que les serveurs supprimés puissent être récupérés. Les mots de passe de la clé USB et les objets de certificat ne sont pas copiés. L'accès aux dossiers n'est pas inclus."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ここには、最近の5つの保護されたローカルバックアップが保存されています。接続コマンドと証明書参照が保持されているため、削除されたサーバーを復元できます。キーチェーンのパスワードや証明書オブジェクトはコピーされません。フォルダへのアクセスは含まれていません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Os cinco backups locais protegidos mais recentes são mantidos aqui. Eles mantêm comandos de conexão e referências de certificados para que os servidores removidos possam ser recuperados. Senhas de Chaveiro e objetos de certificado não são copiados. O acesso a pastas não está incluído."
+          }
         }
       }
     },
@@ -72,6 +120,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Die aktuellen Einstellungen wurden seit dem Erstellen dieser Vorschau geändert. Brich ab und öffne die Vorschau erneut. Es wurden keine importierten Einstellungen angewendet."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "La configuración actual cambió después de preparar esta vista previa. Cancelar y volver a ver la vista previa del archivo. No se aplicaron configuraciones importadas."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Les paramètres actuels ont changé après la préparation de cette vue d'ensemble. Annulez et prévisualisez à nouveau le fichier. Aucun paramètre importé n'a été appliqué."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "このプレビューを作成した後、現在の設定が変更されました。キャンセルしてファイルを再度プレビューしてください。インポートされた設定は適用されませんでした。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "As configurações atuais mudaram após a preparação desta prévia. Cancelar e visualizar o arquivo novamente. Nenhuma configuração importada foi aplicada."
           }
         }
       }
@@ -98,6 +170,30 @@
             "state": "translated",
             "value": "Die Einstellungsdatei überschreitet das Größenlimit von 16 MB oder enthält zu tief verschachtelte Werte. Es wurden keine Einstellungen geändert."
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "El archivo de configuración supera el límite de tamaño de 16 MB o contiene demasiados valores anidados. No se han modificado ninguna configuración."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Le fichier de paramètres dépasse la limite de taille de 16 Mo ou contient trop de valeurs imbriquées. Aucune configuration n'a été modifiée."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "設定ファイルが16 MBのサイズ制限を超えているか、入れ子構造の値が多すぎるため、設定は変更されませんでした。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "O arquivo de configurações excede o limite de tamanho de 16 MB ou contém muitos valores aninhados. Nenhuma configuração foi alterada."
+          }
         }
       }
     },
@@ -122,6 +218,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Einstellungen importiert. Geänderte Werte: %1$lld. Server hinzugefügt: %2$lld; aktualisiert: %3$lld; entfernt: %4$lld. Nicht importierte Werte: %5$lld. Die Wiederherstellungssicherung ist in den Einstellungen verfügbar."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Configuración importada. Valores cambiados: %1$lld. Servidores añadidos: %2$lld; actualizados: %3$lld; eliminados: %4$lld. Valores no importados: %5$lld. La copia de seguridad de recuperación está disponible en Configuración."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Paramètres importés. Valeurs modifiées : %1$lld. Serveurs ajoutés : %2$lld ; mis à jour : %3$lld ; supprimés : %4$lld. Valeurs non importées : %5$lld. La sauvegarde de récupération est disponible dans Paramètres."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "設定がインポートされました。変更された値：%1$lld。追加されたサーバー：%2$lld；更新されたサーバー：%3$lld；削除されたサーバー：%4$lld。インポートされていない値：%5$lld。リカバリバックアップは設定で確認できます。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Configurações importadas. Valores alterados: %1$lld. Servidores adicionados: %2$lld; atualizados: %3$lld; removidos: %4$lld. Valores não importados: %5$lld. A cópia de segurança de recuperação está disponível em Configurações."
           }
         }
       }
@@ -148,6 +268,30 @@
             "state": "translated",
             "value": "Diese Einstellungsdatei verwendet ein neueres Format. Aktualisiere Glasstual vor dem Import. Es wurden keine Einstellungen geändert."
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Este archivo de configuración utiliza un formato más nuevo. Actualice Glasstual antes de importarlo. No se han cambiado configuraciones."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ce fichier de paramètres utilise un format plus récent. Mettez à jour Glasstual avant de l'importer. Aucun paramètre n'a été modifié."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "この設定ファイルは新しい形式を使用しています。インポートする前にGlasstualを更新してください。設定は変更されていません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Este arquivo de configurações usa um formato mais novo. Atualize Glasstual antes de importá-lo. Nenhuma configuração foi alterada."
+          }
         }
       }
     },
@@ -172,6 +316,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Einstellungsübertragung abgeschlossen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Transferencia de configuración completada"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Transfert des paramètres terminé"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "設定の転送が完了しました"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Transferência de configurações concluída"
           }
         }
       }
@@ -198,6 +366,30 @@
             "state": "translated",
             "value": "Eine Einstellungsübertragung läuft bereits."
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Una transferencia de configuraciones ya está en curso."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Un transfert de paramètres est déjà en cours."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "設定の転送はすでに進行中です。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Uma transferência de configurações já está em andamento."
+          }
         }
       }
     },
@@ -222,6 +414,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Einstellungsübertragung gestoppt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Se ha detenido la transferencia de configuraciones"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Le transfert des paramètres a été arrêté"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "設定の転送が停止しました"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Transferência de configurações interrompida"
           }
         }
       }
@@ -248,6 +464,30 @@
             "state": "translated",
             "value": "Verbindungsbefehle können Passwörter oder andere private Informationen enthalten. Aktiviere diese Option nur, wenn du sämtliche Befehle in die exportierte Datei aufnehmen möchtest. Schlüsselbundpasswörter und Zertifikatsverweise werden nie in portable Exporte aufgenommen."
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Los comandos de conexión pueden contener contraseñas u otra información privada. Active esta opción solo si tiene la intención de incluir cada comando en el archivo exportado. Las contraseñas de la cartera de claves y las referencias de certificados nunca se incluyen en las exportaciones portátiles."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Les commandes de connexion peuvent contenir des mots de passe ou d'autres informations privées. Activez cette option uniquement si vous avez l'intention d'inclure chaque commande dans le fichier exporté. Les mots de passe de la clé USB et les références aux certificats ne sont jamais inclus dans les exportations portables."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "接続コマンドにはパスワードやその他の機密情報が含まれている場合があります。このオプションは、エクスポートされたファイルにすべてのコマンドを含めることを意図している場合にのみ有効にしてください。キーチェーンのパスワードや証明書の参照は、ポータブルエクスポートには一切含まれません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Os comandos de conexão podem conter senhas ou outras informações privadas. Ative esta opção apenas se você pretender incluir todos os comandos no arquivo exportado. As senhas da Chaveiro e as referências de certificados nunca são incluídas em exportações portáteis."
+          }
         }
       }
     },
@@ -272,6 +512,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gib eine gültige ganze Zahl ein. Der gespeicherte Wert wurde nicht geändert."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Introduzca un número entero válido. El valor guardado no ha cambiado."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Entrez un nombre entier valide. La valeur enregistrée n'a pas changé."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "有効な整数を入力してください。保存された値は変更されていません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Digite um número inteiro válido. O valor salvo não mudou."
           }
         }
       }
@@ -298,6 +562,30 @@
             "state": "translated",
             "value": "Einstellungen exportieren…"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Configuración de exportación..."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Paramètres d'exportation..."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "エクスポート設定…"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Configurações de Exportação..."
+          }
         }
       }
     },
@@ -322,6 +610,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Einstellungen exportieren"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Configuración de exportación"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Paramètres d'exportation"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "エクスポート設定"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Configurações de Exportação"
           }
         }
       }
@@ -348,6 +660,30 @@
             "state": "translated",
             "value": "Deine Einstellungen wurden erfolgreich exportiert."
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Tus configuraciones se exportaron con éxito."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Vos paramètres ont été exportés avec succès."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "設定が正常にエクスポートされました。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Suas configurações foram exportadas com sucesso."
+          }
         }
       }
     },
@@ -372,6 +708,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Diese Datei ist keine von Glasstual erstellte Einstellungsdatei. Es wurden keine Einstellungen geändert."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Este archivo no es un archivo de configuración que escribió Glasstual. No se cambiaron configuraciones."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ce fichier n'est pas un fichier de paramètres que Glasstual a écrit. Aucun paramètre n'a été modifié."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "このファイルはGlasstualが作成した設定ファイルではありません。設定は変更されていません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Este arquivo não é um arquivo de configurações que Glasstual escreveu. Nenhuma configuração foi alterada."
           }
         }
       }
@@ -398,6 +758,30 @@
             "state": "translated",
             "value": "Einstellungen importieren…"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Configuración de importación..."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Paramètres d'importation..."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "インポート設定…"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Configurações de Importação..."
+          }
         }
       }
     },
@@ -422,6 +806,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Verbindungsbefehle einschließen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Incluir comandos de conexión"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Inclure les commandes de connexion"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "接続コマンドを含める"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Incluir comandos de conexão"
           }
         }
       }
@@ -448,6 +856,30 @@
             "state": "translated",
             "value": "Diese Datei enthält einen ungültigen Wert oder widersprüchliche Werte. Es wurden keine Einstellungen geändert."
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Este archivo contiene un valor inválido o valores que tienen conflictos. No se han modificado ninguna configuración."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ce fichier contient une valeur invalide, ou des valeurs en conflit. Aucune configuration n'a été modifiée."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "このファイルには無効な値、または衝突する値が含まれています。設定は変更されていません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Este arquivo contém um valor inválido ou valores que entram em conflito. Nenhuma configuração foi alterada."
+          }
         }
       }
     },
@@ -472,6 +904,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nicht importierte Einstellungen: %lld"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Configuración no importada: %lld"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Paramètres non importés : %lld"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "設定がインポートされませんでした：%lld"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Configurações não importadas: %lld"
           }
         }
       }
@@ -498,6 +954,30 @@
             "state": "translated",
             "value": "Diese ältere Datei enthält nur ausgewählte Einstellungen. Sie kann zusammengeführt werden, aber keine vollständige Konfiguration wiederherstellen."
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Este archivo de legado contiene solo la configuración seleccionada. Puede fusionarse, pero no se puede usar para restaurar una configuración completa."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ce fichier de sauvegarde ne contient que les paramètres sélectionnés. Il peut être fusionné, mais ne peut pas être utilisé pour restaurer une configuration complète."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "このレガシーファイルには、選択された設定のみが含まれています。統合することはできますが、完全な構成を復元するために使用することはできません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Este arquivo de legado contém apenas configurações selecionadas. Ele pode ser mesclado, mas não pode ser usado para restaurar uma configuração completa."
+          }
         }
       }
     },
@@ -522,6 +1002,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Diese geschützte lokale Sicherung stellt ursprüngliche Verbindungsbefehle und Zertifikatsverweise wieder her, auch für entfernte Server. Schlüsselbundobjekte bleiben auf diesem Mac und werden nicht importiert. Wiederhergestellte Server verbinden sich nicht automatisch."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Esta copia de seguridad local protegida restaura los comandos de conexión originales y las referencias de certificados, incluidas las de los servidores eliminados. Los objetos de la cartera de claves permanecen en este Mac y no se importan. Los servidores recuperados no se conectan automáticamente."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Cette sauvegarde locale protégée restaure les commandes de connexion et les références de certificats d’origine, y compris pour les serveurs supprimés. Les objets de la clé USB restent sur ce Mac et ne sont pas importés. Les serveurs récupérés ne se connectent pas automatiquement."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "この保護されたローカルバックアップでは、削除されたサーバーを含む、元の接続コマンドと証明書参照が復元されます。キーチェーンオブジェクトはこのMacに残っており、インポートされません。復元されたサーバーは自動的に接続されません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Esta cópia de segurança local protegida restaura os comandos de conexão originais e as referências de certificados, incluindo para servidores removidos. Os objetos do Chaveiro permanecem neste Mac e não são importados. Os servidores recuperados não se conectam automaticamente."
           }
         }
       }
@@ -548,6 +1052,30 @@
             "state": "translated",
             "value": "Zusammenführen"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Combinar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "fusionner"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "結合する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "fundir"
+          }
         }
       }
     },
@@ -572,6 +1100,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Importmodus"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Modo de importación"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mode d'importation"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "インポートモード"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Modo de importação"
           }
         }
       }
@@ -598,6 +1150,30 @@
             "state": "translated",
             "value": "Schlüsselbundpasswörter und Zertifikatsverweise werden nicht aus portablen Dateien importiert. Enthaltene Verbindungsbefehle ersetzen die aktuellen; fehlende bleiben erhalten. Enthaltene Befehle können Passwörter enthalten. Importierte Server verbinden sich nicht automatisch."
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Las contraseñas de la llavero y las referencias de certificados no se importan desde archivos portátiles. Los comandos de conexión incluidos reemplazan los comandos actuales; los comandos omitidos se mantienen. Los comandos incluidos pueden contener contraseñas. Los servidores importados no se conectan automáticamente."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Les mots de passe des clés USB et les références de certificats ne sont pas importés depuis des fichiers portables. Les commandes de connexion incluses remplacent les commandes actuelles ; les commandes omises sont conservées. Les commandes incluses peuvent contenir des mots de passe. Les serveurs importés ne se connectent pas automatiquement."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "キーチェーンのパスワードと証明書の参照は、ポータブルファイルからインポートされません。含まれる接続コマンドは現在のコマンドに置き換えられ、省略されたコマンドはそのまま残ります。含まれるコマンドにはパスワードが含まれている場合があります。インポートされたサーバーは自動的に接続されません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "As senhas da chaveiro e as referências de certificados não são importadas de arquivos portáteis. Os comandos de conexão incluídos substituem os comandos atuais; os comandos omitidos são mantidos. Os comandos incluídos podem conter senhas. Os servidores importados não se conectam automaticamente."
+          }
         }
       }
     },
@@ -622,6 +1198,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Zu ändernde Einstellungen: %lld"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Configuración para cambiar: %lld"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Paramètres à modifier : %lld"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "変更する設定：%lld"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Configurações para alterar: %lld"
           }
         }
       }
@@ -648,6 +1248,30 @@
             "state": "translated",
             "value": "Wiederherstellungsvorschau"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Vista previa de la recuperación"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Prévisualisation de la récupération"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "プレビュー復元"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Pré-visualização de recuperação"
+          }
         }
       }
     },
@@ -672,6 +1296,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Vorschau des Einstellungsimports"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Importar ajustes de vista previa"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Paramètres de prévisualisation Importation"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "プレビュー設定のインポート"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Importar Configurações de Pré-visualização"
           }
         }
       }
@@ -698,6 +1346,30 @@
             "state": "translated",
             "value": "Wiederherstellen"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Restablecer"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "restaurer"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "復元する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "restaurar"
+          }
         }
       }
     },
@@ -722,6 +1394,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ersetzt portable Einstellungen und entfernt Server, die in diesem Stand fehlen. Geänderte oder entfernte Server werden getrennt. Die Wiederherstellung erfolgt erst nach dem Sichern einer Wiederherstellungskopie."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Reemplaza la configuración portátil y elimina los servidores que faltan en esta captura de pantalla. Los servidores modificados o eliminados se desconectarán. La restauración solo se procede después de que se haya guardado una copia de seguridad de recuperación."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Remplacez les paramètres portables et supprimez les serveurs manquants dans cette capture d'écran. Les serveurs modifiés ou supprimés seront déconnectés. La restauration n'est possible qu'après avoir sauvegardé une sauvegarde de récupération."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ポータブル設定を置き換え、このスナップショットに欠けているサーバーを削除します。変更または削除されたサーバーは接続が切断されます。復元は、リカバリバックアップが保存された後にのみ行われます。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Substitua as configurações portáteis e remova os servidores ausentes desta captura de tela. Os servidores alterados ou removidos serão desconectados. A restauração só prossegue após uma cópia de segurança de recuperação ter sido salva."
           }
         }
       }
@@ -748,6 +1444,30 @@
             "state": "translated",
             "value": "Vor dem Import prüfen"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Revisar antes de importar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Revoir avant d'importer"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "インポートする前に確認する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Revisar antes de importar"
+          }
         }
       }
     },
@@ -772,6 +1492,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Diese Datei ändert Einstellungen, die Befehle an Server senden oder beeinflussen können, welchen Inhalten Glasstual vertraut. Lies jeden Eintrag vor dem Import."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Este archivo cambia la configuración que puede enviar comandos a servidores o cambiar lo en lo que Glasstual confía. Lea cada una antes de importarla."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ce fichier modifie les paramètres qui peuvent envoyer des commandes aux serveurs ou modifier ce en quoi Glasstual fait confiance. Lisez chacun d'eux avant d'importer."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "このファイルは、サーバーにコマンドを送信したり、Glasstualが信頼するものを変更したりできる設定を変更します。インポートする前に、それぞれを必ず読み込んでください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Este arquivo altera as configurações que podem enviar comandos para servidores ou alterar o que o Glasstual confia. Leia cada uma antes de importar."
           }
         }
       }
@@ -798,6 +1542,30 @@
             "state": "translated",
             "value": "Chatfilter \"%1$@\" führt aus:\n%2$@"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "El filtro de chat \"%1$@\" se ejecuta:\n%2$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Le filtre de chat « %1$@ » s'exécute :\n%2$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "チャットフィルター「%1$@」が実行されます：\n%2$@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "O filtro de bate-papo \"%1$@\" está executando:\n%2$@"
+          }
         }
       }
     },
@@ -822,6 +1590,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Server \"%1$@\" sendet beim Verbinden:\n%2$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "El servidor \"%1$@\" envía cuando se conecta:\n%2$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Le serveur « %1$@ » envoie lorsque il se connecte :\n%2$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "サーバー「%1$@」が接続すると送信します：\n%2$@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "O servidor \"%1$@\" envia quando se conecta:\n%2$@"
           }
         }
       }
@@ -848,6 +1640,30 @@
             "state": "translated",
             "value": "Beantwortet CTCP-VERSION-Anfragen mit: %@"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Responde a las solicitudes de la versión CTCP con: %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Répond aux demandes CTCP VERSION avec : %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "CTCP バージョンリクエストに次のように回答します：%@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Responde aos pedidos CTCP VERSÃO com: %@"
+          }
         }
       }
     },
@@ -872,6 +1688,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Aktiviert den Entwicklermodus."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Activa el modo de desarrollador."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Active le mode développeur."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "開発者モードが有効になります。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ativa o modo de desenvolvedor."
           }
         }
       }
@@ -898,6 +1738,30 @@
             "state": "translated",
             "value": "Text mit diesen Linkschemata wird anklickbar: %@"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "El texto que utiliza estos esquemas de enlaces se vuelve interactivo: %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Le texte utilisant ces schémas de liens devient cliquable : %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "これらのリンクスキームを使用してテキストを送信すると、クリックできるようになります：%@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "O texto usando esses esquemas de links fica clicável: %@"
+          }
         }
       }
     },
@@ -922,6 +1786,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Einige Server wurden nicht rechtzeitig getrennt. Daher wurden keine importierten Einstellungen angewendet. Glasstual verbindet die zuvor getrennten Server erneut."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Algunos servidores no se desconectaron a tiempo, por lo que no se aplicaron las configuraciones importadas. Glasstual está reconectando los servidores que desconectó."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Certains serveurs ne se sont pas déconnectés à temps, de sorte que aucune configuration importée n'a été appliquée. Glasstual se reconnecte aux serveurs qu'il a déconnectés."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "一部のサーバーが時間内に接続を切り離さなかったため、インポートされた設定は適用されませんでした。Glasstualは、切り離したサーバーを再接続しています。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Alguns servidores não se desconectaram a tempo, portanto nenhuma configuração importada foi aplicada. Glasstual está reconectando os servidores que desconectou."
           }
         }
       }
@@ -948,6 +1836,30 @@
             "state": "translated",
             "value": "Hinzuzufügende Server"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Servidores para añadir"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Serveurs à ajouter"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "追加するサーバー"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Servidores para adicionar"
+          }
         }
       }
     },
@@ -972,6 +1884,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Zu entfernende Server"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Servidores a eliminar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Serveurs à supprimer"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "削除するサーバー"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Servidores para remover"
           }
         }
       }
@@ -998,6 +1934,30 @@
             "state": "translated",
             "value": "Zu aktualisierende Server"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Servidores para actualizar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Serveurs à mettre à jour"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "更新するサーバー"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Servidores para atualizar"
+          }
         }
       }
     },
@@ -1023,6 +1983,30 @@
             "state": "translated",
             "value": "Einstellungen und Wiederherstellung"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Configuración y recuperación"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Paramètres et récupération"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "設定と復元"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Configurações e Recuperação"
+          }
         }
       }
     },
@@ -1047,6 +2031,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Im Finder anzeigen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mostrar en Finder"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Afficher dans le Finder"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Finderで表示する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mostrar no Finder"
           }
         }
       }

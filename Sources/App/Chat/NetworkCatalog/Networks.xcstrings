@@ -22,6 +22,30 @@
             "state" : "translated",
             "value" : "Ein deutschsprachiges Chatnetzwerk mit Nickname-Registrierung und eigenen Hostnamen."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Una red de chat en alemán con registro de apodos y nombres de host personalizados."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Un réseau de discussion en allemand avec inscription de surnoms et de noms d'hôte personnalisés."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ニックネーム登録とカスタムホストネームを備えたドイツ語チャットネットワークです。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Uma rede de bate-papo em alemão com registro de apelidos e nomes de host personalizados."
+          }
         }
       }
     },
@@ -45,6 +69,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Eine ungarischsprachige Chatgemeinschaft, die seit 2010 besteht."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Una comunidad de chat en idioma húngaro, en línea desde 2010."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Une communauté de discussion en hongrois, en ligne depuis 2010."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ハンガリー語のチャットコミュニティで、2010年からオンラインです。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Uma comunidade de bate-papo em língua húngara, online desde 2010."
           }
         }
       }
@@ -70,6 +118,30 @@
             "state" : "translated",
             "value" : "Eine Gemeinschaft für eMule und andere freie Softwareprojekte, die auch für allgemeine Gespräche offen ist."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Una comunidad para eMule y otros proyectos de software gratuito, también abierta a conversaciones generales."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Une communauté pour eMule et d'autres projets de logiciels gratuits, ouverte aussi à des conversations générales."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "eMuleおよびその他のフリーソフトウェアプロジェクトのためのコミュニティで、一般的な会話にもオープンです。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Uma comunidade para eMule e outros projetos de software gratuito, aberta para conversas gerais também."
+          }
         }
       }
     },
@@ -93,6 +165,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Eine Gemeinschaft für Spiele, Programmierung und lockere Gespräche mit einem eigenen Hilfekanal."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Una comunidad para juegos, programación y conversación casual, con un canal de ayuda dedicado."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Une communauté pour les jeux vidéo, la programmation et les conversations informelles, avec un canal d'aide dédié."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ゲーム、プログラミング、カジュアルな会話のためのコミュニティで、専用ヘルプチャネルがあります。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Uma comunidade para jogos, programação e conversas casuais, com um canal de ajuda dedicado."
           }
         }
       }
@@ -118,6 +214,30 @@
             "state" : "translated",
             "value" : "Eine Gemeinschaft für Gespräche über Wissenschaft und Technik. Nur verschlüsselte Verbindungen."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Una comunidad para discusiones sobre ciencia y tecnología. Solo conexiones cifradas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Une communauté pour les discussions sur la science et la technologie. Connexions chiffrées uniquement."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "科学技術の議論のためのコミュニティです。暗号化接続のみです。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Uma comunidade para discussões sobre ciência e tecnologia. Apenas conexões criptografadas."
+          }
         }
       }
     },
@@ -141,6 +261,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ein Gemeinschaftsnetzwerk für Gespräche und neue Bekanntschaften. Konten werden über den Dienst N verwaltet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Una red comunitaria para conversar y hacer amigos. Las cuentas utilizan el servicio N."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Un réseau communautaire pour discuter et se faire des amis. Les comptes utilisent le service N."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "会話や友達を作るためのコミュニティネットワーク。アカウントはNサービスを使用します。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Uma rede comunitária para conversas e fazer amigos. As contas usam o serviço N."
           }
         }
       }
@@ -166,6 +310,30 @@
             "state" : "translated",
             "value" : "Ein Gemeinschaftsnetzwerk für alltägliche Gespräche und persönliche Kanäle."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Una red comunitaria para conversaciones cotidianas y canales personales."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Un réseau communautaire pour les conversations quotidiennes et les canaux personnels."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "日常会話とパーソナルチャネルのためのコミュニティネットワーク。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Uma rede comunitária para conversas diárias e canais pessoais."
+          }
         }
       }
     },
@@ -189,6 +357,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ein Gemeinschaftsnetzwerk für Gruppenchats mit Nickname-Registrierung und SASL-Anmeldung."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Una red comunitaria para chats grupales, con registro de apodos e inicio de sesión con SASL."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Un réseau communautaire pour les discussions de groupe, avec l'enregistrement de surnoms et la connexion SASL."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ニックネーム登録とSASLサインインを備えたグループチャット用のコミュニティネットワークです。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Uma rede comunitária para chats em grupo, com registro de apelidos e login SASL."
           }
         }
       }
@@ -214,6 +406,30 @@
             "state" : "translated",
             "value" : "Ein Gemeinschaftsnetzwerk für Technikgespräche und Open-Source-Projekte."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Una red comunitaria para discusiones sobre tecnología y proyectos de código abierto."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Un réseau communautaire pour les discussions sur la technologie et les projets open-source."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "テクノロジーのディスカッションやオープンソースプロジェクトのためのコミュニティネットワーク。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Uma rede comunitária para discussões de tecnologia e projetos de código aberto."
+          }
         }
       }
     },
@@ -237,6 +453,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ein familienfreundliches Netzwerk für Gemeinschaftschaträume, in dem Mitarbeiter Neulingen helfen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Una red apta para familias para salas de chat comunitarias, con ayuda del personal para los recién llegados."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Un réseau convivial pour les familles pour les salles de discussion communautaires, avec l'aide du personnel pour les nouveaux arrivants."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "コミュニティチャットルーム向けのファミリーフレンドリーなネットワークで、新規ユーザーにはスタッフのサポートがあります。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Uma rede amigável para famílias para salas de bate-papo comunitárias, com ajuda da equipe para recém-chegados."
           }
         }
       }
@@ -262,6 +502,30 @@
             "state" : "translated",
             "value" : "Eine Spiele- und Chatgemeinschaft mit einem gemeinsamen Treffpunkt und einem IdleRPG-Spiel."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Una comunidad de juegos y social con una sala de red y un juego IdleRPG."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Une communauté de jeu et sociale avec un salon de réseau et un jeu IdleRPG."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ネットワークラウンジとアイドルRPGゲームを備えた、ゲームとソーシャルコミュニティです。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Uma comunidade de jogos e social com um lounge de rede e um jogo IdleRPG."
+          }
         }
       }
     },
@@ -285,6 +549,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ein Spiele- und Chatnetzwerk mit Q-Konten. Verbindungen sind nicht verschlüsselt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Una red de juegos y redes sociales con cuentas Q. Las conexiones no están cifradas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Un réseau de jeu et de réseaux sociaux avec des comptes Q. Les connexions ne sont pas chiffrées."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Qアカウントを備えたゲームとソーシャルネットワーク。接続は暗号化されていません。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Uma rede de jogos e social com contas Q. As conexões não são criptografadas."
           }
         }
       }
@@ -310,6 +598,30 @@
             "state" : "translated",
             "value" : "Ein allgemeines Chatnetzwerk für unabhängige Gemeinschaften und Website-Chaträume."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Una red de chat general para comunidades independientes y salas de chat de sitios web."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Un réseau de discussion général pour les communautés indépendantes et les salles de discussion de sites web."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "独立系コミュニティやウェブサイトチャットルーム向けの一般的なチャットネットワークです。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Uma rede de bate-papo geral para comunidades independentes e salas de bate-papo de sites."
+          }
         }
       }
     },
@@ -333,6 +645,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ein allgemeines Chatnetzwerk für unabhängige Gemeinschaften mit verschlüsselten Verbindungen und SASL-Anmeldung."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Una red de chat general para comunidades independientes, con conexiones cifradas y inicio de sesión con SASL."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Un réseau de discussion général pour les communautés indépendantes, avec des connexions chiffrées et une connexion avec SASL."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "暗号化接続とSASLサインインを備えた、独立系コミュニティ向けの一般的なチャットネットワークです。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Uma rede de bate-papo geral para comunidades independentes, com conexões criptografadas e login SASL."
           }
         }
       }
@@ -358,6 +694,30 @@
             "state" : "translated",
             "value" : "Ein langjähriges internationales Chatnetzwerk mit Nickname- und Kanalregistrierung."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Una red de chat internacional de larga duración con registro de apodos y canales."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Un réseau de discussion international de longue date avec inscription de surnoms et de canaux."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ニックネームとチャンネル登録が可能な長寿の国際チャットネットワーク。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Uma rede de bate-papo internacional de longa data com registro de apelidos e canais."
+          }
         }
       }
     },
@@ -381,6 +741,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ein langjähriges internationales Chatnetzwerk mit starken europäischen Wurzeln. Nicknamen können nicht registriert werden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Una red de chat internacional de larga duración con fuertes raíces europeas. Los apodos no se pueden registrar."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Un réseau de discussion international de longue date avec de solides racines européennes. Les surnoms ne peuvent pas être enregistrés."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ヨーロッパに強いルーツを持つ、長年にわたり運営されている国際チャットネットワークです。ニックネームの登録はできません。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Uma rede de bate-papo internacional de longa data com fortes raízes europeias. Apelidos não podem ser registrados."
           }
         }
       }
@@ -406,6 +790,30 @@
             "state" : "translated",
             "value" : "Ein langjähriges internationales Chatnetzwerk. Registrierte Konten verwenden den Dienst X."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Una red de chat internacional de larga duración. Las cuentas registradas utilizan el servicio X."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Un réseau de discussion international en cours de fonctionnement depuis longtemps. Les comptes enregistrés utilisent le service X."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "長年にわたり運営されている国際チャットネットワークです。登録アカウントはXサービスを使用しています。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Uma rede de bate-papo internacional de longa data. As contas registradas usam o serviço X."
+          }
         }
       }
     },
@@ -429,6 +837,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ein Treffpunkt für Anime-Fans und allgemeine Chatgemeinschaften."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Un lugar de encuentro para fanáticos de los anime y comunidades de chat general."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Un lieu de rencontre pour les fans d'anime et les communautés de discussion générale."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "アニメファンや一般的なチャットコミュニティのための集いの場です。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Um local de encontro para fãs de anime e comunidades de bate-papo geral."
           }
         }
       }
@@ -454,6 +886,30 @@
             "state" : "translated",
             "value" : "Ein Treffpunkt für freie Software und Open-Source-Projekte mit Gemeinschaften für Programmierung und Linux-Hilfe."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Un lugar de encuentro para proyectos de software libre y de código abierto, con comunidades de apoyo en programación y Linux."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Un lieu de rencontre pour les projets de logiciels libres et d'origine ouverte, avec des communautés de soutien à la programmation et à Linux."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "フリーソフトウェアとオープンソースプロジェクトのための会議場所で、プログラミングとLinuxサポートコミュニティがあります。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Um local de encontro para projetos de software livre e de código aberto, com comunidades de suporte a programação e Linux."
+          }
         }
       }
     },
@@ -477,6 +933,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ein Treffpunkt für Spieler und ihre Gemeinschaften."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Un lugar de encuentro para los jugadores y sus comunidades."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Un lieu de rencontre pour les joueurs et leurs communautés."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ゲーマーとそのコミュニティのための集いの場。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Um local de encontro para jogadores e suas comunidades."
           }
         }
       }
@@ -502,6 +982,30 @@
             "state" : "translated",
             "value" : "Ein Netzwerk für Linux- und Open-Source-Gemeinschaften, darunter Hilfe und Chat zu Linux Mint."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Una red para comunidades de Linux y código abierto, que incluye soporte y chat para Linux Mint."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Un réseau pour les communautés Linux et open-source, incluant le support et le chat pour Linux Mint."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Linuxとオープンソースコミュニティのためのネットワークで、Linux Mintのサポートやチャットが含まれています。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Uma rede para comunidades de Linux e de código aberto, incluindo suporte ao Linux Mint e bate-papo."
+          }
         }
       }
     },
@@ -525,6 +1029,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ein Netzwerk für Reddit und andere Onlinegemeinschaften mit Kanälen für gemeinsame Interessen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Una red para Reddit y otras comunidades en línea, con canales para intereses compartidos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Un réseau pour Reddit et d'autres communautés en ligne, avec des canaux pour des intérêts partagés."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "共通の興味を持つチャンネルを備えたRedditやその他のオンラインコミュニティのためのネットワークです。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Uma rede para o Reddit e outras comunidades online, com canais para interesses compartilhados."
           }
         }
       }
@@ -550,6 +1078,30 @@
             "state" : "translated",
             "value" : "Ein Netzwerk für Spieler und Spielegemeinschaften. Konten verwenden AuthServ."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Una red para jugadores y comunidades de juego. Las cuentas utilizan AuthServ."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Un réseau pour les joueurs et les communautés de jeu. Les comptes utilisent AuthServ."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ゲーマーとゲームコミュニティのためのネットワークです。アカウントはAuthServを使用します。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Uma rede para jogadores e comunidades de jogos. As contas usam o AuthServ."
+          }
         }
       }
     },
@@ -573,6 +1125,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ein Netzwerk für Hackerspaces und die Chaos-Gemeinschaft. Verwende SASL zur Anmeldung bei deinem Konto."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Una red para hackerspaces y la comunidad de Chaos. Usa SASL para iniciar sesión en tu cuenta."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Un réseau pour les hackerspaces et la communauté Chaos. Utilisez SASL pour vous connecter à votre compte."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ハッカースペースとChaosコミュニティのためのネットワークです。アカウントにサインインするには、SASLを使用してください。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Uma rede para hackerspaces e a comunidade Chaos. Use SASL para fazer login na sua conta."
           }
         }
       }
@@ -598,6 +1174,30 @@
             "state" : "translated",
             "value" : "Ein Ort für lockere Gespräche und Technikgemeinschaften."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Un lugar para conversaciones informales y comunidades tecnológicas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Un endroit pour les conversations informelles et les communautés technologiques."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "カジュアルな会話やテクノロジーコミュニティのための場所です。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Um lugar para conversas casuais e comunidades de tecnologia."
+          }
         }
       }
     },
@@ -621,6 +1221,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ein öffentlicher Testserver für neue IRC-Funktionen von Ergo. Sämtlicher Datenverkehr wird protokolliert; verwende für alltägliche Chats das Ergo-Netzwerk."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Un servidor de prueba público para las nuevas funciones de Ergo IRC. Todo el tráfico se registra; utilice la red Ergo para el chat diario."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Un serveur de test public pour les nouvelles fonctionnalités de Ergo IRC. Tout le trafic est enregistré ; utilisez le réseau Ergo pour les discussions quotidiennes."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "新しいErgo IRC機能用の公開テストサーバーです。すべてのトラフィックがログに記録されます。日常のチャットにはErgoネットワークをご利用ください。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Um servidor de teste público para novos recursos do Ergo IRC. Todo o tráfego é registrado; use a rede Ergo para bate-papo diário."
           }
         }
       }
@@ -646,6 +1270,30 @@
             "state" : "translated",
             "value" : "Ein Chatnetzwerk mit Kanälen für Anime, Spiele und allgemeine Gespräche."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Una red social con canales de anime, juegos y conversación general."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Un réseau social avec des canaux d'anime, de jeux vidéo et de conversation générale."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "アニメ、ゲーム、一般的な会話チャネルを備えたソーシャルネットワークです。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Uma rede social com canais de anime, jogos e conversas gerais."
+          }
         }
       }
     },
@@ -669,6 +1317,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Eine italienischsprachige Gemeinschaft für Gespräche und neue Bekanntschaften."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Una comunidad en italiano para conversar y conocer gente nueva."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Une communauté en langue italienne pour discuter et rencontrer de nouvelles personnes."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "会話や新しい人との出会いのためのイタリア語コミュニティです。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Uma comunidade em língua italiana para conversas e conhecer novas pessoas."
           }
         }
       }
@@ -694,6 +1366,30 @@
             "state" : "translated",
             "value" : "Ein unabhängiges Netzwerk für Gemeinschaftskanäle und alltägliche Gespräche."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Una red independiente para canales comunitarios y conversación cotidiana."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Un réseau indépendant pour les chaînes communautaires et les conversations quotidiennes."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "コミュニティチャンネルと日常会話のための独立したネットワーク。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Uma rede independente para canais comunitários e conversa cotidiana."
+          }
         }
       }
     },
@@ -717,6 +1413,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Eine internationale Gemeinschaft für Aktivisten und Technikgespräche. Nur verschlüsselte Verbindungen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Una comunidad internacional para discusiones sobre activismo y tecnología. Solo conexiones cifradas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Une communauté internationale pour les discussions d'activistes et de technologie. Connexions chiffrées uniquement."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "活動家とテクノロジーの議論のための国際的なコミュニティ。暗号化接続のみ。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Uma comunidade internacional para discussões de ativistas e tecnologia. Apenas conexões criptografadas."
           }
         }
       }
@@ -742,6 +1462,30 @@
             "state" : "translated",
             "value" : "Eine internationale Gemeinschaft für Gespräche und gemeinsame Interessen, die seit 1996 besteht."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Una comunidad internacional para conversaciones e intereses compartidos, en línea desde 1996."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Une communauté internationale pour la conversation et les intérêts partagés, en ligne depuis 1996."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "1996年からオンラインで運営されている、会話と共通の関心を持つための国際的なコミュニティです。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Uma comunidade internacional para conversas e interesses compartilhados, online desde 1996."
+          }
         }
       }
     },
@@ -765,6 +1509,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chat für die 2600-Hackergemeinschaft und örtliche Treffgruppen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Chat para la comunidad de hackeadores de 2600 y grupos de reuniones locales."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Chat pour la communauté des hackers 2600 et les groupes de rencontres locaux."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "2600ハッカーコミュニティと地域のミーティンググループのためのチャット。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Chat para a comunidade de hackers 2600 e grupos de encontros locais."
           }
         }
       }
@@ -790,6 +1558,30 @@
             "state" : "translated",
             "value" : "Erstelle ein Konto unter https://gamesurge.net/createaccount/ und melde dich dann mit /msg AuthServ AUTH <account> <password> an."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Crea una cuenta en https://gamesurge.net/createaccount/ y luego inicia sesión con /msg AuthServ AUTH <account> <password>"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Créez un compte sur https://gamesurge.net/createaccount/ puis connectez-vous avec /msg AuthServ AUTH <account> <password>"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "https://gamesurge.net/createaccount/でアカウントを作成し、/msg AuthServ AUTH <account> <password>でサインインしてください。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Crie uma conta em https://gamesurge.net/createaccount/ e faça login com /msg AuthServ AUTH <account> <password>"
+          }
         }
       }
     },
@@ -813,6 +1605,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Erstelle ein Konto unter https://www.darenet.org/signup und melde dich dann mit /msg N AUTH <account> <password> an."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Crea una cuenta en https://www.darenet.org/signup y luego inicia sesión con /msg N AUTH <account> <password>"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Créez un compte sur https://www.darenet.org/signup puis connectez-vous avec /msg N AUTH <account> <password>"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "https://www.darenet.org/signupでアカウントを作成し、その後/msg N AUTH <account> <password>でサインインしてください。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Crie uma conta em https://www.darenet.org/signup e faça login com /msg N AUTH <account> <password>"
           }
         }
       }
@@ -838,6 +1654,30 @@
             "state" : "translated",
             "value" : "Erstelle ein Konto unter https://www.quakenet.org/help/q/how-to-register-an-account-with-q und melde dich dann mit /msg Q@CServe.quakenet.org AUTH <account> <password> an."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Crea una cuenta en https://www.quakenet.org/help/q/how-to-register-an-account-with-q y luego inicia sesión con /msg Q@CServe.quakenet.org AUTH <account> <password>"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Créez un compte sur https://www.quakenet.org/help/q/how-to-register-an-account-with-q puis connectez-vous avec /msg Q@CServe.quakenet.org AUTH <account> <password>"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "https://www.quakenet.org/help/q/how-to-register-an-account-with-qでアカウントを作成し、/msg、Q@CServe.quakenet.org、AUTH、<account>、<password>でサインインしてください。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Crie uma conta em https://www.quakenet.org/help/q/how-to-register-an-account-with-q e faça login com /msg Q@CServe.quakenet.org AUTH <account> <password>"
+          }
         }
       }
     },
@@ -861,6 +1701,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Erstelle ein Konto unter https://www.undernet.org/cservice und melde dich dann mit /msg X@channels.undernet.org LOGIN <account> <password> an."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Crea una cuenta en https://www.undernet.org/cservice y luego inicia sesión con /msg X@channels.undernet.org LOGIN <account> <password>"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Créez un compte sur https://www.undernet.org/cservice puis connectez-vous avec /msg X@channels.undernet.org LOGIN <account> <password>"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "https://www.undernet.org/cserviceでアカウントを作成し、/msg、X@channels.undernet.org、LOGIN、<account>、<password>でサインインしてください。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Crie uma conta em https://www.undernet.org/cservice e faça login com /msg X@channels.undernet.org LOGIN <account> <password>"
           }
         }
       }
@@ -886,6 +1750,30 @@
             "state" : "translated",
             "value" : "Eines der ursprünglichen IRC-Netzwerke mit Kanälen für Gespräche und Computer. Nicknamen können nicht registriert werden."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Una de las redes originales IRC, con canales sociales y de informática. Los apodos no se pueden registrar."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "L'un des réseaux IRC originaux, avec des canaux sociaux et informatiques. Les surnoms ne peuvent pas être enregistrés."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ソーシャルおよびコンピューティングチャネルを備えた、元のIRCネットワークの一つです。ニックネームの登録はできません。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Uma das redes originais IRC, com canais sociais e de computação. Nomes de usuário não podem ser registrados."
+          }
         }
       }
     },
@@ -909,6 +1797,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Gemeinschaften von Open-Source-Projekten, darunter Debian, mit Kanälen für Hilfe und Entwicklung."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Comunidades de proyectos de código abierto, incluyendo Debian, con canales para el soporte y el desarrollo de usuarios."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Communautés de projets open source, dont Debian, avec des canaux pour le support et le développement des utilisateurs."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ユーザーサポートと開発のためのチャネルを備えたオープンソースプロジェクトコミュニティ、Debianを含む。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Comunidades de projetos de código aberto, incluindo Debian, com canais de suporte ao usuário e desenvolvimento."
           }
         }
       }
@@ -934,6 +1846,30 @@
             "state" : "translated",
             "value" : "Registriere dich unter https://www.dumanet.hu/register und identifiziere dich nach dem Verbinden bei NickServ."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Regístrese en https://www.dumanet.hu/register, luego identifique con NickServ después de conectarse."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Inscrivez-vous sur https://www.dumanet.hu/register, puis identifiez-vous avec NickServ après la connexion."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "https://www.dumanet.hu/registerに登録し、接続した後、NickServで身元を確認してください。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Registre-se em https://www.dumanet.hu/register, depois identifique-se com NickServ após conectar."
+          }
         }
       }
     },
@@ -957,6 +1893,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Registrierung bei NickServ: /msg NickServ REGISTER <password> <email>"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Regístrese con NickServ: /msg NickServ REGISTER <password> <email>"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Inscrivez-vous avec NickServ : /msg NickServ REGISTER <password> <email>"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "NickServで登録してください：/msg NickServ REGISTER <password> <email>"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Registre-se com NickServ: /msg NickServ REGISTER <password> <email>"
           }
         }
       }
@@ -982,6 +1942,30 @@
             "state" : "translated",
             "value" : "Registrierung bei NickServ: /msg NickServ REGISTER <password> <email>. Aktiviere SASL zur Anmeldung; NickServ IDENTIFY wird nicht mehr unterstützt."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Regístrese con NickServ: /msg NickServ REGISTER <password> <email>. Active SASL para iniciar sesión; NickServ IDENTIFY ya no está soportado."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Inscrivez-vous avec NickServ : /msg NickServ REGISTER <password> <email>. Activez SASL pour vous connecter ; NickServ IDENTIFY n'est plus pris en charge."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "NickServで登録してください：/msg NickServ REGISTER <password> <email>。ログインにはSASLを有効にしてください；NickServ IDENTIFYはサポートされなくなりました。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Registre-se com NickServ: /msg NickServ REGISTER <password> <email>. Ative SASL para fazer login; NickServ IDENTIFY não é mais suportado."
+          }
         }
       }
     },
@@ -1005,6 +1989,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Registrierung bei NickServ: /msg NickServ REGISTER <password> <email>. Siehe https://libera.chat/guides/registration"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Regístrese con NickServ: /msg NickServ REGISTER <password> <email>. Consulte https://libera.chat/guides/registration"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Inscrivez-vous avec NickServ : /msg NickServ REGISTER <password> <email>. Voir https://libera.chat/guides/registration"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "NickServで登録してください：/msg NickServ REGISTER <password> <email>。https://libera.chat/guides/registrationをご覧ください。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Registre-se com NickServ: /msg NickServ REGISTER <password> <email>. Veja https://libera.chat/guides/registration"
           }
         }
       }
@@ -1030,6 +2038,30 @@
             "state" : "translated",
             "value" : "Registrierung bei NickServ: /msg NickServ REGISTER <password> <email>. Siehe https://www.oftc.net/Services/"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Regístrese con NickServ: /msg NickServ REGISTER <password> <email>. Consulte https://www.oftc.net/Services/"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Inscrivez-vous avec NickServ : /msg NickServ REGISTER <password> <email>. Voir https://www.oftc.net/Services/"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "NickServで登録してください：/msg NickServ REGISTER <password> <email>。https://www.oftc.net/Services/をご覧ください。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Registre-se com NickServ: /msg NickServ REGISTER <password> <email>. Veja https://www.oftc.net/Services/"
+          }
         }
       }
     },
@@ -1053,6 +2085,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chat- und Spielegemeinschaften, darunter das Serverprojekt InspIRCd."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Comunidades sociales y de juegos, incluyendo el proyecto del servidor InspIRCd."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Les communautés sociales et de jeu, y compris le projet de serveur InspIRCd."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "InspIRCdサーバープロジェクトを含むソーシャルおよびゲームコミュニティ。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Comunidades sociais e de jogos, incluindo o projeto do servidor InspIRCd."
           }
         }
       }
@@ -1078,6 +2134,30 @@
             "state" : "translated",
             "value" : "Die Treibstoffrettungsgemeinschaft von Elite Dangerous. Komm vorbei, wenn du Treibstoff brauchst oder anderen Piloten helfen möchtest."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "La comunidad de rescate de combustible Elite Dangerous. Visítala cuando necesites combustible o quieras ayudar a otros pilotos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "La communauté de sauvetage de carburant Elite Dangerous. Visitez-la lorsque vous avez besoin de carburant ou lorsque vous souhaitez aider d'autres pilotes."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Elite Dangerous燃料救助コミュニティ。燃料が必要なとき、または他のパイロットを助けたいときにアクセスしてください。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "A comunidade de resgate de combustível Elite Dangerous. Visite quando precisar de combustível ou quiser ajudar outros pilotos."
+          }
         }
       }
     },
@@ -1102,6 +2182,30 @@
             "state" : "translated",
             "value" : "Das Ergo-Gemeinschaftsnetzwerk für alltägliche Chats und IRC-Entwicklung mit integriertem Nachrichtenverlauf."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "La red comunitaria Ergo para el chat diario y el desarrollo de IRC, con historial de mensajes integrado."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Le réseau communautaire Ergo pour les discussions quotidiennes et le développement de IRC, avec un historique de messages intégré."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ergoコミュニティネットワークは、毎日のチャットとIRC開発に使用でき、組み込みメッセージ履歴を備えています。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "A rede comunitária Ergo para bate-papo diário e desenvolvimento do IRC, com histórico de mensagens integrado."
+          }
         }
       }
     },
@@ -1125,6 +2229,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Die tildeverse-Gemeinschaft für gemeinsam genutzte Unix-Systeme, Programmierung und kleine persönliche Websites."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "La comunidad tildeverse para sistemas Unix compartidos, programación y pequeños sitios web personales."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "La communauté tildeverse pour les systèmes Unix partagés, la programmation et les petits sites personnels."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "共有されたUnixシステム、プログラミング、そして小さな個人用ウェブサイトのためのtildeverseコミュニティ。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "A comunidade tildeverse para sistemas compartilhados Unix, programação e pequenos sites pessoais."
           }
         }
       }

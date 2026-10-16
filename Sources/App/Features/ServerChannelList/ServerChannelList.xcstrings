@@ -22,6 +22,30 @@
             "state": "translated",
             "value": "Ändere die Suche oder aktualisiere die Liste vom Server."
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Cambie la búsqueda o actualice la lista desde el servidor."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Modifiez la recherche ou mettez à jour la liste depuis le serveur."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "サーバーから検索を変更するか、リストを更新してください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Altere a busca ou atualize a lista do servidor."
+          }
         }
       }
     },
@@ -46,6 +70,30 @@
             "state": "translated",
             "value": "Kanalname"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nombre del canal"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nom de la chaîne"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "チャンネル名"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nome do canal"
+          }
         }
       }
     },
@@ -69,6 +117,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ausgewählten Kanälen beitreten"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Únete a los canales seleccionados"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Rejoindre les chaînes sélectionnées"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "選択されたチャンネルに参加する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Junte-se aos Canais Selecionados"
           }
         }
       }
@@ -130,6 +202,90 @@
               }
             }
           }
+        },
+        "es": {
+          "variations": {
+            "plural": {
+              "many": {
+                "stringUnit": {
+                  "state": "needs_review",
+                  "value": "El servidor envió más canales de los que mantiene esta ventana; los primeros %ld están aquí. Restringe la búsqueda en el servidor para ver el resto."
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "needs_review",
+                  "value": "El servidor envió más canales de los que mantiene esta ventana; el primero está aquí. Restringe la búsqueda en el servidor para ver el resto."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "needs_review",
+                  "value": "El servidor envió más canales de los que mantiene esta ventana; los primeros %ld están aquí. Restringe la búsqueda en el servidor para ver el resto."
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "plural": {
+              "many": {
+                "stringUnit": {
+                  "state": "needs_review",
+                  "value": "Le serveur a envoyé plus de canaux que cette fenêtre ne garde ; les premiers %ld sont ici. Affinez la recherche sur le serveur pour voir le reste."
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "needs_review",
+                  "value": "Le serveur a envoyé plus de canaux que cette fenêtre ne garde ; le premier est ici. Affinez la recherche sur le serveur pour voir le reste."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "needs_review",
+                  "value": "Le serveur a envoyé plus de canaux que cette fenêtre ne garde ; les premiers %ld sont ici. Affinez la recherche sur le serveur pour voir le reste."
+                }
+              }
+            }
+          }
+        },
+        "ja": {
+          "variations": {
+            "plural": {
+              "other": {
+                "stringUnit": {
+                  "state": "needs_review",
+                  "value": "サーバーはこのウィンドウが保持しているチャンネルよりも多くのチャンネルを送信しました。最初の%ldはここにあります。サーバーでの検索を絞り込んで、残りを確認してください。"
+                }
+              }
+            }
+          }
+        },
+        "pt-BR": {
+          "variations": {
+            "plural": {
+              "many": {
+                "stringUnit": {
+                  "state": "needs_review",
+                  "value": "O servidor enviou mais canais do que esta janela mantém; os primeiros %ld estão aqui. Restrinja a pesquisa no servidor para ver o resto."
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "needs_review",
+                  "value": "O servidor enviou mais canais do que esta janela mantém; o primeiro está aqui. Restrinja a pesquisa no servidor para ver o resto."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "needs_review",
+                  "value": "O servidor enviou mais canais do que esta janela mantém; os primeiros %ld estão aqui. Restrinja a pesquisa no servidor para ver o resto."
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -153,6 +309,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mitgliederzahl"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Número de miembros"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nombre de membres"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "メンバー数"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Número de membros"
           }
         }
       }
@@ -178,6 +358,30 @@
             "state": "translated",
             "value": "Mindestanzahl Benutzer"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Usuarios mínimos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nombre minimum d'utilisateurs"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "最小ユーザー数"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Usuários mínimos"
+          }
         }
       }
     },
@@ -201,6 +405,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Keine Kanalliste"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sin lista de canales"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Pas de liste de chaînes"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "チャンネルリストなし"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sem Lista de Canais"
           }
         }
       }
@@ -226,6 +454,30 @@
             "state": "translated",
             "value": "Frage über das Servermenü die öffentlichen Kanäle eines Servers ab."
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Pregunta a un servidor por sus canales públicos desde el menú del servidor."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Demandez à un serveur ses canaux publics depuis le menu Serveur."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "サーバーメニューからサーバーの公開チャネルをサーバーに尋ねます。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Peça aos servidores seus canais públicos no menu Servidor."
+          }
         }
       }
     },
@@ -250,6 +502,30 @@
             "state": "translated",
             "value": "Keine öffentlichen Kanäle"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ningún canal público"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Pas de canaux publics"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "公開チャンネルはありません"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nenhum canal público"
+          }
         }
       }
     },
@@ -273,6 +549,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Der Server wendet diesen Filter an. Kleinere Kanäle werden daher nicht gesendet."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "El servidor aplica este filtro, por lo que nunca se envían canales más pequeños."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Le serveur applique ce filtre, de sorte que les canaux plus petits ne sont jamais envoyés."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "サーバーはこのフィルターを適用するため、小さいチャンネルは決して送信されません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "O servidor aplica este filtro, portanto canais menores nunca são enviados."
           }
         }
       }
@@ -334,6 +634,90 @@
               }
             }
           }
+        },
+        "es": {
+          "variations": {
+            "plural": {
+              "many": {
+                "stringUnit": {
+                  "state": "needs_review",
+                  "value": "Canales públicos %ld"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "needs_review",
+                  "value": "Canal público %ld"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "needs_review",
+                  "value": "Canales públicos %ld"
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "plural": {
+              "many": {
+                "stringUnit": {
+                  "state": "needs_review",
+                  "value": "%ld canaux publics"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "needs_review",
+                  "value": "Canal public %ld"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "needs_review",
+                  "value": "%ld canaux publics"
+                }
+              }
+            }
+          }
+        },
+        "ja": {
+          "variations": {
+            "plural": {
+              "other": {
+                "stringUnit": {
+                  "state": "needs_review",
+                  "value": "%ld 公開チャネル"
+                }
+              }
+            }
+          }
+        },
+        "pt-BR": {
+          "variations": {
+            "plural": {
+              "many": {
+                "stringUnit": {
+                  "state": "needs_review",
+                  "value": "%ld canais públicos"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "needs_review",
+                  "value": "%ld canal público"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "needs_review",
+                  "value": "%ld canais públicos"
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -357,6 +741,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Öffentliche Kanalliste"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Lista de canales públicos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Liste des canaux publics"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "公共チャンネル一覧"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Lista de Canais Públicos"
           }
         }
       }
@@ -382,6 +790,30 @@
             "state": "translated",
             "value": "Kanalliste wird angefordert…"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Solicitando la lista de canales..."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Demande de liste des chaînes..."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "チャンネルリストをリクエスト中…"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Solicitando lista de canais..."
+          }
         }
       }
     },
@@ -405,6 +837,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kanäle suchen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Buscar canales"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Rechercher des chaînes"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "チャンネルを検索する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Pesquisar canais"
           }
         }
       }
@@ -430,6 +886,30 @@
             "state": "translated",
             "value": "Thema"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Tema"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "sujet"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "トピック"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "tópico"
+          }
         }
       }
     },
@@ -454,6 +934,30 @@
             "state": "translated",
             "value": "Aktualisieren"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Actualizar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "rafraîchir"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "リフレッシュ"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "refrescar"
+          }
         }
       }
     },
@@ -477,6 +981,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kanalliste"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Lista de canales"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Liste des chaînes"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "チャンネルリスト"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Lista de Canais"
           }
         }
       }

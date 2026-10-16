@@ -22,6 +22,30 @@
             "state": "translated",
             "value": "Befehlsvorschläge"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sugerencias de comandos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Suggestions de commandes"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "コマンドの提案"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sugestões de comandos"
+          }
         }
       }
     },
@@ -45,6 +69,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Aktion in der ausgewählten Unterhaltung senden"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Enviar una acción en la conversación seleccionada"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Envoyer une action dans la conversation sélectionnée"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "選択した会話でアクションを送信する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Enviar uma ação na conversa selecionada"
           }
         }
       }
@@ -70,6 +118,30 @@
             "state": "translated",
             "value": "Erweiterte Verbindungseinstellung ändern"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Cambiar una configuración avanzada de conexión"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Modifier une configuration de connexion avancée"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "高度な接続設定を変更する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Alterar uma configuração avançada de conexão"
+          }
         }
       }
     },
@@ -93,6 +165,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "ZNC-Kanal anhängen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Adjuntar un canal ZNC"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Attacher une chaîne ZNC"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ZNCチャンネルを添付する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Anexe um canal ZNC"
           }
         }
       }
@@ -118,6 +214,30 @@
             "state": "translated",
             "value": "Automatisch konfigurierte Kanäle betreten"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Únete a los canales automáticos configurados"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Rejoignez les canaux automatiques configurés"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "設定された自動チャンネルに参加する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Junte-se aos canais automáticos configurados"
+          }
         }
       }
     },
@@ -141,6 +261,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Als abwesend markieren"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Marca tu ausencia"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Marquez-vous comme absent"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "あなたを不在としてマークしてください"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Marque-se como ausente"
           }
         }
       }
@@ -166,6 +310,30 @@
             "state": "translated",
             "value": "Person aus einem Kanal verbannen"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Prohibir a un usuario de un canal"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Interdire un utilisateur d'un canal"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "チャンネルからユーザーを禁止する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Banir um usuário de um canal"
+          }
         }
       }
     },
@@ -189,6 +357,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Person aus einem Kanal verbannen und entfernen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Prohibir y eliminar a un usuario de un canal"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Bloquer et supprimer un utilisateur d'un canal"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ユーザーをチャンネルから禁止し削除する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Bloquear e remover um usuário de um canal"
           }
         }
       }
@@ -214,6 +406,30 @@
             "state": "translated",
             "value": "Aktion an alle betretenen Kanäle senden"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Enviar una acción a todos los canales a los que se ha unido"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Envoyer une action à tous les canaux auxquels vous êtes abonné"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "参加したすべてのチャネルにアクションを送信する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Enviar uma ação para todos os canais participantes"
+          }
         }
       }
     },
@@ -237,6 +453,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nachricht an alle betretenen Kanäle senden"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Enviar un mensaje a todos los canales a los que se ha unido"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Envoyer un message à tous les canaux auxquels vous êtes abonné"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "参加したすべてのチャネルにメッセージを送る"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Enviar uma mensagem para todos os canais participantes"
           }
         }
       }
@@ -262,6 +502,30 @@
             "state": "translated",
             "value": "Rohe IRC-Zeile über alle Verbindungen senden"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Envíe una línea IRC en bruto en cada conexión"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Envoyez une ligne IRC brute à chaque connexion"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "すべての接続でraw IRCラインを送信します。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Envie uma linha IRC bruta em cada conexão"
+          }
         }
       }
     },
@@ -285,6 +549,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kanäle des Netzwerks durchsuchen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Explora los canales de la red"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Parcourez les chaînes du réseau"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ネットワークのチャンネルを閲覧する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Navegue pelos canais da rede"
           }
         }
       }
@@ -310,6 +598,30 @@
             "state": "translated",
             "value": "Aktivierte IRC-Fähigkeiten anzeigen"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mostrar las capacidades habilitadas de IRC"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Afficher les capacités activées de IRC"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "IRC機能の表示を有効にする"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mostrar capacidades ativadas IRC"
+          }
         }
       }
     },
@@ -333,6 +645,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "TLS-Zertifikat dieser Verbindung prüfen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Inspeccione el certificado TLS de esta conexión"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Inspectez le certificat TLS de cette connexion"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "この接続のTLS証明書を確認する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Inspecione o certificado TLS desta conexão"
           }
         }
       }
@@ -358,6 +694,30 @@
             "state": "translated",
             "value": "Nachricht an Kanaloperatoren senden"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Enviar un mensaje a los operadores de canales"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Envoyer un message aux opérateurs de chaînes"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "チャンネルオペレーターにメッセージを送る"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Enviar uma mensagem aos operadores de canal"
+          }
         }
       }
     },
@@ -381,6 +741,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Notice an Kanaloperatoren senden"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Enviar un aviso a los operadores de canales"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Envoyer un avis aux opérateurs de canaux"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "チャンネルオペレーターに通知を送る"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Enviar um aviso aos operadores de canal"
           }
         }
       }
@@ -406,6 +790,30 @@
             "state": "translated",
             "value": "Prüfen, welche Nicknames online sind"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Comprueba cuáles son los apodos en línea"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Vérifiez quels surnoms sont en ligne"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "どのニックネームがオンラインになっているか確認する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Verifique quais apelidos estão online"
+          }
         }
       }
     },
@@ -429,6 +837,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ausgewählten Gesprächsverlauf leeren"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Borrar el transcripción seleccionada"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Effacer le transcript sélectionné"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "選択したトランスクリプトをクリアする"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Limpar a transcrição selecionada"
           }
         }
       }
@@ -454,6 +886,30 @@
             "state": "translated",
             "value": "Gesprächsverläufe der konfigurierten Verbindungen leeren"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Transcripciones claras en las conexiones configuradas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Transcription claire sur les connexions configurées"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "設定された接続に関するクリアなトランスクリプト"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Transcrições claras em conexões configuradas"
+          }
         }
       }
     },
@@ -477,6 +933,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Abwesenheitsstatus aufheben"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Borrar tu estado de eliminación"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Effacer votre statut d'éloignement"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "離脱ステータスをクリアする"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Limpe seu status de afastamento"
           }
         }
       }
@@ -502,6 +982,30 @@
             "state": "translated",
             "value": "Unterhaltung schließen"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Cerrar una conversación"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Fermer une conversation"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "会話を閉じる"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Fechar uma conversa"
+          }
         }
       }
     },
@@ -525,6 +1029,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Anzeigefarbe eines Nicknames wählen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Elige el color de visualización de un apodo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Choisir la couleur d'affichage d'un surnom"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ニックネームの表示色を選択する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Escolha a cor de exibição de um apelido"
           }
         }
       }
@@ -550,6 +1078,30 @@
             "state": "translated",
             "value": "Mit diesem Netzwerk verbinden oder neu verbinden"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Conectar o volver a conectar a esta red"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Se connecter ou se reconnecter à ce réseau"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "このネットワークに接続または再接続する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Conecte-se ou reconecte-se a esta rede"
+          }
         }
       }
     },
@@ -573,6 +1125,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "CTCP-Anfrage senden"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Enviar una solicitud CTCP"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Envoyer une demande CTCP"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "CTCPリクエストを送信する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Enviar um pedido CTCP"
           }
         }
       }
@@ -598,6 +1174,30 @@
             "state": "translated",
             "value": "CTCP-Antwort senden"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Envíe una respuesta CTCP"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Envoyez une réponse CTCP"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "CTCPの返信を送ってください"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Envie uma resposta CTCP"
+          }
         }
       }
     },
@@ -621,6 +1221,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "ZNC-Kanal abtrennen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Desconectar un canal ZNC"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Déconnecter une chaîne ZNC"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ZNCチャンネルを分離する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Desligar um canal ZNC"
           }
         }
       }
@@ -646,6 +1270,30 @@
             "state": "translated",
             "value": "Direkten Chat starten oder Datei senden"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Iniciar un chat directo o enviar un archivo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Commencez un chat direct ou envoyez un fichier"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ダイレクトチャットを開始するか、ファイルを送信する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Inicie um chat direto ou envie um arquivo"
+          }
         }
       }
     },
@@ -669,6 +1317,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Von diesem Netzwerk trennen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Desconectar de esta red"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Déconnectez-vous de ce réseau"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "このネットワークから接続を解除する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Desconectar desta rede"
           }
         }
       }
@@ -694,6 +1366,30 @@
             "state": "translated",
             "value": "Person vom Server trennen"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Desconectar a un usuario del servidor"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Déconnecter un utilisateur du serveur"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ユーザーをサーバーから接続解除する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Desconectar um usuário do servidor"
+          }
         }
       }
     },
@@ -717,6 +1413,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kanaloperatorstatus erteilen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Estado del operador del canal de subvenciones"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Statut de l'opérateur du canal de subvention"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Grantチャネルオペレーターのステータス"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Status do operador do canal de concessão"
           }
         }
       }
@@ -742,6 +1462,30 @@
             "state": "translated",
             "value": "Halboperatorstatus erteilen"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Otorgar el estatus de medio operador"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Accorder le statut d'opérateur à moitié temps"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ハーフオペレーターステータスを付与する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Conceder status de meio operador"
+          }
         }
       }
     },
@@ -765,6 +1509,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Verlauf vom Server anfordern"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Historial de solicitudes del servidor"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Historique des demandes du serveur"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "サーバーからのリクエスト履歴"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Histórico de solicitações do servidor"
           }
         }
       }
@@ -790,6 +1558,30 @@
             "state": "translated",
             "value": "Ignorierregel für eine Person hinzufügen"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Añadir una regla de ignorar para un usuario"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ajouter une règle d'ignorance pour un utilisateur"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ユーザーに対する無視ルールを追加する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Adicionar uma regra de ignorar para um usuário"
+          }
         }
       }
     },
@@ -813,6 +1605,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Personen in einen Kanal einladen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Invita a la gente a un canal"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Inviter des personnes sur une chaîne"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "人をチャンネルに招待する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Convide pessoas para um canal"
           }
         }
       }
@@ -838,6 +1654,30 @@
             "state": "translated",
             "value": "IP-Adresssperre verwalten"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Gestionar una prohibición de dirección IP"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Gérer une interdiction d'adresse IP"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "IPアドレスのブロックを管理する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Gerenciar uma proibição de endereço IP"
+          }
         }
       }
     },
@@ -861,6 +1701,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Einen oder mehrere Kanäle betreten"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Únete a uno o más canales"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Rejoignez un ou plusieurs canaux"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "1つ以上のチャンネルに参加する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Junte-se a um ou mais canais"
           }
         }
       }
@@ -886,6 +1750,30 @@
             "state": "translated",
             "value": "Kanal verlassen oder private Unterhaltung schließen"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Dejar un canal o cerrar una conversación privada"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Quitter une chaîne ou fermer une conversation privée"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "チャンネルを離れるか、プライベートチャットを閉じる"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Deixe um canal ou feche uma conversa privada"
+          }
         }
       }
     },
@@ -909,6 +1797,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Informationen über passende Personen anfordern"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Solicitar información sobre usuarios coincidentes"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Demander des informations sur les utilisateurs correspondants"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "マッチングユーザーに関する情報のリクエスト"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Solicitar informações sobre usuários correspondentes"
           }
         }
       }
@@ -934,6 +1846,30 @@
             "state": "translated",
             "value": "Verbindungslatenz messen"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Medir el tiempo de conexión de ida y vuelta"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mesurer le temps de connexion aller-retour"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "接続の往復時間を測定する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Medir o tempo de conexão de ida e volta"
+          }
         }
       }
     },
@@ -957,6 +1893,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nachricht an eine Person oder einen Kanal senden"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Enviar un mensaje a una persona o canal"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Envoyer un message à une personne ou à une chaîne"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "人物またはチャネルにメッセージを送る"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Enviar uma mensagem para uma pessoa ou canal"
           }
         }
       }
@@ -982,6 +1942,30 @@
             "state": "translated",
             "value": "IRC-Modi anzeigen oder ändern"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ver o cambiar los modos IRC"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Voir ou modifier les modes IRC"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "IRCモードを表示または変更する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Visualizar ou alterar os modos IRC"
+          }
         }
       }
     },
@@ -1005,6 +1989,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mitteilungstöne stummschalten"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Silenciar los sonidos de notificación"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Bruitner les notifications"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "通知音をミュートする"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Silenciar sons de notificação"
           }
         }
       }
@@ -1030,6 +2038,30 @@
             "state": "translated",
             "value": "Namen der Kanalmitglieder anfordern"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Solicitar los nombres de los miembros del canal"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Demander les noms des membres du canal"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "チャンネルメンバー名のリクエスト"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Solicitar nomes de membros do canal"
+          }
         }
       }
     },
@@ -1053,6 +2085,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Netzwerkweite Verbannung verwalten"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Gestionar una prohibición en toda la red"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Gérer une interdiction à l'échelle du réseau"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ネットワーク全体のバンの管理"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Gerenciar um banimento em toda a rede"
           }
         }
       }
@@ -1078,6 +2134,30 @@
             "state": "translated",
             "value": "Eigenen Nickname ändern"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Cambia tu apodo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Changer votre surnom"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ニックネームを変更する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mude seu apelido"
+          }
         }
       }
     },
@@ -1101,6 +2181,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Prioritäten der Nickname-Vervollständigung anzeigen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mostrar las prioridades de completado de apodos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Afficher les priorités de complétion des surnoms"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ニックネームの完了優先順位を表示する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mostrar as prioridades de conclusão de apelidos"
           }
         }
       }
@@ -1126,6 +2230,30 @@
             "state": "translated",
             "value": "IRC-Notice senden"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Enviar un aviso IRC"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Envoyer un avis IRC"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "IRC通知を送る"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Enviar um aviso IRC"
+          }
         }
       }
     },
@@ -1149,6 +2277,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lokale Mitteilung anzeigen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mostrar una notificación local"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Afficher une notification locale"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ローカル通知を表示する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mostrar uma notificação local"
           }
         }
       }
@@ -1174,6 +2326,30 @@
             "state": "translated",
             "value": "Online-Statusliste des Servers prüfen"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Inspeccione la lista de estado en línea del servidor"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Inspectez la liste d'état en ligne du serveur"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "サーバーのオンライン状態リストを確認する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Inspecione a lista de status online do servidor"
+          }
         }
       }
     },
@@ -1197,6 +2373,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Private Unterhaltung öffnen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Abrir una conversación privada"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ouvrez une conversation privée"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "プライベートチャットを開く"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Abra uma conversa privada"
           }
         }
       }
@@ -1222,6 +2422,30 @@
             "state": "translated",
             "value": "Nachricht an Server-Operatoren senden"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Enviar un mensaje a un operador de servidor"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Envoyer un message à un opérateur de serveur"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "サーバーオペレーターにメッセージを送る"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Enviar uma mensagem para um operador de servidor"
+          }
         }
       }
     },
@@ -1245,6 +2469,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Verbindungspasswort an den Server senden"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Enviar una contraseña de conexión al servidor"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Envoyer un mot de passe de connexion au serveur"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "サーバー接続パスワードを送信する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Enviar uma senha de conexão de servidor"
           }
         }
       }
@@ -1270,6 +2518,30 @@
             "state": "translated",
             "value": "Person am Sprechen in einem Kanal hindern"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Prevenir que un usuario hable en un canal"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Empêcher un utilisateur de parler dans un canal"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ユーザーがチャネルで話すことを防ぐ"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Prevenir que um usuário fale em um canal"
+          }
         }
       }
     },
@@ -1293,6 +2565,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Früher verwendeten Nickname abfragen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Busca un apodo utilizado anteriormente"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Rechercher un surnom précédemment utilisé"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "以前使用したニックネームを検索する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Pesquise um apelido usado anteriormente"
           }
         }
       }
@@ -1318,6 +2614,30 @@
             "state": "translated",
             "value": "Text ausgeben oder rohes Protokoll umschalten"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Imprimir el texto o alternar el registro del protocolo en bruto"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Imprimer le texte ou basculer le journal du protocole brut"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "テキストを印刷するか、生のプロトコルログを切り替える"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Imprimir texto ou alternar o registro do protocolo bruto"
+          }
         }
       }
     },
@@ -1341,6 +2661,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ausgewählte private Unterhaltung umbenennen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Cambiar el título de la conversación privada seleccionada"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Renommer la conversation privée sélectionnée"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "選択したプライベート会話のタイトルを変更する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Renomear a conversa privada selecionada"
           }
         }
       }
@@ -1366,6 +2710,30 @@
             "state": "translated",
             "value": "Zufällige Kanäle zum Debuggen betreten"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Únete a canales aleatorios para depurar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Rejoignez des canaux aléatoires pour le débogage"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "デバッグのためにランダムなチャンネルに参加する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Junte-se a canais aleatórios para depuração"
+          }
         }
       }
     },
@@ -1389,6 +2757,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Rohe IRC-Protokollzeile senden"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Enviar una línea de protocolo IRC en bruto"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Envoyez une ligne de protocole IRC brute"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "生のIRCプロトコルラインを送信する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Enviar uma linha de protocolo IRC bruta"
           }
         }
       }
@@ -1414,6 +2806,30 @@
             "state": "translated",
             "value": "Eigenen richtigen Namen ändern"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Cambia tu nombre real"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Modifiez votre vrai nom"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "実名を変更する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mude seu nome real"
+          }
         }
       }
     },
@@ -1437,6 +2853,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Empfang einer IRC-Zeile simulieren"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Simular la recepción de una línea IRC"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Simuler la réception d'une ligne IRC"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "IRCラインを受信するシミュレーションを行う"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Simule receber uma linha IRC"
           }
         }
       }
@@ -1462,6 +2902,30 @@
             "state": "translated",
             "value": "Ausgewählten Kanal verlassen und erneut betreten"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Salir y volver al canal seleccionado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Quitter et rejoindre le canal sélectionné"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "選択したチャンネルを離れて再接続する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Saia e volte ao canal selecionado"
+          }
         }
       }
     },
@@ -1485,6 +2949,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kanalverbannung aufheben"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Eliminar una prohibición de canal"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Supprimer une interdiction de chaîne"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "チャンネルの禁止を解除する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Remover uma proibição de canal"
           }
         }
       }
@@ -1510,6 +2998,30 @@
             "state": "translated",
             "value": "Person aus einem Kanal entfernen"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Eliminar a un usuario de un canal"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Supprimer un utilisateur d'une chaîne"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "チャンネルからユーザーを削除する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Remover um usuário de um canal"
+          }
         }
       }
     },
@@ -1533,6 +3045,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Halboperatorstatus entziehen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Eliminar el estado de medio operador"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Supprimer le statut d’opérateur à mi-chemin"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "半演算子ステータスを削除する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Remover o status de meio operador"
           }
         }
       }
@@ -1558,6 +3094,30 @@
             "state": "translated",
             "value": "Ignorierregel für eine Person entfernen"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Eliminar una regla de ignorar para un usuario"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Supprimer une règle d'ignorance pour un utilisateur"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ユーザーに対する無視ルールを削除する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Remover uma regra de ignorar para um usuário"
+          }
         }
       }
     },
@@ -1581,6 +3141,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kanaloperatorstatus entziehen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Eliminar el estado del operador del canal"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Supprimer le statut de l’opérateur de canal"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "チャンネルオペレーターステータスを削除する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Remover o status do operador do canal"
           }
         }
       }
@@ -1606,6 +3190,30 @@
             "state": "translated",
             "value": "Sprachrecht entziehen"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Eliminar el estado de voz"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Supprimer le statut de la voix"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "音声ステータスを削除する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Remover o status de voz"
+          }
         }
       }
     },
@@ -1629,6 +3237,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Verbindungslatenz in dieser Unterhaltung melden"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Informe la latencia de conexión a esta conversación"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Signaler la latence de connexion à cette conversation"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "この会話への接続遅延を報告する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Relate a latência de conexão para esta conversa"
           }
         }
       }
@@ -1654,6 +3286,30 @@
             "state": "translated",
             "value": "Zeit seit dem ersten Projekt-Commit melden"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Informe del tiempo transcurrido desde el primer commit del proyecto"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Rapport du temps écoulé depuis le premier dépôt du projet"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "プロジェクトの最初のコミットからの報告時間"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Relate o tempo desde o primeiro commit do projeto"
+          }
         }
       }
     },
@@ -1677,6 +3333,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mitteilungstöne wieder einschalten"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Restablecer los sonidos de notificación"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Récupérer les sons de notification"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "通知音を復元する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Restaurar os sons de notificação"
           }
         }
       }
@@ -1702,6 +3382,30 @@
             "state": "translated",
             "value": "Sprechmöglichkeit einer Person wiederherstellen"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Restablecer la capacidad de hablar de un usuario"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Rétablir la capacité d’un utilisateur à parler"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ユーザーの話し方を復元する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Restaurar a capacidade de falar de um usuário"
+          }
         }
       }
     },
@@ -1725,6 +3429,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Installiertes Skript ausführen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ejecutar un script instalado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Exécuter un script installé"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "インストール済みのスクリプトを実行する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Executar um script instalado"
           }
         }
       }
@@ -1750,6 +3478,30 @@
             "state": "translated",
             "value": "Aktion ohne lokale Anzeige senden"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Enviar una acción sin reproducirla localmente"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Envoyer une action sans l'échoer localement"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ローカルでエコーなしでアクションを送信する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Enviar uma ação sem ecoá-la localmente"
+          }
         }
       }
     },
@@ -1773,6 +3525,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nachricht ohne lokale Anzeige senden"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Enviar un mensaje sin reproducirlo localmente"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Envoyer un message sans l'échoir localement"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ローカルでエコーなしでメッセージを送信する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Enviar uma mensagem sem ecoá-la localmente"
           }
         }
       }
@@ -1798,6 +3574,30 @@
             "state": "translated",
             "value": "Mit einem anderen IRC-Server verbinden"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Conéctate a otro servidor IRC"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Se connecter à un autre serveur IRC"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "別のIRCサーバーに接続する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Conecte-se a outro servidor IRC"
+          }
         }
       }
     },
@@ -1821,6 +3621,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Serverseitige Einschränkung einer Person verwalten"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Gestionar una restricción de usuario en el lado del servidor"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Gérer une restriction d'utilisateur côté serveur"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "サーバー側ユーザー制限を管理する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Gerenciar uma restrição de usuário do lado do servidor"
           }
         }
       }
@@ -1846,6 +3670,30 @@
             "state": "translated",
             "value": "Serverseitige Silence-Liste verwalten"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Gestionar la lista de silencio del lado del servidor"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Gérer la liste de silence côté serveur"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "サーバー側沈黙リストを管理する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Gerenciar a lista de silêncio do lado do servidor"
+          }
         }
       }
     },
@@ -1869,6 +3717,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mitteilungston abspielen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Reproducir un sonido de notificación"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Jouer un son de notification"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "通知音を再生する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Reproduzir um som de notificação"
           }
         }
       }
@@ -1894,6 +3766,30 @@
             "state": "translated",
             "value": "Zu einer passenden Unterhaltung wechseln"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Cambiar a una conversación coincidente"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Passer à une conversation correspondante"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "対応する会話に切り替える"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mudar para uma conversa correspondente"
+          }
         }
       }
     },
@@ -1917,6 +3813,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Person vorübergehend auf dem Server einschränken"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Restringir temporalmente a un usuario en el servidor"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Restreindre temporairement un utilisateur sur le serveur"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "サーバー上のユーザーを一時的に制限する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Restringir temporariamente um usuário no servidor"
           }
         }
       }
@@ -1942,6 +3862,30 @@
             "state": "translated",
             "value": "Befehle planen oder Timer verwalten"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Programar comandos o gestionar temporizadores"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Programmer des commandes ou gérer des compteurs à rebours"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "コマンドのスケジュールを設定またはタイマーを管理する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Agendar comandos ou gerenciar temporizadores"
+          }
         }
       }
     },
@@ -1965,6 +3909,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kanalthema lesen oder ändern"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Leer o cambiar el tema del canal"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Lire ou modifier le sujet du canal"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "チャンネルのトピックを読むか変更する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Leia ou altere o tópico do canal"
           }
         }
       }
@@ -1990,6 +3958,30 @@
             "state": "translated",
             "value": "Informationen zu einer Person abfragen"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Buscar la información de un usuario"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Rechercher les informations d'un utilisateur"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ユーザーの情報を確認する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Pesquise as informações de um usuário"
+          }
         }
       }
     },
@@ -2013,6 +4005,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Eigene Benutzermodi anzeigen oder ändern"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ver o cambiar tus modos de usuario"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Consulter ou modifier vos modes d'utilisation"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ユーザーモードを表示または変更する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Veja ou altere seus modos de usuário"
           }
         }
       }
@@ -2038,6 +4054,30 @@
             "state": "translated",
             "value": "Glasstual-Version melden"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Informe de su versión Glasstual"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Signalez votre version Glasstual"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Glasstualバージョンを報告してください"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Denuncie sua versão Glasstual"
+          }
         }
       }
     },
@@ -2061,6 +4101,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sprachrecht erteilen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Conceder estado de voz"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Attribuer le statut de voix"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "音声ステータスを付与する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Conceder status de voz"
           }
         }
       }
@@ -2086,6 +4150,30 @@
             "state": "translated",
             "value": "Von ZNC gemeldetes Zertifikat prüfen"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Inspeccione el certificado informado por ZNC"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Inspecter le certificat signalé par ZNC"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ZNCによって報告された証明書を確認する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Inspecione o certificado relatado pelo ZNC"
+          }
         }
       }
     },
@@ -2109,6 +4197,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mit + eine Maske hinzufügen, mit - entfernen. Ohne Argumente wird die Liste angefordert. Serverunterstützung erforderlich."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Utilice + para añadir una máscara o - para eliminar una. Sin argumentos, solicita la lista. Requiere soporte del servidor."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Utilisez + pour ajouter un masque ou - pour en supprimer un. Sans arguments, demande la liste. Nécessite le support du serveur."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "マスクを追加するには+を使用し、削除するには-を使用します。引数なしではリストをリクエストします。サーバーサポートが必要です。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Use + para adicionar uma máscara ou - para removê-la. Sem argumentos, solicita a lista. Requer suporte do servidor."
           }
         }
       }
@@ -2134,6 +4246,30 @@
             "state": "translated",
             "value": "Sendet an alle betretenen Kanäle. Die Einstellungen bestimmen, ob weitere Verbindungen einbezogen werden."
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Se envía a cada canal al que se haya unido. La configuración determina si se incluyen otras conexiones."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Envoie à chaque canal auquel vous êtes abonné. Les paramètres déterminent si d'autres connexions sont incluses."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "参加しているすべてのチャンネルに送信します。設定により、他の接続が含まれるかどうかが決定されます。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Envia para cada canal aderido. As configurações determinam se outras conexões são incluídas."
+          }
         }
       }
     },
@@ -2157,6 +4293,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ohne Kanalangabe wird der ausgewählte Kanal verwendet."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Omite el canal para usar el canal seleccionado."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Oubliez le canal pour utiliser le canal sélectionné."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "選択したチャンネルを使用するには、チャンネルを省略してください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Omita o canal para usar o canal selecionado."
           }
         }
       }
@@ -2182,6 +4342,30 @@
             "state": "translated",
             "value": "Ohne Kanalangabe gilt der ausgewählte Kanal. Entsprechende Kanalrechte sind erforderlich."
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Omite el canal para usar el canal seleccionado. Requiere los privilegios de canal adecuados."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Oubliez le canal pour utiliser le canal sélectionné. Cela nécessite les privilèges de canal appropriés."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "選択したチャンネルを使用するには、チャンネルの権限が必要です。チャンネルを省略してください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Omita o canal para usar o canal selecionado. Requer os privilégios de canal apropriados."
+          }
         }
       }
     },
@@ -2205,6 +4389,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mehrere Kanalnamen mit Leerzeichen trennen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Separe los nombres de los múltiples canales con espacios."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Séparez les noms de plusieurs canaux avec des espaces."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "複数のチャンネル名をスペースで区切ります。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Separe os nomes de múltiplos canais com espaços."
           }
         }
       }
@@ -2230,6 +4438,30 @@
             "state": "translated",
             "value": "Kanäle und Schlüssel mit Kommas trennen. Ohne Kanalangabe wird der ausgewählte Kanal erneut betreten."
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Separe los canales y sus teclas con comas. Sin canal, se une al canal seleccionado."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Séparez les canaux et leurs clés par des virgules. Sans canal, rejoignez le canal sélectionné."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "チャンネルとキーはカンマで区切ります。チャンネルがない場合は、選択されたチャンネルに戻ります。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Separe os canais e suas chaves com vírgulas. Sem canal, reintegre-se ao canal selecionado."
+          }
         }
       }
     },
@@ -2253,6 +4485,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Serverunterstützung ist erforderlich. Nutze einen IRCv3-CHATHISTORY-Unterbefehl wie LATEST mit Ziel und Argumenten."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Se requiere el soporte del servidor. Utiliza un subcomando IRCv3 CHATHISTORY como LATEST con su objetivo y argumentos."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Un support serveur est requis. Utilisez une sous-commande IRCv3 CHATHISTORY telle que LATEST avec son objet cible et ses arguments."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "サーバーサポートが必要です。ターゲットと引数を指定したLATESTなどのIRCv3 CHATHISTORYサブコマンドを使用します。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "É necessária o suporte do servidor. Use um subcomando IRCv3 CHATHISTORY, como LATEST, com seu alvo e argumentos."
           }
         }
       }
@@ -2278,6 +4534,30 @@
             "state": "translated",
             "value": "Gib eine Anzahl von 1 bis 20 ein. Der Standardwert ist 1."
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Introduce un número de 1 a 20. El valor predeterminado es 1."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Saisissez un nombre de 1 à 20. La valeur par défaut est 1."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "1から20までの数値を入力します。デフォルトは1です。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Digite um número de 1 a 20. O padrão é 1."
+          }
         }
       }
     },
@@ -2301,6 +4581,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gib einen Nickname und einen CTCP-Befehl wie VERSION oder PING ein."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Introduce un apodo y un comando CTCP como VERSION o PING."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Saisissez un surnom et une commande CTCP telle que VERSION ou PING."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ニックネームと、VERSIONやPINGなどのCTCPコマンドを入力します。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Digite um apelido e um comando CTCP, como VERSÃO ou PING."
           }
         }
       }
@@ -2326,6 +4630,30 @@
             "state": "translated",
             "value": "Nutze chat für eine direkte Unterhaltung oder send mit einem Dateipfad für eine Übertragung."
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Utiliza el chat para una conversación directa o envíalo con una ruta de archivo para una transferencia de archivos."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Utilisez le chat pour une conversation directe ou envoyez-le avec un chemin de fichier pour un transfert de fichier."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "チャットを使って直接会話したり、ファイル転送のためにファイルパスで送信したりします。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Use o chat para uma conversa direta ou envie com um caminho de arquivo para uma transferência de arquivo."
+          }
         }
       }
     },
@@ -2349,6 +4677,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gib eine vollständige IRC-Protokollzeile ein. Setze vor einem letzten Parameter mit Leerzeichen einen Doppelpunkt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Introduzca una línea de protocolo IRC completa. Incluya un punto y coma antes de un parámetro final que contenga espacios."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Saisissez une ligne de protocole IRC complète. Incluez un point-virgule avant un paramètre suivant contenant des espaces."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "完全なIRCプロトコルラインを入力してください。スペースを含む末尾のパラメータの前にはコロンを含めてください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Insira uma linha completa do protocolo IRC. Inclua um ponto e vírgula antes de um parâmetro final contendo espaços."
           }
         }
       }
@@ -2374,6 +4726,30 @@
             "state": "translated",
             "value": "L zeigt Einträge, S fragt den Status ab, C leert die Liste. Personen über das Adressbuch hinzufügen oder entfernen."
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "L enumera las entradas, S solicita el estado, C limpia la lista. Añade o elimina personas a través del Libro de direcciones."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "L affiche les entrées, S demande le statut, C vide la liste. Ajoutez ou supprimez des personnes via le carnet d’adresses."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Lキーで項目を表示し、Sキーでステータスを確認し、Cキーでリストをクリアします。アドレス帳から人を追加または削除できます。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "L lista as entradas, S solicita o status, C apaga a lista. Adicione ou remova pessoas pelo Livro de Endereços."
+          }
         }
       }
     },
@@ -2397,6 +4773,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gib lokal anzuzeigenden Text ein oder schalte mit raw on / raw off das Protokoll ein oder aus."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Introduce texto para mostrarlo localmente, o raw on / raw off para alternar el registro del protocolo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Entrez du texte à afficher localement, ou raw on / raw off pour basculer le journal du protocole."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ローカルで表示するテキストを入力するか、プロトコルログを切り替えるには/ raw offを入力してください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Digite texto para exibir localmente, ou raw on/raw off para alternar o registro do protocolo."
           }
         }
       }
@@ -2422,6 +4822,30 @@
             "state": "translated",
             "value": "Schreibe die Nachricht nach dem Befehl. Leerzeichen gehören zur Nachricht."
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Escribe el mensaje después del comando. Los espacios forman parte del mensaje."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Tapez le message après la commande. Les espaces font partie du message."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "コマンドの後にメッセージを入力してください。スペースはメッセージの一部です。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Digite a mensagem após o comando. Os espaços fazem parte da mensagem."
+          }
         }
       }
     },
@@ -2445,6 +4869,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Beginne mit + oder -, um Modi des ausgewählten Kanals zu ändern, oder gib zuerst ein Ziel ein."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Comienza con + o - para cambiar de modo en el canal seleccionado, o introduce un objetivo primero."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Commencez par + ou - pour changer de mode sur le canal sélectionné, ou saisissez d'abord une cible."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "選択したチャンネルのモードを変更するには、+または-で開始するか、最初にターゲットを入力してください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Comece com + ou - para mudar de modo no canal selecionado, ou insira um alvo primeiro."
           }
         }
       }
@@ -2470,6 +4918,30 @@
             "state": "translated",
             "value": "Gib den Nickname der Person in diesem Netzwerk ein."
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Introduce el apodo del usuario en esta red."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Saisissez le surnom de l’utilisateur sur ce réseau."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "このネットワークにユーザーのニックネームを入力します。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Digite o apelido do usuário nesta rede."
+          }
         }
       }
     },
@@ -2493,6 +4965,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gib einen Nickname ein. Falls keine passende Person verfügbar ist, öffnet sich das Adressbuch zur Bearbeitung."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Introduce un apodo. Si no hay ningún usuario coincidente disponible, se abre el Libro de direcciones para editarlo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Saisissez un surnom. Si aucun utilisateur correspondant n’est disponible, le carnet d’adresses s’ouvre pour modification."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ニックネームを入力します。一致するユーザーが見つからない場合は、編集のためにアドレス帳が開きます。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Digite um apelido. Se nenhum usuário correspondente estiver disponível, o Livro de Endereços será aberto para edição."
           }
         }
       }
@@ -2518,6 +5014,30 @@
             "state": "translated",
             "value": "Gib einen Nickname und optional eine erste Nachricht ein."
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Introduzca un apodo y, opcionalmente, un primer mensaje."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Entrez un surnom et éventuellement un premier message."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ニックネームを入力し、オプションで最初のメッセージを入力してください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Digite um apelido e, opcionalmente, uma primeira mensagem."
+          }
         }
       }
     },
@@ -2541,6 +5061,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "In einer privaten Unterhaltung kann der Nickname entfallen, um diese Person abzufragen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Omite el apodo en una conversación privada para buscar a esa persona."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Oubliez le surnom dans une conversation privée pour rechercher cette personne."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "その人を検索するには、プライベート会話でニックネームを省略してください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Omita o apelido em uma conversa privada para pesquisar essa pessoa."
           }
         }
       }
@@ -2566,6 +5110,30 @@
             "state": "translated",
             "value": "Mehrere Nicknames mit Leerzeichen trennen."
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Separe varios apodos con espacios."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Séparez plusieurs surnoms avec des espaces."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "複数のニックネームをスペースで区切ってください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Separe múltiplos apelidos com espaços."
+          }
         }
       }
     },
@@ -2589,6 +5157,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nicknames mit Leerzeichen trennen. Der optionale Kanal steht am Ende."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Separe los apodos con espacios. El canal opcional viene al final."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Séparez les surnoms par des espaces. Le canal facultatif vient en dernier."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ニックネームはスペースで区切ってください。オプションのチャンネルは最後に配置してください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Separe os apelidos com espaços. O canal opcional vem por último."
           }
         }
       }
@@ -2614,6 +5206,30 @@
             "state": "translated",
             "value": "Keine Argumente erforderlich."
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No se necesitan argumentos."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Aucun argument n'est nécessaire."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "議論する必要はありません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nenhum argumento necessário."
+          }
         }
       }
     },
@@ -2637,6 +5253,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ein optionaler Kanal verknüpft die Mitteilung mit dieser Unterhaltung."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Un canal opcional vincula la notificación a esa conversación."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Un canal optionnel relie la notification à cette conversation."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "オプションのチャネルは、通知をその会話にリンクします。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Um canal opcional vincula a notificação a essa conversa."
           }
         }
       }
@@ -2662,6 +5302,30 @@
             "state": "translated",
             "value": "Erfordert Server-Operatorrechte. Unterstützte Masken, Zeitangaben und Optionen hängen vom Server ab."
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Requiere privilegios del operador del servidor. Las máscaras, duraciones y opciones compatibles dependen del servidor."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Exige des privilèges d'opérateur de serveur. Les masques, durées et options pris en charge dépendent du serveur."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "サーバーオペレーターの権限が必要です。サポートされているマスク、期間、オプションはサーバーによって異なります。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Requer privilégios do operador do servidor. As máscaras, durações e opções suportadas dependem do servidor."
+          }
         }
       }
     },
@@ -2685,6 +5349,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Der Grund ist optional und darf Leerzeichen enthalten."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "La razón es opcional y puede contener espacios."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "La raison est facultative et peut contenir des espaces."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "理由はオプションであり、スペースを含めることができます。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "O motivo é opcional e pode conter espaços."
           }
         }
       }
@@ -2710,6 +5398,30 @@
             "state": "translated",
             "value": "<Platzhalter> durch Werte ersetzen. Angaben in [Klammern] sind optional."
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sustituye <placeholders> por valores. Los elementos entre [corchetes] son opcionales."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Remplacez <placeholders> par des valeurs. Les éléments entre parenthèses sont facultatifs."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<placeholders>を値で置き換えます。[括弧内]の項目はオプションです。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Substitua <placeholders> por valores. Os itens entre [parênteses] são opcionais."
+          }
         }
       }
     },
@@ -2733,6 +5445,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Setze für TLS ein + vor den Port, zum Beispiel +6697."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Prefija el puerto con + para usar TLS, por ejemplo +6697."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Précédez le port par + pour utiliser TLS, par exemple +6697."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ポートに+を付けてTLSを使用します。例えば+6697です。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Prefixe o porta com + para usar TLS, por exemplo +6697."
           }
         }
       }
@@ -2758,6 +5494,30 @@
             "state": "translated",
             "value": "Der richtige Name darf Leerzeichen enthalten. Erfordert SETNAME-Unterstützung auf dem Server."
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "El nombre real puede contener espacios. Requiere soporte del servidor para SETNAME."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Le vrai nom peut contenir des espaces. Nécessite le support du serveur pour SETNAME."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "実名はスペースを含んでいる可能性があります。SETNAMEのサーバーサポートが必要です。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "O nome real pode conter espaços. Requer suporte do servidor para SETNAME."
+          }
         }
       }
     },
@@ -2781,6 +5541,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ohne Serverangabe wird die Verbindung zum aktuellen Endpunkt neu hergestellt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Omita el servidor para volver a conectarse al punto final actual."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Oubliez le serveur pour vous reconnecter à l'extrémité actuelle."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "現在のエンドポイントに再接続するには、サーバーを省略します。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Omita o servidor para se reconectar ao ponto final atual."
           }
         }
       }
@@ -2806,6 +5590,30 @@
             "state": "translated",
             "value": "Argumente werden an das installierte Skript übergeben. Unterstützte Optionen stehen in dessen Dokumentation."
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Los argumentos se pasan al script instalado. Consulte su documentación para conocer las opciones compatibles."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Les arguments sont transmis au script installé. Consultez sa documentation pour connaître les options prises en charge."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "引数はインストールされたスクリプトに渡されます。サポートされているオプションについては、そのドキュメントを確認してください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Os argumentos são passados para o script instalado. Verifique sua documentação para opções suportadas."
+          }
         }
       }
     },
@@ -2829,6 +5637,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gib einen Teil eines Kanal- oder Gesprächsnamens ein. Sucht in allen Netzwerken."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Escribe una parte del nombre de un canal o conversación. Búsquedas en todas las redes."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Saisissez une partie du nom d'une chaîne ou d'une conversation. Recherche sur tous les réseaux."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "チャンネル名または会話名の一部を入力します。すべてのネットワークで検索します。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Digite parte do nome de um canal ou conversa. Pesquisas em todas as redes."
           }
         }
       }
@@ -2854,6 +5686,30 @@
             "state": "translated",
             "value": "Sekunden müssen positiv sein. Wiederholungszahl 0 läuft unbegrenzt. help erklärt die Verwaltungsbefehle."
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Los segundos deben ser positivos. Repita 0 ejecuciones indefinidamente. Utilice ayuda para los comandos de gestión."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Les secondes doivent être positives. Répétez 0 exécutions indéfiniment. Utilisez l'aide pour les commandes de gestion."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "秒数は正数である必要があります。0回の実行を無期限に繰り返します。管理コマンドについてはヘルプを参照してください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Os segundos devem ser positivos. Repita 0 execuções indefinidamente. Use ajuda para comandos de gerenciamento."
+          }
         }
       }
     },
@@ -2877,6 +5733,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gib den Namen eines Systemklangs ein, zum Beispiel Glass."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Introduce el nombre de un sonido de notificación del sistema, como Glass."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Saisissez le nom d’un son de notification du système, comme Glass."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Glassなどのシステム通知音の名前を入力します。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Digite o nome de um som de notificação do sistema, como Glass."
           }
         }
       }
@@ -2902,6 +5782,30 @@
             "state": "translated",
             "value": "help listet unterstützte Funktionen auf. Mit -a gilt die Änderung für alle Verbindungen."
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Utiliza ayuda para listar las funciones compatibles. La bandera -a aplica un cambio a todas las conexiones."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Utilisez l'option aide pour lister les fonctionnalités prises en charge. L'option -a applique une modification à toutes les connexions."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "サポートされている機能のリストを表示するには、ヘルプを使用します。-aフラグは、すべての接続に変更を適用します。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Use ajuda para listar os recursos suportados. A bandeira -a aplica uma alteração a todas as conexões."
+          }
         }
       }
     },
@@ -2925,6 +5829,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ohne Zielangabe wird die ausgewählte Unterhaltung geschlossen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Omite el objetivo para cerrar la conversación seleccionada."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Oubliez l’objectif pour fermer la conversation sélectionnée."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "選択した会話を閉じるには、ターゲットを省略します。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Omita o alvo para fechar a conversa selecionada."
           }
         }
       }
@@ -2950,6 +5878,30 @@
             "state": "translated",
             "value": "Als Ziel dient ein Nickname oder Kanal. Mehrere Ziele mit Kommas trennen."
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Utilice un apodo o un canal como objetivo. Separe varios objetivos con comas."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Utilisez un surnom ou une chaîne comme cible. Séparez plusieurs cibles par des virgules."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ニックネームまたはチャンネルをターゲットとして使用します。複数のターゲットはカンマで区切ります。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Use um apelido ou canal como alvo. Separe múltiplos alvos com vírgulas."
+          }
         }
       }
     },
@@ -2973,6 +5925,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ohne Kanalangabe gilt der ausgewählte Kanal. Ohne Thema wird das aktuelle Thema abgefragt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Omita el canal para usar el canal seleccionado. Omita el tema para leerlo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Oubliez la chaîne pour utiliser la chaîne sélectionnée. Oubliez le sujet pour le lire."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "選択したチャンネルを使用するにはチャンネルを省略してください。読むにはトピックを省略してください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Omita o canal para usar o canal selecionado. Omita o tópico para lê-lo."
           }
         }
       }
@@ -2998,6 +5974,30 @@
             "state": "translated",
             "value": "Erfordert eine ZNC-Verbindung. Ohne Kanalangabe gilt der ausgewählte Kanal."
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Requiere una conexión ZNC. Omita el canal para usar el canal seleccionado."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Exige une connexion ZNC. Oubliez le canal pour utiliser le canal sélectionné."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ZNC接続が必要です。選択したチャンネルを使用するにはチャンネルを省略してください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Requer uma conexão ZNC. Omita o canal para usar o canal selecionado."
+          }
         }
       }
     },
@@ -3021,6 +6021,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "↑↓ auswählen · Tab einfügen · Esc schließen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "↑↓ para elegir · Tab para insertar · Esc para cerrar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "↑↓ pour choisir · Barre d'espace pour insérer · Esc pour fermer"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "↑↓を選択するには・タブキーで挿入するには・Escキーで閉じるには"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "↑↓ para escolher · Tab para inserir · Esc para fechar"
           }
         }
       }
@@ -3046,6 +6070,30 @@
             "state": "translated",
             "value": "↑↓ auswählen · Klicken zum Einfügen · Esc schließen"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "↑↓ para elegir · Haz clic para insertar · Esc para cerrar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "↑↓ pour choisir · Cliquez pour insérer · Esc pour fermer"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "↑↓を選択するには・クリックして挿入するには・Escキーを押して閉じます"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "↑↓ para escolher · Clique para inserir · Esc para fechar"
+          }
         }
       }
     },
@@ -3069,6 +6117,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "<Adresse> [[+]Port] [Passwort]"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<address> [[+]puerto] [contraseña]"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<address> [[+]port] [mot de passe]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<address> [[+]ポート] [パスワード]"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<address> [[+]porta] [senha]"
           }
         }
       }
@@ -3094,6 +6166,30 @@
             "state": "translated",
             "value": "[Argumente]"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[argumentos]"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[arguments]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[論拠]"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[argumentos]"
+          }
         }
       }
     },
@@ -3117,6 +6213,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "<Kanal|Maske> [Flags]"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<channel|mask> [banderas]"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<channel|mask> [flags]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<channel|mask> [フラグ]"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<channel|mask> [bandeiras]"
           }
         }
       }
@@ -3142,6 +6262,30 @@
             "state": "translated",
             "value": "[Kanal] <Nachricht>"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[canal] <message>"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[canal] <message>"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[チャンネル] <message>"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[canal] <message>"
+          }
         }
       }
     },
@@ -3165,6 +6309,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "[Kanal] <Nickname>"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[canal] <nickname>"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[canal] <nickname>"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[チャンネル] <nickname>"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[canal] <nickname>"
           }
         }
       }
@@ -3190,6 +6358,30 @@
             "state": "translated",
             "value": "[Kanal] <Nickname> [Grund]"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[canal] <nickname> [razón]"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[canal] <nickname> [raison]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[チャンネル] <nickname> [理由]"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[canal] <nickname> [motivo]"
+          }
         }
       }
     },
@@ -3213,6 +6405,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "[Kanal]"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[canal]"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[canal]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[チャンネル]"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[canal]"
           }
         }
       }
@@ -3238,6 +6454,30 @@
             "state": "translated",
             "value": "[Kanal] [Grund]"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[canal] [razón]"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[canal] [raison]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[チャンネル] [理由]"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[canal] [motivo]"
+          }
         }
       }
     },
@@ -3261,6 +6501,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "<Kanal> [weitere Kanäle]"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<channel> [más canales]"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<channel> [plus de canaux]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<channel> [他のチャンネル]"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<channel> [mais canais]"
           }
         }
       }
@@ -3286,6 +6550,30 @@
             "state": "translated",
             "value": "[Kanal[,Kanal]] [Schlüssel[,Schlüssel]]"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[canal[,canal]] [clave[,clave]]"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[canal[,canal]] [clé[,clé]]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[チャンネル[,チャンネル]] [キー[,キー]]"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[canal[,canal]] [chave[,chave]]"
+          }
         }
       }
     },
@@ -3309,6 +6597,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "chat <Nickname> | send <Nickname> <Pfad>"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "chatear <nickname> | enviar <nickname> <path>"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Chat <nickname> | envoyer <nickname> <path>"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "チャット <nickname> | <nickname> <path> を送信する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "chat <nickname> | enviar <nickname> <path>"
           }
         }
       }
@@ -3334,6 +6646,30 @@
             "state": "translated",
             "value": "[Grund]"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[razón]"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[raison]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[理由]"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[razão]"
+          }
         }
       }
     },
@@ -3357,6 +6693,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "[Anzahl]"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[contar]"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[compter]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[カウント]"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[contar]"
           }
         }
       }
@@ -3382,6 +6742,30 @@
             "state": "translated",
             "value": "[Flags] [Argumente]"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[banderas] [argumentos]"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[flags] [arguments]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[フラグ] [引数]"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[bandeiras] [argumentos]"
+          }
         }
       }
     },
@@ -3405,6 +6789,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "help | enable|disable [-a] \"Funktion\""
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ayuda | habilitar|deshabilitar [-a] \"característica\""
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Aide | activer | désactiver [-a] \"fonctionnalité\""
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ヘルプ | 有効にする|無効にする [-a]「機能」"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ajuda | ativar|desativar [-a] \"característica\""
           }
         }
       }
@@ -3430,6 +6838,30 @@
             "state": "translated",
             "value": "<IRC-Zeile>"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<IRC line>"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<IRC line>"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<IRC line>"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<IRC line>"
+          }
         }
       }
     },
@@ -3452,6 +6884,30 @@
         "de": {
           "stringUnit": {
             "state": "translated",
+            "value": "L | S | C"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "L | S | C"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "L | S | C"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "L | S | C"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
             "value": "L | S | C"
           }
         }
@@ -3478,6 +6934,30 @@
             "state": "translated",
             "value": "<+|-><Maske|Nickname> [Dauer] [Grund]"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<+|-><mask|nickname> [duración] [razón]"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<+|-><mask|nickname> [durée] [raison]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<+|-><mask|nickname> [期間] [理由]"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<+|-><mask|nickname> [duração] [motivo]"
+          }
         }
       }
     },
@@ -3501,6 +6981,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "[<+|-><Maske|Nickname>]"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[<+|-><mask|nickname>]"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[<+|-><mask|nickname>]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[<+|-><mask|nickname>]"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[<+|-><mask|nickname>]"
           }
         }
       }
@@ -3526,6 +7030,30 @@
             "state": "translated",
             "value": "<+|-><Maske|Nickname> [Grund]"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<+|-><mask|nickname> [razón]"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<+|-><mask|nickname> [raison]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<+|-><mask|nickname> [理由]"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<+|-><mask|nickname> [motivo]"
+          }
         }
       }
     },
@@ -3549,6 +7077,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "<Nachricht>"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<message>"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<message>"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<message>"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<message>"
           }
         }
       }
@@ -3574,6 +7126,30 @@
             "state": "translated",
             "value": "<Ziel[,Ziel]> <Nachricht>"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<target[,target]> <message>"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<target[,target]> <message>"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<target[,target]> <message>"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<target[,target]> <message>"
+          }
         }
       }
     },
@@ -3597,6 +7173,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "<Namensteil>"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<name fragment>"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<name fragment>"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<name fragment>"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<name fragment>"
           }
         }
       }
@@ -3622,6 +7222,30 @@
             "state": "translated",
             "value": "<Nickname>"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<nickname>"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<nickname>"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<nickname>"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<nickname>"
+          }
         }
       }
     },
@@ -3645,6 +7269,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "<Nickname> <Befehl> [Argumente]"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<nickname> <command> [argumentos]"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<nickname> <command> [arguments]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<nickname> <command> [引数]"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<nickname> <command> [argumentos]"
           }
         }
       }
@@ -3670,6 +7318,30 @@
             "state": "translated",
             "value": "<Nickname> [Nachricht]"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<nickname> [mensaje]"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<nickname> [message]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<nickname> [メッセージ]"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<nickname> [mensagem]"
+          }
         }
       }
     },
@@ -3693,6 +7365,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "[Nickname]"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[apodo]"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[surnom]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[ニックネーム]"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[apelido]"
           }
         }
       }
@@ -3718,6 +7414,30 @@
             "state": "translated",
             "value": "<Nickname> [Grund]"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<nickname> [razón]"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<nickname> [raison]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<nickname> [理由]"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<nickname> [motivo]"
+          }
         }
       }
     },
@@ -3741,6 +7461,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "<Nickname> [weitere Nicknames]"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<nickname> [más apodos]"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<nickname> [plus de surnoms]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<nickname> [その他のニックネーム]"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<nickname> [mais apelidos]"
           }
         }
       }
@@ -3766,6 +7510,30 @@
             "state": "translated",
             "value": "<Nickname> [weitere Nicknames] [Kanal]"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<nickname> [más apodos] [canal]"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<nickname> [plus de surnoms] [canal]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<nickname> [その他のニックネーム] [チャンネル]"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<nickname> [mais apelidos] [canal]"
+          }
         }
       }
     },
@@ -3789,6 +7557,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "[Kanal] <Nachricht>"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[canal] <message>"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[canal] <message>"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[チャンネル] <message>"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[canal] <message>"
           }
         }
       }
@@ -3814,6 +7606,30 @@
             "state": "translated",
             "value": "<Passwort>"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<password>"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<password>"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<password>"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<password>"
+          }
         }
       }
     },
@@ -3837,6 +7653,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "<richtiger Name>"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<real name>"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<real name>"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<real name>"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<real name>"
           }
         }
       }
@@ -3862,6 +7702,30 @@
             "state": "translated",
             "value": "<Sekunden> [Wiederholungen] <Befehl> | help | list | stop|restart|remove <ID>"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<seconds> [repetir] <command> | ayuda | lista | detener|reiniciar|eliminar <ID>"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<seconds> [répéter] <command> | aide | liste | arrêter|redémarrer|supprimer <ID>"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<seconds> [繰り返す] <command> |ヘルプ |リスト |停止|再起動|削除 <ID>"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<seconds> [repetir] <command> | ajuda | lista | parar|reiniciar|remover <ID>"
+          }
         }
       }
     },
@@ -3885,6 +7749,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "[Server]"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[servidor]"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[serveur]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[サーバー]"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[servidor]"
           }
         }
       }
@@ -3910,6 +7798,30 @@
             "state": "translated",
             "value": "<Klangname>"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<sound name>"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<sound name>"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<sound name>"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<sound name>"
+          }
         }
       }
     },
@@ -3933,6 +7845,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "<Unterbefehl> <Ziel> [Argumente]"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<subcommand> <target> [argumentos]"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<subcommand> <target> [arguments]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<subcommand> <target> [引数]"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<subcommand> <target> [argumentos]"
           }
         }
       }
@@ -3958,6 +7894,30 @@
             "state": "translated",
             "value": "[Ziel] [Flags] [Argumente]"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[objetivo] [banderas] [argumentos]"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[cible] [flags] [arguments]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[ターゲット] [フラグ] [引数]"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[alvo] [bandeiras] [argumentos]"
+          }
         }
       }
     },
@@ -3981,6 +7941,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "[Ziel]"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[objetivo]"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[cible]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[ターゲット]"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[alvo]"
           }
         }
       }
@@ -4006,6 +7990,30 @@
             "state": "translated",
             "value": "[Kanal] [Thema]"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[canal] [tema]"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[canal] [sujet]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[チャンネル] [トピック]"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[canal] [tópico]"
+          }
         }
       }
     },
@@ -4028,6 +8036,30 @@
         "de": {
           "stringUnit": {
             "state": "translated",
+            "value": "L | S | C"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "L | S | C"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "L | S | C"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "L | S | C"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
             "value": "L | S | C"
           }
         }

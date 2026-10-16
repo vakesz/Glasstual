@@ -22,6 +22,30 @@
             "state" : "translated",
             "value" : "Eintrag hinzufügen"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Añadir entrada"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ajouter une entrée"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "エントリを追加する"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Adicionar entrada"
+          }
         }
       }
     },
@@ -45,6 +69,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kanal hinzufügen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Añadir canal"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ajouter une chaîne"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "チャンネルを追加する"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Adicionar Canal"
           }
         }
       }
@@ -70,6 +118,30 @@
             "state" : "translated",
             "value" : "Hervorhebung hinzufügen"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Añadir resaltar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ajouter en surlignant"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ハイライトを追加する"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Adicionar Destacar"
+          }
         }
       }
     },
@@ -93,6 +165,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ignorierregel hinzufügen…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Añadir usuario Ignorar entrada..."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ajouter un utilisateur Ignorer l'entrée..."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ユーザーを追加 入力を無視…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Adicionar Usuário Ignorar Entrada..."
           }
         }
       }
@@ -118,6 +214,30 @@
             "state" : "translated",
             "value" : "Beobachteten Benutzer hinzufügen…"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Añadir entrada de seguimiento de usuario..."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ajouter une entrée de suivi d'utilisateur..."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ユーザートラッキングエントリを追加する…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Adicionar entrada de rastreamento de usuário..."
+          }
         }
       }
     },
@@ -141,6 +261,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Adressbuch"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Libro de direcciones"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "carnet d'adresses"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "アドレス帳"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "livro de endereços"
           }
         }
       }
@@ -166,6 +310,30 @@
             "state" : "translated",
             "value" : "Automatisch auswählen"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Elegir automáticamente"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Choisir automatiquement"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "自動的に選択する"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Escolher automaticamente"
+          }
         }
       }
     },
@@ -188,6 +356,30 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "IPv4"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "IPv4"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "IPv4"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "IPv4"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
             "value" : "IPv4"
           }
         }
@@ -214,6 +406,30 @@
             "state" : "translated",
             "value" : "IPv6"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "IPv6"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "IPv6"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "IPv6"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "IPv6"
+          }
         }
       }
     },
@@ -238,6 +454,30 @@
             "state" : "translated",
             "value" : "Alle Kanäle"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Todos los canales"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Tous les canaux"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "すべてのチャンネル"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Todos os Canais"
+          }
         }
       }
     },
@@ -261,6 +501,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Alternative Nicknamen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Apodos alternativos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Pseudonymes alternatifs"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "代替ニックネーム"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Sobrenomes alternativos"
           }
         }
       }
@@ -322,6 +586,90 @@
               }
             }
           }
+        },
+        "es" : {
+          "variations" : {
+            "plural" : {
+              "many" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "Espera %ld segundos después de estos comandos antes de unirte"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "Espera %ld un segundo después de estos comandos antes de unirte"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "Espera %ld segundos después de estos comandos antes de unirte"
+                }
+              }
+            }
+          }
+        },
+        "fr" : {
+          "variations" : {
+            "plural" : {
+              "many" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "Attendez %ld secondes après ces commandes avant de vous joindre."
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "Attendez %ld une seconde après ces commandes avant de vous joindre."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "Attendez %ld secondes après ces commandes avant de vous joindre."
+                }
+              }
+            }
+          }
+        },
+        "ja" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "これらのコマンドを実行した後、参加する前に%ld秒間待ってください。"
+                }
+              }
+            }
+          }
+        },
+        "pt-BR" : {
+          "variations" : {
+            "plural" : {
+              "many" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "Espere %ld segundos após esses comandos antes de se juntar"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "Espere %ld segundos após esses comandos antes de se juntar"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "Espere %ld segundos após esses comandos antes de se juntar"
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -345,6 +693,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kanälen erst nach Ausführung dieser Befehle beitreten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Únete a los canales solo después de que estos comandos se hayan ejecutado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Rejoignez les chaînes uniquement après que ces commandes aient été exécutées."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "これらのコマンドを実行した後でのみチャンネルに参加してください。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Junte-se aos canais apenas após esses comandos terem sido executados"
           }
         }
       }
@@ -370,6 +742,30 @@
             "state" : "translated",
             "value" : "Vor dem Kanalbeitritt auf Identifizierung warten"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Espera la identificación antes de unirte a los canales"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Attendez l'identification avant de rejoindre les canaux"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "チャネルに参加する前に身元確認を待ってください。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Espere por identificação antes de se juntar aos canais"
+          }
         }
       }
     },
@@ -393,6 +789,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Abwesenheitsnickname"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Apodo de lejos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Pseudonyme à l'extérieur"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "外出時のニックネーム"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Apelido fora"
           }
         }
       }
@@ -418,6 +838,30 @@
             "state" : "translated",
             "value" : "Der Befehl weist NickServ an, dich anhand dieses Zertifikats zu erkennen. Sende ihn, nachdem du dich identifiziert hast."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "El comando le indica a NickServ que le reconozca con este certificado. Envíelo una vez que haya sido identificado."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "La commande indique à NickServ de vous reconnaître à l'aide de ce certificat. Envoyez-le une fois que vous avez été identifié."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このコマンドは、NickServにこの証明書であなたを認識するように指示します。識別されたら一度送信してください。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "O comando diz para NickServ reconhecê-lo com este certificado. Envie-o assim que você for identificado."
+          }
         }
       }
     },
@@ -441,6 +885,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zertifikatsname"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Nombre del certificado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Nom du certificat"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "証明書名"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Nome do certificado"
           }
         }
       }
@@ -466,6 +934,30 @@
             "state" : "translated",
             "value" : "Nickname ändern"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Cambiar apodo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Changer de surnom"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ニックネームを変更する"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Alterar apelido"
+          }
         }
       }
     },
@@ -489,6 +981,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kanalliste"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Lista de canales"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Liste des chaînes"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "チャンネルリスト"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Lista de Canais"
           }
         }
       }
@@ -514,6 +1030,30 @@
             "state" : "translated",
             "value" : "Identität auswählen"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Elija una identidad"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Choisissez une identité"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "アイデンティティを選択する"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Escolha uma Identidade"
+          }
         }
       }
     },
@@ -537,6 +1077,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Netzwerk auswählen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Elige una red"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Choisir un réseau"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ネットワークを選択する"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Escolha uma Rede"
           }
         }
       }
@@ -562,6 +1126,30 @@
             "state" : "translated",
             "value" : "Standardliste"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Lista predeterminada"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Liste par défaut"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "デフォルトリスト"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Lista padrão"
+          }
         }
       }
     },
@@ -585,6 +1173,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mittel (für ältere Server)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Intermedio (para servidores más antiguos)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Intermédiaire (pour les serveurs plus anciens)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "中級（古いサーバー用）"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Intermediário (para servidores mais antigos)"
           }
         }
       }
@@ -610,6 +1222,30 @@
             "state" : "translated",
             "value" : "Cipher-Suites"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Conjuntos de cifrado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Packs de chiffrement"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "暗号化スイート"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Pacotes de criptografia"
+          }
         }
       }
     },
@@ -633,6 +1269,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nur moderne Suites"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Solo suites modernas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Seules les suites modernes"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "モダンなスイートのみ"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Apenas suítes modernas"
           }
         }
       }
@@ -658,6 +1318,30 @@
             "state" : "translated",
             "value" : "Systemstandard"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Predeterminado del sistema"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Par défaut du système"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "システムデフォルト"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Definição padrão do sistema"
+          }
         }
       }
     },
@@ -681,6 +1365,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Liste aus Version 5.2.7"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Lista de la versión 5.2.7"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Liste de la version 5.2.7"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "バージョン5.2.7のリスト"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Lista da versão 5.2.7"
           }
         }
       }
@@ -706,6 +1414,30 @@
             "state" : "translated",
             "value" : "Liste aus Version 7.0.0"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Lista de la versión 7.0.0"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Liste de la version 7.0.0"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "バージョン7.0.0のリスト"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Lista da versão 7.0.0"
+          }
         }
       }
     },
@@ -729,6 +1461,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Keine bestimmten Suites bevorzugen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "No prefieras suites específicas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ne préférez pas des suites spécifiques"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "特定のスイートを好まないでください"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Não prefira suítes específicas"
           }
         }
       }
@@ -754,6 +1510,30 @@
             "state" : "translated",
             "value" : "Clientzertifikat"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Certificado del cliente"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Certificat du client"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "クライアント証明書"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Certificado do cliente"
+          }
         }
       }
     },
@@ -777,6 +1557,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Abschiedsnachricht beim Ruhezustand"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Mensaje de salida del modo de inactividad del ordenador"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Message de sortie de l’hibernation de l’ordin"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "コンピュータの睡眠終了メッセージ"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Mensagem de término do modo de sono do computador"
           }
         }
       }
@@ -802,6 +1606,30 @@
             "state" : "translated",
             "value" : "Verbindungsbefehle"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Comandos de conexión"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Commandes de connexion"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "接続コマンド"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Comandos de conexão"
+          }
         }
       }
     },
@@ -825,6 +1653,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verschlüsselt verbinden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Conéctate de forma segura"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Se connecter en toute sécurité"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "安全に接続する"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Conecte-se com segurança"
           }
         }
       }
@@ -850,6 +1702,30 @@
             "state" : "translated",
             "value" : "Verbinden über"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Conéctate usando"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Se connecter en utilisant"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "使用して接続する"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Conecte usando"
+          }
         }
       }
     },
@@ -873,6 +1749,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Beim Start von Glasstual verbinden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Conéctate cuando Glasstual se abra"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Se connecter lorsque Glasstual s'ouvre"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Glasstualが開いたときに接続する"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Conecte quando Glasstual abrir"
           }
         }
       }
@@ -898,6 +1798,30 @@
             "state" : "translated",
             "value" : "Verbindungsname"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Nombre de la conexión"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Nom de la connexion"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "接続名"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Nome da conexão"
+          }
         }
       }
     },
@@ -921,6 +1845,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "NickServ-Befehl kopieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Copiar el comando NickServ"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Copier la commande NickServ"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "NickServ コマンドをコピーする"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Copiar Comando NickServ"
           }
         }
       }
@@ -946,6 +1894,30 @@
             "state" : "translated",
             "value" : "NickServ-Befehl für %@ kopieren"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Copiar el comando NickServ para %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Copier la commande NickServ pour %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "NickServ のコマンドを %@ にコピーする"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Copiar o Comando NickServ para %@"
+          }
         }
       }
     },
@@ -969,6 +1941,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "CTCP-VERSION-Antwort"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "CTCP VERSIÓN Responder"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "CTCP VERSION Répondre"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "CTCP バージョン 返信"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "CTCP VERSÃO Responder"
           }
         }
       }
@@ -994,6 +1990,30 @@
             "state" : "translated",
             "value" : "Aktueller Nickname"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Apodo actual"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Nom de code actuel"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "現在のニックネーム"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Apelido atual"
+          }
         }
       }
     },
@@ -1017,6 +2037,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Trennen, wenn keine PING-Antwort eingeht"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Desconectar cuando no se reciba ninguna respuesta PING"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Déconnecter lorsque aucune réponse PING n'est reçue"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "PINGの応答が受信されない場合、接続を解除する"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Desconectar quando nenhuma resposta PING for recebida"
           }
         }
       }
@@ -1042,6 +2086,30 @@
             "state" : "translated",
             "value" : "Bei geänderter Erreichbarkeit trennen"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Desconectar cuando cambie la accesibilidad"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Déconnecter lorsque la disponibilité change"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "到達可能性が変更されたときに接続を解除する"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Desconexão quando a acessibilidade mudar"
+          }
         }
       }
     },
@@ -1065,6 +2133,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bei fehlgeschlagener SASL-Authentifizierung trennen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Desconectar si la autenticación de SASL falla"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Déconnectez-vous si l'authentification SASL échoue"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "SASL認証に失敗した場合は接続を解除します。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Desconecte se a autenticação SASL falhar"
           }
         }
       }
@@ -1090,6 +2182,30 @@
             "state" : "translated",
             "value" : "Beim Ruhezustand des Computers trennen"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Desconectar cuando el ordenador duerme"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Déconnecter lorsque l’ordinateur est en veille"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "コンピュータがスリープしているときに接続を解除する"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Desconectar quando o computador estiver em modo de sono"
+          }
         }
       }
     },
@@ -1113,6 +2229,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Eintrag bearbeiten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Editar entrada"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Modifier l'entrée"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "エントリを編集する"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Editar entrada"
           }
         }
       }
@@ -1138,6 +2278,30 @@
             "state" : "translated",
             "value" : "Kanal bearbeiten"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Editar canal"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Modifier la chaîne"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "チャンネルを編集する"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Editar Canal"
+          }
         }
       }
     },
@@ -1161,6 +2325,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hervorhebung bearbeiten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Editar resaltar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Modifier mettre en évidence"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ハイライトの編集"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Editar Destacar"
           }
         }
       }
@@ -1186,6 +2374,30 @@
             "state" : "translated",
             "value" : "Ersatz"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Respaldo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Rétour arrière"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "フールバック"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Backup"
+          }
         }
       }
     },
@@ -1209,6 +2421,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zeichenkodierung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Codificación"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "encodage"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "エンコーディング"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "codificação"
           }
         }
       }
@@ -1234,6 +2470,30 @@
             "state" : "translated",
             "value" : "Flood-Schutz"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Control de inundaciones"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "prévention des inondations"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "洪水制御"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "controle de inundação"
+          }
         }
       }
     },
@@ -1257,6 +2517,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Anzahl Sekunden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Número de segundos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Nombre de secondes"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "秒数"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Número de segundos"
           }
         }
       }
@@ -1282,6 +2566,30 @@
             "state" : "translated",
             "value" : "Anzahl Befehle"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Número de comandos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Nombre de commandes"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "コマンドの数"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Número de comandos"
+          }
         }
       }
     },
@@ -1305,6 +2613,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "\"%@\" bevorzugt diese Cipher-Suites in absteigender Reihenfolge."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "El \"%@\" prefiere estos paquetes de cifrado, preferidos primero."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Le \"%@\" préfère ces suites de chiffrement, les plus préférées en premier."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "「%@」はこれらの暗号スイートを好みます。最も好ましいのは最初にです。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "O \"%@\" prefere esses pacotes de criptografia, preferencialmente os primeiros."
           }
         }
       }
@@ -1330,6 +2662,30 @@
             "state" : "translated",
             "value" : "Alternative Server bearbeiten…"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Modificar servidores alternativos..."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Modifier les serveurs alternatifs..."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "代替サーバーを変更する…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Modificar servidores alternativos..."
+          }
         }
       }
     },
@@ -1353,6 +2709,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verbindung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Conexión"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "connexion"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "接続"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "conexão"
           }
         }
       }
@@ -1378,6 +2758,30 @@
             "state" : "translated",
             "value" : "Netzwerkverbindung"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Conector de red"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Socket réseau"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ネットワークソケット"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Entrada de rede"
+          }
         }
       }
     },
@@ -1401,6 +2805,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Neuer Nickname"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Nuevo apodo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Nouveau surnom"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "新しいニックネーム"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Novo apelido"
           }
         }
       }
@@ -1426,6 +2854,30 @@
             "state" : "translated",
             "value" : "Neuen Nicknamen eingeben"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Introduce un nuevo apodo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Entrez un nouveau surnom"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "新しいニックネームを入力してください"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Digite um novo apelido"
+          }
         }
       }
     },
@@ -1449,6 +2901,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verbindungsbefehle werden vor dem Kanalbeitritt gesendet. Die NickServ-Identifizierung wartet danach bis zu 30 Sekunden auf Bestätigung. Die obige Verzögerung gilt für andere Befehlslisten."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Los comandos de conexión se envían antes de unirse a los canales. La identificación NickServ espera la confirmación durante hasta 30 segundos después del envío. El retraso anterior se aplica a otras listas de comandos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Les commandes de connexion sont envoyées avant de rejoindre les canaux. L'identification NickServ attend une confirmation, pendant jusqu'à 30 secondes après l'envoi. Le délai ci-dessus s'applique aux autres listes de commandes."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "接続コマンドはチャネルに参加する前に送信されます。NickServ識別子は送信後最大30秒間確認を待機します。上記の遅延は他のコマンドリストにも適用されます。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Os comandos de conexão são enviados antes de ingressar em canais. A identificação NickServ aguarda confirmação, por até 30 segundos após o envio. O atraso acima se aplica a outras listas de comandos."
           }
         }
       }
@@ -1474,6 +2950,30 @@
             "state" : "translated",
             "value" : "Nickname"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Apodo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "surnom"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ニックネーム"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "apelido"
+          }
         }
       }
     },
@@ -1497,6 +2997,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Der Server lehnt bereits verwendete Nicknamen ab."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "El servidor rechaza un apodo que ya está en uso."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Le serveur refuse un surnom qui est déjà utilisé."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "サーバーはすでに使用されているニックネームを拒否します。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "O servidor recusa um apelido que já está em uso."
           }
         }
       }
@@ -1522,6 +3046,30 @@
             "state" : "translated",
             "value" : "Wird zur NickServ-Identifizierung oder als SASL-Passwort verwendet. In deinem Schlüsselbund gespeichert."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Usado para identificar con NickServ, o como tu contraseña SASL. Guardado en tu llavero."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Utilisé pour identifier avec NickServ, ou comme votre mot de passe SASL. Stocké dans votre porte-clés."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "NickServ、またはSASLのパスワードとして識別されることがありました。キーチェーンに保存されています。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Usado para identificar com NickServ ou como sua senha SASL. Armazenado na sua chaveiro."
+          }
         }
       }
     },
@@ -1545,6 +3093,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "NickServ- oder SASL-Passwort"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "NickServ o SASL Contraseña"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Mot de passe NickServ ou SASL"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "NickServまたはSASL パスワード"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "NickServ ou SASL Senha"
           }
         }
       }
@@ -1570,6 +3142,30 @@
             "state" : "translated",
             "value" : "Kein Zertifikat ausgewählt"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ningún certificado seleccionado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Aucun certificat sélectionné"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "証明書を選択されていません"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Sem certificado selecionado"
+          }
         }
       }
     },
@@ -1593,6 +3189,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Keine Zertifikate verfügbar"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Sin certificados disponibles"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Aucun certificat disponible"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "証明書は利用できません"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Sem certificados disponíveis"
           }
         }
       }
@@ -1618,6 +3238,30 @@
             "state" : "translated",
             "value" : "Systemeinstellungen öffnen…"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Abrir Ajustes del sistema..."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ouvrez les paramètres du système..."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "システム設定を開きます…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Abra as Configurações do Sistema..."
+          }
         }
       }
     },
@@ -1641,6 +3285,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nachricht beim Verlassen und Beenden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Mensaje de salida y renuncia"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Message de départ et de résiliation"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "退社メッセージ"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Mensagem de Partir e Recuar"
           }
         }
       }
@@ -1666,6 +3334,30 @@
             "state" : "translated",
             "value" : "Befehle beim Verbinden ausführen"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ejecutar comandos en Conectar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Exécuter des commandes sur Connect"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Connectでコマンドを実行する"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Executar comandos no Conectar"
+          }
         }
       }
     },
@@ -1689,6 +3381,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Server regelmäßig per PING prüfen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Periodicamente PING el servidor"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Periodiquement PING le serveur"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "定期的にPINGサーバー"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Periodicamente PING o servidor"
           }
         }
       }
@@ -1714,6 +3430,30 @@
             "state" : "translated",
             "value" : "\"%@\" ist kein gültiger Nickname. Trenne alternative Nicknamen durch Leerzeichen, zum Beispiel: Guest1 Guest2 Guest3"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "“%@” no es un apodo válido. Separe los apodos alternativos con espacios, por ejemplo: Guest1 Guest2 Guest3"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "« %@ » n'est pas un surnom valide. Séparez les surnoms alternatifs par des espaces, par exemple : Guest1 Guest2 Guest3"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "「%@」は有効なニックネームではありません。代替ニックネームはスペースで区切ってください。例：Guest1 Guest2 Guest3"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "“%@” não é um apelido válido. Separe apelidos alternativos com espaços, por exemplo: Guest1 Guest2 Guest3"
+          }
         }
       }
     },
@@ -1737,6 +3477,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Gib eine Proxyadresse wie proxy.example.com ein."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Introduce una dirección de proxy, como proxy.example.com."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Saisissez une adresse proxy, comme proxy.example.com."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "proxy.example.comのようなプロキシアドレスを入力します。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Digite um endereço de proxy, como proxy.example.com."
           }
         }
       }
@@ -1762,6 +3526,30 @@
             "state" : "translated",
             "value" : "Gib einen Benutzernamen ohne Leerzeichen ein."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Introduzca un nombre de usuario sin espacios."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Entrez un nom d'utilisateur sans espaces."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "スペースなしでユーザー名を入力してください。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Digite um nome de usuário sem espaços."
+          }
         }
       }
     },
@@ -1785,6 +3573,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Adresse"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dirección"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "adresse"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "住所"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "endereço"
           }
         }
       }
@@ -1810,6 +3622,30 @@
             "state" : "translated",
             "value" : "Passwort"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Contraseña"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "mot de passe"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "パスワード"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "senha"
+          }
         }
       }
     },
@@ -1833,6 +3669,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wird in deinem Schlüsselbund gespeichert."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Guardado en tu llavero."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Stocké dans votre porte-clés."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "キーチェーンに保存されています。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Guardado no seu chaveiro."
           }
         }
       }
@@ -1858,6 +3718,30 @@
             "state" : "translated",
             "value" : "Port"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Puerto"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "port"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "港"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "porta"
+          }
         }
       }
     },
@@ -1881,6 +3765,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Proxyserver"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Servidor proxy"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Serveur proxy"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "プロキシサーバー"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Servidor Proxy"
           }
         }
       }
@@ -1906,6 +3814,30 @@
             "state" : "translated",
             "value" : "Proxytyp"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Tipo de proxy"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Type de proxy"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "プロキシの種類"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Tipo de Proxy"
+          }
         }
       }
     },
@@ -1929,6 +3861,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Automatisch"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Automático"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "automatique"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "自動的"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "automático"
           }
         }
       }
@@ -1954,6 +3910,30 @@
             "state" : "translated",
             "value" : "HTTP-Proxy"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Proxy HTTP"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Proxy HTTP"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "HTTPプロキシ"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Proxy HTTP"
+          }
         }
       }
     },
@@ -1977,6 +3957,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Keine"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ninguno"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "aucun"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "なし"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "nenhum"
           }
         }
       }
@@ -2002,6 +4006,30 @@
             "state" : "translated",
             "value" : "SOCKS-5-Proxy"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "SOCKS 5 Proxy"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "CHAUSSETTES 5 Proxy"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ソックス5プロキシ"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "PROXÓRIA SOCKS 5"
+          }
         }
       }
     },
@@ -2025,6 +4053,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tor-Anonymisierungsnetzwerk"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Red de Anonymidad Tor"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Réseau d'anonymat Tor"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Tor匿名ネットワーク"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Rede de Anonimato Tor"
           }
         }
       }
@@ -2050,6 +4102,30 @@
             "state" : "translated",
             "value" : "Benutzername"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Nombre de usuario"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "nom d'utilisateur"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ユーザー名"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "nome de usuário"
+          }
         }
       }
     },
@@ -2073,6 +4149,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Echter Name"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Nombre real"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Nom réel"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "実名"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Nome real"
           }
         }
       }
@@ -2098,6 +4198,30 @@
             "state" : "translated",
             "value" : "Nach Trennung erneut verbinden"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Reconectar después de desconectar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Se reconnecter après déconnexion"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "切断後に再接続する"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Reconectar após desconectar"
+          }
         }
       }
     },
@@ -2121,6 +4245,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Neu laden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Recargar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "recharger"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "リロード"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "recarregar"
           }
         }
       }
@@ -2146,6 +4294,30 @@
             "state" : "translated",
             "value" : "Eintrag entfernen"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Eliminar entrada"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Supprimer l'entrée"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "エントリを削除する"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Remover entrada"
+          }
         }
       }
     },
@@ -2169,6 +4341,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kanal entfernen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Eliminar canal"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Supprimer la chaîne"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "チャンネルを削除する"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Remover canal"
           }
         }
       }
@@ -2194,6 +4390,30 @@
             "state" : "translated",
             "value" : "Hervorhebung entfernen"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Eliminar resaltar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Supprimer le soulignement"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ハイライトを削除する"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Remover Destaque"
+          }
         }
       }
     },
@@ -2217,6 +4437,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zertifikat zurücksetzen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Restablecer certificado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Réinitialiser le certificat"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "証明書のリセット"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Redefinir certificado"
           }
         }
       }
@@ -2242,6 +4486,30 @@
             "state" : "translated",
             "value" : "Befehle ohne Ausgabe ausführen"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ejecutar comandos en silencio"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Exécuter des commandes en silence"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "コマンドを静かに実行する"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Executar comandos em silêncio"
+          }
         }
       }
     },
@@ -2265,6 +4533,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wähle ein Zertifikat, das beim verschlüsselten Verbinden gesendet werden soll."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Selecciona un certificado para enviarlo cuando te conectes de forma segura."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Sélectionnez un certificat à envoyer lorsque vous vous connectez en toute sécurité."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "安全に接続する際に送信する証明書を選択します。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Selecione um certificado para enviar quando você se conectar com segurança."
           }
         }
       }
@@ -2290,6 +4582,30 @@
             "state" : "translated",
             "value" : "Zertifikat auswählen…"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Seleccionar certificado..."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Sélectionner le certificat..."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "証明書を選択..."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Selecione Certificado..."
+          }
         }
       }
     },
@@ -2313,6 +4629,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Serveradresse"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dirección del servidor"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Adresse du serveur"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "サーバーアドレス"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Endereço do servidor"
           }
         }
       }
@@ -2338,6 +4678,30 @@
             "state" : "translated",
             "value" : "Gib einen Netzwerknamen wie Libera.Chat ein, um Adresse, Port und Verschlüsselung auszufüllen."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Escribe un nombre de red, como Libera.Chat, para completar su dirección, puerto y cifrado."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Saisissez un nom de réseau, tel que Libera.Chat, pour renseigner son adresse, son port et son cryptage."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Libera.Chatなどのネットワーク名を入力して、そのアドレス、ポート、暗号化情報を入力します。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Digite um nome de rede, como Libera.Chat, para preencher seu endereço, porta e criptografia."
+          }
         }
       }
     },
@@ -2361,6 +4725,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Serverpasswort"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Contraseña del servidor"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Mot de passe du serveur"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "サーバーパスワード"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Senha do servidor"
           }
         }
       }
@@ -2386,6 +4774,30 @@
             "state" : "translated",
             "value" : "Wird beim Verbinden mit PASS gesendet und in deinem Schlüsselbund gespeichert."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Se envía con el comando PASS al conectarse y se almacena en tu llavero."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Envoyé avec la commande PASS lors de la connexion et stocké dans votre porte-clés."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "接続時にPASSコマンドで送信され、キーチェーンに保存されます。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Enviado com o comando PASS ao conectar e armazenado na sua chaveiro."
+          }
         }
       }
     },
@@ -2409,6 +4821,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Port"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Puerto"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "port"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "港"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "porta"
           }
         }
       }
@@ -2434,6 +4870,30 @@
             "state" : "translated",
             "value" : "Erweitert"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Avanzado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "avancé"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "高度な"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "avançado"
+          }
         }
       }
     },
@@ -2457,6 +4917,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zeichenkodierung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Codificación"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "encodage"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "エンコーディング"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "codificação"
           }
         }
       }
@@ -2482,6 +4966,30 @@
             "state" : "translated",
             "value" : "Allgemein"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "General"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "général"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "一般"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "geral"
+          }
         }
       }
     },
@@ -2505,6 +5013,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hervorhebungen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Destacados"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Points forts"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ハイライト"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Destaques"
           }
         }
       }
@@ -2530,6 +5062,30 @@
             "state" : "translated",
             "value" : "Identität"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Identidad"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "identité"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "アイデンティティ"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "identidade"
+          }
         }
       }
     },
@@ -2553,6 +5109,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nachrichten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Mensajes"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Messages"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "メッセージ"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Mensagens"
           }
         }
       }
@@ -2578,6 +5158,30 @@
             "state" : "translated",
             "value" : "Ausschließen"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Excluir"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "exclure"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "除外する"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "excluir"
+          }
         }
       }
     },
@@ -2601,6 +5205,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Treffer"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Partido"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "match"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "マッチ"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "combinar"
           }
         }
       }
@@ -2626,6 +5254,30 @@
             "state" : "translated",
             "value" : "Beim Verbinden unsichtbaren Modus (+i) setzen"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Configurar el modo invisible (+i) al conectarse"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Configurer le mode invisible (+i) lors de la connexion"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "接続時に無視（+i）モードを設定する"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Defina o modo invisível (+i) ao conectar"
+          }
         }
       }
     },
@@ -2649,6 +5301,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "SHA-1-Fingerabdruck"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Huella dactilar SHA-1"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "empreinte digitale SHA-1"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "SHA-1指紋"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Impressão digital SHA-1"
           }
         }
       }
@@ -2674,6 +5350,30 @@
             "state" : "translated",
             "value" : "SHA-256-Fingerabdruck"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Huella dactilar SHA-256"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "empreinte digitale SHA-256"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "SHA-256指紋"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Impressão digital SHA-256"
+          }
         }
       }
     },
@@ -2697,6 +5397,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "SHA-512-Fingerabdruck"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Huella dactilar SHA-512"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "empreinte digitale SHA-512"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "SHA-512指紋"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Impressão digital SHA-512"
           }
         }
       }
@@ -2722,6 +5446,30 @@
             "state" : "translated",
             "value" : "Mit SASL anmelden"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Inicia sesión con SASL"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Se connecter avec SASL"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "SASLでサインインしてください"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Faça login com SASL"
+          }
         }
       }
     },
@@ -2745,6 +5493,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Gib auf der nächsten Seite Serveradresse, Port und Passwort ein."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Introduzca la dirección, el puerto y la contraseña del servidor en la siguiente pantalla."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Saisissez l'adresse, le port et le mot de passe du serveur sur l'écran suivant."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "次の画面でサーバーのアドレス、ポート、パスワードを入力します。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Insira o endereço, porta e senha do servidor na próxima tela."
           }
         }
       }
@@ -2770,6 +5542,30 @@
             "state" : "translated",
             "value" : "Dieses Netzwerk empfiehlt keine Kanäle."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Esta red no sugiere ningún canal."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ce réseau ne suggère aucun canal."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このネットワークではチャンネルが提案されていません。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Esta rede não sugere nenhum canal."
+          }
         }
       }
     },
@@ -2793,6 +5589,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wähle ein Netzwerk, um dessen Verbindungsdaten zu übernehmen, oder Eigener Server, um sie selbst einzugeben."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Elige una red para rellenar sus detalles de conexión, o elige Servidor personalizado para introducir el tuyo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Choisissez un réseau pour renseigner ses détails de connexion, ou choisissez Serveur personnalisé pour saisir le vôtre."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "接続詳細を入力するにはネットワークを選択するか、カスタムサーバーを選択してご自身のものを入力してください。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Escolha uma rede para preencher seus detalhes de conexão ou escolha Servidor Personalizado para inserir o seu próprio."
           }
         }
       }
@@ -2818,6 +5638,30 @@
             "state" : "translated",
             "value" : "Registrierung erforderlich"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Se requiere registro"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Inscription requise"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "登録が必要です"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Registro obrigatório"
+          }
         }
       }
     },
@@ -2841,6 +5685,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Empfohlene Kanäle"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Canales sugeridos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Chaînes suggérées"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "提案されたチャンネル"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Canais sugeridos"
           }
         }
       }
@@ -2866,6 +5734,30 @@
             "state" : "translated",
             "value" : "Diese Kanäle werden zur Kanalliste der Verbindung hinzugefügt und können dort einzeln entfernt werden."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Estos canales se añaden a la lista de canales de la conexión, donde cualquiera de ellos se puede eliminar."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ces canaux sont ajoutés à la liste des canaux de la connexion, où chacun d’eux peut être supprimé."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "これらのチャンネルは接続のチャンネルリストに追加され、それらのいずれかを取り除くことができます。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Esses canais são adicionados à lista de canais da conexão, onde qualquer um deles pode ser removido."
+          }
         }
       }
     },
@@ -2889,6 +5781,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Website"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Sitio web"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "site web"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ウェブサイト"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "site"
           }
         }
       }
@@ -2914,6 +5830,30 @@
             "state" : "translated",
             "value" : "Im Schlüsselbund sind keine Zertifikate zur Identifizierung eingerichtet.\n\nZertifikate müssen folgende Kriterien erfüllen:\n\t• Zertifikatstyp: \"SSL Client\"\n\t• Passender privater Schlüssel vorhanden"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "No hay certificados en la llavero configurados para fines de identificación.\n\nLos certificados deben cumplir con los siguientes criterios:\n\t• El certificado está configurado como tipo: \"SSL Cliente\"\n\t• El certificado tiene una clave privada coincidente"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Il n’y a aucun certificat dans la clé USB configuré à des fins d’identité.\n\nLes certificats doivent répondre aux critères suivants :\n\t• Le certificat est configuré comme type : \"SSL Client\"\n\t• Le certificat possède une clé privée correspondante"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "本人確認のために設定されたキーチェーンには証明書がありません。\n\n証明書は以下の基準を満たしている必要があります。\n\t• 証明書はタイプとして「SSL Client」として構成されています。\n\t• 証明書には対応するプライベートキーがあります"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Não há certificados no chaveiro configurados para fins de identificação.\n\nOs certificados devem atender aos seguintes critérios:\n\t• O certificado está configurado como tipo: \"SSL Cliente\"\n\t• O certificado tem a chave privada correspondente"
+          }
         }
       }
     },
@@ -2937,6 +5877,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verbindungseinstellungen neu laden?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "¿Reiniciar la configuración de la conexión?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Réinitialiser les paramètres de la connexion ?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "接続の設定を再読み込みしますか？"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Recarregar as configurações da conexão?"
           }
         }
       }
@@ -2962,6 +5926,30 @@
             "state" : "translated",
             "value" : "Tor Browser muss vor dem Verbinden gestartet sein."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "El navegador Tor debe estar funcionando antes de conectarse."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Le navigateur Tor doit être en cours d'exécution avant de se connecter."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "接続する前にTorブラウザが実行されている必要があります。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "O Tor Browser deve estar executando antes de se conectar."
+          }
         }
       }
     },
@@ -2985,6 +5973,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Benutzername"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Nombre de usuario"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "nom d'utilisateur"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ユーザー名"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "nome de usuário"
           }
         }
       }
@@ -3010,6 +6022,30 @@
             "state" : "translated",
             "value" : "Zertifikatskette beim Verbinden überprüfen"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Validar la cadena de certificados al conectarse"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Valider la chaîne de certificats lors de la connexion"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "接続時に証明書チェーンを検証する"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Valide a cadeia de certificados ao conectar"
+          }
         }
       }
     },
@@ -3033,6 +6069,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Herstellerspezifisch"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Específico del proveedor"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Spécifique au fournisseur"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ベンダー固有"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Específico do fornecedor"
           }
         }
       }
@@ -3058,6 +6118,30 @@
             "state" : "translated",
             "value" : "Cipher-Suites in dieser Liste"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Conjuntos de cifrado en esta lista"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Packs de chiffrement dans cette liste"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このリスト内の暗号化スイート"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Pacotes de criptografia nesta lista"
+          }
         }
       }
     },
@@ -3081,6 +6165,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Warnen, wenn Kanälen nicht beigetreten werden kann"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Advertir si no se pueden unirse a los canales"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Avertir si les chaînes ne peuvent pas être rejointes"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "チャンネルに参加できない場合、警告する"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Aviso se os canais não podem ser conectados"
           }
         }
       }
@@ -3106,6 +6214,30 @@
             "state" : "translated",
             "value" : "Deine ungesicherten Änderungen werden verworfen."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Los cambios no guardados serán descartados."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Vos modifications non enregistrées seront rejetées."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "保存されていない変更は破棄されます。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Suas alterações não salvas serão descartadas."
+          }
         }
       }
     },
@@ -3129,6 +6261,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ZNC-Bouncer"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ZNC Bouncer"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ZNC Bouncer"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ZNCバンサー"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ZNC Bouncer"
           }
         }
       }
@@ -3154,6 +6310,30 @@
             "state" : "translated",
             "value" : "Beim Verbinden nicht automatisch Kanälen beitreten"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "No te unas automáticamente a los canales al conectarte"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ne rejoignez pas automatiquement les canaux lors de la connexion"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "接続時にチャネルを自動的に参加させない"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Não se junte automaticamente a canais ao conectar"
+          }
         }
       }
     },
@@ -3177,6 +6357,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Keine Benachrichtigungen für wiedergegebene Nachrichten anzeigen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "No mostrar notificaciones para el búfer de reproducción"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ne pas afficher les notifications pour le tampon de lecture"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "再生バッファーの通知を表示しない"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Não mostrar notificações para o buffer de reprodução"
           }
         }
       }
@@ -3202,6 +6406,30 @@
             "state" : "translated",
             "value" : "Nur verpasste Nachrichten wiedergeben"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Solo reproduce los mensajes que te has perdido"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ne reproduisez que les messages que vous avez manqués"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "見逃したメッセージだけを再生する"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Reproduza apenas as mensagens que você perdeu"
+          }
         }
       }
     },
@@ -3225,6 +6453,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Diese Optionen gelten für ZNC 1.2 und neuer."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Estas opciones se dirigen a ZNC 1.2 y posteriores."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ces options ciblent ZNC 1.2 et versions ultérieures."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "これらのオプションはZNC 1.2以降を対象としています。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Essas opções visam ZNC 1.2 e posterior."
           }
         }
       }
@@ -3250,6 +6502,30 @@
             "state" : "translated",
             "value" : "Wähle Alle Kanäle, um diese Regel überall anzuwenden."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Elige Todos los canales para aplicar esta regla en todas partes."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Choisissez Tous les canaux pour appliquer cette règle partout."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このルールをすべてのチャンネルに適用するには、すべてのチャンネルを選択します。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Escolha Todos os Canais para aplicar esta regra em todos os lugares."
+          }
         }
       }
     },
@@ -3273,6 +6549,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kanal"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Canal"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "canal"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "チャンネル"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "canal"
           }
         }
       }
@@ -3298,6 +6598,30 @@
             "state" : "translated",
             "value" : "Das Wort oder die Wortgruppe, nach der diese Regel sucht."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "La palabra o frase con la que coincide esta regla."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Le mot ou la phrase avec laquelle cette règle correspond."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このルールに一致する単語またはフレーズ。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "A palavra ou frase que esta regra corresponde."
+          }
         }
       }
     },
@@ -3321,6 +6645,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Schlüsselwort"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Palabra clave"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "mot clé"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "キーワード"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "palavra-chave"
           }
         }
       }
@@ -3346,6 +6694,30 @@
             "state" : "translated",
             "value" : "Übereinstimmungstyp"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Tipo de partido"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Type de match"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "マッチタイプ"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Tipo de partida"
+          }
         }
       }
     },
@@ -3369,6 +6741,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hervorhebungsregel"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Regla de resaltado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Règle de mise en évidence"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ハイライトルール"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Regra de destaque"
           }
         }
       }
@@ -3394,6 +6790,30 @@
             "state" : "translated",
             "value" : "Ein Schlüsselwort nur für diese Verbindung hervorheben oder ignorieren."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Destaca o ignora una palabra clave en esta conexión solo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Mettre en évidence ou ignorer un mot-clé sur cette connexion seule."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "この接続だけでキーワードをハイライトまたは無視します。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Realce ou ignore uma palavra-chave nesta conexão apenas."
+          }
         }
       }
     },
@@ -3417,6 +6837,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wort oder Wortgruppe"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Palabra o frase"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Mot ou expression"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "単語またはフレーズ"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Palavra ou frase"
           }
         }
       }
@@ -3442,6 +6886,30 @@
             "state" : "translated",
             "value" : "Server hinzufügen"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Añadir servidor"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ajouter un serveur"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "サーバーを追加する"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Adicionar Servidor"
+          }
         }
       }
     },
@@ -3465,6 +6933,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verschlüsselt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Seguro"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "sécurisé"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "安全な"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "seguro"
           }
         }
       }
@@ -3490,6 +6982,30 @@
             "state" : "translated",
             "value" : "Gib eine ganze Zahl zwischen 1 und 65.535 ein."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Introduzca un número entero entre 1 y 65.535."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Entrez un nombre entier entre 1 et 65 535."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "1と65,535の間の整数を入力してください。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Digite um número inteiro entre 1 e 65.535."
+          }
         }
       }
     },
@@ -3513,6 +7029,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Glasstual versucht die Server von oben nach unten. Ändere die Reihenfolge mit den Pfeiltasten; der erste Server ist der primäre."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Glasstual prueba estos servidores de arriba abajo. Usa los botones de flecha para cambiar su orden; el primer servidor es primario."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Glasstual essaie ces serveurs du haut en bas. Utilisez les boutons fléchers pour modifier leur ordre ; le premier serveur est principal."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Glasstualは、これらのサーバーを上から下まで試します。矢印ボタンを使用して順序を変更してください。最初のサーバーが優先されます。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Glasstual tenta esses servidores de cima para baixo. Use os botões de seta para alterar sua ordem; o primeiro servidor é primário."
           }
         }
       }
@@ -3538,6 +7078,30 @@
             "state" : "translated",
             "value" : "Nach unten"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Mueve hacia abajo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Déplacer vers le bas"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "下に移動する"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Mover para baixo"
+          }
         }
       }
     },
@@ -3561,6 +7125,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nach oben"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Mueve hacia arriba"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Monter"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "上に移動する"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Mover para cima"
           }
         }
       }
@@ -3586,6 +7174,30 @@
             "state" : "translated",
             "value" : "Port"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Puerto"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "port"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "港"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "porta"
+          }
         }
       }
     },
@@ -3609,6 +7221,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Server entfernen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Eliminar servidor"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Supprimer le serveur"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "サーバーを削除する"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Remover Servidor"
           }
         }
       }
@@ -3634,6 +7270,30 @@
             "state" : "translated",
             "value" : "Serverliste"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Lista de servidores"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Liste des serveurs"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "サーバーリスト"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Lista de servidores"
+          }
         }
       }
     },
@@ -3657,6 +7317,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wird beim Verbinden mit PASS gesendet und in deinem Schlüsselbund gespeichert. Dies ist nicht dein NickServ-Passwort."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Se envía con el comando PASS al conectarse y se almacena en tu llavero. Esta no es tu contraseña NickServ."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Envoyé avec la commande PASS lors de la connexion, et stocké dans votre porte-clés. Ce n'est pas votre mot de passe NickServ."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "接続時にPASSコマンドで送信され、キーチェーンに保存されます。これはあなたのNickServパスワードではありません。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Enviado com o comando PASS ao conectar e armazenado na sua chaveiro. Esta não é a sua senha NickServ."
           }
         }
       }
@@ -3682,6 +7366,30 @@
             "state" : "translated",
             "value" : "Gib eine Serveradresse wie irc.example.com ein."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Introduzca una dirección de servidor, como irc.example.com."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Saisissez une adresse de serveur, comme irc.example.com."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "irc.example.comのようなサーバーアドレスを入力してください。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Digite um endereço de servidor, como irc.example.com."
+          }
         }
       }
     },
@@ -3705,6 +7413,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Alternative Server"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Servidores alternativos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Serveurs alternatifs"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "代替サーバー"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Servidores alternativos"
           }
         }
       }
@@ -3730,6 +7462,30 @@
             "state" : "translated",
             "value" : "Keine Kanäle"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Sin canales"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Pas de chaînes"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "チャンネルはありません"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Sem Canais"
+          }
         }
       }
     },
@@ -3753,6 +7509,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Füge Kanäle hinzu und wähle aus, welchen du beim Verbinden beitreten möchtest."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Añade canales y elige cuáles unirte al conectarte."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ajoutez des chaînes et choisissez celles auxquelles vous souhaitez vous joindre lors de la connexion."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "チャンネルを追加し、接続時にどのチャンネルに参加するかを選択します。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Adicione canais e escolha quais deles você deseja se juntar ao se conectar."
           }
         }
       }
@@ -3778,6 +7558,30 @@
             "state" : "translated",
             "value" : "Keine Hervorhebungsregeln"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Sin reglas de resaltado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Pas de règles de mise en évidence"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ハイライトルールなし"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Sem regras de destaque"
+          }
         }
       }
     },
@@ -3801,6 +7605,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Füge Schlüsselwörter hinzu, die auf diesem Server hervorgehoben oder ausgeschlossen werden sollen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Añade palabras clave para resaltar o excluir en este servidor."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ajoutez des mots-clés pour mettre en évidence ou exclure sur ce serveur."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このサーバーでハイライトまたは除外するためにキーワードを追加します。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Adicione palavras-chave para destacar ou excluir neste servidor."
           }
         }
       }
@@ -3826,6 +7654,30 @@
             "state" : "translated",
             "value" : "Keine Adressbucheinträge"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Sin entradas del libro de direcciones"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Aucune entrée du carnet d’adresses"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "アドレス帳の項目はありません"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Sem entradas do Livro de Endereços"
+          }
         }
       }
     },
@@ -3849,6 +7701,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Füge Ignorierregeln hinzu oder verfolge, wann Benutzer online kommen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Añade reglas de ignorar o sigue a los usuarios cuando se conectan a internet."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ajoutez des règles d'ignoration ou suivez les utilisateurs lorsqu'ils se connectent en ligne."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "オンラインになったユーザーを無視するルールを追加したり、追跡したりします。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Adicione regras de ignorar ou rastreie usuários quando eles entram online."
           }
         }
       }
