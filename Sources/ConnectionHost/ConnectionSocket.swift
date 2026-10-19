@@ -186,6 +186,10 @@ actor ConnectionSocket {
 	private var sending = false
 
 	private var alternateDisconnectError: ConnectionError?
+	/// A terminal event has entered the stream. The host must keep its reader
+	/// alive until it delivers that event, even though this socket has already
+	/// returned to `.idle`.
+	private var disconnectEventPending = false
 
 	/// Whether the owner asked for this transport to close. A close it asked for
 	/// is never answered by another dial.
@@ -245,15 +249,15 @@ actor ConnectionSocket {
 
 	 The owner waits for that event before letting go of the transport, so this
 	 has to be honest about it. A close already under way is still on its way to
-	 one. `false` means there is nothing to wait for: the transport never
-	 dialled, or has already finished. */
+	 one, and a terminal event already queued still needs delivery. `false`
+	 means there is nothing to wait for because the transport never dialled. */
 	@discardableResult
 	func close() -> Bool {
 		/* Recorded before the guard: a close asked for while the transport was
 		 already ending its own dial still has to stop the legacy retry. */
 		closedByOwner = true
 
-		return endDial()
+		return endDial() || disconnectEventPending
 	}
 
 	/** Ends the dial in flight, recording why.
@@ -568,6 +572,7 @@ actor ConnectionSocket {
 	/// Reports the transport gone, with the reason the dials it ran settled on.
 	private func onDisconnect(with error: ConnectionError?) {
 		resetState()
+		disconnectEventPending = true
 
 		events.yield(.disconnected(error))
 

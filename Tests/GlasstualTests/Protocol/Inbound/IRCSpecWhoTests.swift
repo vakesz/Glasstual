@@ -287,12 +287,73 @@ struct IRCSpecWhoTests {
 	func endOfWhoClosesTheRequest() throws {
 		let session = session()
 
-		session.requestedCommands.recordWhoRequestOpenedAsVisible()
+		session.requestedCommands.recordWhoRequestOpenedAsVisible(for: "#chan")
 
 		#expect(session.requestedCommands.visibleWhoRequest)
 
 		try receive(":irc.example.net 315 me #chan :End of /WHO list", on: session)
 
 		#expect(session.requestedCommands.visibleWhoRequest == false)
+	}
+
+	/// Solanum answers a rate limited `WHO` with `RPL_TRYAGAIN` and no `315`.
+	/// With the sweep's request unanswered, the /who behind it read as a
+	/// hidden one until the session reconnected: the refusal has to close the
+	/// request the terminator would have.
+	@Test("263 closes the WHO request the missing 315 leaves open")
+	func rateLimitRefusalClosesTheWhoRequest() throws {
+		let session = session()
+
+		session.requestedCommands.recordWhoRequestOpened()
+		session.requestedCommands.recordWhoRequestOpenedAsVisible()
+		#expect(session.requestedCommands.visibleWhoRequest == false)
+
+		try receive(
+			":irc.example.net 263 me WHO :You have attempted to initiate too many requests",
+			on: session
+		)
+
+		#expect(session.requestedCommands.visibleWhoRequest)
+		#expect(session.requestedCommands.hasOpenHiddenWhoRequest == false)
+	}
+
+	/// ircd-seven's `ERR_TOOMANYMATCHES` alias is a terminator-less WHO refusal.
+	@Test("736 closes the WHO request the missing 315 leaves open")
+	func tooManyMatchesRefusalClosesTheWhoRequest() throws {
+		let session = session()
+
+		session.requestedCommands.recordWhoRequestOpened(for: "#big")
+
+		try receive(":irc.example.net 736 me WHO #big :Too many matches", on: session)
+
+		#expect(session.requestedCommands.hasOpenHiddenWhoRequest == false)
+	}
+
+	/// The standard `ERR_TOOMANYMATCHES` has the command then its mask. Closing
+	/// the oldest WHO would let an error for one channel consume another's reply.
+	@Test("416 closes only the WHO request it names")
+	func standardTooManyMatchesClosesTheNamedWhoRequest() throws {
+		let session = session()
+
+		session.requestedCommands.recordWhoRequestOpened(for: "#first")
+		session.requestedCommands.recordWhoRequestOpened(for: "#second")
+
+		try receive(":irc.example.net 416 me WHO #second :Too many matches", on: session)
+
+		#expect(session.requestedCommands.hasOpenHiddenWhoRequest)
+
+		try receive(":irc.example.net 315 me #first :End of /WHO list", on: session)
+
+		#expect(session.requestedCommands.hasOpenHiddenWhoRequest == false)
+	}
+
+	@Test("416 for another command does not close a WHO request")
+	func standardTooManyMatchesForAnotherCommandLeavesWhoOpen() throws {
+		let session = session()
+		session.requestedCommands.recordWhoRequestOpened(for: "#channel")
+
+		try receive(":irc.example.net 416 me NAMES * :Too many matches", on: session)
+
+		#expect(session.requestedCommands.hasOpenHiddenWhoRequest)
 	}
 }

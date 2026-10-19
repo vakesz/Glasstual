@@ -114,12 +114,12 @@ struct FileTransferQuotaTests {
 		running.processedFilesize = 400
 		model.add(running)
 
-		#expect(model.pendingReceiveByteCount == 600)
+		#expect(model.pendingReceiveByteCount() == 600)
 
 		running.transferStatus = .complete
 
 		// A finished download has already written its bytes; they are not pending.
-		#expect(model.pendingReceiveByteCount == 0)
+		#expect(model.pendingReceiveByteCount() == 0)
 	}
 
 	/// A transfer that somehow reports more written than announced must not
@@ -133,7 +133,28 @@ struct FileTransferQuotaTests {
 		running.processedFilesize = 4000
 		model.add(running)
 
-		#expect(model.pendingReceiveByteCount == 0)
+		#expect(model.pendingReceiveByteCount() == 0)
+	}
+
+	/// Two offers admitted in the same window each saw the other as new and
+	/// empty: neither reserved its bytes for the other, and the second one
+	/// found out about the full volume on its last block.
+	@Test("Unanswered offers reserve their bytes against the next offer's room")
+	func unansweredOffersReserveTheirBytes() throws {
+		let session = TestServerSession()
+		let model = FileTransferList()
+
+		let first = try receiver(on: session, filename: "big.iso", filesize: 1000)
+		let second = try receiver(on: session, filename: "more.iso", filesize: 2000)
+
+		model.add(first)
+		model.add(second)
+
+		#expect(first.transferStatus == .stopped)
+		#expect(model.pendingReceiveByteCount() == 3000)
+
+		// A fresh offer's own bytes are what the caller adds beside the rest.
+		#expect(model.pendingReceiveByteCount(excluding: second) == 1000)
 	}
 
 	@Test("A destination with no room refuses the offer")

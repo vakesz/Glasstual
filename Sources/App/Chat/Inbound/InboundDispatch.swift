@@ -52,14 +52,20 @@ extension ServerSession {
 	/// groups a known numeric belongs to, or a reply this session only prints.
 	func receiveNumericReply(_ message: Message) {
 		let rawNumeric = message.commandNumeric
+		let numeric = ServerNumeric(rawValue: rawNumeric)
+		let shouldPrint = numeric?.requiresSpecialFiltering == true || shouldPrintReceivedMessage(message)
+
+		if numeric?.isRateLimitRefusal == true {
+			/* A refusal closes no reply of its own, so the requests it answers
+			 are closed here before the broad 400–596 error routing sees it. */
+			receiveRateLimitRefusalReply(message, shouldPrint: shouldPrint)
+			return
+		}
 
 		if ServerNumeric.isErrorReply(rawNumeric) {
 			receiveErrorNumericReply(message)
 			return
 		}
-
-		let numeric = ServerNumeric(rawValue: rawNumeric)
-		let shouldPrint = numeric?.requiresSpecialFiltering == true || shouldPrintReceivedMessage(message)
 
 		if let numeric, let group = numeric.group {
 			switch group {

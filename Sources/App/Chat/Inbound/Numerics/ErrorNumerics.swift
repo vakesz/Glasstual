@@ -61,6 +61,53 @@ extension ServerSession {
 			printErrorReply(message)
 		}
 	}
+
+	/** A rate limit answer for a command whose terminator never follows it.
+
+	 The server answers a refused `WHO` with `RPL_TRYAGAIN` (or one of WHO's
+	 oversized answers with `ERR_TOOMANYMATCHES`) and no `315`; a refused `LIST`
+	 draws the same with no `RPL_LISTEND`. Left open, a WHO request misassigns
+	 every reply behind it, and a LIST keeps its Refresh button disabled — so
+	 the request is closed here, by the command name the refusal names as its
+	 first parameter, exactly the way a failure numeric closes it.
+
+	 A `315` prints through the hands-on command console whenever the request
+	 being closed was the user's own; the refusal prints the same way. A
+	 refused `LIST` prints like the failure numerics do.
+
+	 Called from `InboundDispatch`, before the ordinary reply groups and error
+	 path. `416` is an error numeric while 263 and 736 are not, but all three
+	 have the same terminator-less request-lifecycle effect. */
+	func receiveRateLimitRefusalReply(_ message: Message, shouldPrint: Bool) {
+		switch message.param(at: 1).uppercased() {
+		case "WHO":
+			/* `263` names only the command, while 416 and 736 also name the
+			 target. Use the target when it exists; otherwise IRC's wire order is
+			 the only correlation an unlabelled refusal provides. */
+			let requestWasHidden: Bool? = if message.commandNumeric == ServerNumeric.tryagain.rawValue {
+				requestedCommands.recordWhoRequestClosed()
+			} else if message.params.count > 3 {
+				requestedCommands.recordWhoRequestClosed(for: casefoldedTarget(message.param(at: 2)))
+			} else {
+				requestedCommands.recordWhoRequestClosed()
+			}
+			if requestWasHidden == false, shouldPrint {
+				printReplyToHiddenCommandResponsesConsole(message)
+			}
+
+			return
+		/* A refused LIST sends no RPL_LISTEND, and a list left waiting for
+		 one spins with its Refresh button disabled. */
+		case "LIST":
+			channelListPresentation?.channelListDidFinish(for: self)
+		default:
+			break
+		}
+
+		if shouldPrint {
+			printErrorReply(message)
+		}
+	}
 }
 
 @MainActor

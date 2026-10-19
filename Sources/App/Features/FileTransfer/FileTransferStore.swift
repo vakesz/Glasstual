@@ -169,9 +169,10 @@ extension FileTransferStore {
 			/* Reserving the file first and finding out on the last block that the
 			 volume was full leaves a part-written download and a peer that spent
 			 the whole transfer on it. The offer states its size up front, so the
-			 room for it — beside what the downloads already running still have to
-			 write — can be settled before anything is accepted. */
-			let required = totalFilesize + model.pendingReceiveByteCount
+			 room for it — beside what the other downloads still have to write,
+			 unanswered offers included — can be settled before anything is
+			 accepted. */
+			let required = totalFilesize + model.pendingReceiveByteCount(excluding: controller)
 			guard Self.destination(destinationPath, hasRoomFor: required) else {
 				fileTransferLogger.error("Refused an automatic download the destination volume has no room for")
 				controller.close(with: .storageFull, isFatalError: true)
@@ -390,14 +391,18 @@ extension FileTransferStore {
 	 failing it in a way Try Again can get past when not.
 
 	 The automatic download always asked this; a download the user accepted by
-	 hand did not, and found out on the last block. The downloads already
-	 running still have their own bytes to write, so the room has to be there
-	 beside theirs. */
+	 hand did not, and found out on the last block. The other downloads still
+	 owe their own bytes — the running ones to the volume they are writing, the
+	 unanswered offers to the answers the user has yet to give — so the room
+	 has to be there beside theirs, and not beside this transfer's own, which
+	 is still a stopped row in the list. */
 	private func claimRoom(for transfer: FileTransfer, at path: String) -> Bool {
 		let remaining = transfer.totalFilesize > transfer.processedFilesize
 			? transfer.totalFilesize - transfer.processedFilesize
 			: 0
-		let (required, overflow) = remaining.addingReportingOverflow(model.pendingReceiveByteCount)
+		let (required, overflow) = remaining.addingReportingOverflow(
+			model.pendingReceiveByteCount(excluding: transfer)
+		)
 		guard Self.destination(path, hasRoomFor: overflow ? .max : required) else {
 			fileTransferLogger.error("Refused to start a download the destination volume has no room for")
 			transfer.close(with: .storageFull)

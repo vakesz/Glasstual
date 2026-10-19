@@ -100,6 +100,28 @@ struct BatchLimitsTests {
 		#expect(session.batchMessages.queuedEntries.count == MessageBatchContainer.maximumOpenBatches)
 	}
 
+	@Test("Open batches share one queued-message budget")
+	func openBatchesCannotMultiplyTheQueuedMessageLimit() throws {
+		let session = TestServerSession()
+		session.enableCapability(.batch)
+		for index in 0 ..< MessageBatchContainer.maximumOpenBatches {
+			try session.receiveBatch(message("BATCH +b\(index) chathistory", on: session))
+		}
+		for index in 0 ..< MessageBatchContainer.maximumQueuedMessages {
+			let token = index % MessageBatchContainer.maximumOpenBatches
+			try #expect(session.filterBatchCommandIncomingData(message(
+				"@batch=b\(token) :n\(index)!u@h PRIVMSG #c :queued",
+				on: session
+			)))
+		}
+
+		#expect(session.batchMessages.queuedMessageCount == MessageBatchContainer.maximumQueuedMessages)
+		let overflow = try message("@batch=b0 :overflow!u@h PRIVMSG #c :live", on: session)
+		#expect(session.filterBatchCommandIncomingData(overflow) == false)
+		#expect(session.batchMessages.queuedMessageCount < MessageBatchContainer.maximumQueuedMessages)
+		#expect(session.processedMessages.first?.senderNickname == "n0")
+	}
+
 	/// Closing a batch frees its slot, so a well-behaved server never hits the
 	/// ceiling however many batches it sends in sequence.
 	@Test

@@ -96,12 +96,19 @@ final class FileTransferList {
 		}
 	}
 
-	/// How many bytes the downloads that are running or waiting still have left
-	/// to write, which is what a new offer has to find room beside.
-	var pendingReceiveByteCount: UInt64 {
+	/// How many bytes the downloads that are running, negotiating or still
+	/// unanswered have left to write, which is what a new offer has to find
+	/// room beside. `excluding` is the transfer whose own size the caller adds
+	/// separately: the candidate is already in the list when either check
+	/// runs, and counting it here would charge it to itself twice.
+	func pendingReceiveByteCount(excluding: FileTransfer? = nil) -> UInt64 {
 		transfers.reduce(into: UInt64(0)) { total, transfer in
-			guard transfer.isSender == false,
-			      transfer.transferStatus.isRunning,
+			/* Fresh offers have the stopped status until the user accepts them,
+			 and they must count too, or a peer can add unlimited unanswered offers.
+			 Finished and failed rows stay in the list without spending the limit. */
+			guard transfer !== excluding,
+			      transfer.isSender == false,
+			      transfer.transferStatus.isRunning || transfer.transferStatus == .stopped,
 			      transfer.totalFilesize > transfer.processedFilesize
 			else { return }
 

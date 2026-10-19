@@ -13,11 +13,18 @@ final class MessageBatchContainer {
 	/// opens batches and never closes them stops being able to open more.
 	/// No network opens anywhere near this many at once.
 	static let maximumOpenBatches = 64
+	/// All open batches share this budget. Without it, each permitted root could
+	/// consume a full per-batch queue before any overflow handling runs.
+	static let maximumQueuedMessages = MessageBatch.maximumQueuedEntries
 
 	private var entries: [String: MessageBatch] = [:]
 
 	var queuedEntries: [String: MessageBatch] {
 		entries
+	}
+
+	var queuedMessageCount: Int {
+		entries.values.reduce(into: 0) { $0 += $1.queuedMessages.count }
 	}
 
 	/// Rejects duplicate active tokens as well as batches beyond the ceiling.

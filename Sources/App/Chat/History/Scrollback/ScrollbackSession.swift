@@ -161,7 +161,14 @@ actor ScrollbackSession {
 		}
 		guard isTerminating == false else { return false }
 		let outcome = await store.openDatabase(inDirectory: databaseDirectory)
-		guard isTerminating == false else { return false }
+		/* Termination can begin while the store is opening. Keep the state that
+		 reflects the store's completed open, even though this caller must report
+		 unavailable: a failed close rolls `isTerminating` back, and that session
+		 has to be usable rather than remain attached to its completed load task. */
+		guard isTerminating == false else {
+			loadState = outcome.isOpen ? .loaded : .unavailable
+			return false
+		}
 
 		switch outcome {
 		case .opened:
@@ -299,6 +306,14 @@ actor ScrollbackSession {
 	}
 
 	// MARK: - Termination
+
+	#if DEBUG
+		/// Whether a termination attempt is in flight, for a test that has to
+		/// synchronize with the moment it began rather than race it.
+		var isTerminatingForTesting: Bool {
+			isTerminating
+		}
+	#endif
 
 	@discardableResult
 	func prepareForTermination() async -> ScrollbackSaveOutcome {

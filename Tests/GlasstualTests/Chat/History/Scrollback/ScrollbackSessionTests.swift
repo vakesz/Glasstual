@@ -183,7 +183,7 @@ struct ScrollbackSessionTests {
 		session.write(entry("third")) { #expect($0 == .accepted) }
 		let page = await session.fetchOutcome(newest())
 		#expect(page.entries.map(\.uniqueIdentifier) == ["third"])
-		#expect(await recorder.operations == [.write, .write, .reset, .write, .fetch])
+		#expect(await recorder.operations == [.open, .write, .write, .reset, .write, .fetch])
 		#expect(await session.prepareForTermination() == .saved)
 		try await ScrollbackFixture.close(context)
 	}
@@ -252,6 +252,60 @@ struct ScrollbackSessionTests {
 		await path.set(directory.path)
 		#expect(await session.fetchOutcome(newest()).entries.isEmpty)
 		#expect(await session.isLoaded)
+		#expect(await session.prepareForTermination() == .saved)
+		try await ScrollbackFixture.close(context)
+	}
+
+	@Test("A failed termination close after opening leaves the session usable")
+	func failedTerminationCloseDuringLoadRestoresLoadedState() async throws {
+		let directory = try directory()
+		defer { try? FileManager.default.removeItem(at: directory) }
+		let openGate = ScrollbackOperationGate()
+		let closeGate = ScrollbackOperationGate()
+		let context = try ScrollbackQueries.makeStack(at: directory.appendingPathComponent("history.sqlite"))
+		let store = ScrollbackStore(
+			filenameSetting: ScrollbackFilenameFixture().store,
+			makeStack: { _ in context },
+			willPerform: { operation in
+				if case .open = operation {
+					await openGate.wait()
+				}
+				if case .close = operation {
+					await closeGate.wait()
+				}
+			}
+		)
+		let session = session(store: store, directory: { directory.path })
+		let pending = entry("pending")
+		let load = Task { await session.writeEntry(pending) }
+		await openGate.ready()
+
+		try await context.perform {
+			ScrollbackQueries.insert(pending, in: context, entryIdentifier: 1)
+			let inserted = try #require(context.insertedObjects.first)
+			inserted.setValue(nil, forKey: ScrollbackAttribute.sessionID.rawValue)
+		}
+
+		let termination = Task { await session.prepareForTermination() }
+		/* Prepare runs in the session actor before its first await, so observing
+		 termination there means the load below cannot resume ahead of it. */
+		while await session.isTerminatingForTesting == false {
+			await Task.yield()
+		}
+		await openGate.release()
+		await closeGate.ready()
+		await closeGate.release()
+
+		#expect(await load.value == .unavailable)
+		if case .failed = await termination.value {} else {
+			Issue.record("Termination unexpectedly saved an invalid row")
+		}
+		#expect(await session.retryLoading())
+
+		try await context.perform {
+			let inserted = try #require(context.insertedObjects.first)
+			inserted.setValue(NSNumber(value: pending.sessionIdentifier), forKey: ScrollbackAttribute.sessionID.rawValue)
+		}
 		#expect(await session.prepareForTermination() == .saved)
 		try await ScrollbackFixture.close(context)
 	}

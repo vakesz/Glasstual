@@ -70,15 +70,17 @@ extension ServerSession {
 			return false
 		}
 
-		if rootBatch.queueMessage(message) {
+		if batchMessages.queuedMessageCount < MessageBatchContainer.maximumQueuedMessages,
+		   rootBatch.queueMessage(message)
+		{
 			return true
 		}
 
-		/* A full queue used to drop the message, so a netsplit wider than the
-		 queue lost the QUITs past it and left those people listed in every
-		 channel. What was queued is processed now, in order, and the rest of
-		 the batch as it arrives: the batch loses its replay treatment, but no
-		 line. Its labelled response, if any, can no longer be trusted. */
+		/* A full batch or connection-wide budget used to drop the message, so a
+		 netsplit wider than the queue lost the QUITs past it and left those people
+		 listed in every channel. What was queued is processed now, in order, and
+		 the rest of the batch as it arrives: the batch loses its replay treatment,
+		 but no line. Its labelled response, if any, can no longer be trusted. */
 		rootBatch.hasOverflowed = true
 		rootBatch.labeledDelivery.state = .failed
 		batchProcessingLogger.error("A batch exceeded its queue limit; processing the rest of it as it arrives")

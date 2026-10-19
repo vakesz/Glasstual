@@ -19,6 +19,11 @@ enum ServerNumeric: UInt, CaseIterable, Sendable {
 	case luserunknown = 253
 	case luserchannels = 254
 	case luserme = 255
+	/// Solanum's `RPL_TRYAGAIN`: the command was rate limited and the answer
+	/// that normally ends it (`RPL_LISTEND`, `315`) never arrives. It is not
+	/// an error numeric by the 400–596 convention, so it cannot reach the
+	/// error path; `ErrorNumerics` closes what it refuses instead.
+	case tryagain = 263
 	case localusers = 265
 	case globalusers = 266
 	case silelist = 271
@@ -73,6 +78,10 @@ enum ServerNumeric: UInt, CaseIterable, Sendable {
 	case nosuchchannel = 403
 	case cannotsendtochan = 404
 	case toomanychannels = 405
+	/// IRCnet's `ERR_TOOMANYMATCHES`: a command's reply was truncated and its
+	/// usual terminator may never arrive. The first parameter names the command
+	/// and the optional second parameter names its target.
+	case toomanymatches = 416
 	case unknowncommand = 421
 	case nomotd = 422
 	case erroneusnickname = 432
@@ -129,6 +138,8 @@ enum ServerNumeric: UInt, CaseIterable, Sendable {
 	case monlist = 732
 	case endofmonlist = 733
 	case monlistfull = 734
+	/// ircd-seven's nonstandard `ERR_TOOMANYMATCHES` alias.
+	case legacyTooManyMatches = 736
 	case loggedin = 900
 	case loggedout = 901
 	case nicklocked = 902
@@ -191,6 +202,19 @@ enum ServerNumeric: UInt, CaseIterable, Sendable {
 	/// enum has no case for and those still have to reach the error path.
 	static func isErrorReply(_ rawValue: UInt) -> Bool {
 		rawValue >= 400 && rawValue < 597 && rawValue != ServerNumeric.nomotd.rawValue
+	}
+
+	/** The numerics that refuse a command outright, with no terminating reply
+	 following them.
+
+	 A rate limited `WHO` or `LIST` can be answered with a refusal and then
+	 nothing: the `315` or `RPL_LISTEND` that closes the request on the book-
+	 keeping side never arrives. `416` is an error numeric, while `263` and 736
+	 are not, so `InboundDispatch` recognizes all three before its normal paths.
+	 They name their refused command as a parameter, which `ErrorNumerics`
+	 matches the way ``errorKind``'s callers do. */
+	var isRateLimitRefusal: Bool {
+		self == .tryagain || self == .toomanymatches || self == .legacyTooManyMatches
 	}
 
 	/** What kind of failure an error numeric reports.

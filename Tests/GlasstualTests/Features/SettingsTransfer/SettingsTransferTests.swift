@@ -32,6 +32,44 @@ struct SettingsTransferTests {
 		#expect(try session.liveSnapshot() == snapshot)
 	}
 
+	@Test("A failed backup listing keeps the workflow it happened during")
+	func failedBackupListingKeepsWorkflowState() async throws {
+		let fixture = try Fixture()
+		defer { fixture.cleanUp() }
+		let backupDirectory = fixture.directory.appendingPathComponent("Backups")
+		let session = fixture.session(backupDirectory: backupDirectory)
+
+		let source = try Fixture()
+		defer { source.cleanUp() }
+		let data = try await source.session().exportData()
+		try await session.prepareImport(from: source.write(data))
+		await session.commitPreview()
+		#expect(session.result?.backup != nil)
+		#expect(session.backups.count == 1)
+
+		/* A listing the pane can no longer read must not relabel an import
+		 that fully succeeded, nor hold the pane itself when it is idle. */
+		try FileManager.default.setAttributes(
+			[.posixPermissions: 0o000 as NSNumber], ofItemAtPath: backupDirectory.path
+		)
+		/* Restore runs before the fixture's own cleanUp can reach the folder. */
+		defer {
+			try? FileManager.default.setAttributes(
+				[.posixPermissions: 0o755 as NSNumber], ofItemAtPath: backupDirectory.path
+			)
+		}
+
+		await session.refreshBackups()
+		#expect(session.result?.summary.isEmpty == false)
+		#expect(session.errorMessage == nil)
+		#expect(session.backups.count == 1)
+
+		session.acknowledge()
+		await session.refreshBackups()
+		#expect(session.canStart)
+		#expect(session.errorMessage == nil)
+	}
+
 	private func config(_ name: String) -> ServerConfig {
 		var config = ServerConfig(connectionName: name)
 		config.nickname = "TestNick"
@@ -581,6 +619,42 @@ struct SettingsTransferTests {
 }
 
 extension SettingsTransferTests {
+	@Test("Cancellation after the QUIT barrier restores the connections it interrupted")
+	func cancellationAfterQuitResumesInterruptedConnections() async throws {
+		let fixture = try Fixture()
+		defer { fixture.cleanUp() }
+		let model = ChatEnvironmentFixture(settings: .current(stores: fixture.stores))
+		let live = model.chatSession.createSession(with: config("Interrupted transfer"))
+		let (credentialGate, credentials) = AsyncStream<Void>.makeStream()
+		defer {
+			credentials.finish()
+			live.cancelPendingSessionTasks()
+		}
+		live.credentialLoader = { _ in
+			for await _ in credentialGate {}
+			return [:]
+		}
+		live.setConnectionTransportForTesting(.connecting)
+		let before = SettingsArchive.snapshot(from: fixture.stores, sessions: [live.config])
+		let plan = try SettingsTransferPlan(
+			archive: SettingsArchive.snapshot(from: fixture.stores, sessions: []),
+			current: before,
+			mode: .restore
+		)
+		let commit = SettingsTransferCommit(
+			stores: fixture.stores,
+			chatSession: model.chatSession,
+			closeWait: .seconds(1),
+			usesApplication: false,
+			liveSnapshot: { throw CancellationError() }
+		)
+
+		await #expect(throws: CancellationError.self) { try await commit.apply(plan) }
+
+		#expect(live.isConnecting)
+		#expect(live.startup.credentialTask != nil)
+	}
+
 	@Test("Restore removes extra live and saved queries without deleting local data", arguments: [false, true])
 	func restoreRemovesExtraQueries(rememberDirectConversations: Bool) async throws {
 		let fixture = try Fixture()

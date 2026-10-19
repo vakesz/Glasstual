@@ -71,6 +71,37 @@ struct ChatHistoryReferenceTests {
 		#expect(session.printedLines.count > 0, "The numeric still follows its ordinary presentation path")
 	}
 
+	@Test("An unlabelled error cannot cancel history that later arrives")
+	func unlabelledNumericDoesNotCancelHistory() throws {
+		let session = TestServerSession()
+		session.isLoggedIn = true
+		session.enableCapability([.batch, .serverTime, .messageTags, .chatHistory])
+		let channel = try #require(session.findConversationOrCreate("#history"))
+		let socket = Connection(config: ConnectionConfig(), onSession: session)
+		session.socket = socket
+		session.setConnectionTransportForTesting(.connected)
+		let request = ServerHistoryRequest(id: UUID(), before: Date(timeIntervalSince1970: 100), oldestLineNumber: nil)
+		#expect(session.requestServerHistory(request, in: channel))
+		let pending = try #require(session.chatHistory.serverRequests[channel.uniqueIdentifier])
+		#expect(pending.label == nil)
+
+		session.connectionDidReceive(":server 404 me #history :Cannot send to channel")
+
+		#expect(session.chatHistory.serverRequests[channel.uniqueIdentifier] === pending)
+
+		for wire in [
+			":server BATCH +history chathistory #history",
+			"@batch=history;time=1970-01-01T00:00:50.000Z :alice!u@h PRIVMSG #history :older",
+			":server BATCH -history",
+		] {
+			session.connectionDidReceive(wire)
+		}
+
+		#expect(session.chatHistory.serverRequests.isEmpty)
+		#expect(pending.timeoutTask == nil)
+		#expect(session.processedMessages.count == 1)
+	}
+
 	@Test("Message identifier support respects advertisement removal and reconnect", arguments: [
 		("msgid", true), ("timestamp", false), ("timestamp,msgid", true), ("future", false), ("", false),
 	])

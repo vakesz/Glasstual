@@ -35,6 +35,12 @@ struct SettingsTransferCommit {
 			try await closeConnections(of: changed)
 			try checkStillApplicable(plan, changed: changed)
 		} catch is CancellationError {
+			/* Application termination owns its own connection shutdown. Any other
+			 cancellation has crossed the QUIT barrier without applying the plan, so
+			 restore the sessions this transfer interrupted. */
+			if applicationIsTerminating == false {
+				resumeConnections(of: interrupted)
+			}
 			throw CancellationError()
 		} catch {
 			resumeConnections(of: interrupted)
@@ -129,9 +135,13 @@ struct SettingsTransferCommit {
 	}
 
 	private func checkApplicationIsRunning() throws {
-		if usesApplication, AppServices.delegate.applicationIsTerminating {
+		if applicationIsTerminating {
 			throw CancellationError()
 		}
+	}
+
+	private var applicationIsTerminating: Bool {
+		usesApplication && AppServices.delegate.applicationIsTerminating
 	}
 
 	/// Everything after the barrier: publish the imported values, then bring

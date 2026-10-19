@@ -282,7 +282,13 @@ final class SettingsTransferSession {
 		do {
 			backups = try await recoveryStore.backups()
 		} catch {
-			report(error)
+			/* The listing only feeds the recovery pane; the backups it takes are
+			 written and read through other paths that report their own errors.
+			 This transfer neither applied nor failed because a listing could not
+			 be read, so it stays out of the workflow state. */
+			transferLogger.error(
+				"Reading the recovery backups failed: \(error.localizedDescription, privacy: .public)"
+			)
 		}
 	}
 

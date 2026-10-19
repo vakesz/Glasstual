@@ -196,6 +196,23 @@ struct InboundPresenceTrackingTests {
 		#expect(peers[15].isActive)
 	}
 
+	@Test("A missing hidden ISON reply expires the entire sweep before the next poll")
+	func missingIsonReplyDoesNotAccumulateRequests() throws {
+		let session = session()
+		let peer = try query("peer", on: session)
+		session.setConnectionTransportForTesting(.connected)
+		session.markAsLoggedIn()
+
+		session.onISONTimer()
+		session.onISONTimer()
+		#expect(session.sentLines.compactMap { $0 as? String }.filter { $0.hasPrefix("ISON ") }.count == 1)
+
+		session.onISONTimer()
+		#expect(session.sentLines.compactMap { $0 as? String }.filter { $0.hasPrefix("ISON ") }.count == 2)
+		try receive(":irc.example.net 303 me :peer", on: session)
+		#expect(peer.isActive)
+	}
+
 	@Test("A server with MONITOR is not polled with ISON")
 	func monitorServerIsNotPolled() throws {
 		let session = session()

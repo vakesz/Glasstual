@@ -313,11 +313,13 @@ extension ServerSession {
 		case .who:
 			guard isLoggedIn else { return }
 			guard requireArguments(arguments, for: parsed.command) else { return }
+			let components = LineParser.wireTokens(in: arguments.rest)
+			guard let target = components.first else { return }
 			createHiddenCommandResponses()
-			requestedCommands.recordWhoRequestOpenedAsVisible()
+			requestedCommands.recordWhoRequestOpenedAsVisible(for: casefoldedTarget(target))
 			/* `WHO #chan o` is a target and a flag. Joined into one parameter the
 			 server matched a mask with a space in it and answered nothing. */
-			send(.who, arguments: LineParser.wireTokens(in: arguments.rest))
+			send(.who, arguments: components)
 
 		case .whois:
 			guard isLoggedIn else { return }

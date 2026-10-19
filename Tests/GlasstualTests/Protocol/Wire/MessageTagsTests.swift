@@ -240,6 +240,16 @@ struct MessageTagsTests {
 		#expect(session.sentLines.count == 0)
 	}
 
+	@Test("A reaction is refused while its session is disconnecting")
+	func reactionRequiresAnActiveConnection() throws {
+		let session = makeMessageTagsSession()
+		let channel = try addChannel(named: "#chat", to: session)
+		session.connectionState.beginDisconnect()
+
+		#expect(session.sendReaction("👍", toMessageIdentifier: "abc123", in: channel) == false)
+		#expect(session.sentLines.count == 0)
+	}
+
 	private func makeMessageTagsSession() -> TestServerSession {
 		let session = TestServerSession(configDictionary: ["nickname": "me", "username": "me"])
 		session.environment.settings.sendTypingNotifications = true

@@ -487,7 +487,12 @@ extension ServerSession {
 		toMessageIdentifier messageIdentifier: String,
 		in conversation: Conversation
 	) -> Bool {
-		guard emoji.isEmpty == false, messageIdentifier.isEmpty == false, conversation.isConsole == false else {
+		guard emoji.isEmpty == false, messageIdentifier.isEmpty == false,
+		      isLoggedIn, isTerminating == false, isQuitting == false, isDisconnecting == false,
+		      conversation.isConsole == false, conversation.isActive,
+		      conversation.associatedSession === self,
+		      conversationList.contains(where: { $0 === conversation })
+		else {
 			return false
 		}
 

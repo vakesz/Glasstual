@@ -1,6 +1,7 @@
 // Copyright (c) 2018 Codeux Software, LLC & respective contributors.
 // SPDX-License-Identifier: BSD-3-Clause
 
+import Foundation
 @testable import Glasstual
 import Testing
 
@@ -34,6 +35,21 @@ struct SessionRequestedCommandsTests {
 		#expect(requests.recordIsonRequestClosed() == ["carol"])
 		#expect(requests.hasOpenIsonRequest == false)
 		#expect(requests.recordIsonRequestClosed().isEmpty)
+	}
+
+	@Test("An incomplete hidden ISON sweep can expire without affecting visible requests")
+	func expiresOnlyHiddenIsonRequests() {
+		let requests = SessionRequestedCommands()
+		requests.recordIsonRequestOpened(askingAbout: ["alice"])
+		requests.recordIsonRequestOpened(askingAbout: ["bob"])
+		requests.recordIsonRequestOpenedAsVisible()
+
+		requests.discardHiddenIsonRequests()
+
+		#expect(requests.hasOpenHiddenIsonRequest == false)
+		#expect(requests.visibleIsonRequest)
+		requests.recordIsonRequestClosed()
+		#expect(requests.hasOpenIsonRequest == false)
 	}
 
 	@Test("Requests for the same command are closed in insertion order")
@@ -86,6 +102,37 @@ struct SessionRequestedCommandsTests {
 		requests.recordWhoRequestClosed()
 
 		#expect(requests.visibleIsonRequest == false)
+		#expect(requests.visibleWhoRequest == false)
+	}
+
+	@Test("Expiring a sweep removes only aged timer WHO requests")
+	func expiringSweepRemovesOnlyAgedTimerWhoRequests() {
+		let requests = SessionRequestedCommands()
+		let now = Date(timeIntervalSinceReferenceDate: 1000)
+
+		/* An unanswered periodic sweep, an initial WHO, and the `/who` behind
+		 it. The initial request needs its delayed `315`; only the timer request
+		 missed an entire sweep interval. */
+		requests.recordWhoRequestOpened(
+			for: "#timed",
+			sentAt: now.addingTimeInterval(-UserTrackingWhoBatchPolicy.timerInterval),
+			expiresWithNextSweep: true
+		)
+		requests.recordWhoRequestOpened(for: "#initial", sentAt: now)
+		requests.recordWhoRequestOpenedAsVisible(for: "#visible")
+
+		#expect(requests.hasOpenHiddenWhoRequest)
+		#expect(requests.visibleWhoRequest == false)
+
+		requests.discardExpiredHiddenWhoSweepRequests(now: now, after: UserTrackingWhoBatchPolicy.timerInterval)
+
+		#expect(requests.hasOpenHiddenWhoRequest)
+		#expect(requests.visibleWhoRequest == false)
+
+		#expect(requests.recordWhoRequestClosed(for: "#initial") == true)
+		#expect(requests.recordWhoRequestClosed(for: "#visible") == false)
+
+		#expect(requests.hasOpenHiddenWhoRequest == false)
 		#expect(requests.visibleWhoRequest == false)
 	}
 }

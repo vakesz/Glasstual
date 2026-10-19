@@ -8,7 +8,7 @@ import os
 /// The transaction the store is about to run, for a test that has to hold one
 /// in flight. Nothing in the app observes it.
 nonisolated enum ScrollbackStoreOperation: Equatable, Sendable {
-	case write, reset, forget, close, save, resize, fetch
+	case open, write, reset, forget, close, save, resize, fetch
 }
 
 /** The Core Data transaction, and every view's counters.
@@ -117,6 +117,7 @@ actor ScrollbackStore {
 			guard let context else { return .failed(reason: nil) }
 			databaseURL = url
 			await context.perform { context.retainsRegisteredObjects = false }
+			await willPerform?(.open)
 			lifecycle = closingCount == 0 ? .open : .closing
 			scheduleSave()
 			return .opened

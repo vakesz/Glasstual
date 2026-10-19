@@ -5,6 +5,7 @@
 import Foundation
 
 enum UserTrackingWhoBatchPolicy {
+	static let timerInterval: TimeInterval = 120
 	/// One tick covers the starting position in the conversation list plus four
 	/// more, so a long list is walked over several ticks.
 	static let maximumConversationOffset = 4
@@ -169,6 +170,13 @@ extension ServerSession {
 	 the same presence thirty seconds late. */
 	@MainActor func onISONTimer() {
 		guard isLoggedIn, isBrokenIRCdKnownAsTwitch == false, supportsAdvancedTracking == false else { return }
+		/* ISON replies have no request identifier. Let a full poll settle before
+		 another begins; when one reply never arrives, expiring that whole sweep
+		 avoids assigning the next reply to the wrong nicknames. */
+		if requestedCommands.hasOpenHiddenIsonRequest {
+			requestedCommands.discardHiddenIsonRequests()
+			return
+		}
 
 		var nicknames = Array(trackedUsers.trackedUsers.keys)
 		nicknames.append(contentsOf: directPeerNicknames)
@@ -177,7 +185,7 @@ extension ServerSession {
 
 	func startWhoTimer() {
 		guard whoTimer.isActive == false else { return }
-		whoTimer.start(120, repeats: true)
+		whoTimer.start(UserTrackingWhoBatchPolicy.timerInterval, repeats: true)
 	}
 
 	func stopWhoTimer() {
@@ -185,9 +193,16 @@ extension ServerSession {
 		whoTimer.stop()
 	}
 
-	@MainActor func onWhoTimer() {
+	@MainActor func onWhoTimer(now: Date = .now) {
 		guard isLoggedIn, isBrokenIRCdKnownAsTwitch == false else { return }
-		sendTimedWhoRequests(to: conversationList)
+		/* A `315` names its WHO target, so a delayed initial request can remain
+		 open and still pair with its terminator. Only a timer sweep that missed a
+		 full interval is stale enough to retire before the next one begins. */
+		requestedCommands.discardExpiredHiddenWhoSweepRequests(
+			now: now,
+			after: UserTrackingWhoBatchPolicy.timerInterval
+		)
+		sendTimedWhoRequests(to: conversationList, sentAt: now)
 	}
 
 	/** A channel's first WHO goes out as soon as its members are known.
@@ -208,7 +223,7 @@ extension ServerSession {
 	}
 
 	@MainActor
-	func sendTimedWhoRequests(to conversations: [Conversation]) {
+	func sendTimedWhoRequests(to conversations: [Conversation], sentAt: Date = .now) {
 		guard isLoggedIn, isBrokenIRCdKnownAsTwitch == false,
 		      let range = UserTrackingWhoBatchPolicy.indexRange(
 		      	startingAt: Int(lastWhoRequestConversationListIndex),
@@ -224,20 +239,27 @@ extension ServerSession {
 			let channel = conversations[index]
 			guard channel.isActive, channel.isChannel else { continue }
 
-			let sentInitialRequest = channel.sentInitialWhoRequest
-			if sentInitialRequest == false {
-				channel.sentInitialWhoRequest = true
-			}
+			/* The flag means the initial member-state WHO went out, so only a
+			 selection that goes on to send may set it: committed before the
+			 guards below, `Send WHO Command Requests to Channels` enabled
+			 mid-session left every already-seen channel marked as having
+			 answered — and a channel too large for the initial WHO marked
+			 identically — neither ever receiving one. */
+			let isInitialQuery = channel.sentInitialWhoRequest == false
 
 			guard config.sendWhoCommandRequestsToChannels else { continue }
 
 			let memberCount = UInt(channel.numberOfMembers)
-			if sentInitialRequest == false {
+			if isInitialQuery {
 				guard memberCount <= UserTrackingWhoBatchPolicy.maximumInitialChannelSize else { continue }
 			} else {
 				guard isCapabilityEnabled(.awayNotify) == false,
 				      memberCount <= environment.settings.trackUserAwayStatusMaximumChannelSize
 				else { continue }
+			}
+
+			if isInitialQuery {
+				channel.sentInitialWhoRequest = true
 			}
 
 			channelsToQuery.append(channel)
@@ -252,7 +274,7 @@ extension ServerSession {
 		lastWhoRequestConversationListIndex = UInt(endIndex + 1)
 
 		for channel in channelsToQuery {
-			sendWho(to: channel, hideResponse: true)
+			sendWho(to: channel, hideResponse: true, expiresWithNextSweep: true, sentAt: sentAt)
 		}
 	}
 

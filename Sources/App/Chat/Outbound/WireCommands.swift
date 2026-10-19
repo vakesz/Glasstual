@@ -31,17 +31,36 @@ extension ServerSession {
 		send(.part, arguments: [channel.name, comment ?? config.normalLeavingComment])
 	}
 
-	func sendWho(to channel: Conversation, hideResponse: Bool = false) {
+	func sendWho(
+		to channel: Conversation,
+		hideResponse: Bool = false,
+		expiresWithNextSweep: Bool = false,
+		sentAt: Date = .now
+	) {
 		guard channel.isChannel else { return }
-		sendWho(toChannelNamed: channel.name, hideResponse: hideResponse)
+		sendWho(
+			toChannelNamed: channel.name,
+			hideResponse: hideResponse,
+			expiresWithNextSweep: expiresWithNextSweep,
+			sentAt: sentAt
+		)
 	}
 
-	func sendWho(toChannelNamed channelName: String, hideResponse: Bool = false) {
+	func sendWho(
+		toChannelNamed channelName: String,
+		hideResponse: Bool = false,
+		expiresWithNextSweep: Bool = false,
+		sentAt: Date = .now
+	) {
 		guard isLoggedIn, channelName.isEmpty == false else { return }
 		if hideResponse {
-			requestedCommands.recordWhoRequestOpened()
+			requestedCommands.recordWhoRequestOpened(
+				for: casefoldedTarget(channelName),
+				sentAt: sentAt,
+				expiresWithNextSweep: expiresWithNextSweep
+			)
 		} else {
-			requestedCommands.recordWhoRequestOpenedAsVisible()
+			requestedCommands.recordWhoRequestOpenedAsVisible(for: casefoldedTarget(channelName))
 		}
 		if supportInfo.whoxSupported {
 			send(.who, arguments: [channelName, "%tcuhnfar,\(ServerQuirks.whoxToken)"])

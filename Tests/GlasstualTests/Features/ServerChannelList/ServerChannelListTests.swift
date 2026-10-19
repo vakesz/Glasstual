@@ -62,8 +62,9 @@ struct ServerChannelListTests {
 		try receive(":irc.example.net 322 me #swift 12 :All about Swift", on: session)
 		try receive(":irc.example.net 323 me :End of /LIST", on: session)
 		try receive(":irc.example.net 421 me LIST :Unknown command", on: session)
+		try receive(":irc.example.net 416 me LIST :Too many matches", on: session)
 
-		#expect(presentation.events == ["start", "#swift 12 All about Swift", "finish", "finish"])
+		#expect(presentation.events == ["start", "#swift 12 All about Swift", "finish", "finish", "finish"])
 	}
 
 	/** A reply for a window that is already closed used to make a new session,
