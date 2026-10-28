@@ -46,9 +46,9 @@ nonisolated struct ScriptCatalog: Sendable {
 		for (directory, origin) in locations {
 			guard let directory,
 			      let entries = try? FileManager.default.contentsOfDirectory(
-				at: directory,
-				includingPropertiesForKeys: [.isRegularFileKey, .isSymbolicLinkKey],
-				options: [.skipsHiddenFiles]
+			      	at: directory,
+			      	includingPropertiesForKeys: [.isRegularFileKey, .isSymbolicLinkKey],
+			      	options: [.skipsHiddenFiles]
 			      ) else { continue }
 			// Custom commands win; within one directory the literal filename wins.
 			for url in entries.sorted(by: { $0.lastPathComponent < $1.lastPathComponent }) {

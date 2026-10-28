@@ -527,14 +527,14 @@ final nonisolated class InlineImageTestProtocol: URLProtocol { // nonisolated: i
 	override func startLoading() {
 		guard let url = request.url,
 		      let fixture = Self.fixtures.withLock({ fixtures in
-			fixtures[url]?.started = true
-			return fixtures[url]
+		      	fixtures[url]?.started = true
+		      	return fixtures[url]
 		      }),
 		      let response = HTTPURLResponse(
-			url: url,
-			statusCode: fixture.status,
-			httpVersion: "HTTP/1.1",
-			headerFields: fixture.headers
+		      	url: url,
+		      	statusCode: fixture.status,
+		      	httpVersion: "HTTP/1.1",
+		      	headerFields: fixture.headers
 		      )
 		else {
 			client?.urlProtocol(self, didFailWithError: URLError(.badURL))

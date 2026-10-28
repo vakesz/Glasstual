@@ -268,7 +268,7 @@ extension ServerSession {
 	func retrySASLNegotiation(withMechanisms mechanisms: [String]) -> Bool {
 		if let mechanism = sasl.mechanism,
 		   sasl.triedMechanisms.contains(where: {
-			$0.caseInsensitiveCompare(mechanism) == .orderedSame
+		   	$0.caseInsensitiveCompare(mechanism) == .orderedSame
 		   }) == false
 		{
 			sasl.triedMechanisms.append(mechanism)

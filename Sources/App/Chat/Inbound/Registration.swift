@@ -38,8 +38,8 @@ enum NicknameRetryPolicy {
 	static func padded(_ nickname: String?, maximumLength: UInt) -> String {
 		guard let nickname,
 		      let padded = nickname.padNickname(
-			withCharacter: 95,
-			maximumLength: maximumLength
+		      	withCharacter: 95,
+		      	maximumLength: maximumLength
 		      )
 		else { return fallbackNickname }
 		return padded

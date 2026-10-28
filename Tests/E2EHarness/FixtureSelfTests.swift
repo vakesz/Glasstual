@@ -323,10 +323,10 @@ enum FixtureSelfTests {
 			sendFailed = false
 			connection.send(content: data, contentContext: final ? .finalMessage : .defaultMessage,
 			                isComplete: true, completion: .contentProcessed { [weak self] error in
-				Task { @MainActor in
-					self?.sendFailed = error != nil
-					self?.sendFinished = true
-				}
+			                	Task { @MainActor in
+			                		self?.sendFailed = error != nil
+			                		self?.sendFinished = true
+			                	}
 			                })
 			try await FixtureSelfTests.wait { self.sendFinished }
 			guard !sendFailed else { throw HarnessFailure.assertion("Self-test send failed") }
