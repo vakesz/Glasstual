@@ -745,26 +745,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Desconocido"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "inconnu"
+            "state": "translated",
+            "value": "Inconnu"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "未知の"
+            "state": "translated",
+            "value": "不明"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "desconhecido"
+            "state": "translated",
+            "value": "Desconhecido"
           }
         }
       }

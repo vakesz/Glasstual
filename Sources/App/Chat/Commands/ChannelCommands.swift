@@ -25,8 +25,7 @@ private struct ChannelModerationInvocation {
 @MainActor
 extension ServerSession {
 	func dispatchBroadcastCommand(_ command: LocalCommand, parsed: ParsedUserCommand) {
-		guard isLoggedIn else { return }
-		guard requireArguments(parsed.arguments, for: parsed.command) else { return }
+		guard isLoggedIn, requireArguments(parsed.arguments, for: parsed.command) else { return }
 		let remoteCommand: RemoteCommand = command == .amsg ? .privmsg : .privmsgAction
 		for session in broadcastTargets(whenAllConnections: environment.settings.amsgAllConnections) {
 			let channels = session.conversationList.filter { $0.isActive && $0.isChannel }

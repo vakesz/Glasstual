@@ -52,8 +52,8 @@ extension ServerSession {
 	func scheduleReadMarker(for conversation: Conversation, date: Date) {
 		guard readMarkerIsAvailable(for: conversation),
 		      ChatHistoryPolicy.shouldAdvanceMarker(
-		      	candidate: date,
-		      	previous: readMarkers.sentDates[conversation.uniqueIdentifier]
+			candidate: date,
+			previous: readMarkers.sentDates[conversation.uniqueIdentifier]
 		      )
 		else { return }
 		let identifier = conversation.uniqueIdentifier
@@ -75,8 +75,8 @@ extension ServerSession {
 	func sendReadMarker(for conversation: Conversation, date newestDate: Date) {
 		guard !isTerminating, readMarkerIsAvailable(for: conversation),
 		      ChatHistoryPolicy.shouldAdvanceMarker(
-		      	candidate: newestDate,
-		      	previous: readMarkers.sentDates[conversation.uniqueIdentifier]
+			candidate: newestDate,
+			previous: readMarkers.sentDates[conversation.uniqueIdentifier]
 		      )
 		else { return }
 		readMarkers.sentDates[conversation.uniqueIdentifier] = newestDate

@@ -31,8 +31,7 @@ extension TranscriptView {
 	func selectionAnchor() -> SelectionAnchor? {
 		guard editDepth == 0 else { return nil }
 		let selection = textView.selectedRange()
-		guard selection.length > 0 else { return nil }
-		guard let start = selectionEndpoint(at: selection.location),
+		guard selection.length > 0, let start = selectionEndpoint(at: selection.location),
 		      let end = selectionEndpoint(at: NSMaxRange(selection), isEnd: true) else { return nil }
 		return SelectionAnchor(start: start, end: end)
 	}

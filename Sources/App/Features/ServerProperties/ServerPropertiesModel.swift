@@ -58,17 +58,17 @@ final class ServerPropertiesModel {
 		}
 	}
 
-	private var serverPasswordText: String
-	private var nicknamePasswordText: String
-	private var proxyPasswordText: String
+	var serverPasswordText: String
+	var nicknamePasswordText: String
+	var proxyPasswordText: String
 
 	/// Which of the three fields the person has typed into. A field that is not
 	/// in here keeps whatever edit the configuration already carried, so a sheet
 	/// dismissed with OK before — or without — the keychain read leaves every
 	/// stored secret alone.
-	private var editedSecretFields: Set<SecretField> = []
+	var editedSecretFields: Set<SecretField> = []
 
-	private enum SecretField {
+	enum SecretField {
 		case serverPassword
 		case nicknamePassword
 		case proxyPassword
@@ -76,14 +76,14 @@ final class ServerPropertiesModel {
 
 	/// What the one keychain read found, by item — the channel keys included.
 	/// Empty until it answers.
-	private var loadedSecrets: [KeychainItem: String] = [:]
+	var loadedSecrets: [KeychainItem: String] = [:]
 
 	/// The client-side certificate the connection sends, or `nil` when it sends
 	/// none. Four rows reading "No Certificate Selected" said the same thing
 	/// four times; there is nothing to show when there is no certificate.
 	var certificate: ClientCertificateDetails?
 
-	private var submission = SubmissionGate()
+	var submission = SubmissionGate()
 
 	/// The bundled network catalog the Server Address field completes against.
 	let networkList: NetworkList
@@ -93,7 +93,7 @@ final class ServerPropertiesModel {
 	 `nil` for a connection that already exists — there is nothing to start it
 	 from — and again once a template has been applied, which is what moves the
 	 sheet on to the form. */
-	private(set) var templatePicker: NetworkPickerListModel?
+	var templatePicker: NetworkPickerListModel?
 
 	/** The port and TLS state the field overwrote when it last matched a
 	 network, kept so that typing a host no network claims can put them back.
@@ -101,18 +101,18 @@ final class ServerPropertiesModel {
 	 A network fills both fields in, which throws away whatever was there; the
 	 person who then types their own host is owed what they had, not the last
 	 network's defaults. */
-	@ObservationIgnored private var valuesReplacedByNetwork: PrimaryServerValues?
+	@ObservationIgnored var valuesReplacedByNetwork: PrimaryServerValues?
 
 	/// The address text this last resolved, so re-running the resolution over an
 	/// unchanged field neither re-applies a network nor restores anything.
-	@ObservationIgnored private var lastResolvedAddressText: String
+	@ObservationIgnored var lastResolvedAddressText: String
 
 	/// Set while a network is being written into the fields, so the write does
 	/// not read as another edit of the address.
-	@ObservationIgnored private var isApplyingNetwork = false
+	@ObservationIgnored var isApplyingNetwork = false
 
 	/// A port as the field spells it, beside the TLS state that went with it.
-	private struct PrimaryServerValues {
+	struct PrimaryServerValues {
 		let port: String
 		let secured: Bool
 	}
@@ -146,7 +146,7 @@ final class ServerPropertiesModel {
 	 Rebuilding them used to mean building a whole second `ServerPropertiesModel`
 	 and copying seven properties off it, which also started that model's
 	 keychain task. */
-	private struct DerivedFields {
+	struct DerivedFields {
 		let serverAddress: String
 		let serverPort: String
 		let proxyAddress: String
@@ -170,7 +170,7 @@ final class ServerPropertiesModel {
 		}
 	}
 
-	private func apply(_ fields: DerivedFields) {
+	func apply(_ fields: DerivedFields) {
 		serverAddress = fields.serverAddress
 		forgetNetworkResolution()
 		serverPort = fields.serverPort
@@ -209,87 +209,6 @@ final class ServerPropertiesModel {
 	 `replace(with:)`, and for every row of the channel list each time it was
 	 drawn. The view runs this once as the sheet opens, and the answers are
 	 cached for as long as the sheet lives. */
-	func loadSecrets() async {
-		let passwords = await KeychainSecretLoader.passwords(for: secretKeychainItems)
-		applyLoadedSecrets(passwords)
-	}
-
-	/** Describes the client certificate the connection sends, off the main
-	 actor, and clears the description when it sends none.
-
-	 The certificate is a persistent keychain reference, so naming it and
-	 digesting it is a `SecItemCopyMatching` like the passwords: read as the
-	 sheet opens, it was the stall between the click and the sheet. The view
-	 runs this again whenever the reference changes, which cancels a read of
-	 the previous one. */
-	func loadCertificate() async {
-		guard let reference = config.identityClientSideCertificate else {
-			certificate = nil
-			return
-		}
-		let details = await ClientCertificateLoader.certificate(for: reference)
-		guard Task.isCancelled == false, reference == config.identityClientSideCertificate else { return }
-		certificate = details
-	}
-
-	/// Whether the channel list shows a channel as having a key: an unflushed
-	/// edit if there is one, and otherwise what the one keychain read found.
-	func channelHasSecretKey(_ channel: ConversationConfig) -> Bool {
-		channel.pendingSecretKey.value(orStored: loadedSecrets[channel.keychainItem])?.isEmpty == false
-	}
-
-	private var secretKeychainItems: [KeychainItem] {
-		var items = [config.nicknamePasswordKeychainItem, config.proxyPasswordKeychainItem]
-
-		if let primaryServer {
-			items.append(primaryServer.keychainItem)
-		}
-
-		return items + displayedChannels.map(\.keychainItem)
-	}
-
-	private func applyLoadedSecrets(_ passwords: [KeychainItem: String]) {
-		guard Task.isCancelled == false else { return }
-		loadedSecrets = passwords
-
-		/* A field the user has already typed into keeps what they typed — an
-		 emptied one included, which is why this asks what was edited rather
-		 than what is empty. */
-		if editedSecretFields.contains(.serverPassword) == false {
-			serverPasswordText = secret(
-				primaryServer?.pendingServerPassword ?? .unchanged,
-				from: primaryServer?.keychainItem
-			)
-		}
-		if editedSecretFields.contains(.nicknamePassword) == false {
-			nicknamePasswordText = secret(config.pendingNicknamePassword, from: config.nicknamePasswordKeychainItem)
-		}
-		if editedSecretFields.contains(.proxyPassword) == false {
-			proxyPasswordText = secret(config.pendingProxyPassword, from: config.proxyPasswordKeychainItem)
-		}
-	}
-
-	/// An unflushed edit if there is one, and otherwise what the one keychain
-	/// read found. Never a keychain read of its own.
-	private func secret(_ pending: PendingKeychainSecret, from item: KeychainItem?) -> String {
-		pending.value(orStored: item.flatMap { loadedSecrets[$0] }) ?? ""
-	}
-
-	/** What submitting one of the three fields asks the keychain to do.
-
-	 Only a field the person typed into carries an instruction; every other one
-	 hands back the edit the configuration already had, which is normally
-	 `.unchanged`. Emitting `.edited(text)` for an untouched field wrote
-	 `.cleared` for as long as the keychain read had not landed, which deleted
-	 the secret the sheet had not finished showing. */
-	private func submittedSecret(
-		_ field: SecretField,
-		text: String,
-		pending: PendingKeychainSecret
-	) -> PendingKeychainSecret {
-		editedSecretFields.contains(field) ? .edited(text.trimmed) : pending
-	}
-
 	func serverListForEditing() -> [ServerEndpoint]? {
 		let fault: (ServerPropertiesSelection, String)? =
 			if !resolvedPrimaryServerAddress.isValidInternetAddress {
@@ -314,7 +233,7 @@ final class ServerPropertiesModel {
 	 refuses one before either runs, so the fallback is defence in depth: it
 	 keeps the port the endpoint already had, because moving the person to a
 	 default port without saying so is the worse answer. */
-	private func primaryServerForSubmission() -> ServerEndpoint {
+	func primaryServerForSubmission() -> ServerEndpoint {
 		var primary = primaryServer ?? ServerEndpoint()
 		primary.serverAddress = resolvedPrimaryServerAddress
 		primary.serverPort = UInt16(serverPort) ?? primary.serverPort
@@ -328,7 +247,7 @@ final class ServerPropertiesModel {
 
 	/// The endpoint list with `server` as its first entry, whether or not there
 	/// was one to replace.
-	private func serverList(replacingPrimaryWith server: ServerEndpoint) -> [ServerEndpoint] {
+	func serverList(replacingPrimaryWith server: ServerEndpoint) -> [ServerEndpoint] {
 		var servers = config.serverList
 		if servers.isEmpty {
 			servers.append(server)
@@ -366,151 +285,6 @@ final class ServerPropertiesModel {
 	var primaryServerIsSecured: Bool {
 		get { primaryServer?.prefersSecuredConnection ?? false }
 		set { setPrimaryServerSecured(newValue) }
-	}
-
-	// MARK: - Templates
-
-	var isChoosingTemplate: Bool {
-		templatePicker != nil
-	}
-
-	/// Continue is offered once a row is chosen; the custom server row counts.
-	var canApplyTemplate: Bool {
-		templatePicker?.hasSelection ?? false
-	}
-
-	/** Fills the connection in from the chosen row and moves on to the form.
-
-	 The custom server row moves on with the fields as they are. A network sets
-	 the connection's name and primary endpoint, turns SASL on where the network
-	 offers it, and puts its suggested channels on the channel list, where the
-	 Conversation List pane can take any of them off again. */
-	func applySelectedTemplate() {
-		guard let picker = templatePicker, picker.hasSelection else { return }
-
-		if let network = picker.selectedNetwork {
-			var config = config
-			config.connectionName = network.networkName
-			config.serverList = [
-				ServerEndpoint(
-					serverAddress: network.serverAddress,
-					serverPort: network.serverPort,
-					prefersSecuredConnection: network.prefersSecuredConnection
-				),
-			]
-			config.usesSASL = network.saslSupported
-			config.conversationList = network.suggestedChannels.map { ConversationConfig.seed(withName: $0) }
-			replace(with: config)
-		}
-
-		templatePicker = nil
-		selection = .general
-	}
-
-	// MARK: - Bundled networks
-
-	/** What the Server Address field offers to complete to.
-
-	 An empty field leads with the popular networks and then lists the rest, the
-	 way the onboarding picker does; typing narrows the whole catalog by name and
-	 by address. The onboarding picker's matcher also reads the network's blurb,
-	 which belongs to a browsing list rather than to an address field, so this
-	 keeps its own. */
-	var serverAddressSuggestions: [Network] {
-		let query = serverAddress.trimmed
-
-		guard query.isEmpty == false else {
-			return networkList.popularNetworks + networkList.networksBelowThePopularOnes
-		}
-
-		return networkList.listOfNetworks.filter {
-			$0.networkName.localizedCaseInsensitiveContains(query)
-				|| $0.serverAddress.localizedCaseInsensitiveContains(query)
-		}
-	}
-
-	/** The address to connect to, which is not always the address on screen.
-
-	 The field shows a network by name — "Libera.Chat" rather than
-	 `irc.libera.chat` — so what is stored is the catalog's address for the
-	 network the text names, and otherwise the host as typed. Three network names
-	 hold a space, which is also why the name is resolved before the text is cut
-	 down to its first token. */
-	var resolvedPrimaryServerAddress: String {
-		if let network = networkList.network(named: serverAddress.trimmed) {
-			return network.serverAddress
-		}
-
-		return serverAddress.firstToken.lowercased()
-	}
-
-	/** Fills the port and TLS fields in from the network the address now names.
-
-	 Called for each edit of the field. A value that names a network — by its
-	 name or by its address — is replaced with the network's name and brings the
-	 network's port and TLS state with it; a value that names none puts back
-	 whatever the last network overwrote, once. */
-	func serverAddressTextDidChange() {
-		guard isApplyingNetwork == false else { return }
-
-		let text = serverAddress.trimmed
-
-		guard text != lastResolvedAddressText else { return }
-
-		lastResolvedAddressText = text
-
-		guard let network = networkList.network(named: text) ?? networkList.network(withServerAddress: text)
-		else {
-			restorePreviousValuesForPrimaryServer()
-			return
-		}
-
-		isApplyingNetwork = true
-		defer { isApplyingNetwork = false }
-
-		if valuesReplacedByNetwork == nil {
-			valuesReplacedByNetwork = PrimaryServerValues(port: serverPort, secured: primaryServerIsSecured)
-		}
-
-		serverAddress = network.networkName
-		lastResolvedAddressText = network.networkName
-		applyPrimaryServerValues(
-			PrimaryServerValues(port: String(network.serverPort), secured: network.prefersSecuredConnection)
-		)
-	}
-
-	/// The network name a stored address is listed under, or the address itself
-	/// when the catalog does not list it.
-	private static func displayedServerAddress(_ serverAddress: String, in networkList: NetworkList) -> String {
-		networkList.network(withServerAddress: serverAddress)?.networkName ?? serverAddress
-	}
-
-	private func restorePreviousValuesForPrimaryServer() {
-		guard let previous = valuesReplacedByNetwork else { return }
-
-		valuesReplacedByNetwork = nil
-		applyPrimaryServerValues(previous)
-	}
-
-	/** Writes a port and a TLS state together.
-
-	 `setPrimaryServerSecured(_:)` moves the port between 6667 and 6697 as the
-	 endpoint sheet does, which is right for a toggle the person flipped and
-	 wrong here: both values are being replaced at once, so neither may nudge
-	 the other. */
-	private func applyPrimaryServerValues(_ values: PrimaryServerValues) {
-		var server = primaryServer ?? ServerEndpoint()
-		server.serverPort = UInt16(values.port) ?? server.serverPort
-		server.prefersSecuredConnection = values.secured
-		storePrimaryServer(server)
-		serverPort = values.port
-	}
-
-	/// Forgets what the field last resolved, for a sheet whose fields have just
-	/// been replaced wholesale: nothing a network overwrote is still on screen.
-	private func forgetNetworkResolution() {
-		valuesReplacedByNetwork = nil
-		lastResolvedAddressText = serverAddress.trimmed
 	}
 
 	func submittedConfig() -> ServerConfig? {
@@ -606,21 +380,21 @@ final class ServerPropertiesModel {
 		[.socks5, .HTTP].contains(type)
 	}
 
-	private var primaryServer: ServerEndpoint? {
+	var primaryServer: ServerEndpoint? {
 		config.serverList.first
 	}
 
-	private func storePrimaryServer(_ server: ServerEndpoint) {
+	func storePrimaryServer(_ server: ServerEndpoint) {
 		config.serverList = serverList(replacingPrimaryWith: server)
 	}
 
-	private func uniqueNonempty(_ values: [String]) -> [String] {
+	func uniqueNonempty(_ values: [String]) -> [String] {
 		var seen = Set<String>()
 		return values.filter { !$0.isEmpty && seen.insert($0).inserted }
 	}
 }
 
-private extension String {
+extension String {
 	var trimmed: String {
 		trimmingCharacters(in: .whitespacesAndNewlines)
 	}

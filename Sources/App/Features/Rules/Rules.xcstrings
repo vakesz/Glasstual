@@ -1228,25 +1228,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Vale"
+            "state": "translated",
+            "value": "OK"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "OK"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "OK"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "OK"
           }
         }

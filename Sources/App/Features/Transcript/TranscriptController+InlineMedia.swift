@@ -31,12 +31,8 @@ extension TranscriptController {
 		/* The link parser's scheme set is user-extensible, so an address that
 		 became clickable is not necessarily one the inline-content service can
 		 handle. It only ever fetches over HTTP, and aborts on a file: URL. */
-		guard let url = URL(string: address), LinkSchemeRules.isWebURL(url)
-		else {
-			return nil
-		}
-
-		guard backingView?.containsLine(identifier: lineNumber) == true else { return nil }
+		guard let url = URL(string: address), LinkSchemeRules.isWebURL(url),
+		      backingView?.containsLine(identifier: lineNumber) == true else { return nil }
 		let generation = renderScheduler.generation
 		let loader = inlineImageLoader
 		// Only admission failures run synchronously; successful callbacks receive the assigned token.

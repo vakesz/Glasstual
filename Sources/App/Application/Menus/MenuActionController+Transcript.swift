@@ -81,10 +81,10 @@ extension MenuActionController {
 	}
 
 	@objc func lookUpInDictionary(_: Any?) {
-		guard let selection = context.selectedBackingView?.selection, selection.isEmpty == false else { return }
-		guard let encodedSelection = selection.addingPercentEncoding(
-			withAllowedCharacters: CharacterSet.unreservedURICharacters
-		) else { return }
+		guard let selection = context.selectedBackingView?.selection, selection.isEmpty == false,
+		      let encodedSelection = selection.addingPercentEncoding(
+		      	withAllowedCharacters: CharacterSet.unreservedURICharacters
+		      ) else { return }
 		OpenLink.open(string: "dict://\(encodedSelection)")
 	}
 

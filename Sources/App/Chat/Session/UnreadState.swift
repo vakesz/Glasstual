@@ -14,8 +14,7 @@ extension ServerSession {
 	}
 
 	func setHighlightState(for conversation: Conversation) {
-		guard let output else { return }
-		guard conversationIsSelectedInKeyWindow(conversation, output: output) == false else { return }
+		guard let output, conversationIsSelectedInKeyWindow(conversation, output: output) == false else { return }
 
 		conversation.nicknameHighlightCount += 1
 		environment.services.updateDockBadge()
@@ -33,8 +32,7 @@ extension ServerSession {
 
 		let count = max(1, count)
 
-		guard let output else { return }
-		guard conversationIsSelectedInKeyWindow(conversation, output: output) == false else { return }
+		guard let output, conversationIsSelectedInKeyWindow(conversation, output: output) == false else { return }
 
 		/* A direct conversation always counts on the dock badge; a channel does so
 		 only when the user asked for public messages to be counted there. */

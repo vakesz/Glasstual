@@ -53,14 +53,14 @@ enum DCCScenario {
 		try await driver.wait("DCC terminal row status and peer closure") { deadline in
 			guard try HarnessFiles.exists("dcc-peer-complete"),
 			      let row = try driver.identified(
-			      	"file-transfer-row-\(transferIdentifier)",
-			      	from: window,
-			      	deadline: deadline
+				"file-transfer-row-\(transferIdentifier)",
+				from: window,
+				deadline: deadline
 			      ),
 			      let label = try driver.identified(
-			      	"file-transfer-status-\(transferIdentifier)",
-			      	from: row,
-			      	deadline: deadline
+				"file-transfer-status-\(transferIdentifier)",
+				from: row,
+				deadline: deadline
 			      ) else { return false }
 			return try driver.text(label, kAXValueAttribute, deadline: deadline) == status
 		}

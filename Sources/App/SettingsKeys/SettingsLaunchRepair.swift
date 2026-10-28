@@ -71,10 +71,8 @@ enum SettingsLaunchRepair {
 		// by prefix, so sweep the persisted domains for them too.
 		for storage in [SettingStorage.container, SettingStorage.standard] {
 			for (name, object) in persisted[storage] ?? [:] {
-				guard values[name] == nil, !removed.contains(name), SettingsKeys.key(named: name) == nil else {
-					continue
-				}
-				guard let value = PropertyListValue(propertyList: object),
+				guard values[name] == nil, !removed.contains(name), SettingsKeys.key(named: name) == nil,
+				      let value = PropertyListValue(propertyList: object),
 				      SettingsKeys.allFamilies.contains(where: { $0.matches(name) })
 				else {
 					continue

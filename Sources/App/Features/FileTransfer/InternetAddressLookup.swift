@@ -71,7 +71,7 @@ enum InternetAddressLookup {
 			!data.isEmpty,
 			data.count <= responseByteLimit,
 			let address = String(data: data, encoding: .utf8)?
-			.trimmingCharacters(in: .whitespacesAndNewlines),
+				.trimmingCharacters(in: .whitespacesAndNewlines),
 			address.isIPv4Address || address.isIPv6Address
 		else {
 			return nil

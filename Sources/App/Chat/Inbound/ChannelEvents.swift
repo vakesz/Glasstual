@@ -149,8 +149,7 @@ extension ServerSession {
 	/// IRCv3 `chghost`, gated the same way `account-notify` is: a hostmask
 	/// rewrite nobody negotiated is not one to believe.
 	func receiveChangeHost(_ message: Message) {
-		guard isCapabilityEnabled(.changeHost) else { return }
-		guard message.params.count == 2, let nickname = message.senderNickname else { return }
+		guard isCapabilityEnabled(.changeHost), message.params.count == 2, let nickname = message.senderNickname else { return }
 		let username = message.params[0]
 		guard username.isHostmaskUsername else {
 			inboundEventLogger.error("CHGHOST contains an improperly formatted username")

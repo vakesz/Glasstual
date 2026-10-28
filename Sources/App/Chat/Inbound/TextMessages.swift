@@ -417,8 +417,7 @@ extension ServerSession {
 	}
 
 	private func processNickServNotice(_ text: String, from message: Message) {
-		guard !message.isReplayed, message.params.first.map(nicknameIsMyself) == true else { return }
-		guard noticeIsFromServices(message) else { return }
+		guard !message.isReplayed, message.params.first.map(nicknameIsMyself) == true, noticeIsFromServices(message) else { return }
 
 		let isIdentifiedWithSASL = isCapabilityEnabled(.isIdentifiedWithSASL)
 		let action = ServiceNoticePolicy.nickServAction(

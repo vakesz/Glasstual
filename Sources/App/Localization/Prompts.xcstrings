@@ -25,26 +25,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Aceptar"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "accepter"
+            "state": "translated",
+            "value": "Accepter"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "受け入れる"
+            "state": "translated",
+            "value": "許可"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "aceitar"
+            "state": "translated",
+            "value": "Aceitar"
           }
         }
       }
@@ -169,26 +169,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Cancelar"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "annuler"
+            "state": "translated",
+            "value": "Annuler"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "キャンセルする"
+            "state": "translated",
+            "value": "キャンセル"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "cancelar"
+            "state": "translated",
+            "value": "Cancelar"
           }
         }
       }
@@ -361,26 +361,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Cerrar"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "fermer"
+            "state": "translated",
+            "value": "Fermer"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "閉じる"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "fechar"
+            "state": "translated",
+            "value": "Fechar"
           }
         }
       }
@@ -505,26 +505,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Continuar"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "continuer"
+            "state": "translated",
+            "value": "Continuer"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "続ける"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "continuar"
+            "state": "translated",
+            "value": "Continuar"
           }
         }
       }
@@ -649,26 +649,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Eliminar"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "supprimer"
+            "state": "translated",
+            "value": "Supprimer"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "削除する"
+            "state": "translated",
+            "value": "削除"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "apagar"
+            "state": "translated",
+            "value": "Apagar"
           }
         }
       }
@@ -697,26 +697,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Rechazar"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "déclin"
+            "state": "translated",
+            "value": "Refuser"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "拒否する"
+            "state": "translated",
+            "value": "拒否"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "declínio"
+            "state": "translated",
+            "value": "Recusar"
           }
         }
       }
@@ -1033,25 +1033,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Vale"
+            "state": "translated",
+            "value": "OK"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "OK"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "OK"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "OK"
           }
         }
@@ -1513,26 +1513,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "No"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "non"
+            "state": "translated",
+            "value": "Non"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "いいえ"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "não"
+            "state": "translated",
+            "value": "Não"
           }
         }
       }
@@ -1609,26 +1609,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Abierto"
+            "state": "translated",
+            "value": "Abrir"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ouvert"
+            "state": "translated",
+            "value": "Ouvrir"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "開く"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "aberto"
+            "state": "translated",
+            "value": "Abrir"
           }
         }
       }
@@ -1849,26 +1849,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Dejar"
+            "state": "translated",
+            "value": "Salir"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "démissionner"
+            "state": "translated",
+            "value": "Quitter"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "やめる"
+            "state": "translated",
+            "value": "終了"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "sair"
+            "state": "translated",
+            "value": "Sair"
           }
         }
       }
@@ -1945,26 +1945,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Eliminar"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "enlever"
+            "state": "translated",
+            "value": "Supprimer"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "削除する"
+            "state": "translated",
+            "value": "削除"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "remover"
+            "state": "translated",
+            "value": "Remover"
           }
         }
       }
@@ -1993,26 +1993,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Guardar"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "économiser"
+            "state": "translated",
+            "value": "Enregistrer"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "保存する"
+            "state": "translated",
+            "value": "保存"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "salvar"
+            "state": "translated",
+            "value": "Salvar"
           }
         }
       }
@@ -2185,26 +2185,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Seleccionar"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "sélectionner"
+            "state": "translated",
+            "value": "Sélectionner"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "選択する"
+            "state": "translated",
+            "value": "選択"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "selecionar"
+            "state": "translated",
+            "value": "Selecionar"
           }
         }
       }
@@ -2233,26 +2233,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Enviar"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "envoyer"
+            "state": "translated",
+            "value": "Envoyer"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "送る"
+            "state": "translated",
+            "value": "送信"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "enviar"
+            "state": "translated",
+            "value": "Enviar"
           }
         }
       }

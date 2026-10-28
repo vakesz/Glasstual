@@ -25,26 +25,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Aceptar"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "accepter"
+            "state": "translated",
+            "value": "Accepter"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "受け入れる"
+            "state": "translated",
+            "value": "許可"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "aceitar"
+            "state": "translated",
+            "value": "Aceitar"
           }
         }
       }
@@ -73,26 +73,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Todos"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "tous"
+            "state": "translated",
+            "value": "Tout"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "全て"
+            "state": "translated",
+            "value": "すべて"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "tudo"
+            "state": "translated",
+            "value": "Tudo"
           }
         }
       }
@@ -986,26 +986,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Mostrar"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "spectacle"
+            "state": "translated",
+            "value": "Afficher"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "表示する"
+            "state": "translated",
+            "value": "表示"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "mostrar"
+            "state": "translated",
+            "value": "Mostrar"
           }
         }
       }

@@ -51,7 +51,7 @@ nonisolated struct SettingsColor: SettingValue, Codable {
 		      let payload = try? PropertyListDecoder().decode(StoredColor.self, from: data),
 		      payload.version == StoredColor.currentVersion,
 		      [payload.color.red, payload.color.green, payload.color.blue, payload.color.alpha]
-		      .allSatisfy(\.isFinite)
+		      	.allSatisfy(\.isFinite)
 		else {
 			return nil
 		}

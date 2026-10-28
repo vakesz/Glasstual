@@ -213,9 +213,9 @@ final class ScrollbackDuplicateIndex {
 	) -> Bool {
 		guard let index = viewIndexes[viewIdentifier],
 		      let fallbackKey = Self.fallbackKey(
-		      	for: receivedAt,
-		      	nickname: nickname,
-		      	messageBody: messageBody
+			for: receivedAt,
+			nickname: nickname,
+			messageBody: messageBody
 		      )
 		else {
 			return false

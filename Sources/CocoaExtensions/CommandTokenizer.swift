@@ -95,11 +95,7 @@ public struct CommandTokenizer: Sendable {
 	public mutating func nextQuotedToken() -> String {
 		let source = Array(remainder)
 
-		guard source.count >= 2, source[0] == "\"" else {
-			return ""
-		}
-
-		guard let scan = Self.scanQuotedToken(source) else {
+		guard source.count >= 2, source[0] == "\"", let scan = Self.scanQuotedToken(source) else {
 			return ""
 		}
 

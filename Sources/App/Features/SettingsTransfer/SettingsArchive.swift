@@ -99,8 +99,7 @@ nonisolated struct SettingsArchive: Equatable, Sendable {
 	}
 
 	private func encode(configurations: [[String: PropertyListValue]], format: String) throws -> Data {
-		guard let sessions else { throw SettingsTransferError.invalidDocument }
-		guard sessions.count == configurations.count else { throw SettingsTransferError.invalidDocument }
+		guard let sessions, sessions.count == configurations.count else { throw SettingsTransferError.invalidDocument }
 		let dictionary: [String: PropertyListValue] = [
 			"format": .string(format), "version": .integer(Self.version),
 			"preferences": .dictionary(values), "unset": .init(unset.sorted()),

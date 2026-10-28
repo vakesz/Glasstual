@@ -226,8 +226,8 @@ extension ServerSession {
 	func sendTimedWhoRequests(to conversations: [Conversation], sentAt: Date = .now) {
 		guard isLoggedIn, isBrokenIRCdKnownAsTwitch == false,
 		      let range = UserTrackingWhoBatchPolicy.indexRange(
-		      	startingAt: Int(lastWhoRequestConversationListIndex),
-		      	conversationCount: conversations.count
+			startingAt: Int(lastWhoRequestConversationListIndex),
+			conversationCount: conversations.count
 		      )
 		else { return }
 

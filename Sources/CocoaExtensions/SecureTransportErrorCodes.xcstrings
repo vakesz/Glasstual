@@ -1,3702 +1,3702 @@
 {
-  "sourceLanguage" : "en",
-  "strings" : {
-    "-9800" : {
-      "comment" : "Reason for errSSLProtocol.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Generic protocol error"
+  "sourceLanguage": "en",
+  "strings": {
+    "-9800": {
+      "comment": "Reason for errSSLProtocol.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Generic protocol error"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Általános protokollhiba"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Általános protokollhiba"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Allgemeiner Protokollfehler"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allgemeiner Protokollfehler"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Error genérico de protocolo"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Error genérico de protocolo"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Erreur de protocole générique"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Erreur de protocole générique"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "一般的なプロトコルエラー"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "一般的なプロトコルエラー"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Erro genérico de protocolo"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Erro genérico de protocolo"
           }
         }
       }
     },
-    "-9801" : {
-      "comment" : "Reason for errSSLNegotiation.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cipher suite negotiation failure"
+    "-9801": {
+      "comment": "Reason for errSSLNegotiation.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cipher suite negotiation failure"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A titkosítási csomag egyeztetése sikertelen"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A titkosítási csomag egyeztetése sikertelen"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aushandlung der Cipher-Suite fehlgeschlagen"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aushandlung der Cipher-Suite fehlgeschlagen"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Fallo en la negociación de la combinación de cifrado"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Fallo en la negociación de la combinación de cifrado"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Échec de la négociation de la suite de chiffrement"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Échec de la négociation de la suite de chiffrement"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "暗号スイートの交渉失敗"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "暗号スイートの交渉失敗"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Falha na negociação do conjunto de chaves cifradas"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Falha na negociação do conjunto de chaves cifradas"
           }
         }
       }
     },
-    "-9802" : {
-      "comment" : "Reason for errSSLFatalAlert.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fatal alert"
+    "-9802": {
+      "comment": "Reason for errSSLFatalAlert.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fatal alert"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Végzetes riasztás"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Végzetes riasztás"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Schwerwiegende Warnmeldung"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schwerwiegende Warnmeldung"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Alerta fatal"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Alerta fatal"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Alerte fatale"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Alerte fatale"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "致命的な警告"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "致命的な警告"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Alerta fatal"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Alerta fatal"
           }
         }
       }
     },
-    "-9803" : {
-      "comment" : "Reason for errSSLWouldBlock.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "I/O would block"
+    "-9803": {
+      "comment": "Reason for errSSLWouldBlock.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I/O would block"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A bemeneti/kimeneti művelet blokkolna"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A bemeneti/kimeneti művelet blokkolna"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ein-/Ausgabe würde blockieren"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein-/Ausgabe würde blockieren"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "I/O bloquearía"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "I/O bloquearía"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "I/O bloquerait"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "I/O bloquerait"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "I/Oがブロックされます"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "I/Oがブロックされます"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "I/O bloquearia"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "I/O bloquearia"
           }
         }
       }
     },
-    "-9804" : {
-      "comment" : "Reason for errSSLSessionNotFound.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Attempt to restore an unknown session"
+    "-9804": {
+      "comment": "Reason for errSSLSessionNotFound.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Attempt to restore an unknown session"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ismeretlen munkamenet visszaállítási kísérlete"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ismeretlen munkamenet visszaállítási kísérlete"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Versuch, eine unbekannte Sitzung wiederherzustellen"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Versuch, eine unbekannte Sitzung wiederherzustellen"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Intento de restaurar una sesión desconocida"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Intento de restaurar una sesión desconocida"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Tentative de restauration d'une session inconnue"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Tentative de restauration d'une session inconnue"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "不明なセッションの復元を試みる"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "不明なセッションの復元を試みる"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Tentativa de restaurar uma sessão desconhecida"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Tentativa de restaurar uma sessão desconhecida"
           }
         }
       }
     },
-    "-9805" : {
-      "comment" : "Reason for errSSLClosedGraceful.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Connection was closed gracefully"
+    "-9805": {
+      "comment": "Reason for errSSLClosedGraceful.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connection was closed gracefully"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A kapcsolat szabályosan lezárult"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A kapcsolat szabályosan lezárult"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verbindung ordnungsgemäß geschlossen"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbindung ordnungsgemäß geschlossen"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "La conexión se cerró de forma elegante"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "La conexión se cerró de forma elegante"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "La connexion a été fermée avec élégance"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "La connexion a été fermée avec élégance"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "接続は優しく閉じられました。"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "接続は優しく閉じられました。"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "A conexão foi fechada de forma graciosa"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "A conexão foi fechada de forma graciosa"
           }
         }
       }
     },
-    "-9806" : {
-      "comment" : "Reason for errSSLClosedAbort.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Connection was closed as a result of an error"
+    "-9806": {
+      "comment": "Reason for errSSLClosedAbort.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connection was closed as a result of an error"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A kapcsolat hiba miatt lezárult"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A kapcsolat hiba miatt lezárult"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verbindung aufgrund eines Fehlers geschlossen"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbindung aufgrund eines Fehlers geschlossen"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "La conexión se cerró como resultado de un error"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "La conexión se cerró como resultado de un error"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "La connexion a été fermée en raison d'une erreur."
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "La connexion a été fermée en raison d'une erreur."
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "エラーにより接続が切断されました。"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "エラーにより接続が切断されました。"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "A conexão foi fechada como resultado de um erro"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "A conexão foi fechada como resultado de um erro"
           }
         }
       }
     },
-    "-9807" : {
-      "comment" : "Reason for errSSLXCertChainInvalid.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Invalid certificate chain"
+    "-9807": {
+      "comment": "Reason for errSSLXCertChainInvalid.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invalid certificate chain"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Érvénytelen tanúsítványlánc"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Érvénytelen tanúsítványlánc"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ungültige Zertifikatskette"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ungültige Zertifikatskette"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Cadena de certificados no válida"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Cadena de certificados no válida"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Chaîne de certificats invalide"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Chaîne de certificats invalide"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "無効な証明書チェーン"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "無効な証明書チェーン"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Cadeia de certificados inválida"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Cadeia de certificados inválida"
           }
         }
       }
     },
-    "-9808" : {
-      "comment" : "Reason for errSSLBadCert.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Invalid certificate format"
+    "-9808": {
+      "comment": "Reason for errSSLBadCert.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invalid certificate format"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Érvénytelen tanúsítványformátum"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Érvénytelen tanúsítványformátum"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ungültiges Zertifikatsformat"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ungültiges Zertifikatsformat"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Formato de certificado inválido"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Formato de certificado inválido"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Format de certificat invalide"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Format de certificat invalide"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "無効な証明書形式"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "無効な証明書形式"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Formato de certificado inválido"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Formato de certificado inválido"
           }
         }
       }
     },
-    "-9809" : {
-      "comment" : "Reason for errSSLCrypto.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Underlying cryptographic error"
+    "-9809": {
+      "comment": "Reason for errSSLCrypto.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Underlying cryptographic error"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mögöttes kriptográfiai hiba"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mögöttes kriptográfiai hiba"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zugrunde liegender kryptografischer Fehler"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zugrunde liegender kryptografischer Fehler"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Error criptográfico subyacente"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Error criptográfico subyacente"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Erreur cryptographique sous-jacente"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Erreur cryptographique sous-jacente"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "根本的な暗号化エラー"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "根本的な暗号化エラー"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Erro criptográfico subjacente"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Erro criptográfico subjacente"
           }
         }
       }
     },
-    "-9810" : {
-      "comment" : "Reason for errSSLInternal.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Internal error"
+    "-9810": {
+      "comment": "Reason for errSSLInternal.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Internal error"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Belső hiba"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Belső hiba"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Interner Fehler"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Interner Fehler"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Error interno"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Error interno"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Erreur interne"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Erreur interne"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "内部エラー"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "内部エラー"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Erro interno"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Erro interno"
           }
         }
       }
     },
-    "-9811" : {
-      "comment" : "Reason for errSSLModuleAttach.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Module attach failure"
+    "-9811": {
+      "comment": "Reason for errSSLModuleAttach.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Module attach failure"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Modul csatolása sikertelen"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modul csatolása sikertelen"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Einbinden des Moduls fehlgeschlagen"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einbinden des Moduls fehlgeschlagen"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Fallo al adjuntar el módulo"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Fallo al adjuntar el módulo"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Échec de l’attachement du module"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Échec de l’attachement du module"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "モジュール添付の失敗"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "モジュール添付の失敗"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Falha na anexação do módulo"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Falha na anexação do módulo"
           }
         }
       }
     },
-    "-9812" : {
-      "comment" : "Reason for errSSLUnknownRootCert.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Valid certificate chain with an untrusted root"
+    "-9812": {
+      "comment": "Reason for errSSLUnknownRootCert.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Valid certificate chain with an untrusted root"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Érvényes tanúsítványlánc nem megbízható gyökértanúsítvánnyal"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Érvényes tanúsítványlánc nem megbízható gyökértanúsítvánnyal"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gültige Zertifikatskette mit nicht vertrauenswürdigem Stammzertifikat"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gültige Zertifikatskette mit nicht vertrauenswürdigem Stammzertifikat"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Cadena de certificados válida con una raíz no confiable"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Cadena de certificados válida con una raíz no confiable"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Chaîne de certificats valide avec une racine non fiable"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Chaîne de certificats valide avec une racine non fiable"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "信頼できないルートを持つ有効な証明書チェーン"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "信頼できないルートを持つ有効な証明書チェーン"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Cadeia de certificados válida com uma raiz não confiável"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Cadeia de certificados válida com uma raiz não confiável"
           }
         }
       }
     },
-    "-9813" : {
-      "comment" : "Reason for errSSLNoRootCert.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No root certificate for the certificate chain"
+    "-9813": {
+      "comment": "Reason for errSSLNoRootCert.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No root certificate for the certificate chain"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A tanúsítványlánchoz nincs gyökértanúsítvány"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A tanúsítványlánchoz nincs gyökértanúsítvány"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kein Stammzertifikat für die Zertifikatskette vorhanden"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kein Stammzertifikat für die Zertifikatskette vorhanden"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Sin certificado raíz para la cadena de certificados"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sin certificado raíz para la cadena de certificados"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Aucun certificat racine pour la chaîne de certificats"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Aucun certificat racine pour la chaîne de certificats"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "証明書チェーンのルート証明書がない"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "証明書チェーンのルート証明書がない"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Sem certificado raiz para a cadeia de certificados"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sem certificado raiz para a cadeia de certificados"
           }
         }
       }
     },
-    "-9814" : {
-      "comment" : "Reason for errSSLCertExpired.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Certificate chain has an expired certificate"
+    "-9814": {
+      "comment": "Reason for errSSLCertExpired.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Certificate chain has an expired certificate"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A tanúsítványlánc lejárt tanúsítványt tartalmaz"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A tanúsítványlánc lejárt tanúsítványt tartalmaz"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Die Zertifikatskette enthält ein abgelaufenes Zertifikat"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Zertifikatskette enthält ein abgelaufenes Zertifikat"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "La cadena de certificados tiene un certificado caducado"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "La cadena de certificados tiene un certificado caducado"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "La chaîne de certificats contient un certificat expiré."
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "La chaîne de certificats contient un certificat expiré."
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "証明書チェーンに期限切れの証明書があります。"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "証明書チェーンに期限切れの証明書があります。"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "A cadeia de certificados tem um certificado expirado"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "A cadeia de certificados tem um certificado expirado"
           }
         }
       }
     },
-    "-9815" : {
-      "comment" : "Reason for errSSLCertNotYetValid.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Certificate chain has a certificate that is not yet valid"
+    "-9815": {
+      "comment": "Reason for errSSLCertNotYetValid.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Certificate chain has a certificate that is not yet valid"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A tanúsítványlánc még nem érvényes tanúsítványt tartalmaz"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A tanúsítványlánc még nem érvényes tanúsítványt tartalmaz"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Die Zertifikatskette enthält ein noch nicht gültiges Zertifikat"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Zertifikatskette enthält ein noch nicht gültiges Zertifikat"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "La cadena de certificados tiene un certificado que aún no es válido"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "La cadena de certificados tiene un certificado que aún no es válido"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "La chaîne de certificats contient un certificat qui n'est pas encore valide."
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "La chaîne de certificats contient un certificat qui n'est pas encore valide."
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "証明書チェーンにはまだ有効でない証明書があります。"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "証明書チェーンにはまだ有効でない証明書があります。"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "A cadeia de certificados tem um certificado que ainda não é válido"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "A cadeia de certificados tem um certificado que ainda não é válido"
           }
         }
       }
     },
-    "-9816" : {
-      "comment" : "Reason for errSSLClosedNoNotify.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Server closed session with no notification"
+    "-9816": {
+      "comment": "Reason for errSSLClosedNoNotify.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server closed session with no notification"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A kiszolgáló értesítés nélkül lezárta a munkamenetet"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A kiszolgáló értesítés nélkül lezárta a munkamenetet"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Der Server hat die Sitzung ohne Benachrichtigung geschlossen"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Server hat die Sitzung ohne Benachrichtigung geschlossen"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "El servidor cerró la sesión sin notificación"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "El servidor cerró la sesión sin notificación"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "La session du serveur a été fermée sans notification"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "La session du serveur a été fermée sans notification"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "サーバーは通知なしでセッションを終了しました。"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "サーバーは通知なしでセッションを終了しました。"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Servidor fechou sessão sem notificação"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Servidor fechou sessão sem notificação"
           }
         }
       }
     },
-    "-9817" : {
-      "comment" : "Reason for errSSLBufferOverflow.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Insufficient buffer provided"
+    "-9817": {
+      "comment": "Reason for errSSLBufferOverflow.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Insufficient buffer provided"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A megadott puffer túl kicsi"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A megadott puffer túl kicsi"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Der bereitgestellte Puffer ist zu klein"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der bereitgestellte Puffer ist zu klein"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Se proporcionó un búfer insuficiente"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Se proporcionó un búfer insuficiente"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Buffer insuffisant fourni"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Buffer insuffisant fourni"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "十分なバッファーが提供されていません"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "十分なバッファーが提供されていません"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Buffer insuficiente fornecido"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Buffer insuficiente fornecido"
           }
         }
       }
     },
-    "-9818" : {
-      "comment" : "Reason for errSSLBadCipherSuite.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Improperly configured cipher suite"
+    "-9818": {
+      "comment": "Reason for errSSLBadCipherSuite.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Improperly configured cipher suite"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hibásan beállított titkosítási csomag"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hibásan beállított titkosítási csomag"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Falsch konfigurierte Cipher-Suite"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falsch konfigurierte Cipher-Suite"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Conjunto de cifrados configurado de forma incorrecta"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Conjunto de cifrados configurado de forma incorrecta"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Suite de chiffrement mal configurée"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Suite de chiffrement mal configurée"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "不適切に構成された暗号スイート"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "不適切に構成された暗号スイート"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Conjunto de chifres configurado incorretamente"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Conjunto de chifres configurado incorretamente"
           }
         }
       }
     },
-    "-9819" : {
-      "comment" : "Reason for errSSLPeerUnexpectedMsg.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unexpected message received"
+    "-9819": {
+      "comment": "Reason for errSSLPeerUnexpectedMsg.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unexpected message received"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Váratlan üzenet érkezett"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Váratlan üzenet érkezett"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unerwartete Nachricht empfangen"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unerwartete Nachricht empfangen"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Mensaje inesperado recibido"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mensaje inesperado recibido"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Message inattendu reçu"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Message inattendu reçu"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "予期せぬメッセージを受け取りました"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "予期せぬメッセージを受け取りました"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Mensagem inesperada recebida"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mensagem inesperada recebida"
           }
         }
       }
     },
-    "-9820" : {
-      "comment" : "Reason for errSSLPeerBadRecordMac.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bad MAC"
+    "-9820": {
+      "comment": "Reason for errSSLPeerBadRecordMac.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bad MAC"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hibás üzenethitelesítési kód"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hibás üzenethitelesítési kód"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ungültiger Nachrichtenauthentifizierungscode"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ungültiger Nachrichtenauthentifizierungscode"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "MAC malo"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "MAC malo"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Mauvais MAC"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mauvais MAC"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "悪いMAC"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "悪いMAC"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "MAC ruim"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "MAC ruim"
           }
         }
       }
     },
-    "-9821" : {
-      "comment" : "Reason for errSSLPeerDecryptionFail.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Decryption failed"
+    "-9821": {
+      "comment": "Reason for errSSLPeerDecryptionFail.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Decryption failed"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sikertelen visszafejtés"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sikertelen visszafejtés"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Entschlüsselung fehlgeschlagen"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entschlüsselung fehlgeschlagen"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "La descifrado falló"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "La descifrado falló"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Décryptage échoué"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Décryptage échoué"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "暗号解読に失敗しました"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "暗号解読に失敗しました"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Decifração falhou"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Decifração falhou"
           }
         }
       }
     },
-    "-9822" : {
-      "comment" : "Reason for errSSLPeerRecordOverflow.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Record overflow"
+    "-9822": {
+      "comment": "Reason for errSSLPeerRecordOverflow.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Record overflow"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rekordtúlcsordulás"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rekordtúlcsordulás"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Datensatzüberlauf"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Datensatzüberlauf"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Sobrecarga de registros"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sobrecarga de registros"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Overflow de enregistrement"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Overflow de enregistrement"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "記録オーバーフロー"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "記録オーバーフロー"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Superação de registros"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Superação de registros"
           }
         }
       }
     },
-    "-9823" : {
-      "comment" : "Reason for errSSLPeerDecompressFail.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Decompression failure"
+    "-9823": {
+      "comment": "Reason for errSSLPeerDecompressFail.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Decompression failure"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sikertelen kitömörítés"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sikertelen kitömörítés"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dekomprimierung fehlgeschlagen"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dekomprimierung fehlgeschlagen"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Fallo de descompresión"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Fallo de descompresión"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Échec de la décompression"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Échec de la décompression"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "デコンプレッションの失敗"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "デコンプレッションの失敗"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Falha de decompressão"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Falha de decompressão"
           }
         }
       }
     },
-    "-9824" : {
-      "comment" : "Reason for errSSLPeerHandshakeFail.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Handshake failure"
+    "-9824": {
+      "comment": "Reason for errSSLPeerHandshakeFail.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake failure"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sikertelen kézfogás"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sikertelen kézfogás"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Handshake fehlgeschlagen"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake fehlgeschlagen"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Fallo del apretón de manos"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Fallo del apretón de manos"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Échec de la poignée de main"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Échec de la poignée de main"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "握手失敗"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "握手失敗"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Falha no aperto de mão"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Falha no aperto de mão"
           }
         }
       }
     },
-    "-9825" : {
-      "comment" : "Reason for errSSLPeerBadCert.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bad certificate"
+    "-9825": {
+      "comment": "Reason for errSSLPeerBadCert.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bad certificate"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hibás tanúsítvány"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hibás tanúsítvány"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fehlerhaftes Zertifikat"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fehlerhaftes Zertifikat"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Certificado malo"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Certificado malo"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Mauvais certificat"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mauvais certificat"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "悪い証明書"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "悪い証明書"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Certificado ruim"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Certificado ruim"
           }
         }
       }
     },
-    "-9826" : {
-      "comment" : "Reason for errSSLPeerUnsupportedCert.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Invalid or unsupported certificate format"
+    "-9826": {
+      "comment": "Reason for errSSLPeerUnsupportedCert.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invalid or unsupported certificate format"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Érvénytelen vagy nem támogatott tanúsítványformátum"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Érvénytelen vagy nem támogatott tanúsítványformátum"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ungültiges oder nicht unterstütztes Zertifikatsformat"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ungültiges oder nicht unterstütztes Zertifikatsformat"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Formato de certificado no válido o no soportado"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Formato de certificado no válido o no soportado"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Format de certificat invalide ou non pris en charge"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Format de certificat invalide ou non pris en charge"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "無効またはサポートされていない証明書形式"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "無効またはサポートされていない証明書形式"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Formato de certificado inválido ou não suportado"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Formato de certificado inválido ou não suportado"
           }
         }
       }
     },
-    "-9827" : {
-      "comment" : "Reason for errSSLPeerCertRevoked.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Certificate revoked"
+    "-9827": {
+      "comment": "Reason for errSSLPeerCertRevoked.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Certificate revoked"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Visszavont tanúsítvány"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Visszavont tanúsítvány"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zertifikat widerrufen"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zertifikat widerrufen"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Certificado revocado"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Certificado revocado"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Certificat révoqué"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Certificat révoqué"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "証明書取り消し"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "証明書取り消し"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Certificado revogado"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Certificado revogado"
           }
         }
       }
     },
-    "-9828" : {
-      "comment" : "Reason for errSSLPeerCertExpired.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Certificate expired"
+    "-9828": {
+      "comment": "Reason for errSSLPeerCertExpired.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Certificate expired"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lejárt tanúsítvány"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lejárt tanúsítvány"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zertifikat abgelaufen"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zertifikat abgelaufen"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Certificado caducado"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Certificado caducado"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Le certificat a expiré"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Le certificat a expiré"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "証明書は期限切れです"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "証明書は期限切れです"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Certificado expirado"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Certificado expirado"
           }
         }
       }
     },
-    "-9829" : {
-      "comment" : "Reason for errSSLPeerCertUnknown.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unknown certificate"
+    "-9829": {
+      "comment": "Reason for errSSLPeerCertUnknown.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown certificate"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ismeretlen tanúsítvány"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ismeretlen tanúsítvány"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unbekanntes Zertifikat"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unbekanntes Zertifikat"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Certificado desconocido"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Certificado desconocido"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Certificat inconnu"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Certificat inconnu"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "不明な証明書"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "不明な証明書"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Certificado desconhecido"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Certificado desconhecido"
           }
         }
       }
     },
-    "-9830" : {
-      "comment" : "Reason for errSSLIllegalParam.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Illegal parameter"
+    "-9830": {
+      "comment": "Reason for errSSLIllegalParam.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Illegal parameter"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Érvénytelen paraméter"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Érvénytelen paraméter"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unzulässiger Parameter"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unzulässiger Parameter"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Parámetro ilegal"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Parámetro ilegal"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Paramètre illégal"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Paramètre illégal"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "違法なパラメータ"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "違法なパラメータ"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Parâmetro ilegal"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Parâmetro ilegal"
           }
         }
       }
     },
-    "-9831" : {
-      "comment" : "Reason for errSSLPeerUnknownCA.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unknown certificate authority"
+    "-9831": {
+      "comment": "Reason for errSSLPeerUnknownCA.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown certificate authority"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ismeretlen hitelesítésszolgáltató"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ismeretlen hitelesítésszolgáltató"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unbekannte Zertifizierungsstelle"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unbekannte Zertifizierungsstelle"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Autoridad de certificación desconocida"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Autoridad de certificación desconocida"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Autorité de certification inconnue"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Autorité de certification inconnue"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "不明な証明書発行機関"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "不明な証明書発行機関"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Autoridade de certificado desconhecida"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Autoridade de certificado desconhecida"
           }
         }
       }
     },
-    "-9832" : {
-      "comment" : "Reason for errSSLPeerAccessDenied.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Access denied"
+    "-9832": {
+      "comment": "Reason for errSSLPeerAccessDenied.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Access denied"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hozzáférés megtagadva"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hozzáférés megtagadva"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zugriff verweigert"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zugriff verweigert"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Acceso denegado"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Acceso denegado"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Accès refusé"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Accès refusé"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "アクセス拒否"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "アクセス拒否"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Acesso negado"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Acesso negado"
           }
         }
       }
     },
-    "-9833" : {
-      "comment" : "Reason for errSSLPeerDecodeError.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Decoding error"
+    "-9833": {
+      "comment": "Reason for errSSLPeerDecodeError.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Decoding error"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dekódolási hiba"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dekódolási hiba"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dekodierungsfehler"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dekodierungsfehler"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Error de decodificación"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Error de decodificación"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Erreur de décodage"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Erreur de décodage"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "解読エラー"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "解読エラー"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Erro de decodificação"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Erro de decodificação"
           }
         }
       }
     },
-    "-9834" : {
-      "comment" : "Reason for errSSLPeerDecryptError.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Decryption error"
+    "-9834": {
+      "comment": "Reason for errSSLPeerDecryptError.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Decryption error"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Visszafejtési hiba"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Visszafejtési hiba"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Entschlüsselungsfehler"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entschlüsselungsfehler"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Error de descifrado"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Error de descifrado"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Erreur de déchiffrement"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Erreur de déchiffrement"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "暗号解読エラー"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "暗号解読エラー"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Erro de descriptografia"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Erro de descriptografia"
           }
         }
       }
     },
-    "-9835" : {
-      "comment" : "Reason for errSSLPeerExportRestriction.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Export restriction"
+    "-9835": {
+      "comment": "Reason for errSSLPeerExportRestriction.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export restriction"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Exportkorlátozás"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exportkorlátozás"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Exportbeschränkung"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exportbeschränkung"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Restricción de exportación"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Restricción de exportación"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Restriction d'exportation"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Restriction d'exportation"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "輸出制限"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "輸出制限"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Restrição de exportação"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Restrição de exportação"
           }
         }
       }
     },
-    "-9836" : {
-      "comment" : "Reason for errSSLPeerProtocolVersion.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Invalid protocol version"
+    "-9836": {
+      "comment": "Reason for errSSLPeerProtocolVersion.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invalid protocol version"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Érvénytelen protokollverzió"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Érvénytelen protokollverzió"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ungültige Protokollversion"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ungültige Protokollversion"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Versión de protocolo no válida"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Versión de protocolo no válida"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Version de protocole invalide"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Version de protocole invalide"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "無効なプロトコルバージョン"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "無効なプロトコルバージョン"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Versão do protocolo inválida"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Versão do protocolo inválida"
           }
         }
       }
     },
-    "-9837" : {
-      "comment" : "Reason for errSSLPeerInsufficientSecurity.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Insufficient security"
+    "-9837": {
+      "comment": "Reason for errSSLPeerInsufficientSecurity.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Insufficient security"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Elégtelen biztonság"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elégtelen biztonság"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unzureichende Sicherheit"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unzureichende Sicherheit"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Seguridad insuficiente"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Seguridad insuficiente"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Sécurité insuffisante"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sécurité insuffisante"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "セキュリティが不十分です"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "セキュリティが不十分です"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Segurança insuficiente"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Segurança insuficiente"
           }
         }
       }
     },
-    "-9838" : {
-      "comment" : "Reason for errSSLPeerInternalError.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Internal error"
+    "-9838": {
+      "comment": "Reason for errSSLPeerInternalError.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Internal error"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Belső hiba"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Belső hiba"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Interner Fehler"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Interner Fehler"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Error interno"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Error interno"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Erreur interne"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Erreur interne"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "内部エラー"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "内部エラー"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Erro interno"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Erro interno"
           }
         }
       }
     },
-    "-9839" : {
-      "comment" : "Reason for errSSLPeerUserCancelled.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "User canceled"
+    "-9839": {
+      "comment": "Reason for errSSLPeerUserCancelled.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "User canceled"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A felhasználó megszakította"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A felhasználó megszakította"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vom Benutzer abgebrochen"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vom Benutzer abgebrochen"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "El usuario canceló"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "El usuario canceló"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "L'utilisateur a annulé"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "L'utilisateur a annulé"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ユーザーがキャンセルしました"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ユーザーがキャンセルしました"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Usuário cancelado"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Usuário cancelado"
           }
         }
       }
     },
-    "-9840" : {
-      "comment" : "Reason for errSSLPeerNoRenegotiation.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Renegotiation is not allowed"
+    "-9840": {
+      "comment": "Reason for errSSLPeerNoRenegotiation.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renegotiation is not allowed"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Az újraegyeztetés nem engedélyezett"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Az újraegyeztetés nem engedélyezett"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Erneute Aushandlung ist nicht erlaubt"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erneute Aushandlung ist nicht erlaubt"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "No se permite la renegociación"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No se permite la renegociación"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "La rénegotiation n'est pas autorisée"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "La rénegotiation n'est pas autorisée"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "再交渉は許可されていません"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "再交渉は許可されていません"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Renegociação não é permitida"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Renegociação não é permitida"
           }
         }
       }
     },
-    "-9841" : {
-      "comment" : "Reason for errSSLPeerAuthCompleted.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Peer certificate is valid or was ignored if verification is disabled"
+    "-9841": {
+      "comment": "Reason for errSSLPeerAuthCompleted.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Peer certificate is valid or was ignored if verification is disabled"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A partner tanúsítványa érvényes, vagy kikapcsolt ellenőrzés mellett figyelmen kívül maradt"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A partner tanúsítványa érvényes, vagy kikapcsolt ellenőrzés mellett figyelmen kívül maradt"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Das Zertifikat der Gegenstelle ist gültig oder wurde bei deaktivierter Prüfung ignoriert"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Zertifikat der Gegenstelle ist gültig oder wurde bei deaktivierter Prüfung ignoriert"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "El certificado de pares es válido o fue ignorado si la verificación está desactivada"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "El certificado de pares es válido o fue ignorado si la verificación está desactivada"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Le certificat de pair est valide ou a été ignoré si la vérification est désactivée"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Le certificat de pair est valide ou a été ignoré si la vérification est désactivée"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ピア証明書は有効であるか、検証が無効になっている場合は無視されます。"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ピア証明書は有効であるか、検証が無効になっている場合は無視されます。"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "O certificado de pares é válido ou foi ignorado se a verificação estiver desativada"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "O certificado de pares é válido ou foi ignorado se a verificação estiver desativada"
           }
         }
       }
     },
-    "-9842" : {
-      "comment" : "Reason for errSSLClientCertRequested.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Server has requested a client-side certificate"
+    "-9842": {
+      "comment": "Reason for errSSLClientCertRequested.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server has requested a client-side certificate"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A kiszolgáló kliensoldali tanúsítványt kért"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A kiszolgáló kliensoldali tanúsítványt kért"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Der Server hat ein Clientzertifikat angefordert"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Server hat ein Clientzertifikat angefordert"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "El servidor ha solicitado un certificado del lado del cliente"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "El servidor ha solicitado un certificado del lado del cliente"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Le serveur a demandé un certificat côté client"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Le serveur a demandé un certificat côté client"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "サーバーがクライアント側証明書をリクエストしました。"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "サーバーがクライアント側証明書をリクエストしました。"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "O servidor solicitou um certificado do lado do cliente"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "O servidor solicitou um certificado do lado do cliente"
           }
         }
       }
     },
-    "-9843" : {
-      "comment" : "Reason for errSSLHostNameMismatch.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Host mismatch"
+    "-9843": {
+      "comment": "Reason for errSSLHostNameMismatch.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Host mismatch"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Eltérő gépnév"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eltérő gépnév"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hostname stimmt nicht überein"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hostname stimmt nicht überein"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Desajuste del anfitrión"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Desajuste del anfitrión"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Incompatibilité d'hôte"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Incompatibilité d'hôte"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ホストの不一致"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ホストの不一致"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Desacordo de hospedeiro"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Desacordo de hospedeiro"
           }
         }
       }
     },
-    "-9844" : {
-      "comment" : "Reason for errSSLConnectionRefused.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Peer dropped connection before responding"
+    "-9844": {
+      "comment": "Reason for errSSLConnectionRefused.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Peer dropped connection before responding"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A partner válaszadás előtt bontotta a kapcsolatot"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A partner válaszadás előtt bontotta a kapcsolatot"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Die Gegenstelle hat die Verbindung vor einer Antwort getrennt"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Gegenstelle hat die Verbindung vor einer Antwort getrennt"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "El compañero perdió la conexión antes de responder"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "El compañero perdió la conexión antes de responder"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Le pair a coupé la connexion avant de répondre"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Le pair a coupé la connexion avant de répondre"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ピアが応答する前に接続を切断しました。"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ピアが応答する前に接続を切断しました。"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Parceiro desconectou-se antes de responder"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Parceiro desconectou-se antes de responder"
           }
         }
       }
     },
-    "-9845" : {
-      "comment" : "Reason for errSSLDecryptionFail.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Decryption failure"
+    "-9845": {
+      "comment": "Reason for errSSLDecryptionFail.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Decryption failure"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sikertelen visszafejtés"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sikertelen visszafejtés"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Entschlüsselung fehlgeschlagen"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entschlüsselung fehlgeschlagen"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Fallo en la descifrado"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Fallo en la descifrado"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Échec de la déchiffrement"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Échec de la déchiffrement"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "暗号解読失敗"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "暗号解読失敗"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Falha na descriptografia"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Falha na descriptografia"
           }
         }
       }
     },
-    "-9846" : {
-      "comment" : "Reason for errSSLBadRecordMac.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bad MAC"
+    "-9846": {
+      "comment": "Reason for errSSLBadRecordMac.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bad MAC"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hibás üzenethitelesítési kód"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hibás üzenethitelesítési kód"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ungültiger Nachrichtenauthentifizierungscode"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ungültiger Nachrichtenauthentifizierungscode"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "MAC malo"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "MAC malo"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Mauvais MAC"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mauvais MAC"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "悪いMAC"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "悪いMAC"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "MAC ruim"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "MAC ruim"
           }
         }
       }
     },
-    "-9847" : {
-      "comment" : "Reason for errSSLRecordOverflow.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Record overflow"
+    "-9847": {
+      "comment": "Reason for errSSLRecordOverflow.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Record overflow"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rekordtúlcsordulás"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rekordtúlcsordulás"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Datensatzüberlauf"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Datensatzüberlauf"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Sobrecarga de registros"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sobrecarga de registros"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Overflow de enregistrement"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Overflow de enregistrement"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "記録オーバーフロー"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "記録オーバーフロー"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Superação de registros"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Superação de registros"
           }
         }
       }
     },
-    "-9848" : {
-      "comment" : "Reason for errSSLBadConfiguration.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Configuration error"
+    "-9848": {
+      "comment": "Reason for errSSLBadConfiguration.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configuration error"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Beállítási hiba"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beállítási hiba"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Konfigurationsfehler"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konfigurationsfehler"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Error de configuración"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Error de configuración"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Erreur de configuration"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Erreur de configuration"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "構成エラー"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "構成エラー"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Erro de configuração"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Erro de configuração"
           }
         }
       }
     },
-    "-9849" : {
-      "comment" : "Reason for errSSLUnexpectedRecord.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unexpected (skipped) record in DTLS"
+    "-9849": {
+      "comment": "Reason for errSSLUnexpectedRecord.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unexpected (skipped) record in DTLS"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Váratlan (kihagyott) DTLS-rekord"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Váratlan (kihagyott) DTLS-rekord"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unerwarteter (übersprungener) DTLS-Datensatz"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unerwarteter (übersprungener) DTLS-Datensatz"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Registro inesperado (omitido) en DTLS"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Registro inesperado (omitido) en DTLS"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Enregistrement inattendu (omissé) dans DTLS"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Enregistrement inattendu (omissé) dans DTLS"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "DTLSで予期せぬ（スキップされた）レコード"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "DTLSで予期せぬ（スキップされた）レコード"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Registro inesperado (passado) no DTLS"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Registro inesperado (passado) no DTLS"
           }
         }
       }
     },
-    "-9850" : {
-      "comment" : "Reason for errSSLWeakPeerEphemeralDHKey.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Server has a weak ephemeral Diffie-Hellman public key"
+    "-9850": {
+      "comment": "Reason for errSSLWeakPeerEphemeralDHKey.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server has a weak ephemeral Diffie-Hellman public key"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A kiszolgáló ideiglenes Diffie–Hellman nyilvános kulcsa gyenge"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A kiszolgáló ideiglenes Diffie–Hellman nyilvános kulcsa gyenge"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Der Server verwendet einen schwachen temporären öffentlichen Diffie-Hellman-Schlüssel"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Server verwendet einen schwachen temporären öffentlichen Diffie-Hellman-Schlüssel"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "El servidor tiene una clave pública diférmica-Hellman efímera débil"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "El servidor tiene una clave pública diférmica-Hellman efímera débil"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Le serveur possède une clé publique Diffie-Hellman éphémère faible."
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Le serveur possède une clé publique Diffie-Hellman éphémère faible."
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "サーバーには弱い一時的なディフィ-ヘルマン公開鍵があります。"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "サーバーには弱い一時的なディフィ-ヘルマン公開鍵があります。"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "O servidor tem uma chave pública difusa-Hellman efêmera fraca"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "O servidor tem uma chave pública difusa-Hellman efêmera fraca"
           }
         }
       }
     },
-    "-9851" : {
-      "comment" : "Reason for errSSLClientHelloReceived.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hello received"
+    "-9851": {
+      "comment": "Reason for errSSLClientHelloReceived.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hello received"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hello üzenet érkezett"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hello üzenet érkezett"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hello-Nachricht empfangen"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hello-Nachricht empfangen"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Hola recibido"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Hola recibido"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Bonjour reçu"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Bonjour reçu"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "こんにちは、受け取りました"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "こんにちは、受け取りました"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Olá recebido"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Olá recebido"
           }
         }
       }
     },
-    "-9852" : {
-      "comment" : "Reason for errSSLTransportReset.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Socket shutdown (e.g. TCP RST or FIN)"
+    "-9852": {
+      "comment": "Reason for errSSLTransportReset.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Socket shutdown (e.g. TCP RST or FIN)"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hálózati kapcsolat lezárása (például TCP RST vagy FIN)"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hálózati kapcsolat lezárása (például TCP RST vagy FIN)"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Socket geschlossen (z. B. TCP RST oder FIN)"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Socket geschlossen (z. B. TCP RST oder FIN)"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Cierre del conector (por ejemplo, TCP RST o FIN)"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Cierre del conector (por ejemplo, TCP RST o FIN)"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Arrêt du socket (par exemple TCP RST ou FIN)"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Arrêt du socket (par exemple TCP RST ou FIN)"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ソケットシャットダウン（例：TCP RSTまたはFIN）"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ソケットシャットダウン（例：TCP RSTまたはFIN）"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Desligamento do conector (por exemplo, TCP RST ou FIN)"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Desligamento do conector (por exemplo, TCP RST ou FIN)"
           }
         }
       }
     },
-    "-9853" : {
-      "comment" : "Reason for errSSLNetworkTimeout.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Network timeout"
+    "-9853": {
+      "comment": "Reason for errSSLNetworkTimeout.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Network timeout"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hálózati időtúllépés"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hálózati időtúllépés"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Netzwerk-Zeitüberschreitung"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Netzwerk-Zeitüberschreitung"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Tiempo de espera de la red"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Tiempo de espera de la red"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Temps d'attente réseau écoulé"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Temps d'attente réseau écoulé"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ネットワークタイムアウト"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ネットワークタイムアウト"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Tempo limite da rede"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Tempo limite da rede"
           }
         }
       }
     },
-    "-9854" : {
-      "comment" : "Reason for errSSLConfigurationFailed.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Configuration failed"
+    "-9854": {
+      "comment": "Reason for errSSLConfigurationFailed.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configuration failed"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Beállítás sikertelen"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beállítás sikertelen"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Konfiguration fehlgeschlagen"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konfiguration fehlgeschlagen"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "La configuración falló"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "La configuración falló"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "La configuration a échoué"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "La configuration a échoué"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "構成に失敗しました"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "構成に失敗しました"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Configuração falhou"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Configuração falhou"
           }
         }
       }
     },
-    "-9855" : {
-      "comment" : "Reason for errSSLUnsupportedExtension.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unsupported extension"
+    "-9855": {
+      "comment": "Reason for errSSLUnsupportedExtension.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unsupported extension"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nem támogatott kiterjesztés"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nem támogatott kiterjesztés"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nicht unterstützte Erweiterung"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nicht unterstützte Erweiterung"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Extensión no soportada"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Extensión no soportada"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Extension non prise en charge"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Extension non prise en charge"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "サポートされていない拡張子"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "サポートされていない拡張子"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Extensão não suportada"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Extensão não suportada"
           }
         }
       }
     },
-    "-9856" : {
-      "comment" : "Reason for errSSLUnexpectedMessage.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Peer rejected unexpected message"
+    "-9856": {
+      "comment": "Reason for errSSLUnexpectedMessage.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Peer rejected unexpected message"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A partner elutasította a váratlan üzenetet"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A partner elutasította a váratlan üzenetet"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Die Gegenstelle hat eine unerwartete Nachricht abgelehnt"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Gegenstelle hat eine unerwartete Nachricht abgelehnt"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "El compañero rechazó el mensaje inesperado"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "El compañero rechazó el mensaje inesperado"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Le pair a rejeté le message inattendu"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Le pair a rejeté le message inattendu"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ピアが予期せぬメッセージを拒否しました"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ピアが予期せぬメッセージを拒否しました"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Parceiro rejeitou mensagem inesperada"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Parceiro rejeitou mensagem inesperada"
           }
         }
       }
     },
-    "-9857" : {
-      "comment" : "Reason for errSSLDecompressFail.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Decompression failed"
+    "-9857": {
+      "comment": "Reason for errSSLDecompressFail.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Decompression failed"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sikertelen kitömörítés"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sikertelen kitömörítés"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dekomprimierung fehlgeschlagen"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dekomprimierung fehlgeschlagen"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "La descompresión falló"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "La descompresión falló"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "La décompression a échoué"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "La décompression a échoué"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "デコンプレッションに失敗しました"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "デコンプレッションに失敗しました"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "A decompressão falhou"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "A decompressão falhou"
           }
         }
       }
     },
-    "-9858" : {
-      "comment" : "Reason for errSSLHandshakeFail.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Handshake failed"
+    "-9858": {
+      "comment": "Reason for errSSLHandshakeFail.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake failed"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sikertelen kézfogás"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sikertelen kézfogás"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Handshake fehlgeschlagen"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake fehlgeschlagen"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "El apretón de manos falló"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "El apretón de manos falló"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "La poignée de main a échoué"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "La poignée de main a échoué"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "握手に失敗しました"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "握手に失敗しました"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Aumento de mão falhou"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Aumento de mão falhou"
           }
         }
       }
     },
-    "-9859" : {
-      "comment" : "Reason for errSSLDecodeError.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Decode failed"
+    "-9859": {
+      "comment": "Reason for errSSLDecodeError.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Decode failed"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sikertelen dekódolás"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sikertelen dekódolás"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dekodierung fehlgeschlagen"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dekodierung fehlgeschlagen"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Error al descifrar"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Error al descifrar"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Décodage échoué"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Décodage échoué"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "解読に失敗しました"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "解読に失敗しました"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Decodificação falhou"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Decodificação falhou"
           }
         }
       }
     },
-    "-9860" : {
-      "comment" : "Reason for errSSLInappropriateFallback.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Inappropriate fallback"
+    "-9860": {
+      "comment": "Reason for errSSLInappropriateFallback.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inappropriate fallback"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nem megfelelő visszalépés"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nem megfelelő visszalépés"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ungeeigneter Fallback"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ungeeigneter Fallback"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Respaldo inapropiado"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Respaldo inapropiado"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Remplacement inapproprié"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Remplacement inapproprié"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "不適切なフォールバック"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "不適切なフォールバック"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Padrão de reposição inadequado"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Padrão de reposição inadequado"
           }
         }
       }
     },
-    "-9861" : {
-      "comment" : "Reason for errSSLMissingExtension.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Missing extension"
+    "-9861": {
+      "comment": "Reason for errSSLMissingExtension.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Missing extension"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hiányzó kiterjesztés"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hiányzó kiterjesztés"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fehlende Erweiterung"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fehlende Erweiterung"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Extensión faltante"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Extensión faltante"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Extension manquante"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Extension manquante"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "拡張子が不足しています"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "拡張子が不足しています"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Extensão faltando"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Extensão faltando"
           }
         }
       }
     },
-    "-9862" : {
-      "comment" : "Reason for errSSLBadCertificateStatusResponse.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bad OCSP response"
+    "-9862": {
+      "comment": "Reason for errSSLBadCertificateStatusResponse.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bad OCSP response"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hibás OCSP-válasz"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hibás OCSP-válasz"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ungültige OCSP-Antwort"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ungültige OCSP-Antwort"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Respuesta OCSP incorrecta"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Respuesta OCSP incorrecta"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Mauvaise réponse OCSP"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mauvaise réponse OCSP"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "悪いOCSP応答"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "悪いOCSP応答"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Resposta OCSP ruim"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Resposta OCSP ruim"
           }
         }
       }
     },
-    "-9863" : {
-      "comment" : "Reason for errSSLCertificateRequired.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Certificate required"
+    "-9863": {
+      "comment": "Reason for errSSLCertificateRequired.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Certificate required"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tanúsítvány szükséges"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tanúsítvány szükséges"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zertifikat erforderlich"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zertifikat erforderlich"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Se requiere certificado"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Se requiere certificado"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Certificat requis"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Certificat requis"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "証明書が必要です"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "証明書が必要です"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Certificado necessário"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Certificado necessário"
           }
         }
       }
     },
-    "-9864" : {
-      "comment" : "Reason for errSSLUnknownPSKIdentity.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unknown PSK identity"
+    "-9864": {
+      "comment": "Reason for errSSLUnknownPSKIdentity.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown PSK identity"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ismeretlen PSK-azonosító"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ismeretlen PSK-azonosító"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unbekannte PSK-Identität"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unbekannte PSK-Identität"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Identidad PSK desconocida"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Identidad PSK desconocida"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Identité PSK inconnue"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Identité PSK inconnue"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "不明なPSK識別子"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "不明なPSK識別子"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Identidade PSK desconhecida"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Identidade PSK desconhecida"
           }
         }
       }
     },
-    "-9865" : {
-      "comment" : "Reason for errSSLUnrecognizedName.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unknown or unrecognized name"
+    "-9865": {
+      "comment": "Reason for errSSLUnrecognizedName.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown or unrecognized name"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ismeretlen vagy fel nem ismert név"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ismeretlen vagy fel nem ismert név"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unbekannter oder nicht erkannter Name"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unbekannter oder nicht erkannter Name"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Nombre desconocido o no reconocido"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nombre desconocido o no reconocido"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Nom inconnu ou non reconnu"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nom inconnu ou non reconnu"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "不明または認識されていない名前"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "不明または認識されていない名前"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Nome desconhecido ou não reconhecido"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nome desconhecido ou não reconhecido"
           }
         }
       }
     },
-    "-9880" : {
-      "comment" : "Reason for errSSLATSViolation.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ATS violation"
+    "-9880": {
+      "comment": "Reason for errSSLATSViolation.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ATS violation"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ATS-szabálysértés"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ATS-szabálysértés"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ATS-Verstoß"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ATS-Verstoß"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Violación de ATS"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Violación de ATS"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Violation ATS"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Violation ATS"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ATS違反"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ATS違反"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Violação do ATS"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Violação do ATS"
           }
         }
       }
     },
-    "-9881" : {
-      "comment" : "Reason for errSSLATSMinimumVersionViolation.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ATS violation: minimum protocol version is not ATS compliant"
+    "-9881": {
+      "comment": "Reason for errSSLATSMinimumVersionViolation.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ATS violation: minimum protocol version is not ATS compliant"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ATS-szabálysértés: a minimális protokollverzió nem felel meg az ATS követelményeinek"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ATS-szabálysértés: a minimális protokollverzió nem felel meg az ATS követelményeinek"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ATS-Verstoß: Die minimale Protokollversion entspricht nicht den ATS-Anforderungen"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ATS-Verstoß: Die minimale Protokollversion entspricht nicht den ATS-Anforderungen"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Violación de ATS: la versión mínima del protocolo no cumple con ATS"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Violación de ATS: la versión mínima del protocolo no cumple con ATS"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Violation ATS : la version minimale du protocole n'est pas conforme à ATS"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Violation ATS : la version minimale du protocole n'est pas conforme à ATS"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ATS違反：最小プロトコルバージョンがATS準拠ではありません"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ATS違反：最小プロトコルバージョンがATS準拠ではありません"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Violação ATS: a versão mínima do protocolo não é compatível com ATS"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Violação ATS: a versão mínima do protocolo não é compatível com ATS"
           }
         }
       }
     },
-    "-9882" : {
-      "comment" : "Reason for errSSLATSCiphersuiteViolation.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ATS violation: selected ciphersuite is not ATS compliant"
+    "-9882": {
+      "comment": "Reason for errSSLATSCiphersuiteViolation.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ATS violation: selected ciphersuite is not ATS compliant"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ATS-szabálysértés: a kiválasztott titkosítási csomag nem felel meg az ATS követelményeinek"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ATS-szabálysértés: a kiválasztott titkosítási csomag nem felel meg az ATS követelményeinek"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ATS-Verstoß: Die ausgewählte Cipher-Suite entspricht nicht den ATS-Anforderungen"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ATS-Verstoß: Die ausgewählte Cipher-Suite entspricht nicht den ATS-Anforderungen"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Violación de ATS: el conjunto de cifrados seleccionado no cumple con ATS"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Violación de ATS: el conjunto de cifrados seleccionado no cumple con ATS"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Violation ATS : le jeu de chiffrement sélectionné n'est pas conforme à ATS"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Violation ATS : le jeu de chiffrement sélectionné n'est pas conforme à ATS"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ATS違反：選択された暗号スイートはATSコンプライアンスではありません"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ATS違反：選択された暗号スイートはATSコンプライアンスではありません"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Violação ATS: o conjunto de chifres selecionado não é compatível com ATS"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Violação ATS: o conjunto de chifres selecionado não é compatível com ATS"
           }
         }
       }
     },
-    "-9883" : {
-      "comment" : "Reason for errSSLATSMinimumKeySizeViolation.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ATS violation: peer key size is not ATS compliant"
+    "-9883": {
+      "comment": "Reason for errSSLATSMinimumKeySizeViolation.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ATS violation: peer key size is not ATS compliant"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ATS-szabálysértés: a partner kulcsmérete nem felel meg az ATS követelményeinek"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ATS-szabálysértés: a partner kulcsmérete nem felel meg az ATS követelményeinek"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ATS-Verstoß: Die Schlüsselgröße der Gegenstelle entspricht nicht den ATS-Anforderungen"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ATS-Verstoß: Die Schlüsselgröße der Gegenstelle entspricht nicht den ATS-Anforderungen"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Violación de ATS: el tamaño de la clave de pares no cumple con ATS"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Violación de ATS: el tamaño de la clave de pares no cumple con ATS"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Violation ATS : la taille de la clé de pair n'est pas conforme à ATS"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Violation ATS : la taille de la clé de pair n'est pas conforme à ATS"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ATS違反：ピアキーサイズがATSコンプライアンスではありません"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ATS違反：ピアキーサイズがATSコンプライアンスではありません"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Violação ATS: o tamanho da chave de pares não é compatível com ATS"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Violação ATS: o tamanho da chave de pares não é compatível com ATS"
           }
         }
       }
     },
-    "-9884" : {
-      "comment" : "Reason for errSSLATSLeafCertificateHashAlgorithmViolation.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ATS violation: peer leaf certificate hash algorithm is not ATS compliant"
+    "-9884": {
+      "comment": "Reason for errSSLATSLeafCertificateHashAlgorithmViolation.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ATS violation: peer leaf certificate hash algorithm is not ATS compliant"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ATS-szabálysértés: a partner végtanúsítványának kivonatoló algoritmusa nem felel meg az ATS követelményeinek"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ATS-szabálysértés: a partner végtanúsítványának kivonatoló algoritmusa nem felel meg az ATS követelményeinek"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ATS-Verstoß: Der Hashalgorithmus des Endzertifikats entspricht nicht den ATS-Anforderungen"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ATS-Verstoß: Der Hashalgorithmus des Endzertifikats entspricht nicht den ATS-Anforderungen"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Violación de ATS: el algoritmo de encriptación del certificado de hoja de pares no cumple con ATS"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Violación de ATS: el algoritmo de encriptación del certificado de hoja de pares no cumple con ATS"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Violation ATS : l'algorithme de hachage du certificat de feuille de pair n'est pas conforme à ATS"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Violation ATS : l'algorithme de hachage du certificat de feuille de pair n'est pas conforme à ATS"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ATS違反：ピアリーフ証明書のハッシュアルゴリズムはATS準拠ではありません"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ATS違反：ピアリーフ証明書のハッシュアルゴリズムはATS準拠ではありません"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Violação ATS: o algoritmo de hash do certificado de folha de pares não é compatível com ATS"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Violação ATS: o algoritmo de hash do certificado de folha de pares não é compatível com ATS"
           }
         }
       }
     },
-    "-9885" : {
-      "comment" : "Reason for errSSLATSCertificateHashAlgorithmViolation.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ATS violation: peer certificate hash algorithm is not ATS compliant"
+    "-9885": {
+      "comment": "Reason for errSSLATSCertificateHashAlgorithmViolation.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ATS violation: peer certificate hash algorithm is not ATS compliant"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ATS-szabálysértés: a partner tanúsítványának kivonatoló algoritmusa nem felel meg az ATS követelményeinek"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ATS-szabálysértés: a partner tanúsítványának kivonatoló algoritmusa nem felel meg az ATS követelményeinek"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ATS-Verstoß: Der Hashalgorithmus des Zertifikats der Gegenstelle entspricht nicht den ATS-Anforderungen"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ATS-Verstoß: Der Hashalgorithmus des Zertifikats der Gegenstelle entspricht nicht den ATS-Anforderungen"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Violación de ATS: el algoritmo de encriptación de hash del certificado de pares no cumple con ATS"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Violación de ATS: el algoritmo de encriptación de hash del certificado de pares no cumple con ATS"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Violation ATS : l'algorithme de hachage du certificat de pair n'est pas conforme à ATS"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Violation ATS : l'algorithme de hachage du certificat de pair n'est pas conforme à ATS"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ATS違反：ピア証明書のハッシュアルゴリズムはATS準拠していません"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ATS違反：ピア証明書のハッシュアルゴリズムはATS準拠していません"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Violação ATS: o algoritmo de hash do certificado de pares não é compatível com ATS"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Violação ATS: o algoritmo de hash do certificado de pares não é compatível com ATS"
           }
         }
       }
     },
-    "-9886" : {
-      "comment" : "Reason for errSSLATSCertificateTrustViolation.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ATS violation: peer certificate is not issued by trusted peer"
+    "-9886": {
+      "comment": "Reason for errSSLATSCertificateTrustViolation.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ATS violation: peer certificate is not issued by trusted peer"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ATS-szabálysértés: a partner tanúsítványát nem megbízható fél állította ki"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ATS-szabálysértés: a partner tanúsítványát nem megbízható fél állította ki"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ATS-Verstoß: Das Zertifikat der Gegenstelle wurde nicht von einer vertrauenswürdigen Stelle ausgestellt"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ATS-Verstoß: Das Zertifikat der Gegenstelle wurde nicht von einer vertrauenswürdigen Stelle ausgestellt"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Violación de ATS: el certificado de compañero no es emitido por un compañero de confianza"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Violación de ATS: el certificado de compañero no es emitido por un compañero de confianza"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Violation ATS : le certificat de pair n'est pas émis par un pair de confiance"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Violation ATS : le certificat de pair n'est pas émis par un pair de confiance"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ATS違反：ピア証明書は信頼できるピアによって発行されていません"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ATS違反：ピア証明書は信頼できるピアによって発行されていません"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Violação ATS: o certificado de parceiro não foi emitido por um parceiro confiável"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Violação ATS: o certificado de parceiro não foi emitido por um parceiro confiável"
           }
         }
       }
     },
-    "-9890" : {
-      "comment" : "Reason for errSSLEarlyDataRejected.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Early application data rejected by peer"
+    "-9890": {
+      "comment": "Reason for errSSLEarlyDataRejected.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Early application data rejected by peer"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A partner elutasította a korai alkalmazásadatokat"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A partner elutasította a korai alkalmazásadatokat"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Frühe Anwendungsdaten von der Gegenstelle abgelehnt"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frühe Anwendungsdaten von der Gegenstelle abgelehnt"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Datos de solicitud temprana rechazados por pares"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Datos de solicitud temprana rechazados por pares"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Données de demande anticipées rejetées par les pairs"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Données de demande anticipées rejetées par les pairs"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ピアによって早期申請データが拒否されました"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ピアによって早期申請データが拒否されました"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Dados de aplicação antecipada rejeitados por pares"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Dados de aplicação antecipada rejeitados por pares"
           }
         }
       }
     },
-    "-9999" : {
-      "comment" : "Reason for errSSLUnknownError, which is defined by this library rather than Secure Transport.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unknown"
+    "-9999": {
+      "comment": "Reason for errSSLUnknownError, which is defined by this library rather than Secure Transport.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ismeretlen"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ismeretlen"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unbekannt"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unbekannt"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Desconocido"
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desconocido"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "inconnu"
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inconnu"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "未知の"
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不明"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "desconhecido"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desconhecido"
           }
         }
       }
     },
-    "error-description" : {
-      "comment" : "Complete Secure Transport error description. Arguments are the localized reason and numeric OSStatus code. Migrated from legacy key heading.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Secure Transport Error: %1$@ (%2$ld)"
+    "error-description": {
+      "comment": "Complete Secure Transport error description. Arguments are the localized reason and numeric OSStatus code. Migrated from legacy key heading.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Secure Transport Error: %1$@ (%2$ld)"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Secure Transport hiba: %1$@ (%2$ld)"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Secure Transport hiba: %1$@ (%2$ld)"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Secure-Transport-Fehler: %1$@ (%2$ld)"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Secure-Transport-Fehler: %1$@ (%2$ld)"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Error de transporte seguro: %1$@ (%2$ld)"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Error de transporte seguro: %1$@ (%2$ld)"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Erreur de transport sécurisé : %1$@ (%2$ld)"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Erreur de transport sécurisé : %1$@ (%2$ld)"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "セキュリティ輸送エラー：%1$@ (%2$ld)"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "セキュリティ輸送エラー：%1$@ (%2$ld)"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Erro de Transporte Seguro: %1$@ (%2$ld)"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Erro de Transporte Seguro: %1$@ (%2$ld)"
           }
         }
       }
     },
-    "no-shared-cipher-suite" : {
-      "comment" : "Added after the errSSLPeerHandshakeFail (-9824) and errSSLNegotiation (-9801) descriptions: the handshake failed because the server accepted none of the cipher suites the application offered. One sentence, follows the error description.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "There was no cipher suite in common with the server."
+    "no-shared-cipher-suite": {
+      "comment": "Added after the errSSLPeerHandshakeFail (-9824) and errSSLNegotiation (-9801) descriptions: the handshake failed because the server accepted none of the cipher suites the application offered. One sentence, follows the error description.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There was no cipher suite in common with the server."
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nincs a kiszolgálóval közös titkosítási csomag."
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincs a kiszolgálóval közös titkosítási csomag."
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Es gab keine mit dem Server gemeinsame Cipher-Suite."
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es gab keine mit dem Server gemeinsame Cipher-Suite."
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "No había ningún conjunto de cifrado en común con el servidor."
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No había ningún conjunto de cifrado en común con el servidor."
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Il n'y avait pas de suite de chiffrement commune avec le serveur."
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Il n'y avait pas de suite de chiffrement commune avec le serveur."
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "サーバーと共通する暗号化スイートはありませんでした。"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "サーバーと共通する暗号化スイートはありませんでした。"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Não havia nenhum conjunto de criptografia em comum com o servidor."
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Não havia nenhum conjunto de criptografia em comum com o servidor."
           }
         }
       }
     }
   },
-  "version" : "1.0"
+  "version": "1.0"
 }

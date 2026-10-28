@@ -43,11 +43,7 @@ enum SASLPolicy {
 			}
 		}
 
-		guard let preferredMechanism else {
-			return mechanisms
-		}
-
-		guard let preferredIndex = mechanisms.firstIndex(where: {
+		guard let preferredMechanism, let preferredIndex = mechanisms.firstIndex(where: {
 			$0.caseInsensitiveCompare(preferredMechanism) == .orderedSame
 		}) else {
 			return mechanisms

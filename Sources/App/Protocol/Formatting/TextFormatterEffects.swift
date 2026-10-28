@@ -1,10 +1,9 @@
 // Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
 // SPDX-License-Identifier: BSD-3-Clause
 
-import CocoaExtensions
-
 // AppKit: IRC formatting is applied to attributed strings as fonts and colours.
 import AppKit
+import CocoaExtensions
 import Foundation
 
 enum TextFormatterEffectKind: Int, Sendable {

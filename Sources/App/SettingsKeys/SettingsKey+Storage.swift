@@ -70,10 +70,10 @@ nonisolated extension UserDefaults { // nonisolated: guarded
 	}
 }
 
+@MainActor
 extension SettingsKey {
 	/// The effective value in the shared store: what the user chose, or the
 	/// declared default.
-	@MainActor
 	var value: Value {
 		get { GlasstualUserDefaults.container[self] }
 		nonmutating set { GlasstualUserDefaults.container[self] = newValue }
@@ -81,7 +81,6 @@ extension SettingsKey {
 
 	/// The stored value, or `nil` when nothing has been written and no default
 	/// was registered.
-	@MainActor
 	var storedValue: Value? {
 		get { GlasstualUserDefaults.container[stored: self] }
 		nonmutating set { GlasstualUserDefaults.container[stored: self] = newValue }
@@ -103,15 +102,14 @@ nonisolated extension SettingsKey {
 	}
 }
 
+@MainActor
 extension AnySettingsKey {
 	/// The property-list value defined by the key's owning subsystem.
-	@MainActor
 	var propertyListValue: PropertyListValue? {
 		get { GlasstualUserDefaults.container.propertyListValue(for: self) }
 		nonmutating set { GlasstualUserDefaults.container.setPropertyListValue(newValue, for: self) }
 	}
 
-	@MainActor
 	func reset() {
 		GlasstualUserDefaults.container.removeValue(for: self)
 	}

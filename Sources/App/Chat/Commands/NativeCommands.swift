@@ -16,15 +16,13 @@ extension ServerSession {
 
 		switch command {
 		case .aquote, .araw:
-			guard isConnected else { return }
-			guard requireArguments(parsed.arguments, for: parsed.command) else { return }
+			guard isConnected, requireArguments(parsed.arguments, for: parsed.command) else { return }
 			for session in allSessions {
 				session.sendLine(arguments)
 			}
 
 		case .quote, .raw:
-			guard isConnected else { return }
-			guard requireArguments(parsed.arguments, for: parsed.command) else { return }
+			guard isConnected, requireArguments(parsed.arguments, for: parsed.command) else { return }
 			sendLine(arguments)
 
 		case .cap, .caps:
@@ -54,29 +52,25 @@ extension ServerSession {
 		let arguments = parsed.arguments.rest
 		switch command {
 		case .ison:
-			guard isLoggedIn else { return }
-			guard requireArguments(parsed.arguments, for: parsed.command) else { return }
+			guard isLoggedIn, requireArguments(parsed.arguments, for: parsed.command) else { return }
 			createHiddenCommandResponses()
 			/* One nickname per parameter, and split over as many commands as the
 			 list needs. `sendIson` opens a request for each of them. */
 			sendIson(forNicknames: LineParser.wireTokens(in: arguments), hideResponse: false)
 
 		case .names:
-			guard isLoggedIn else { return }
-			guard requireArguments(parsed.arguments, for: parsed.command) else { return }
+			guard isLoggedIn, requireArguments(parsed.arguments, for: parsed.command) else { return }
 			createHiddenCommandResponses()
 			/* `NAMES #one #two` asks about two channels. Sent as one parameter it
 			 asked about a channel whose name has a space in it. */
 			send(.names, arguments: LineParser.wireTokens(in: arguments))
 
 		case .recv:
-			guard requireArguments(parsed.arguments, for: parsed.command) else { return }
-			guard socket != nil else { return }
+			guard requireArguments(parsed.arguments, for: parsed.command), socket != nil else { return }
 			connectionDidReceive(arguments)
 
 		case .setname:
-			guard isLoggedIn else { return }
-			guard requireArguments(parsed.arguments, for: parsed.command) else { return }
+			guard isLoggedIn, requireArguments(parsed.arguments, for: parsed.command) else { return }
 			guard isCapabilityEnabled(.setName) else {
 				printDebugInformation(String(localized: .IRC.thisServerDoesNotSupportChanging))
 				return
@@ -84,8 +78,7 @@ extension ServerSession {
 			send(.setname, arguments: [arguments])
 
 		case .wallops:
-			guard isLoggedIn else { return }
-			guard requireArguments(parsed.arguments, for: parsed.command) else { return }
+			guard isLoggedIn, requireArguments(parsed.arguments, for: parsed.command) else { return }
 			send(.wallops, arguments: [arguments])
 
 		default:
@@ -159,8 +152,7 @@ extension ServerSession {
 			}
 
 		case .server:
-			guard requireArguments(arguments, for: parsed.command) else { return }
-			guard let request = ServerConnectionRequest.parse(
+			guard requireArguments(arguments, for: parsed.command), let request = ServerConnectionRequest.parse(
 				arguments.rest,
 				channels: nil,
 				options: ServerConnectionOptions(
@@ -258,8 +250,7 @@ extension ServerSession {
 		let arguments = parsed.arguments.rest
 		switch command {
 		case .chathistory:
-			guard isLoggedIn else { return }
-			guard requireArguments(parsed.arguments, for: parsed.command) else { return }
+			guard isLoggedIn, requireArguments(parsed.arguments, for: parsed.command) else { return }
 			guard isCapabilityEnabled(.chatHistory) else {
 				printDebugInformation(String(localized: .IRC.thisServerDoesNotSupportChat))
 				return
@@ -274,8 +265,8 @@ extension ServerSession {
 			sendModes(arguments, withParametersString: nil, inChannelNamed: userNickname)
 
 		case .monitor, .watch:
-			guard isLoggedIn, let wireCommand = command.relayedRemoteCommand else { return }
-			guard requireArguments(parsed.arguments, for: parsed.command) else { return }
+			guard isLoggedIn, let wireCommand = command.relayedRemoteCommand,
+			      requireArguments(parsed.arguments, for: parsed.command) else { return }
 			let components = LineParser.wireTokens(in: arguments)
 			if components.contains(where: { $0.hasPrefix("-") || $0.hasPrefix("+") }) {
 				printDebugInformation(String(localized: .IRC.pleaseUseTheAddressBook))
@@ -311,8 +302,7 @@ extension ServerSession {
 		var arguments = parsed.arguments
 		switch command {
 		case .who:
-			guard isLoggedIn else { return }
-			guard requireArguments(arguments, for: parsed.command) else { return }
+			guard isLoggedIn, requireArguments(arguments, for: parsed.command) else { return }
 			let components = LineParser.wireTokens(in: arguments.rest)
 			guard let target = components.first else { return }
 			createHiddenCommandResponses()

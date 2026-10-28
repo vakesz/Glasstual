@@ -95,10 +95,8 @@ enum DCCFileTransferRequestParser {
 	}
 
 	private static func validPort(_ value: String, allowsZero: Bool) -> UInt16? {
-		guard value.allSatisfy(\.isNumber), let integer = Int(value), integer >= 0, integer <= Int(UInt16.max) else {
-			return nil
-		}
-		guard integer > 0 || allowsZero else { return nil }
+		guard value.allSatisfy(\.isNumber), let integer = Int(value), integer >= 0, integer <= Int(UInt16.max),
+		      integer > 0 || allowsZero else { return nil }
 		return UInt16(integer)
 	}
 

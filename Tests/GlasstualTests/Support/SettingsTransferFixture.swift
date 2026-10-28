@@ -39,7 +39,7 @@ struct SettingsTransferFixture {
 	func session(backupDirectory: URL? = nil, chatSession: ChatSession? = nil) -> SettingsTransferSession {
 		SettingsTransferSession(stores: stores,
 		                        recoveryDirectory: backupDirectory ?? directory
-		                        	.appendingPathComponent("Backups"),
+			.appendingPathComponent("Backups"),
 		                        sessionSource: chatSession.map(SettingsTransferSessionSource.chatSession) ?? .stored)
 	}
 

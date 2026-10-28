@@ -22,9 +22,11 @@ fail() {
 tool="${1:-}"
 case "$tool" in
 	swiftformat)
-		version=0.63.0
+		# 0.64.1+ indent+wrap emits space-before-tab under --indent tab, which
+		# SwiftLint rejects. Stay on 0.64.0 until that is fixed upstream.
+		version=0.64.0
 		url="https://github.com/nicklockwood/SwiftFormat/releases/download/$version/swiftformat.zip"
-		sha256=28c7802e11fa5ae113d903066439c6bb1be20a8ac1ad9709c42616a7e273fb0f
+		sha256=95ea62625d0b898a7af870293311ae6f09e4a3147ecd900593687e4b9ab2fd98
 		executable=swiftformat
 		;;
 	swiftlint)

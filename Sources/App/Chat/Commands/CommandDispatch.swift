@@ -12,8 +12,7 @@ extension ServerSession {
 	}
 
 	func sendCommand(_ input: NSAttributedString, completeTarget: Bool = true, target targetName: String? = nil) {
-		guard let parsed = ParsedUserCommand(input) else { return }
-		guard allowsDeveloperModeCommand(parsed) else { return }
+		guard let parsed = ParsedUserCommand(input), allowsDeveloperModeCommand(parsed) else { return }
 
 		let targetConversation = resolvedTargetConversation(
 			completeTarget: completeTarget,

@@ -1,246 +1,246 @@
 {
-  "sourceLanguage" : "en",
-  "strings" : {
-    "certificate-conversion-error" : {
-      "comment" : "Error shown when ZNC certificate information cannot be converted for display. Migrated from legacy key wco-zv.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "An error occurred while converting certificate information to a friendlier format"
+  "sourceLanguage": "en",
+  "strings": {
+    "certificate-conversion-error": {
+      "comment": "Error shown when ZNC certificate information cannot be converted for display. Migrated from legacy key wco-zv.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An error occurred while converting certificate information to a friendlier format"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hiba történt a tanúsítványadatok olvashatóbb formátumba alakításakor"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hiba történt a tanúsítványadatok olvashatóbb formátumba alakításakor"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Beim Umwandeln der Zertifikatsinformationen in ein lesbareres Format ist ein Fehler aufgetreten"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beim Umwandeln der Zertifikatsinformationen in ein lesbareres Format ist ein Fehler aufgetreten"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Se ha producido un error al convertir la información del certificado a un formato más amigable."
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Se ha producido un error al convertir la información del certificado a un formato más amigable."
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Une erreur s'est produite lors de la conversion des informations du certificat vers un format plus convivial."
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Une erreur s'est produite lors de la conversion des informations du certificat vers un format plus convivial."
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "証明書情報をより使いやすい形式に変換する際にエラーが発生しました。"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "証明書情報をより使いやすい形式に変換する際にエラーが発生しました。"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Ocorreu um erro ao converter as informações do certificado para um formato mais amigável"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ocorreu um erro ao converter as informações do certificado para um formato mais amigável"
           }
         }
       }
     },
-    "close-button" : {
-      "comment" : "Title of the button that closes the certificate information panel.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Close"
+    "close-button": {
+      "comment": "Title of the button that closes the certificate information panel.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bezárás"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bezárás"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Schließen"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schließen"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Cerrar"
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerrar"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "fermer"
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fermer"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "閉じる"
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "閉じる"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "fechar"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fechar"
           }
         }
       }
     },
-    "detach-confirmation" : {
-      "comment" : "Confirmation shown after detaching a channel. The argument is the channel name. Migrated from legacy key 0fr-kb.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The \u0002detach\u0002 command has been sent for the channel \u0002%@\u0002. Automatic join on connect for this channel has been disabled as well. Use the command \u0002attach\u0002 at any time to be returned to this channel and have automatic join turned back on."
+    "detach-confirmation": {
+      "comment": "Confirmation shown after detaching a channel. The argument is the channel name. Migrated from legacy key 0fr-kb.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The \u0002detach\u0002 command has been sent for the channel \u0002%@\u0002. Automatic join on connect for this channel has been disabled as well. Use the command \u0002attach\u0002 at any time to be returned to this channel and have automatic join turned back on."
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A \u0002detach\u0002 parancs elküldve a(z) \u0002%@\u0002 csatornához. A csatornához való automatikus csatlakozás is ki lett kapcsolva. Az \u0002attach\u0002 paranccsal bármikor visszatérhetsz, és újra bekapcsolhatod az automatikus csatlakozást."
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A \u0002detach\u0002 parancs elküldve a(z) \u0002%@\u0002 csatornához. A csatornához való automatikus csatlakozás is ki lett kapcsolva. Az \u0002attach\u0002 paranccsal bármikor visszatérhetsz, és újra bekapcsolhatod az automatikus csatlakozást."
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Der Befehl \u0002detach\u0002 wurde für den Kanal \u0002%@\u0002 gesendet. Der automatische Beitritt beim Verbinden wurde ebenfalls deaktiviert. Mit \u0002attach\u0002 kannst du jederzeit zurückkehren und den automatischen Beitritt wieder aktivieren."
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Befehl \u0002detach\u0002 wurde für den Kanal \u0002%@\u0002 gesendet. Der automatische Beitritt beim Verbinden wurde ebenfalls deaktiviert. Mit \u0002attach\u0002 kannst du jederzeit zurückkehren und den automatischen Beitritt wieder aktivieren."
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "El \u0002Desatacar\u0002 Se ha enviado el comando para el canal \u0002%@\u0002. La conexión automática al conectarse a este canal también ha sido desactivada. Use el comando \u0002Adjuntar\u0002 en cualquier momento para ser devuelto a este canal y tener la incorporación automática desactivada nuevamente."
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "El \u0002Desatacar\u0002 Se ha enviado el comando para el canal \u0002%@\u0002. La conexión automática al conectarse a este canal también ha sido desactivada. Use el comando \u0002Adjuntar\u0002 en cualquier momento para ser devuelto a este canal y tener la incorporación automática desactivada nuevamente."
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Le \u0002détacher\u0002 La commande a été envoyée pour le canal \u0002%@\u0002.  L'adhésion automatique lors de la connexion à cette chaîne a également été désactivée. Utilisez la commande \u0002attacher\u0002 à tout moment pour être retourné sur cette chaîne et avoir le rattachement automatique réactivé."
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Le \u0002détacher\u0002 La commande a été envoyée pour le canal \u0002%@\u0002.  L'adhésion automatique lors de la connexion à cette chaîne a également été désactivée. Utilisez la commande \u0002attacher\u0002 à tout moment pour être retourné sur cette chaîne et avoir le rattachement automatique réactivé."
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "それ \u0002取り外す\u0002 チャンネルに対してコマンドが送信されました。 \u0002%@\u0002このチャンネルの接続時の自動参加も無効になっています。コマンドを使用してください。 \u0002添付する\u0002 いつでもこのチャンネルに戻し、自動参加を再度有効にすることができます。"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "それ \u0002取り外す\u0002 チャンネルに対してコマンドが送信されました。 \u0002%@\u0002このチャンネルの接続時の自動参加も無効になっています。コマンドを使用してください。 \u0002添付する\u0002 いつでもこのチャンネルに戻し、自動参加を再度有効にすることができます。"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "O \u0002separar\u0002 comando foi enviado para o canal \u0002%@\u0002. A adesão automática ao conectar para este canal também foi desativada. Use o comando \u0002anexar\u0002 a qualquer momento para ser devolvido a este canal e ter a inscrição automática reativada."
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "O \u0002separar\u0002 comando foi enviado para o canal \u0002%@\u0002. A adesão automática ao conectar para este canal também foi desativada. Use o comando \u0002anexar\u0002 a qualquer momento para ser devolvido a este canal e ter a inscrição automática reativada."
           }
         }
       }
     },
-    "no-information-available" : {
-      "comment" : "Message shown when ZNC has no certificate information. Migrated from legacy key moh-hg.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No information is available"
+    "no-information-available": {
+      "comment": "Message shown when ZNC has no certificate information. Migrated from legacy key moh-hg.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No information is available"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nincs elérhető információ"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincs elérhető információ"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Keine Informationen verfügbar"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Informationen verfügbar"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "No hay información disponible"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No hay información disponible"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Aucune information n'est disponible"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Aucune information n'est disponible"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "情報は利用できません。"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "情報は利用できません。"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Nenhuma informação está disponível"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nenhuma informação está disponível"
           }
         }
       }
     },
-    "znc-connection-required" : {
-      "comment" : "Message shown when a ZNC-only command is used on another server. Migrated from legacy key xex-nl.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This command is not available because you aren't connected to ZNC"
+    "znc-connection-required": {
+      "comment": "Message shown when a ZNC-only command is used on another server. Migrated from legacy key xex-nl.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This command is not available because you aren't connected to ZNC"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ez a parancs nem érhető el, mert nem ZNC-hez kapcsolódsz"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ez a parancs nem érhető el, mert nem ZNC-hez kapcsolódsz"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dieser Befehl ist nicht verfügbar, da du nicht mit ZNC verbunden bist"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Befehl ist nicht verfügbar, da du nicht mit ZNC verbunden bist"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Este comando no está disponible porque no estás conectado a ZNC"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Este comando no está disponible porque no estás conectado a ZNC"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Cette commande n'est pas disponible parce que vous n'êtes pas connecté à ZNC."
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Cette commande n'est pas disponible parce que vous n'êtes pas connecté à ZNC."
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "このコマンドはZNCに接続していないため利用できません。"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "このコマンドはZNCに接続していないため利用できません。"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Este comando não está disponível porque você não está conectado ao ZNC"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Este comando não está disponível porque você não está conectado ao ZNC"
           }
         }
       }
     }
   },
-  "version" : "1.0"
+  "version": "1.0"
 }

@@ -233,7 +233,7 @@ nonisolated struct TranscriptRenderer {
 
 	private func isSurroundedByNonAlphanumerics(_ range: NSRange) -> Bool {
 		guard range.length > 0, let stringRange = Range(range, in: body) else { return false }
-		/** `Unicode.Scalar.Properties` carries the current tables. The hand-written
+		/*  `Unicode.Scalar.Properties` carries the current tables. The hand-written
 		 range tables this replaced were generated around 2007 and stopped at
 		 U+1D7CB, so every script added since was classified as non-alphabetic. */
 		func isAlphanumeric(_ scalar: Unicode.Scalar) -> Bool {

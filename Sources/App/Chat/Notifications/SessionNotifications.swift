@@ -20,27 +20,20 @@ extension ServerSession {
 		text: String? = nil,
 		userInfo suppliedUserInfo: UserNotificationPayload? = nil
 	) {
-		guard nickname.map({ isUserMuted(nickname: $0) }) != true else { return }
-		guard UserNotificationPolicy.admits(UserNotificationAdmissionContext(
+		guard nickname.map({ isUserMuted(nickname: $0) }) != true, UserNotificationPolicy.admits(UserNotificationAdmissionContext(
 			event: event,
 			isTerminating: isTerminating,
 			isCollapsingNetsplit: netsplitCollapse.isCollapsing,
 			nicknameIsLocalUser: nickname.map(nicknameIsMyself) ?? false,
 			conversationIsMuted: target.map { conversationIsMuted($0, for: event) } ?? false
-		)) else { return }
-
-		guard let presenter = environment.services.notifications,
-		      presenter.areNotificationsDisabled == false else { return }
-
-		guard UserNotificationPolicy.postsNotification(
+		)), let presenter = environment.services.notifications,
+		presenter.areNotificationsDisabled == false, UserNotificationPolicy.postsNotification(
 			event: event,
 			notifiesAboutMentions: environment.settings.notifyAboutMentions,
 			postWhileFocused: environment.settings.postNotificationsWhileInFocus,
 			mainWindowIsFocused: output.map { window in window.isKeyWindow || window.isMainWindow } == true,
 			targetIsSelected: output?.isItemSelected(target) == true
-		) else { return }
-
-		guard let content = userNotificationContent(
+		), let content = userNotificationContent(
 			for: event,
 			lineType: lineType,
 			target: target,

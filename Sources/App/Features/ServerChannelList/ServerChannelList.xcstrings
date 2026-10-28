@@ -889,26 +889,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Tema"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "sujet"
+            "state": "translated",
+            "value": "Sujet"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "トピック"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "tópico"
+            "state": "translated",
+            "value": "Tópico"
           }
         }
       }
@@ -937,26 +937,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Actualizar"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "rafraîchir"
+            "state": "translated",
+            "value": "Actualiser"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "リフレッシュ"
+            "state": "translated",
+            "value": "更新"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "refrescar"
+            "state": "translated",
+            "value": "Atualizar"
           }
         }
       }

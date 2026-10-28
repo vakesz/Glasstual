@@ -26,8 +26,7 @@ extension MenuActionController {
 			(NSApp.keyWindow ?? NSApp.mainWindow)?.performClose(sender)
 			return
 		case .partConversation:
-			guard let session = context.selectedSession else { return }
-			guard let conversation = context.selectedConversation else { return }
+			guard let session = context.selectedSession, let conversation = context.selectedConversation else { return }
 			if conversation.isChannel {
 				guard conversation.isActive else { return }
 				session.part(conversation)

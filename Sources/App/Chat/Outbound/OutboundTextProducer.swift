@@ -138,8 +138,8 @@ extension ServerSession {
 		outboundTextProducer?.enqueue { [weak self] in
 			guard let self, !isTerminating, startup.identifier == startupIdentifier, socket?.uniqueIdentifier == connection,
 			      destinations.allSatisfy({ destination in
-			      	destination.conversation.name == destination.name
-			      		&& conversationList.contains { $0 === destination.conversation }
+				destination.conversation.name == destination.name
+					&& conversationList.contains { $0 === destination.conversation }
 			      }) else { return false }
 			return step(self)
 		}

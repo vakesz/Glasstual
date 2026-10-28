@@ -47,11 +47,7 @@ nonisolated enum DCCTransport {
 		for port in portRange {
 			try Task.checkCancellation()
 
-			guard let networkPort = NWEndpoint.Port(rawValue: port) else {
-				continue
-			}
-
-			guard let listener = try? NetworkListener<TCP>(
+			guard let networkPort = NWEndpoint.Port(rawValue: port), let listener = try? NetworkListener<TCP>(
 				using: .parameters { TCP() }.localPort(networkPort)
 			) else {
 				continue

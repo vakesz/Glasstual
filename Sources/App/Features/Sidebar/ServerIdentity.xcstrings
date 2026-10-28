@@ -169,26 +169,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Azul"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "bleu"
+            "state": "translated",
+            "value": "Bleu"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "青い"
+            "state": "translated",
+            "value": "青"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "azul"
+            "state": "translated",
+            "value": "Azul"
           }
         }
       }
@@ -217,26 +217,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Verde"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "vert"
+            "state": "translated",
+            "value": "Vert"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "緑色"
+            "state": "translated",
+            "value": "緑"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "verde"
+            "state": "translated",
+            "value": "Verde"
           }
         }
       }
@@ -265,26 +265,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Naranja"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "orange"
+            "state": "translated",
+            "value": "Orange"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "オレンジ"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "laranja"
+            "state": "translated",
+            "value": "Laranja"
           }
         }
       }
@@ -313,26 +313,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Rosa"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "rose"
+            "state": "translated",
+            "value": "Rose"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "ピンク"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "rosa"
+            "state": "translated",
+            "value": "Rosa"
           }
         }
       }
@@ -361,26 +361,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Púrpura"
+            "state": "translated",
+            "value": "Morado"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "violet"
+            "state": "translated",
+            "value": "Violet"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "紫"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "roxo"
+            "state": "translated",
+            "value": "Roxo"
           }
         }
       }
@@ -409,26 +409,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Rojo"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "rouge"
+            "state": "translated",
+            "value": "Rouge"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "赤"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "vermelho"
+            "state": "translated",
+            "value": "Vermelho"
           }
         }
       }
@@ -457,26 +457,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Por defecto"
+            "state": "translated",
+            "value": "Por omisión"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "par défaut"
+            "state": "translated",
+            "value": "Par défaut"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "デフォルト"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "padrão"
+            "state": "translated",
+            "value": "Padrão"
           }
         }
       }
@@ -505,26 +505,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Turquesa"
+            "state": "translated",
+            "value": "Verde azulado"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "sarcelle"
+            "state": "translated",
+            "value": "Sarcelle"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ターコイズブルー"
+            "state": "translated",
+            "value": "ティール"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Turquesa"
+            "state": "translated",
+            "value": "Verde-azulado"
           }
         }
       }
@@ -553,26 +553,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Amarilla"
+            "state": "translated",
+            "value": "Amarillo"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "jaune"
+            "state": "translated",
+            "value": "Jaune"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "黄色"
+            "state": "translated",
+            "value": "黄"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "amarelo"
+            "state": "translated",
+            "value": "Amarelo"
           }
         }
       }
@@ -601,26 +601,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Ícono"
+            "state": "translated",
+            "value": "Icono"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "icône"
+            "state": "translated",
+            "value": "Icône"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "アイコン"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ícone"
+            "state": "translated",
+            "value": "Ícone"
           }
         }
       }
@@ -745,26 +745,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Código"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "code"
+            "state": "translated",
+            "value": "Code"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "コード"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "código"
+            "state": "translated",
+            "value": "Código"
           }
         }
       }
@@ -841,26 +841,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Globo"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "globe"
+            "state": "translated",
+            "value": "Globe"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "地球儀"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "globo"
+            "state": "translated",
+            "value": "Globo"
           }
         }
       }
@@ -889,26 +889,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Corazón"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "cœur"
+            "state": "translated",
+            "value": "Cœur"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "心臓"
+            "state": "translated",
+            "value": "ハート"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "coração"
+            "state": "translated",
+            "value": "Coração"
           }
         }
       }
@@ -937,26 +937,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Hoja"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "feuille"
+            "state": "translated",
+            "value": "Feuille"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "葉"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "folha"
+            "state": "translated",
+            "value": "Folha"
           }
         }
       }
@@ -985,26 +985,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Red"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "réseau"
+            "state": "translated",
+            "value": "Réseau"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "ネットワーク"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "rede"
+            "state": "translated",
+            "value": "Rede"
           }
         }
       }
@@ -1033,26 +1033,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Personas"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "personnes"
+            "state": "translated",
+            "value": "Personnes"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "人々"
+            "state": "translated",
+            "value": "人"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "pessoas"
+            "state": "translated",
+            "value": "Pessoas"
           }
         }
       }
@@ -1129,26 +1129,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Estrella"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "étoile"
+            "state": "translated",
+            "value": "Étoile"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "星"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "estrela"
+            "state": "translated",
+            "value": "Estrela"
           }
         }
       }
@@ -1177,26 +1177,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Terminal"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "terminal"
+            "state": "translated",
+            "value": "Terminal"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "ターミナル"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "terminal"
+            "state": "translated",
+            "value": "Terminal"
           }
         }
       }
@@ -1225,26 +1225,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Vista previa"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "avant-première"
+            "state": "translated",
+            "value": "Aperçu"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "プレビュー"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "pré-visualização"
+            "state": "translated",
+            "value": "Prévia"
           }
         }
       }

@@ -1513,26 +1513,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Vista previa"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "avant-première"
+            "state": "translated",
+            "value": "Aperçu"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "プレビュー"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "pré-visualização"
+            "state": "translated",
+            "value": "Prévia"
           }
         }
       }
@@ -7225,26 +7225,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Oscuro"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "sombre"
+            "state": "translated",
+            "value": "Sombre"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "暗い"
+            "state": "translated",
+            "value": "ダーク"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "escuro"
+            "state": "translated",
+            "value": "Escuro"
           }
         }
       }
@@ -7321,26 +7321,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Luz"
+            "state": "translated",
+            "value": "Claro"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "lumière"
+            "state": "translated",
+            "value": "Clair"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "光"
+            "state": "translated",
+            "value": "ライト"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "luz"
+            "state": "translated",
+            "value": "Claro"
           }
         }
       }
@@ -10009,26 +10009,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Desconectado"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "décousu"
+            "state": "translated",
+            "value": "Déconnecté"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "接続解除された"
+            "state": "translated",
+            "value": "切断済み"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "desligado"
+            "state": "translated",
+            "value": "Desconectado"
           }
         }
       }
@@ -11833,26 +11833,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Diseño"
+            "state": "translated",
+            "value": "Disposición"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "mise en page"
+            "state": "translated",
+            "value": "Disposition"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "レイアウト"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "layout"
+            "state": "translated",
+            "value": "Layout"
           }
         }
       }

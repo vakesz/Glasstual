@@ -115,8 +115,8 @@ final class TestServerSession: ServerSession {
  second step, which is what the socket reader does. A test that only wants "the
  line as this session would read it" says so here rather than repeating both
  halves at every call site. */
+@MainActor
 extension Message {
-	@MainActor
 	init?(line: String, on session: ServerSession) {
 		guard let parsed = Message(line: line, context: session.messageParsingContext) else { return nil }
 

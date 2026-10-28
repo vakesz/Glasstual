@@ -237,8 +237,8 @@ struct AccessibilityDriver {
 			connected ? "exact connected title/subtitle" : "disconnected title/subtitle",
 			deadline: deadline
 		) { end in
-			guard let window = try identified("main-window", from: root, deadline: end) else { return false }
-			guard try text(window, kAXRoleAttribute, deadline: end) == kAXWindowRole else { return false }
+			guard let window = try identified("main-window", from: root, deadline: end),
+			      try text(window, kAXRoleAttribute, deadline: end) == kAXWindowRole else { return false }
 			let title = try text(window, kAXTitleAttribute, deadline: end)
 			let separator = " \u{00B7} "
 			if let channel {

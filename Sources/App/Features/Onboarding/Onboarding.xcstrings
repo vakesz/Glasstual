@@ -1,3962 +1,3962 @@
 {
-  "sourceLanguage" : "en",
-  "strings" : {
-    "account-identity-help" : {
-      "comment" : "Explains the existing shared SASL account and IRC USER identity contract, and that disabling SASL retains the password for NickServ.",
-      "extractionState" : "manual",
-      "generatesSymbol" : true,
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "When a password is saved, this account name is also sent as your IRC username. Turning off SASL keeps the password for NickServ identification."
+  "sourceLanguage": "en",
+  "strings": {
+    "account-identity-help": {
+      "comment": "Explains the existing shared SASL account and IRC USER identity contract, and that disabling SASL retains the password for NickServ.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When a password is saved, this account name is also sent as your IRC username. Turning off SASL keeps the password for NickServ identification."
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ha elmentesz egy jelszót, ezt a fióknevet IRC-felhasználónévként is elküldjük. A SASL kikapcsolása után a jelszó megmarad a NickServ-azonosításhoz."
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ha elmentesz egy jelszót, ezt a fióknevet IRC-felhasználónévként is elküldjük. A SASL kikapcsolása után a jelszó megmarad a NickServ-azonosításhoz."
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wenn ein Passwort gespeichert ist, wird dieser Kontoname auch als IRC-Benutzername gesendet. Beim Deaktivieren von SASL bleibt das Passwort für die NickServ-Identifizierung erhalten."
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wenn ein Passwort gespeichert ist, wird dieser Kontoname auch als IRC-Benutzername gesendet. Beim Deaktivieren von SASL bleibt das Passwort für die NickServ-Identifizierung erhalten."
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Cuando se guarda una contraseña, este nombre de cuenta también se envía como su nombre de usuario IRC. Desactivar SASL mantiene la contraseña para la identificación de NickServ."
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Cuando se guarda una contraseña, este nombre de cuenta también se envía como su nombre de usuario IRC. Desactivar SASL mantiene la contraseña para la identificación de NickServ."
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Lorsque un mot de passe est enregistré, ce nom de compte est également envoyé comme votre nom d'utilisateur IRC. Désactiver SASL conserve le mot de passe pour l'identification NickServ."
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Lorsque un mot de passe est enregistré, ce nom de compte est également envoyé comme votre nom d'utilisateur IRC. Désactiver SASL conserve le mot de passe pour l'identification NickServ."
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "パスワードが保存されると、このアカウント名もIRCユーザー名として送信されます。SASLをオフにすると、NickServの識別のためにパスワードは保持されます。"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "パスワードが保存されると、このアカウント名もIRCユーザー名として送信されます。SASLをオフにすると、NickServの識別のためにパスワードは保持されます。"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Quando uma senha é salva, este nome de conta também é enviado como seu nome de usuário IRC. Desativar SASL mantém a senha para a identificação NickServ."
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Quando uma senha é salva, este nome de conta também é enviado como seu nome de usuário IRC. Desativar SASL mantém a senha para a identificação NickServ."
           }
         }
       }
     },
-    "account-name" : {
-      "comment" : "Network picker. Legacy key: np1-an.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Account name"
+    "account-name": {
+      "comment": "Network picker. Legacy key: np1-an.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account name"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fióknév"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fióknév"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kontoname"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kontoname"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Nombre de la cuenta"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nombre de la cuenta"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Nom du compte"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nom du compte"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "アカウント名"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "アカウント名"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Nome da conta"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nome da conta"
           }
         }
       }
     },
-    "alternate-nickname" : {
-      "comment" : "Step: Welcome and identity. Legacy key: id1-an.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Alternate nickname"
+    "alternate-nickname": {
+      "comment": "Step: Welcome and identity. Legacy key: id1-an.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alternate nickname"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Másodlagos becenév"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Másodlagos becenév"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Alternativer Nickname"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alternativer Nickname"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Apodo alternativo"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Apodo alternativo"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Pseudonyme alternatif"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Pseudonyme alternatif"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "代替ニックネーム"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "代替ニックネーム"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Apelido alternativo"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Apelido alternativo"
           }
         }
       }
     },
-    "chat-style" : {
-      "comment" : "Step: Look and feel. Legacy key: lf1-ax.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Chat style"
+    "chat-style": {
+      "comment": "Step: Look and feel. Legacy key: lf1-ax.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chat style"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Beszélgetés stílusa"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beszélgetés stílusa"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Chatstil"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chatstil"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Estilo de chat"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Estilo de chat"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Style de chat"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Style de chat"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "チャットスタイル"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "チャットスタイル"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Estilo de bate-papo"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Estilo de bate-papo"
           }
         }
       }
     },
-    "choose-a-network-or-enter" : {
-      "comment" : "Network picker. Legacy key: np1-e1.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choose a network or enter a server address."
+    "choose-a-network-or-enter": {
+      "comment": "Network picker. Legacy key: np1-e1.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a network or enter a server address."
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Válassz hálózatot, vagy adj meg egy kiszolgálócímet."
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Válassz hálózatot, vagy adj meg egy kiszolgálócímet."
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wähle ein Netzwerk oder gib eine Serveradresse ein."
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wähle ein Netzwerk oder gib eine Serveradresse ein."
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Elige una red o introduce una dirección de servidor."
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Elige una red o introduce una dirección de servidor."
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Choisissez un réseau ou saisissez une adresse de serveur."
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Choisissez un réseau ou saisissez une adresse de serveur."
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ネットワークを選択するか、サーバーアドレスを入力してください。"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ネットワークを選択するか、サーバーアドレスを入力してください。"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Escolha uma rede ou insira um endereço de servidor."
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Escolha uma rede ou insira um endereço de servidor."
           }
         }
       }
     },
-    "choose-a-network-to-see-suggested" : {
-      "comment" : "Step: First network. Legacy key: nw1-ep.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choose a network to see suggested channels."
+    "choose-a-network-to-see-suggested": {
+      "comment": "Step: First network. Legacy key: nw1-ep.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a network to see suggested channels."
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Az ajánlott csatornák megtekintéséhez válassz hálózatot."
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Az ajánlott csatornák megtekintéséhez válassz hálózatot."
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wähle ein Netzwerk, um empfohlene Kanäle zu sehen."
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wähle ein Netzwerk, um empfohlene Kanäle zu sehen."
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Elige una red para ver los canales sugeridos."
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Elige una red para ver los canales sugeridos."
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Choisissez un réseau pour voir les chaînes suggérées."
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Choisissez un réseau pour voir les chaînes suggérées."
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "提案されたチャンネルを見るには、ネットワークを選択してください。"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "提案されたチャンネルを見るには、ネットワークを選択してください。"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Escolha uma rede para ver os canais sugeridos."
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Escolha uma rede para ver os canais sugeridos."
           }
         }
       }
     },
-    "choose-how-conversations-are-displayed" : {
-      "comment" : "Step: Look and feel. Legacy key: lf1-st.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choose how conversations are displayed. You can change this later in Settings."
+    "choose-how-conversations-are-displayed": {
+      "comment": "Step: Look and feel. Legacy key: lf1-st.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose how conversations are displayed. You can change this later in Settings."
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Válaszd ki a beszélgetések megjelenését. Ezt később módosíthatod a Beállításokban."
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Válaszd ki a beszélgetések megjelenését. Ezt később módosíthatod a Beállításokban."
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wähle, wie Gespräche angezeigt werden. Du kannst dies später in den Einstellungen ändern."
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wähle, wie Gespräche angezeigt werden. Du kannst dies später in den Einstellungen ändern."
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Elige cómo se muestran las conversaciones. Puedes cambiar esto más tarde en Ajustes."
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Elige cómo se muestran las conversaciones. Puedes cambiar esto más tarde en Ajustes."
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Choisissez la façon dont les conversations sont affichées. Vous pouvez modifier cela plus tard dans Paramètres."
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Choisissez la façon dont les conversations sont affichées. Vous pouvez modifier cela plus tard dans Paramètres."
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "会話の表示方法を選択します。これは、後で「設定」で変更できます。"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "会話の表示方法を選択します。これは、後で「設定」で変更できます。"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Escolha como as conversas são exibidas. Você pode alterar isso mais tarde nas Configurações."
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Escolha como as conversas são exibidas. Você pode alterar isso mais tarde nas Configurações."
           }
         }
       }
     },
-    "choose-what-glasstual-should-tell" : {
-      "comment" : "Step: Notifications. Legacy key: nt1-st.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choose what Glasstual should tell you about while you are busy with something else."
+    "choose-what-glasstual-should-tell": {
+      "comment": "Step: Notifications. Legacy key: nt1-st.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose what Glasstual should tell you about while you are busy with something else."
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Válaszd ki, miről értesítsen a Glasstual, amikor mással foglalkozol."
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Válaszd ki, miről értesítsen a Glasstual, amikor mással foglalkozol."
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wähle, worüber Glasstual dich informieren soll, während du mit etwas anderem beschäftigt bist."
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wähle, worüber Glasstual dich informieren soll, während du mit etwas anderem beschäftigt bist."
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Elige lo que Glasstual debería decirte mientras estás ocupado con otra cosa."
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Elige lo que Glasstual debería decirte mientras estás ocupado con otra cosa."
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Choisissez ce que Glasstual devrait vous dire pendant que vous êtes occupé par autre chose."
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Choisissez ce que Glasstual devrait vous dire pendant que vous êtes occupé par autre chose."
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Glasstualが他のことに忙しい間、あなたに何を伝えるべきかを選択してください。"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Glasstualが他のことに忙しい間、あなたに何を伝えるべきかを選択してください。"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Escolha o que Glasstual deve lhe dizer enquanto você estiver ocupado com outra coisa."
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Escolha o que Glasstual deve lhe dizer enquanto você estiver ocupado com outra coisa."
           }
         }
       }
     },
-    "classic-line-by-line-view" : {
-      "comment" : "Step: Look and feel. Legacy key: lf1-ld.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Classic line-by-line view"
+    "classic-line-by-line-view": {
+      "comment": "Step: Look and feel. Legacy key: lf1-ld.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Classic line-by-line view"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Klasszikus, soronkénti nézet"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klasszikus, soronkénti nézet"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Klassische zeilenweise Ansicht"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klassische zeilenweise Ansicht"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Vista clásica línea por línea"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Vista clásica línea por línea"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Vue classique ligne par ligne"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Vue classique ligne par ligne"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "クラシックな行ごとの表示"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "クラシックな行ごとの表示"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Visualização clássica linha por linha"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Visualização clássica linha por linha"
           }
         }
       }
     },
-    "connect-when-finished" : {
-      "comment" : "Step: First network. Legacy key: nw1-cn.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Connect when finished"
+    "connect-when-finished": {
+      "comment": "Step: First network. Legacy key: nw1-cn.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect when finished"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kapcsolódás a beállítás végén"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapcsolódás a beállítás végén"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nach Abschluss verbinden"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nach Abschluss verbinden"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Conéctate cuando termines"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Conéctate cuando termines"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Connectez-vous une fois terminé"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Connectez-vous une fois terminé"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "完了したら接続してください"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "完了したら接続してください"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Conecte quando terminar"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Conecte quando terminar"
           }
         }
       }
     },
-    "connection-unavailable" : {
-      "comment" : "Alert title. Onboarding stays open and can retry if application services are unavailable when creating the connection.",
-      "extractionState" : "manual",
-      "generatesSymbol" : true,
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The connection could not be created."
+    "connection-unavailable": {
+      "comment": "Alert title. Onboarding stays open and can retry if application services are unavailable when creating the connection.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The connection could not be created."
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nem sikerült létrehozni a kapcsolatot."
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nem sikerült létrehozni a kapcsolatot."
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Die Verbindung konnte nicht erstellt werden."
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Verbindung konnte nicht erstellt werden."
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "No se pudo crear la conexión."
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No se pudo crear la conexión."
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "La connexion n'a pas pu être créée."
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "La connexion n'a pas pu être créée."
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "接続できませんでした。"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "接続できませんでした。"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "A conexão não pôde ser criada."
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "A conexão não pôde ser criada."
           }
         }
       }
     },
-    "connection-unavailable-recovery" : {
-      "comment" : "Alert message shown when the first connection could not be created.",
-      "extractionState" : "manual",
-      "generatesSymbol" : true,
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Try again, or go back and continue without a network."
+    "connection-unavailable-recovery": {
+      "comment": "Alert message shown when the first connection could not be created.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try again, or go back and continue without a network."
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Próbáld újra, vagy lépj vissza, és folytasd hálózat nélkül."
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Próbáld újra, vagy lépj vissza, és folytasd hálózat nélkül."
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Versuche es erneut oder gehe zurück und fahre ohne Netzwerk fort."
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Versuche es erneut oder gehe zurück und fahre ohne Netzwerk fort."
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Inténtalo de nuevo o vuelve atrás y continúa sin conexión a la red."
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Inténtalo de nuevo o vuelve atrás y continúa sin conexión a la red."
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Réessayez, ou revenez en arrière et continuez sans réseau."
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Réessayez, ou revenez en arrière et continuez sans réseau."
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "もう一度試すか、ネットワークなしで戻ってから続行してください。"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "もう一度試すか、ネットワークなしで戻ってから続行してください。"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Tente novamente ou volte e continue sem rede."
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Tente novamente ou volte e continue sem rede."
           }
         }
       }
     },
-    "enter-a-port-between-1" : {
-      "comment" : "Network picker. Legacy key: np1-e2.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Enter a port between 1 and 65535."
+    "enter-a-port-between-1": {
+      "comment": "Network picker. Legacy key: np1-e2.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a port between 1 and 65535."
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Adj meg egy 1 és 65535 közötti portszámot."
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adj meg egy 1 és 65535 közötti portszámot."
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gib einen Port zwischen 1 und 65535 ein."
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gib einen Port zwischen 1 und 65535 ein."
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Introduzca un puerto entre 1 y 65535."
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Introduzca un puerto entre 1 y 65535."
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Entrez un port entre 1 et 65535."
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Entrez un port entre 1 et 65535."
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "1と65535の間のポートを入力してください。"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "1と65535の間のポートを入力してください。"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Digite um porto entre 1 e 65535."
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Digite um porto entre 1 e 65535."
           }
         }
       }
     },
-    "glasstual-is-an-irc-client-built" : {
-      "comment" : "Step: Welcome and identity. Legacy key: id1-st.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Glasstual is an IRC client built for the Mac. Start by choosing how others will see you."
+    "glasstual-is-an-irc-client-built": {
+      "comment": "Step: Welcome and identity. Legacy key: id1-st.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstual is an IRC client built for the Mac. Start by choosing how others will see you."
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A Glasstual egy Macre készült IRC-kliens. Először válaszd ki, hogyan lássanak mások."
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A Glasstual egy Macre készült IRC-kliens. Először válaszd ki, hogyan lássanak mások."
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Glasstual ist ein IRC-Client für den Mac. Wähle zuerst, wie andere dich sehen sollen."
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstual ist ein IRC-Client für den Mac. Wähle zuerst, wie andere dich sehen sollen."
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Glasstual es un cliente IRC diseñado para el Mac. Comienza eligiendo cómo los demás te verán."
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Glasstual es un cliente IRC diseñado para el Mac. Comienza eligiendo cómo los demás te verán."
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Glasstual est un client IRC conçu pour le Mac. Commencez par choisir comment les autres vous verront."
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Glasstual est un client IRC conçu pour le Mac. Commencez par choisir comment les autres vous verront."
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Glasstualは、Mac用に構築されたIRCクライアントです。他の人があなたを見る方法を選択することから始めましょう。"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Glasstualは、Mac用に構築されたIRCクライアントです。他の人があなたを見る方法を選択することから始めましょう。"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Glasstual é um cliente IRC construído para o Mac. Comece escolhendo como os outros vão te ver."
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Glasstual é um cliente IRC construído para o Mac. Comece escolhendo como os outros vão te ver."
           }
         }
       }
     },
-    "glasstual-will-ask-macos-for-permission" : {
-      "comment" : "Step: Notifications. Legacy key: nt1-pr.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Glasstual will ask macOS for permission to show notifications when you continue. You can change this at any time in System Settings."
+    "glasstual-will-ask-macos-for-permission": {
+      "comment": "Step: Notifications. Legacy key: nt1-pr.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstual will ask macOS for permission to show notifications when you continue. You can change this at any time in System Settings."
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A folytatáskor a Glasstual engedélyt kér a macOS-től az értesítések megjelenítésére. Ezt bármikor módosíthatod a Rendszerbeállításokban."
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A folytatáskor a Glasstual engedélyt kér a macOS-től az értesítések megjelenítésére. Ezt bármikor módosíthatod a Rendszerbeállításokban."
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wenn du fortfährst, bittet Glasstual macOS um Erlaubnis für Benachrichtigungen. Du kannst dies jederzeit in den Systemeinstellungen ändern."
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wenn du fortfährst, bittet Glasstual macOS um Erlaubnis für Benachrichtigungen. Du kannst dies jederzeit in den Systemeinstellungen ändern."
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Glasstual le pedirá permiso a macOS para mostrar notificaciones cuando continúes. Puede cambiar esto en cualquier momento en la configuración del Sistema."
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Glasstual le pedirá permiso a macOS para mostrar notificaciones cuando continúes. Puede cambiar esto en cualquier momento en la configuración del Sistema."
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Glasstual demandera à macOS la permission de montrer les notifications lorsque vous continuerez. Vous pouvez modifier cela à tout moment dans les paramètres du système."
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Glasstual demandera à macOS la permission de montrer les notifications lorsque vous continuerez. Vous pouvez modifier cela à tout moment dans les paramètres du système."
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Glasstualが、続行すると通知を表示する許可をmacOSに求めます。これはいつでもシステム設定で変更できます。"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Glasstualが、続行すると通知を表示する許可をmacOSに求めます。これはいつでもシステム設定で変更できます。"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "O Glasstual pedirá permissão ao macOS para exibir notificações quando você continuar. Você pode alterar isso a qualquer momento nas Configurações do Sistema."
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "O Glasstual pedirá permissão ao macOS para exibir notificações quando você continuar. Você pode alterar isso a qualquer momento nas Configurações do Sistema."
           }
         }
       }
     },
-    "good-morning-everyone" : {
-      "comment" : "Step: Look and feel. Legacy key: lf1-m1.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Good morning everyone"
+    "good-morning-everyone": {
+      "comment": "Step: Look and feel. Legacy key: lf1-m1.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Good morning everyone"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Jó reggelt mindenkinek"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jó reggelt mindenkinek"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Guten Morgen zusammen"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guten Morgen zusammen"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Buenos días a todos"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Buenos días a todos"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Bonjour à tous"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Bonjour à tous"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "皆さん、おはようございます"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "皆さん、おはようございます"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Bom dia a todos"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Bom dia a todos"
           }
         }
       }
     },
-    "invalid-account" : {
-      "comment" : "Validation failure for an IRC account name or a password containing control characters.",
-      "extractionState" : "manual",
-      "generatesSymbol" : true,
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Enter a valid IRC username and a password without control characters."
+    "invalid-account": {
+      "comment": "Validation failure for an IRC account name or a password containing control characters.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a valid IRC username and a password without control characters."
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Adj meg érvényes IRC-felhasználónevet és vezérlőkarakterek nélküli jelszót."
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adj meg érvényes IRC-felhasználónevet és vezérlőkarakterek nélküli jelszót."
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gib einen gültigen IRC-Benutzernamen und ein Passwort ohne Steuerzeichen ein."
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gib einen gültigen IRC-Benutzernamen und ein Passwort ohne Steuerzeichen ein."
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Introduzca un nombre de usuario IRC válido y una contraseña sin caracteres de control."
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Introduzca un nombre de usuario IRC válido y una contraseña sin caracteres de control."
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Entrez un nom d'utilisateur IRC valide et un mot de passe sans caractères de contrôle."
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Entrez un nom d'utilisateur IRC valide et un mot de passe sans caractères de contrôle."
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "制御文字なしの有効なIRCユーザー名とパスワードを入力してください。"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "制御文字なしの有効なIRCユーザー名とパスワードを入力してください。"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Digite um nome de usuário IRC válido e uma senha sem caracteres de controle."
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Digite um nome de usuário IRC válido e uma senha sem caracteres de controle."
           }
         }
       }
     },
-    "irc-example-org" : {
-      "comment" : "Network picker. Legacy key: np1-sh.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "irc.example.org"
+    "irc-example-org": {
+      "comment": "Network picker. Legacy key: np1-sh.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "irc.example.org"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "irc.example.org"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "irc.example.org"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "irc.example.org"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "irc.example.org"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "irc.example.org"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "irc.example.org"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "irc.example.org"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "irc.example.org"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "irc.example.org"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "irc.example.org"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "irc.example.org"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "irc.example.org"
           }
         }
       }
     },
-    "look-and-feel" : {
-      "comment" : "Step: Look and feel. Legacy key: lf1-tt.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Look and Feel"
+    "look-and-feel": {
+      "comment": "Step: Look and feel. Legacy key: lf1-tt.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Look and Feel"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Megjelenés"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Megjelenés"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Darstellung"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Darstellung"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Ver y sentir"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ver y sentir"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Apparence et sensation"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Apparence et sensation"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "見た目と感触"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "見た目と感触"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Olhe e sinta"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Olhe e sinta"
           }
         }
       }
     },
-    "messages-in-rounded-bubbles" : {
-      "comment" : "Step: Look and feel. Legacy key: lf1-bd.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Messages in rounded bubbles"
+    "messages-in-rounded-bubbles": {
+      "comment": "Step: Look and feel. Legacy key: lf1-bd.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Messages in rounded bubbles"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Üzenetek lekerekített buborékokban"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Üzenetek lekerekített buborékokban"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nachrichten in abgerundeten Sprechblasen"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nachrichten in abgerundeten Sprechblasen"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Mensajes en burbujas redondeadas"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mensajes en burbujas redondeadas"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Messages dans des bulles arrondies"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Messages dans des bulles arrondies"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "丸みを帯びた泡の中のメッセージ"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "丸みを帯びた泡の中のメッセージ"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Mensagens em bolhas arredondadas"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mensagens em bolhas arredondadas"
           }
         }
       }
     },
-    "morning-anyone-tried-the-new-build" : {
-      "comment" : "Step: Look and feel. Legacy key: lf1-m2.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Morning! Anyone tried the new build?"
+    "morning-anyone-tried-the-new-build": {
+      "comment": "Step: Look and feel. Legacy key: lf1-m2.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Morning! Anyone tried the new build?"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Jó reggelt! Próbálta már valaki az új verziót?"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jó reggelt! Próbálta már valaki az új verziót?"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Morgen! Hat jemand die neue Version ausprobiert?"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Morgen! Hat jemand die neue Version ausprobiert?"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "¡Buenos días! ¿Alguien ha probado la nueva construcción?"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "¡Buenos días! ¿Alguien ha probado la nueva construcción?"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Bonjour ! Quelqu'un a-t-il essayé la nouvelle construction ?"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Bonjour ! Quelqu'un a-t-il essayé la nouvelle construction ?"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "おはよう！新しいビルド、誰か試した？"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "おはよう！新しいビルド、誰か試した？"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Bom dia! Alguém já experimentou a nova construção?"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Bom dia! Alguém já experimentou a nova construção?"
           }
         }
       }
     },
-    "network-picker-account" : {
-      "comment" : "Network picker. Legacy key: np1-ac.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Account"
+    "network-picker-account": {
+      "comment": "Network picker. Legacy key: np1-ac.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fiók"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fiók"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Konto"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konto"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Cuenta"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Cuenta"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "compte"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "compte"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "アカウント"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "アカウント"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "conta"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "conta"
           }
         }
       }
     },
-    "network-picker-password" : {
-      "comment" : "Network picker. Legacy key: np1-pw.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Password"
+    "network-picker-password": {
+      "comment": "Network picker. Legacy key: np1-pw.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Password"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Jelszó"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jelszó"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Passwort"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passwort"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Contraseña"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Contraseña"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "mot de passe"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "mot de passe"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "パスワード"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "パスワード"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "senha"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "senha"
           }
         }
       }
     },
-    "network-picker-port" : {
-      "comment" : "Network picker. Legacy key: np1-pt.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Port"
+    "network-picker-port": {
+      "comment": "Network picker. Legacy key: np1-pt.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Port"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Port"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Port"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Port"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Port"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Puerto"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Puerto"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "port"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "port"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "港"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "港"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "porta"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "porta"
           }
         }
       }
     },
-    "nickname" : {
-      "comment" : "Step: Welcome and identity. Legacy key: id1-np.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nickname"
+    "nickname": {
+      "comment": "Step: Welcome and identity. Legacy key: id1-np.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nickname"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Becenév"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Becenév"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nickname"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nickname"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Apodo"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Apodo"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "surnom"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "surnom"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ニックネーム"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ニックネーム"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "apelido"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "apelido"
           }
         }
       }
     },
-    "notifications-are-allowed-for-glasstual" : {
-      "comment" : "Step: Notifications. Legacy key: nt1-pd.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Notifications are allowed for Glasstual."
+    "notifications-are-allowed-for-glasstual": {
+      "comment": "Step: Notifications. Legacy key: nt1-pd.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications are allowed for Glasstual."
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A Glasstual értesítései engedélyezve vannak."
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A Glasstual értesítései engedélyezve vannak."
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Benachrichtigungen für Glasstual sind erlaubt."
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Benachrichtigungen für Glasstual sind erlaubt."
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Se permiten las notificaciones para Glasstual."
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Se permiten las notificaciones para Glasstual."
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Les notifications sont autorisées pour Glasstual."
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Les notifications sont autorisées pour Glasstual."
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Glasstualに対して通知が許可されています。"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Glasstualに対して通知が許可されています。"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "As notificações são permitidas para Glasstual."
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "As notificações são permitidas para Glasstual."
           }
         }
       }
     },
-    "notifications-are-turned-off-for-glasstual" : {
-      "comment" : "Step: Notifications. Legacy key: nt1-pn.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Notifications are turned off for Glasstual in System Settings."
+    "notifications-are-turned-off-for-glasstual": {
+      "comment": "Step: Notifications. Legacy key: nt1-pn.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications are turned off for Glasstual in System Settings."
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A Glasstual értesítései ki vannak kapcsolva a Rendszerbeállításokban."
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A Glasstual értesítései ki vannak kapcsolva a Rendszerbeállításokban."
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Benachrichtigungen für Glasstual sind in den Systemeinstellungen deaktiviert."
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Benachrichtigungen für Glasstual sind in den Systemeinstellungen deaktiviert."
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Las notificaciones están desactivadas para Glasstual en la configuración del sistema."
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Las notificaciones están desactivadas para Glasstual en la configuración del sistema."
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Les notifications sont désactivées pour Glasstual dans les paramètres du système."
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Les notifications sont désactivées pour Glasstual dans les paramètres du système."
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "システム設定でGlasstualの通知はオフになっています。"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "システム設定でGlasstualの通知はオフになっています。"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "As notificações estão desativadas para Glasstual nas Configurações do Sistema."
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "As notificações estão desativadas para Glasstual nas Configurações do Sistema."
           }
         }
       }
     },
-    "notify-about-mentions-and-private-messages" : {
-      "comment" : "Combined notification preference for mentions and private messages, matching the Notifications settings pane.",
-      "extractionState" : "manual",
-      "generatesSymbol" : true,
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Notify me about mentions and private messages"
+    "notify-about-mentions-and-private-messages": {
+      "comment": "Combined notification preference for mentions and private messages, matching the Notifications settings pane.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notify me about mentions and private messages"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Értesíts az említésekről és a privát üzenetekről"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Értesíts az említésekről és a privát üzenetekről"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bei Erwähnungen und privaten Nachrichten benachrichtigen"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bei Erwähnungen und privaten Nachrichten benachrichtigen"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Notifícame sobre las menciones y los mensajes privados"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Notifícame sobre las menciones y los mensajes privados"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Avisez-moi des mentions et des messages privés"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Avisez-moi des mentions et des messages privés"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "言及やプライベートメッセージについてお知らせしてください"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "言及やプライベートメッセージについてお知らせしてください"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Notifique-me sobre menções e mensagens privadas"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Notifique-me sobre menções e mensagens privadas"
           }
         }
       }
     },
-    "notify-me-about-private-messages" : {
-      "comment" : "Step: Notifications. Legacy key: nt1-pm.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Notify me about private messages"
+    "notify-me-about-private-messages": {
+      "comment": "Step: Notifications. Legacy key: nt1-pm.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notify me about private messages"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Értesítés a privát üzenetekről"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Értesítés a privát üzenetekről"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bei privaten Nachrichten benachrichtigen"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bei privaten Nachrichten benachrichtigen"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Notifícame sobre los mensajes privados"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Notifícame sobre los mensajes privados"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Avisez-moi des messages privés"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Avisez-moi des messages privés"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "プライベートメッセージについて通知してください"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "プライベートメッセージについて通知してください"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Notifique-me sobre mensagens privadas"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Notifique-me sobre mensagens privadas"
           }
         }
       }
     },
-    "notify-me-when-someone-mentions-me" : {
-      "comment" : "Step: Notifications. Legacy key: nt1-hl.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Notify me when someone mentions me"
+    "notify-me-when-someone-mentions-me": {
+      "comment": "Step: Notifications. Legacy key: nt1-hl.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notify me when someone mentions me"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Értesítés, ha valaki megemlít"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Értesítés, ha valaki megemlít"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bei Erwähnungen benachrichtigen"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bei Erwähnungen benachrichtigen"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Avisame cuando alguien me mencione"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Avisame cuando alguien me mencione"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Avisez-moi quand quelqu'un me mentionne"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Avisez-moi quand quelqu'un me mentionne"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "誰かが私のことを言及したときに私に通知してください"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "誰かが私のことを言及したときに私に通知してください"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Notifique-me quando alguém me mencionar"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Notifique-me quando alguém me mencionar"
           }
         }
       }
     },
-    "pick-a-network-to-join" : {
-      "comment" : "Step: First network. Legacy key: nw1-st.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pick a network to join. You can add more networks later from the Server menu."
+    "pick-a-network-to-join": {
+      "comment": "Step: First network. Legacy key: nw1-st.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pick a network to join. You can add more networks later from the Server menu."
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Válassz egy hálózatot a csatlakozáshoz. Később a Kiszolgáló menüből további hálózatokat is hozzáadhatsz."
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Válassz egy hálózatot a csatlakozáshoz. Később a Kiszolgáló menüből további hálózatokat is hozzáadhatsz."
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wähle ein Netzwerk zum Beitreten. Weitere Netzwerke kannst du später über das Servermenü hinzufügen."
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wähle ein Netzwerk zum Beitreten. Weitere Netzwerke kannst du später über das Servermenü hinzufügen."
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Elige una red a la que unirte. Puedes añadir más redes más tarde desde el menú del servidor."
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Elige una red a la que unirte. Puedes añadir más redes más tarde desde el menú del servidor."
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Choisissez un réseau auquel vous joindre. Vous pouvez ajouter d'autres réseaux plus tard depuis le menu Serveur."
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Choisissez un réseau auquel vous joindre. Vous pouvez ajouter d'autres réseaux plus tard depuis le menu Serveur."
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "参加するネットワークを選択してください。サーバーメニューから後でさらにネットワークを追加できます。"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "参加するネットワークを選択してください。サーバーメニューから後でさらにネットワークを追加できます。"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Escolha uma rede para se juntar. Você pode adicionar mais redes mais tarde no menu do Servidor."
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Escolha uma rede para se juntar. Você pode adicionar mais redes mais tarde no menu do Servidor."
           }
         }
       }
     },
-    "play-sounds" : {
-      "comment" : "Step: Notifications. Legacy key: nt1-sn.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Play sounds"
+    "play-sounds": {
+      "comment": "Step: Notifications. Legacy key: nt1-sn.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Play sounds"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hangjelzések lejátszása"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hangjelzések lejátszása"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Töne abspielen"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Töne abspielen"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Reproducir sonidos"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Reproducir sonidos"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Jouer des sons"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Jouer des sons"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "音を再生する"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "音を再生する"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Reproduzir sons"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Reproduzir sons"
           }
         }
       }
     },
-    "real-name" : {
-      "comment" : "Step: Welcome and identity. Legacy key: id1-rn.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Real name"
+    "real-name": {
+      "comment": "Step: Welcome and identity. Legacy key: id1-rn.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Real name"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Valódi név"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Valódi név"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Echter Name"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Echter Name"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Nombre real"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nombre real"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Nom réel"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nom réel"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "実名"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "実名"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Nome real"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nome real"
           }
         }
       }
     },
-    "registration-required" : {
-      "comment" : "Network picker. Legacy key: np1-rq.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Registration required"
+    "registration-required": {
+      "comment": "Network picker. Legacy key: np1-rq.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registration required"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Regisztráció szükséges"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Regisztráció szükséges"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Registrierung erforderlich"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registrierung erforderlich"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Se requiere registro"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Se requiere registro"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Inscription requise"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Inscription requise"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "登録が必要です"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "登録が必要です"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Registro obrigatório"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Registro obrigatório"
           }
         }
       }
     },
-    "server-address" : {
-      "comment" : "Network picker. Legacy key: np1-sv.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Server address"
+    "server-address": {
+      "comment": "Network picker. Legacy key: np1-sv.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server address"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kiszolgáló címe"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kiszolgáló címe"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Serveradresse"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serveradresse"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Dirección del servidor"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Dirección del servidor"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Adresse du serveur"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Adresse du serveur"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "サーバーアドレス"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "サーバーアドレス"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Endereço do servidor"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Endereço do servidor"
           }
         }
       }
     },
-    "sign-in-with-sasl" : {
-      "comment" : "Network picker. Legacy key: np1-sa.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sign in with SASL"
+    "sign-in-with-sasl": {
+      "comment": "Network picker. Legacy key: np1-sa.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in with SASL"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bejelentkezés SASL-lel"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bejelentkezés SASL-lel"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mit SASL anmelden"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mit SASL anmelden"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Inicia sesión con SASL"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Inicia sesión con SASL"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Se connecter avec SASL"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Se connecter avec SASL"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "SASLでサインインしてください"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "SASLでサインインしてください"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Faça login com SASL"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Faça login com SASL"
           }
         }
       }
     },
-    "step-look-and-feel" : {
-      "comment" : "Step: Look and feel. Legacy key: lf1-tm.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "09:41"
+    "step-look-and-feel": {
+      "comment": "Step: Look and feel. Legacy key: lf1-tm.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "09:41"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "09:41"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "09:41"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "09:41"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "09:41"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "09:41"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "09:41"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "09 h 41"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "09 h 41"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "09:41"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "09:41"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "09:41"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "09:41"
           }
         }
       }
     },
-    "step-look-and-feel-alice" : {
-      "comment" : "Step: Look and feel. Legacy key: lf1-n1.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "alice"
+    "step-look-and-feel-alice": {
+      "comment": "Step: Look and feel. Legacy key: lf1-n1.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "alice"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "alice"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "alice"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "alice"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "alice"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Alicia"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Alicia"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Alice"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Alice"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "アリス"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "アリス"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Alice"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Alice"
           }
         }
       }
     },
-    "step-look-and-feel-appearance" : {
-      "comment" : "Step: Look and feel. Legacy key: lf1-ap.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Appearance"
+    "step-look-and-feel-appearance": {
+      "comment": "Step: Look and feel. Legacy key: lf1-ap.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appearance"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Megjelenés"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Megjelenés"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Erscheinungsbild"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erscheinungsbild"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Apariencia"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Apariencia"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "apparence"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "apparence"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "外見"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "外見"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "aparência"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "aparência"
           }
         }
       }
     },
-    "step-look-and-feel-bob" : {
-      "comment" : "Step: Look and feel. Legacy key: lf1-n2.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "bob"
+    "step-look-and-feel-bob": {
+      "comment": "Step: Look and feel. Legacy key: lf1-n2.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "bob"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "bob"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "bob"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "bob"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "bob"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Bob"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Bob"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "coupe au carré"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "coupe au carré"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ボブ"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ボブ"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "monte de dinheiro"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "monte de dinheiro"
           }
         }
       }
     },
-    "step-look-and-feel-bubbles" : {
-      "comment" : "Step: Look and feel. Legacy key: lf1-bb.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bubbles"
+    "step-look-and-feel-bubbles": {
+      "comment": "Step: Look and feel. Legacy key: lf1-bb.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bubbles"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Buborékok"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buborékok"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sprechblasen"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sprechblasen"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Burbujas"
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Burbujas"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Bulles"
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bulles"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "泡"
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "吹き出し"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Bolhas"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Balões"
           }
         }
       }
     },
-    "step-look-and-feel-dark" : {
-      "comment" : "Step: Look and feel. Legacy key: lf1-a3.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dark"
+    "step-look-and-feel-dark": {
+      "comment": "Step: Look and feel. Legacy key: lf1-a3.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dark"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sötét"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sötét"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dunkel"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dunkel"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Oscuro"
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oscuro"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "sombre"
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sombre"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "暗い"
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ダーク"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "escuro"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escuro"
           }
         }
       }
     },
-    "step-look-and-feel-large" : {
-      "comment" : "Step: Look and feel. Legacy key: lf1-s3.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Large"
+    "step-look-and-feel-large": {
+      "comment": "Step: Look and feel. Legacy key: lf1-s3.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Large"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nagy"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nagy"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Groß"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Groß"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Grande"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Grande"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "grand"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "grand"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "大きい"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "大きい"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "grande"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "grande"
           }
         }
       }
     },
-    "step-look-and-feel-light" : {
-      "comment" : "Step: Look and feel. Legacy key: lf1-a2.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Light"
+    "step-look-and-feel-light": {
+      "comment": "Step: Look and feel. Legacy key: lf1-a2.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Light"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Világos"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Világos"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hell"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hell"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Luz"
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claro"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "lumière"
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clair"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "光"
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ライト"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "luz"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claro"
           }
         }
       }
     },
-    "step-look-and-feel-lines" : {
-      "comment" : "Step: Look and feel. Legacy key: lf1-ln.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lines"
+    "step-look-and-feel-lines": {
+      "comment": "Step: Look and feel. Legacy key: lf1-ln.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lines"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sorok"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sorok"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zeilen"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zeilen"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Líneas"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Líneas"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Lignes"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Lignes"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "線"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "線"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Linhas"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Linhas"
           }
         }
       }
     },
-    "step-look-and-feel-medium" : {
-      "comment" : "Step: Look and feel. Legacy key: lf1-s2.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Medium"
+    "step-look-and-feel-medium": {
+      "comment": "Step: Look and feel. Legacy key: lf1-s2.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Medium"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Közepes"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Közepes"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mittel"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mittel"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Medio"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Medio"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "moyen"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "moyen"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "中程度"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "中程度"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "médio"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "médio"
           }
         }
       }
     },
-    "step-look-and-feel-small" : {
-      "comment" : "Step: Look and feel. Legacy key: lf1-s1.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Small"
+    "step-look-and-feel-small": {
+      "comment": "Step: Look and feel. Legacy key: lf1-s1.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Small"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kicsi"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kicsi"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Klein"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klein"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Pequeño"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Pequeño"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "petit"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "petit"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "小さい"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "小さい"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "pequeno"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "pequeno"
           }
         }
       }
     },
-    "step-look-and-feel-system" : {
-      "comment" : "Step: Look and feel. Legacy key: lf1-a1.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "System"
+    "step-look-and-feel-system": {
+      "comment": "Step: Look and feel. Legacy key: lf1-a1.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rendszer"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rendszer"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "System"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Sistema"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sistema"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "système"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "système"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "システム"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "システム"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "sistema"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "sistema"
           }
         }
       }
     },
-    "step-look-and-feel-you" : {
-      "comment" : "Step: Look and feel. Legacy key: lf1-n3.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "you"
+    "step-look-and-feel-you": {
+      "comment": "Step: Look and feel. Legacy key: lf1-n3.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "you"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "te"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "te"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "du"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "du"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "tú"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "tú"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "vous"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "vous"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "あなた"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "あなた"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "você"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "você"
           }
         }
       }
     },
-    "step-notifications" : {
-      "comment" : "Step: Notifications. Legacy key: nt1-tt.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Notifications"
+    "step-notifications": {
+      "comment": "Step: Notifications. Legacy key: nt1-tt.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Értesítések"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Értesítések"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Benachrichtigungen"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Benachrichtigungen"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Notificaciones"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Notificaciones"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Notifications"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Notifications"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "通知"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "通知"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Notificações"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Notificações"
           }
         }
       }
     },
-    "step-welcome-and-identity-nickname" : {
-      "comment" : "Step: Welcome and identity. Legacy key: id1-nk.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nickname"
+    "step-welcome-and-identity-nickname": {
+      "comment": "Step: Welcome and identity. Legacy key: id1-nk.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nickname"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Becenév"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Becenév"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nickname"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nickname"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Apodo"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Apodo"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "surnom"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "surnom"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ニックネーム"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ニックネーム"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "apelido"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "apelido"
           }
         }
       }
     },
-    "step-welcome-and-identity-nickname-required" : {
-      "comment" : "Step: Welcome and identity. Shown under the nickname field while it does not hold a nickname.",
-      "extractionState" : "manual",
-      "generatesSymbol" : true,
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Enter a nickname."
+    "step-welcome-and-identity-nickname-required": {
+      "comment": "Step: Welcome and identity. Shown under the nickname field while it does not hold a nickname.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a nickname."
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Adj meg egy becenevet."
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adj meg egy becenevet."
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gib einen Nicknamen ein."
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gib einen Nicknamen ein."
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Introduce un apodo."
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Introduce un apodo."
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Entrez un surnom."
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Entrez un surnom."
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ニックネームを入力してください。"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ニックネームを入力してください。"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Digite um apelido."
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Digite um apelido."
           }
         }
       }
     },
-    "step-welcome-and-identity-optional" : {
-      "comment" : "Step: Welcome and identity. Legacy key: id1-ap.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Optional"
+    "step-welcome-and-identity-optional": {
+      "comment": "Step: Welcome and identity. Legacy key: id1-ap.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nem kötelező"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nem kötelező"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Optional"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Opcional"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Opcional"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "facultatif"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "facultatif"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "オプション"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "オプション"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "opcional"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "opcional"
           }
         }
       }
     },
-    "suggested-channels" : {
-      "comment" : "Step: First network. Legacy key: nw1-ch.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Suggested channels"
+    "suggested-channels": {
+      "comment": "Step: First network. Legacy key: nw1-ch.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggested channels"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ajánlott csatornák"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajánlott csatornák"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Empfohlene Kanäle"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empfohlene Kanäle"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Canales sugeridos"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Canales sugeridos"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Canaux suggérés"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Canaux suggérés"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "提案されたチャンネル"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "提案されたチャンネル"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Canais sugeridos"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Canais sugeridos"
           }
         }
       }
     },
-    "summary" : {
-      "comment" : "Step: Summary. Title of the final review step.",
-      "extractionState" : "manual",
-      "generatesSymbol" : true,
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ready to Go"
+    "summary": {
+      "comment": "Step: Summary. Title of the final review step.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ready to Go"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minden készen áll"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minden készen áll"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Alles bereit"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alles bereit"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Listo para ir"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Listo para ir"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Prêt à partir"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Prêt à partir"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "出発準備が整いました"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "出発準備が整いました"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Pronto para ir"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Pronto para ir"
           }
         }
       }
     },
-    "summary-appearance" : {
-      "comment" : "Step: Summary. Row label for the chosen light or dark appearance.",
-      "extractionState" : "manual",
-      "generatesSymbol" : true,
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Appearance"
+    "summary-appearance": {
+      "comment": "Step: Summary. Row label for the chosen light or dark appearance.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appearance"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Megjelenés"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Megjelenés"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Erscheinungsbild"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erscheinungsbild"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Apariencia"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Apariencia"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "apparence"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "apparence"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "外見"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "外見"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "aparência"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "aparência"
           }
         }
       }
     },
-    "summary-channels" : {
-      "comment" : "Step: Summary. Row label for the channels the first connection will join.",
-      "extractionState" : "manual",
-      "generatesSymbol" : true,
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Channels"
+    "summary-channels": {
+      "comment": "Step: Summary. Row label for the channels the first connection will join.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Channels"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Csatornák"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csatornák"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kanäle"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kanäle"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Canales"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Canales"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Chaînes"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Chaînes"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "チャンネル"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "チャンネル"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Canais"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Canais"
           }
         }
       }
     },
-    "summary-chat-style" : {
-      "comment" : "Step: Summary. Row label for the chosen transcript style.",
-      "extractionState" : "manual",
-      "generatesSymbol" : true,
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Chat style"
+    "summary-chat-style": {
+      "comment": "Step: Summary. Row label for the chosen transcript style.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chat style"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Beszélgetés stílusa"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beszélgetés stílusa"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Chatstil"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chatstil"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Estilo de chat"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Estilo de chat"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Style de chat"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Style de chat"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "チャットスタイル"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "チャットスタイル"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Estilo de bate-papo"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Estilo de bate-papo"
           }
         }
       }
     },
-    "summary-mentions" : {
-      "comment" : "Step: Summary. One of the notification kinds listed in the notifications row.",
-      "extractionState" : "manual",
-      "generatesSymbol" : true,
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mentions"
+    "summary-mentions": {
+      "comment": "Step: Summary. One of the notification kinds listed in the notifications row.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mentions"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Említések"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Említések"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Erwähnungen"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erwähnungen"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Menciones"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Menciones"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Mentions"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mentions"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "言及"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "言及"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Mencões"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mencões"
           }
         }
       }
     },
-    "summary-network" : {
-      "comment" : "Step: Summary. Row label for the network the first connection will use.",
-      "extractionState" : "manual",
-      "generatesSymbol" : true,
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Network"
+    "summary-network": {
+      "comment": "Step: Summary. Row label for the network the first connection will use.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Network"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hálózat"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hálózat"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Netzwerk"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Netzwerk"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Red"
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Red"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "réseau"
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réseau"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ネットワーク"
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ネットワーク"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "rede"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rede"
           }
         }
       }
     },
-    "summary-nickname" : {
-      "comment" : "Step: Summary. Row label for the chosen nickname.",
-      "extractionState" : "manual",
-      "generatesSymbol" : true,
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nickname"
+    "summary-nickname": {
+      "comment": "Step: Summary. Row label for the chosen nickname.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nickname"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Becenév"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Becenév"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nickname"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nickname"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Apodo"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Apodo"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "surnom"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "surnom"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ニックネーム"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ニックネーム"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "apelido"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "apelido"
           }
         }
       }
     },
-    "summary-nothing-chosen" : {
-      "comment" : "Step: Summary. Value of a row the user left empty, such as no network or no notifications.",
-      "extractionState" : "manual",
-      "generatesSymbol" : true,
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "None"
+    "summary-nothing-chosen": {
+      "comment": "Step: Summary. Value of a row the user left empty, such as no network or no notifications.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "None"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nincs"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincs"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Keine"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Ninguno"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ninguno"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "aucun"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "aucun"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "なし"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "なし"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "nenhum"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "nenhum"
           }
         }
       }
     },
-    "summary-notifications" : {
-      "comment" : "Step: Summary. Row label for the notifications that were turned on.",
-      "extractionState" : "manual",
-      "generatesSymbol" : true,
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Notifications"
+    "summary-notifications": {
+      "comment": "Step: Summary. Row label for the notifications that were turned on.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Értesítések"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Értesítések"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Benachrichtigungen"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Benachrichtigungen"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Notificaciones"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Notificaciones"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Notifications"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Notifications"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "通知"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "通知"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Notificações"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Notificações"
           }
         }
       }
     },
-    "summary-private-messages" : {
-      "comment" : "Step: Summary. One of the notification kinds listed in the notifications row.",
-      "extractionState" : "manual",
-      "generatesSymbol" : true,
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Private messages"
+    "summary-private-messages": {
+      "comment": "Step: Summary. One of the notification kinds listed in the notifications row.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Private messages"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Privát üzenetek"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privát üzenetek"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Private Nachrichten"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Private Nachrichten"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Mensajes privados"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mensajes privados"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Messages privés"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Messages privés"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "プライベートメッセージ"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "プライベートメッセージ"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Mensagens privadas"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mensagens privadas"
           }
         }
       }
     },
-    "summary-review-your-choices" : {
-      "comment" : "Step: Summary. Subtitle of the final review step.",
-      "extractionState" : "manual",
-      "generatesSymbol" : true,
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Review your choices. You can change any of them later in Settings."
+    "summary-review-your-choices": {
+      "comment": "Step: Summary. Subtitle of the final review step.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review your choices. You can change any of them later in Settings."
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ellenőrizd a választásaidat. Később bármelyiket módosíthatod a Beállításokban."
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ellenőrizd a választásaidat. Később bármelyiket módosíthatod a Beállításokban."
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Prüfe deine Auswahl. Du kannst sie später in den Einstellungen ändern."
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prüfe deine Auswahl. Du kannst sie später in den Einstellungen ändern."
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Revisa tus opciones. Puedes cambiar cualquiera de ellas más tarde en Ajustes."
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Revisa tus opciones. Puedes cambiar cualquiera de ellas más tarde en Ajustes."
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Vérifiez vos choix. Vous pouvez en modifier n’importe lequel plus tard dans Paramètres."
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Vérifiez vos choix. Vous pouvez en modifier n’importe lequel plus tard dans Paramètres."
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "選択肢を確認してください。後で「設定」でそれらのいずれかを変更できます。"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "選択肢を確認してください。後で「設定」でそれらのいずれかを変更できます。"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Revise suas escolhas. Você pode alterar qualquer uma delas mais tarde nas Configurações."
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Revise suas escolhas. Você pode alterar qualquer uma delas mais tarde nas Configurações."
           }
         }
       }
     },
-    "summary-setting-things-up" : {
-      "comment" : "Step: Summary. Shown beside a progress indicator while the first connection is being created.",
-      "extractionState" : "manual",
-      "generatesSymbol" : true,
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Setting things up…"
+    "summary-setting-things-up": {
+      "comment": "Step: Summary. Shown beside a progress indicator while the first connection is being created.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Setting things up…"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Beállítás folyamatban…"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beállítás folyamatban…"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Einrichtung läuft…"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einrichtung läuft…"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Configurando las cosas..."
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Configurando las cosas..."
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Configuration des choses..."
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Configuration des choses..."
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "設定をしています…"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "設定をしています…"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Configurando as coisas..."
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Configurando as coisas..."
           }
         }
       }
     },
-    "summary-sounds" : {
-      "comment" : "Step: Summary. One of the notification kinds listed in the notifications row.",
-      "extractionState" : "manual",
-      "generatesSymbol" : true,
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sounds"
+    "summary-sounds": {
+      "comment": "Step: Summary. One of the notification kinds listed in the notifications row.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sounds"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hangok"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hangok"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Töne"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Töne"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Sonidos"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sonidos"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Bruits"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Bruits"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "音"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "音"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Somos"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Somos"
           }
         }
       }
     },
-    "summary-text-size" : {
-      "comment" : "Step: Summary. Row label for the chosen transcript text size.",
-      "extractionState" : "manual",
-      "generatesSymbol" : true,
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Text size"
+    "summary-text-size": {
+      "comment": "Step: Summary. Row label for the chosen transcript text size.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text size"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Szövegméret"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Szövegméret"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Textgröße"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Textgröße"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Tamaño del texto"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Tamaño del texto"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Taille du texte"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Taille du texte"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "テキストサイズ"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "テキストサイズ"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Tamanho do texto"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Tamanho do texto"
           }
         }
       }
     },
-    "text-size" : {
-      "comment" : "Step: Look and feel. Legacy key: lf1-fs.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Text size"
+    "text-size": {
+      "comment": "Step: Look and feel. Legacy key: lf1-fs.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text size"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Szövegméret"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Szövegméret"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Textgröße"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Textgröße"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Tamaño del texto"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Tamaño del texto"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Taille du texte"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Taille du texte"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "テキストサイズ"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "テキストサイズ"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Tamanho do texto"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Tamanho do texto"
           }
         }
       }
     },
-    "use-ssl-tls" : {
-      "comment" : "Network picker. Legacy key: np1-tl.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Use SSL/TLS"
+    "use-ssl-tls": {
+      "comment": "Network picker. Legacy key: np1-tl.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use SSL/TLS"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "SSL/TLS használata"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SSL/TLS használata"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "SSL/TLS verwenden"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SSL/TLS verwenden"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Utilice SSL/TLS"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Utilice SSL/TLS"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Utilisez SSL/TLS"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Utilisez SSL/TLS"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "SSL/TLSを使用する"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "SSL/TLSを使用する"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Use SSL/TLS"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Use SSL/TLS"
           }
         }
       }
     },
-    "used-when-your-nickname-is-already" : {
-      "comment" : "Step: Welcome and identity. Legacy key: id1-ah.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Used when your nickname is already taken. Optional."
+    "used-when-your-nickname-is-already": {
+      "comment": "Step: Welcome and identity. Legacy key: id1-ah.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Used when your nickname is already taken. Optional."
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Akkor használjuk, ha a beceneved már foglalt. Nem kötelező."
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Akkor használjuk, ha a beceneved már foglalt. Nem kötelező."
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wird verwendet, wenn dein Nickname bereits vergeben ist. Optional."
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wird verwendet, wenn dein Nickname bereits vergeben ist. Optional."
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Se utiliza cuando tu apodo ya está ocupado. Opcional."
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Se utiliza cuando tu apodo ya está ocupado. Opcional."
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Utilisé lorsque votre surnom est déjà pris. Facultatif."
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Utilisé lorsque votre surnom est déjà pris. Facultatif."
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ニックネームがすでに取られているときに使用します。オプションです。"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ニックネームがすでに取られているときに使用します。オプションです。"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Usado quando seu apelido já está ocupado. Opcional."
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Usado quando seu apelido já está ocupado. Opcional."
           }
         }
       }
     },
-    "welcome-to-glasstual" : {
-      "comment" : "Step: Welcome and identity. Legacy key: id1-tt.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Welcome to Glasstual"
+    "welcome-to-glasstual": {
+      "comment": "Step: Welcome and identity. Legacy key: id1-tt.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Welcome to Glasstual"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Üdvözöl a Glasstual"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Üdvözöl a Glasstual"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Willkommen bei Glasstual"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Willkommen bei Glasstual"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Bienvenido a Glasstual"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Bienvenido a Glasstual"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Bienvenue sur Glasstual"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Bienvenue sur Glasstual"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Glasstualへようこそ"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Glasstualへようこそ"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Bem-vindo ao Glasstual"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Bem-vindo ao Glasstual"
           }
         }
       }
     },
-    "window-chrome-back" : {
-      "comment" : "Window chrome. Legacy key: ob1-bk.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Back"
+    "window-chrome-back": {
+      "comment": "Window chrome. Legacy key: ob1-bk.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vissza"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vissza"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zurück"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zurück"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Detrás"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Detrás"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "en arrière"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "en arrière"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "後ろ"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "後ろ"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "de volta"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "de volta"
           }
         }
       }
     },
-    "window-chrome-continue" : {
-      "comment" : "Window chrome. Legacy key: ob1-ct.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Continue"
+    "window-chrome-continue": {
+      "comment": "Window chrome. Legacy key: ob1-ct.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Folytatás"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folytatás"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fortfahren"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fortfahren"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Continuar"
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuar"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "continuer"
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuer"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "続ける"
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "続ける"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "continuar"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuar"
           }
         }
       }
     },
-    "window-chrome-finish" : {
-      "comment" : "Window chrome. Legacy key: ob1-fn.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Finish"
+    "window-chrome-finish": {
+      "comment": "Window chrome. Legacy key: ob1-fn.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finish"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Befejezés"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Befejezés"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fertig"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fertig"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Terminar"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Terminar"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "finir"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "finir"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "終わる"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "終わる"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "terminar"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "terminar"
           }
         }
       }
     },
-    "window-chrome-set-up-later" : {
-      "comment" : "Window chrome. Button that closes onboarding without setting anything up, and without it coming back at the next launch.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Set Up Later"
+    "window-chrome-set-up-later": {
+      "comment": "Window chrome. Button that closes onboarding without setting anything up, and without it coming back at the next launch.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set Up Later"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Beállítás később"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beállítás később"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Später einrichten"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Später einrichten"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Configurar más tarde"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Configurar más tarde"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Configurer plus tard"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Configurer plus tard"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "後で設定する"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "後で設定する"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Configurar mais tarde"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Configurar mais tarde"
           }
         }
       }
     },
-    "window-chrome-skip" : {
-      "comment" : "Window chrome. Legacy key: ob1-sk.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Skip"
+    "window-chrome-skip": {
+      "comment": "Window chrome. Legacy key: ob1-sk.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skip"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kihagyás"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kihagyás"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Überspringen"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Überspringen"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Saltar"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Saltar"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "sauter"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "sauter"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "スキップ"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "スキップ"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "pular"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "pular"
           }
         }
       }
     },
-    "window-chrome-step" : {
-      "comment" : "Window chrome. Legacy key: ob1-pg.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Step %1$ld of %2$ld"
+    "window-chrome-step": {
+      "comment": "Window chrome. Legacy key: ob1-pg.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step %1$ld of %2$ld"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$ld. lépés, összesen %2$ld"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$ld. lépés, összesen %2$ld"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Schritt %1$ld von %2$ld"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schritt %1$ld von %2$ld"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Paso %1$ld de %2$ld"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Paso %1$ld de %2$ld"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Étape %1$ld de %2$ld"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Étape %1$ld de %2$ld"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "%2$ldのステップ%1$ld"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%2$ldのステップ%1$ld"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Passo %1$ld de %2$ld"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Passo %1$ld de %2$ld"
           }
         }
       }
     },
-    "window-chrome-welcome-to-glasstual" : {
-      "comment" : "Window chrome. Legacy key: ob1-wt.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Welcome to Glasstual"
+    "window-chrome-welcome-to-glasstual": {
+      "comment": "Window chrome. Legacy key: ob1-wt.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Welcome to Glasstual"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Üdvözöl a Glasstual"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Üdvözöl a Glasstual"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Willkommen bei Glasstual"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Willkommen bei Glasstual"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Bienvenido a Glasstual"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Bienvenido a Glasstual"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Bienvenue sur Glasstual"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Bienvenue sur Glasstual"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Glasstualへようこそ"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Glasstualへようこそ"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Bem-vindo ao Glasstual"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Bem-vindo ao Glasstual"
           }
         }
       }
     },
-    "yes-it-works-well-so-far" : {
-      "comment" : "Step: Look and feel. Legacy key: lf1-m3.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Yes, it works well so far."
+    "yes-it-works-well-so-far": {
+      "comment": "Step: Look and feel. Legacy key: lf1-m3.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yes, it works well so far."
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Igen, eddig jól működik."
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Igen, eddig jól működik."
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ja, bisher funktioniert sie gut."
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ja, bisher funktioniert sie gut."
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Sí, funciona bien hasta ahora."
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sí, funciona bien hasta ahora."
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Oui, ça fonctionne bien jusqu'à présent."
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Oui, ça fonctionne bien jusqu'à présent."
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "はい、今のところうまく機能しています。"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "はい、今のところうまく機能しています。"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Sim, funciona bem até agora."
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sim, funciona bem até agora."
           }
         }
       }
     },
-    "your-first-network" : {
-      "comment" : "Step: First network. Legacy key: nw1-tt.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Your First Network"
+    "your-first-network": {
+      "comment": "Step: First network. Legacy key: nw1-tt.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your First Network"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Az első hálózatod"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Az első hálózatod"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dein erstes Netzwerk"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dein erstes Netzwerk"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Tu primera red"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Tu primera red"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Votre premier réseau"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Votre premier réseau"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "あなたの最初のネットワーク"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "あなたの最初のネットワーク"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Sua Primeira Rede"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sua Primeira Rede"
           }
         }
       }
     },
-    "your-name-or-anything-you-like" : {
-      "comment" : "Step: Welcome and identity. Legacy key: id1-rp.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Your name, or anything you like"
+    "your-name-or-anything-you-like": {
+      "comment": "Step: Welcome and identity. Legacy key: id1-rp.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your name, or anything you like"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A neved, vagy bármi más"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A neved, vagy bármi más"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dein Name oder etwas anderes"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dein Name oder etwas anderes"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Tu nombre, o cualquier cosa que te guste"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Tu nombre, o cualquier cosa que te guste"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Ton nom, ou n'importe quoi que tu aimes"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ton nom, ou n'importe quoi que tu aimes"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "あなたの名前、または好きなもの"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "あなたの名前、または好きなもの"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Seu nome, ou qualquer coisa que você quiser"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Seu nome, ou qualquer coisa que você quiser"
           }
         }
       }
     }
   },
-  "version" : "1.0"
+  "version": "1.0"
 }

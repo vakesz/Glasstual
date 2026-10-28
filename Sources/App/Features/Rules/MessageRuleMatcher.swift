@@ -249,8 +249,10 @@ final class MessageRuleMatcher {
 		session: ServerSession,
 		receivedAt: Date
 	) {
-		guard !rule.forwardDestination.isEmpty, let text, !text.isEmpty else { return }
-		guard let destination = session.findConversationOrCreate(rule.forwardDestination, isDirect: true)
+		guard !rule.forwardDestination.isEmpty, let text, !text.isEmpty, let destination = session.findConversationOrCreate(
+			rule.forwardDestination,
+			isDirect: true
+		)
 		else { return }
 		let message = String(localized: .Rules.forwardedMessage(command, text))
 		session.print(
@@ -275,8 +277,7 @@ final class MessageRuleMatcher {
 		receivedAt: Date,
 		wasEncrypted: Bool
 	) {
-		guard !rule.forwardDestination.isEmpty else { return }
-		guard let destination = session.findConversationOrCreate(rule.forwardDestination, isDirect: true)
+		guard !rule.forwardDestination.isEmpty, let destination = session.findConversationOrCreate(rule.forwardDestination, isDirect: true)
 		else { return }
 		let command = lineType == .notice ? "NOTICE" : "PRIVMSG"
 		session.print(
@@ -328,8 +329,7 @@ final class MessageRuleMatcher {
 			session.sendCommand(line)
 		}
 
-		guard rule.logsMatch else { return }
-		guard let report = session.findConversationOrCreate(Self.actionLogConsoleName, isConsole: true) else {
+		guard rule.logsMatch, let report = session.findConversationOrCreate(Self.actionLogConsoleName, isConsole: true) else {
 			return
 		}
 		let message = if let destination {

@@ -25,26 +25,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Todos"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "tous"
+            "state": "translated",
+            "value": "Tout"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "全て"
+            "state": "translated",
+            "value": "すべて"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "tudo"
+            "state": "translated",
+            "value": "Tudo"
           }
         }
       }
@@ -73,26 +73,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "No leído"
+            "state": "translated",
+            "value": "No leídos"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "non lu"
+            "state": "translated",
+            "value": "Non lus"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "未読"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ainda não lido"
+            "state": "translated",
+            "value": "Não lidos"
           }
         }
       }

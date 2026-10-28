@@ -317,13 +317,10 @@ final class Sidebar {
 		      let session = sessions.first(where: { $0.uniqueIdentifier == serverID }),
 		      let move = SidebarReorderPolicy.move(fromOffsets: offsets, toOffset: destination),
 		      session.conversationList.indices.contains(move.from),
-		      session.conversationList.indices.contains(move.to)
-		else { return false }
-
-		guard SidebarReorderPolicy.permitsMove(
-			draggedIsChannel: session.conversationList[move.from].isChannel,
-			destinationIsChannel: session.conversationList[move.to].isChannel
-		) else { return false }
+		      session.conversationList.indices.contains(move.to), SidebarReorderPolicy.permitsMove(
+		      	draggedIsChannel: session.conversationList[move.from].isChannel,
+		      	destinationIsChannel: session.conversationList[move.to].isChannel
+		      ) else { return false }
 
 		chatSession.moveConversation(on: session, from: move.from, to: move.to)
 		return true

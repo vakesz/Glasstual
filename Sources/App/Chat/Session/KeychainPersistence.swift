@@ -108,8 +108,7 @@ final class KeychainPersistence {
 				await observer.value
 			}
 			guard observed == submission else { continue }
-			guard let error = failures.values.first else { return }
-			guard await confirmRetry(error) else { return }
+			guard let error = failures.values.first, await confirmRetry(error) else { return }
 			let remaining = latestEdits.filter { failures[$0.key] != nil }
 			if !remaining.isEmpty {
 				_ = enqueue(remaining)

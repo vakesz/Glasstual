@@ -95,11 +95,7 @@ final class AddressBookUserTrackingContainer {
 	}
 
 	func status(ofTrackedNickname nickname: String, changedTo newStatus: AddressBookUserTrackingStatus) {
-		guard newStatus != .unknown else {
-			return
-		}
-
-		guard record(newStatus, for: nickname) else {
+		guard newStatus != .unknown, record(newStatus, for: nickname) else {
 			return
 		}
 

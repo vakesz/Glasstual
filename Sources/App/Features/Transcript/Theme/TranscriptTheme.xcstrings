@@ -25,26 +25,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Antecedentes"
+            "state": "translated",
+            "value": "Fondo"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "arrière-plan"
+            "state": "translated",
+            "value": "Arrière-plan"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "背景"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "fundo"
+            "state": "translated",
+            "value": "Fundo"
           }
         }
       }
@@ -73,26 +73,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Burbujas"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Bulles"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "泡"
+            "state": "translated",
+            "value": "吹き出し"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Bolhas"
+            "state": "translated",
+            "value": "Balões"
           }
         }
       }
@@ -121,25 +121,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Colores"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Couleurs"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "色"
+            "state": "translated",
+            "value": "カラー"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Cores"
           }
         }
@@ -169,26 +169,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Personalizado"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "coutume"
+            "state": "translated",
+            "value": "Personnalisé"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "カスタム"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "costume"
+            "state": "translated",
+            "value": "Personalizado"
           }
         }
       }
@@ -217,26 +217,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Oscuro"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "sombre"
+            "state": "translated",
+            "value": "Sombre"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "暗い"
+            "state": "translated",
+            "value": "ダーク"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "escuro"
+            "state": "translated",
+            "value": "Escuro"
           }
         }
       }
@@ -265,26 +265,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Texto del evento"
+            "state": "translated",
+            "value": "Texto de eventos"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Texte de l'événement"
+            "state": "translated",
+            "value": "Texte des événements"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "イベントテキスト"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Texto do evento"
+            "state": "translated",
+            "value": "Texto de eventos"
           }
         }
       }
@@ -313,26 +313,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Tema de exportación..."
+            "state": "translated",
+            "value": "Exportar tema…"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Thème d'exportation..."
+            "state": "translated",
+            "value": "Exporter le thème…"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "エクスポートテーマ…"
+            "state": "translated",
+            "value": "テーマを書き出す…"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Tema de Exportação..."
+            "state": "translated",
+            "value": "Exportar tema…"
           }
         }
       }
@@ -361,26 +361,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Fracaso"
+            "state": "translated",
+            "value": "Error"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "échec"
+            "state": "translated",
+            "value": "Échec"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "失敗"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "falha"
+            "state": "translated",
+            "value": "Falha"
           }
         }
       }
@@ -409,26 +409,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Destacar el fondo"
+            "state": "translated",
+            "value": "Fondo de resaltado"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Mettre en évidence l'arrière-plan"
+            "state": "translated",
+            "value": "Arrière-plan de surbrillance"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "背景をハイライトする"
+            "state": "translated",
+            "value": "ハイライトの背景"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Realçar o fundo"
+            "state": "translated",
+            "value": "Fundo do destaque"
           }
         }
       }
@@ -457,26 +457,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Destacar texto"
+            "state": "translated",
+            "value": "Texto de resaltado"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Mettre en évidence le texte"
+            "state": "translated",
+            "value": "Texte de surbrillance"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "テキストをハイライトする"
+            "state": "translated",
+            "value": "ハイライトのテキスト"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Realçar texto"
+            "state": "translated",
+            "value": "Texto do destaque"
           }
         }
       }
@@ -505,26 +505,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Espacio horizontal"
+            "state": "translated",
+            "value": "Margen horizontal"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Encadrement horizontal"
+            "state": "translated",
+            "value": "Marge horizontale"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "水平パッド"
+            "state": "translated",
+            "value": "左右の余白"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Ajuste horizontal"
+            "state": "translated",
+            "value": "Preenchimento horizontal"
           }
         }
       }
@@ -553,26 +553,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Importar Tema..."
+            "state": "translated",
+            "value": "Importar tema…"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Importer un thème..."
+            "state": "translated",
+            "value": "Importer un thème…"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "テーマをインポート…"
+            "state": "translated",
+            "value": "テーマを読み込む…"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Importar Tema..."
+            "state": "translated",
+            "value": "Importar tema…"
           }
         }
       }
@@ -601,26 +601,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Burbuja entrante"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Bulle entrant"
+            "state": "translated",
+            "value": "Bulle entrante"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "受信バブル"
+            "state": "translated",
+            "value": "受信吹き出し"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Bolha entrante"
+            "state": "translated",
+            "value": "Balão de entrada"
           }
         }
       }
@@ -649,26 +649,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "El archivo seleccionado no es un tema de transcripción Glasstual válido."
+            "state": "translated",
+            "value": "El archivo seleccionado no es un tema de transcripción de Glasstual válido."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Le fichier sélectionné n’est pas un thème de transcription Glasstual valide."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "選択されたファイルは、有効なGlasstualトランスクリプトテーマではありません。"
+            "state": "translated",
+            "value": "選択したファイルは有効な Glasstual のトランスクリプトテーマではありません。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "O arquivo selecionado não é um tema de transcrição Glasstual válido."
+            "state": "translated",
+            "value": "O arquivo selecionado não é um tema de transcrição do Glasstual válido."
           }
         }
       }
@@ -697,26 +697,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Ese cambio no se aplicó: los valores del tema de la transcripción deben permanecer dentro de los rangos compatibles."
+            "state": "translated",
+            "value": "Ese cambio no se aplicó: los valores del tema de transcripción deben estar dentro de los intervalos admitidos."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Ce changement n'a pas été appliqué : les valeurs du thème de transcription doivent rester dans les plages prises en charge."
+            "state": "translated",
+            "value": "Cette modification n’a pas été appliquée : les valeurs du thème de transcription doivent rester dans les plages prises en charge."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "その変更は適用されませんでした：トランスクリプトのテーマ値はサポートされている範囲内に保たなければなりません。"
+            "state": "translated",
+            "value": "その変更は適用されませんでした。トランスクリプトテーマの値は対応する範囲内である必要があります。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Essa mudança não foi aplicada: os valores do tema da transcrição devem permanecer dentro das faixas suportadas."
+            "state": "translated",
+            "value": "Essa alteração não foi aplicada: os valores do tema de transcrição devem permanecer dentro dos intervalos suportados."
           }
         }
       }
@@ -745,26 +745,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Diseño"
+            "state": "translated",
+            "value": "Disposición"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "mise en page"
+            "state": "translated",
+            "value": "Disposition"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "レイアウト"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "layout"
+            "state": "translated",
+            "value": "Layout"
           }
         }
       }
@@ -793,26 +793,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Luz"
+            "state": "translated",
+            "value": "Claro"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "lumière"
+            "state": "translated",
+            "value": "Clair"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "光"
+            "state": "translated",
+            "value": "ライト"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "luz"
+            "state": "translated",
+            "value": "Claro"
           }
         }
       }
@@ -841,26 +841,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Espaciado de líneas"
+            "state": "translated",
+            "value": "Interlineado"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Espacement des lignes"
+            "state": "translated",
+            "value": "Interligne"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "行間"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "espaçamento entre linhas"
+            "state": "translated",
+            "value": "Espaçamento entre linhas"
           }
         }
       }
@@ -889,25 +889,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Líneas"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Lignes"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "線"
+            "state": "translated",
+            "value": "行"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Linhas"
           }
         }
@@ -937,26 +937,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Enlaces"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "terrain de golf"
+            "state": "translated",
+            "value": "Liens"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "リンク"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "campo de golfe"
+            "state": "translated",
+            "value": "Links"
           }
         }
       }
@@ -985,26 +985,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Espaciado de mensajes"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Espacement des messages"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "メッセージのスペース"
+            "state": "translated",
+            "value": "メッセージの間隔"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Espaçamento de mensagens"
+            "state": "translated",
+            "value": "Espaçamento das mensagens"
           }
         }
       }
@@ -1033,25 +1033,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Otros apodos"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Autres surnoms"
+            "state": "translated",
+            "value": "Autres pseudos"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "他のニックネーム"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Outros apelidos"
           }
         }
@@ -1081,26 +1081,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Burbuja saliente"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Bulle sortante"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "出ているバブル"
+            "state": "translated",
+            "value": "送信吹き出し"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Bolha de saída"
+            "state": "translated",
+            "value": "Balão de saída"
           }
         }
       }
@@ -1129,26 +1129,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Texto primario"
+            "state": "translated",
+            "value": "Texto principal"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Texte primaire"
+            "state": "translated",
+            "value": "Texte principal"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "主要テキスト"
+            "state": "translated",
+            "value": "メインテキスト"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Texto primário"
+            "state": "translated",
+            "value": "Texto principal"
           }
         }
       }
@@ -1177,26 +1177,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "¿Cambiar tu tema personalizado por %@?"
+            "state": "translated",
+            "value": "¿Reemplazar tu tema personalizado por %@?"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Remplacez votre thème personnalisé par %@ ?"
+            "state": "translated",
+            "value": "Remplacer votre thème personnalisé par %@ ?"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "カスタマイズされたテーマを%@に置き換えますか？"
+            "state": "translated",
+            "value": "カスタムテーマを%@に置き換えますか?"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Substitua seu tema personalizado por %@?"
+            "state": "translated",
+            "value": "Substituir seu tema personalizado por %@?"
           }
         }
       }
@@ -1225,26 +1225,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Cada rol almacena colores sRGB claros y oscuros separados en la lista de propiedades exportada, más el par más intenso que dibuja cuando el Aumentar contraste está activado. Un color que elijas aquí es lo que ambos ajustes dibujan."
+            "state": "translated",
+            "value": "Cada rol guarda colores sRGB claros y oscuros por separado en la lista de propiedades exportada, además del par más fuerte que dibuja con Aumentar contraste activado. El color que eliges aquí es el que usan ambos ajustes."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Chaque rôle stocke des couleurs sRGB claires et foncées séparées dans la liste des propriétés exportée, ainsi que la paire la plus forte qu'il dessine lorsque l'option « Augmenter le contraste » est activée. Une couleur que vous choisissez ici est celle que les deux réglages dessinent."
+            "state": "translated",
+            "value": "Chaque rôle enregistre des couleurs sRVB claires et sombres distinctes dans la liste de propriétés exportée, ainsi que la paire plus contrastée utilisée lorsque Contraste élevé est activé. La couleur choisie ici est celle qu’utilisent les deux réglages."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "各役割は、エクスポートされたプロパティリストに異なるライトとダークのsRGB色を保存し、コントラストを上げる状態で描く強度の高いペアも追加します。ここで選択した色は、両方の設定が描く色になります。"
+            "state": "translated",
+            "value": "各ロールは、書き出したプロパティリストにライト用とダーク用の sRGB カラーを別々に保存し、さらに「コントラストを上げる」がオンのときに描画する強い組み合わせも保存します。ここで選んだ色が、どちらの設定でも使われます。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Cada papel armazena cores sRGB claras e escuras separadas na lista de propriedades exportada, além do par mais forte que ele desenha quando o Aumentar Contraste está ativado. Uma cor que você escolher aqui é a que ambos os ajustes desenham."
+            "state": "translated",
+            "value": "Cada função armazena cores sRGB claras e escuras separadas na lista de propriedades exportada, além do par mais forte usado com Aumentar contraste ativado. A cor que você escolhe aqui é a que os dois ajustes usam."
           }
         }
       }
@@ -1273,25 +1273,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Texto secundario"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Texte secondaire"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "二次テキスト"
+            "state": "translated",
+            "value": "サブテキスト"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Texto secundário"
           }
         }
@@ -1321,26 +1321,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Mostrar imágenes en línea"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Afficher les images intégrées"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "インライン画像を表示する"
+            "state": "translated",
+            "value": "インライン画像を表示"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Mostrar imagens inline"
+            "state": "translated",
+            "value": "Mostrar imagens embutidas"
           }
         }
       }
@@ -1369,25 +1369,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Fondo del panel lateral"
+            "state": "translated",
+            "value": "Fondo de la barra lateral"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Arrière-plan de la barre latérale"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "サイドバーの背景"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Fundo da barra lateral"
           }
         }
@@ -1417,25 +1417,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Nombre del tema"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Nom du thème"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "テーマ名"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Nome do tema"
           }
         }
@@ -1465,26 +1465,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Predeterminado del tema"
+            "state": "translated",
+            "value": "Preajuste de tema"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Prétabli de thème"
+            "state": "translated",
+            "value": "Préréglage de thème"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "テーマプリセット"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Pré-definição de tema"
+            "state": "translated",
+            "value": "Predefinição de tema"
           }
         }
       }
@@ -1513,26 +1513,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Marcadores de tiempo"
+            "state": "translated",
+            "value": "Marcas de tiempo"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Marques de temps"
+            "state": "translated",
+            "value": "Horodatages"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "タイムスタンプ"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Marcadores de tempo"
+            "state": "translated",
+            "value": "Carimbos de data/hora"
           }
         }
       }
@@ -1561,25 +1561,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Tema de la transcripción"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Thème de la transcription"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "トランスクリプトのテーマ"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Tema da transcrição"
           }
         }
@@ -1609,26 +1609,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Marcador de no leído"
+            "state": "translated",
+            "value": "Marcador de no leídos"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Marqueur non lu"
+            "state": "translated",
+            "value": "Marqueur non lus"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "未読マーカー"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Marcador de não lido"
+            "state": "translated",
+            "value": "Marcador de não lidos"
           }
         }
       }
@@ -1657,26 +1657,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Este tema de transcripción utiliza una versión de formato no soportada %lld."
+            "state": "translated",
+            "value": "Este tema de transcripción usa la versión de formato no admitida %lld."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Ce thème de transcription utilise une version de format non prise en charge %lld."
+            "state": "translated",
+            "value": "Ce thème de transcription utilise la version de format non prise en charge %lld."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "このトランスクリプトテーマはサポートされていないフォーマットバージョン%lldを使用しています。"
+            "state": "translated",
+            "value": "このトランスクリプトテーマは未対応のフォーマットバージョン %lld を使用しています。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Este tema de transcrição usa a versão de formato não suportada %lld."
+            "state": "translated",
+            "value": "Este tema de transcrição usa a versão de formato sem suporte %lld."
           }
         }
       }
@@ -1705,25 +1705,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Tu apodo"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Votre surnom"
+            "state": "translated",
+            "value": "Votre pseudo"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "あなたのニックネーム"
+            "state": "translated",
+            "value": "自分のニックネーム"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Seu apelido"
           }
         }

@@ -123,8 +123,7 @@ nonisolated struct ServerConnectionRequest: Equatable, Sendable {
 
 		for section in channelList.components(separatedBy: ",") {
 			let channel = section.trimmingCharacters(in: .whitespacesAndNewlines)
-			guard channel.isChannelName else { continue }
-			guard channels.contains(where: {
+			guard channel.isChannelName, channels.contains(where: {
 				$0.caseInsensitiveCompare(channel) == .orderedSame
 			}) == false else { continue }
 			channels.append(channel)

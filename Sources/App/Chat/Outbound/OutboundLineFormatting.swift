@@ -62,6 +62,7 @@ private func wireByteCount(_ string: String, encoding: UInt) -> Int {
 	return count > 0 ? count : string.utf8.count
 }
 
+@MainActor
 extension LineBudget {
 	/** The budget for one line of `lineType` addressed to `targetName`.
 
@@ -69,7 +70,6 @@ extension LineBudget {
 	 relays the line: `:hostmask COMMAND target :`, plus the CR LF. The
 	 hostmask is only known once the server has told us, so a constant stands
 	 in until it has. */
-	@MainActor
 	static func forMessage(
 		toTarget targetName: String,
 		on session: ServerSession,

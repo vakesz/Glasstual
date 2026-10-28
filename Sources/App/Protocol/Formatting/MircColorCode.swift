@@ -1,11 +1,10 @@
 // Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
 // SPDX-License-Identifier: BSD-3-Clause
 
-import CocoaExtensions
-
 // AppKit: a hexadecimal colour code names a colour the renderer stores as an
 // `NSColor` attribute.
 import AppKit
+import CocoaExtensions
 import Foundation
 
 private nonisolated func isBase10Numeric(_ character: unichar) -> Bool { // nonisolated: pure

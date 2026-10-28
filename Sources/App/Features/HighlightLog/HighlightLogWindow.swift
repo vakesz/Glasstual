@@ -230,8 +230,7 @@ final class HighlightLogWindow: SessionScoped {
 
 		let conversationId = conversation.uniqueIdentifier
 		transcriptController.jump(toLine: entry.lineNumber) { success in
-			guard success else { return }
-			guard let conversation = AppServices.chatSession?.findConversation(
+			guard success, let conversation = AppServices.chatSession?.findConversation(
 				withId: conversationId,
 				onSessionWithId: sessionId
 			) else { return }

@@ -1,1974 +1,1974 @@
 {
-  "sourceLanguage" : "en",
-  "strings" : {
-    "certificate-not-trusted" : {
-      "comment" : "Error shown when the user declines a server certificate the system would not trust on its own.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The certificate for this server is not trusted"
+  "sourceLanguage": "en",
+  "strings": {
+    "certificate-not-trusted": {
+      "comment": "Error shown when the user declines a server certificate the system would not trust on its own.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The certificate for this server is not trusted"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A kiszolgáló tanúsítványa nem megbízható"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A kiszolgáló tanúsítványa nem megbízható"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Das Zertifikat dieses Servers ist nicht vertrauenswürdig"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Zertifikat dieses Servers ist nicht vertrauenswürdig"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "El certificado de este servidor no es confiable"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "El certificado de este servidor no es confiable"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Le certificat de ce serveur n'est pas fiable"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Le certificat de ce serveur n'est pas fiable"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "このサーバーの証明書は信頼されていません。"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "このサーバーの証明書は信頼されていません。"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "O certificado deste servidor não é confiável"
-          }
-        }
-      }
-    },
-    "connection-already-open" : {
-      "comment" : "Error reported to the application when it asks the connection host to open a connection that is already open.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A connection is already open on this host"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ezen a gépen már nyitva van egy kapcsolat"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Auf diesem Host ist bereits eine Verbindung geöffnet"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Ya hay una conexión abierta en este host"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Une connexion est déjà ouverte sur cet hôte"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "このホストにはすでに接続が確立されています。"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Uma conexão já está aberta neste hospedeiro"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "O certificado deste servidor não é confiável"
           }
         }
       }
     },
-    "connection-timed-out" : {
-      "comment" : "Error shown when an IRC connection attempt exceeds its timeout. Migrated from legacy key Connection timed out.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Connection timed out"
+    "connection-already-open": {
+      "comment": "Error reported to the application when it asks the connection host to open a connection that is already open.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A connection is already open on this host"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A kapcsolat időtúllépés miatt megszakadt"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ezen a gépen már nyitva van egy kapcsolat"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zeitüberschreitung der Verbindung"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf diesem Host ist bereits eine Verbindung geöffnet"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Se ha agotado el tiempo de conexión"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ya hay una conexión abierta en este host"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Connexion expirée"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Une connexion est déjà ouverte sur cet hôte"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "接続時間が経過しました"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "このホストにはすでに接続が確立されています。"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Conexão expirou"
-          }
-        }
-      }
-    },
-    "dns-error" : {
-      "comment" : "DNS connection error. Arguments are the DNS error reason and numeric error code. Migrated from legacy key DNS Error: %@ (%ld).",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "DNS Error: %1$@ (%2$ld)"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "DNS-hiba: %1$@ (%2$ld)"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "DNS-Fehler: %1$@ (%2$ld)"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "DNS Error: %1$@ (%2$ld)"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "DNS Erreur : %1$@ (%2$ld)"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "DNS エラー：%1$@ (%2$ld)"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "DNS Erro: %1$@ (%2$ld)"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Uma conexão já está aberta neste hospedeiro"
           }
         }
       }
     },
-    "dns-reason-already-registered" : {
-      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Already registered"
+    "connection-timed-out": {
+      "comment": "Error shown when an IRC connection attempt exceeds its timeout. Migrated from legacy key Connection timed out.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connection timed out"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Már regisztrálva"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A kapcsolat időtúllépés miatt megszakadt"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bereits registriert"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zeitüberschreitung der Verbindung"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Ya registrado"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Se ha agotado el tiempo de conexión"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Déjà enregistré"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Connexion expirée"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "すでに登録済み"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "接続時間が経過しました"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Já registrado"
-          }
-        }
-      }
-    },
-    "dns-reason-bad-flags" : {
-      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bad flags"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hibás jelzők"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ungültige Flags"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Banderas rojas"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Mauvais drapeaux"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "悪いフラグ"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Flertões ruins"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Conexão expirou"
           }
         }
       }
     },
-    "dns-reason-bad-interface-index" : {
-      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bad interface index"
+    "dns-error": {
+      "comment": "DNS connection error. Arguments are the DNS error reason and numeric error code. Migrated from legacy key DNS Error: %@ (%ld).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DNS Error: %1$@ (%2$ld)"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hibás interfészindex"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DNS-hiba: %1$@ (%2$ld)"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ungültiger Schnittstellenindex"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DNS-Fehler: %1$@ (%2$ld)"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Índice de interfaz mala"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "DNS Error: %1$@ (%2$ld)"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Mauvais index d'interface"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "DNS Erreur : %1$@ (%2$ld)"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "悪いインターフェースインデックス"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "DNS エラー：%1$@ (%2$ld)"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Mau índice de interface"
-          }
-        }
-      }
-    },
-    "dns-reason-bad-key" : {
-      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bad key"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hibás kulcs"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ungültiger Schlüssel"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Llave incorrecta"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Mauvaise clé"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "間違ったキー"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Chave errada"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "DNS Erro: %1$@ (%2$ld)"
           }
         }
       }
     },
-    "dns-reason-bad-parameter" : {
-      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bad parameter"
+    "dns-reason-already-registered": {
+      "comment": "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Already registered"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hibás paraméter"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Már regisztrálva"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ungültiger Parameter"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bereits registriert"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Parámetro incorrecto"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ya registrado"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Mauvais paramètre"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Déjà enregistré"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "パラメータが悪い"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "すでに登録済み"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Parâmetro ruim"
-          }
-        }
-      }
-    },
-    "dns-reason-bad-reference" : {
-      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bad reference"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hibás hivatkozás"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ungültige Referenz"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Mal referencia"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Mauvaise référence"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "悪い参照"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Mau referência"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Já registrado"
           }
         }
       }
     },
-    "dns-reason-bad-signature" : {
-      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bad signature"
+    "dns-reason-bad-flags": {
+      "comment": "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bad flags"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hibás aláírás"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hibás jelzők"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ungültige Signatur"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ungültige Flags"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Firma mala"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Banderas rojas"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Mauvaise signature"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mauvais drapeaux"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "悪い署名"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "悪いフラグ"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Assinatura ruim"
-          }
-        }
-      }
-    },
-    "dns-reason-bad-state" : {
-      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bad state"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hibás állapot"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ungültiger Zustand"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Estado malo"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Mauvais état"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "悪い状態"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Estado ruim"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Flertões ruins"
           }
         }
       }
     },
-    "dns-reason-bad-time" : {
-      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bad time"
+    "dns-reason-bad-interface-index": {
+      "comment": "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bad interface index"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hibás időpont"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hibás interfészindex"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ungültige Zeit"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ungültiger Schnittstellenindex"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Mal momento"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Índice de interfaz mala"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Mauvais moment"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mauvais index d'interface"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "悪い時間"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "悪いインターフェースインデックス"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Mau tempo"
-          }
-        }
-      }
-    },
-    "dns-reason-double-nat" : {
-      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Double NAT"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kettős NAT"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Doppeltes NAT"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "NAT doble"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Double NAT"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ダブルNAT"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "NAT Duplo"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mau índice de interface"
           }
         }
       }
     },
-    "dns-reason-firewall" : {
-      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Firewall"
+    "dns-reason-bad-key": {
+      "comment": "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bad key"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tűzfal"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hibás kulcs"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Firewall"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ungültiger Schlüssel"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Cortafuegos"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Llave incorrecta"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "pare-feu"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mauvaise clé"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ファイアウォール"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "間違ったキー"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "firewall"
-          }
-        }
-      }
-    },
-    "dns-reason-incompatible" : {
-      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Incompatible"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nem kompatibilis"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nicht kompatibel"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Incompatible"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "incompatible"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "互換性がない"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "incompatível"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Chave errada"
           }
         }
       }
     },
-    "dns-reason-invalid" : {
-      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Invalid"
+    "dns-reason-bad-parameter": {
+      "comment": "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bad parameter"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Érvénytelen"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hibás paraméter"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ungültig"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ungültiger Parameter"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "No válido"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Parámetro incorrecto"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "invalide"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mauvais paramètre"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "無効です"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "パラメータが悪い"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "inválido"
-          }
-        }
-      }
-    },
-    "dns-reason-name-conflict" : {
-      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Name conflict"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Névütközés"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Namenskonflikt"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Conflicto de nombres"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Conflit de noms"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "名前の衝突"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Conflito de nomes"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Parâmetro ruim"
           }
         }
       }
     },
-    "dns-reason-nat-port-mapping-disabled" : {
-      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "NAT port mapping disabled"
+    "dns-reason-bad-reference": {
+      "comment": "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bad reference"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "NAT-portleképezés letiltva"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hibás hivatkozás"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "NAT-Portzuordnung deaktiviert"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ungültige Referenz"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Mapeo de puertos NAT desactivado"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mal referencia"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Mappage des ports NAT désactivé"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mauvaise référence"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "NATポートマッピングが無効になっています"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "悪い参照"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Mapeamento de porta NAT desativado"
-          }
-        }
-      }
-    },
-    "dns-reason-nat-port-mapping-unsupported" : {
-      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "NAT port mapping unsupported"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "NAT-portleképezés nem támogatott"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "NAT-Portzuordnung nicht unterstützt"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "No se admite el mapeo de puertos NAT"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "La mappage des ports NAT n'est pas pris en"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "NATポートマッピングはサポートされていません"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Mapeamento de porta NAT não suportado"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mau referência"
           }
         }
       }
     },
-    "dns-reason-nat-traversal" : {
-      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "NAT traversal"
+    "dns-reason-bad-signature": {
+      "comment": "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bad signature"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "NAT-átjárás"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hibás aláírás"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "NAT-Traversal"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ungültige Signatur"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Travesía de NAT"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Firma mala"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Traversée NAT"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mauvaise signature"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "NATトラバース"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "悪い署名"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Traversal NAT"
-          }
-        }
-      }
-    },
-    "dns-reason-no-authentication" : {
-      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No authentication"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nincs hitelesítés"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Keine Authentifizierung"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Sin autenticación"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Pas d'authentification"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "認証なし"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Sem autenticação"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Assinatura ruim"
           }
         }
       }
     },
-    "dns-reason-no-memory" : {
-      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No memory"
+    "dns-reason-bad-state": {
+      "comment": "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bad state"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nincs memória"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hibás állapot"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kein Speicher verfügbar"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ungültiger Zustand"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Sin memoria"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Estado malo"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Pas de mémoire"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mauvais état"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "記憶なし"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "悪い状態"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Sem memória"
-          }
-        }
-      }
-    },
-    "dns-reason-no-router" : {
-      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No router"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nincs útválasztó"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kein Router"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Sin router"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Pas de routeur"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ルーターなし"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Sem roteador"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Estado ruim"
           }
         }
       }
     },
-    "dns-reason-no-such-key" : {
-      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No such key"
+    "dns-reason-bad-time": {
+      "comment": "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bad time"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nincs ilyen kulcs"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hibás időpont"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Schlüssel nicht vorhanden"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ungültige Zeit"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "No hay una llave así"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mal momento"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Aucune telle clé"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mauvais moment"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "そのようなキーはありません"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "悪い時間"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Nenhuma chave assim"
-          }
-        }
-      }
-    },
-    "dns-reason-no-such-name" : {
-      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No such name"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nincs ilyen név"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Name nicht vorhanden"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "No hay ese nombre"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Pas de tel nom"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "そのような名前はありません"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Nenhum nome assim"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mau tempo"
           }
         }
       }
     },
-    "dns-reason-no-such-record" : {
-      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No such record"
+    "dns-reason-double-nat": {
+      "comment": "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Double NAT"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nincs ilyen rekord"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kettős NAT"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Datensatz nicht vorhanden"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Doppeltes NAT"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "No hay ningún registro así"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "NAT doble"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Aucun tel enregistrement"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Double NAT"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "そのような記録はありません"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ダブルNAT"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Nenhum registro assim"
-          }
-        }
-      }
-    },
-    "dns-reason-not-initialized" : {
-      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Not initialized"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nincs inicializálva"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nicht initialisiert"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "No inicializado"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Non initialisé"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "初期化されていない"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Não inicializado"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "NAT Duplo"
           }
         }
       }
     },
-    "dns-reason-polling-mode" : {
-      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Polling mode"
+    "dns-reason-firewall": {
+      "comment": "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Firewall"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lekérdezéses mód"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tűzfal"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Abfragemodus"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Firewall"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Modo de votación"
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cortafuegos"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Mode de sondage"
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pare-feu"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "投票モード"
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ファイアウォール"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Modo de pesquisa"
-          }
-        }
-      }
-    },
-    "dns-reason-refused" : {
-      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Refused"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Elutasítva"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Abgelehnt"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Rechazado"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Refusé"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "拒否された"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Recusado"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Firewall"
           }
         }
       }
     },
-    "dns-reason-service-not-running" : {
-      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Service not running"
+    "dns-reason-incompatible": {
+      "comment": "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incompatible"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A szolgáltatás nem fut"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nem kompatibilis"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dienst läuft nicht"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nicht kompatibel"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Servicio no en funcionamiento"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Incompatible"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Service non fonctionnel"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "incompatible"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "サービスが実行されていません"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "互換性がない"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Serviço não está funcionando"
-          }
-        }
-      }
-    },
-    "dns-reason-timeout" : {
-      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Timeout"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Időtúllépés"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zeitüberschreitung"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Tiempo de espera"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "temps de repos"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "タイムアウト"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "tempo esgotado"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "incompatível"
           }
         }
       }
     },
-    "dns-reason-transient" : {
-      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Transient"
+    "dns-reason-invalid": {
+      "comment": "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invalid"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Átmeneti hiba"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Érvénytelen"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vorübergehender Fehler"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ungültig"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Transitorio"
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No válido"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "transitoire"
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invalide"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "一時的な"
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無効"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "temporário"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inválido"
           }
         }
       }
     },
-    "dns-reason-unsupported" : {
-      "comment" : "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unsupported"
+    "dns-reason-name-conflict": {
+      "comment": "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name conflict"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nem támogatott"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Névütközés"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nicht unterstützt"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Namenskonflikt"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "No soportado"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Conflicto de nombres"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "sans être soutenu"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Conflit de noms"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "サポートされていない"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "名前の衝突"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "sem suporte"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Conflito de nomes"
           }
         }
       }
     },
-    "error-reason-unknown" : {
-      "comment" : "Reason shown inside a DNS or POSIX connection error when the system reports a status this build has no name for.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unknown"
+    "dns-reason-nat-port-mapping-disabled": {
+      "comment": "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NAT port mapping disabled"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ismeretlen"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NAT-portleképezés letiltva"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unbekannt"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NAT-Portzuordnung deaktiviert"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Desconocido"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mapeo de puertos NAT desactivado"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "inconnu"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mappage des ports NAT désactivé"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "未知の"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "NATポートマッピングが無効になっています"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "desconhecido"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mapeamento de porta NAT desativado"
           }
         }
       }
     },
-    "peer-line-too-long" : {
-      "comment" : "Error shown when an IRC peer sends a line exceeding the supported buffer limit. Migrated from legacy key Peer sent a line that is too long.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Peer sent a line that is too long"
+    "dns-reason-nat-port-mapping-unsupported": {
+      "comment": "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NAT port mapping unsupported"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A partner túl hosszú sort küldött"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NAT-portleképezés nem támogatott"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Die Gegenstelle hat eine zu lange Zeile gesendet"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NAT-Portzuordnung nicht unterstützt"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Un compañero envió una línea que es demasiado larga"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No se admite el mapeo de puertos NAT"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Un pair a envoyé une ligne trop longue"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "La mappage des ports NAT n'est pas pris en"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ピアが長すぎる行を送信しました。"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "NATポートマッピングはサポートされていません"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Um colega enviou uma linha que é muito longa"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mapeamento de porta NAT não suportado"
           }
         }
       }
     },
-    "posix-error" : {
-      "comment" : "POSIX connection error. Arguments are the POSIX error reason and numeric error code. Migrated from legacy key POSIX Error: %@ (%ld).",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "POSIX Error: %1$@ (%2$ld)"
+    "dns-reason-nat-traversal": {
+      "comment": "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NAT traversal"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "POSIX-hiba: %1$@ (%2$ld)"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NAT-átjárás"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "POSIX-Fehler: %1$@ (%2$ld)"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NAT-Traversal"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Error POSIX: %1$@ (%2$ld)"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Travesía de NAT"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Erreur POSIX : %1$@ (%2$ld)"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Traversée NAT"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "POSIXエラー：%1$@ (%2$ld)"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "NATトラバース"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Erro POSIX: %1$@ (%2$ld)"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Traversal NAT"
           }
         }
       }
     },
-    "proxy-address-missing" : {
-      "comment" : "Error shown when a configured IRC proxy has no address. Migrated from legacy key Proxy address is missing.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Proxy address is missing"
+    "dns-reason-no-authentication": {
+      "comment": "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No authentication"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hiányzik a proxy címe"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincs hitelesítés"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Proxyadresse fehlt"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Authentifizierung"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Falta la dirección de proxy"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sin autenticación"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "L'adresse du proxy est manquante"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Pas d'authentification"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "プロキシアドレスがありません"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "認証なし"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Endereço de proxy está faltando"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sem autenticação"
           }
         }
       }
     },
-    "unknown-error" : {
-      "comment" : "Shown in place of the certificate failure reason when the system evaluates a chain as untrusted without saying why.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unknown error"
+    "dns-reason-no-memory": {
+      "comment": "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No memory"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ismeretlen hiba"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincs memória"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unbekannter Fehler"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kein Speicher verfügbar"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Error desconocido"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sin memoria"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Erreur inconnue"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Pas de mémoire"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "不明なエラー"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "記憶なし"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Erro desconhecido"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sem memória"
           }
         }
       }
     },
-    "unsupported-proxy-type" : {
-      "comment" : "Error shown for an IRC proxy type unsupported by the connection service. Migrated from legacy key Unsupported proxy type.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unsupported proxy type"
+    "dns-reason-no-router": {
+      "comment": "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No router"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nem támogatott proxytípus"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincs útválasztó"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nicht unterstützter Proxytyp"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kein Router"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Tipo de proxy no soportado"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sin router"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Type de proxy non pris en charge"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Pas de routeur"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "サポートされていないプロキシタイプ"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ルーターなし"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Tipo de proxy não suportado"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sem roteador"
           }
         }
       }
     },
-    "wifi-aware-error" : {
-      "comment" : "Error shown when a connection fails somewhere in Wi-Fi Aware, which reports no reason of its own.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wi-Fi Aware error"
+    "dns-reason-no-such-key": {
+      "comment": "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No such key"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wi-Fi Aware hiba"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincs ilyen kulcs"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wi-Fi-Aware-Fehler"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schlüssel nicht vorhanden"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Error de Wi-Fi Aware"
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No hay una llave así"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Erreur Wi-Fi Aware"
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Aucune telle clé"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Wi-Fi Awareエラー"
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "そのようなキーはありません"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Erro Wi-Fi Aware"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nenhuma chave assim"
+          }
+        }
+      }
+    },
+    "dns-reason-no-such-name": {
+      "comment": "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No such name"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincs ilyen név"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name nicht vorhanden"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No hay ese nombre"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Pas de tel nom"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "そのような名前はありません"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nenhum nome assim"
+          }
+        }
+      }
+    },
+    "dns-reason-no-such-record": {
+      "comment": "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No such record"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincs ilyen rekord"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Datensatz nicht vorhanden"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No hay ningún registro así"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Aucun tel enregistrement"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "そのような記録はありません"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nenhum registro assim"
+          }
+        }
+      }
+    },
+    "dns-reason-not-initialized": {
+      "comment": "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not initialized"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincs inicializálva"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nicht initialisiert"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No inicializado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Non initialisé"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "初期化されていない"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Não inicializado"
+          }
+        }
+      }
+    },
+    "dns-reason-polling-mode": {
+      "comment": "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Polling mode"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lekérdezéses mód"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abfragemodus"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Modo de votación"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mode de sondage"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "投票モード"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Modo de pesquisa"
+          }
+        }
+      }
+    },
+    "dns-reason-refused": {
+      "comment": "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refused"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elutasítva"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abgelehnt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Rechazado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Refusé"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "拒否された"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Recusado"
+          }
+        }
+      }
+    },
+    "dns-reason-service-not-running": {
+      "comment": "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Service not running"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A szolgáltatás nem fut"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dienst läuft nicht"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Servicio no en funcionamiento"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Service non fonctionnel"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "サービスが実行されていません"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Serviço não está funcionando"
+          }
+        }
+      }
+    },
+    "dns-reason-timeout": {
+      "comment": "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timeout"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Időtúllépés"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zeitüberschreitung"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tiempo de espera"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Délai dépassé"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "タイムアウト"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tempo esgotado"
+          }
+        }
+      }
+    },
+    "dns-reason-transient": {
+      "comment": "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transient"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Átmeneti hiba"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vorübergehender Fehler"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Transitorio"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "transitoire"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "一時的な"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "temporário"
+          }
+        }
+      }
+    },
+    "dns-reason-unsupported": {
+      "comment": "Reason shown inside the DNS connection error for the mDNSResponder status of the same name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unsupported"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nem támogatott"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nicht unterstützt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No admitido"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non pris en charge"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未対応"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sem suporte"
+          }
+        }
+      }
+    },
+    "error-reason-unknown": {
+      "comment": "Reason shown inside a DNS or POSIX connection error when the system reports a status this build has no name for.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ismeretlen"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unbekannt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desconocido"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inconnu"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不明"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desconhecido"
+          }
+        }
+      }
+    },
+    "peer-line-too-long": {
+      "comment": "Error shown when an IRC peer sends a line exceeding the supported buffer limit. Migrated from legacy key Peer sent a line that is too long.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Peer sent a line that is too long"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A partner túl hosszú sort küldött"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Gegenstelle hat eine zu lange Zeile gesendet"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Un compañero envió una línea que es demasiado larga"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Un pair a envoyé une ligne trop longue"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ピアが長すぎる行を送信しました。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Um colega enviou uma linha que é muito longa"
+          }
+        }
+      }
+    },
+    "posix-error": {
+      "comment": "POSIX connection error. Arguments are the POSIX error reason and numeric error code. Migrated from legacy key POSIX Error: %@ (%ld).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "POSIX Error: %1$@ (%2$ld)"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "POSIX-hiba: %1$@ (%2$ld)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "POSIX-Fehler: %1$@ (%2$ld)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Error POSIX: %1$@ (%2$ld)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Erreur POSIX : %1$@ (%2$ld)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "POSIXエラー：%1$@ (%2$ld)"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Erro POSIX: %1$@ (%2$ld)"
+          }
+        }
+      }
+    },
+    "proxy-address-missing": {
+      "comment": "Error shown when a configured IRC proxy has no address. Migrated from legacy key Proxy address is missing.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proxy address is missing"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hiányzik a proxy címe"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proxyadresse fehlt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Falta la dirección de proxy"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "L'adresse du proxy est manquante"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "プロキシアドレスがありません"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Endereço de proxy está faltando"
+          }
+        }
+      }
+    },
+    "unknown-error": {
+      "comment": "Shown in place of the certificate failure reason when the system evaluates a chain as untrusted without saying why.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown error"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ismeretlen hiba"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unbekannter Fehler"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Error desconocido"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Erreur inconnue"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "不明なエラー"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Erro desconhecido"
+          }
+        }
+      }
+    },
+    "unsupported-proxy-type": {
+      "comment": "Error shown for an IRC proxy type unsupported by the connection service. Migrated from legacy key Unsupported proxy type.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unsupported proxy type"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nem támogatott proxytípus"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nicht unterstützter Proxytyp"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Tipo de proxy no soportado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Type de proxy non pris en charge"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "サポートされていないプロキシタイプ"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Tipo de proxy não suportado"
+          }
+        }
+      }
+    },
+    "wifi-aware-error": {
+      "comment": "Error shown when a connection fails somewhere in Wi-Fi Aware, which reports no reason of its own.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wi-Fi Aware error"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wi-Fi Aware hiba"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wi-Fi-Aware-Fehler"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Error de Wi-Fi Aware"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Erreur Wi-Fi Aware"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Wi-Fi Awareエラー"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Erro Wi-Fi Aware"
           }
         }
       }
     }
   },
-  "version" : "1.0"
+  "version": "1.0"
 }

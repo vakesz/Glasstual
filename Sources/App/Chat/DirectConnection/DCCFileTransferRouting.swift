@@ -97,8 +97,7 @@ extension ServerSession {
 			in: nil,
 			as: .dccFileTransfer, command: ChatLineFormat.defaultCommand
 		)
-		guard environment.settings.fileTransferRequestReplyAction != .ignore else { return }
-		guard let fileTransfers, let identifier = fileTransfers.addReceiver(
+		guard environment.settings.fileTransferRequestReplyAction != .ignore, let fileTransfers, let identifier = fileTransfers.addReceiver(
 			for: self, nickname: nickname, address: address, port: port,
 			filename: filename, filesize: totalFilesize, token: transferToken,
 			peerIsKnown: isKnownFileTransferPeer(nickname)

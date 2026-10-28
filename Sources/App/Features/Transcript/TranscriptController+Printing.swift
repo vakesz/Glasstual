@@ -79,10 +79,8 @@ extension TranscriptController {
 				$0,
 				forView: associatedItem.uniqueIdentifier
 			) } == true
-		if result.isHighlight, !isDuplicate {
-			if let conversation {
-				session.cacheHighlight(in: conversation, with: chatLine)
-			}
+		if result.isHighlight, !isDuplicate, let conversation {
+			session.cacheHighlight(in: conversation, with: chatLine)
 		}
 		let projectionAction = transcriptProjection.record(result)
 		forgetRetiredProjectionMessages()

@@ -197,11 +197,7 @@ extension ServerSession {
 	 turn it away. */
 	func scramMutualAuthenticationIsSatisfied() -> Bool {
 		guard isCapabilityEnabled(.isIdentifiedWithSASL) == false,
-		      isCapabilityEnabled(.isInSASLNegotiation)
-		else {
-			return true
-		}
-		guard let mechanism = sasl.mechanism,
+		      isCapabilityEnabled(.isInSASLNegotiation), let mechanism = sasl.mechanism,
 		      mechanism.caseInsensitiveCompare(SCRAMClient.mechanismName) == .orderedSame
 		else {
 			return true
@@ -272,7 +268,7 @@ extension ServerSession {
 	func retrySASLNegotiation(withMechanisms mechanisms: [String]) -> Bool {
 		if let mechanism = sasl.mechanism,
 		   sasl.triedMechanisms.contains(where: {
-		   	$0.caseInsensitiveCompare(mechanism) == .orderedSame
+			$0.caseInsensitiveCompare(mechanism) == .orderedSame
 		   }) == false
 		{
 			sasl.triedMechanisms.append(mechanism)

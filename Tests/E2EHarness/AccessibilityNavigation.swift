@@ -292,8 +292,11 @@ extension AccessibilityDriver {
 	}
 
 	func channelRow(_ channel: String, joined: Bool, deadline: Double) throws -> AXUIElement? {
-		guard let window = try identified("main-window", from: root, deadline: deadline) else { return nil }
-		guard let sidebar = try identified("sidebar", from: window, deadline: deadline) else { return nil }
+		guard let window = try identified("main-window", from: root, deadline: deadline), let sidebar = try identified(
+			"sidebar",
+			from: window,
+			deadline: deadline
+		) else { return nil }
 		let label = "Channel \(channel), Channel " + (joined ? "Joined" : "Not Joined")
 		guard let node = try find(from: sidebar, deadline: deadline, matching: {
 			let description = try text($0, kAXDescriptionAttribute, deadline: deadline)
@@ -368,10 +371,13 @@ extension AccessibilityDriver {
 			// Context menus may be app children rather than row children. Never search AXMenuBar descendants.
 			let children = try value(root, kAXChildrenAttribute, deadline: deadline) as? [AXUIElement] ?? []
 			for child in children {
-				guard try text(child, kAXRoleAttribute, deadline: deadline) != kAXMenuBarRole else { continue }
-				guard let menu = try find(from: child, deadline: deadline, matching: {
-					try text($0, kAXRoleAttribute, deadline: deadline) == kAXMenuRole
-				}) else { continue }
+				guard try text(child, kAXRoleAttribute, deadline: deadline) != kAXMenuBarRole, let menu = try find(
+					from: child,
+					deadline: deadline,
+					matching: {
+						try text($0, kAXRoleAttribute, deadline: deadline) == kAXMenuRole
+					}
+				) else { continue }
 				let items = try value(menu, kAXChildrenAttribute, deadline: deadline) as? [AXUIElement] ?? []
 				for item in items {
 					guard try text(item, kAXRoleAttribute, deadline: deadline) == kAXMenuItemRole,

@@ -29,16 +29,15 @@ extension ServerSession {
 	/// IRCv3 `account-notify`. A server only sends this once the capability is
 	/// negotiated, so an unnegotiated one is not evidence of anything.
 	func receiveAccountNotify(_ message: Message) {
-		guard isCapabilityEnabled(.accountNotify) else { return }
-		guard let wireAccount = message.params.first, let nickname = message.senderNickname else { return }
+		guard isCapabilityEnabled(.accountNotify), let wireAccount = message.params.first,
+		      let nickname = message.senderNickname else { return }
 		let account = IdentityPolicy.account(fromWireValue: wireAccount)
 		modifyUser(withNickname: nickname) { $0.account = account }
 	}
 
 	/// IRCv3 `setname`, gated the same way `account-notify` is.
 	func receiveSetName(_ message: Message) {
-		guard isCapabilityEnabled(.setName) else { return }
-		guard let realName = message.params.first, let nickname = message.senderNickname else { return }
+		guard isCapabilityEnabled(.setName), let realName = message.params.first, let nickname = message.senderNickname else { return }
 		modifyUser(withNickname: nickname) { $0.realName = realName }
 	}
 

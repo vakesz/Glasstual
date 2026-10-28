@@ -94,11 +94,7 @@ final class STSPolicyStore {
 		/* IRCv3 requires a policy offered over a connection whose certificate
 		 did not validate to be ignored. Otherwise anyone who can present a
 		 certificate the user clicks through once gets to pin the host. */
-		guard certificateChainValidated else {
-			return .none
-		}
-
-		guard values.hasDuration else {
+		guard certificateChainValidated, values.hasDuration else {
 			return .none
 		}
 

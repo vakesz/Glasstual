@@ -374,7 +374,7 @@ nonisolated extension ScrollbackQueries {
 			if let cursor {
 				guard let uri = URL(string: cursor.rowURI),
 				      let coordinator = context.persistentStoreCoordinator ?? context.parent?
-				      .persistentStoreCoordinator,
+				      	.persistentStoreCoordinator,
 				      let objectID = coordinator.managedObjectID(forURIRepresentation: uri)
 				else { return .failed(.missingCursor) }
 				let anchor = NSFetchRequest<NSManagedObject>(entityName: entityName)

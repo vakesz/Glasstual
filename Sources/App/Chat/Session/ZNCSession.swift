@@ -140,11 +140,8 @@ extension ServerSession {
 	 cleared a buffer. Both are turned back into what they describe here, before
 	 anything else in the session reads the message. */
 	func interceptZNCServerInput(_ message: Message) -> Message? {
-		guard znc.isConnected, message.remoteCommand == .privmsg, message.params.count == 2 else {
-			return message
-		}
-
-		guard let sender = message.senderNickname else { return message }
+		guard znc.isConnected, message.remoteCommand == .privmsg, message.params.count == 2,
+		      let sender = message.senderNickname else { return message }
 		if nickname(sender, isZNCUser: "buffextras") {
 			return interceptZNCBufferExtras(message)
 		}
@@ -327,8 +324,7 @@ extension ServerSession {
 	}
 
 	func detectZNC(from message: Message) {
-		guard znc.isConnected == false, message.senderIsServer else { return }
-		guard message.senderNickname == ServerQuirks.ZNC.serverName else { return }
+		guard znc.isConnected == false, message.senderIsServer, message.senderNickname == ServerQuirks.ZNC.serverName else { return }
 
 		znc.isConnected = true
 		zncLogger.info("ZNC detected")
@@ -342,8 +338,7 @@ extension ServerSession {
 	// MARK: - Playback
 
 	func clearPlayback(for conversation: Conversation) {
-		guard isCapabilityEnabled(.playback) else { return }
-		guard conversation.isDirect, conversation.isDirectForZNCUser == false else { return }
+		guard isCapabilityEnabled(.playback), conversation.isDirect, conversation.isDirectForZNCUser == false else { return }
 
 		sendPlaybackCommand("clear \(conversation.name)")
 	}

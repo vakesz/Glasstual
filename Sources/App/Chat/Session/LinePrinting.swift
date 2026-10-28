@@ -157,8 +157,8 @@ extension ServerSession {
 	}
 }
 
+@MainActor
 private extension ServerSession {
-	@MainActor
 	func printOnMainActor(_ request: LinePrintRequest) {
 		precondition(request.command != nil || request.referenceMessage != nil)
 		guard !isTerminating else { return }
@@ -242,8 +242,8 @@ private extension ServerSession {
 			request.completionBlock?(context)
 			guard let self, let conversation, !isTerminating,
 			      socket?.uniqueIdentifier == connectionIdentifier,
-			      conversation.associatedSession === self else { return }
-			guard context.isDisplayed, !context.isDuplicate, !isPlayback, conversation.readStateGeneration == readGeneration,
+			      conversation.associatedSession === self, context.isDisplayed, !context.isDuplicate, !isPlayback,
+			      conversation.readStateGeneration == readGeneration,
 			      self.output?.isKeyWindow == true, self.output?.isItemVisible(conversation) == true,
 			      let readMarkerTimestamp else { return }
 			scheduleReadMarker(for: conversation, date: readMarkerTimestamp)

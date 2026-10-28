@@ -440,9 +440,8 @@ extension TranscriptController {
 	 times out, so the button is offered only while the session would act on it. */
 	var serverHistoryRetryIsAvailable: Bool {
 		guard !terminating, serverHistory.request == nil,
-		      let session = associatedSession, let conversation = associatedConversation
-		else { return false }
-		guard let oldest = backingView?.displayedLines.first else { return false }
+		      let session = associatedSession, let conversation = associatedConversation,
+		      let oldest = backingView?.displayedLines.first else { return false }
 		let request = ServerHistoryRequest(id: UUID(), before: oldest.receivedAt, oldestLineNumber: oldest.lineNumber,
 		                                   messageIdentifier: oldest.messageIdentifier)
 		return session.canRetryServerHistory(for: conversation, request: request)

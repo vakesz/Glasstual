@@ -52,8 +52,8 @@ extension ServerSession {
 	}
 
 	func forceJoinChannel(_ channelName: String, password: String?) {
-		guard canJoinChannels, channelName.isEmpty == false else { return }
-		guard let channelName = channelNamesWithinServerLimit([channelName]).first else { return }
+		guard canJoinChannels, channelName.isEmpty == false,
+		      let channelName = channelNamesWithinServerLimit([channelName]).first else { return }
 		warnIfJoiningChannelsExceedsLimit([channelName])
 		var arguments = [channelName]
 		if let key = OutboundJoinPolicy.sanitizedKey(password, maximumLength: supportInfo.maximumKeyLength) {

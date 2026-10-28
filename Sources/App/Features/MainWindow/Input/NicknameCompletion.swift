@@ -340,11 +340,7 @@ final class NicknameCompletion {
 			}
 
 			return next.weight > best.weight ? next : best
-		}) else {
-			return nil
-		}
-
-		guard weighted.contains(where: { $0.weight < heaviest.weight }) else {
+		}), weighted.contains(where: { $0.weight < heaviest.weight }) else {
 			return nil
 		}
 

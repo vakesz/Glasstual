@@ -79,8 +79,8 @@ nonisolated struct ChannelSpotlightSearchResult: Identifiable, Hashable, Sendabl
 	}
 }
 
+@MainActor
 extension ChannelSpotlightSearchResult {
-	@MainActor
 	init(conversation: Conversation) {
 		self.init(
 			id: conversation.uniqueIdentifier,

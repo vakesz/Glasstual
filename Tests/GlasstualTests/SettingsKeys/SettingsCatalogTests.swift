@@ -33,11 +33,7 @@ struct SettingsCatalogTests {
 		for key in SettingsKeys.allKeys {
 			// The default nickname is re-registered at launch with a random
 			// suffix, so the domain deliberately does not hold the declaration.
-			guard key.name != SettingsKeys.Identity.nickname.name else {
-				continue
-			}
-
-			guard let declared = key.registeredDefault else {
+			guard key.name != SettingsKeys.Identity.nickname.name, let declared = key.registeredDefault else {
 				continue
 			}
 

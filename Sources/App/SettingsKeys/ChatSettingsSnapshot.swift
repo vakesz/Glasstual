@@ -8,10 +8,10 @@ import Foundation
 
  This lives with the settings rather than with the snapshot so that the
  connection code declares what it needs and never reads the store itself. */
+@MainActor
 extension ChatSettings {
 	/// Reads the shared defaults store once, on the main actor that owns it.
 	/// The result is a `Sendable` value the connection layer keeps.
-	@MainActor
 	static func current(stores: SettingsStores = .live) -> ChatSettings {
 		var snapshot = ChatSettings()
 
