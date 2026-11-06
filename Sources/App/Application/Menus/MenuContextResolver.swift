@@ -247,7 +247,7 @@ final class MenuContextResolver {
 			guard let self, isOwnAction(notification) else { return }
 			resetPointedItems()
 		}
-		notifications.observe(.mainWindowSelectionChanged) { [weak self] _ in
+		notifications.observe(MainWindowSelectionChanged.self) { [weak self] _ in
 			guard let self, menuIsOpen == false else { return }
 			resetPointedItems()
 		}

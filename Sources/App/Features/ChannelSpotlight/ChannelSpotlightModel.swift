@@ -56,13 +56,13 @@ final class ChannelSpotlightModel {
 		self.conversations = conversations
 		self.selectedSessionID = selectedSessionID
 		self.selectConversation = selectConversation
-		notifications.observe(.chatSessionListWasModified) { [weak self] _ in
+		notifications.observe(ChatSessionListWasModified.self) { [weak self] _ in
 			self?.reloadResults()
 		}
-		notifications.observe(.serverSessionConversationListWasModified) { [weak self] _ in
+		notifications.observe(ServerSessionConversationListWasModified.self) { [weak self] _ in
 			self?.reloadResults()
 		}
-		notifications.observe(.mainWindowSelectionChanged) { [weak self] _ in
+		notifications.observe(MainWindowSelectionChanged.self) { [weak self] _ in
 			self?.updateSessionRestriction()
 		}
 		notifications.observe(.userDefaultsDidChange) { [weak self] notification in

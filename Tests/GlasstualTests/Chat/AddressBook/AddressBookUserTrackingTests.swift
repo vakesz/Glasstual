@@ -45,11 +45,10 @@ struct AddressBookUserTrackingTests {
 
 		await confirmation("The removal notification is posted") { removed in
 			let token = center.addObserver(
-				forName: .addressBookTrackingRemovedUser,
-				object: tracker,
-				queue: nil
-			) { notification in
-				#expect(notification.userInfo?[addressBookTrackingNicknameKey] as? String == "Alice")
+				of: tracker,
+				for: AddressBookTrackedUserRemoved.self
+			) { message in
+				#expect(message.nickname == "Alice")
 				removed()
 			}
 			defer { center.removeObserver(token) }
@@ -68,9 +67,8 @@ struct AddressBookUserTrackingTests {
 
 		await confirmation("The cleared notification is posted") { cleared in
 			let token = center.addObserver(
-				forName: .addressBookTrackingRemovedAllUsers,
-				object: tracker,
-				queue: nil
+				of: tracker,
+				for: AddressBookTrackedUsersCleared.self
 			) { _ in
 				cleared()
 			}
@@ -96,5 +94,38 @@ struct AddressBookUserTrackingTests {
 	@Test("A WHO batch spans five channels from the start index")
 	func whoBatchPolicyPreservesLegacyFiveChannelWindow() {
 		#expect(UserTrackingWhoBatchPolicy.indexRange(startingAt: 2, conversationCount: 10) == 2 ... 6)
+	}
+}
+
+@MainActor
+@Suite("Address book tracking messages")
+struct AddressBookTrackingMessageTests {
+	@Test("A status change carries the nickname and a typed status")
+	func statusChangeRoundTrips() throws {
+		let tracker = AddressBookUserTrackingContainer()
+		let notification = AddressBookTrackingStatusChanged.makeNotification(
+			AddressBookTrackingStatusChanged(subject: tracker, nickname: "Alice", status: .away)
+		)
+
+		let message = try #require(AddressBookTrackingStatusChanged.makeMessage(notification))
+		#expect(message.subject === tracker)
+		#expect(message.nickname == "Alice")
+		#expect(message.status == .away)
+		#expect(notification.userInfo?["status"] as? UInt == AddressBookUserTrackingStatus.away.rawValue)
+	}
+
+	@Test("Adding a tracked user announces the nickname")
+	func additionCarriesNickname() {
+		let tracker = AddressBookUserTrackingContainer()
+		var nicknames: [String] = []
+		let token = NotificationCenter.default.addObserver(
+			of: tracker,
+			for: AddressBookTrackedUserAdded.self
+		) { nicknames.append($0.nickname) }
+		defer { NotificationCenter.default.removeObserver(token) }
+
+		tracker.addTrackedUser("Bob")
+
+		#expect(nicknames == ["Bob"])
 	}
 }

@@ -41,7 +41,7 @@ struct ConnectionInboundDeliveryTests {
 	func finalErrorBeforeEOF() async throws {
 		let (session, connection) = connectedSession()
 		let receiver = connection.callbackReceiver
-		try await observe(.serverSessionDidDisconnect, from: session) {
+		try await observe(ServerSessionDidDisconnect.self, from: session) {
 			receiver.didReceive([Data("ERROR :Final rejection".utf8)]) {}
 			receiver.didCloseReadStream()
 			receiver.didDisconnect(withError: nil)
@@ -237,7 +237,7 @@ struct ConnectionInboundDeliveryTests {
 		config.serverPort = 6667
 		let plain = Connection(config: config, onSession: session)
 		session.socket = plain
-		try await observe(.serverSessionDidConnect, from: session) {
+		try await observe(ServerSessionDidConnect.self, from: session) {
 			plain.callbackReceiver.didConnect(toHost: origin.serverAddress)
 		}
 		try #require(plain.isConnected)
@@ -260,7 +260,7 @@ struct ConnectionInboundDeliveryTests {
 		#expect(session.server?.uniqueIdentifier == origin.uniqueIdentifier)
 		let secured = Connection(config: endpoint, onSession: session)
 		session.socket = secured
-		try await observe(.serverSessionDidConnect, from: session) {
+		try await observe(ServerSessionDidConnect.self, from: session) {
 			secured.callbackReceiver.didConnect(toHost: endpoint.serverAddress)
 		}
 		let passwords = session.sentLines.compactMap { $0 as? String }.filter { $0.hasPrefix("PASS ") }
@@ -286,7 +286,7 @@ struct ConnectionInboundDeliveryTests {
 		let origin = ServerEndpoint(serverAddress: "origin.invalid", pendingServerPassword: .set("do-not-forward"))
 		session.config.serverList = [origin]
 		session.server = origin
-		try await observe(.serverSessionDidConnect, from: session) {
+		try await observe(ServerSessionDidConnect.self, from: session) {
 			socket.callbackReceiver.didConnect(toHost: origin.serverAddress)
 		}
 		try #require(socket.isConnected)
@@ -305,7 +305,7 @@ struct ConnectionInboundDeliveryTests {
 		#expect(session.server == nil)
 		let redirected = Connection(config: endpoint, onSession: session)
 		session.socket = redirected
-		try await observe(.serverSessionDidConnect, from: session) {
+		try await observe(ServerSessionDidConnect.self, from: session) {
 			redirected.callbackReceiver.didConnect(toHost: endpoint.serverAddress)
 		}
 		#expect(session.sentLines.compactMap { $0 as? String }.contains { $0.hasPrefix("PASS ") } == false)
@@ -326,7 +326,7 @@ struct ConnectionInboundDeliveryTests {
 		config.serverPort = 6667
 		let plain = Connection(config: config, onSession: session)
 		session.socket = plain
-		try await observe(.serverSessionDidConnect, from: session) {
+		try await observe(ServerSessionDidConnect.self, from: session) {
 			plain.callbackReceiver.didConnect(toHost: origin.serverAddress)
 		}
 		session.sentCapabilityCommands.removeAllObjects()
@@ -350,7 +350,7 @@ struct ConnectionInboundDeliveryTests {
 		config.connectionPrefersSecuredConnection = secured
 		let socket = Connection(config: config, onSession: session)
 		session.socket = socket
-		try await observe(.serverSessionDidConnect, from: session) {
+		try await observe(ServerSessionDidConnect.self, from: session) {
 			socket.callbackReceiver.didConnect(toHost: origin.serverAddress)
 		}
 
@@ -427,11 +427,11 @@ struct ConnectionInboundDeliveryTests {
 	}
 
 	/// Register before injecting callbacks, so even synchronous completion is observed.
-	private func observe(
-		_ name: Notification.Name, from session: ServerSession, performing action: () -> Void
+	private func observe<Message: SubjectMessage>(
+		_ messageType: Message.Type, from session: Message.Subject, performing action: () -> Void
 	) async throws {
 		let (events, continuation) = AsyncStream<Void>.makeStream(bufferingPolicy: .bufferingOldest(1))
-		let observer = NotificationCenter.default.addObserver(forName: name, object: session, queue: nil) { _ in
+		let observer = NotificationCenter.default.addObserver(of: session, for: messageType) { _ in
 			continuation.yield()
 			continuation.finish()
 		}
@@ -447,7 +447,7 @@ struct ConnectionInboundDeliveryTests {
 				break
 			}
 		})
-		try #require(observed, "Connection lifecycle event did not arrive before the deadline: \(name.rawValue)")
+		try #require(observed, "Connection lifecycle event did not arrive before the deadline: \(Message.name.rawValue)")
 	}
 
 	/// The connection drains the host's callbacks through one ordered stream, so

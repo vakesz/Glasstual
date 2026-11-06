@@ -107,8 +107,8 @@ final class UserNotificationController: NSObject, UserNotificationPresenting {
 	private func prepareInitialState() {
 		UNUserNotificationCenter.current().delegate = self
 
-		notifications.observe(.mainWindowSelectionChanged) { [weak self] notification in
-			self?.mainWindowSelectionChanged(notification)
+		notifications.observe(MainWindowSelectionChanged.self) { [weak self] _ in
+			self?.mainWindowSelectionChanged()
 		}
 
 		registerCategories()
@@ -154,7 +154,7 @@ final class UserNotificationController: NSObject, UserNotificationPresenting {
 		)
 	}
 
-	private func mainWindowSelectionChanged(_: Notification) {
+	private func mainWindowSelectionChanged() {
 		guard let mainWindow = AppServices.delegate.mainWindow,
 		      let session = mainWindow.selectedSession
 		else {

@@ -12,9 +12,20 @@ private let appearanceLogger = Logger(
 	category: "Appearance"
 )
 
-extension Notification.Name {
-	static let applicationAppearanceChanged = Notification.Name("Glasstual.applicationAppearanceChanged")
-	static let systemAppearanceChanged = Notification.Name("Glasstual.systemAppearanceChanged")
+struct ApplicationAppearanceChanged: SubjectMessage {
+	typealias Subject = Appearance
+
+	nonisolated static let name = Notification.Name("Glasstual.applicationAppearanceChanged")
+
+	let subject: Appearance
+}
+
+struct SystemAppearanceChanged: SubjectMessage {
+	typealias Subject = Appearance
+
+	nonisolated static let name = Notification.Name("Glasstual.systemAppearanceChanged")
+
+	let subject: Appearance
 }
 
 /// Which of the two appearances the application draws in.
@@ -260,16 +271,10 @@ final class Appearance: NSObject {
 	}
 
 	private func notifyApplicationAppearanceChanged() {
-		NotificationCenter.default.post(
-			name: .applicationAppearanceChanged,
-			object: self
-		)
+		ApplicationAppearanceChanged(subject: self).post()
 	}
 
 	private func notifySystemAppearanceChanged() {
-		NotificationCenter.default.post(
-			name: .systemAppearanceChanged,
-			object: self
-		)
+		SystemAppearanceChanged(subject: self).post()
 	}
 }

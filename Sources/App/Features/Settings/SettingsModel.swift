@@ -206,10 +206,10 @@ final class SettingsModel {
 	private func prepareNotifications() {
 		guard notificationsAreActive == false else { return }
 		notificationsAreActive = true
-		notifications.observe(.sessionCapabilitiesDidChange) { [weak self] _ in
+		notifications.observe(SessionCapabilitiesDidChange.self) { [weak self] _ in
 			self?.refreshIRCv3Connections()
 		}
-		notifications.observe(.chatSessionListWasModified) { [weak self] _ in
+		notifications.observe(ChatSessionListWasModified.self) { [weak self] _ in
 			self?.refreshIRCv3Connections()
 		}
 	}

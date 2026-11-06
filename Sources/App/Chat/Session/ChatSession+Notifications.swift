@@ -4,7 +4,18 @@
 
 import Foundation
 
-extension Notification.Name {
-	static let chatSessionListWasModified = Notification.Name("Glasstual.chatSessionListWasModified")
-	static let chatSessionWillDestroySession = Notification.Name("Glasstual.chatSessionWillDestroySession")
+struct ChatSessionListWasModified: SubjectMessage {
+	typealias Subject = ChatSession
+
+	nonisolated static let name = Notification.Name("Glasstual.chatSessionListWasModified")
+
+	let subject: ChatSession
+}
+
+struct ChatSessionWillDestroySession: SubjectMessage {
+	typealias Subject = ServerSession
+
+	nonisolated static let name = Notification.Name("Glasstual.chatSessionWillDestroySession")
+
+	let subject: ServerSession
 }

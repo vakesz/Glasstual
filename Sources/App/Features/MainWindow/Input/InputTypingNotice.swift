@@ -49,10 +49,10 @@ final class InputTypingNotice {
 			return
 		}
 
-		notifications.observe(.typingTrackerDidChange) { [weak self] notification in
-			self?.typingStateDidChange(notification)
+		notifications.observe(TypingTrackerDidChange.self) { [weak self] message in
+			self?.typingStateDidChange(message)
 		}
-		notifications.observe(.mainWindowSelectionChanged) { [weak self] _ in
+		notifications.observe(MainWindowSelectionChanged.self) { [weak self] _ in
 			self?.selectionDidChange()
 		}
 	}
@@ -81,10 +81,8 @@ final class InputTypingNotice {
 		self.typingConversation = nil
 	}
 
-	private func typingStateDidChange(_ notification: Notification) {
-		guard let conversation = notification.userInfo?[typingTrackerConversationKey] as? Conversation,
-		      conversation === selectedConversation()
-		else {
+	private func typingStateDidChange(_ message: TypingTrackerDidChange) {
+		guard message.conversation === selectedConversation() else {
 			return
 		}
 

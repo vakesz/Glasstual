@@ -179,7 +179,7 @@ extension ServerSession {
 		userNickname = config.nickname
 		nicknameRetry.sentNickname = config.nickname
 		output?.updateTitle(for: self)
-		NotificationCenter.default.post(name: .serverSessionDidConnect, object: self)
+		ServerSessionDidConnect(subject: self).post()
 
 		/* What `USER` sends: an empty username or real name falls back to the
 		 nickname, and the mode bits are the RFC 2812 ones for invisible and
@@ -204,7 +204,7 @@ extension ServerSession {
 		}
 		changeStateOff(withError: disconnectError)
 		invokeDisconnectCallbacks()
-		NotificationCenter.default.post(name: .serverSessionDidDisconnect, object: self)
+		ServerSessionDidDisconnect(subject: self).post()
 	}
 
 	func connectionDidCloseReadStream() {

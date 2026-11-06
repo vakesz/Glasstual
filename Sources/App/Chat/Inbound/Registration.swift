@@ -56,7 +56,7 @@ extension ServerSession {
 		sasl.incomingPayload = nil
 		sasl.triedMechanisms.removeAll()
 		failPendingDeliveriesForDisconnect()
-		NotificationCenter.default.post(name: .sessionCapabilitiesDidChange, object: self)
+		SessionCapabilitiesDidChange(subject: self).post()
 	}
 
 	func receivePing(_ message: Message) {

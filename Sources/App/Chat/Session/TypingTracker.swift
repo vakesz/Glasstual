@@ -3,11 +3,36 @@
 
 import Foundation
 
-extension Notification.Name {
-	static let typingTrackerDidChange = Self("Glasstual.typingTrackerDidChange")
-}
+/// Someone started or stopped typing in `conversation` on `subject`.
+struct TypingTrackerDidChange: NotificationCenter.MainActorMessage {
+	typealias Subject = ServerSession
 
-nonisolated let typingTrackerConversationKey = "channel"
+	nonisolated static let name = Notification.Name("Glasstual.typingTrackerDidChange")
+
+	private static let conversationKey = "channel"
+
+	let subject: ServerSession
+	let conversation: Conversation
+
+	@MainActor func post(on center: NotificationCenter = .default) {
+		center.post(self, subject: subject)
+	}
+
+	static func makeMessage(_ notification: Notification) -> Self? {
+		guard let subject = notification.object as? ServerSession,
+		      let conversation = notification.userInfo?[conversationKey] as? Conversation
+		else { return nil }
+		return Self(subject: subject, conversation: conversation)
+	}
+
+	static func makeNotification(_ message: Self) -> Notification {
+		Notification(
+			name: name,
+			object: message.subject,
+			userInfo: [conversationKey: message.conversation]
+		)
+	}
+}
 
 private struct TypingEntry {
 	let nickname: String
@@ -206,11 +231,7 @@ final class TypingTracker {
 			return
 		}
 
-		NotificationCenter.default.post(
-			name: .typingTrackerDidChange,
-			object: session,
-			userInfo: [typingTrackerConversationKey: conversation]
-		)
+		TypingTrackerDidChange(subject: session, conversation: conversation).post()
 	}
 }
 

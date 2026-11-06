@@ -18,16 +18,14 @@ extension TranscriptView {
 		setTopic(nil)
 		applyTheme()
 		if viewController?.associatedConversation != nil {
-			notifications.observe(.conversationConfigWasUpdated) { [weak self] notification in
-				guard let self, let conversation = viewController?.associatedConversation,
-				      notification.object as AnyObject? === conversation else { return }
+			notifications.observe(ConversationConfigWasUpdated.self) { [weak self] message in
+				guard let self, message.subject === viewController?.associatedConversation else { return }
 				reloadFolding()
 			}
 		}
 		if viewController?.associatedSession != nil {
-			notifications.observe(.serverSessionConfigWasUpdated) { [weak self] notification in
-				guard let self, let session = viewController?.associatedSession,
-				      notification.object as AnyObject? === session else { return }
+			notifications.observe(ServerSessionConfigWasUpdated.self) { [weak self] message in
+				guard let self, message.subject === viewController?.associatedSession else { return }
 				reloadFolding()
 			}
 		}

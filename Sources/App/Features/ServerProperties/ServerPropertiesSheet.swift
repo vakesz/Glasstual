@@ -322,8 +322,8 @@ final class ServerPropertiesSheet: SheetSession, SessionScoped, ServerProperties
 
 	private func addConfigurationDidChangeObserver() {
 		guard let session else { return }
-		notifications.observe(.serverSessionConfigWasUpdated, object: session) { [weak self] notification in
-			self?.underlyingConfigurationChanged(notification)
+		notifications.observe(ServerSessionConfigWasUpdated.self, of: session) { [weak self] message in
+			self?.underlyingConfigurationChanged(message)
 		}
 	}
 
@@ -337,8 +337,8 @@ final class ServerPropertiesSheet: SheetSession, SessionScoped, ServerProperties
 	 The alert is a sheet on the window this sheet is already on, so it arrives
 	 over the edits it is asking about. Keeping what is typed is the default;
 	 reloading is the destructive answer, because it throws those edits away. */
-	private func underlyingConfigurationChanged(_ notification: Notification) {
-		guard let session = notification.object as? ServerSession else { return }
+	private func underlyingConfigurationChanged(_ message: ServerSessionConfigWasUpdated) {
+		let session = message.subject
 		Alerts.present(AlertRequest(
 			title: String(localized: .ServerProperties.thisConnectionsConfigurationHasChangedDo),
 			body: String(localized: .ServerProperties.youWillLooseUnsavedChangesIf),

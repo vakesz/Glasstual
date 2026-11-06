@@ -6,10 +6,12 @@ import CocoaExtensions
 import Foundation
 import os
 
-extension Notification.Name {
-	static let conversationConfigWasUpdated = Notification.Name(
-		"Glasstual.conversationConfigWasUpdated"
-	)
+struct ConversationConfigWasUpdated: SubjectMessage {
+	typealias Subject = Conversation
+
+	nonisolated static let name = Notification.Name("Glasstual.conversationConfigWasUpdated")
+
+	let subject: Conversation
 }
 
 class Conversation: ChatItem {
@@ -114,10 +116,7 @@ class Conversation: ChatItem {
 		}
 
 		if fireChangedNotification {
-			NotificationCenter.default.post(
-				name: .conversationConfigWasUpdated,
-				object: self
-			)
+			ConversationConfigWasUpdated(subject: self).post()
 		}
 	}
 

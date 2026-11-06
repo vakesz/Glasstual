@@ -9,15 +9,20 @@ import Foundation
  Copyright © 2000 - 2012 the Colloquy IRC Client. Redistribution is permitted
  under the three-clause BSD license reproduced in Acknowledgements.pdf. */
 
-extension Notification.Name {
-	static let serverSessionConfigWasUpdated = Self("Glasstual.serverSessionConfigWasUpdated")
-	static let serverSessionConversationListWasModified = Self("Glasstual.serverSessionConversationListWasModified")
-	static let serverSessionWillConnect = Self("Glasstual.serverSessionWillConnect")
-	static let serverSessionDidConnect = Self("Glasstual.serverSessionDidConnect")
-	static let serverSessionWillSendQuit = Self("Glasstual.serverSessionWillSendQuit")
-	static let serverSessionWillDisconnect = Self("Glasstual.serverSessionWillDisconnect")
-	static let serverSessionDidDisconnect = Self("Glasstual.serverSessionDidDisconnect")
-	nonisolated static let serverSessionUserNicknameChanged = Self("Glasstual.serverSessionUserNicknameChanged")
+struct ServerSessionConfigWasUpdated: SubjectMessage {
+	typealias Subject = ServerSession
+
+	nonisolated static let name = Notification.Name("Glasstual.serverSessionConfigWasUpdated")
+
+	let subject: ServerSession
+}
+
+struct ServerSessionConversationListWasModified: SubjectMessage {
+	typealias Subject = ServerSession
+
+	nonisolated static let name = Notification.Name("Glasstual.serverSessionConversationListWasModified")
+
+	let subject: ServerSession
 }
 
 class ServerSession: ChatItem {

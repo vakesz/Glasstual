@@ -58,9 +58,8 @@ struct ConversationTests {
 		let query = makeChannel(name: "old-nick", type: .direct)
 		let (notices, continuation) = AsyncStream<Void>.makeStream(bufferingPolicy: .bufferingOldest(1))
 		let observer = NotificationCenter.default.addObserver(
-			forName: .conversationConfigWasUpdated,
-			object: query,
-			queue: nil
+			of: query,
+			for: ConversationConfigWasUpdated.self
 		) { _ in continuation.yield() }
 		defer { NotificationCenter.default.removeObserver(observer) }
 

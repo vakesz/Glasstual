@@ -6,8 +6,12 @@ import CocoaExtensions
 import Foundation
 import os
 
-extension Notification.Name {
-	static let sessionCapabilitiesDidChange = Notification.Name("Glasstual.sessionCapabilitiesDidChange")
+struct SessionCapabilitiesDidChange: SubjectMessage {
+	typealias Subject = ServerSession
+
+	nonisolated static let name = Notification.Name("Glasstual.sessionCapabilitiesDidChange")
+
+	let subject: ServerSession
 }
 
 private let negotiationLogger = Logger(
@@ -295,7 +299,7 @@ extension ServerSession {
 			pauseCapabilityNegotiation()
 		}
 
-		NotificationCenter.default.post(name: .sessionCapabilitiesDidChange, object: self)
+		SessionCapabilitiesDidChange(subject: self).post()
 	}
 
 	/** Matches an `ACK` or `NAK` back to the outstanding requests it names.

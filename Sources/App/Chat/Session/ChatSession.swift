@@ -177,7 +177,7 @@ final class ChatSession {
 	// MARK: - Lifecycle
 
 	private func postSessionListWasModifiedNotification() {
-		NotificationCenter.default.post(name: .chatSessionListWasModified, object: self)
+		ChatSessionListWasModified(subject: self).post()
 	}
 
 	func autoConnect(afterWakeup afterWakeUp: Bool) {
@@ -425,10 +425,7 @@ final class ChatSession {
 			return
 		}
 
-		NotificationCenter.default.post(
-			name: .chatSessionWillDestroySession,
-			object: session
-		)
+		ChatSessionWillDestroySession(subject: session).post()
 		selectOtherBeforeDestroy(session)
 		session.prepareForRemoval(preservingLocalData: preservingLocalData)
 		notifyObservers { $0.chatSession(self, didRemoveSession: session) }

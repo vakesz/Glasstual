@@ -4,6 +4,40 @@
 
 import Foundation
 
+/// A user of the session changed nickname, the local user included.
+struct ServerSessionNicknameChanged: NotificationCenter.MainActorMessage {
+	typealias Subject = ServerSession
+
+	nonisolated static let name = Notification.Name("Glasstual.serverSessionUserNicknameChanged")
+
+	private static let oldNicknameKey = "oldNickname"
+	private static let newNicknameKey = "newNickname"
+
+	let subject: ServerSession
+	let oldNickname: String
+	let newNickname: String
+
+	@MainActor func post(on center: NotificationCenter = .default) {
+		center.post(self, subject: subject)
+	}
+
+	static func makeMessage(_ notification: Notification) -> Self? {
+		guard let subject = notification.object as? ServerSession,
+		      let oldNickname = notification.userInfo?[oldNicknameKey] as? String,
+		      let newNickname = notification.userInfo?[newNicknameKey] as? String
+		else { return nil }
+		return Self(subject: subject, oldNickname: oldNickname, newNickname: newNickname)
+	}
+
+	static func makeNotification(_ message: Self) -> Notification {
+		Notification(
+			name: name,
+			object: message.subject,
+			userInfo: [oldNicknameKey: message.oldNickname, newNicknameKey: message.newNickname]
+		)
+	}
+}
+
 enum MembershipEventPolicy {
 	static func shouldPrint(
 		isLocalUser: Bool,
@@ -283,10 +317,9 @@ extension ServerSession {
 				}
 			}
 		}
-		NotificationCenter.default.post(
-			name: .serverSessionUserNicknameChanged, object: self,
-			userInfo: ["oldNickname": oldNickname, "newNickname": newNickname]
-		)
+		ServerSessionNicknameChanged(
+			subject: self, oldNickname: oldNickname, newNickname: newNickname
+		).post()
 		let user = printOnly ? nil : findUser(oldNickname)
 		if !printOnly, user == nil {
 			return

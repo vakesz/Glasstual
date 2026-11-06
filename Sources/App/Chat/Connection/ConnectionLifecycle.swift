@@ -110,7 +110,7 @@ extension ServerSession {
 			String(socketConfig.serverPort)
 		)))
 		sessionCredentials.forget()
-		NotificationCenter.default.post(name: .serverSessionWillConnect, object: self)
+		ServerSessionWillConnect(subject: self).post()
 
 		socketConfig.addressType = config.addressType
 		socketConfig.cipherSuites = config.cipherSuites
@@ -284,10 +284,10 @@ extension ServerSession {
 			// socket delegate to deliver its completion to removal/reconnect callers.
 			connectionState.beginDisconnect()
 			output?.updateTitle(for: self)
-			NotificationCenter.default.post(name: .serverSessionWillDisconnect, object: self)
+			ServerSessionWillDisconnect(subject: self).post()
 			changeStateOff()
 			invokeDisconnectCallbacks()
-			NotificationCenter.default.post(name: .serverSessionDidDisconnect, object: self)
+			ServerSessionDidDisconnect(subject: self).post()
 			return
 		}
 		cancelPendingSessionTasks()
@@ -295,7 +295,7 @@ extension ServerSession {
 		guard isConnecting || isConnected, let socket else { return }
 		connectionState.beginDisconnect()
 		output?.updateTitle(for: self)
-		NotificationCenter.default.post(name: .serverSessionWillDisconnect, object: self)
+		ServerSessionWillDisconnect(subject: self).post()
 		socket.close()
 	}
 
@@ -311,14 +311,14 @@ extension ServerSession {
 		connectionState.beginQuit()
 		if isConnecting, socket == nil {
 			cancelReconnect()
-			NotificationCenter.default.post(name: .serverSessionWillSendQuit, object: self)
+			ServerSessionWillSendQuit(subject: self).post()
 			disconnect()
 			return
 		}
 		cancelPendingSessionTasks()
 		socket?.beginCloseDeadline()
 		cancelReconnect()
-		NotificationCenter.default.post(name: .serverSessionWillSendQuit, object: self)
+		ServerSessionWillSendQuit(subject: self).post()
 		socket?.clearSendQueue()
 		guard isLoggedIn else {
 			disconnect()

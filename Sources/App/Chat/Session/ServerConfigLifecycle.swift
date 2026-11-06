@@ -106,7 +106,7 @@ extension ServerSession {
 		output?.updateTitle(for: self)
 		clearAddressBookCache()
 		populateISONTrackedUsersList()
-		NotificationCenter.default.post(name: .serverSessionConfigWasUpdated, object: self)
+		ServerSessionConfigWasUpdated(subject: self).post()
 	}
 
 	func reloadSidebarItems() {
@@ -136,7 +136,7 @@ extension ServerSession {
 			from: conversationList,
 			rememberDirectConversations: environment.settings.remembersDirectConversations
 		)
-		NotificationCenter.default.post(name: .serverSessionConversationListWasModified, object: self)
+		ServerSessionConversationListWasModified(subject: self).post()
 	}
 
 	func configurationDictionary() -> [String: PropertyListValue] {

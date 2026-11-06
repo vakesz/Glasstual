@@ -90,6 +90,21 @@ final class NotificationSubscriptions {
 		observerTokens.append((center, token))
 	}
 
+	/// Runs `handler` inline on the main actor for each `Message`, optionally
+	/// only those about `subject`.
+	func observe<Message: NotificationCenter.MainActorMessage>(
+		_ messageType: Message.Type,
+		of subject: Message.Subject? = nil,
+		center: NotificationCenter = .default,
+		using handler: @escaping @MainActor (Message) -> Void
+	) where Message.Subject: AnyObject {
+		let token = center.addObserver(of: subject, for: messageType) { message in
+			handler(message)
+		}
+
+		observerTokens.append((center, token))
+	}
+
 	func cancelAll() {
 		tasks.forEach { $0.cancel() }
 		tasks.removeAll()

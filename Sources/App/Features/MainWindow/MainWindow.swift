@@ -7,10 +7,12 @@ import CocoaExtensions
 import Foundation
 import SwiftUI
 
-extension Notification.Name {
-	/// The one declaration of the selection notification; an observer that
-	/// spells the name itself is watching a name nobody posts.
-	static let mainWindowSelectionChanged = Notification.Name("Glasstual.mainWindowSelectionChanged")
+struct MainWindowSelectionChanged: SubjectMessage {
+	typealias Subject = MainWindow
+
+	nonisolated static let name = Notification.Name("Glasstual.mainWindowSelectionChanged")
+
+	let subject: MainWindow
 }
 
 /** The application's one window.
@@ -196,13 +198,13 @@ private extension MainWindow {
 
 extension MainWindow {
 	func observeNotifications() {
-		notifications.observe(.applicationAppearanceChanged) { [weak self] _ in
+		notifications.observe(ApplicationAppearanceChanged.self) { [weak self] _ in
 			self?.updateAppearance()
 		}
-		notifications.observe(.themeAppearanceChanged) { [weak self] _ in
+		notifications.observe(ThemeAppearanceChanged.self) { [weak self] _ in
 			self?.reloadTheme()
 		}
-		notifications.observe(.themeWasModified) { [weak self] _ in
+		notifications.observe(ThemeWasModified.self) { [weak self] _ in
 			self?.reloadTheme()
 		}
 		/* Synchronously, so that a settings sheet's write and the redraw it asks
@@ -216,7 +218,7 @@ extension MainWindow {
 
 	 Only the window's `NSAppearance` follows here. The transcripts and the
 	 conversation background resolve theme colours, and `ThemeStore` announces
-	 those through `.themeAppearanceChanged` and its observed snapshot, so they
+	 those through `ThemeAppearanceChanged` and its observed snapshot, so they
 	 update in place. */
 	private func updateAppearance() {
 		let properties = AppServices.appearance.properties

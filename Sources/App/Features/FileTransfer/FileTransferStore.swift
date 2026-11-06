@@ -45,8 +45,8 @@ final class FileTransferStore {
 	) {
 		self.addressSource = addressSource
 		self.defaultDownloadDestinationURL = defaultDownloadDestinationURL
-		notifications.observe(.chatSessionWillDestroySession) { [weak self] notification in
-			self?.sessionWillBeDestroyed(notification)
+		notifications.observe(ChatSessionWillDestroySession.self) { [weak self] message in
+			self?.sessionWillBeDestroyed(message)
 		}
 		networkChanges = followNetworkChanges()
 	}
@@ -236,8 +236,8 @@ extension FileTransferStore {
 		return controller.uniqueIdentifier
 	}
 
-	func sessionWillBeDestroyed(_ notification: Notification) {
-		guard let session = notification.object as? ServerSession else { return }
+	func sessionWillBeDestroyed(_ message: ChatSessionWillDestroySession) {
+		let session = message.subject
 		removeFileTransfers(model.transfers.filter { $0.session === session })
 	}
 
