@@ -134,6 +134,10 @@ struct ServerSessionUserIdentityTests {
 		let channel = try joinChannel("#chat", on: session)
 
 		try session.receiveInvite(message(":alice!a@example.org INVITE bob #chat", on: session))
+		#expect(session.printedLines.count == 0)
+
+		session.enableCapability(.inviteNotify)
+		try session.receiveInvite(message(":alice!a@example.org INVITE bob #chat", on: session))
 
 		#expect(session.printedLines.count == 1)
 		let printed = try #require(printedLine(at: 0, on: session))

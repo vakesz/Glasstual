@@ -8929,6 +8929,54 @@
         }
       }
     },
+    "ircv3-capability-no-implicit-names": {
+      "comment": "Summary of the draft/no-implicit-names IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stops the server sending a channel's member list on every join; the app asks for it instead."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Megakadályozza, hogy a szerver minden csatlakozáskor elküldje a csatorna tagjainak listáját; az alkalmazás kéri le helyette."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verhindert, dass der Server bei jedem Beitritt die Mitgliederliste eines Kanals sendet; die App fordert sie stattdessen an."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Evita que el servidor envíe la lista de miembros de un canal en cada unión; la aplicación la solicita en su lugar."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Empêche le serveur d'envoyer la liste des membres d'une chaîne à chaque arrivée ; l'application la demande à la place."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "参加のたびにサーバーがチャンネルのメンバー一覧を送るのをやめさせ、代わりにアプリが一覧を要求します。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Impede que o servidor envie a lista de membros de um canal a cada entrada; o aplicativo a solicita no lugar."
+          }
+        }
+      }
+    },
     "ircv3-capability-pre-away": {
       "comment": "Summary of the pre-away IRCv3 capability, shown beside its switch in Settings.",
       "extractionState": "manual",
@@ -13389,6 +13437,246 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Somente enquanto o VoiceOver estiver em execução. Os anúncios são falados mesmo quando a conversa está aberta."
+          }
+        }
+      }
+    },
+    "general-away-on-idle": {
+      "comment": "Checkbox in the General pane: marks the user away after a period without keyboard or mouse input.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set away status when your Mac is idle"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Távolléti állapot beállítása, ha a Mac tétlen"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abwesenheitsstatus setzen, wenn der Mac inaktiv ist"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Activar el estado de ausencia cuando el Mac está inactivo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Activer le statut d’absence lorsque le Mac est inactif"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Macがアイドル状態のときに不在ステータスにする"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Definir status de ausente quando o Mac estiver inativo"
+          }
+        }
+      }
+    },
+    "general-away-on-idle-note": {
+      "comment": "Explanation below the idle-away checkbox. Also applies when another user's session is switched to.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstual marks you present again as soon as you use the keyboard or mouse. Switching to another user also sets your status."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A Glasstual azonnal visszaállítja a jelenlétedet, amint használod a billentyűzetet vagy az egeret. Másik felhasználóra váltás is beállítja az állapotot."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstual setzt dich wieder auf anwesend, sobald du Tastatur oder Maus benutzt. Auch der Wechsel zu einem anderen Benutzer setzt den Status."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Glasstual te marca como presente en cuanto usas el teclado o el ratón. Cambiar a otro usuario también establece el estado."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Glasstual vous remet présent dès que vous utilisez le clavier ou la souris. Changer d’utilisateur définit aussi le statut."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "キーボードまたはマウスを使うとすぐに在席に戻ります。別のユーザに切り替えた場合も不在になります。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "O Glasstual marca você como presente assim que você usa o teclado ou o mouse. Trocar de usuário também define o status."
+          }
+        }
+      }
+    },
+    "general-away-idle-minutes": {
+      "comment": "Stepper label in the General pane. %lld is the number of minutes of inactivity before away is set.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Away after %lld min without input"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld perc tétlenség után távol"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abwesend nach %lld Min. ohne Eingabe"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ausente tras %lld min sin actividad"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Absent après %lld min sans activité"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%lld分間操作がないと不在"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ausente após %lld min sem atividade"
+          }
+        }
+      }
+    },
+    "general-away-idle-message": {
+      "comment": "Text field label in the General pane: the away message used while idle. Leaving it empty uses the default.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Idle away message (empty for the default)"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Távolléti üzenet tétlenség esetén (üresen az alapértelmezett)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abwesenheitsnachricht bei Inaktivität (leer für Standard)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mensaje de ausencia por inactividad (vacío para el predeterminado)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Message d’absence en cas d’inactivité (vide pour le message par défaut)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "アイドル時の不在メッセージ(空欄で既定)"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mensagem de ausente por inatividade (vazio para o padrão)"
+          }
+        }
+      }
+    },
+    "general-away-idle-threshold": {
+      "comment": "Display name of the idle-away threshold setting, used where settings are listed by name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Idle time before away"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tétlenségi idő a távolléti állapot előtt"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inaktivitätszeit bis zur Abwesenheit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Tiempo de inactividad antes de la ausencia"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Durée d’inactivité avant l’absence"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "不在になるまでのアイドル時間"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Tempo ocioso antes de ficar ausente"
           }
         }
       }

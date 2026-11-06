@@ -18,6 +18,27 @@ nonisolated struct ISupportExtendedBanConfig: Sendable, Equatable {
 }
 
 nonisolated enum ISupportTokenParser {
+	/// The longest `ICON` address kept. A network icon is a link, not a payload.
+	static let maximumNetworkIconURLLength = 2048
+
+	/** The address `ICON` names, or `nil` when it names nothing the client may fetch.
+
+	 Only `http` and `https` with a host survive; a `data:`, `file:` or
+	 scheme-less value is the server asking for something other than a download.
+	 Whether the host is one the client may contact is the downloader's decision,
+	 since it needs the resolved address. */
+	static func networkIconURL(from value: String) -> URL? {
+		guard value.isEmpty == false, value.utf8.count <= maximumNetworkIconURLLength,
+		      let url = URL(string: value),
+		      let scheme = url.scheme?.lowercased(), scheme == "http" || scheme == "https",
+		      url.host(percentEncoded: false)?.isEmpty == false
+		else {
+			return nil
+		}
+
+		return url
+	}
+
 	/** A token value with its `\xHH` escapes decoded.
 
 	 ISUPPORT values cannot carry a space, a backslash or an `=` as written, so

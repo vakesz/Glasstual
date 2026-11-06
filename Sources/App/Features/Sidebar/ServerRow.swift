@@ -26,6 +26,9 @@ struct ServerRow: Identifiable, Equatable {
 	let conversations: [ConversationRow]
 	var isFavoritesGroup = false
 	var identityStyle = ServerIdentityStyle()
+	/// The icon the network advertises, drawn in place of the identity glyph
+	/// once it has been fetched. Decorative: the row's label is its name.
+	var networkIcon: NSImage?
 }
 
 /// One conversation in the sidebar.

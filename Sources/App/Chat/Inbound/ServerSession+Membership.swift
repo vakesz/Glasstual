@@ -84,6 +84,7 @@ extension ServerSession {
 			channel.activate(at: message.isReplayed ? Date() : message.receivedAt)
 			userHostmask = message.senderHostmask
 			output?.reloadChatItem(channel)
+			requestNamesAfterJoin(of: channel, isReplayed: message.isReplayed)
 		} else {
 			guard let found = findConversation(channelName), found.isChannel else { return }
 			channel = found
@@ -416,6 +417,21 @@ extension ServerSession {
 
 		output?.reloadChatItem(directConversation)
 		output?.updateTitle(for: directConversation)
+	}
+
+	/** Asks for the member list a server withholds from a joining client.
+
+	 With `draft/no-implicit-names` the server no longer follows a JOIN with 353
+	 and 366, so the list is requested here. The reply is read as the initial
+	 one because the channel has not yet received names, which is the same test
+	 that tells the first reply from the answer to a later `/names`. A JOIN
+	 replayed from history says nothing about the channel being joined now. */
+	private func requestNamesAfterJoin(of channel: Conversation, isReplayed: Bool) {
+		guard isReplayed == false, isCapabilityEnabled(.noImplicitNames), channel.channelNamesReceived == false else {
+			return
+		}
+
+		send(.names, arguments: [channel.name])
 	}
 
 	private func updateTrackingStatus(for entry: AddressBookEntry, message: Message) {

@@ -36,6 +36,8 @@ nonisolated enum ISupportChange: Sendable, Equatable {
 	case channelModeKinds([Character: ChannelModeKind])
 	case channelNamePrefixes([String])
 	case networkName(String)
+	/// `ICON`, already reduced to a web address or to nothing.
+	case networkIcon(URL?)
 	/// `PREFIX`, as two lists of equal length. Both are empty when the server
 	/// has no membership prefixes at all.
 	case userModePrefixes(modeSymbols: [String], characters: [String])
@@ -95,6 +97,8 @@ private nonisolated extension ISupportChange {
 			return .channelNamePrefixes(value.map(String.init))
 		case .network:
 			return .networkName(value)
+		case .icon:
+			return .networkIcon(ISupportTokenParser.networkIconURL(from: value))
 		case .prefix:
 			return userModePrefixes(value)
 		case .statusmsg:

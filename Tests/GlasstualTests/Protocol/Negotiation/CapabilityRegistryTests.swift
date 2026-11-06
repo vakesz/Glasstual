@@ -193,6 +193,7 @@ struct CapabilityRegistryTests {
 		"batch",
 		"cap-notify",
 		"chghost",
+		"draft/no-implicit-names",
 		"echo-message",
 		"message-tags",
 		"multi-prefix",

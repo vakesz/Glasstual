@@ -96,6 +96,9 @@ final class SidebarCellView: NSTableCellView {
 			if server.isFavoritesGroup {
 				leadingImage.image = NSImage(systemSymbolName: "pin.fill", accessibilityDescription: nil)
 				leadingImage.isHidden = false
+			} else if let networkIcon = server.networkIcon {
+				leadingImage.image = networkIcon
+				leadingImage.isHidden = false
 			} else {
 				leadingImage.image = NSImage(systemSymbolName: server.identityStyle.icon.symbolName, accessibilityDescription: nil)
 				leadingImage.isHidden = false

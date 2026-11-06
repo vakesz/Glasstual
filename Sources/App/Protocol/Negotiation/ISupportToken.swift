@@ -26,6 +26,7 @@ nonisolated enum ISupportToken: String, CaseIterable, Sendable {
 	case elist = "ELIST"
 	case excepts = "EXCEPTS"
 	case extban = "EXTBAN"
+	case icon = "ICON"
 	case invex = "INVEX"
 	case keylen = "KEYLEN"
 	case kicklen = "KICKLEN"

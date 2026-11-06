@@ -116,6 +116,11 @@ extension CapabilityRegistry {
 				specification: ircv3Specification("multi-prefix")
 			),
 			Capability.capability(
+				named: "draft/no-implicit-names",
+				identifier: .noImplicitNames,
+				specification: ircv3Specification("no-implicit-names")
+			),
+			Capability.capability(
 				named: "pre-away",
 				identifier: .preAway,
 				specification: ircv3Specification("pre-away")

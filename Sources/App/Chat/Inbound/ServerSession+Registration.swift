@@ -67,7 +67,9 @@ extension ServerSession {
 
 	func receiveAwayNotifyCapability(_ message: Message) {
 		guard isCapabilityEnabled(.awayNotify), let nickname = message.senderNickname else { return }
-		modifyUser(withNickname: nickname, asAway: !message.sequence.isEmpty)
+		let isAway = !message.sequence.isEmpty
+		modifyUser(withNickname: nickname, asAway: isAway)
+		recordMonitoredActivity(of: nickname, away: isAway)
 	}
 
 	func receiveInit(_ message: Message) {

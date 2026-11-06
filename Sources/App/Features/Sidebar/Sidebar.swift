@@ -63,8 +63,12 @@ final class Sidebar {
 	@ObservationIgnored private var updateDepth = 0
 	@ObservationIgnored private var updateIsPending = false
 	@ObservationIgnored private var refreshTask: Task<Void, Never>?
+	/// The icons networks advertise, drawn on their server rows.
+	let networkIcons = NetworkIconStore()
 
-	init() {}
+	init() {
+		networkIcons.onChange = { [weak self] in self?.setNeedsRefresh() }
+	}
 
 	/** No rows are built here: the window attaches before the chat session
 	 exists, and its first conversation is what fills them. */
@@ -83,8 +87,11 @@ final class Sidebar {
 		updateIsPending = false
 		projection = SidebarProjection(
 			sessions: sessions, selectedItemIdentifier: selectedItemIdentifier,
-			filter: filter, filterText: filterText
+			filter: filter, filterText: filterText, networkIcon: networkIcons.image(for:)
 		)
+		for url in sessions.compactMap(\.supportInfo.networkIconURL) {
+			networkIcons.request(url)
+		}
 	}
 
 	func toggleFavorite(_ conversation: Conversation) {
@@ -136,7 +143,7 @@ final class Sidebar {
 		}
 		let current = SidebarProjection(
 			sessions: sessions, selectedItemIdentifier: selectedItemIdentifier,
-			filter: filter, filterText: filterText
+			filter: filter, filterText: filterText, networkIcon: networkIcons.image(for:)
 		)
 		pendingProjection = current
 		return current

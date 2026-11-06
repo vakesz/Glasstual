@@ -98,7 +98,10 @@ extension ServerSession {
 		let channelName = message.params[1]
 
 		guard nicknameIsMyself(invitee) else {
-			guard let channel = findConversation(channelName),
+			/* An invitation addressed to somebody else reaches a client only
+			 through `invite-notify`, so one that arrives without it is not an
+			 event this session asked to be told about. */
+			guard isCapabilityEnabled(.inviteNotify), let channel = findConversation(channelName),
 			      shouldPrintReceivedMessage(message, withText: channelName, destinedFor: channel)
 			else { return }
 			print(
@@ -169,5 +172,6 @@ extension ServerSession {
 			$0.username = username
 			$0.address = address
 		}
+		recordMonitoredActivity(of: nickname, away: nil)
 	}
 }

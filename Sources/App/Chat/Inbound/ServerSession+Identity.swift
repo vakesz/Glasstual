@@ -33,6 +33,7 @@ extension ServerSession {
 		      let nickname = message.senderNickname else { return }
 		let account = IdentityPolicy.account(fromWireValue: wireAccount)
 		modifyUser(withNickname: nickname) { $0.account = account }
+		recordMonitoredActivity(of: nickname, away: nil)
 	}
 
 	/// IRCv3 `setname`, gated the same way `account-notify` is.

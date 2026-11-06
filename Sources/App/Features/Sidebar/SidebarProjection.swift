@@ -29,7 +29,8 @@ struct SidebarProjection {
 	}
 
 	init(
-		sessions: [ServerSession], selectedItemIdentifier: String?, filter: SidebarFilter, filterText: String
+		sessions: [ServerSession], selectedItemIdentifier: String?, filter: SidebarFilter, filterText: String,
+		networkIcon: (URL) -> NSImage? = { _ in nil }
 	) {
 		let query = filterText.trimmingCharacters(in: .whitespacesAndNewlines)
 		let filtering = filter != .all || query.isEmpty == false
@@ -85,7 +86,8 @@ struct SidebarProjection {
 				isExpanded: filtering || session.sidebarItemIsExpanded,
 				showsDisclosure: listed.isEmpty == false,
 				conversations: listed,
-				identityStyle: session.config.sidebarIdentity
+				identityStyle: session.config.sidebarIdentity,
+				networkIcon: session.supportInfo.networkIconURL.flatMap(networkIcon)
 			))
 		}
 		self.rows = rows

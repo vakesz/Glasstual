@@ -28,6 +28,7 @@ struct IRCv3Pane: View {
 		"labeled-response": .Settings.ircv3CapabilityLabeledResponse,
 		"message-tags": .Settings.ircv3CapabilityMessageTags,
 		"multi-prefix": .Settings.ircv3CapabilityMultiPrefix,
+		"draft/no-implicit-names": .Settings.ircv3CapabilityNoImplicitNames,
 		"pre-away": .Settings.ircv3CapabilityPreAway,
 		"sasl": .Settings.ircv3CapabilitySasl,
 		"server-time": .Settings.ircv3CapabilityServerTime,
