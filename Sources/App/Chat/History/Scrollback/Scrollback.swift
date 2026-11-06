@@ -37,7 +37,7 @@ final class Scrollback {
 	// MARK: - Process life cycle
 
 	func resetMaximumLineCount() {
-		Task { await session.applyMaximumLineCount() }
+		session.enqueueMaximumLineCountUpdate()
 	}
 
 	func prepareForApplicationTermination(

@@ -38,6 +38,21 @@ struct PendingIRCEndpoint {
 		      let origin, origin.serverAddress.caseInsensitiveCompare(host) == .orderedSame else { return nil }
 		return origin
 	}
+
+	/** The configured server entry this endpoint's credentials may come from.
+
+	 An STS upgrade keeps the entry it upgraded. A redirect or `/conn` that
+	 lands on a host the network's own server list names is that entry: the
+	 user configured the host, so its password goes to it. Any other host is
+	 somebody the user never configured, and a redirect is server-controlled
+	 input, so nothing is sent there. */
+	func credentialEndpoint(among servers: [ServerEndpoint]) -> ServerEndpoint? {
+		if let inherited = credentialEndpoint {
+			return inherited
+		}
+
+		return servers.first { $0.serverAddress.caseInsensitiveCompare(host) == .orderedSame }
+	}
 }
 
 /// How the console reports the TLS version and cipher a connection settled on.
@@ -153,6 +168,16 @@ extension ServerSession {
 				edits[selectedServer.keychainItem] = selectedServer.pendingServerPassword
 			}
 			sessionCredentials.install(stored, items: items, applying: edits)
+			/* An explicit endpoint that is not one of the configured servers
+			 never receives the account password, over SASL or to services. */
+			if requestedEndpoint != nil, server == nil {
+				sessionCredentials.withholdsAccountCredentials = true
+				printDebugInformation(
+					toConsole: ConnectionSafetyStrings.Credentials.withheldFromUnconfiguredHost(
+						socketConfig.serverAddress
+					)
+				)
+			}
 			socketConfig.proxyPassword = configurationSnapshot.pendingProxyPassword.value(
 				orStored: sessionCredentials.password(for: configurationSnapshot.proxyPasswordKeychainItem)
 			)
@@ -175,7 +200,7 @@ extension ServerSession {
 		var host = endpoint?.host ?? ""
 		var port = endpoint?.port ?? ConnectionDefaults.serverPort
 		var secured = endpoint?.secured ?? false
-		server = endpoint?.credentialEndpoint
+		server = endpoint?.credentialEndpoint(among: servers)
 		if host.isValidInternetAddress == false {
 			let retryIndex = servers.firstIndex { $0.uniqueIdentifier == retryingServerIdentifier }
 			let nextIndex = retryIndex.map(UInt.init)

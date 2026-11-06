@@ -62,7 +62,7 @@ extension ServerSession {
 		chatHistory.serverRequests.removeAll()
 		chatHistory.requestsByBatchToken.removeAll()
 		for entry in pending {
-			entry.timeoutTask?.cancel()
+			entry.timeoutTimer?.stop()
 			entry.presentation?.receiveServerHistory(.cancelled, for: entry.request)
 		}
 		chatHistory.prependConversation = nil

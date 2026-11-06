@@ -303,7 +303,7 @@ nonisolated struct ConnectionHostSendOrderingTests {
 		], finishing: false)
 		let joined = try await server.lines(waitingFor: 8)
 		#expect(joined.last == "JOIN #order")
-		#expect(session.startup.authenticationTask == nil)
+		#expect(session.startup.authenticationTimer == nil)
 	}
 
 	@Test("Queued PONGs bypass an exhausted flood window and retain their own order")

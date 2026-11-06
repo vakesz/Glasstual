@@ -91,8 +91,10 @@ extension TranscriptView {
 		isAdjustingSelection = true
 		textView.setSelectedRange(restored)
 		isAdjustingSelection = false
+		/* `textView.string` is the whole transcript; the storage reads only the
+		 selected characters. */
 		selection = restored.length > 0
-			? (textView.string as NSString).substring(with: restored)
+			? textView.textStorage?.attributedSubstring(from: restored).string
 			: nil
 	}
 

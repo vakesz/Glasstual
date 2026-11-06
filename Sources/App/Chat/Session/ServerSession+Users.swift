@@ -245,18 +245,30 @@ extension ServerSession {
 		 started the timer: a rename or an edit replaces that value, and the one
 		 to retire is whichever the directory holds when the timer comes due. */
 		let identifier = user.id
+		let startingNickname = user.nickname
 
 		store.removeUserTask = Task { [weak self] in
 			try? await Task.sleep(for: .seconds(removeUserTimerInterval))
 
 			guard Task.isCancelled == false, let self,
-			      let user = userList.first(where: { $0.id == identifier })
+			      let user = storedUser(withID: identifier, startingNickname: startingNickname)
 			else {
 				return
 			}
 
 			remove(user)
 		}
+	}
+
+	/** The directory's user for `identifier`. The nickname the timer started with
+	 is still right unless the person was renamed, so one hashed lookup answers
+	 nearly every time; only a rename falls back to walking the directory, and
+	 that walk does not copy it. */
+	private func storedUser(withID identifier: User.ID, startingNickname: String) -> User? {
+		if let user = findUser(startingNickname), user.id == identifier {
+			return user
+		}
+		return userIndex.values.first { $0.id == identifier }
 	}
 
 	func cancelRemoveUserTimer(for user: User) {

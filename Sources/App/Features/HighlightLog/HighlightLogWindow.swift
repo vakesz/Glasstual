@@ -36,7 +36,7 @@ struct HighlightLogRow: Identifiable, Equatable {
 			)
 		}
 		let renderedMessage = (formattedMessage as NSString).attributedString(
-			withIRCFormatting: NSFont.systemFont(ofSize: 13),
+			withIRCFormatting: NSFont.preferredFont(forTextStyle: .body),
 			preferredFontColor: .controlTextColor
 		) ?? NSAttributedString(string: formattedMessage)
 		message = AttributedString(renderedMessage)

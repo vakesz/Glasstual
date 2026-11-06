@@ -60,11 +60,12 @@ private final nonisolated class LinkParserExpressions: Sendable { // nonisolated
 			/* host.local — mDNS names are not in the data detector's TLD list. */
 			("(?<![^\\s(\\[{<\"'“‘])[\\w-]+(?:\\.[\\w-]+)*\\.local(?::\\d+)?(?:/\\S*)?", false),
 		]
-		supplementary = patterns.compactMap { pattern, hasScheme in
-			guard let expression = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else {
-				return nil
+		supplementary = patterns.map { pattern, hasScheme in
+			do {
+				return try (NSRegularExpression(pattern: pattern, options: [.caseInsensitive]), hasScheme)
+			} catch {
+				preconditionFailure("Link pattern \(pattern) does not compile: \(error)")
 			}
-			return (expression, hasScheme)
 		}
 	}
 }

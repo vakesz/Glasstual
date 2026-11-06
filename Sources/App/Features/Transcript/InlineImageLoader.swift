@@ -14,6 +14,7 @@ nonisolated enum InlineImageError: Error, Sendable {
 	case unsupportedContent
 	case bodyTooLarge
 	case resourceLimit
+	case hostNotAllowed
 
 	var logDescription: String {
 		switch self {
@@ -21,6 +22,7 @@ nonisolated enum InlineImageError: Error, Sendable {
 		case .unsupportedContent: "the address does not contain a supported image"
 		case .bodyTooLarge: "the body exceeds the download limit"
 		case .resourceLimit: "the preview exceeds the resource limits"
+		case .hostNotAllowed: "the address names a local or private host"
 		}
 	}
 }
@@ -43,16 +45,20 @@ final class InlineImageLoader {
 	private let limits: InlineImageLimits
 	private let budget: InlineImageBudget
 	private let protocolClasses: [URLProtocol.Type]
+	private let hostResolver: InlineImageHostResolver
 	private var entries: [Key: Entry] = [:]
 
 	init(
 		limits: InlineImageLimits = .init(),
 		budget: InlineImageBudget = .shared,
-		protocolClasses: [URLProtocol.Type] = []
+		protocolClasses: [URLProtocol.Type] = [],
+		hostResolver: InlineImageHostResolver? = nil
 	) {
 		self.limits = limits
 		self.budget = budget
 		self.protocolClasses = protocolClasses
+		// A stubbed protocol never reaches the network, so there is nothing to resolve.
+		self.hostResolver = hostResolver ?? (protocolClasses.isEmpty ? .system : .literalOnly)
 	}
 
 	isolated deinit {
@@ -80,6 +86,11 @@ final class InlineImageLoader {
 			completion(.failure(InlineImageError.unsupportedContent))
 			return nil
 		}
+		// The spelling alone settles literal addresses and local names without a lookup.
+		guard InlineImageHostPolicy.verdict(forHost: url.host(percentEncoded: false)) != .refused else {
+			completion(.failure(InlineImageError.hostNotAllowed))
+			return nil
+		}
 		guard entries[key] == nil,
 		      let reservation = budget.reserve(view: viewIdentifier, bytes: limits.workingByteCount)
 		else {
@@ -88,6 +99,7 @@ final class InlineImageLoader {
 		}
 		let limits = limits
 		let protocolClasses = protocolClasses
+		let hostResolver = hostResolver
 		let budget = budget
 		let task = Task { [weak self] in
 			var retained = false
@@ -107,7 +119,8 @@ final class InlineImageLoader {
 				let data = try await InlineImageTransfer.download(
 					url,
 					limits: limits,
-					protocolClasses: protocolClasses
+					protocolClasses: protocolClasses,
+					resolver: hostResolver
 				)
 				let preview = try await InlineImageDecoder.prepare(data, limits: limits)
 				try Task.checkCancellation()

@@ -47,6 +47,8 @@ nonisolated func ircWireTimestampDate(from value: String) -> Date? { // nonisola
 	return Date(timeIntervalSince1970: seconds)
 }
 
+private nonisolated let digitsAndPoint = CharacterSet.decimalDigits.union(CharacterSet(charactersIn: "."))
+
 /** A `time` (or bouncer `t`) tag read as a date, or `nil` when it carries no
  timestamp the session can act on.
 
@@ -55,8 +57,6 @@ nonisolated func ircWireTimestampDate(from value: String) -> Date? { // nonisola
  bouncer sends. Either way a replayed line is filed when it was said rather than
  when it arrived. */
 private nonisolated func serverTimeDate(from value: String) -> Date? { // nonisolated: pure
-	let digitsAndPoint = CharacterSet.decimalDigits.union(CharacterSet(charactersIn: "."))
-
 	if value.unicodeScalars.allSatisfy(digitsAndPoint.contains) {
 		return ircWireTimestampDate(from: value)
 	}

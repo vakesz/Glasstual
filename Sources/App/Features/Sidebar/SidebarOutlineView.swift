@@ -41,6 +41,7 @@ final class SidebarOutlineView: NSOutlineView, NSOutlineViewDataSource, NSOutlin
 		target = self
 		doubleAction = #selector(activateClickedRow(_:))
 		setAccessibilityIdentifier("sidebar")
+		setAccessibilityLabel(String(localized: .Sidebar.outlineAccessibilityLabel))
 		registerForDraggedTypes([Self.dragType])
 		setDraggingSourceOperationMask(.move, forLocal: true)
 		setDraggingSourceOperationMask([], forLocal: false)

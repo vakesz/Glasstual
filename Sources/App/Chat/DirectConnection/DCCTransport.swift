@@ -186,9 +186,10 @@ nonisolated enum DCCTransport {
 	/** Whether an inbound connection came from the peer the transfer was
 	 negotiated with.
 
-	 An empty expectation accepts anything, which is what is left whenever the
-	 offer named no address — a plain `DCC SEND` names none, and the peer's
-	 hostmask is not a substitute for one.
+	 An empty expectation accepts the connection, which is what is left whenever
+	 the offer named no address — a plain `DCC SEND` names none, and the peer's
+	 hostmask is not a substitute for one. The caller closes the listener after
+	 the first accepted connection, so that is the only one it ever takes.
 
 	 Both sides are reduced to address bytes before they are compared. One
 	 address has many spellings: `2001:0db8::1` and `2001:db8::1` are the same

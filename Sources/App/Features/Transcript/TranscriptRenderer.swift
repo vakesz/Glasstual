@@ -126,7 +126,7 @@ nonisolated struct TranscriptRenderer {
 
 		for keyword in highlighted where isHighlight == false {
 			let matches = matchMethod == .regularExpression
-				? Array(ranges(ofRegularExpression: keyword).prefix(1))
+				? firstRange(ofRegularExpression: keyword).map { [$0] } ?? []
 				: ranges(of: keyword, options: .caseInsensitive)
 			for range in matches {
 				guard excludedRanges.allSatisfy({ NSIntersectionRange(range, $0).length == 0 }) else { continue }
@@ -215,13 +215,23 @@ nonisolated struct TranscriptRenderer {
 	 That pairing is the one the cap is for -- the cost of a pathological
 	 pattern grows with the input, and only the reader's patterns are
 	 unbounded in shape. The cap is far past any real message and far short of
-	 anything that could stall a render. */
-	private func ranges(ofRegularExpression pattern: String) -> [NSRange] {
-		guard let expression = configuration.highlightExpressions.expression(for: pattern) else { return [] }
-		return ranges(
-			of: expression,
-			matchedLength: min((body as NSString).length, TranscriptHighlightExpressions.maximumMatchedLength)
-		)
+	 anything that could stall a render.
+
+	 Only the first non-empty match is wanted, so the search stops there rather
+	 than collecting every match of the message. */
+	private func firstRange(ofRegularExpression pattern: String) -> NSRange? {
+		guard let expression = configuration.highlightExpressions.expression(for: pattern) else { return nil }
+		let matchedLength = min((body as NSString).length, TranscriptHighlightExpressions.maximumMatchedLength)
+		var first: NSRange?
+		expression.enumerateMatches(
+			in: body,
+			range: NSRange(location: 0, length: matchedLength)
+		) { match, _, stop in
+			guard let range = match?.range, range.length > 0 else { return }
+			first = range
+			stop.pointee = true
+		}
+		return first
 	}
 
 	private func ranges(of expression: NSRegularExpression, matchedLength: Int) -> [NSRange] {
@@ -374,10 +384,12 @@ private nonisolated struct TranscriptMemberReference {
 		// Keep IRC's nickname punctuation together so @get cannot target the
 		// first part of get_more or get-away. Combining marks stay attached
 		// before the directory applies the server's Unicode normalization.
-		CharacterSet.alphanumerics.contains(scalar)
-			|| CharacterSet.nonBaseCharacters.contains(scalar)
-			|| "-[]\\`_^{}|~".unicodeScalars.contains(scalar)
+		nicknameCharacters.contains(scalar)
 	}
+
+	private static let nicknameCharacters = CharacterSet.alphanumerics
+		.union(.nonBaseCharacters)
+		.union(CharacterSet(charactersIn: "-[]\\`_^{}|~"))
 }
 
 extension TranscriptRenderer {

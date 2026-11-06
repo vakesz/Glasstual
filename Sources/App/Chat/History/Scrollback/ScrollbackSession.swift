@@ -207,6 +207,14 @@ actor ScrollbackSession {
 
 	// MARK: - The order changes are asked in
 
+	/// Queues the stored-line ceiling behind the changes already asked for, so a
+	/// new limit is applied after the writes that preceded it and never before.
+	nonisolated func enqueueMaximumLineCountUpdate() { // nonisolated: pure
+		queue { [self] in
+			await applyMaximumLineCount()
+		}
+	}
+
 	/** Queues an archived line for storage, behind the changes already asked for.
 
 	 Nonisolated so that asking costs the caller nothing: the caller is the main

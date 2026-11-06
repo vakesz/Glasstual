@@ -6,12 +6,22 @@ import AppKit
 import CocoaExtensions
 import UniformTypeIdentifiers
 
-private enum TranscriptContextMenuSuppressionKey: String {
+enum TranscriptContextMenuSuppressionKey: String {
 	/** A key of its own rather than the one the question used to carry: the
 	 recorded answer is a button, and the buttons this alert offers changed
 	 sides, so a reader who once ticked "Do not ask again" for Open would have
 	 been answering Cancel from then on. */
 	case openExternalURL = "Open Link In External Application"
+
+	/** The key one scheme's "Do not ask again" is recorded under.
+
+	 Consent to hand a `ftp:` link to another application says nothing about
+	 `irc:` or `webcal:`, so each scheme is asked about, and remembered,
+	 separately. The scheme is lowercased so that `FTP:` and `ftp:` are the
+	 same answer. */
+	static func openExternalURL(scheme: String?) -> String {
+		"\(openExternalURL.rawValue) (\(scheme?.lowercased() ?? ""))"
+	}
 }
 
 final class TranscriptContextTarget: NSObject {
@@ -299,7 +309,7 @@ final class TranscriptCommands: NSObject {
 			body: url.absoluteString,
 			defaultButton: PromptStrings.Action.cancel,
 			alternateButton: PromptStrings.Action.open,
-			suppressionKey: TranscriptContextMenuSuppressionKey.openExternalURL.rawValue
+			suppressionKey: TranscriptContextMenuSuppressionKey.openExternalURL(scheme: url.scheme)
 		)
 		openingLinkTask?.cancel()
 		openingLinkTask = Task {

@@ -4,6 +4,12 @@
 
 import AppKit
 import CocoaExtensions
+import os
+
+private nonisolated let scriptCatalogLogger = Logger(
+	subsystem: LogSubsystem.current,
+	category: "ScriptCatalog"
+)
 
 /** The user scripts the application can run as commands.
 
@@ -72,7 +78,13 @@ final class ScriptCatalogStore {
 			return
 		}
 
-		try? fileManager.createSymbolicLink(at: destinationURL, withDestinationURL: sourceURL)
+		do {
+			try fileManager.createSymbolicLink(at: destinationURL, withDestinationURL: sourceURL)
+		} catch {
+			scriptCatalogLogger.error(
+				"Could not link custom scripts into the group container: \(error.localizedDescription, privacy: .public)"
+			)
+		}
 	}
 
 	@concurrent

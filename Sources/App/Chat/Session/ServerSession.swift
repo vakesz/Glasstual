@@ -159,6 +159,8 @@ class ServerSession: ChatItem {
 	}
 
 	var startup = StartupState()
+	/// The scripts this session started that are still running.
+	let scriptTasks = ScriptTaskBag()
 	var trackedUserPopulationTask: Task<Void, Never>?
 	var rejoinTasks: [String: Task<Void, Never>] = [:]
 	var pendingConfirmationTasks: [UUID: Task<Void, Never>] = [:]
@@ -392,6 +394,7 @@ class ServerSession: ChatItem {
 			sasl.timeoutTimer,
 		].forEach { timer in timer.stop() }
 		startup.cancel()
+		scriptTasks.cancelAll()
 		trackedUserPopulationTask?.cancel()
 		rejoinTasks.values.forEach { $0.cancel() }
 		pendingConfirmationTasks.values.forEach { $0.cancel() }

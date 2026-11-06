@@ -13680,6 +13680,150 @@
           }
         }
       }
+    },
+    "notifications-heading-accessibility": {
+      "comment": "Section heading in the Notifications pane for options that help people using assistive technology.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accessibility"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bedienungshilfen"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kisegítő lehetőségek"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Accesibilidad"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Accessibilité"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "アクセシビリティ"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Acessibilidade"
+          }
+        }
+      }
+    },
+    "notifications-announce-voiceover": {
+      "comment": "Checkbox in the Notifications pane. VoiceOver is the macOS screen reader.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Announce highlights and disconnections with VoiceOver"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hervorhebungen und Verbindungsabbrüche mit VoiceOver ansagen"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Említések és kapcsolatmegszakadások bemondása a VoiceOverrel"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Anunciar menciones y desconexiones con VoiceOver"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Annoncer les mentions et les déconnexions avec VoiceOver"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ハイライトと切断をVoiceOverで読み上げる"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Anunciar destaques e desconexões com o VoiceOver"
+          }
+        }
+      }
+    },
+    "notifications-announce-voiceover-note": {
+      "comment": "Note below the VoiceOver announcements checkbox in the Notifications pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only while VoiceOver is running. Announcements are spoken even when the conversation is open."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur solange VoiceOver läuft. Ansagen erfolgen auch, wenn die Unterhaltung geöffnet ist."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csak akkor, ha a VoiceOver fut. A bemondás akkor is megtörténik, ha a beszélgetés meg van nyitva."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Solo mientras VoiceOver está activo. Los avisos se leen aunque la conversación esté abierta."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Uniquement lorsque VoiceOver est actif. Les annonces sont lues même lorsque la conversation est ouverte."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "VoiceOverの実行中のみ。会話を開いている間も読み上げられます。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Somente enquanto o VoiceOver estiver em execução. Os anúncios são falados mesmo quando a conversa está aberta."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

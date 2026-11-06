@@ -16,6 +16,23 @@ nonisolated extension SettingsKeys {
 		static let removeAllFormatting = SettingsKey(group + "Remove All Formatting", default: false)
 		static let rightToLeftFormatting = SettingsKey(group + "Right To Left Formatting", default: false)
 		static let replyToCTCPRequests = SettingsKey(group + "Reply To CTCP Requests", default: true)
+
+		/// Whether a CTCP `VERSION` reply names the version number as well as
+		/// the application. Off, the reply says which client this is and
+		/// nothing that narrows down which release, and so which known flaws.
+		static let ctcpRevealsClientVersion = SettingsKey(
+			group + "CTCP Reveals Client Version",
+			default: false
+		)
+
+		/// What a CTCP `USERINFO` query is answered with. Empty by default: the
+		/// real name is shown to the server already, and any peer may ask.
+		static let ctcpUserInfoReply = SettingsKey(
+			group + "CTCP User Info Reply",
+			default: "",
+			validation: { $0.count <= 400 }
+		)
+
 		static let detectHighlightSpam = SettingsKey(group + "Detect Highlight Spam", default: true)
 		static let filterUnicodeTextSpam = SettingsKey(group + "Filter Unicode Text Spam", default: false)
 		static let openBrowserInBackground = SettingsKey(
@@ -36,7 +53,7 @@ nonisolated extension SettingsKeys {
 			showDateChanges, showInlineMedia, showJoinLeave, autoAddUnreadMarker, copyOnSelect,
 			removeAllFormatting, rightToLeftFormatting, replyToCTCPRequests, detectHighlightSpam,
 			filterUnicodeTextSpam, openBrowserInBackground, disableNicknameColorHashing,
-			nicknameColorStyleOverrides,
+			nicknameColorStyleOverrides, ctcpRevealsClientVersion, ctcpUserInfoReply,
 		]
 	}
 }

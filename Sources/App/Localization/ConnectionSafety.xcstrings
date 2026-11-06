@@ -49,6 +49,54 @@
         }
       }
     },
+    "credentials-withheld-unconfigured-host" : {
+      "comment" : "Console notice when the connection goes to a host that is not one of the network's configured servers, for example a server-sent redirect, so the account password is not sent to it. %1$@ is the host.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The account password will not be sent to %1$@: it is not one of this network's configured servers."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A fiók jelszava nem lesz elküldve ide: %1$@. Nem tartozik a hálózat beállított szerverei közé."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Kontopasswort wird nicht an %1$@ gesendet: Dieser Server gehört nicht zu den konfigurierten Servern dieses Netzwerks."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "La contraseña de la cuenta no se enviará a %1$@: no es uno de los servidores configurados de esta red."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Le mot de passe du compte ne sera pas envoyé à %1$@ : ce n'est pas l'un des serveurs configurés de ce réseau."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "アカウントのパスワードは%1$@に送信されません：このネットワークに設定されたサーバーではありません。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "A senha da conta não será enviada para %1$@: este não é um dos servidores configurados desta rede."
+          }
+        }
+      }
+    },
     "direct-chat-offer-refused-address" : {
       "comment" : "Console notice when a DCC CHAT offer names an address the client refuses to dial (loopback, a private network, a documentation range). %1$@ is the sender's nickname, %2$@ the address the offer named.",
       "extractionState" : "manual",

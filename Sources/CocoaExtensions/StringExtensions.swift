@@ -78,6 +78,12 @@ private let filenameFormatControls = CharacterSet(charactersIn:
 private let filenameFormatControlsContinued = CharacterSet(charactersIn:
 	"\u{202E}\u{2066}\u{2067}\u{2068}\u{2069}")
 
+private let disallowedFilenameCharacters = CharacterSet(charactersIn: "/:")
+	.union(.controlCharacters)
+	.union(.illegalCharacters)
+	.union(filenameFormatControls)
+	.union(filenameFormatControlsContinued)
+
 /// Space characters that IRC peers use interchangeably with U+0020.
 private let spaceLikeScalars: CharacterSet = {
 	var set = CharacterSet()
@@ -109,11 +115,7 @@ public extension String {
 			return self
 		}
 
-		let disallowed = CharacterSet(charactersIn: "/:")
-			.union(.controlCharacters)
-			.union(.illegalCharacters)
-			.union(filenameFormatControls)
-			.union(filenameFormatControlsContinued)
+		let disallowed = disallowedFilenameCharacters
 		let substituted = trimmingCharacters(in: .whitespacesAndNewlines)
 			.unicodeScalars.map {
 				disallowed.contains($0) ? Unicode.Scalar("_") : $0

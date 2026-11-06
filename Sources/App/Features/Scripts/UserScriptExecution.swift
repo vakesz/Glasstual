@@ -156,7 +156,7 @@ extension ServerSession {
 		target: String?,
 		invocation: ScriptInvocation
 	) {
-		Task { [weak self] in
+		scriptTasks.run { [weak self] in
 			let outcome: Result<String?, any Error>
 			do {
 				outcome = try await .success(UserScriptRunner.runUserAppleScript(
@@ -169,7 +169,7 @@ extension ServerSession {
 				outcome = .failure(error)
 			}
 
-			guard let self, scriptInvocationIsCurrent(invocation) else { return }
+			guard !Task.isCancelled, let self, scriptInvocationIsCurrent(invocation) else { return }
 
 			switch outcome {
 			case let .success(resultString):
@@ -191,7 +191,7 @@ extension ServerSession {
 	) {
 		let arguments = [target ?? ""] + input.components(separatedBy: .whitespaces)
 
-		Task { [weak self] in
+		scriptTasks.run { [weak self] in
 			let outcome: Result<String, any Error>
 			do {
 				let data = try await UserScriptRunner.runUnixScript(at: url, arguments: arguments)
@@ -200,7 +200,7 @@ extension ServerSession {
 				outcome = .failure(error)
 			}
 
-			guard let self, scriptInvocationIsCurrent(invocation) else { return }
+			guard !Task.isCancelled, let self, scriptInvocationIsCurrent(invocation) else { return }
 
 			switch outcome {
 			case let .success(text):

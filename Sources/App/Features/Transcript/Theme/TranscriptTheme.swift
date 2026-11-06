@@ -305,20 +305,20 @@ nonisolated struct TranscriptTheme: Codable, Equatable, Sendable {
 	static let defaultPalette = TranscriptThemePalette(
 		background: pair(light: 0xFFFFFF, dark: 0x1E1E1E, contrastLight: 0xFFFFFF, contrastDark: 0x000000),
 		primaryText: pair(light: 0x202124, dark: 0xF2F2F2, contrastLight: 0x000000, contrastDark: 0xFFFFFF),
-		secondaryText: pair(light: 0x6E6E73, dark: 0xA1A1A6, contrastLight: 0x3A3A3C, contrastDark: 0xE5E5EA),
+		secondaryText: pair(light: 0x5F5F64, dark: 0xC2C2C6, contrastLight: 0x3A3A3C, contrastDark: 0xEBEBEF),
 		/* A role of its own, added with the native transcript: timestamps used
-			to be drawn in `secondaryText`, which measures 5.07:1 on white and
-			6.48:1 on the dark ground. These are deliberately quieter than that —
-			a timestamp is the least of what a line says — and were picked to stay
-			above the 4.5:1 the WCAG AA contrast minimum asks of body text, which
-			this is a point smaller than: 4.65:1 on white, 5.11:1 on dark. The
-			increased-contrast pair gives up that quietness, which is the whole
-			point of the setting. */
-		timestampText: pair(light: 0x747479, dark: 0x8E8E93, contrastLight: 0x3A3A3C, contrastDark: 0xE5E5EA),
-		eventText: pair(light: 0x65656A, dark: 0xAEAEB2, contrastLight: 0x2C2C2E, contrastDark: 0xEBEBF0),
-		link: pair(light: 0x0068D9, dark: 0x64A8FF, contrastLight: 0x0040A0, contrastDark: 0x9CC8FF),
-		localNickname: pair(light: 0x006B3C, dark: 0x67D99A, contrastLight: 0x00522D, contrastDark: 0x8CEFB8),
-		remoteNickname: pair(light: 0x5B42A6, dark: 0xB7A3FF, contrastLight: 0x3B2A80, contrastDark: 0xD3C6FF),
+			to be drawn in `secondaryText`. These are deliberately a step quieter
+			than that — a timestamp is the least of what a line says — but the
+			text also sits on the bubble grounds, and the quietest ground is the
+			dark outgoing bubble, so the floor is the 4.5:1 the WCAG AA contrast
+			minimum asks of body text, which this is a point smaller than, measured
+			there: 4.59:1. The increased-contrast pair gives up that quietness,
+			which is the whole point of the setting. */
+		timestampText: pair(light: 0x68686D, dark: 0xB6B6B9, contrastLight: 0x3A3A3C, contrastDark: 0xEBEBEF),
+		eventText: pair(light: 0x65656A, dark: 0xB6B6B9, contrastLight: 0x2C2C2E, contrastDark: 0xEBEBF0),
+		link: pair(light: 0x0065D2, dark: 0x81B9FF, contrastLight: 0x003E9C, contrastDark: 0xDEEDFF),
+		localNickname: pair(light: 0x006B3C, dark: 0x67D99A, contrastLight: 0x004F2B, contrastDark: 0xC4F7DA),
+		remoteNickname: pair(light: 0x5B42A6, dark: 0xBCAAFF, contrastLight: 0x3B2A80, contrastDark: 0xEEE9FF),
 		highlightBackground: pair(
 			light: 0xFFF1B8, dark: 0x5C4710, contrastLight: 0xFFE066, contrastDark: 0x634A00
 		),
@@ -326,7 +326,7 @@ nonisolated struct TranscriptTheme: Codable, Equatable, Sendable {
 		bubbleIncoming: pair(light: 0xE9E9EB, dark: 0x363638, contrastLight: 0xDCDCDE, contrastDark: 0x48484A),
 		bubbleOutgoing: pair(light: 0xD8ECFF, dark: 0x164A73, contrastLight: 0xC3E1FF, contrastDark: 0x1A5080),
 		unreadMarker: pair(light: 0xD70015, dark: 0xFF6961, contrastLight: 0xA30010, contrastDark: 0xFF8A80),
-		failure: pair(light: 0xB00020, dark: 0xFF8A80, contrastLight: 0x8B0016, contrastDark: 0xFF9E96),
+		failure: pair(light: 0xB00020, dark: 0xFF9A92, contrastLight: 0x8B0016, contrastDark: 0xFFE6E4),
 		chromeBackground: pair(light: 0xFFFFFF, dark: 0x1E1E1E, contrastLight: 0xFFFFFF, contrastDark: 0x000000)
 	)
 

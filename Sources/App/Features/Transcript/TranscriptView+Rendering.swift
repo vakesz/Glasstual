@@ -486,8 +486,6 @@ extension TranscriptView {
 	/// The theme's font at this view's text scale. Every attribute run starts
 	/// from it, so the scale is applied once, here.
 	func effectiveFont(_ controller: ThemeStore) -> NSFont {
-		let font = controller.font
-		return NSFont(name: font.fontName, size: font.pointSize * textScale)
-			?? NSFont.systemFont(ofSize: font.pointSize * textScale)
+		controller.scaledFont(scale: textScale)
 	}
 }

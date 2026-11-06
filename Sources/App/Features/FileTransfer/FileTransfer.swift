@@ -202,7 +202,15 @@ final class FileTransfer: SessionScoped {
 		controller.filename = (path as NSString).lastPathComponent
 		controller.wireFilename = controller.filename.safeFilename
 
-		guard let file = try? await fileFactory(URL(fileURLWithPath: path), false, accessURL) else { return nil }
+		let file: DCCTransferFile
+		do {
+			file = try await fileFactory(URL(fileURLWithPath: path), false, accessURL)
+		} catch {
+			fileTransferLogger.error(
+				"Could not open \(controller.filename, privacy: .private) to send: \(error.localizedDescription, privacy: .public)"
+			)
+			return nil
+		}
 		guard !Task.isCancelled else {
 			await file.close()
 			return nil

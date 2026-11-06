@@ -67,7 +67,7 @@ final class PendingServerHistoryRequest {
 	weak var conversation: Conversation?
 	weak var presentation: (any ServerHistoryPresenting)?
 	var cancelled = false
-	var timeoutTask: Task<Void, Never>?
+	var timeoutTimer: SessionTimer?
 
 	init(request: ServerHistoryRequest, label: String?, conversation: Conversation, connectionIdentifier: String?,
 	     presentation: (any ServerHistoryPresenting)?)
@@ -80,7 +80,7 @@ final class PendingServerHistoryRequest {
 		delivery = presentation == nil ? .transcript : .presentation
 	}
 
-	isolated deinit { timeoutTask?.cancel() }
+	isolated deinit { timeoutTimer?.stop() }
 }
 
 @MainActor
@@ -98,9 +98,8 @@ extension ServerSession {
 			presentation: presentation
 		)
 		chatHistory.serverRequests[conversation.uniqueIdentifier] = pending
-		pending.timeoutTask = Task { [weak self, weak pending] in
-			try? await Task.sleep(for: .seconds(ChatHistoryPolicy.requestTimeout))
-			guard !Task.isCancelled, let self, let pending else { return }
+		pending.timeoutTimer = SessionTimer.once(after: ChatHistoryPolicy.requestTimeout) { [weak self, weak pending] in
+			guard let self, let pending else { return }
 			timeoutServerHistory(pending)
 		}
 		sendCommand(
@@ -138,7 +137,7 @@ extension ServerSession {
 			// Without labels a late response cannot be distinguished from a retry.
 			// Keep this slot retired until its batch/FAIL arrives or the connection resets.
 			pending.cancelled = true
-			pending.timeoutTask?.cancel()
+			pending.timeoutTimer?.stop()
 			pending.presentation = nil
 		}
 	}
@@ -269,8 +268,8 @@ extension ServerSession {
 	func finishServerHistory(_ pending: PendingServerHistoryRequest, outcome: ServerHistoryOutcome) -> Bool {
 		guard let key = chatHistory.serverRequests.first(where: { $0.value === pending })?.key else { return false }
 		chatHistory.serverRequests.removeValue(forKey: key)
-		pending.timeoutTask?.cancel()
-		pending.timeoutTask = nil
+		pending.timeoutTimer?.stop()
+		pending.timeoutTimer = nil
 		pending.presentation?.receiveServerHistory(outcome, for: pending.request)
 		return true
 	}

@@ -46,6 +46,7 @@ final class RecordingNotificationPresenter: UserNotificationPresenting {
 	private(set) var claimedThreads: [String?] = []
 	private(set) var attentionRequests = 0
 	private(set) var playedSounds: [String] = []
+	private(set) var announcements: [String] = []
 
 	func claimsAlert(inThread thread: String?) -> Bool {
 		claimedThreads.append(thread)
@@ -55,6 +56,10 @@ final class RecordingNotificationPresenter: UserNotificationPresenting {
 
 	func post(_ notification: PendingUserNotification) {
 		posted.append(notification)
+	}
+
+	func announce(_ message: String) {
+		announcements.append(message)
 	}
 
 	func requestUserAttention() {

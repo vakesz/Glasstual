@@ -85,9 +85,39 @@ final class ThemeStore {
 	}
 
 	var font: NSFont {
-		NSFont(name: theme.fontName, size: theme.fontSize)
-			?? NSFont.systemFont(ofSize: theme.fontSize)
+		resolvedFont(size: theme.fontSize)
 	}
+
+	/// The theme's font at `scale` times its point size.
+	func scaledFont(scale: CGFloat) -> NSFont {
+		resolvedFont(size: theme.fontSize * scale)
+	}
+
+	/// Resolving a font by name is a lookup in the system's font catalogue, and
+	/// every attribute run of every line asks for one. The cache is keyed by
+	/// name and size, so a theme or scale change reaches a new key and the old
+	/// entries only age out when the table is cleared at its small bound.
+	private func resolvedFont(size: CGFloat) -> NSFont {
+		let key = FontKey(name: theme.fontName, size: size)
+		if let cached = fontCache[key] {
+			return cached
+		}
+		let font = NSFont(name: key.name, size: size) ?? NSFont.systemFont(ofSize: size)
+		if fontCache.count >= Self.fontCacheLimit {
+			fontCache.removeAll(keepingCapacity: true)
+		}
+		fontCache[key] = font
+		return font
+	}
+
+	private struct FontKey: Hashable {
+		let name: String
+		let size: CGFloat
+	}
+
+	private static let fontCacheLimit = 16
+
+	@ObservationIgnored private var fontCache: [FontKey: NSFont] = [:]
 
 	var backgroundColor: NSColor {
 		resolved(theme.palette.background)

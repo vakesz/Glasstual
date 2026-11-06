@@ -30,9 +30,13 @@ nonisolated extension SettingsKeys {
 			default: false
 		)
 
+		/// Whether highlights and unexpected disconnects are also spoken by
+		/// VoiceOver, which only matters while it is running.
+		static let announceToVoiceOver = SettingsKey(group + "Announce To VoiceOver", default: false)
+
 		static let all: [any AnySettingsKey] = [
 			notifyAboutMentions, soundIsMuted, postWhileInFocus, displayDockBadge,
-			publicMessageCountOnDockBadge,
+			publicMessageCountOnDockBadge, announceToVoiceOver,
 		]
 	}
 }

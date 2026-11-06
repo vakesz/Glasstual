@@ -334,8 +334,19 @@ final class ConversationMembers {
 		}
 
 		if needsResort {
-			removeStoredMember(oldMember)
-			sortedInsert(newMember)
+			deferInboundPresentationIfNeeded()
+			if presentationUpdateDepth > 0 {
+				/* Moving a member is a removal and an insertion, each of which
+				 shifts every index after it. Inside a batch the new value takes
+				 the old slot and the batch's one sort puts it in place. */
+				guard replaceStoredMember(oldMember, with: newMember) else {
+					return
+				}
+				orderingPending = true
+			} else {
+				removeStoredMember(oldMember)
+				sortedInsert(newMember)
+			}
 		} else if replaceStoredMember(oldMember, with: newMember) == false {
 			return
 		}

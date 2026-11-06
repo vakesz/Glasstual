@@ -57,6 +57,16 @@ nonisolated enum WireRedaction {
 		case "OPER":
 			guard parameters.count >= 3 else { return line }
 			parameters[2] = credentialMask
+		case "JOIN":
+			// The second parameter is the comma list of channel keys, one per
+			// channel in the order of the first. Empty slots stay empty.
+			guard parameters.count >= 3 else { return line }
+			parameters[2] = parameters[2].components(separatedBy: ",").map { key in
+				key.isEmpty ? key : credentialMask
+			}.joined(separator: ",")
+		case "MODE":
+			guard parameters.count >= 4, parameters[2].contains("k") else { return line }
+			maskChannelKeys(inModeParameters: &parameters)
 		case "NICKSERV", "NS":
 			guard parameters.count >= 2 else { return line }
 			let message = parameters.dropFirst().joined(separator: " ")
@@ -83,6 +93,62 @@ nonisolated enum WireRedaction {
 		return prefix + parameters.enumerated().map { index, value in
 			index == lastIndex && hasTrailing ? ":\(value)" : value
 		}.joined(separator: " ")
+	}
+
+	/// Mode letters that take an argument whether they are set or unset.
+	private static let modesWithArgument: Set<Character> = ["k", "b", "e", "I", "o", "v", "h", "q", "a"]
+	/// Mode letters that take an argument only when they are set.
+	private static let modesWithSetArgument: Set<Character> = ["l"]
+	/// Mode letters known to take no argument. A letter in neither set is
+	/// unknown, and an unknown letter may or may not consume an argument.
+	private static let modesWithoutArgument: Set<Character> = [
+		"i", "m", "n", "p", "s", "t", "r", "c", "C", "S", "R", "M", "N", "T", "z", "u", "Q", "K",
+	]
+
+	/** Masks the argument of every `k` in the mode string at index 2.
+
+	 The mode string is walked with its `+`/`-` state so that each letter picks
+	 up the argument that belongs to it: `+lk 10 key` and `+kl key 10` both
+	 mask only the key. A letter this walk does not know may consume an
+	 argument or not, so the alignment cannot be trusted past it; every argument
+	 is masked then, which loses legibility rather than a key. */
+	private static func maskChannelKeys(inModeParameters parameters: inout [String]) {
+		let firstArgument = 3
+		var index = firstArgument
+		var isSetting = true
+		var keyIndexes: [Int] = []
+		var isAligned = true
+
+		for letter in parameters[2] {
+			switch letter {
+			case "+":
+				isSetting = true
+			case "-":
+				isSetting = false
+			default:
+				if modesWithArgument.contains(letter) || (isSetting && modesWithSetArgument.contains(letter)) {
+					if letter == "k" {
+						keyIndexes.append(index)
+					}
+					index += 1
+				} else if modesWithSetArgument.contains(letter) || modesWithoutArgument.contains(letter) {
+					continue
+				} else {
+					isAligned = false
+				}
+			}
+		}
+
+		guard isAligned else {
+			for argument in firstArgument ..< parameters.count {
+				parameters[argument] = credentialMask
+			}
+			return
+		}
+
+		for keyIndex in keyIndexes where keyIndex < parameters.count {
+			parameters[keyIndex] = credentialMask
+		}
 	}
 
 	/** `redacted` cut back into parameters as wide as the ones it came from.

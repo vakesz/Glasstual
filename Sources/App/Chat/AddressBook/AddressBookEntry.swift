@@ -44,6 +44,9 @@ nonisolated struct AddressBookEntry: Codable, Equatable, Sendable {
 	var parentEntries: [AddressBookEntry]?
 
 	private var matcher: AddressBookEntryMatcher
+	/// The same mask compiled under each other casemapping, so a session's
+	/// match runs against a compiled mask instead of compiling one per call.
+	private var mappedMatchers: [ISupportCaseMapping: AddressBookEntryMatcher]
 
 	init(
 		uniqueIdentifier: String = UUID().uuidString,
@@ -54,6 +57,7 @@ nonisolated struct AddressBookEntry: Codable, Equatable, Sendable {
 		self.entryType = entryType
 		self.hostmask = hostmask
 		matcher = AddressBookEntryMatcher(entryType: entryType, hostmask: hostmask)
+		mappedMatchers = Self.mappedMatchers(entryType: entryType, hostmask: hostmask)
 	}
 
 	private enum CodingKeys: String, CodingKey {
@@ -84,6 +88,7 @@ nonisolated struct AddressBookEntry: Codable, Equatable, Sendable {
 		let entryType = AddressBookEntryKind(rawValue: rawEntryType) ?? .ignore
 		self.entryType = entryType
 		matcher = AddressBookEntryMatcher(entryType: entryType, hostmask: hostmask)
+		mappedMatchers = Self.mappedMatchers(entryType: entryType, hostmask: hostmask)
 
 		if entryType == .ignore || entryType == .mixed {
 			decodeIgnoreSettings(from: container)
@@ -229,8 +234,7 @@ nonisolated extension AddressBookEntry {
 	/// Session-owned mute rules use the server's advertised nickname mapping.
 	/// Legacy ignore and tracking lookups keep their existing default mapping.
 	func checkMatch(_ hostmask: String, caseMapping: ISupportCaseMapping) -> Bool {
-		AddressBookEntryMatcher(entryType: entryType, hostmask: self.hostmask, caseMapping: caseMapping)
-			.matches(hostmask: hostmask)
+		(mappedMatchers[caseMapping] ?? matcher).matches(hostmask: hostmask)
 	}
 
 	/// A copy under a fresh identity.
@@ -243,5 +247,17 @@ nonisolated extension AddressBookEntry {
 
 	private mutating func rebuildCache() {
 		matcher = AddressBookEntryMatcher(entryType: entryType, hostmask: hostmask)
+		mappedMatchers = Self.mappedMatchers(entryType: entryType, hostmask: hostmask)
+	}
+
+	private static let casemappings: [ISupportCaseMapping] = [.rfc1459, .strictRFC1459, .ascii, .rfc7613]
+
+	private static func mappedMatchers(
+		entryType: AddressBookEntryKind,
+		hostmask: String
+	) -> [ISupportCaseMapping: AddressBookEntryMatcher] {
+		Dictionary(uniqueKeysWithValues: casemappings.map {
+			($0, AddressBookEntryMatcher(entryType: entryType, hostmask: hostmask, caseMapping: $0))
+		})
 	}
 }

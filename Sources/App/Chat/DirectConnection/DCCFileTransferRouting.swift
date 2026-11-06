@@ -69,17 +69,29 @@ extension ServerSession {
 		return true
 	}
 
-	/** Whether this user already knows `nickname`: a direct conversation with
-	 them is open, or they are in the address book as someone whose activity is
-	 tracked.
+	/** Whether `nickname` is a person this user has told the address book to
+	 track, and the person using the nickname right now is that person.
 
-	 An offer from anyone else is still listed for the user to accept, but it
-	 does not download on its own, however the automatic download is set. */
+	 A nickname is not an identity: anyone can take one, including right after
+	 its owner leaves. A tracking entry for the nickname is therefore not
+	 enough. The sender must also be shown to be the person the entry names,
+	 either by the services account the server reports for them or by the
+	 `user@host` the entry itself pins. An offer from anyone else is still
+	 listed for the user to accept, but it does not download on its own,
+	 however the automatic download is set. */
 	func isKnownFileTransferPeer(_ nickname: String) -> Bool {
-		if findConversation(nickname)?.isDirect == true {
-			return true
+		guard let entry = findUserTrackingAddressBookEntry(forNickname: nickname) else {
+			return false
 		}
-		return findUserTrackingAddressBookEntry(forNickname: nickname) != nil
+		let sender = findUser(nickname)
+
+		return FileTransferPeerTrust.isTrusted(
+			senderHostmask: sender?.hostmask,
+			senderAccount: sender?.account,
+			trackedNickname: nickname,
+			entryHostmask: entry.hostmask,
+			caseMapping: supportInfo.caseMapping
+		)
 	}
 
 	func receivedDCCSend(
@@ -274,5 +286,48 @@ nonisolated struct DCCOfferThrottle: Sendable {
 			offerTimesBySender.removeValue(forKey: oldest.key)
 		}
 		return true
+	}
+}
+
+/** Whether the person behind a nickname is the one an address book entry names. */
+nonisolated enum FileTransferPeerTrust {
+	/** The sender is trusted when the server reports a services account for
+	 them that is the tracked name, or when the entry pins a `user@host` that
+	 the sender's real hostmask matches.
+
+	 An entry written as a bare nickname pins no host, so for it only the
+	 account can vouch. A wildcard `user@host` pins nothing either. */
+	static func isTrusted(
+		senderHostmask: String?,
+		senderAccount: String?,
+		trackedNickname: String,
+		entryHostmask: String,
+		caseMapping: ISupportCaseMapping
+	) -> Bool {
+		if let senderAccount, senderAccount.isEmpty == false, senderAccount != "*",
+		   HostmaskGlob.casefold(senderAccount, caseMapping: caseMapping)
+		   == HostmaskGlob.casefold(trackedNickname, caseMapping: caseMapping)
+		{
+			return true
+		}
+
+		guard let senderHostmask, hasPinnedUserAndHost(entryHostmask) else {
+			return false
+		}
+
+		return AddressBookEntryMatcher(entryType: .ignore, hostmask: entryHostmask, caseMapping: caseMapping)
+			.matches(hostmask: senderHostmask)
+	}
+
+	/// Whether a hostmask names a `user@host`: a bare nickname or a pair of
+	/// wildcards names nobody in particular.
+	private static func hasPinnedUserAndHost(_ hostmask: String) -> Bool {
+		guard let separator = hostmask.firstIndex(of: "!") else {
+			return false
+		}
+
+		let fragment = hostmask[hostmask.index(after: separator)...]
+
+		return fragment.isEmpty == false && fragment.allSatisfy { $0 == "*" || $0 == "@" } == false
 	}
 }

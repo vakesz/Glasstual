@@ -41,6 +41,11 @@ struct SessionCredentials {
 	/// connection has been printed for this session.
 	var reportedWithheldCredentials = false
 
+	/// Set when the connection went to a host that is not one of the network's
+	/// configured servers, such as a server-sent redirect. The account
+	/// password is not sent to it.
+	var withholdsAccountCredentials = false
+
 	mutating func forget() {
 		self = SessionCredentials()
 	}
@@ -61,7 +66,8 @@ struct NickServIdentification {
 extension ServerSession {
 	/// Resolves the current pending edit over the session's stored snapshot.
 	var sessionNicknamePassword: String? {
-		config.pendingNicknamePassword.value(orStored: sessionCredentials.password(for: config.nicknamePasswordKeychainItem))
+		guard sessionCredentials.withholdsAccountCredentials == false else { return nil }
+		return config.pendingNicknamePassword.value(orStored: sessionCredentials.password(for: config.nicknamePasswordKeychainItem))
 	}
 
 	var sessionServerPassword: String? {

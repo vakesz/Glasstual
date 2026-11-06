@@ -12652,6 +12652,54 @@
           }
         }
       }
+    },
+    "irc-client-name-only": {
+      "comment": "CTCP VERSION reply that names the application without its version number. %1$@ is the application name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ IRC Client: https://github.com/vakesz/Glasstual"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ IRC-kliens: https://github.com/vakesz/Glasstual"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ IRC-Client: https://github.com/vakesz/Glasstual"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@ IRC Cliente: https://github.com/vakesz/Glasstual"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@ IRC Client : https://github.com/vakesz/Glasstual"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@ IRC クライアント：https://github.com/vakesz/Glasstual"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@ IRC Cliente: https://github.com/vakesz/Glasstual"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

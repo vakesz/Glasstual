@@ -59,6 +59,9 @@ final class DirectChatSession {
 	 started in the same turn reach the actor in whatever order the scheduler
 	 picks, and a chat that reorders the user's lines is a bug. */
 	private var outboundTask: Task<Void, Never>?
+	/** The hop that starts the socket. Closing waits for it, so the actor sees
+	 `start` before `close` rather than whichever task the scheduler runs first. */
+	private var startTask: Task<Void, Never>?
 	private var portMapping: PortMapper?
 	private let portMappingNotifications = NotificationSubscriptions()
 
@@ -203,7 +206,7 @@ final class DirectChatSession {
 			}
 		}
 
-		Task { await chat.start() }
+		startTask = Task { await chat.start() }
 	}
 
 	func close() {
@@ -240,7 +243,12 @@ final class DirectChatSession {
 		if let chat {
 			self.chat = nil
 
-			Task { await chat.close() }
+			let started = startTask
+			startTask = nil
+			Task {
+				await started?.value
+				await chat.close()
+			}
 		}
 	}
 

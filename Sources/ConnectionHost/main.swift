@@ -31,7 +31,17 @@ final class ConnectionHostListenerDelegate: NSObject, NSXPCListenerDelegate {
 			 it never reaches the exported object. */
 			connection.setCodeSigningRequirement(peerRequirement)
 		} else {
-			ConnectionHostLog.listener.error("The connection host is not signed; accepting its peer unverified")
+			/* Without a requirement there is nothing to check the peer against,
+			 and an unverified peer drives a host that dials arbitrary servers.
+			 Only a Debug build, which unsigned local builds and the test and
+			 E2E harnesses run, may go on; a Release build refuses. */
+			#if DEBUG
+				ConnectionHostLog.listener.error("The connection host is not signed; accepting its peer unverified")
+			#else
+				ConnectionHostLog.listener.fault("The connection host is not signed; refusing its peer")
+
+				return false
+			#endif
 		}
 
 		connection.exportedInterface = RemoteConnectionInterface.server()

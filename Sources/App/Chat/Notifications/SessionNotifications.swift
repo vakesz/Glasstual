@@ -27,7 +27,21 @@ extension ServerSession {
 			nicknameIsLocalUser: nickname.map(nicknameIsMyself) ?? false,
 			conversationIsMuted: target.map { conversationIsMuted($0, for: event) } ?? false
 		)), let presenter = environment.services.notifications,
-		presenter.areNotificationsDisabled == false, UserNotificationPolicy.postsNotification(
+		presenter.areNotificationsDisabled == false else { return }
+
+		/* Spoken whether or not a banner follows: the conversation being open
+		 in the key window is what the banner is withheld for, and a person who
+		 cannot see the transcript still needs to hear the highlight. The
+		 presenter decides whether the person asked for it. */
+		if event == .highlight, let nickname, let text {
+			presenter.announce(String(localized: .Notifications.announcementHighlight(
+				nickname,
+				target?.name ?? networkNameAlt,
+				(text as NSString).stripIRCEffects
+			)))
+		}
+
+		guard UserNotificationPolicy.postsNotification(
 			event: event,
 			notifiesAboutMentions: environment.settings.notifyAboutMentions,
 			postWhileFocused: environment.settings.postNotificationsWhileInFocus,

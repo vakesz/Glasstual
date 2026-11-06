@@ -84,6 +84,12 @@ final class UserNotificationController: NSObject, UserNotificationPresenting {
 	/// The one permission request of this launch, so that a burst of events
 	/// raises one prompt rather than one each.
 	private var authorizationRequest: Task<Void, Never>?
+	/// When the system last said notifications may be shown. Only that answer
+	/// is kept, and only briefly: a denial is always asked again, so allowing
+	/// notifications in System Settings takes effect on the next one, and the
+	/// system drops anything posted in the seconds after a revocation.
+	private var authorizationConfirmedAt: ContinuousClock.Instant?
+	private static let authorizationConfirmationLifetime = Duration.seconds(30)
 	/// The main-window selection notification this controller answers.
 	private let notifications = NotificationSubscriptions()
 
@@ -214,12 +220,38 @@ final class UserNotificationController: NSObject, UserNotificationPresenting {
 		schedule(content)
 	}
 
+	func announce(_ message: String) {
+		guard SettingsStores.live[SettingsKeys.Notifications.announceToVoiceOver],
+		      NSWorkspace.shared.isVoiceOverEnabled
+		else { return }
+
+		NSAccessibility.post(
+			element: NSApp as Any,
+			notification: .announcementRequested,
+			userInfo: VoiceOverAnnouncement.userInfo(for: message)
+		)
+	}
+
 	func requestUserAttention() {
 		NSApp.requestUserAttention(.informationalRequest)
 	}
 
 	func playAlertSound(named name: String) {
 		SoundPlayer.playAlertSound(name)
+	}
+
+	private func isDeliveryAuthorized() async -> Bool {
+		let now = ContinuousClock.now
+		if let confirmed = authorizationConfirmedAt, now - confirmed < Self.authorizationConfirmationLifetime {
+			return true
+		}
+		let status = await UNUserNotificationCenter.current().notificationSettings().authorizationStatus
+		guard status != .denied else {
+			authorizationConfirmedAt = nil
+			return false
+		}
+		authorizationConfirmedAt = ContinuousClock.now
+		return true
 	}
 
 	private func schedule(_ content: UNNotificationContent) {
@@ -234,10 +266,7 @@ final class UserNotificationController: NSObject, UserNotificationPresenting {
 		let task = Task { [weak self] in
 			defer { self?.deliveries.complete(request.identifier) }
 			await self?.requestAuthorizationIfNeeded()
-			guard !Task.isCancelled else { return }
-			if await UNUserNotificationCenter.current().notificationSettings().authorizationStatus == .denied {
-				return
-			}
+			guard !Task.isCancelled, await self?.isDeliveryAuthorized() ?? true else { return }
 			do {
 				let center = UNUserNotificationCenter.current()
 				try await center.add(request)

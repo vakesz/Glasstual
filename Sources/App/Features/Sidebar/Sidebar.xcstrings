@@ -576,6 +576,54 @@
           }
         }
       }
+    },
+    "outline-accessibility-label": {
+      "comment": "Accessibility label of the sidebar list of servers, channels and private conversations.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Servers and conversations"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server und Unterhaltungen"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kiszolgálók és beszélgetések"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Servidores y conversaciones"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Serveurs et conversations"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "サーバーと会話"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Servidores e conversas"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

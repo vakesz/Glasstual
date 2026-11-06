@@ -1,6 +1,7 @@
 // Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
 // SPDX-License-Identifier: BSD-3-Clause
 
+import Foundation
 @testable import Glasstual
 import Testing
 
@@ -95,6 +96,79 @@ struct SessionNotificationTests {
 		session.notifyEvent(.highlight, lineType: .privateMessage, target: channel, nickname: "alice", text: "hi")
 
 		#expect(fixture.notifications.posted.isEmpty)
+	}
+
+	/// The banner is withheld for the conversation being read in the key window;
+	/// a person using VoiceOver is not reading it with their eyes, so the
+	/// announcement is not withheld with it. Whether it is spoken at all is the
+	/// presenter's decision.
+	@Test("A highlight is announced even when no banner is posted")
+	func highlightIsAnnouncedWithoutABanner() throws {
+		let fixture = fixture()
+		let session = TestServerSession(configDictionary: [:], nicknamePassword: nil, fixture: fixture)
+		let channel = try #require(session.findConversationOrCreate("#glasstual"))
+		fixture.output.isKeyWindow = true
+		fixture.output.select(channel)
+
+		session.notifyEvent(.highlight, lineType: .privateMessage, target: channel, nickname: "alice", text: "hi")
+
+		#expect(fixture.notifications.posted.isEmpty)
+		#expect(fixture.notifications.announcements == [
+			String(localized: .Notifications.announcementHighlight("alice", channel.name, "hi")),
+		])
+	}
+
+	@Test("A conversation with highlights ignored announces nothing")
+	func mutedHighlightsAreNotAnnounced() throws {
+		let fixture = fixture()
+		let session = TestServerSession(configDictionary: [:], nicknamePassword: nil, fixture: fixture)
+		let channel = try #require(session.findConversationOrCreate("#glasstual"))
+		var channelConfig = channel.config
+		channelConfig.ignoreHighlights = true
+		channel.updateConfig(channelConfig)
+
+		session.notifyEvent(.highlight, lineType: .privateMessage, target: channel, nickname: "alice", text: "hi")
+
+		#expect(fixture.notifications.announcements.isEmpty)
+	}
+
+	@Test("Only a highlight is announced, not other notifying events")
+	func otherEventsAreNotAnnounced() throws {
+		let fixture = fixture()
+		let session = TestServerSession(configDictionary: [:], nicknamePassword: nil, fixture: fixture)
+		let channel = try #require(session.findConversationOrCreate("#glasstual"))
+
+		session.notifyEvent(.privateMessage, lineType: .privateMessage, target: channel, nickname: "alice", text: "hi")
+
+		#expect(fixture.notifications.announcements.isEmpty)
+	}
+
+	@Test("A connection that drops is announced")
+	func droppedConnectionIsAnnounced() {
+		let fixture = fixture()
+		let session = TestServerSession(configDictionary: [:], nicknamePassword: nil, fixture: fixture)
+		session.setConnectionTransportForTesting(.connected)
+
+		session.changeStateOff()
+
+		#expect(fixture.notifications.announcements == [
+			String(localized: .Notifications.announcementDisconnected(session.networkNameAlt)),
+		])
+	}
+
+	@Test("A disconnect or quit the person asked for is not announced", arguments: [
+		SessionConnectionState.Shutdown.disconnecting,
+		.quitting,
+	])
+	func requestedDisconnectIsNotAnnounced(shutdown: SessionConnectionState.Shutdown) {
+		let fixture = fixture()
+		let session = TestServerSession(configDictionary: [:], nicknamePassword: nil, fixture: fixture)
+		session.setConnectionTransportForTesting(.connected)
+		session.setConnectionShutdownForTesting(shutdown)
+
+		session.changeStateOff()
+
+		#expect(fixture.notifications.announcements.isEmpty)
 	}
 
 	@Test("/notifysound names its sound through the notification port")

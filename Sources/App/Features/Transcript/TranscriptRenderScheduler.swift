@@ -31,7 +31,9 @@ final class TranscriptRenderScheduler {
 	private var pipeline = TranscriptRenderPipeline()
 	private var pipelineTask: Task<Void, Never>?
 
-	private var applications: [@MainActor () -> Void] = []
+	/// A slice, so that running a batch advances the start rather than moving
+	/// every queued application down.
+	private var applications: ArraySlice<@MainActor () -> Void> = []
 	/// Applications parked until the history replay finishes.
 	private var heldApplications: [@MainActor () -> Void] = []
 	private var applicationTask: Task<Void, Never>?
@@ -81,7 +83,7 @@ final class TranscriptRenderScheduler {
 	 The replay applies its own lines this way, from an application the drain is
 	 already running, so it does not start the drain itself. */
 	func prioritize(_ batch: [@MainActor () -> Void]) {
-		applications.insert(contentsOf: batch, at: 0)
+		applications.insert(contentsOf: batch, at: applications.startIndex)
 	}
 
 	/// Parks an application until ``releaseHeldApplications()``.
@@ -92,7 +94,7 @@ final class TranscriptRenderScheduler {
 	/// Moves the parked applications ahead of everything queued, in the order
 	/// they were parked.
 	func releaseHeldApplications() {
-		applications.insert(contentsOf: heldApplications, at: 0)
+		applications.insert(contentsOf: heldApplications, at: applications.startIndex)
 		heldApplications.removeAll()
 	}
 

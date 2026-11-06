@@ -32,7 +32,7 @@ struct ConnectionAutojoinWaitTests {
 		session.performAutoJoin()
 
 		#expect(session.startup.authentication == .waiting)
-		#expect(session.startup.authenticationTask != nil)
+		#expect(session.startup.authenticationTimer != nil)
 		#expect(session.autojoin.delayedWarningTimer.isActive)
 	}
 
@@ -82,7 +82,7 @@ struct ConnectionAutojoinWaitTests {
 		session.onAutojoinDelayedWarningTimer()
 
 		#expect(session.autojoin.delayedWarningCount == 0)
-		#expect(session.startup.authenticationTask != nil)
+		#expect(session.startup.authenticationTimer != nil)
 	}
 
 	@Test("Autojoin proceeds once the deadline expires")

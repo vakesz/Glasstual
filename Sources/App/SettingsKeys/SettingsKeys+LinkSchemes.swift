@@ -23,8 +23,7 @@ nonisolated extension SettingsKeys {
 		static let permittedDefault = SettingsKey(
 			group + "Permitted Default",
 			default: [
-				"feed", "ftp", "gopher", "irc", "ircs", "itms", "sftp", "ssh",
-				"telnet", "glasstual", "webcal", "x-man-page",
+				"feed", "ftp", "gopher", "irc", "ircs", "itms", "sftp", "glasstual", "webcal",
 			],
 			storage: .standard,
 			validation: { $0.allSatisfy(isValidScheme) }

@@ -61,6 +61,9 @@ actor FileLogSink {
 
 	private let logger = Logger(subsystem: LogSubsystem.current, category: "FileLogSink")
 	private var files: [UUID: OpenFile] = [:]
+	/// Built once; each write only refreshes its time zone, so a change of the
+	/// system's zone still decides which day a line belongs to.
+	private var calendar = Calendar(identifier: .gregorian)
 
 	isolated deinit {
 		var result = FileLogResult()
@@ -112,7 +115,6 @@ actor FileLogSink {
 	private func open(
 		_ identifier: UUID, destination: FileLogDestination, at date: Date, result: inout FileLogResult
 	) throws {
-		var calendar = Calendar(identifier: .gregorian)
 		calendar.timeZone = .current
 		let day = calendar.startOfDay(for: date)
 		if let file = files[identifier], file.destination == destination, file.day == day {

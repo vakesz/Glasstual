@@ -38,24 +38,18 @@ nonisolated struct RenderedMemberDirectory: Equatable, Sendable, ExpressibleByAr
 	/// Each member under their folded name. The first spelling wins where two
 	/// fold alike, which a server that enforces its casemapping never sends.
 	private let membersByFoldedNickname: [String: RenderedMember]
-	/// The distinct lengths of the members' names, in UTF-16 units, shortest
-	/// first: the only lengths a mention can have.
-	let nicknameLengths: [Int]
 
 	init(_ members: [RenderedMember], caseMapping: ISupportCaseMapping = .rfc1459) {
 		self.members = members
 		self.caseMapping = caseMapping
 		var byName: [String: RenderedMember] = [:]
-		var lengths = Set<Int>()
 		for member in members where member.nickname.isEmpty == false {
 			let folded = IRCCaseFolding.fold(member.nickname, using: caseMapping)
 			if byName[folded] == nil {
 				byName[folded] = member
 			}
-			lengths.insert((member.nickname as NSString).length)
 		}
 		membersByFoldedNickname = byName
-		nicknameLengths = lengths.sorted()
 	}
 
 	init(arrayLiteral members: RenderedMember...) {

@@ -20,17 +20,24 @@ final nonisolated class InlineImageTransfer: NSObject, Sendable { // nonisolated
 
 	private let state = Mutex(State())
 	private let maximumBytes: Int
+	private let resolver: InlineImageHostResolver
 
-	private init(maximumBytes: Int) {
+	private init(maximumBytes: Int, resolver: InlineImageHostResolver) {
 		self.maximumBytes = maximumBytes
+		self.resolver = resolver
 	}
 
 	@concurrent
 	static func download(_ url: URL, limits: InlineImageLimits,
-	                     protocolClasses: [URLProtocol.Type]) async throws -> Data
+	                     protocolClasses: [URLProtocol.Type],
+	                     resolver: InlineImageHostResolver = .system) async throws -> Data
 	{
 		try Task.checkCancellation()
 		guard LinkSchemeRules.isWebURL(url) else { throw InlineImageError.unsupportedContent }
+		guard await InlineImageHostPolicy.permits(url, resolver: resolver) else {
+			throw InlineImageError.hostNotAllowed
+		}
+		try Task.checkCancellation()
 		guard limits.workingByteCount != nil else { throw InlineImageError.resourceLimit }
 		let configuration = URLSessionConfiguration.ephemeral
 		configuration.urlCache = nil
@@ -42,7 +49,7 @@ final nonisolated class InlineImageTransfer: NSObject, Sendable { // nonisolated
 		if !protocolClasses.isEmpty {
 			configuration.protocolClasses = protocolClasses
 		}
-		let delegate = InlineImageTransfer(maximumBytes: limits.maximumEncodedBytes)
+		let delegate = InlineImageTransfer(maximumBytes: limits.maximumEncodedBytes, resolver: resolver)
 		let session = URLSession(configuration: configuration, delegate: delegate, delegateQueue: nil)
 		defer { session.invalidateAndCancel() }
 		return try await withTaskCancellationHandler {
@@ -138,10 +145,20 @@ nonisolated extension InlineImageTransfer: URLSessionDataDelegate { // nonisolat
 		_: URLSession, task _: URLSessionTask, willPerformHTTPRedirection _: HTTPURLResponse,
 		newRequest request: URLRequest, completionHandler: @escaping @Sendable (URLRequest?) -> Void
 	) {
-		let allowed = state.withLock { state in
+		let withinLimit = state.withLock { state in
 			state.redirects += 1
 			return state.redirects <= 5 && request.url.map(LinkSchemeRules.isWebURL) == true
 		}
-		completionHandler(allowed ? request : nil)
+		guard withinLimit, let target = request.url else {
+			completionHandler(nil)
+			return
+		}
+		/* A redirect is as free to name a private host as the original link, so
+		 the target is held to the same policy before it is followed. */
+		let resolver = resolver
+		Task {
+			let allowed = await InlineImageHostPolicy.permits(target, resolver: resolver)
+			completionHandler(allowed ? request : nil)
+		}
 	}
 }

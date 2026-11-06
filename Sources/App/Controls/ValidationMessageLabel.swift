@@ -24,9 +24,18 @@ struct ValidationMessageLabel: View {
 	}
 
 	var body: some View {
-		Label(message, systemImage: "exclamationmark.circle.fill")
-			.font(.caption)
-			.foregroundStyle(.red)
-			.accessibilityLabel(message)
+		/* The icon carries the red; the words stay in the primary label colour
+		 at the body size, because small red text does not hold contrast on
+		 every ground a sheet is drawn on. */
+		Label {
+			Text(message)
+				.foregroundStyle(.primary)
+		} icon: {
+			Image(systemName: "exclamationmark.circle.fill")
+				.foregroundStyle(.red)
+		}
+		.font(.callout)
+		.accessibilityElement(children: .ignore)
+		.accessibilityLabel(message)
 	}
 }

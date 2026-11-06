@@ -191,7 +191,52 @@ struct IRCSpecCTCPTests {
 		#expect(lines.allSatisfy { $0.hasPrefix("NOTICE alice :\(Self.delimiter)") })
 		#expect(lines[0].contains("\(Self.delimiter)VERSION "))
 		#expect(lines[2].contains("\(Self.delimiter)TIME "))
-		#expect(lines[3].contains("Me Myself"))
+		#expect(lines[3].contains("Me Myself") == false)
+	}
+
+	/// Anyone may ask, so USERINFO does not answer with the real name unless
+	/// the user wrote an answer for it.
+	@Test("USERINFO answers with nothing, and with the configured text once there is some")
+	func userInfoReplyIsConfigured() throws {
+		let key = SettingsKeys.Messages.ctcpUserInfoReply
+		let original = key.storedValue
+		defer { key.storedValue = original }
+
+		let session = session()
+		key.value = ""
+		try deliver(":alice!a@h PRIVMSG me :\(Self.delimiter)USERINFO\(Self.delimiter)", on: session)
+
+		key.value = "Away from keyboard"
+		try deliver(":bob!b@h PRIVMSG me :\(Self.delimiter)USERINFO\(Self.delimiter)", on: session)
+
+		let lines = sentLines(of: session)
+
+		#expect(lines.count == 2)
+		#expect(lines[0].contains("Me Myself") == false)
+		#expect(lines[0].contains("\(Self.delimiter)USERINFO"))
+		#expect(lines[1].contains("Away from keyboard"))
+	}
+
+	@Test("VERSION names the application without its version number unless asked to")
+	func versionReplyHidesTheReleaseByDefault() throws {
+		let key = SettingsKeys.Messages.ctcpRevealsClientVersion
+		let original = key.storedValue
+		defer { key.storedValue = original }
+
+		let version = ApplicationInfo.applicationVersionShort()
+		let session = session()
+		key.value = false
+		try deliver(":alice!a@h PRIVMSG me :\(Self.delimiter)VERSION\(Self.delimiter)", on: session)
+
+		key.value = true
+		try deliver(":bob!b@h PRIVMSG me :\(Self.delimiter)VERSION\(Self.delimiter)", on: session)
+
+		let lines = sentLines(of: session)
+
+		#expect(lines.count == 2)
+		#expect(lines[0].contains(ApplicationInfo.applicationName()))
+		#expect(lines[0].contains(version) == false)
+		#expect(lines[1].contains(version))
 	}
 
 	/// modern.ircdocs.horse §PING: "the reply ... MUST contain the same

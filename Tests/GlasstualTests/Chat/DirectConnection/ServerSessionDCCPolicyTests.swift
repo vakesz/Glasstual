@@ -92,4 +92,50 @@ struct ServerSessionDCCPolicyTests {
 		#expect(DirectChatPolicy.conversationName(for: "alice") == "=alice")
 		#expect(DirectChatPolicy.listeningArguments(address: "42", port: 5000, token: "9") == "chat 42 5000 9")
 	}
+
+	// MARK: - Automatic download trust
+
+	@Test("A matching services account vouches for a tracked nickname")
+	func accountVouchesForTrackedNickname() {
+		#expect(
+			FileTransferPeerTrust.isTrusted(
+				senderHostmask: "mara!m@anywhere.example",
+				senderAccount: "Mara",
+				trackedNickname: "mara",
+				entryHostmask: "mara!*@*",
+				caseMapping: .rfc1459
+			)
+		)
+	}
+
+	@Test("A nickname alone is not trusted", arguments: [nil, "", "*", "someone-else"])
+	func nicknameAloneIsNotTrusted(account: String?) {
+		#expect(
+			FileTransferPeerTrust.isTrusted(
+				senderHostmask: "mara!m@anywhere.example",
+				senderAccount: account,
+				trackedNickname: "mara",
+				entryHostmask: "mara!*@*",
+				caseMapping: .rfc1459
+			) == false
+		)
+	}
+
+	@Test("A pinned user@host is trusted only for the host it names")
+	func pinnedHostmaskMustMatch() {
+		func trusted(_ hostmask: String?) -> Bool {
+			FileTransferPeerTrust.isTrusted(
+				senderHostmask: hostmask,
+				senderAccount: nil,
+				trackedNickname: "mara",
+				entryHostmask: "mara!m@home.example.org",
+				caseMapping: .rfc1459
+			)
+		}
+
+		#expect(trusted("mara!m@home.example.org"))
+		#expect(trusted("mara!m@evil.example.net") == false)
+		#expect(trusted("mara!other@home.example.org") == false)
+		#expect(trusted(nil) == false)
+	}
 }

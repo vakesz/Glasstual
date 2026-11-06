@@ -11,7 +11,7 @@ import Foundation
  the ordinal scheme, the identifier indexes and the trim be driven -- and
  checked -- without an `NSView`, and it is why every mutation here ends by
  asserting the one invariant that ties the two arrays together:
- `lineStarts.count == lines.count + 1`.
+ `storedLineStarts.count == lines.count + 1`.
 
  The ordinals are what keep the indexes stable. Lines only ever arrive at
  either end and leave from the top, so an ordinal is fixed for as long as its
@@ -30,7 +30,18 @@ struct TranscriptDocument {
 	 document around them, and it is stored rather than summed per lookup:
 	 restoring the selection after a single append asks for two of these, and
 	 summing the lengths before a line made each answer a walk of the buffer. */
-	private(set) var lineStarts: [Int] = [0]
+	private var storedLineStarts: [Int] = [0]
+
+	/// Where each line begins, plus the end of the document. Built on demand;
+	/// the document itself reads through ``location(ofLineAt:)``.
+	var lineStarts: [Int] {
+		storedLineStarts.map { $0 + lineStartBias }
+	}
+
+	/// Added to every stored start. Retiring the oldest lines moves every
+	/// remaining line by the same amount, which this absorbs in one step
+	/// instead of rewriting the whole array.
+	private var lineStartBias = 0
 
 	/// How many lines on screen are highlights. Counted as the document is
 	/// edited because the menu asks on every validation pass, and the answer
@@ -103,12 +114,12 @@ struct TranscriptDocument {
 	/// Where a line begins in the text storage. `lines.count` names the end of
 	/// the document, which is where an append starts writing.
 	func location(ofLineAt index: Int) -> Int {
-		lineStarts[index]
+		storedLineStarts[index] + lineStartBias
 	}
 
 	/// How many characters a line drew.
 	func length(ofLineAt index: Int) -> Int {
-		lineStarts[index + 1] - lineStarts[index]
+		storedLineStarts[index + 1] - storedLineStarts[index]
 	}
 
 	func range(ofLine lineNumber: String) -> NSRange? {
@@ -166,7 +177,8 @@ struct TranscriptDocument {
 	mutating func removeAll() {
 		folding.reset()
 		lines.removeAll()
-		lineStarts = [0]
+		storedLineStarts = [0]
+		lineStartBias = 0
 		highlightedLineCount = 0
 		lineOrdinals.removeAll()
 		messageLineOrdinals.removeAll()
@@ -181,7 +193,8 @@ struct TranscriptDocument {
 	mutating func takeLinesForRebuild() -> [TranscriptRow] {
 		let retained = lines
 		lines.removeAll(keepingCapacity: true)
-		lineStarts = [0]
+		storedLineStarts = [0]
+		lineStartBias = 0
 		highlightedLineCount = 0
 		lineOrdinals.removeAll()
 		messageLineOrdinals.removeAll()
@@ -204,7 +217,7 @@ struct TranscriptDocument {
 		}
 		let firstOrdinal = firstLineOrdinal + index
 		lines.insert(contentsOf: newLines, at: index)
-		lineStarts.insert(contentsOf: starts, at: index)
+		storedLineStarts.insert(contentsOf: starts.map { $0 - lineStartBias }, at: index)
 		shiftLineStarts(after: index + newLines.count - 1, by: totalLength)
 		/* In front, the new lines' message ordinals come before the ones already
 		 held, so they are indexed newest first to keep each list ascending. */
@@ -258,7 +271,7 @@ struct TranscriptDocument {
 		}
 		highlightedLineCount -= lines[indices].filter(\.body.isHighlight).count
 		lines.removeSubrange(indices)
-		lineStarts.removeSubrange(indices)
+		storedLineStarts.removeSubrange(indices)
 		firstLineOrdinal += indices.count
 		shiftLineStarts(after: indices.lowerBound - 1, by: -removedLength)
 		var carried: [TranscriptMarker] = []
@@ -290,10 +303,10 @@ struct TranscriptDocument {
 	/// Expanding a large group must not shift the document once per message.
 	mutating func noteLinesRedrawn(in indices: Range<Int>, lengths: [Int]) {
 		precondition(indices.count == lengths.count)
-		let previousEnd = lineStarts[indices.upperBound]
-		var location = lineStarts[indices.lowerBound]
+		let previousEnd = location(ofLineAt: indices.upperBound)
+		var location = location(ofLineAt: indices.lowerBound)
 		for (index, length) in zip(indices, lengths) {
-			lineStarts[index] = location
+			storedLineStarts[index] = location - lineStartBias
 			location += length
 		}
 		shiftLineStarts(after: indices.upperBound - 1, by: location - previousEnd)
@@ -390,8 +403,12 @@ struct TranscriptDocument {
 	/// changed the length of one line leaves to do.
 	private mutating func shiftLineStarts(after index: Int, by delta: Int) {
 		guard delta != 0 else { return }
-		for position in (index + 1) ..< lineStarts.count {
-			lineStarts[position] += delta
+		guard index >= 0 else {
+			lineStartBias += delta
+			return
+		}
+		for position in (index + 1) ..< storedLineStarts.count {
+			storedLineStarts[position] += delta
 		}
 	}
 
@@ -399,6 +416,6 @@ struct TranscriptDocument {
 	/// growing without the other is a document that would read the wrong
 	/// characters for a line rather than merely draw one wrong.
 	private func checkInvariant() {
-		precondition(lineStarts.count == lines.count + 1, "Transcript line starts and lines disagree")
+		precondition(storedLineStarts.count == lines.count + 1, "Transcript line starts and lines disagree")
 	}
 }

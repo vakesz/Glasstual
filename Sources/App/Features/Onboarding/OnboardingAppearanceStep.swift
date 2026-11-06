@@ -134,7 +134,10 @@ private struct OnboardingStylePreview: View {
 		.buttonStyle(.plain)
 		.frame(maxWidth: .infinity)
 		.accessibilityElement(children: .ignore)
-		.accessibilityLabel(Text(style.title))
+		.accessibilityLabel(Text(.Onboarding.appearanceStyleAccessibilityLabel(
+			String(localized: style.title),
+			String(localized: style.summary)
+		)))
 		.accessibilityAddTraits(.isButton)
 		.accessibilityAddTraits(isSelected ? [.isSelected] : [])
 	}

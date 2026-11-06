@@ -68,7 +68,9 @@ nonisolated struct TranscriptProjectionState: Sendable {
 
 	private var capacity: Int
 	/// Rows awaiting a document, oldest first. Empty while active.
-	private var recentResults: [TranscriptRenderResult] = []
+	/// A slice so that retiring the oldest row advances the start rather than
+	/// moving every row behind it down.
+	private var recentResults: ArraySlice<TranscriptRenderResult> = []
 	/// What ``recentResults`` holds, so a duplicate check is an answer rather
 	/// than a walk.
 	private var recentLineNumbers: Set<String> = []
@@ -145,9 +147,9 @@ nonisolated struct TranscriptProjectionState: Sendable {
 	/// document supplies the only persistent semantic rows.
 	mutating func beginReplay(displaying rows: [TranscriptRow] = []) -> [TranscriptRenderResult] {
 		if phase == .active {
-			recentResults = rows.suffix(capacity).map {
+			recentResults = ArraySlice(rows.suffix(capacity).map {
 				TranscriptRenderResult(transcriptLine: $0, fromCurrentSession: false, processesInlineMedia: false)
-			}
+			})
 			recentLineNumbers = Set(recentResults.map(\.lineNumber))
 			recentMessageIdentifiers.removeAll(keepingCapacity: true)
 			for result in recentResults {
@@ -158,7 +160,7 @@ nonisolated struct TranscriptProjectionState: Sendable {
 		}
 		phase = .loading
 		pendingResults.removeAll(keepingCapacity: true)
-		return recentResults
+		return Array(recentResults)
 	}
 
 	mutating func finishReplay(displaying lineNumbers: Set<String>) -> [TranscriptRenderResult] {

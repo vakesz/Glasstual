@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 import CoreGraphics
+import Foundation
 
 /** Stores a column's width once the divider has come to rest.
 
@@ -13,12 +14,15 @@ import CoreGraphics
 @MainActor
 final class ColumnWidthWriter {
 	private let key: SettingsKey<Double>
-	private let settle: Duration
-	private var write: Task<Void, Never>?
+	private let settle: TimeInterval
+	private let clock: TimerClock
+	private var timer: SessionTimer?
+	private var pendingWidth: Double?
 
-	init(_ key: SettingsKey<Double>, settle: Duration = .milliseconds(250)) {
+	init(_ key: SettingsKey<Double>, settle: TimeInterval = 0.25, clock: TimerClock = .continuous) {
 		self.key = key
 		self.settle = settle
+		self.clock = clock
 	}
 
 	func record(_ width: CGFloat) {
@@ -26,12 +30,20 @@ final class ColumnWidthWriter {
 		guard key.accepts(value) else { return }
 		/* A column passes through other widths while it settles. One that
 		 comes back to the stored width leaves nothing to write. */
-		write?.cancel()
+		timer?.stop()
+		pendingWidth = nil
 		guard key.value != value else { return }
-		write = Task { [key, settle] in
-			try? await Task.sleep(for: settle)
-			guard !Task.isCancelled else { return }
-			key.value = value
+		pendingWidth = value
+		let timer = timer ?? SessionTimer(clock: clock) { [weak self] _ in
+			self?.commit()
 		}
+		self.timer = timer
+		timer.start(settle)
+	}
+
+	private func commit() {
+		guard let width = pendingWidth else { return }
+		pendingWidth = nil
+		key.value = width
 	}
 }

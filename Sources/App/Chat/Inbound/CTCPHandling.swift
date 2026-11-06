@@ -118,12 +118,21 @@ extension ServerSession {
 		case .time:
 			return DateFormatting.iso8601String(from: Date())
 		case .userInfo:
-			return config.realName
+			// Any peer may ask, so the real name is not the default answer.
+			return SettingsKeys.Messages.ctcpUserInfoReply.value
 		case .version:
 			let masquerade = config.ctcpVersionReply?.nonEmpty ?? environment.settings.masqueradeCTCPVersion?
 				.nonEmpty
 
-			return masquerade ?? String(localized: .IRC.ircClientV(
+			if let masquerade {
+				return masquerade
+			}
+
+			guard SettingsKeys.Messages.ctcpRevealsClientVersion.value else {
+				return String(localized: .IRC.ircClientNameOnly(ApplicationInfo.applicationName()))
+			}
+
+			return String(localized: .IRC.ircClientV(
 				ApplicationInfo.applicationName(),
 				ApplicationInfo.applicationVersionShort()
 			))

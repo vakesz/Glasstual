@@ -38,6 +38,10 @@ nonisolated enum ConnectionSafetyStrings {
 		static var withheldOverPlaintext: String {
 			String(localized: .ConnectionSafety.credentialsWithheldOverPlaintext)
 		}
+
+		static func withheldFromUnconfiguredHost(_ host: String) -> String {
+			String(localized: .ConnectionSafety.credentialsWithheldUnconfiguredHost(host))
+		}
 	}
 
 	enum SASL {

@@ -40,7 +40,13 @@ actor ScrollbackStore {
 	private var lifecycle = Lifecycle.closed
 	private var occupied = false
 	private var closingCount = 0
-	private var waiting: [CheckedContinuation<Void, Never>] = []
+	/** Operations queued behind the one in flight, oldest first. `waitingHead`
+	 is the next to resume, so handing the store on is O(1) rather than the
+	 shift `removeFirst` makes of every entry behind it. Every waiter is resumed
+	 by ``leave()`` and each operation runs even for a cancelled caller, so
+	 cancellation has nothing to remove and nothing to strand. */
+	private var waiting: [CheckedContinuation<Void, Never>?] = []
+	private var waitingHead = 0
 	private var context: NSManagedObjectContext?
 	private var databaseURL: URL?
 	private var views: [String: ViewState] = [:]
@@ -54,7 +60,7 @@ actor ScrollbackStore {
 	private let saveInterval: Duration
 	private let willPerform: (@Sendable (ScrollbackStoreOperation) async -> Void)?
 	var pendingOperationCount: Int {
-		waiting.count
+		waiting.count - waitingHead
 	}
 
 	init(
@@ -82,11 +88,21 @@ actor ScrollbackStore {
 	}
 
 	private func leave() {
-		if waiting.isEmpty {
+		guard waitingHead < waiting.count else {
+			waiting.removeAll(keepingCapacity: true)
+			waitingHead = 0
 			occupied = false
-		} else {
-			waiting.removeFirst().resume()
+			return
 		}
+		let next = waiting[waitingHead]
+		waiting[waitingHead] = nil
+		waitingHead += 1
+		/* Reclaim the consumed prefix once it dominates, keeping the cost amortized O(1). */
+		if waitingHead >= 32, waitingHead * 2 >= waiting.count {
+			waiting.removeFirst(waitingHead)
+			waitingHead = 0
+		}
+		next?.resume()
 	}
 
 	/** What a database this build minted is called.

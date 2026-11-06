@@ -133,10 +133,15 @@ struct DockIconBadgeContent: View {
 				VStack(alignment: .trailing, spacing: Layout.stackSpacing) {
 					let height = geometry.size.height * Layout.badgeHeightRatio
 					if highlightCount > 0 {
-						badge(highlightCount, color: Color(nsColor: .systemGreen), height: height)
+						badge(
+							highlightCount,
+							prefix: Self.highlightPrefix,
+							color: Color(nsColor: .systemGreen),
+							height: height
+						)
 					}
 					if messageCount > 0 {
-						badge(messageCount, color: Color(nsColor: .systemRed), height: height)
+						badge(messageCount, prefix: "", color: Color(nsColor: .systemRed), height: height)
 					}
 				}
 				.padding(.top, Layout.topPadding)
@@ -144,8 +149,12 @@ struct DockIconBadgeContent: View {
 		}
 	}
 
-	private func badge(_ count: UInt, color: Color, height: CGFloat) -> some View {
-		Text(DockIcon.badgeString(forCount: count))
+	/// Names the highlight count without colour: green and red alone do not
+	/// tell the two badges apart for everyone.
+	private static let highlightPrefix = "@"
+
+	private func badge(_ count: UInt, prefix: String, color: Color, height: CGFloat) -> some View {
+		Text(verbatim: prefix + DockIcon.badgeString(forCount: count))
 			.font(.system(size: height * Layout.fontSizeRatio, weight: .bold))
 			.foregroundStyle(.white)
 			.padding(.horizontal, height * Layout.horizontalPaddingRatio)

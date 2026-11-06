@@ -20,7 +20,7 @@ final class StartupState {
 	var credentialTask: Task<Void, Never>?
 	var channelCredentialTasks: [KeychainItem: Task<Void, Never>] = [:]
 	var settlingTask: Task<Void, Never>?
-	var authenticationTask: Task<Void, Never>?
+	var authenticationTimer: SessionTimer?
 
 	var canJoin: Bool {
 		commands == .ready && (!requiresAuthentication || authentication == .confirmed || authentication == .timedOut)
@@ -30,11 +30,11 @@ final class StartupState {
 		credentialTask?.cancel()
 		channelCredentialTasks.values.forEach { $0.cancel() }
 		settlingTask?.cancel()
-		authenticationTask?.cancel()
+		authenticationTimer?.stop()
 		credentialTask = nil
 		channelCredentialTasks.removeAll()
 		settlingTask = nil
-		authenticationTask = nil
+		authenticationTimer = nil
 	}
 
 	isolated deinit {
@@ -101,8 +101,8 @@ extension ServerSession {
 			socket?.config.diagnostics?.record(.authenticated)
 		}
 		startup.authentication = .confirmed
-		startup.authenticationTask?.cancel()
-		startup.authenticationTask = nil
+		startup.authenticationTimer?.stop()
+		startup.authenticationTimer = nil
 		nickServ.isWaiting = false
 		if startup.requiresAuthentication {
 			performAutoJoin()
@@ -120,14 +120,12 @@ extension ServerSession {
 		      startup.requiresAuthentication,
 		      startup.authentication == .pending || startup.authentication == .waiting
 		else { return }
-		startup.authenticationTask?.cancel()
+		startup.authenticationTimer?.stop()
 		startup.authentication = .waiting
 		nickServ.isWaiting = true
 		let identifier = startup.identifier
-		startup.authenticationTask = Task { [weak self] in
-			do { try await Task.sleep(for: .seconds(30), clock: .continuous) } catch { return }
-			guard let self else { return }
-			authenticationDeadlineExpired(for: identifier)
+		startup.authenticationTimer = SessionTimer.once(after: 30) { [weak self] in
+			self?.authenticationDeadlineExpired(for: identifier)
 		}
 	}
 
@@ -147,29 +145,20 @@ extension ServerSession {
 		 every time the wait is re-entered. */
 		startAutojoinDelayedWarningTimer()
 
-		guard startup.authentication == .pending, startup.authenticationTask == nil else { return }
+		guard startup.authentication == .pending, startup.authenticationTimer == nil else { return }
 
 		startup.authentication = .waiting
 		let identifier = startup.identifier
-		startup.authenticationTask = Task { [weak self] in
-			do {
-				try await Task.sleep(
-					for: .seconds(AutojoinPolicy.unattendedAuthenticationDeadline),
-					clock: .continuous
-				)
-			} catch {
-				return
-			}
-			guard let self else { return }
-			authenticationDeadlineExpired(for: identifier)
+		startup.authenticationTimer = SessionTimer.once(after: AutojoinPolicy.unattendedAuthenticationDeadline) { [weak self] in
+			self?.authenticationDeadlineExpired(for: identifier)
 		}
 	}
 
 	func authenticationDeadlineExpired(for identifier: UUID) {
 		guard startup.identifier == identifier, startup.authentication == .waiting,
 		      isLoggedIn, !isTerminating, !isQuitting, !isDisconnecting else { return }
-		startup.authenticationTask?.cancel()
-		startup.authenticationTask = nil
+		startup.authenticationTimer?.stop()
+		startup.authenticationTimer = nil
 		startup.authentication = .timedOut
 		nickServ.isWaiting = false
 		printDebugInformation(toConsole: String(localized: .IRC.nickServIdentificationTimedOut))

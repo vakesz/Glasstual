@@ -249,5 +249,13 @@ private extension ServerSession {
 
 		printDebugInformation(toConsole: disconnectMessage)
 		presentation?.mark()
+
+		/* Only a connection that dropped is news: a quit or a disconnect the
+		 person asked for, and the hop to another server, are what they just did. */
+		if !isQuitting, !isDisconnecting, disconnectMode != .serverRedirect {
+			environment.services.notifications?.announce(
+				String(localized: .Notifications.announcementDisconnected(networkNameAlt))
+			)
+		}
 	}
 }

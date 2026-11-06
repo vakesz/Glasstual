@@ -1,6 +1,102 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "announcement-disconnected": {
+      "comment": "Spoken by VoiceOver when a connection drops unexpectedly. The argument is the network name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnected from %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbindung zu %@ getrennt"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapcsolat bontva: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Desconectado de %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Déconnecté de %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@から切断されました"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Desconectado de %@"
+          }
+        }
+      }
+    },
+    "announcement-highlight": {
+      "comment": "Spoken by VoiceOver when a highlight arrives. Arguments are the sender nickname, the conversation name and the message text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Highlight from %1$@ in %2$@: %3$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hervorhebung von %1$@ in %2$@: %3$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Említés tőle: %1$@, itt: %2$@: %3$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mención de %1$@ en %2$@: %3$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mention de %1$@ dans %2$@ : %3$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%2$@で%1$@からのハイライト: %3$@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Destaque de %1$@ em %2$@: %3$@"
+          }
+        }
+      }
+    },
     "body-action-with-nickname": {
       "comment": "Notification body for an action message. The arguments are the nickname and the message text.",
       "extractionState": "manual",
