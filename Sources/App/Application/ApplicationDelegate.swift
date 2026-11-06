@@ -4,6 +4,7 @@
 
 import AppKit
 import CocoaExtensions
+import CoreSpotlight
 import Network
 import os
 
@@ -147,6 +148,9 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 		if let menuController {
 			chatSession?.addObserver(menuController)
 		}
+
+		chatSession?.addObserver(AppServices.conversationIndex)
+		AppServices.conversationIndex.schedule()
 	}
 
 	private func startApplicationServices() {
@@ -312,6 +316,20 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 	 document types used to name an `NSDocument` subclass, whose nonisolated
 	 `read(from:ofType:)` had to assume the main actor before it could put an
 	 alert on screen; this delegate method is isolated by declaration. */
+	/// A Spotlight result for an indexed conversation or server arrives here.
+	func application(
+		_: NSApplication,
+		continue userActivity: NSUserActivity,
+		restorationHandler _: @escaping ([any NSUserActivityRestoring]) -> Void
+	) -> Bool {
+		guard userActivity.activityType == CSSearchableItemActionType,
+		      let identifier = userActivity.userInfo?[CSSearchableItemActivityIdentifier] as? String
+		else { return false }
+
+		ApplicationLinkHandler.openIndexedItem(identifier: identifier)
+		return true
+	}
+
 	func application(_: NSApplication, open urls: [URL]) {
 		guard applicationIsTerminating == false else { return }
 		ScriptFileImporter.open(urls)

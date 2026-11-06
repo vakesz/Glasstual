@@ -46,6 +46,22 @@ struct GeneralPane: View {
 
 		Section {
 			SettingsToggle(
+				title: .Settings.generalSpotlightConversations,
+				note: .Settings.generalSpotlightNote,
+				isOn: model.settings.binding(for: SettingsKeys.Spotlight.indexConversations)
+			)
+			SettingsToggle(
+				title: .Settings.generalSpotlightDirectMessages,
+				note: .Settings.generalSpotlightDirectMessagesNote,
+				isEnabled: model.settings[SettingsKeys.Spotlight.indexConversations],
+				isOn: model.settings.binding(for: SettingsKeys.Spotlight.indexDirectMessages)
+			)
+		} header: {
+			Text(.Settings.generalHeadingSpotlight)
+		}
+
+		Section {
+			SettingsToggle(
 				title: .Settings.generalRejoinOnKick,
 				isOn: model.settings.binding(for: SettingsKeys.Connection.rejoinOnKick)
 			)

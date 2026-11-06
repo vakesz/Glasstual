@@ -13680,6 +13680,294 @@
           }
         }
       }
+    },
+    "general-heading-spotlight": {
+      "comment": "Section heading in the General pane for the Spotlight indexing preferences.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spotlight"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spotlight"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spotlight"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Spotlight"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Spotlight"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Spotlight"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Spotlight"
+          }
+        }
+      }
+    },
+    "general-spotlight-conversations": {
+      "comment": "Checkbox in the General pane: lets Spotlight find servers and channels by name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show servers and channels in Spotlight"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Szerverek és csatornák megjelenítése a Spotlightban"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server und Kanäle in Spotlight anzeigen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mostrar servidores y canales en Spotlight"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Afficher les serveurs et les salons dans Spotlight"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "サーバとチャンネルをSpotlightに表示"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mostrar servidores e canais no Spotlight"
+          }
+        }
+      }
+    },
+    "general-spotlight-note": {
+      "comment": "Explanation below the Spotlight checkbox. Only names are indexed.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only names are indexed. Messages are never added to Spotlight. Turning this off removes everything Glasstual added."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csak a nevek kerülnek az indexbe. Az üzenetek soha nem kerülnek a Spotlightba. A kikapcsolás eltávolít mindent, amit a Glasstual hozzáadott."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es werden nur Namen indiziert. Nachrichten werden nie zu Spotlight hinzugefügt. Beim Ausschalten wird alles entfernt, was Glasstual hinzugefügt hat."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Solo se indexan los nombres. Los mensajes nunca se añaden a Spotlight. Al desactivarlo se elimina todo lo que Glasstual añadió."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Seuls les noms sont indexés. Les messages ne sont jamais ajoutés à Spotlight. La désactivation supprime tout ce que Glasstual a ajouté."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "名前のみがインデックスされます。メッセージがSpotlightに追加されることはありません。オフにすると、Glasstualが追加したものがすべて削除されます。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Apenas os nomes são indexados. As mensagens nunca são adicionadas ao Spotlight. Desativar remove tudo o que o Glasstual adicionou."
+          }
+        }
+      }
+    },
+    "general-spotlight-direct-messages": {
+      "comment": "Checkbox in the General pane: lets Spotlight find direct conversations by the other person's nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Include direct messages"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Közvetlen üzenetek belefoglalása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Direktnachrichten einbeziehen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Incluir mensajes directos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Inclure les messages directs"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ダイレクトメッセージを含める"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Incluir mensagens diretas"
+          }
+        }
+      }
+    },
+    "general-spotlight-direct-messages-note": {
+      "comment": "Explanation below the direct-messages Spotlight checkbox.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Direct conversations are named after people, so they stay out of Spotlight unless you turn this on."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A közvetlen beszélgetések személyekről kapják a nevüket, ezért csak akkor kerülnek a Spotlightba, ha ezt bekapcsolod."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Direkte Unterhaltungen tragen die Namen von Personen und bleiben daher außerhalb von Spotlight, wenn du dies nicht einschaltest."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Las conversaciones directas llevan nombres de personas, por lo que no aparecen en Spotlight a menos que lo actives."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Les conversations directes portent le nom de personnes ; elles restent hors de Spotlight sauf si vous l’activez."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ダイレクトの会話は人の名前が付くため、これをオンにしない限りSpotlightには表示されません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "As conversas diretas têm o nome de pessoas, então ficam fora do Spotlight, a menos que você ative isto."
+          }
+        }
+      }
+    },
+    "ircv3-capability-message-redaction": {
+      "comment": "Summary of the draft/message-redaction IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lets you delete messages, and shows when others delete theirs."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lehetővé teszi az üzenetek törlését, és megjeleníti, ha mások törlik a sajátjukat."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ermöglicht das Löschen von Nachrichten und zeigt an, wenn andere ihre löschen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Permite eliminar mensajes y muestra cuándo otros eliminan los suyos."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Permet de supprimer des messages et indique quand d’autres suppriment les leurs."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "メッセージを削除でき、他の人が削除したときも表示します。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Permite excluir mensagens e mostra quando outras pessoas excluem as suas."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

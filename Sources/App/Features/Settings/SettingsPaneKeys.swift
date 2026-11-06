@@ -58,6 +58,8 @@ enum SettingsPaneKeys {
 		.init(SettingsKeys.Connection.idleAwayMinutes, .Settings.generalAwayIdleThreshold),
 		.init(SettingsKeys.Connection.idleAwayMessage, .Settings.generalAwayIdleMessage),
 		.init(SettingsKeys.Connection.preventSleepWhileConnected, .Settings.preventSleepWhileConnected),
+		.init(SettingsKeys.Spotlight.indexConversations, .Settings.generalSpotlightConversations),
+		.init(SettingsKeys.Spotlight.indexDirectMessages, .Settings.generalSpotlightDirectMessages),
 		.init(SettingsKeys.Connection.rejoinOnKick, .Settings.generalRejoinOnKick),
 		.init(SettingsKeys.Connection.autojoinOnInvite, .Settings.generalAutojoinOnInvite),
 		.init(SettingsKeys.Logging.reloadScrollbackOnLaunch, .Settings.generalReloadScrollback),
