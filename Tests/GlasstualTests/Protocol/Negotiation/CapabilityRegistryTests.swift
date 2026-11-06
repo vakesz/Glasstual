@@ -194,6 +194,7 @@ struct CapabilityRegistryTests {
 		"cap-notify",
 		"chghost",
 		"draft/message-redaction",
+		"draft/multiline",
 		"draft/no-implicit-names",
 		"echo-message",
 		"message-tags",

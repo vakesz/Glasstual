@@ -118,6 +118,13 @@ extension CapabilityRegistry {
 				negotiation: .automatic,
 				specification: ircv3Specification("labeled-response")
 			),
+			Capability(
+				name: MultilineLimits.capabilityName,
+				identifier: .multiline,
+				requestedByDefault: true,
+				dependencies: ["batch", "message-tags"],
+				specification: ircv3Specification("multiline")
+			),
 			Capability.capability(
 				named: "multi-prefix",
 				identifier: .multiPrefix,

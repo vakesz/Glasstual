@@ -112,4 +112,5 @@ nonisolated struct CapabilitySet: OptionSet, Hashable, Sendable {
 	static let preAway = Self(rawValue: 1 << 34)
 	static let noImplicitNames = Self(rawValue: 1 << 35)
 	static let messageRedaction = Self(rawValue: 1 << 36)
+	static let multiline = Self(rawValue: 1 << 37)
 }

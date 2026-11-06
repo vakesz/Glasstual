@@ -8929,6 +8929,54 @@
         }
       }
     },
+    "ircv3-capability-multiline": {
+      "comment": "Summary of the draft/multiline IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sends pasted text as one multi-line message and shows other people's the same way."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A beillesztett szöveget egyetlen többsoros üzenetként küldi el, és másokét is így jeleníti meg."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sendet eingefügten Text als eine mehrzeilige Nachricht und zeigt die Nachrichten anderer ebenso an."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Envía el texto pegado como un único mensaje de varias líneas y muestra así los de otras personas."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Envoie le texte collé en un seul message multiligne et affiche de la même façon ceux des autres."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "貼り付けたテキストを複数行の1つのメッセージとして送信し、他の人のメッセージも同様に表示します。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Envia o texto colado como uma única mensagem de várias linhas e exibe as de outras pessoas da mesma forma."
+          }
+        }
+      }
+    },
     "ircv3-capability-no-implicit-names": {
       "comment": "Summary of the draft/no-implicit-names IRCv3 capability, shown beside its switch in Settings.",
       "extractionState": "manual",

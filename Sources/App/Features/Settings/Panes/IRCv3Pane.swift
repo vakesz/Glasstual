@@ -29,6 +29,7 @@ struct IRCv3Pane: View {
 		"draft/message-redaction": .Settings.ircv3CapabilityMessageRedaction,
 		"message-tags": .Settings.ircv3CapabilityMessageTags,
 		"multi-prefix": .Settings.ircv3CapabilityMultiPrefix,
+		"draft/multiline": .Settings.ircv3CapabilityMultiline,
 		"draft/no-implicit-names": .Settings.ircv3CapabilityNoImplicitNames,
 		"pre-away": .Settings.ircv3CapabilityPreAway,
 		"sasl": .Settings.ircv3CapabilitySasl,

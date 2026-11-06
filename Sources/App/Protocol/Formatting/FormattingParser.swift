@@ -11,18 +11,24 @@ import Foundation
 /// Every other control character is settled in the same pass, the way
 /// ``ControlCharacterDisposition`` says: a line separator is drawn as a space and
 /// the rest are dropped, so no formatted string can break out of its line.
+///
+/// A line feed is the one separator that can be kept. Only a `draft/multiline`
+/// message can carry one, since a line on the wire cannot, so the renderer asks
+/// for it on the lines that hold a person's text and nowhere else.
 nonisolated enum FormattingParser {
-	static func parse(_ source: String) -> NSMutableAttributedString {
-		var parser = Parser(source: source)
+	static func parse(_ source: String, preservingLineFeeds: Bool = false) -> NSMutableAttributedString {
+		var parser = Parser(source: source, preservesLineFeeds: preservingLineFeeds)
 		return parser.parse()
 	}
 
 	private struct Parser {
 		private let inputCharacters: [UniChar]
 		private let result: NSMutableAttributedString
+		private let preservesLineFeeds: Bool
 		private var removedCount = 0
 
-		init(source: String) {
+		init(source: String, preservesLineFeeds: Bool) {
+			self.preservesLineFeeds = preservesLineFeeds
 			let input = source as NSString
 			var characters = [UniChar](repeating: 0, count: input.length)
 			if input.length > 0 {
@@ -38,6 +44,11 @@ nonisolated enum FormattingParser {
 
 			while inputIndex < inputCharacters.count {
 				let character = inputCharacters[inputIndex]
+				if preservesLineFeeds, character == 0x0A {
+					inputIndex += 1
+					continue
+				}
+
 				guard character < 0x20 || ControlCharacterDisposition(of: character) != .keep else {
 					inputIndex += 1
 					continue

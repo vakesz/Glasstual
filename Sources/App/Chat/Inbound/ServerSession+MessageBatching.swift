@@ -23,6 +23,12 @@ enum BatchPolicy {
 		type == "chathistory" || type == "draft/chathistory"
 	}
 
+	/// A batch whose lines are one message: `draft/multiline`, or the name it
+	/// will have once final.
+	static func isMultiline(_ type: String?) -> Bool {
+		type == MultilineLimits.batchType || type == "multiline"
+	}
+
 	static func isNetsplit(_ type: String?) -> Bool {
 		type == "netsplit" || type == "netjoin"
 	}
@@ -140,6 +146,7 @@ private extension ServerSession {
 		batch.batchToken = token
 		batch.batchType = message.params.count > 1 ? message.params[1] : nil
 		batch.batchParameters = message.params.count > 2 ? Array(message.params.dropFirst(2)) : nil
+		batch.openingMessage = message
 		if let parentToken = message.batchToken {
 			guard let parent = batchMessages.queuedEntry(withBatchToken: parentToken),
 			      parent.batchIsOpen else { return }
@@ -187,6 +194,7 @@ private extension ServerSession {
 		let family = batchMessages.queuedEntries.values.filter { $0.rootBatch === batch }
 		let incomplete = batch.labeledDelivery.state == .failed || family.contains { $0.batchIsOpen }
 
+		coalesceMultilineMessages(in: batch)
 		replay(batch, family: family)
 		resolveDeliveries(in: family, incomplete: incomplete)
 		endZNCPlaybackState(for: batch)
@@ -242,6 +250,22 @@ private extension ServerSession {
 			znc.isPlayingBackHistory = false
 		} else if batch.batchType == ServerQuirks.ZNC.certificateInfoBatchType {
 			znc.isSendingCertificateInfo = false
+		}
+	}
+}
+
+extension ServerSession {
+	/// Replaces the lines of every `draft/multiline` batch in a closing family
+	/// with the one message each stands for, before anything is replayed.
+	func coalesceMultilineMessages(in root: MessageBatch) {
+		let queued = root.queuedMessages
+
+		guard queued.contains(where: { BatchPolicy.isMultiline($0.parentBatchMessage?.batchType) }) else { return }
+
+		root.dequeueMessages()
+
+		for message in MultilineAssembler.assemble(queued) {
+			root.queueMessage(message)
 		}
 	}
 }

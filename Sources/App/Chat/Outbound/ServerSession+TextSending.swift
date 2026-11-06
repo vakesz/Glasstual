@@ -133,6 +133,20 @@ extension ServerSession {
 		let source = NSAttributedString(attributedString: text)
 		let replyIdentifier = nextMessageReplyIdentifier
 		nextMessageReplyIdentifier = nil
+		if let conversation = destination as? Conversation,
+		   let proposal = multilineProposal(for: source, as: command, in: conversation)
+		{
+			/* One question replaces the flood warning: the person has been shown
+			 how the text will go out and chooses between the ways. */
+			requestMultilineChoice(
+				proposal,
+				text: source,
+				as: command,
+				in: conversation,
+				replyIdentifier: replyIdentifier
+			)
+			return
+		}
 		var warningCursor = OutboundInputCursor(source)
 		var lineCount = 0
 		while lineCount <= 4, warningCursor.next() != nil {
@@ -152,8 +166,8 @@ extension ServerSession {
 		sendInputLines(source, as: command, destination: destination, replyIdentifier: replyIdentifier)
 	}
 
-	private func sendInputLines(_ text: NSAttributedString, as command: RemoteCommand, destination: ChatItem,
-	                            replyIdentifier: String?)
+	func sendInputLines(_ text: NSAttributedString, as command: RemoteCommand, destination: ChatItem,
+	                    replyIdentifier: String?)
 	{
 		var remaining = OutboundInputCursor(text)
 		var pendingReply = replyIdentifier
@@ -329,7 +343,7 @@ extension ServerSession {
 		)
 	}
 
-	private func printLocallyIfNeeded(
+	func printLocallyIfNeeded(
 		_ message: String,
 		in conversation: Conversation,
 		policy: OutboundMessageOptions,

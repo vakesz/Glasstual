@@ -84,7 +84,7 @@ nonisolated struct TranscriptRenderer {
 	/// Parses the control codes, returning the attributed text the annotation
 	/// steps mark up.
 	private mutating func parseFormatting() -> NSMutableAttributedString {
-		let attributedBody = FormattingParser.parse(body)
+		let attributedBody = FormattingParser.parse(body, preservingLineFeeds: isMessageOrNotice)
 		body = attributedBody.string
 
 		return attributedBody
