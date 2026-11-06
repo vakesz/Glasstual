@@ -284,7 +284,7 @@ struct ScrollbackStoreConcurrencyTests {
 		let entries = ["empty", "persisted"].flatMap { view in
 			(0 ..< 40).map { entry("\(view)-\($0)", date: 200, view: view) }
 		}
-		await withTaskGroup(of: Void.self) { group in
+		await withDiscardingTaskGroup { group in
 			for entry in entries {
 				group.addTask { await harness.write(entry) }
 			}

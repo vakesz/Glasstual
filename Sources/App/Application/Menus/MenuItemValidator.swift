@@ -178,49 +178,27 @@ struct MenuItemValidator {
 		}
 	}
 
-	private func validateChannelCommand(_ item: NSMenuItem) -> Bool {
-		let permissions = ChannelActionPermissions(channel: conversation, session: session)
-		let isJoined = permissions.isJoined
+	func validateChannelCommand(_ item: NSMenuItem) -> Bool {
+		let selection = MenuCommandContext(session: session, conversation: conversation)
+		let isJoined = selection.satisfies(.joined)
 
+		/* What a command says and shows is settled beside whether it applies. */
 		switch item.command {
 		case .toggleFavorite:
 			item.title = String(localized: conversation?.config.isFavorite == true ? .Sidebar.unpinFavorite : .Sidebar.pinFavorite)
-			return conversation.map { $0.isChannel || $0.isDirect } == true
 		case .joinChannel:
 			item.isHidden = isJoined
-			return conversation.map { session?.canJoin($0) == true } == true
 		case .leaveChannel:
 			item.isHidden = isJoined == false
-			return isJoined
-		case .addChannel:
-			return session != nil
-		case .viewChannelLogs:
-			return conversation != nil && ApplicationPaths.isWritingTranscripts
-		case .modifyTopic:
-			return permissions.canModifyTopic
-		case .modes, .channelModeManageAll:
-			return permissions.canChangeModes
-		case .bans:
-			return isJoined
 		case .channelModeModerated:
 			item.state = context.channelModeIsSet("m") ? .on : .off
-			return permissions.canChangeModes
 		case .channelModeInviteOnly:
 			item.state = context.channelModeIsSet("i") ? .on : .off
-			return permissions.canChangeModes
-		case .banExceptions:
-			return isJoined && session?.supportInfo.isListSupported(.banException) == true
-		case .inviteExceptions:
-			return isJoined && session?.supportInfo.isListSupported(.inviteException) == true
-		case .quiets:
-			return isJoined && session?.supportInfo.isListSupported(.quiet) == true
-		case .channelProperties:
-			return conversation?.isChannel == true
-		case .copyChannelIdentifier:
-			return conversation != nil
 		default:
-			return true
+			break
 		}
+
+		return item.command?.channelRequirements.map(selection.satisfies) ?? true
 	}
 
 	private func validateWindowCommand(_ item: NSMenuItem) -> Bool {
@@ -267,6 +245,7 @@ struct MenuItemValidator {
 	}
 
 	func validateMemberCommand(_ item: NSMenuItem) -> Bool {
+		let selection = MenuCommandContext(session: session, conversation: conversation)
 		switch item.command {
 		case .muteUser, .unmuteUser:
 			guard let target = context.muteTarget(for: item) else {
@@ -280,24 +259,11 @@ struct MenuItemValidator {
 			return existingIgnore(for: item) == .none
 		case .modifyIgnore, .removeIgnore:
 			return existingIgnore(for: item) == .some
-		case .inviteTo:
-			guard let session, session.isLoggedIn, conversation?.isConsole == false else { return false }
-			return session.conversationList.contains { $0 !== conversation && $0.isChannel }
-		case .whois, .ctcp, .ctcpSendFile, .ctcpPing, .ctcpTime,
-		     .ctcpClientInfo, .ctcpVersion, .ctcpFinger, .ctcpUserInfo:
-			return session?.isLoggedIn == true && conversation?.isConsole == false
-		case .startDirectConversation:
-			return session?.isLoggedIn == true && conversation?.isChannel == true
-		case .changeColor:
-			return conversation?.isChannel == true
 		case .giveOp, .giveHalfop, .giveVoice, .takeOp, .takeHalfop, .takeVoice:
 			return validateMemberMode(item)
-		case .ban, .kick, .kickban:
-			return session?.isLoggedIn == true && conversation?.isChannel == true && conversation?.isActive == true
-		case .ircOperator, .operatorSetVirtualHost, .operatorKill, .operatorShun, .operatorGline:
-			return session?.userIsIRCop == true && session?.isLoggedIn == true && conversation?.isConsole == false
 		default:
-			return true
+			/* The rest depend only on the server and conversation. */
+			return item.command?.memberRequirements.map(selection.satisfies) ?? true
 		}
 	}
 
@@ -324,7 +290,9 @@ struct MenuItemValidator {
 	/// A rank command applies when the member does not already stand where it
 	/// would put them, and the server knows the rank at all.
 	private func validateMemberMode(_ item: NSMenuItem) -> Bool {
-		guard session?.isLoggedIn == true, conversation?.isChannel == true, conversation?.isActive == true else {
+		guard MenuCommandContext(session: session, conversation: conversation)
+			.satisfies(.channelManagement)
+		else {
 			return false
 		}
 

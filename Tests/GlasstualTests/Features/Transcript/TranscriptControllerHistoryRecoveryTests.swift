@@ -125,7 +125,7 @@ struct TranscriptControllerHistoryRecoveryTests {
 		#expect(history.recovery.storageFailure == nil)
 		#expect(history.recovery.deletionFailures == failures)
 		#expect(history.recovery.localMessage?
-			.contains(String(localized: .Transcript.deletionNotRepeated)) == true)
+			.contains(String(localized: .ChatHistory.deletionNotRepeated)) == true)
 		#expect(await Set(history.fetchOutcome(request).entries.map(\.uniqueIdentifier)) ==
 			[old.uniqueIdentifier, newer.uniqueIdentifier])
 		#expect(await history.fetchOutcome(otherRequest).entries.map(\.uniqueIdentifier) == [old.uniqueIdentifier])

@@ -64,7 +64,10 @@ struct ConfigRemovalTests {
 			channel.activate()
 		}
 		session.startPongTimer()
-		session.pendingConnectionTask = Task { try? await Task.sleep(for: .seconds(60)) }
+		/* Parked on a stream nothing feeds, so the task has no timer to outlive the test. */
+		let (idle, idleContinuation) = AsyncStream<Void>.makeStream()
+		defer { idleContinuation.finish() }
+		session.pendingConnectionTask = Task { for await _ in idle {} }
 		let scheduledConnection = try #require(session.pendingConnectionTask)
 
 		fixture.chatSession.destroySession(session, preservingLocalData: true)

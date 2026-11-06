@@ -34,7 +34,7 @@ extension ServerSession {
 		 cannot see the transcript still needs to hear the highlight. The
 		 presenter decides whether the person asked for it. */
 		if event == .highlight, let nickname, let text {
-			presenter.announce(String(localized: .Notifications.announcementHighlight(
+			presenter.announce(String(localized: .ChatNotifications.announcementHighlight(
 				nickname,
 				target?.name ?? networkNameAlt,
 				(text as NSString).stripIRCEffects
@@ -156,7 +156,7 @@ extension ServerSession {
 		let location = event == .highlight ? target?.name : nil
 		let isAction = lineType == .action || lineType == .actionNoHighlight
 		let body = isAction
-			? String(localized: .Notifications.bodyActionWithNickname(nickname, text))
+			? String(localized: .ChatNotifications.bodyActionWithNickname(nickname, text))
 			: text
 
 		return UserNotificationContent(
@@ -174,21 +174,21 @@ extension ServerSession {
 		guard let nickname, let target else { return nil }
 
 		let body = if let reason, reason.isEmpty == false {
-			String(localized: .Notifications.bodyKicked(nickname, reason))
+			String(localized: .ChatNotifications.bodyKicked(nickname, reason))
 		} else {
-			String(localized: .Notifications.bodyKickedWithoutReason(nickname))
+			String(localized: .ChatNotifications.bodyKickedWithoutReason(nickname))
 		}
 
-		return UserNotificationContent(title: String(localized: .Notifications.typeKicked), subtitle: target.name, body: body)
+		return UserNotificationContent(title: String(localized: .ChatNotifications.typeKicked), subtitle: target.name, body: body)
 	}
 
 	private func inviteUserNotificationContent(nickname: String?, channelName: String?) -> UserNotificationContent? {
 		guard let nickname, let channelName else { return nil }
 
 		return UserNotificationContent(
-			title: String(localized: .Notifications.typeChannelInvitation),
+			title: String(localized: .ChatNotifications.typeChannelInvitation),
 			subtitle: networkNameAlt,
-			body: String(localized: .Notifications.bodyInvited(nickname, channelName))
+			body: String(localized: .ChatNotifications.bodyInvited(nickname, channelName))
 		)
 	}
 }

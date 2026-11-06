@@ -180,8 +180,9 @@ extension ServerSession {
 		guard delay > 0 else { settleConnectCommands(); return }
 		let identifier = startup.identifier
 		startup.settlingTask = Task { [weak self] in
-			do { try await Task.sleep(for: .seconds(delay), clock: .continuous) } catch { return }
-			guard let self, startup.identifier == identifier else { return }
+			guard let clock = self?.startupClock else { return }
+			await clock.wait(delay)
+			guard !Task.isCancelled, let self, startup.identifier == identifier else { return }
 			settleConnectCommands()
 		}
 	}

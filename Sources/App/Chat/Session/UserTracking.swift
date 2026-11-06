@@ -46,9 +46,9 @@ extension ServerSession {
 		/* Only the three states a person would want telling about say anything;
 		 the rest are bookkeeping the tracker does for itself. */
 		let message: String? = switch status {
-		case .signedOn: String(localized: .Notifications.bodyUserNowAvailable(nickname))
-		case .signedOff: String(localized: .Notifications.bodyUserNoLongerAvailable(nickname))
-		case .available: String(localized: .Notifications.bodyUserAvailable(nickname))
+		case .signedOn: String(localized: .ChatNotifications.bodyUserNowAvailable(nickname))
+		case .signedOff: String(localized: .ChatNotifications.bodyUserNoLongerAvailable(nickname))
+		case .available: String(localized: .ChatNotifications.bodyUserAvailable(nickname))
 		default: nil
 		}
 

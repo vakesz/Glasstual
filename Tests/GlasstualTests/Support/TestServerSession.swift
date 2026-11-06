@@ -59,10 +59,6 @@ final class TestServerSession: ServerSession {
 		fixture.output
 	}
 
-	static func testChannelUser(nickname: String, on session: ServerSession) -> Member {
-		Member(user: User(nickname: nickname), prefixes: session.currentUserPrefixes)
-	}
-
 	func markAsLoggedIn() {
 		isLoggedIn = true
 	}

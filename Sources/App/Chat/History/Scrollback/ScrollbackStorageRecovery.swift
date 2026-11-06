@@ -23,7 +23,7 @@ final class ScrollbackStorageRecovery {
 	var localMessage: String? {
 		if deletionFailures.isEmpty == false {
 			let details = Set(deletionFailures.values).sorted()
-			return ([String(localized: .Transcript.deletionNotRepeated)] + details +
+			return ([String(localized: .ChatHistory.deletionNotRepeated)] + details +
 				[storageFailure].compactMap(\.self)).joined(separator: "\n")
 		}
 		return storageFailure

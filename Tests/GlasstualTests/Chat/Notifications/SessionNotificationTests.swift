@@ -114,7 +114,7 @@ struct SessionNotificationTests {
 
 		#expect(fixture.notifications.posted.isEmpty)
 		#expect(fixture.notifications.announcements == [
-			String(localized: .Notifications.announcementHighlight("alice", channel.name, "hi")),
+			String(localized: .ChatNotifications.announcementHighlight("alice", channel.name, "hi")),
 		])
 	}
 
@@ -152,7 +152,7 @@ struct SessionNotificationTests {
 		session.changeStateOff()
 
 		#expect(fixture.notifications.announcements == [
-			String(localized: .Notifications.announcementDisconnected(session.networkNameAlt)),
+			String(localized: .ChatNotifications.announcementDisconnected(session.networkNameAlt)),
 		])
 	}
 

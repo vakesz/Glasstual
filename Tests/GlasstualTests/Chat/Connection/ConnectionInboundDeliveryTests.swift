@@ -18,24 +18,19 @@ struct ConnectionInboundDeliveryTests {
 		                            makeService: { NSXPCConnection(serviceName: "test.glasstual.unavailable-service") })
 		session.socket = connection
 		connection.open()
-		let deadline = ContinuousClock.now + .seconds(5)
-		while session.socket != nil, ContinuousClock.now < deadline {
-			try await Task.sleep(for: .milliseconds(10))
-		}
+		try await Eventually.until("the failed connection to be released") { session.socket == nil }
 		#expect(session.socket == nil)
 		#expect(!session.isConnecting)
 	}
 
 	@Test("TLS publishes sidebar and title before 001, even for unknown cipher descriptions")
-	func securityCallbackRefreshesBeforeRegistration() async {
+	func securityCallbackRefreshesBeforeRegistration() async throws {
 		let (session, connection) = connectedSession()
 		connection.callbackReceiver.didSecureConnection(
 			withProtocolType: tlsProtocolVersionUnknown,
 			cipherSuite: tlsCipherSuiteUnknown
 		)
-		for _ in 0 ..< 100 where session.recordedOutput.reloadedItems.isEmpty {
-			await Task.yield()
-		}
+		try await Eventually.until("the sidebar reload") { !session.recordedOutput.reloadedItems.isEmpty }
 		#expect(connection.isSecured)
 		#expect(session.isLoggedIn == false)
 		#expect(session.recordedOutput.reloadedItems.contains { $0 === session })
@@ -150,13 +145,7 @@ struct ConnectionInboundDeliveryTests {
 			notePrinted.finish()
 		}
 		let (acknowledgements, acknowledge) = AsyncStream<Void>.makeStream()
-		let deadline = Task {
-			try? await Task.sleep(for: .seconds(5))
-			notePrinted.finish()
-			acknowledge.finish()
-		}
 		defer {
-			deadline.cancel()
 			if let pending {
 				admission.finish(pending)
 			}
@@ -170,17 +159,22 @@ struct ConnectionInboundDeliveryTests {
 			acknowledge.yield()
 			acknowledge.finish()
 		}
-		for await _ in printed {}
-		let identifier = try #require(pending)
-		#expect(list.presentationRevision == revision + 1)
-		#expect(channel.findMember("alice") != nil)
-		#expect(channel.findMember("bob") == nil)
-		admission.finish(identifier)
-		var didAcknowledge = false
-		for await _ in acknowledgements {
-			didAcknowledge = true
-		}
-		try #require(didAcknowledge, "The read was not acknowledged")
+		try await Eventually.withDeadline(onExpiry: {
+			notePrinted.finish()
+			acknowledge.finish()
+		}, perform: {
+			for await _ in printed {}
+			let identifier = try #require(pending)
+			#expect(list.presentationRevision == revision + 1)
+			#expect(channel.findMember("alice") != nil)
+			#expect(channel.findMember("bob") == nil)
+			admission.finish(identifier)
+			var didAcknowledge = false
+			for await _ in acknowledgements {
+				didAcknowledge = true
+			}
+			try #require(didAcknowledge, "The read was not acknowledged")
+		})
 		#expect(list.presentationRevision == revision + 2)
 		#expect(channel.findMember("bob") != nil)
 	}
@@ -441,22 +435,18 @@ struct ConnectionInboundDeliveryTests {
 			continuation.yield()
 			continuation.finish()
 		}
-		let deadline = Task {
-			try? await Task.sleep(for: .seconds(30))
-			guard !Task.isCancelled else { return }
-			continuation.finish()
-		}
 		defer {
-			deadline.cancel()
 			NotificationCenter.default.removeObserver(observer)
 			continuation.finish()
 		}
 		action()
 		var observed = false
-		for await _ in events {
-			observed = true
-			break
-		}
+		await Eventually.withDeadline(.seconds(30), onExpiry: { continuation.finish() }, perform: {
+			for await _ in events {
+				observed = true
+				break
+			}
+		})
 		try #require(observed, "Connection lifecycle event did not arrive before the deadline: \(name.rawValue)")
 	}
 

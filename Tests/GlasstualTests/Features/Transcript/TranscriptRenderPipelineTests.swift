@@ -94,7 +94,7 @@ struct TranscriptRenderPipelineTests {
 		await runner.value
 	}
 
-	@Test("Barrier cancellation and stop release callers without requiring a consumer", arguments: [false, true])
+	@Test("Barrier cancellation and stop release callers without requiring a consumer", .timeLimit(.minutes(1)), arguments: [false, true])
 	func barrierCancellationReleasesWaiter(stop: Bool) async {
 		let pipeline = TranscriptRenderPipeline()
 		let waiter = Task { await pipeline.barrier() }
@@ -321,7 +321,7 @@ struct TranscriptRenderPipelineTests {
 		#expect(delivered.labels.isEmpty)
 	}
 
-	@Test("The barrier returns when the pipeline is already stopped or its stream has ended")
+	@Test("The barrier returns when the pipeline is already stopped or its stream has ended", .timeLimit(.minutes(1)))
 	func barrierRejectsStoppedAndTerminatedPipelines() async {
 		let stopped = TranscriptRenderPipeline()
 		await stopped.stop()
@@ -332,7 +332,7 @@ struct TranscriptRenderPipelineTests {
 		await terminated.barrier()
 	}
 
-	@Test("Stopping releases every barrier caller even without a running consumer")
+	@Test("Stopping releases every barrier caller even without a running consumer", .timeLimit(.minutes(1)))
 	func stopReleasesAllBarrierWaiters() async {
 		let pipeline = TranscriptRenderPipeline()
 		let started = (0 ..< 8).map { _ in DeliverySignal() }

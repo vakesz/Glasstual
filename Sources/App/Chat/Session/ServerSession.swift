@@ -159,6 +159,9 @@ class ServerSession: ChatItem {
 	}
 
 	var startup = StartupState()
+
+	/// Paces the settling delay after connect commands; tests step their own.
+	var startupClock = TimerClock.continuous
 	/// The scripts this session started that are still running.
 	let scriptTasks = ScriptTaskBag()
 	var trackedUserPopulationTask: SessionTimer?

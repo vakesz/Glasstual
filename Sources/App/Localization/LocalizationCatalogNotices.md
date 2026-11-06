@@ -10,7 +10,7 @@ for additional information.
 Catalog copyright notices:
 
 - `About.xcstrings`, `Accessibility.xcstrings`,
-  `Application.xcstrings`, `ChannelSpotlight.xcstrings`,
+  `Application.xcstrings`, `ChannelSpotlight.xcstrings`, `ChatNotifications.xcstrings`,
   `FileTransfer.xcstrings`, `HighlightLog.xcstrings`,
   `MemberList.xcstrings`, `NetworkPicker.xcstrings`,
   `Notifications.xcstrings`, `Onboarding.xcstrings`,

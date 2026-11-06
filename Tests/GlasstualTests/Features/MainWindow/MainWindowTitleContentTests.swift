@@ -68,19 +68,24 @@ struct MainWindowTitleContentTests {
 		#expect(content.subtitle.contains("Alice (away)"))
 	}
 
-	@Test("Disconnecting outranks connecting and logging on")
-	func disconnectingStatusTakesPrecedence() {
-		for transport in [SessionConnectionState.Transport.preparingCredentials, .connecting, .connected] {
-			for shutdown in [SessionConnectionState.Shutdown.quitting, .disconnecting] {
-				for loggedIn in [false, true] {
-					let session = TestServerSession()
-					session.connectionState = SessionConnectionState(transport: transport, shutdown: shutdown)
-					session.isLoggedIn = loggedIn
-					let content = MainWindowTitleContent(session: session, conversation: nil)
-					#expect(content.subtitle.hasPrefix(MainWindowConnectionStatus.disconnecting.title))
-				}
-			}
-		}
+	@Test(
+		"Disconnecting outranks connecting and logging on",
+		arguments: [SessionConnectionState.Transport.preparingCredentials, .connecting, .connected],
+		[
+			(SessionConnectionState.Shutdown.quitting, false), (.quitting, true),
+			(.disconnecting, false), (.disconnecting, true),
+		]
+	)
+	func disconnectingStatusTakesPrecedence(
+		transport: SessionConnectionState.Transport,
+		ending: (shutdown: SessionConnectionState.Shutdown, loggedIn: Bool)
+	) {
+		let (shutdown, loggedIn) = ending
+		let session = TestServerSession()
+		session.connectionState = SessionConnectionState(transport: transport, shutdown: shutdown)
+		session.isLoggedIn = loggedIn
+		let content = MainWindowTitleContent(session: session, conversation: nil)
+		#expect(content.subtitle.hasPrefix(MainWindowConnectionStatus.disconnecting.title))
 	}
 
 	@Test("The native window updates a selected child's status when its session changes")

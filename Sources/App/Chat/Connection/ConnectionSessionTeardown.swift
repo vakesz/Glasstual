@@ -254,7 +254,7 @@ private extension ServerSession {
 		 person asked for, and the hop to another server, are what they just did. */
 		if !isQuitting, !isDisconnecting, disconnectMode != .serverRedirect {
 			environment.services.notifications?.announce(
-				String(localized: .Notifications.announcementDisconnected(networkNameAlt))
+				String(localized: .ChatNotifications.announcementDisconnected(networkNameAlt))
 			)
 		}
 	}
