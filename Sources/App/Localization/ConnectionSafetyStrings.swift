@@ -49,6 +49,14 @@ nonisolated enum ConnectionSafetyStrings {
 			String(localized: .ConnectionSafety.saslCredentialsContainANullCharacter)
 		}
 
+		static var ecdsaKeyUnavailable: String {
+			String(localized: .ConnectionSafety.saslEcdsaKeyUnavailable)
+		}
+
+		static var ecdsaChallengeInvalid: String {
+			String(localized: .ConnectionSafety.saslEcdsaChallengeInvalid)
+		}
+
 		static var timedOut: String {
 			String(localized: .ConnectionSafety.saslAuthenticationTimedOut)
 		}

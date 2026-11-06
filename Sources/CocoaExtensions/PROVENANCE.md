@@ -20,7 +20,7 @@ String Catalog attribution is in
 | `FoundationExtensions.swift` | Foundation and file-system extensions. |
 | `StringExtensions.swift` | String, character-set and address utilities. |
 | `CommandTokenizer.swift` | Command token parsing. |
-| `KeychainStore.swift` | Generic-password storage in the process's entitled access group. |
+| `KeychainStore.swift` | Generic-password storage in the process's entitled access group, including the SASL ECDSA signing key item. |
 | `Logging.swift` | Framework log identifier. |
 | `PortMapper.swift` | Port mapping through DNS-SD. |
 | `RegularExpression.swift` | Cached expressions with bounded matching. |

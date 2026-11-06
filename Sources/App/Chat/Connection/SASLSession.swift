@@ -6,6 +6,15 @@ import CocoaExtensions
 import Foundation
 import os
 
+/// Where an ECDSA-NIST256P-CHALLENGE exchange stands. The client carries the
+/// key, so the session keeps it only while the exchange is running.
+enum ECDSAChallengeExchange {
+	/// The account name went out; the server's challenge is next.
+	case sentIdentity(ECDSAChallengeClient)
+	/// The signature went out; the server's verdict is next.
+	case answered
+}
+
 /** One SASL exchange.
 
  The mechanisms the server offered, the one being tried, the ones already
@@ -16,6 +25,7 @@ struct SASLSession {
 	var mechanism: String?
 	var triedMechanisms: [String] = []
 	var incomingPayload: String?
+	var ecdsaExchange: ECDSAChallengeExchange?
 	var scramTask: Task<Void, Never>?
 	var scramSession: SCRAMClient? {
 		didSet {

@@ -9,6 +9,7 @@ extension ServerConfig {
 		var edits: KeychainPersistence.Edits = [
 			nicknamePasswordKeychainItem: pendingNicknamePassword,
 			proxyPasswordKeychainItem: pendingProxyPassword,
+			saslSigningKeyKeychainItem: pendingSASLSigningKey,
 		]
 		for server in serverList {
 			edits[server.keychainItem] = server.pendingServerPassword
@@ -20,7 +21,7 @@ extension ServerConfig {
 	}
 
 	var keychainItems: [KeychainItem] {
-		[nicknamePasswordKeychainItem, proxyPasswordKeychainItem]
+		[nicknamePasswordKeychainItem, proxyPasswordKeychainItem, saslSigningKeyKeychainItem]
 			+ serverList.map(\.keychainItem) + conversationList.map(\.keychainItem)
 	}
 
@@ -30,6 +31,9 @@ extension ServerConfig {
 		}
 		if edits[proxyPasswordKeychainItem] == pendingProxyPassword {
 			pendingProxyPassword = .unchanged
+		}
+		if edits[saslSigningKeyKeychainItem] == pendingSASLSigningKey {
+			pendingSASLSigningKey = .unchanged
 		}
 		for index in serverList.indices where edits[serverList[index].keychainItem] == serverList[index].pendingServerPassword {
 			serverList[index].pendingServerPassword = .unchanged

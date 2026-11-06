@@ -18,6 +18,7 @@ struct KeychainItemTests {
 			(KeychainItem.proxyPassword("abc"), "glasstual.proxy-server.abc"),
 			(KeychainItem.serverPassword("abc"), "glasstual.server.abc"),
 			(KeychainItem.channelSecretKey("abc"), "glasstual.channel-key.abc"),
+			(KeychainItem.saslSigningKey("abc"), "glasstual.sasl-ecdsa.abc"),
 		]
 	)
 	func serviceNames(item: KeychainItem, expected: String) {
@@ -31,6 +32,7 @@ struct KeychainItemTests {
 			(KeychainItem.proxyPassword("abc"), "Glasstual (Proxy Server Password)"),
 			(KeychainItem.serverPassword("abc"), "Glasstual (Server Password)"),
 			(KeychainItem.channelSecretKey("abc"), "Glasstual (Channel JOIN Key)"),
+			(KeychainItem.saslSigningKey("abc"), "Glasstual (SASL ECDSA Key)"),
 		]
 	)
 	func labels(item: KeychainItem, expected: String) {

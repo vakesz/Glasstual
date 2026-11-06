@@ -1,8 +1,10 @@
 // Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
 // SPDX-License-Identifier: BSD-3-Clause
 
+import AppKit
 import CocoaExtensions
 import SwiftUI
+import UniformTypeIdentifiers
 
 /* The panes of the connection sheet's first section: what the connection is,
  who it logs in as, and what it says on the way in and out. Each one is a view
@@ -61,6 +63,7 @@ struct ServerPropertiesGeneralPane: View {
 
 struct ServerPropertiesIdentityPane: View {
 	@Bindable var model: ServerPropertiesModel
+	@State private var isImportingSigningKey = false
 
 	var body: some View {
 		Form {
@@ -102,6 +105,44 @@ struct ServerPropertiesIdentityPane: View {
 				)
 			} footer: {
 				Text(.ServerProperties.nicknamePasswordHelp)
+			}
+
+			Section {
+				if model.hasSigningKey {
+					Text(.ServerProperties.saslEcdsaKeyStored)
+						.foregroundStyle(.secondary)
+				} else {
+					Text(.ServerProperties.saslEcdsaKeyMissing)
+						.foregroundStyle(.secondary)
+				}
+				if let publicKey = model.signingPublicKey {
+					LabeledContent(.ServerProperties.saslEcdsaPublicKeyLabel) {
+						Text(verbatim: publicKey)
+							.font(.callout.monospaced())
+							.textSelection(.enabled)
+					}
+				}
+				HStack {
+					Button(.ServerProperties.saslEcdsaGenerateKeyButton) { model.generateSigningKey() }
+					Button(.ServerProperties.saslEcdsaImportKeyButton) { isImportingSigningKey = true }
+					Button(.ServerProperties.saslEcdsaCopyPublicKeyButton) {
+						NSPasteboard.general.stringContent = model.signingPublicKey
+					}
+					.disabled(model.hasSigningKey == false)
+					Button(.ServerProperties.saslEcdsaRemoveKeyButton, role: .destructive) { model.removeSigningKey() }
+						.disabled(model.hasSigningKey == false)
+				}
+				if let error = model.signingKeyError {
+					Text(verbatim: error)
+						.foregroundStyle(.red)
+				}
+			} header: {
+				Text(.ServerProperties.saslEcdsaKeyHeader)
+			} footer: {
+				Text(.ServerProperties.saslEcdsaKeyHelp)
+			}
+			.fileImporter(isPresented: $isImportingSigningKey, allowedContentTypes: [.data]) { result in
+				model.importSigningKey(fromFile: result)
 			}
 
 			Section {

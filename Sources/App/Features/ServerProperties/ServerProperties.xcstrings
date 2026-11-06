@@ -4513,6 +4513,534 @@
         }
       }
     },
+    "sasl-ecdsa-copy-public-key-button" : {
+      "comment" : "Server properties Identity pane. Button that copies the SASL ECDSA public key to the pasteboard.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy Public Key"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nyilvános kulcs másolása"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffentlichen Schlüssel kopieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Copiar clave pública"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Copier la clé publique"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "公開鍵をコピー"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Copiar chave pública"
+          }
+        }
+      }
+    },
+    "sasl-ecdsa-generate-key-button" : {
+      "comment" : "Server properties Identity pane. Button that generates a new SASL ECDSA key.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Generate Key"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kulcs létrehozása"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schlüssel erzeugen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Generar clave"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Générer une clé"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "鍵を生成"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Gerar chave"
+          }
+        }
+      }
+    },
+    "sasl-ecdsa-import-key-button" : {
+      "comment" : "Server properties Identity pane. Button that imports an existing SASL ECDSA key from a PEM or PKCS #8 file.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import…"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importálás…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importieren…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Importar…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Importer…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "読み込む…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Importar…"
+          }
+        }
+      }
+    },
+    "sasl-ecdsa-import-unreadable" : {
+      "comment" : "Server properties Identity pane. Error shown when the file chosen as the SASL ECDSA key could not be read.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The file could not be read."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A fájl nem olvasható."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Datei konnte nicht gelesen werden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "No se pudo leer el archivo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Le fichier n'a pas pu être lu."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ファイルを読み込めませんでした。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Não foi possível ler o arquivo."
+          }
+        }
+      }
+    },
+    "sasl-ecdsa-import-unsupported" : {
+      "comment" : "Server properties Identity pane. Error shown when the file chosen as the SASL ECDSA key is not a key Glasstual can use.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The file does not hold an unencrypted P-256 private key in PEM or PKCS #8 format."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A fájl nem titkosítatlan P-256 privát kulcsot tartalmaz PEM vagy PKCS #8 formátumban."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Datei enthält keinen unverschlüsselten privaten P-256-Schlüssel im PEM- oder PKCS-#8-Format."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "El archivo no contiene una clave privada P-256 sin cifrar en formato PEM o PKCS #8."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Le fichier ne contient pas de clé privée P-256 non chiffrée au format PEM ou PKCS #8."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このファイルには、PEMまたはPKCS #8形式の暗号化されていないP-256秘密鍵が含まれていません。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "O arquivo não contém uma chave privada P-256 sem criptografia no formato PEM ou PKCS #8."
+          }
+        }
+      }
+    },
+    "sasl-ecdsa-key-header" : {
+      "comment" : "Server properties Identity pane. Section header for the SASL ECDSA key controls.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SASL ECDSA Key"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SASL ECDSA-kulcs"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SASL-ECDSA-Schlüssel"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Clave SASL ECDSA"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Clé SASL ECDSA"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "SASL ECDSA鍵"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Chave SASL ECDSA"
+          }
+        }
+      }
+    },
+    "sasl-ecdsa-key-help" : {
+      "comment" : "Server properties Identity pane. Help text under the SASL ECDSA key controls, explaining that the key replaces sending a password and how to register it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "With a key, SASL signs the server's challenge instead of sending a password. Register the public key with your account, for example with NickServ SET PUBKEY on Atheme. The private key stays in this Mac's Keychain and is never exported with settings. Changes apply when you save."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kulccsal a SASL a jelszó elküldése helyett aláírja a kiszolgáló kihívását. Regisztráld a nyilvános kulcsot a fiókodhoz, például Atheme-en a NickServ SET PUBKEY paranccsal. A privát kulcs ezen a Macen, a Kulcskarikában marad, és a beállításokkal sem exportálódik. A módosítások mentéskor lépnek érvénybe."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit einem Schlüssel signiert SASL die Challenge des Servers, statt ein Passwort zu senden. Registriere den öffentlichen Schlüssel bei deinem Account, zum Beispiel mit NickServ SET PUBKEY bei Atheme. Der private Schlüssel bleibt im Schlüsselbund dieses Macs und wird nie mit den Einstellungen exportiert. Änderungen werden beim Speichern übernommen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Con una clave, SASL firma el desafío del servidor en lugar de enviar una contraseña. Registra la clave pública en tu cuenta, por ejemplo con NickServ SET PUBKEY en Atheme. La clave privada permanece en el llavero de este Mac y nunca se exporta con los ajustes. Los cambios se aplican al guardar."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Avec une clé, SASL signe le défi du serveur au lieu d'envoyer un mot de passe. Enregistrez la clé publique auprès de votre compte, par exemple avec NickServ SET PUBKEY sur Atheme. La clé privée reste dans le trousseau de ce Mac et n'est jamais exportée avec les réglages. Les modifications s'appliquent à l'enregistrement."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "鍵を使うと、SASLはパスワードを送信する代わりにサーバーのチャレンジに署名します。公開鍵をアカウントに登録してください(AthemeではNickServ SET PUBKEYなど)。秘密鍵はこのMacのキーチェーンに残り、設定と一緒に書き出されることはありません。変更は保存時に反映されます。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Com uma chave, o SASL assina o desafio do servidor em vez de enviar uma senha. Registre a chave pública na sua conta, por exemplo com NickServ SET PUBKEY no Atheme. A chave privada permanece no Chaveiro deste Mac e nunca é exportada com os ajustes. As alterações são aplicadas ao salvar."
+          }
+        }
+      }
+    },
+    "sasl-ecdsa-key-missing" : {
+      "comment" : "Server properties Identity pane. Status shown when no SASL ECDSA key is stored, so the key is missing.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No key is stored."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nincs kulcs tárolva."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Es ist kein Schlüssel gespeichert."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "No hay ninguna clave guardada."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Aucune clé n'est enregistrée."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "鍵は保存されていません。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Nenhuma chave armazenada."
+          }
+        }
+      }
+    },
+    "sasl-ecdsa-key-stored" : {
+      "comment" : "Server properties Identity pane. Status shown when a SASL ECDSA key is stored in the Keychain.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A key is stored in the Keychain."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Egy kulcs van tárolva a Kulcskarikában."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Schlüssel ist im Schlüsselbund gespeichert."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Hay una clave guardada en el llavero."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Une clé est enregistrée dans le trousseau."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "キーチェーンに鍵が保存されています。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Há uma chave armazenada no Chaveiro."
+          }
+        }
+      }
+    },
+    "sasl-ecdsa-public-key-label" : {
+      "comment" : "Server properties Identity pane. Label of the SASL ECDSA public key to register with the network's account service.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Public Key"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nyilvános kulcs"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffentlicher Schlüssel"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Clave pública"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Clé publique"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "公開鍵"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Chave pública"
+          }
+        }
+      }
+    },
+    "sasl-ecdsa-remove-key-button" : {
+      "comment" : "Server properties Identity pane. Button that removes the stored SASL ECDSA key.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove Key"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kulcs eltávolítása"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schlüssel entfernen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Eliminar clave"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Supprimer la clé"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "鍵を削除"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Remover chave"
+          }
+        }
+      }
+    },
     "select-a-certificate-to-send-when" : {
       "comment" : "Custom client-side certificate selection. Legacy key: mi4-fd.",
       "extractionState" : "manual",

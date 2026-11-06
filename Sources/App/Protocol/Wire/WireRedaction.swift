@@ -22,7 +22,7 @@ nonisolated enum WireRedaction {
 	 login failed under, which is the first thing anyone reading one wants. Only
 	 the names this session can send are spared; anything else is a payload. */
 	private static let saslMechanismNames: Set<String> = [
-		"EXTERNAL", "PLAIN", SCRAMClient.mechanismName,
+		"EXTERNAL", "PLAIN", SCRAMClient.mechanismName, ECDSAChallengeClient.mechanismName,
 	]
 	private static let sensitiveServiceVerbs: Set<String> = [
 		"AUTH", "CONFIRM", "GHOST", "GROUP", "IDENTIFY", "LOGIN", "PASSWD", "PASSWORD", "RECOVER",

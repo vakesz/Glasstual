@@ -86,7 +86,7 @@ public enum PendingKeychainSecret: Sendable, Equatable, Hashable {
 	}
 }
 
-/// One of the four secrets Glasstual keeps out of its property lists, named by
+/// One of the five secrets Glasstual keeps out of its property lists, named by
 /// the model that owns it rather than by the label and service-name strings it
 /// expands to. Every secret is scoped to the owning model's `uniqueIdentifier`,
 /// which is what the associated value carries.
@@ -95,6 +95,8 @@ public enum KeychainItem: Sendable, Equatable, Hashable {
 	case proxyPassword(String)
 	case serverPassword(String)
 	case channelSecretKey(String)
+	/// The base64 raw representation of the P-256 key SASL ECDSA signs with.
+	case saslSigningKey(String)
 
 	/// `kSecAttrLabel`. This is what Keychain Access shows the user.
 	public var label: String {
@@ -103,6 +105,7 @@ public enum KeychainItem: Sendable, Equatable, Hashable {
 		case .proxyPassword: "Glasstual (Proxy Server Password)"
 		case .serverPassword: "Glasstual (Server Password)"
 		case .channelSecretKey: "Glasstual (Channel JOIN Key)"
+		case .saslSigningKey: "Glasstual (SASL ECDSA Key)"
 		}
 	}
 
@@ -114,6 +117,7 @@ public enum KeychainItem: Sendable, Equatable, Hashable {
 		case let .proxyPassword(identifier): "glasstual.proxy-server.\(identifier)"
 		case let .serverPassword(identifier): "glasstual.server.\(identifier)"
 		case let .channelSecretKey(identifier): "glasstual.channel-key.\(identifier)"
+		case let .saslSigningKey(identifier): "glasstual.sasl-ecdsa.\(identifier)"
 		}
 	}
 
@@ -201,7 +205,7 @@ public actor KeychainWriter {
 	}
 }
 
-/// The `SecItem` calls behind ``KeychainItem``. The four cases of that enum are
+/// The `SecItem` calls behind ``KeychainItem``. The cases of that enum are
 /// the whole surface anything outside this framework needs.
 ///
 /// Every item is written to, looked up in and deleted from one keychain access

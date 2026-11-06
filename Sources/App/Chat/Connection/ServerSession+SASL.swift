@@ -3,18 +3,34 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 import CocoaExtensions
+import CryptoKit
 import Foundation
 import os
 
 /// The SASL half of capability negotiation: which mechanism is chosen, the
 /// exchange itself, and what happens when the server refuses one.
 extension ServerSession {
+	/** The key ECDSA signs with: an unflushed edit if there is one, and
+	 otherwise the keychain snapshot the connection loaded. Nil when none is
+	 configured, when the stored value is not a P-256 key, and when the
+	 connection went to a host outside the network's configured servers —
+	 naming the account to one is what the password rules already refuse. */
+	private var saslSigningKey: P256.Signing.PrivateKey? {
+		guard sessionCredentials.withholdsAccountCredentials == false else { return nil }
+		let stored = config.pendingSASLSigningKey.value(
+			orStored: sessionCredentials.password(for: config.saslSigningKeyKeychainItem)
+		)
+
+		return stored.flatMap(ECDSASigningKey.privateKey(fromStored:))
+	}
+
 	private var supportedSASLMechanisms: [String] {
 		guard config.usesSASL else { return [] }
 		return SASLPolicy.supportedMechanisms(
 			hasClientCertificate: socket?.isConnectedWithClientSideCertificate ?? false,
 			externalMechanismDisabled: config.saslAuthenticationDisableExternalMechanism,
 			hasPassword: sessionNicknamePassword?.isEmpty == false,
+			hasSigningKey: saslSigningKey != nil,
 			sendsPasswordInClear: permitsCredentialsInClear,
 			preferredMechanism: config.saslMechanismPreference
 		)
@@ -88,8 +104,37 @@ extension ServerSession {
 			sendCapabilityAuthenticate("+")
 		case SCRAMClient.mechanismName:
 			sendSASLScramInformation(forServerData: serverData)
+		case ECDSAChallengeClient.mechanismName:
+			sendSASLECDSAInformation(forServerData: serverData)
 		default:
 			break
+		}
+	}
+
+	private func sendSASLECDSAInformation(forServerData serverData: String) {
+		switch sasl.ecdsaExchange {
+		case nil:
+			guard let key = saslSigningKey else {
+				abortSASLNegotiation(reason: ConnectionSafetyStrings.SASL.ecdsaKeyUnavailable)
+				return
+			}
+			let client = ECDSAChallengeClient(
+				privateKey: key,
+				authorizationIdentity: config.username.nonEmpty ?? config.nickname
+			)
+			sasl.ecdsaExchange = .sentIdentity(client)
+			sendSASLPayloadInChunks(client.identityPayload)
+		case let .sentIdentity(client):
+			do {
+				let response = try client.response(forEncodedChallenge: serverData)
+				sasl.ecdsaExchange = .answered
+				sendSASLPayloadInChunks(response)
+			} catch {
+				abortSASLNegotiation(reason: ConnectionSafetyStrings.SASL.ecdsaChallengeInvalid)
+			}
+		case .answered:
+			// The signature is the last message; another challenge is not part of the exchange.
+			abortSASLNegotiation(reason: ConnectionSafetyStrings.SASL.ecdsaChallengeInvalid)
 		}
 	}
 
@@ -155,6 +200,12 @@ extension ServerSession {
 	}
 
 	private func sendSASLPayloadInChunks(_ payload: String) {
+		for chunk in SASLPolicy.wireChunks(for: payload) {
+			sendCapabilityAuthenticate(chunk)
+		}
+	}
+
+	private func sendSASLPayloadInChunks(_ payload: Data) {
 		for chunk in SASLPolicy.wireChunks(for: payload) {
 			sendCapabilityAuthenticate(chunk)
 		}
@@ -226,6 +277,7 @@ extension ServerSession {
 		disableCapability(.isInSASLNegotiation)
 		sasl.mechanism = nil
 		sasl.scramSession = nil
+		sasl.ecdsaExchange = nil
 		sasl.incomingPayload = nil
 		if failed {
 			disableCapability(.isIdentifiedWithSASL)
@@ -248,6 +300,7 @@ extension ServerSession {
 		}
 
 		sasl.scramSession = nil
+		sasl.ecdsaExchange = nil
 		sasl.incomingPayload = nil
 
 		let offered = mechanisms.isEmpty ? sasl.offeredMechanisms ?? [] : mechanisms
@@ -285,6 +338,7 @@ extension ServerSession {
 		disableCapability(.isIdentifiedWithSASL)
 		sasl.mechanism = nil
 		sasl.scramSession = nil
+		sasl.ecdsaExchange = nil
 		sasl.incomingPayload = nil
 	}
 }

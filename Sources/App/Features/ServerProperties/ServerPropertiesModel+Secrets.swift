@@ -35,7 +35,11 @@ extension ServerPropertiesModel {
 	}
 
 	private var secretKeychainItems: [KeychainItem] {
-		var items = [config.nicknamePasswordKeychainItem, config.proxyPasswordKeychainItem]
+		var items = [
+			config.nicknamePasswordKeychainItem,
+			config.proxyPasswordKeychainItem,
+			config.saslSigningKeyKeychainItem,
+		]
 
 		if let primaryServer {
 			items.append(primaryServer.keychainItem)

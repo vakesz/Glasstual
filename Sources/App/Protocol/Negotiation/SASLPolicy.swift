@@ -22,11 +22,13 @@ enum SASLPolicy {
 	 - Parameter sendsPasswordInClear: Whether the connection may carry the
 	   password itself. `PLAIN` sends it as typed, so it is left out where the
 	   answer is no; SCRAM proves knowledge of the password without sending it
-	   and stays available. */
+	   and stays available.
+	 - Parameter hasSigningKey: Whether an ECDSA key is configured. */
 	static func supportedMechanisms(
 		hasClientCertificate: Bool,
 		externalMechanismDisabled: Bool,
 		hasPassword: Bool,
+		hasSigningKey: Bool = false,
 		sendsPasswordInClear: Bool = true,
 		preferredMechanism: String?
 	) -> [String] {
@@ -34,6 +36,13 @@ enum SASLPolicy {
 
 		if hasClientCertificate, externalMechanismDisabled == false {
 			mechanisms.append("EXTERNAL")
+		}
+
+		/* A key proves possession without sending a secret, which is better than
+		 either password mechanism, so it goes ahead of both and they remain the
+		 fallback when the server does not offer it or refuses the signature. */
+		if hasSigningKey {
+			mechanisms.append(ECDSAChallengeClient.mechanismName)
 		}
 
 		if hasPassword {
@@ -76,7 +85,11 @@ enum SASLPolicy {
 	static let timeout: TimeInterval = 30
 
 	static func wireChunks(for payload: String) -> [String] {
-		let encoded = Data(payload.utf8).base64EncodedString()
+		wireChunks(for: Data(payload.utf8))
+	}
+
+	static func wireChunks(for payload: Data) -> [String] {
+		let encoded = payload.base64EncodedString()
 
 		guard encoded.isEmpty == false else {
 			return ["+"]

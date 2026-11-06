@@ -140,6 +140,9 @@ nonisolated struct ServerConfig: Codable, Equatable, Sendable {
 	var pendingNicknamePassword: PendingKeychainSecret = .unchanged
 	/// An unflushed edit to the proxy password. Never encoded.
 	var pendingProxyPassword: PendingKeychainSecret = .unchanged
+	/// An unflushed edit to the SASL ECDSA signing key, as ``ECDSASigningKey`` stores
+	/// it. Never encoded.
+	var pendingSASLSigningKey: PendingKeychainSecret = .unchanged
 
 	init(connectionName: String? = nil) {
 		self.connectionName = connectionName ?? ApplicationStrings.untitledConnection
@@ -190,6 +193,10 @@ nonisolated extension ServerConfig {
 		.proxyPassword(uniqueIdentifier)
 	}
 
+	var saslSigningKeyKeychainItem: KeychainItem {
+		.saslSigningKey(uniqueIdentifier)
+	}
+
 	var nicknamePasswordFromKeychain: String? {
 		nicknamePasswordKeychainItem.password
 	}
@@ -224,6 +231,7 @@ nonisolated extension ServerConfig {
 		var copy = self
 		copy.pendingNicknamePassword = pendingNicknamePassword.detached(from: nicknamePasswordFromKeychain)
 		copy.pendingProxyPassword = pendingProxyPassword.detached(from: proxyPasswordFromKeychain)
+		copy.pendingSASLSigningKey = pendingSASLSigningKey.detached(from: saslSigningKeyKeychainItem.password)
 		copy.conversationList = conversationList.map { $0.uniqueCopy() }
 		copy.highlightList = highlightList.map { $0.uniqueCopy() }
 		copy.ignoreList = ignoreList.map { $0.uniqueCopy() }

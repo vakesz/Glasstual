@@ -73,6 +73,10 @@ final class ServerPropertiesModel {
 	/// four times; there is nothing to show when there is no certificate.
 	var certificate: ClientCertificateDetails?
 
+	/// Why the last SASL ECDSA key import failed, shown beside the key controls
+	/// until the next key change.
+	var signingKeyError: String?
+
 	var submission = SubmissionGate()
 
 	/// The bundled network catalog the Server Address field completes against.

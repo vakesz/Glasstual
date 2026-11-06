@@ -384,6 +384,102 @@
           }
         }
       }
+    },
+    "sasl-ecdsa-challenge-invalid" : {
+      "comment" : "Console notice when the challenge of a SASL ECDSA exchange was not valid base64, had the wrong length or arrived out of order, so the exchange was abandoned.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SASL ECDSA authentication failed because the server sent an unusable challenge."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A SASL ECDSA-hitelesítés sikertelen, mert a kiszolgáló használhatatlan kihívást küldött."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die SASL-ECDSA-Authentifizierung ist fehlgeschlagen, weil der Server eine unbrauchbare Challenge gesendet hat."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "La autenticación SASL ECDSA falló porque el servidor envió un desafío inutilizable."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "L'authentification SASL ECDSA a échoué : le serveur a envoyé un défi inutilisable."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "サーバーが使用できないチャレンジを送信したため、SASL ECDSA認証に失敗しました。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "A autenticação SASL ECDSA falhou porque o servidor enviou um desafio inutilizável."
+          }
+        }
+      }
+    },
+    "sasl-ecdsa-key-unavailable" : {
+      "comment" : "Console notice when SASL ECDSA was chosen but its signing key was missing or unreadable in the Keychain, so the exchange was abandoned.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SASL ECDSA authentication failed because the signing key could not be read from the Keychain."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A SASL ECDSA-hitelesítés sikertelen, mert az aláírókulcs nem olvasható a Kulcskarikából."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die SASL-ECDSA-Authentifizierung ist fehlgeschlagen, weil der Signaturschlüssel nicht aus dem Schlüsselbund gelesen werden konnte."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "La autenticación SASL ECDSA falló porque no se pudo leer la clave de firma del llavero."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "L'authentification SASL ECDSA a échoué : la clé de signature est illisible dans le trousseau."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "署名鍵をキーチェーンから読み取れなかったため、SASL ECDSA認証に失敗しました。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "A autenticação SASL ECDSA falhou porque não foi possível ler a chave de assinatura do Chaveiro."
+          }
+        }
+      }
     }
   },
   "version" : "1.0"
