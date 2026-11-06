@@ -5,52 +5,6 @@ import AppKit
 import CocoaExtensions
 import SwiftUI
 
-/// Where an alert appears.
-@MainActor
-enum AlertPresentation {
-	/// A state-driven sheet on the application's main window. Reveals the
-	/// installed window when it is closed, minimised or hidden. Before a
-	/// window is installed, the alert runs application modal instead.
-	case mainWindow
-	/// A sheet on the main window, or on any other visible window. Reveals the
-	/// installed main window when none is visible. During launch and migration
-	/// no window exists yet, and the alert runs application modal instead.
-	case anyVisibleWindow
-}
-
-/// The presentation half of showing an alert: put it on screen, run it, report
-/// the button and whether the suppression checkbox ended up ticked. Injected so
-/// `Alerts`'s suppression policy is testable on its own.
-@MainActor
-protocol AlertPresenter {
-	func present(_ request: AlertRequest, in presentation: AlertPresentation) async -> AlertPresenterResult
-}
-
-nonisolated struct AlertPresenterResult: Equatable, Sendable {
-	let response: AlertResponse
-	let suppressionChecked: Bool
-}
-
-/** The window a shared alert hangs its sheet from.
-
- A static that names a live object: `Application/` installs the main window as
- it builds it and everything else only reads it, which is why the setter is not
- open. `nil` before that window exists, which is when an alert runs application
- modal instead.
-
- An `NSWindow` rather than the main-window type, because a window is all an
- alert asks of it: whether it is on screen, and what sheet it is already
- showing. */
-@MainActor
-enum SheetPresentation {
-	private(set) weak static var hostWindow: NSWindow?
-
-	/// Called once, from the application delegate, as the main window is built.
-	static func install(_ window: NSWindow) {
-		hostWindow = window
-	}
-}
-
 /** Shows alerts with `NSAlert`.
 
  The system panel is what an alert is: it draws the application icon, badges it

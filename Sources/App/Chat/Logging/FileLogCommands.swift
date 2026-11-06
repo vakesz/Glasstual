@@ -4,22 +4,6 @@
 
 import Foundation
 
-/** Where a file-log operation is carried out.
-
- A value holding one closure rather than a protocol: the only thing that varies
- is which actor is behind it, and the one production actor is
- ``FileLogSink``. */
-nonisolated struct FileLogSinkPort: Sendable {
-	let process: @Sendable (FileLogOperation) async -> FileLogResult
-
-	/// The real transcript files on disk.
-	static func fileSystem() -> Self {
-		let sink = FileLogSink()
-
-		return Self { await sink.process($0) }
-	}
-}
-
 /// One consumer, not one Task per write. Awaiting even a reentrant test sink
 /// cannot let the next command overtake the current one.
 @MainActor

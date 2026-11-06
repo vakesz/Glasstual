@@ -4,28 +4,6 @@
 
 import Foundation
 
-/** The chat history this session has asked for and is still waiting on.
-
- A `CHATHISTORY` reply arrives as a batch some time after the request, so what
- the session is waiting for outlives the call that asked: which conversation
- the page belongs to, the lines collected so far, the targets the server
- refused, and the `BEFORE` requests still outstanding. */
-struct ChatHistorySession {
-	/// The conversation whose page is being collected, `nil` between batches.
-	var prependConversation: Conversation?
-	/// The lines of the page collected so far.
-	var prependedLines: [ChatLine]?
-	/// Casefolded targets whose history request the server refused.
-	var failedTargets: Set<String> = []
-	/// `BEFORE` requests keyed by conversation identity, independent of
-	/// CASEMAPPING.
-	var serverRequests: [String: PendingServerHistoryRequest] = [:]
-	/// Which request a `CHATHISTORY` batch answers, keyed by the batch's token.
-	/// A batch is the wire's record of a group of lines; what this session asked
-	/// for is this subsystem's own bookkeeping and stays here.
-	var requestsByBatchToken: [String: UUID] = [:]
-}
-
 enum ChatHistoryPolicy {
 	static let defaultRequestLimit: UInt = 100
 	static let readMarkerDebounceInterval: TimeInterval = 1

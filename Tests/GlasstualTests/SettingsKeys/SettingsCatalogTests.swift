@@ -201,7 +201,7 @@ struct SettingsDeclarationListTests {
 		let registration: String?
 	}
 
-	private static let keysDirectory = RepositoryPaths.appSources.appending(path: "SettingsKeys")
+	private static let keysDirectory = RepositoryPaths.appSources.appending(path: "SettingsKeys/Keys")
 
 	private static func domains() throws -> [Domain] {
 		let names = try FileManager.default.contentsOfDirectory(atPath: keysDirectory.path())
@@ -254,7 +254,7 @@ struct SettingsDeclarationListTests {
 	@Test("Every domain that declares keys reaches the catalogue")
 	func everyDomainIsCatalogued() throws {
 		let catalogue = try String(
-			contentsOf: Self.keysDirectory.appending(path: "SettingsCatalog.swift"),
+			contentsOf: Self.keysDirectory.deletingLastPathComponent().appending(path: "SettingsCatalog.swift"),
 			encoding: .utf8
 		)
 		for domain in try Self.domains() where domain.registration != nil {

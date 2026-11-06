@@ -361,12 +361,3 @@ private extension MenuActionController {
 		}
 	}
 }
-
-/// Where the nickname insertion above landed once it has replaced a selection.
-/// The replaced range describes storage that no longer exists, so nothing may
-/// be measured against it afterwards.
-nonisolated enum MenuInsertionRangePolicy {
-	static func insertedRange(replacing replaced: NSRange, with insertion: String) -> NSRange {
-		NSRange(location: replaced.location, length: insertion.utf16.count)
-	}
-}

@@ -192,13 +192,3 @@ extension ServerSession {
 		)
 	}
 }
-
-/** What one notification says.
-
- The title is who or what it is about, the subtitle is where it happened and
- the body is the detail. Every event fills the title; the rest is what it has. */
-struct UserNotificationContent {
-	var title: String
-	var subtitle: String?
-	var body: String?
-}

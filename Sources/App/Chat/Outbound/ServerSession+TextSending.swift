@@ -9,58 +9,6 @@ private enum OutboundTextSuppressionKey: String {
 	case potentialFlood = "Input Text Possible Flood Warning"
 }
 
-/** One outbound text send, decided once.
-
- The three commands that carry a person's text are `PRIVMSG`, a `PRIVMSG`
- whose body is an `ACTION`, and `NOTICE`; a failed initializer is how "that is
- not a text command" is said. Everything else the send path needs — the wire
- name, the line type it prints as, and the two things the `/o…` and `/s…`
- spellings change — is read off the one remote command, so the value cannot
- disagree with itself. */
-struct OutboundMessageOptions {
-	let remoteCommand: RemoteCommand
-	let isOperatorMessage: Bool
-	let isSecretMessage: Bool
-
-	/// How the line prints locally.
-	var lineType: ChatLineKind {
-		switch remoteCommand {
-		case .privmsgAction: .action
-		case .notice: .notice
-		default: .privateMessage
-		}
-	}
-
-	init?(remoteCommand: RemoteCommand, isOperatorMessage: Bool = false, isSecretMessage: Bool = false) {
-		switch remoteCommand {
-		case .privmsg, .privmsgAction, .notice:
-			self.remoteCommand = remoteCommand
-		default:
-			return nil
-		}
-
-		self.isOperatorMessage = isOperatorMessage
-		self.isSecretMessage = isSecretMessage
-	}
-
-	init?(command: LocalCommand?, silentlyConnecting: Bool) {
-		switch command {
-		case .msg, .omsg, .smsg, .umsg:
-			self.init(
-				remoteCommand: .privmsg,
-				isOperatorMessage: command == .omsg,
-				isSecretMessage: command == .smsg || silentlyConnecting
-			)
-		case .me, .sme, .ume:
-			self.init(remoteCommand: .privmsgAction, isSecretMessage: command == .sme)
-		case .notice, .onotice, .unotice:
-			self.init(remoteCommand: .notice, isOperatorMessage: command == .onotice)
-		default:
-			return nil
-		}
-	}
-}
-
 extension ServerSession {
 	/// An empty ACTION would be dropped by most servers, so it goes out with a
 	/// single space instead.
@@ -476,63 +424,5 @@ extension ServerSession {
 	private func selectCommandDestination(_ conversation: Conversation?) {
 		guard let conversation else { return }
 		output?.select(conversation)
-	}
-}
-
-extension ServerSession {
-	@MainActor
-	@discardableResult
-	func sendReaction(
-		_ emoji: String,
-		toMessageIdentifier messageIdentifier: String,
-		in conversation: Conversation
-	) -> Bool {
-		guard emoji.isEmpty == false, messageIdentifier.isEmpty == false,
-		      isLoggedIn, isTerminating == false, isQuitting == false, isDisconnecting == false,
-		      conversation.isConsole == false, conversation.isActive,
-		      conversation.associatedSession === self,
-		      conversationList.contains(where: { $0 === conversation })
-		else {
-			return false
-		}
-
-		let tags = ["+draft/react": emoji, "+draft/reply": messageIdentifier]
-		guard sendTagMessage(tags, toTarget: conversation.name) else { return false }
-
-		deliverTags(
-			["draft/react": emoji, "draft/reply": messageIdentifier],
-			fromSender: userNickname,
-			in: conversation
-		)
-		return true
-	}
-
-	func sendPrivmsg(_ message: String, to conversation: Conversation) {
-		sendText(NSAttributedString(string: message), as: .privmsg, to: conversation)
-	}
-
-	/// The `String` spelling is for the verb a person typed after `/ctcp`, which
-	/// this session is free to know nothing about. Everything it sends on its own
-	/// goes out through the ``CTCPVerb`` overload.
-	func sendCTCPQuery(_ nickname: String, command: String, text: String?) {
-		send(
-			.privmsg,
-			arguments: [nickname, CTCPPayload.framed(command: command, text: text, sanitizingLineBreaks: false)]
-		)
-	}
-
-	func sendCTCPQuery(_ nickname: String, command: CTCPVerb, text: String?) {
-		sendCTCPQuery(nickname, command: command.wireName, text: text)
-	}
-
-	func sendCTCPReply(_ nickname: String, command: String, text: String?) {
-		send(
-			.notice,
-			arguments: [nickname, CTCPPayload.framed(command: command, text: text, sanitizingLineBreaks: true)]
-		)
-	}
-
-	func sendCTCPPing(_ nickname: String) {
-		sendCTCPQuery(nickname, command: .ping, text: String(Date().timeIntervalSince1970))
 	}
 }
