@@ -50,19 +50,6 @@ struct MemberListProfilePopoverTests {
 		#expect(memberList.memberShowingProfile == nil)
 	}
 
-	@Test("Dismissing one member's profile leaves another's alone")
-	func dismissingIsAddressedToOneMember() throws {
-		let alice = try add("alice")
-		let bob = try add("bob")
-
-		memberList.showProfile(for: alice.id)
-		memberList.endProfileInteraction(with: bob.id)
-		#expect(memberList.memberShowingProfile == alice.id)
-
-		memberList.endProfileInteraction(with: alice.id)
-		#expect(memberList.memberShowingProfile == nil)
-	}
-
 	@Test("A member who leaves takes their profile with them")
 	func leavingClosesTheProfile() throws {
 		let alice = try add("alice")

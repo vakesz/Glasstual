@@ -6,32 +6,10 @@ import CocoaExtensions
 import Foundation
 import os
 
-/// What tearing a conversation down does beyond removing it. Named options rather
-/// than positional booleans, so a call site says which of them it means.
-struct ConversationDestruction: OptionSet, Sendable {
-	let rawValue: Int
-
-	/// Move the selection off the conversation and redraw the navigation list. The
-	/// session drops the conversation either way; this names the redraw.
-	static let reloadsSidebar = Self(rawValue: 1 << 0)
-	/// Send `PART` for a channel that is still joined.
-	static let partsChannel = Self(rawValue: 1 << 1)
-	/// Keep the conversation's logs, keychain item and input history.
-	static let preservesLocalData = Self(rawValue: 1 << 2)
-
-	/// What the user asking to close a conversation means.
-	static let `default`: Self = [.reloadsSidebar, .partsChannel]
-}
-
 private enum ChatSessionTiming {
 	static let autoConnectDelay: UInt = 1
 	static let reconnectAfterWakeupDelay: UInt = 8
 	static let savePeriodicallyThreshold: CFAbsoluteTime = 300
-}
-
-extension Notification.Name {
-	static let chatSessionListWasModified = Notification.Name("Glasstual.chatSessionListWasModified")
-	static let chatSessionWillDestroySession = Notification.Name("Glasstual.chatSessionWillDestroySession")
 }
 
 /** The application's one chat session: every server session it has open, and
@@ -48,9 +26,9 @@ final class ChatSession {
 	private var storedSessions: [ServerSession] = []
 
 	/// What every connection has sent and received this session.
-	private var traffic = ConnectionTraffic()
+	var traffic = ConnectionTraffic()
 	/// The idle-sleep assertion held while a connection is logged in.
-	private let sleepPrevention = SleepPrevention()
+	let sleepPrevention = SleepPrevention()
 
 	/// When the session list was last written by the periodic save.
 	private var savePeriodicallyLastSave = CFAbsoluteTimeGetCurrent()
@@ -171,21 +149,6 @@ final class ChatSession {
 		refreshSleepPrevention()
 	}
 
-	// MARK: - Sleep
-
-	/// Called when a session's registration state changes, which is the only
-	/// thing the setting reads besides itself.
-	func noteLoginStateChanged() {
-		refreshSleepPrevention()
-	}
-
-	private func refreshSleepPrevention() {
-		sleepPrevention.refresh(
-			shouldHold: SettingsKeys.Connection.preventSleepWhileConnected.value
-				&& sessions.contains(where: \.isLoggedIn)
-		)
-	}
-
 	/// Re-reads the defaults store and republishes the snapshot to every session.
 	func refreshEnvironmentSettings() {
 		applySettings(.current())
@@ -288,32 +251,6 @@ final class ChatSession {
 		for session in sessions {
 			session.settingsChanged(action)
 		}
-	}
-
-	// MARK: - Traffic counters
-
-	var messagesSent: UInt {
-		traffic.messagesSent
-	}
-
-	var messagesReceived: UInt {
-		traffic.messagesReceived
-	}
-
-	var bandwidthIn: UInt64 {
-		traffic.bandwidthIn
-	}
-
-	var bandwidthOut: UInt64 {
-		traffic.bandwidthOut
-	}
-
-	func noteMessageSent(length: UInt) {
-		traffic.noteSent(length: length)
-	}
-
-	func noteMessageReceived(length: UInt) {
-		traffic.noteReceived(length: length)
 	}
 
 	// MARK: - Sidebar items

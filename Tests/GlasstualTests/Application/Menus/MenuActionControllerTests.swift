@@ -117,7 +117,7 @@ struct MenuActionControllerTests {
 		controller.disconnect(item)
 		#expect(session.recordedOutput.titleUpdates.count == titleUpdateCount)
 		#expect(session.sentLines.count == 1)
-		#expect(!delayedDisconnect.isCancelled)
+		#expect(delayedDisconnect.isActive)
 
 		session.cancelDelayedDisconnect()
 		connection.close()

@@ -197,7 +197,7 @@ struct ServerPropertiesProxyServerPane: View {
 					TextField(.ServerProperties.proxyAddress, text: $model.proxyAddress)
 					TextField(.ServerProperties.proxyPort, text: $model.proxyPort)
 					TextField(.ServerProperties.proxyUsername, text: $model.proxyUsername)
-					SecureField(.ServerProperties.proxyPassword, text: $model.proxyPassword)
+					SecureField(.ServerProperties.proxyPassword, text: model.secretBinding(.proxyPassword))
 				} footer: {
 					Text(.ServerProperties.proxyPasswordHelp)
 				}

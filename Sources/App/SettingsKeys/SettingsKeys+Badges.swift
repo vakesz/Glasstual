@@ -66,12 +66,12 @@ nonisolated extension SettingsKeys {
 extension UserListModeBadge {
 	var displayName: LocalizedStringResource {
 		switch self {
-		case .ircOperator: .Settings.interfaceModeServerStaff
-		case .channelOwner: .Settings.interfaceModeChannelOwner
-		case .superOperator: .Settings.interfaceModeChannelAdministrator
-		case .normalOperator: .Settings.interfaceModeChannelOperator
-		case .halfOperator: .Settings.interfaceModeChannelHalfOperator
-		case .voiced: .Settings.interfaceModeVoicedUser
+		case .ircOperator: .SettingsLabels.interfaceModeServerStaff
+		case .channelOwner: .SettingsLabels.interfaceModeChannelOwner
+		case .superOperator: .SettingsLabels.interfaceModeChannelAdministrator
+		case .normalOperator: .SettingsLabels.interfaceModeChannelOperator
+		case .halfOperator: .SettingsLabels.interfaceModeChannelHalfOperator
+		case .voiced: .SettingsLabels.interfaceModeVoicedUser
 		}
 	}
 }

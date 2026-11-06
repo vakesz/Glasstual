@@ -72,15 +72,7 @@ extension ServerSession {
 		!isTerminating && environment.services.applicationState?.applicationIsTerminating != true
 	}
 
-	func connect() {
-		connect(.normal)
-	}
-
-	func connect(_ mode: SessionConnectMode) {
-		connect(mode, bypassProxy: false)
-	}
-
-	func connect(_ mode: SessionConnectMode, bypassProxy: Bool) {
+	func connect(_ mode: SessionConnectMode = .normal, bypassProxy: Bool = false) {
 		connect(mode, bypassProxy: bypassProxy, retryingServerIdentifier: nil)
 	}
 
@@ -336,10 +328,8 @@ extension ServerSession {
 
 		/* Held so that a reconnect inside the two-second window cannot have this
 		 stale block tear down the *new* session. */
-		pendingDisconnectTask = Task { [weak self, weak socket] in
-			try? await Task.sleep(for: .seconds(2))
-
-			guard Task.isCancelled == false, let self, self.socket === socket else { return }
+		pendingDisconnectTask = SessionTimer.once(after: 2) { [weak self, weak socket] in
+			guard let self, self.socket === socket else { return }
 
 			pendingDisconnectTask = nil
 			disconnect()
@@ -347,7 +337,7 @@ extension ServerSession {
 	}
 
 	func cancelDelayedDisconnect() {
-		pendingDisconnectTask?.cancel()
+		pendingDisconnectTask?.stop()
 		pendingDisconnectTask = nil
 	}
 
@@ -370,9 +360,9 @@ extension ServerSession {
 		sessionCredentials.forget()
 		cancelScheduledConnection()
 		cancelConnectCommandSettling()
-		trackedUserPopulationTask?.cancel()
+		trackedUserPopulationTask?.stop()
 		trackedUserPopulationTask = nil
-		rejoinTasks.values.forEach { $0.cancel() }
+		rejoinTasks.values.forEach { $0.stop() }
 		rejoinTasks.removeAll()
 		typingSender.removeAll()
 	}

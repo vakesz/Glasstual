@@ -84,9 +84,9 @@ extension ServerSession {
 			/* `263` names only the command, while 416 and 736 also name the
 			 target. Use the target when it exists; otherwise IRC's wire order is
 			 the only correlation an unlabelled refusal provides. */
-			let requestWasHidden: Bool? = if message.commandNumeric == ServerNumeric.tryagain.rawValue {
-				requestedCommands.recordWhoRequestClosed()
-			} else if message.params.count > 3 {
+			let requestWasHidden: Bool? = if message.commandNumeric != ServerNumeric.tryagain.rawValue,
+			                                 message.params.count > 3
+			{
 				requestedCommands.recordWhoRequestClosed(for: casefoldedTarget(message.param(at: 2)))
 			} else {
 				requestedCommands.recordWhoRequestClosed()

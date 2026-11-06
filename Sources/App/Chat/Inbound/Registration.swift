@@ -107,13 +107,9 @@ extension ServerSession {
 
 		performAutoJoin()
 
-		trackedUserPopulationTask?.cancel()
-		trackedUserPopulationTask = Task { [weak self] in
-			try? await Task.sleep(for: .seconds(10))
-
-			guard Task.isCancelled == false, let self else { return }
-
-			populateISONTrackedUsersList()
+		trackedUserPopulationTask?.stop()
+		trackedUserPopulationTask = SessionTimer.once(after: 10) { [weak self] in
+			self?.populateISONTrackedUsersList()
 		}
 	}
 

@@ -91,9 +91,9 @@ extension PreferredAppearance {
 	/// What the appearance picker calls this choice.
 	var displayName: LocalizedStringResource {
 		switch self {
-		case .inherited: .Settings.interfaceAppearanceSystem
-		case .light: .Settings.interfaceAppearanceLight
-		case .dark: .Settings.interfaceAppearanceDark
+		case .inherited: .SettingsLabels.interfaceAppearanceSystem
+		case .light: .SettingsLabels.interfaceAppearanceLight
+		case .dark: .SettingsLabels.interfaceAppearanceDark
 		}
 	}
 }

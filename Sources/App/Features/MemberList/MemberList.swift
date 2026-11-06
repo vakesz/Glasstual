@@ -226,14 +226,6 @@ final class MemberList: ConversationMembersPresenting {
 		memberShowingProfile = nil
 	}
 
-	/// Drops whatever `member`'s row was showing, and leaves another row's
-	/// popover alone.
-	func endProfileInteraction(with member: User.ID) {
-		if memberShowingProfile == member {
-			memberShowingProfile = nil
-		}
-	}
-
 	private func dismissProfileIfMemberLeft(_ admitted: Set<User.ID>) {
 		if let memberShowingProfile, admitted.contains(memberShowingProfile) == false {
 			self.memberShowingProfile = nil

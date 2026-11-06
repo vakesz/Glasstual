@@ -152,7 +152,7 @@ class ServerSession: ChatItem {
 	var disconnectCallbacks: [() -> Void] = []
 	/** Both delays are cancellable so that a reconnect inside the delay window
 	 cannot have a stale block act on the new session. */
-	var pendingDisconnectTask: Task<Void, Never>?
+	var pendingDisconnectTask: SessionTimer?
 	var pendingConnectionTask: Task<Void, Never>?
 	var credentialLoader: @Sendable ([KeychainItem]) async -> [KeychainItem: String] = {
 		await KeychainSecretLoader.passwords(for: $0)
@@ -161,8 +161,8 @@ class ServerSession: ChatItem {
 	var startup = StartupState()
 	/// The scripts this session started that are still running.
 	let scriptTasks = ScriptTaskBag()
-	var trackedUserPopulationTask: Task<Void, Never>?
-	var rejoinTasks: [String: Task<Void, Never>] = [:]
+	var trackedUserPopulationTask: SessionTimer?
+	var rejoinTasks: [String: SessionTimer] = [:]
 	var pendingConfirmationTasks: [UUID: Task<Void, Never>] = [:]
 	var renderAdmission = RenderAdmission()
 	/// Member ordering and native-list presentation for one bounded inbound read
@@ -384,7 +384,7 @@ class ServerSession: ChatItem {
 
 	isolated deinit {
 		sasl.scramTask?.cancel()
-		pendingDisconnectTask?.cancel()
+		pendingDisconnectTask?.stop()
 		pendingConnectionTask?.cancel()
 		outboundTextProducer?.cancel()
 		notifications.cancelAll()
@@ -395,8 +395,8 @@ class ServerSession: ChatItem {
 		].forEach { timer in timer.stop() }
 		startup.cancel()
 		scriptTasks.cancelAll()
-		trackedUserPopulationTask?.cancel()
-		rejoinTasks.values.forEach { $0.cancel() }
+		trackedUserPopulationTask?.stop()
+		rejoinTasks.values.forEach { $0.stop() }
 		pendingConfirmationTasks.values.forEach { $0.cancel() }
 		labeledResponses.deadlineTask?.cancel()
 	}

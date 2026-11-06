@@ -502,11 +502,11 @@ struct ConnectionInboundDeliveryTests {
 		session.autoConnect(withDelay: 20, afterWakeUp: false)
 		session.startReconnectTimer()
 		let scheduled = session.pendingConnectionTask
-		let rejoin = Task {}
+		let rejoin = SessionTimer.once(after: 60) {}
 		session.rejoinTasks["#test"] = rejoin
 		session.isTerminating = true
 		#expect(scheduled?.isCancelled == true)
-		#expect(rejoin.isCancelled)
+		#expect(rejoin.isActive == false)
 		#expect(session.rejoinTasks.isEmpty)
 		session.autoConnect(withDelay: 20, afterWakeUp: false)
 		session.startReconnectTimer()

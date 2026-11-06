@@ -152,10 +152,6 @@ extension ServerSession {
 		labeledResponses.pending.removeAll()
 	}
 
-	func attachLineNumber(_ lineNumber: String, toDeliveryWithLabel label: String) {
-		labeledResponses.pending[label]?.lineNumber = lineNumber
-	}
-
 	func timeoutDelivery(withLabel label: String) {
 		guard let delivery = labeledResponses.pending[label], !delivery.resolved else { return }
 		resolveDelivery(

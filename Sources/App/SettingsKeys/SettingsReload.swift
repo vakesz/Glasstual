@@ -63,16 +63,6 @@ nonisolated struct SettingsReloadRequest: NotificationCenter.MainActorMessage, S
 		.settingsReloadRequested
 	}
 
-	/** Spelled out rather than left to the default interop so that the bridge is
-	 one readable pair: the action crosses as its raw value. */
-	static func makeNotification(_ message: Self) -> Notification {
-		Notification(
-			name: name,
-			object: nil,
-			userInfo: [actionKey: message.action.rawValue]
-		)
-	}
-
 	static func makeMessage(_ notification: Notification) -> Self? {
 		guard let rawValue = notification.userInfo?[actionKey] as? UInt else {
 			return nil

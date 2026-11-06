@@ -162,7 +162,7 @@ final class ScrollbackDuplicateIndex {
 		guard let milliseconds = Int64(exactly: (date.timeIntervalSince1970 * 1000.0).rounded()) else {
 			return nil
 		}
-		return String(format: "%lld\u{001f}%@\u{001f}%@", milliseconds, nickname ?? "", messageBody)
+		return "\(milliseconds)\u{001f}\(nickname ?? "")\u{001f}\(messageBody)"
 	}
 
 	/// Indexes `chatLine` for the duplicate checks, and reports whether this call

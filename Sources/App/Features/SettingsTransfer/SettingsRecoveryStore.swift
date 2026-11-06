@@ -20,13 +20,6 @@ actor SettingsRecoveryStore {
 		self.directory = directory
 	}
 
-	/// Where this Mac keeps its configuration backups.
-	@MainActor
-	static var defaultDirectory: URL {
-		(ApplicationPaths.applicationSupportURL ?? URL.applicationSupportDirectory)
-			.appendingPathComponent("Configuration Backups", isDirectory: true)
-	}
-
 	func backups() throws -> [SettingsRecoveryBackup] {
 		guard FileManager.default.fileExists(atPath: directory.path) else { return [] }
 		return try FileManager.default.contentsOfDirectory(

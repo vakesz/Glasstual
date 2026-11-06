@@ -11,33 +11,26 @@ nonisolated struct Hostmask: Equatable, Sendable {
 	let address: String
 
 	init?(parsing value: String, maximumNicknameLength: Int = 50) {
-		let source = value as NSString
-		let nicknameSeparator = source.range(of: "!", options: .literal)
+		// Separators are found on unicode scalars, not Characters, so a "!" or
+		// "@" followed by a combining mark still delimits as it did on UTF-16.
+		let scalars = value.unicodeScalars
 
-		guard nicknameSeparator.location != NSNotFound else {
+		guard let nicknameSeparator = scalars.firstIndex(of: "!") else {
 			return nil
 		}
 
 		// An IRC hostmask delimits on the first "@" after the "!". Searching
 		// backwards let "nick!user@host@evil" parse as address "evil", which
 		// matches a different address book rule than the operator wrote.
-		let searchStart = nicknameSeparator.location + nicknameSeparator.length
-		let addressSeparator = source.range(
-			of: "@",
-			options: .literal,
-			range: NSRange(location: searchStart, length: source.length - searchStart)
-		)
+		let usernameStart = scalars.index(after: nicknameSeparator)
 
-		guard addressSeparator.location != NSNotFound else {
+		guard let addressSeparator = scalars[usernameStart...].firstIndex(of: "@") else {
 			return nil
 		}
 
-		let nickname = source.substring(to: nicknameSeparator.location)
-		let usernameStart = nicknameSeparator.location + 1
-		let username = source.substring(
-			with: NSRange(location: usernameStart, length: addressSeparator.location - usernameStart)
-		)
-		let address = source.substring(from: addressSeparator.location + 1)
+		let nickname = String(scalars[..<nicknameSeparator])
+		let username = String(scalars[usernameStart ..< addressSeparator])
+		let address = String(scalars[scalars.index(after: addressSeparator)...])
 
 		guard Self.isValidNickname(nickname, maximumLength: maximumNicknameLength),
 		      Self.isValidUsername(username),

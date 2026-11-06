@@ -3,6 +3,7 @@
 
 import Foundation
 @testable import Glasstual
+import Synchronization
 import Testing
 
 @MainActor
@@ -53,5 +54,21 @@ struct BundleResourcesTests {
 		#expect(BundleResources.array(fromResources: "StaticStore", cacheValue: false) == nil)
 		#expect(BundleResources.dictionary(fromResources: "DoesNotExistAnywhere", cacheValue: false) == nil)
 		#expect(BundleResources.hasCachedResource(named: "DoesNotExistAnywhere") == false)
+	}
+}
+
+extension BundleResources {
+	/// Empties the cache. Tests plant entries in it, and it is process-wide.
+	static func removeAllCachedResources() {
+		resourceFileContents.withLock { contents in
+			contents.removeAll()
+		}
+	}
+
+	/// Whether `name`'s contents have been read already.
+	static func hasCachedResource(named name: String, inDirectory subpath: String? = nil) -> Bool {
+		resourceFileContents.withLock { contents in
+			contents[cacheKey(name: name, subpath: subpath)] != nil
+		}
 	}
 }

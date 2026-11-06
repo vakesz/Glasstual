@@ -112,4 +112,46 @@ struct TranscriptThemePresetContrastTests {
 			}
 		}
 	}
+
+	/** The transcript draws every text role on the page and, in bubble layouts,
+	 on both bubble grounds, so each role is held to the floor on all three. */
+	@Test(
+		"Every preset text role clears the floor on the page and both bubble grounds",
+		arguments: TranscriptThemePreset.allCases
+	)
+	func presetTextRolesClearContrastOnEveryGround(_ preset: TranscriptThemePreset) {
+		let palette = preset.theme().palette
+		let grounds: [(name: String, color: KeyPath<TranscriptThemePalette, AdaptiveTranscriptColor>)] = [
+			("page", \.background),
+			("incoming bubble", \.bubbleIncoming),
+			("outgoing bubble", \.bubbleOutgoing),
+		]
+		for increasesContrast in [false, true] {
+			let floor = increasesContrast ? 7.0 : 4.5
+			for isDark in [false, true] {
+				for ground in grounds {
+					let resolvedGround = palette[keyPath: ground.color]
+						.resolved(isDark: isDark, increasesContrast: increasesContrast)
+					for role in textRoles {
+						let ratio = palette[keyPath: role.color]
+							.resolved(isDark: isDark, increasesContrast: increasesContrast)
+							.contrastRatio(against: resolvedGround)
+						let mode = "\(isDark ? "dark" : "light")\(increasesContrast ? " high-contrast" : "")"
+						#expect(ratio >= floor, "\(preset.title) \(role.name) on the \(mode) \(ground.name): \(ratio)")
+					}
+				}
+			}
+		}
+	}
+
+	@Test("Every preset keeps the timestamp quieter than the secondary text", arguments: TranscriptThemePreset.allCases)
+	func presetTimestampIsQuieterThanSecondary(_ preset: TranscriptThemePreset) {
+		let palette = preset.theme().palette
+		for isDark in [false, true] {
+			let ground = palette.background.resolved(isDark: isDark)
+			let timestamp = palette.timestampText.resolved(isDark: isDark).contrastRatio(against: ground)
+			let secondary = palette.secondaryText.resolved(isDark: isDark).contrastRatio(against: ground)
+			#expect(timestamp < secondary, "\(preset.title) \(isDark ? "dark" : "light"): \(timestamp) against \(secondary)")
+		}
+	}
 }

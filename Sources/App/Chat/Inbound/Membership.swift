@@ -154,11 +154,9 @@ extension ServerSession {
 				if environment.settings.rejoinOnKick, !channel.errorOnLastJoinAttempt {
 					printDebugInformation(String(localized: .IRC.attemptingToRejoinChannelInThree), in: channel)
 					let key = channel.uniqueIdentifier
-					rejoinTasks[key]?.cancel()
-					rejoinTasks[key] = Task { [weak self, weak channel] in
-						try? await Task.sleep(for: .seconds(3))
-
-						guard Task.isCancelled == false, let self, let channel else { return }
+					rejoinTasks[key]?.stop()
+					rejoinTasks[key] = SessionTimer.once(after: 3) { [weak self, weak channel] in
+						guard let self, let channel else { return }
 
 						rejoinTasks[key] = nil
 						join(channel)
@@ -187,8 +185,9 @@ extension ServerSession {
 		if !printOnly, !message.isReplayed {
 			typingTracker.removeNickname(sender)
 		}
-		let conversationName = printOnly ? message.params[0] : nil
-		let comment = message.params.count > (printOnly ? 1 : 0) ? message.params[printOnly ? 1 : 0] : ""
+		let layout = PrintOnlyLayout(message)
+		let conversationName = layout.conversationName
+		let comment = layout.payload ?? ""
 		let isLocalUser = nicknameIsMyself(sender)
 		let user = printOnly ? nil : findUser(sender)
 		if !printOnly, user == nil {
@@ -253,11 +252,9 @@ extension ServerSession {
 	func receiveNick(_ message: Message) {
 		guard !message.params.isEmpty, let oldNickname = message.senderNickname else { return }
 		let printOnly = message.isPrintOnlyMessage
-		let conversationName = printOnly ? message.params[0] : nil
-		guard let newNickname = message.params.count > (printOnly ? 1 : 0)
-			? message.params[printOnly ? 1 : 0] : nil,
-			oldNickname != newNickname
-		else { return }
+		let layout = PrintOnlyLayout(message)
+		let conversationName = layout.conversationName
+		guard let newNickname = layout.payload, oldNickname != newNickname else { return }
 		if !printOnly, !message.isReplayed {
 			// The old identity is gone; a new typing tag can establish the new one.
 			typingTracker.removeNickname(oldNickname)
@@ -390,5 +387,18 @@ extension ServerSession {
 
 	private func updateTrackingStatus(for entry: AddressBookEntry, message: Message) {
 		updateUserTrackingStatus(for: entry, message: message)
+	}
+}
+
+/// Where a QUIT or NICK message keeps its payload. A print-only message leads
+/// with the name of the conversation it prints into; a live one does not.
+private struct PrintOnlyLayout {
+	let conversationName: String?
+	let payload: String?
+
+	init(_ message: Message) {
+		let offset = message.isPrintOnlyMessage ? 1 : 0
+		conversationName = message.isPrintOnlyMessage ? message.params.first : nil
+		payload = message.params.count > offset ? message.params[offset] : nil
 	}
 }

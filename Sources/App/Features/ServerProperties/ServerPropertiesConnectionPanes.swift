@@ -32,7 +32,7 @@ struct ServerPropertiesGeneralPane: View {
 					.onChange(of: model.serverAddress) { model.serverAddressTextDidChange() }
 				TextField(.ServerProperties.serverPort, text: $model.serverPort)
 				Toggle(.ServerProperties.connectSecurely, isOn: $model.primaryServerIsSecured)
-				SecureField(.ServerProperties.serverPassword, text: $model.serverPassword)
+				SecureField(.ServerProperties.serverPassword, text: model.secretBinding(.serverPassword))
 			} footer: {
 				Text(.ServerProperties.serverPasswordHelp)
 			}
@@ -85,7 +85,7 @@ struct ServerPropertiesIdentityPane: View {
 			Section {
 				SecureField(
 					.ServerProperties.nickservOrSaslPassword,
-					text: $model.nicknamePassword
+					text: model.secretBinding(.nicknamePassword)
 				)
 				/* The onboarding network picker was the only place this
 				 could be chosen, so a connection made any other way was

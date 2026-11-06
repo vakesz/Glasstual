@@ -41,13 +41,20 @@ private func makePreviousSessionLine(body: String = "previous") -> ChatLine {
 	line.messageBody = body
 	line.lineType = .privateMessage
 	line.nickname = "alice"
-	line.restoreIdentity(
-		uniqueIdentifier: "previous-session-line",
-		sessionIdentifier: ChatLine.currentSessionIdentifier() == 1
-			? 2
-			: ChatLine.currentSessionIdentifier() - 1
-	)
-	return line
+	let sessionIdentifier = ChatLine.currentSessionIdentifier() == 1
+		? 2
+		: ChatLine.currentSessionIdentifier() - 1
+	guard let stored = try? PropertyListEncoder().encode(ChatLineStoredPayload(line: line)),
+	      var payload = (try? PropertyListSerialization.propertyList(from: stored, format: nil)) as? [String: Any],
+	      var fields = payload["line"] as? [String: Any]
+	else { preconditionFailure("A chat line must round-trip through its stored payload") }
+	fields[ChatLine.CodingKeys.uniqueIdentifier.rawValue] = "previous-session-line"
+	fields[ChatLine.CodingKeys.sessionIdentifier.rawValue] = sessionIdentifier
+	payload["line"] = fields
+	guard let data = try? PropertyListSerialization.data(fromPropertyList: payload, format: .binary, options: 0),
+	      let restored = ChatLine(data: data)
+	else { preconditionFailure("The edited payload must decode as a stored line") }
+	return restored
 }
 
 @Suite("Native log line rendering")

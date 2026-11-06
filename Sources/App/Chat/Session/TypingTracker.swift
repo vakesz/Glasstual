@@ -132,7 +132,7 @@ final class TypingTracker {
 	 typing indicator filed under one spelling then never cleared when the
 	 `done` tag arrived spelled the other way. */
 	private func casefolded(_ nickname: String) -> String {
-		session?.casefoldNickname(nickname) ?? nickname.lowercased()
+		session?.casefoldNickname(nickname) ?? IRCCaseFolding.fold(nickname, using: .rfc1459)
 	}
 
 	func removeAll(in conversation: Conversation) {

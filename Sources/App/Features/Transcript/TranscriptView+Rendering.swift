@@ -73,6 +73,19 @@ extension TranscriptView {
 				attributes: runAttributes(run, line: line, paragraph: paragraph)
 			))
 		}
+		if line.body.isHighlight, body.length > 0 {
+			/* A highlight is drawn in colour, so the word is what a screen reader
+			 hears first; whatever the first run already says follows it. */
+			let existing = body.attribute(.accessibilityCustomText, at: 0, effectiveRange: nil) as? [String] ?? []
+			body.addAttribute(
+				.accessibilityCustomText,
+				value: TranscriptHighlightCue.spokenText(
+					prefix: String(localized: .Transcript.highlightAccessibility),
+					existing: existing
+				),
+				range: (body.string as NSString).rangeOfComposedCharacterSequence(at: 0)
+			)
+		}
 		TranscriptIsolate.appendIsolated(body, to: result, isolateAttributes: metadata)
 		result.addAttribute(.transcriptSelectionSegment, value: "body",
 		                    range: NSRange(location: bodyStart, length: result.length - bodyStart))
@@ -169,6 +182,16 @@ extension TranscriptView {
 		if run.traits.contains(.highlighted) {
 			attributes[.backgroundColor] = themeColor(palette.highlightBackground)
 			attributes[.foregroundColor] = themeColor(palette.highlightText)
+			/* The colours are the whole of the cue otherwise, so a reader who has
+			 asked to be told things without colour gets a line under the run. */
+			if TranscriptHighlightCue.underlinesRun(
+				isHighlighted: true,
+				differentiatesWithoutColor: NSWorkspace.shared.accessibilityDisplayShouldDifferentiateWithoutColor,
+				action: run.action
+			) {
+				attributes[.underlineStyle] = NSUnderlineStyle.single.rawValue
+				attributes[.underlineColor] = themeColor(palette.highlightText)
+			}
 		}
 		if run.traits.contains(.strikethrough) {
 			attributes[.strikethroughStyle] = NSUnderlineStyle.single.rawValue

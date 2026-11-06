@@ -148,10 +148,12 @@ nonisolated enum DateFormatting {
 			))
 		}
 
-		/* "Today" and "Yesterday" are `DateFormatter.doesRelativeDateFormatting`
-		 and nothing else: `Date.FormatStyle` has no equivalent, and
-		 `Date.RelativeFormatStyle` says "3 days ago" instead of naming the day.
-		 A `DateFormatter` is not `Sendable`, so this path builds one per call
+		/* "Today" and "Yesterday" ahead of a date and time are
+		 `DateFormatter.doesRelativeDateFormatting` and nothing else:
+		 `Date.FormatStyle` has no equivalent, and `Date.RelativeFormatStyle`
+		 yields an offset ("3 days ago", or "yesterday" with no time of day)
+		 rather than the formatted date, so the output would differ. A
+		 `DateFormatter` is not `Sendable`, so this path builds one per call
 		 rather than sharing one; nothing on the transcript's drawing path asks
 		 for a relative date. */
 		let dateFormatter = DateFormatter()

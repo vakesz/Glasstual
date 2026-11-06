@@ -257,6 +257,19 @@ final class Connection {
 	/// How many lines are handled before the main actor is offered to other work.
 	private static let linesPerTurn = 64
 
+	/// Whether a connect or secure event may still advance this connection. A
+	/// session that can no longer continue connecting closes it instead.
+	private func admitConnectionProgress() -> Bool {
+		guard isDisconnecting == false else { return false }
+		guard session?.canContinueConnecting == true else {
+			session?.cancelReconnect()
+			close()
+			return false
+		}
+
+		return true
+	}
+
 	private func handle(_ event: ConnectionEvent) {
 		guard terminal == false, session?.socket === self else {
 			if case let .requestInsecureCertificateTrust(response) = event {
@@ -268,23 +281,13 @@ final class Connection {
 		case let .willConnectToProxy(host, port):
 			session?.connectionWillConnect(toProxy: host, port: port)
 		case let .didConnect(host):
-			guard isDisconnecting == false else { return }
-			guard session?.canContinueConnecting == true else {
-				session?.cancelReconnect()
-				close()
-				return
-			}
+			guard admitConnectionProgress() else { return }
 			connectedAddress = host
 			isConnecting = false
 			isConnected = true
 			session?.connectionDidConnect()
 		case let .didSecure(protocolType, cipherSuite):
-			guard isDisconnecting == false else { return }
-			guard session?.canContinueConnecting == true else {
-				session?.cancelReconnect()
-				close()
-				return
-			}
+			guard admitConnectionProgress() else { return }
 			isSecured = true
 			isConnectedWithClientSideCertificate = config.identityClientSideCertificate != nil
 			session?.connectionDidSecure(protocolType: protocolType, cipherSuite: cipherSuite)

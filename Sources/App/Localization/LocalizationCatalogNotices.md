@@ -21,8 +21,8 @@ Catalog copyright notices:
 - `AddressBook.xcstrings`, `ChannelProperties.xcstrings` and
   `CommonErrors.xcstrings`:
   Copyright (c) 2018 Codeux Software, LLC & respective contributors.
-- `IRC.xcstrings`, `MainWindow.xcstrings`, `Prompts.xcstrings` and
-  `Settings.xcstrings`: Copyright (c) 2010 - 2020 Codeux Software, LLC &
+- `IRC.xcstrings`, `MainWindow.xcstrings`, `Prompts.xcstrings`,
+  `Settings.xcstrings` and `SettingsLabels.xcstrings`: Copyright (c) 2010 - 2020 Codeux Software, LLC &
   respective contributors.
 - `MainWindow.xcstrings` also contains menu text copyrighted 2010 - 2018 by
   Codeux Software, LLC & respective contributors.

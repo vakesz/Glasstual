@@ -192,15 +192,6 @@ nonisolated struct ChatLine: Codable, Hashable, Sendable, CustomStringConvertibl
 		}
 	}
 
-	/// Restores the two identities a stored line carried. Every other field is
-	/// settable within the module; these are the line's own. A stored line that
-	/// carried none leaves them empty, which is what tells
-	/// `populateDefaultsPostflight` to mint a fresh one.
-	mutating func restoreIdentity(uniqueIdentifier: String?, sessionIdentifier: UInt) {
-		self.uniqueIdentifier = uniqueIdentifier ?? ""
-		self.sessionIdentifier = sessionIdentifier
-	}
-
 	func scrollbackEntry(forView viewIdentifier: String) -> ScrollbackEntry {
 		guard let data = try? PropertyListEncoder().encode(ChatLineStoredPayload(line: self)) else {
 			preconditionFailure("A chat line must remain encodable")
