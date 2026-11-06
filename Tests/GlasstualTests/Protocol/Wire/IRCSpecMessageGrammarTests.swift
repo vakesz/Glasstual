@@ -115,7 +115,7 @@ struct IRCSpecMessageGrammarTests {
 		let session = TestServerSession()
 		let message = try #require(Message(line: "PING :12345", on: session))
 
-		#expect(message.senderIsServer)
+		#expect(message.sender.isServer)
 		#expect(message.command == "PING")
 		#expect(message.params == ["12345"])
 	}
@@ -128,10 +128,10 @@ struct IRCSpecMessageGrammarTests {
 		let session = TestServerSession()
 		let message = try #require(Message(line: ":nick!user@example.org PRIVMSG #chan :hi", on: session))
 
-		#expect(message.senderIsServer == false)
+		#expect(message.sender.isServer == false)
 		#expect(message.senderNickname == "nick")
-		#expect(message.senderUsername == "user")
-		#expect(message.senderAddress == "example.org")
+		#expect(message.sender.username == "user")
+		#expect(message.sender.address == "example.org")
 		#expect(message.senderHostmask == "nick!user@example.org")
 	}
 
@@ -140,7 +140,7 @@ struct IRCSpecMessageGrammarTests {
 		let session = TestServerSession()
 		let message = try #require(Message(line: ":irc.example.org NOTICE * :hello", on: session))
 
-		#expect(message.senderIsServer)
+		#expect(message.sender.isServer)
 		#expect(message.senderNickname == "irc.example.org")
 	}
 

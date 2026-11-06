@@ -310,7 +310,7 @@ struct MessageTagCorpusTests {
 	func absentSenderFallsBackToTheServer() throws {
 		let message = try #require(Message(line: "PING :12345"))
 
-		#expect(message.senderIsServer)
+		#expect(message.sender.isServer)
 		#expect(message.params == ["12345"])
 		#expect(message.sequence == "12345")
 	}
@@ -320,10 +320,10 @@ struct MessageTagCorpusTests {
 		let message = try #require(Message(line: ":nick!user@host PRIVMSG #chan :hi"))
 
 		#expect(message.senderNickname == "nick")
-		#expect(message.senderUsername == "user")
-		#expect(message.senderAddress == "host")
+		#expect(message.sender.username == "user")
+		#expect(message.sender.address == "host")
 		#expect(message.senderHostmask == "nick!user@host")
-		#expect(message.senderIsServer == false)
+		#expect(message.sender.isServer == false)
 	}
 
 	@Test

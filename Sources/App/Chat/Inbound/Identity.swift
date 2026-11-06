@@ -49,7 +49,7 @@ extension ServerSession {
 	 bouncer, a server that does not filter client tags, or the peer put there,
 	 and an account name or bot flag taken from it is a claim nobody checked. */
 	func updateUserIdentity(fromMessageTags message: Message) {
-		guard !message.senderIsServer, let nickname = message.senderNickname, !nickname.isEmpty else { return }
+		guard !message.sender.isServer, let nickname = message.senderNickname, !nickname.isEmpty else { return }
 		let account = isCapabilityEnabled(.accountTag) ? message.senderAccount : nil
 		let isBot = supportInfo.botModeSymbol != nil && message.messageTags?["bot"] != nil
 		guard account != nil || isBot else { return }

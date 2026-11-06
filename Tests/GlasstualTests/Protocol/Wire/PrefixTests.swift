@@ -77,3 +77,33 @@ struct PrefixTests {
 		#expect(message.sender.isServer)
 	}
 }
+
+@MainActor
+@Suite("Prefix shapes")
+struct PrefixShapeTests {
+	@Test("A server prefix carries only its name")
+	func serverCarriesItsName() throws {
+		let message = try #require(Message(line: ":irc.example.com 001 me :hi"))
+
+		#expect(message.sender == .server(name: "irc.example.com"))
+		#expect(message.sender.hostmask == "irc.example.com")
+		#expect(message.sender.username == nil)
+		#expect(message.sender.address == nil)
+	}
+
+	@Test("A hostmask with an empty username keeps its wire spelling")
+	func emptyUsernameKeepsRawHostmask() throws {
+		let message = try #require(Message(line: ":alice!@example.org PRIVMSG #chan :hello"))
+
+		#expect(message.sender == .user(.init(nickname: "alice", address: "example.org", hostmask: "alice!@example.org")))
+	}
+
+	@Test("A line with no prefix is attributed to the named server")
+	func missingPrefixIsTheServer() throws {
+		var context = MessageParsingContext.none
+		context.serverAddress = "irc.example.net"
+		let message = try #require(Message(line: "PING :x", context: context))
+
+		#expect(message.sender == .server(name: "irc.example.net"))
+	}
+}

@@ -14,7 +14,7 @@ extension ServerSession {
 			}
 		case .umodegmsg: handleUserModeMessageNumeric(message, shouldPrint: shouldPrint)
 		case .loggedin:
-			guard message.params.count == 4, message.senderIsServer,
+			guard message.params.count == 4, message.sender.isServer,
 			      nicknameIsMyself(message.params[0]), message.params[2] != "*",
 			      !message.params[2].isEmpty else { return }
 			guard scramMutualAuthenticationIsSatisfied() else {

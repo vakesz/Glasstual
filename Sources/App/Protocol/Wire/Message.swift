@@ -93,7 +93,7 @@ nonisolated struct MessageParsingContext: Sendable {
  their own. The one reference it keeps is `parentBatchMessage`, the batch that
  holds it — that has identity, so it stays a class. */
 nonisolated struct Message {
-	var sender = Prefix()
+	var sender = Prefix.unnamed
 	/// The wire command as the server spelled it, upper-cased by the parser for
 	/// everything that is not a numeric.
 	private(set) var command = ""
@@ -121,20 +121,8 @@ nonisolated struct Message {
 		sender.nickname
 	}
 
-	var senderUsername: String? {
-		sender.username
-	}
-
-	var senderAddress: String? {
-		sender.address
-	}
-
 	var senderHostmask: String? {
 		sender.hostmask
-	}
-
-	var senderIsServer: Bool {
-		sender.isServer
 	}
 
 	var sequence: String {
@@ -156,13 +144,9 @@ nonisolated struct Message {
 
 		if let senderSection = parsed.senderSection {
 			sender = Prefix.user(parsing: senderSection, maximumNicknameLength: context.maximumNicknameLength)
-				?? Prefix(nickname: senderSection, hostmask: senderSection, isServer: true)
+				?? .server(name: senderSection)
 		} else {
-			sender = Prefix(
-				nickname: context.serverAddress,
-				hostmask: context.serverAddress,
-				isServer: true
-			)
+			sender = .server(name: context.serverAddress)
 		}
 
 		setCommand(parsed.command)

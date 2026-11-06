@@ -240,7 +240,7 @@ extension ServerSession {
 	/// Receiving a message ends that sender's typing state in its destination.
 	/// History cannot clear a live indicator, and an echo belongs to its target.
 	func clearTyping(for message: Message) {
-		guard !message.isReplayed, !message.isPrintOnlyMessage, !message.senderIsServer,
+		guard !message.isReplayed, !message.isPrintOnlyMessage, !message.sender.isServer,
 		      let sender = message.senderNickname, var target = message.params.first else { return }
 		if !supportInfo.extractStatusMessagePrefix(fromTargetNamed: target).isEmpty {
 			target.removeFirst()

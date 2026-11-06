@@ -92,8 +92,8 @@ extension ServerSession {
 		if !printOnly {
 			var user = draftUser(withNickname: sender)
 			user.nickname = sender
-			user.username = message.senderUsername
-			user.address = message.senderAddress
+			user.username = message.sender.username
+			user.address = message.sender.address
 			if isCapabilityEnabled(.extendedJoin), message.params.count >= 3 {
 				user.account = IdentityPolicy.account(fromWireValue: message.params[1])
 				user.realName = message.params[2]
@@ -117,9 +117,9 @@ extension ServerSession {
 		if shouldPrintReceivedMessage(message, withText: nil, destinedFor: channel),
 		   printsGeneralEvent(isLocalUser: isLocalUser, in: channel, ignoring: ignore)
 		{
-			let address = (message.senderAddress ?? "").stringByAppendingIRCFormattingStop
+			let address = (message.sender.address ?? "").stringByAppendingIRCFormattingStop
 			print(
-				String(localized: .IRC.joinedTheChannel(sender, message.senderUsername ?? "", address)),
+				String(localized: .IRC.joinedTheChannel(sender, message.sender.username ?? "", address)),
 				by: nil,
 				in: channel, as: .join, command: message.command, receivedAt: message.receivedAt
 			)
@@ -156,8 +156,8 @@ extension ServerSession {
 		{
 			var text = String(localized: .IRC.leftTheChannel(
 				sender,
-				message.senderUsername ?? "",
-				(message.senderAddress ?? "").stringByAppendingIRCFormattingStop
+				message.sender.username ?? "",
+				(message.sender.address ?? "").stringByAppendingIRCFormattingStop
 			))
 			if !comment.isEmpty {
 				text = String(localized: .IRC.miscellaneousMessagesRelated(text, comment.stringByAppendingIRCFormattingStop))
@@ -234,8 +234,8 @@ extension ServerSession {
 
 		var quitText = String(localized: .IRC.leftIrc(
 			sender,
-			message.senderUsername ?? "",
-			(message.senderAddress ?? "").stringByAppendingIRCFormattingStop
+			message.sender.username ?? "",
+			(message.sender.address ?? "").stringByAppendingIRCFormattingStop
 		))
 		if !comment.isEmpty {
 			quitText = String(localized: .IRC.miscellaneousMessagesRelatedToIrcEvents(quitText, comment.stringByAppendingIRCFormattingStop))

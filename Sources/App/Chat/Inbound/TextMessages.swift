@@ -256,7 +256,7 @@ extension ServerSession {
 		if stringIsChannelName(target) {
 			guard ignore?.ignorePublicMessages != true else { return }
 			receivePublicText(message, lineType: lineType, target: target, text: text)
-		} else if !message.senderIsServer {
+		} else if !message.sender.isServer {
 			guard ignore?.ignorePrivateMessages != true else { return }
 			receivePrivateText(message, lineType: lineType, target: target, text: text)
 		} else {
@@ -410,8 +410,8 @@ extension ServerSession {
 
 	private func noticeIsFromServices(_ message: Message) -> Bool {
 		ServiceNoticePolicy.noticeIsFromServices(
-			senderIsServer: message.senderIsServer,
-			senderAddress: message.senderAddress,
+			senderIsServer: message.sender.isServer,
+			senderAddress: message.sender.address,
 			serverAddress: serverAddress
 		)
 	}

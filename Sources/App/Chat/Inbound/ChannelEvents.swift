@@ -111,7 +111,12 @@ extension ServerSession {
 			return
 		}
 
-		let text = String(localized: .IRC.invitedYouToJoin(sender, message.senderUsername ?? "", message.senderAddress ?? "", channelName))
+		let text = String(localized: .IRC.invitedYouToJoin(
+			sender,
+			message.sender.username ?? "",
+			message.sender.address ?? "",
+			channelName
+		))
 		if shouldPrintReceivedMessage(message, withText: channelName, destinedFor: nil) {
 			let selectedConversation = output?.selectedConversation(on: self)
 			print(text, by: nil, in: selectedConversation, as: .invite, command: message.command,
@@ -137,7 +142,7 @@ extension ServerSession {
 	func receiveCertInfo(_ message: Message) {
 		guard message.params.count == 2,
 		      znc.isSendingCertificateInfo,
-		      message.senderIsServer,
+		      message.sender.isServer,
 		      message.senderNickname == ServerQuirks.ZNC.messageSender,
 		      InboundEventPolicy.acceptsCertificateChunk(message.sequence),
 		      let chainData = znc.certificateChainText,
