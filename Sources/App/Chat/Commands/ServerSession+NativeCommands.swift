@@ -69,6 +69,18 @@ extension ServerSession {
 			guard requireArguments(parsed.arguments, for: parsed.command), socket != nil else { return }
 			connectionDidReceive(arguments)
 
+		case .redact:
+			guard isLoggedIn, requireArguments(parsed.arguments, for: parsed.command) else { return }
+			guard isCapabilityEnabled(.messageRedaction) else {
+				printDebugInformation(String(localized: .IRC.redactionUnsupported))
+				return
+			}
+			var tokens = parsed.arguments
+			let identifier = tokens.next()
+			let reason = tokens.rest
+			guard let conversation = output?.selectedConversation(on: self) else { return }
+			redactMessage(withIdentifier: identifier, in: conversation, reason: reason.isEmpty ? nil : reason)
+
 		case .setname:
 			guard isLoggedIn, requireArguments(parsed.arguments, for: parsed.command) else { return }
 			guard isCapabilityEnabled(.setName) else {

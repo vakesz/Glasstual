@@ -39,6 +39,12 @@ protocol ChatItemPresenting: AnyObject {
 	func mark()
 	func mark(at date: Date)
 	func noteReaction(_ emoji: String, fromNickname nickname: String, toMessageIdentifier identifier: String)
+	/** A message was deleted. The view replaces it with a placeholder, and the
+	 history behind it overwrites the stored text.
+
+	 A redaction can name a line that has not been drawn or stored yet, so the
+	 conformer keeps it until that line arrives. */
+	func noteRedaction(ofMessageIdentifier identifier: String)
 	func replacePendingLine(_ line: ChatLine, reason: String?)
 	func updateDeliveryState(
 		forLineNumber lineNumber: String,
@@ -59,6 +65,9 @@ protocol ChatItemPresenting: AnyObject {
 }
 
 extension ChatItemPresenting {
+	/// A presentation that draws no messages has nothing to replace.
+	func noteRedaction(ofMessageIdentifier _: String) {}
+
 	func replacePendingLine(_ line: ChatLine, reason: String?) {
 		updateDeliveryState(forLineNumber: line.uniqueIdentifier, state: line.deliveryState,
 		                    messageIdentifier: line.messageIdentifier, reason: reason)

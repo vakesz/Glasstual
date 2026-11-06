@@ -55,13 +55,17 @@ final class TranscriptCommands: NSObject {
 	/// transcript never names the window's menu controller itself.
 	private let sink: TranscriptCommandSink
 	private var openingLinkTask: Task<Void, Never>?
+	private var deletingMessageTask: Task<Void, Never>?
 
 	init(sink: TranscriptCommandSink) {
 		self.sink = sink
 		super.init()
 	}
 
-	isolated deinit { openingLinkTask?.cancel() }
+	isolated deinit {
+		openingLinkTask?.cancel()
+		deletingMessageTask?.cancel()
+	}
 
 	func contextMenu(for transcript: TranscriptView, defaultMenuItems: [NSMenuItem]) -> NSMenu {
 		let menu = NSMenu()
@@ -284,7 +288,59 @@ final class TranscriptCommands: NSObject {
 		else {
 			return []
 		}
-		return sink.messageReplyItems(messageIdentifier, target.lineNickname, target.lineExcerpt)
+		let items = sink.messageReplyItems(messageIdentifier, target.lineNickname, target.lineExcerpt)
+		return items + deleteMessageItems(
+			forMessage: messageIdentifier,
+			by: target.lineNickname,
+			in: conversation,
+			view: view,
+			precededBySeparator: items.isEmpty
+		)
+	}
+
+	private func deleteMessageItems(
+		forMessage messageIdentifier: String,
+		by nickname: String?,
+		in conversation: Conversation,
+		view: TranscriptView,
+		precededBySeparator: Bool
+	) -> [NSMenuItem] {
+		guard let session = view.viewController?.associatedSession,
+		      TranscriptMessageDeletion.isOffered(forMessageBy: nickname, in: conversation, on: session)
+		else {
+			return []
+		}
+		let item = NSMenuItem(
+			title: String(localized: .Transcript.menuDeleteMessage),
+			action: #selector(deleteMessage(_:)),
+			keyEquivalent: ""
+		)
+		item.target = self
+		item.image = NSImage(systemSymbolName: "trash", accessibilityDescription: item.title)
+		item.representedObject = TranscriptMessageDeletionRequest(
+			messageIdentifier: messageIdentifier,
+			conversation: conversation,
+			session: session,
+			window: view.textView.window
+		)
+		return precededBySeparator ? [.separator(), item] : [item]
+	}
+
+	@objc private func deleteMessage(_ sender: Any?) {
+		guard let request = (sender as? NSMenuItem)?.representedObject as? TranscriptMessageDeletionRequest else {
+			return
+		}
+		deletingMessageTask?.cancel()
+		deletingMessageTask = Task {
+			guard let reason = await TranscriptMessageDeletion.confirm(in: request.window), !Task.isCancelled,
+			      let session = request.session, let conversation = request.conversation
+			else { return }
+			session.redactMessage(
+				withIdentifier: request.messageIdentifier,
+				in: conversation,
+				reason: reason
+			)
+		}
 	}
 
 	func openWebpage(_ url: URL) {

@@ -191,6 +191,7 @@ struct SlashCommandHelp {
 		.init([.quote, .raw], .SlashCommands.descriptionRaw, .SlashCommands.syntaxIrcLine, .SlashCommands.hintIrcProtocolLine),
 		.init([.recv], .SlashCommands.descriptionReceive, .SlashCommands.syntaxIrcLine, .SlashCommands.hintIrcProtocolLine),
 		.init([.server], .SlashCommands.descriptionServer, .SlashCommands.syntaxAddressPortPassword, .SlashCommands.hintPortTlsPrefix),
+		.init([.redact], .SlashCommands.descriptionRedact, .SlashCommands.syntaxMessageIdentifierReason, .SlashCommands.hintRedact),
 		.init([.setcolor], .SlashCommands.descriptionColor, .SlashCommands.syntaxNickname, .SlashCommands.hintNickname),
 		.init([.setname], .SlashCommands.descriptionRealName, .SlashCommands.syntaxRealName, .SlashCommands.hintRealName),
 		.init([.setqueryname], .SlashCommands.descriptionQueryName, .SlashCommands.syntaxNickname, .SlashCommands.hintNickname),

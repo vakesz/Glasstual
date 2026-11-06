@@ -190,6 +190,8 @@ private extension ServerSession {
 			receiveStandardReply(message)
 		case .markread:
 			receiveReadMarker(message)
+		case .redact:
+			receiveRedact(message)
 		default:
 			break
 		}
@@ -215,6 +217,11 @@ extension ServerSession {
 		if message.remoteCommand == .fail, RemoteCommand(wireName: command) == .chathistory,
 		   !noteChatHistoryFailure(message)
 		{
+			return
+		}
+
+		if message.remoteCommand == .fail, RemoteCommand(wireName: command) == .redact {
+			receiveRedactionFailure(message)
 			return
 		}
 

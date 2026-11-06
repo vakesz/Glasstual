@@ -64,6 +64,8 @@ nonisolated extension ChatLine {
 			"topic"
 		case .website:
 			"website"
+		case .redacted:
+			"redacted"
 		default:
 			nil
 		}

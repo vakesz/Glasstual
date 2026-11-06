@@ -217,6 +217,7 @@ private extension TranscriptController {
 		for (identifier, merged) in reactions.all {
 			backingView?.updateReactions(merged, messageIdentifier: identifier.rawValue)
 		}
+		restoreRedactions()
 		switch transcriptProjection.mark {
 		case .none:
 			break

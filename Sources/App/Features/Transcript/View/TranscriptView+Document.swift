@@ -89,6 +89,15 @@ extension TranscriptView {
 		}
 	}
 
+	func redactMessage(withIdentifier messageIdentifier: String, placeholder: String) {
+		performEditingBatch {
+			for index in document.redactMessage(messageIdentifier: messageIdentifier, placeholder: placeholder) {
+				inlineImageLoader.cancelLoads(forView: viewIdentifier, lineNumber: document[index].lineNumber)
+				refresh(at: index)
+			}
+		}
+	}
+
 	func updateReactions(_ reactions: [String: [String]], messageIdentifier: String) {
 		performEditingBatch {
 			for index in document.mergeReactions(reactions, messageIdentifier: messageIdentifier) {

@@ -233,6 +233,19 @@ actor ScrollbackStore {
 		return await context.perform { ScrollbackQueries.replace(entry, in: context) }
 	}
 
+	func redactChatLine(
+		messageIdentifier: String,
+		inView viewIdentifier: String
+	) async -> ScrollbackRedactionOutcome {
+		guard lifecycle == .open else { return .unavailable }
+		await enter()
+		defer { leave() }
+		guard let context else { return .unavailable }
+		return await context.perform {
+			ScrollbackQueries.redact(messageIdentifier: messageIdentifier, viewIdentifier: viewIdentifier, in: context)
+		}
+	}
+
 	@discardableResult
 	func forgetView(_ identifier: String) async -> ScrollbackDeletionOutcome {
 		await removeHistory(identifier, forget: true)

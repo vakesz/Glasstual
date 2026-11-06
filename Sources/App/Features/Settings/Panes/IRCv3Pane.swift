@@ -26,6 +26,7 @@ struct IRCv3Pane: View {
 		"extended-monitor": .Settings.ircv3CapabilityExtendedMonitor,
 		"invite-notify": .Settings.ircv3CapabilityInviteNotify,
 		"labeled-response": .Settings.ircv3CapabilityLabeledResponse,
+		"draft/message-redaction": .Settings.ircv3CapabilityMessageRedaction,
 		"message-tags": .Settings.ircv3CapabilityMessageTags,
 		"multi-prefix": .Settings.ircv3CapabilityMultiPrefix,
 		"draft/no-implicit-names": .Settings.ircv3CapabilityNoImplicitNames,

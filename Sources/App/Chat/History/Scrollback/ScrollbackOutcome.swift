@@ -51,3 +51,14 @@ nonisolated enum ScrollbackReplacementOutcome: Equatable, Sendable {
 	case unavailable
 	case failed(String)
 }
+
+/** Redacting a stored line must never recreate a cleared or pruned row.
+
+ `redacted` carries the line as it is stored now, so the duplicate index can be
+ told what the row holds instead of the text it held. */
+nonisolated enum ScrollbackRedactionOutcome: Equatable, Sendable {
+	case redacted(ChatLine)
+	case missing
+	case unavailable
+	case failed(String)
+}

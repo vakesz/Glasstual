@@ -83,6 +83,20 @@ nonisolated struct TranscriptRow: Equatable, Sendable {
 		[lineNumber, historyCursor?.lineIdentifier].compactMap(\.self)
 	}
 
+	/** Replaces the message with the placeholder a deleted one is drawn as.
+
+	 Its place, time, sender and identifiers stay: only what a reader could read
+	 goes, so a conversation does not close up around the gap and a reply to the
+	 message still has something to point at. */
+	mutating func redact(placeholder: String) {
+		lineType = .redacted
+		reactions = [:]
+		body = TranscriptBody(
+			plainText: placeholder,
+			runs: [TranscriptTextRun(text: placeholder, traits: .italic)]
+		)
+	}
+
 	mutating func mergeReactions(_ delta: [String: [String]]) {
 		for (emoji, nicknames) in delta {
 			for nickname in nicknames where !reactions[emoji, default: []].contains(nickname) {

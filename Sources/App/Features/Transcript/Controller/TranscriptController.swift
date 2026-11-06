@@ -86,6 +86,9 @@ final class TranscriptController: ChatItemPresenting, ServerHistoryPresenting {
 	 projection, or is about to: a reaction for anything else has no row to be
 	 drawn on. Retired with the last row of their message. */
 	var reactions = TranscriptReactionLedger()
+	/// The messages deleted this session, checked against every row as it is
+	/// drawn. See ``TranscriptRedactionLedger``.
+	var redactions = TranscriptRedactionLedger()
 	private(set) var viewLoadedTimestamp: TimeInterval = 0
 	var lastLineStorage: ChatLine?
 	/** The lines handed to `print` that have not been applied to the view yet.
@@ -310,6 +313,7 @@ final class TranscriptController: ChatItemPresenting, ServerHistoryPresenting {
 		renderScheduler.stop()
 		viewIsLoaded = false
 		reactions.removeAll()
+		redactions.removeAll()
 		backingView?.clearLines()
 		backingView = nil
 		inlineImageLoader.cancelLoads(forView: uniqueIdentifier)
@@ -462,6 +466,12 @@ extension TranscriptController {
 		}
 		if let identifier = line.messageIdentifier, let delta = reactions.reactions(forMessage: identifier) {
 			line.mergeReactions(delta)
+		}
+		/* Last, because it withdraws what the two above add. A stored line
+		 that was redacted in an earlier session arrives with its type and
+		 nothing else, and is drawn as the same placeholder. */
+		if line.lineType == .redacted || redactions.contains(line.messageIdentifier) {
+			line.redact(placeholder: Self.redactionPlaceholder)
 		}
 		return line
 	}

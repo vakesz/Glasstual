@@ -218,6 +218,45 @@ nonisolated enum ScrollbackQueries {
 		} catch { return .failed(error.localizedDescription) }
 	}
 
+	/** Overwrites the stored payload of the line `messageIdentifier` names in one
+	 view with the line redacted, so the deleted text does not stay in the
+	 database.
+
+	 The identifier lives inside the payload rather than in a column, so this
+	 reads the view's rows. An ASCII identifier is first looked for as bytes in
+	 the stored payload, which spares decoding every row that cannot be the one.
+	 The row keeps its cursor, order and line identity: only `lineData` changes. */
+	static func redact(
+		messageIdentifier: String,
+		viewIdentifier: String,
+		in context: NSManagedObjectContext
+	) -> ScrollbackRedactionOutcome {
+		guard messageIdentifier.isEmpty == false else { return .missing }
+		let request = NSFetchRequest<NSManagedObject>(entityName: entityName)
+		request.predicate = NSPredicate(format: "%K == %@", ScrollbackAttribute.viewID.rawValue, viewIdentifier)
+		request.includesPendingChanges = true
+		request.fetchBatchSize = 256
+		let needle = messageIdentifier.data(using: .ascii)
+		do {
+			var redactedLine: ChatLine?
+			for row in try context.fetch(request) {
+				guard let data = row.value(forKey: ScrollbackAttribute.lineData.rawValue) as? Data,
+				      needle.map({ data.range(of: $0) != nil }) ?? true,
+				      var line = ChatLine(data: data),
+				      MessageIdentifierKey.equal(line.messageIdentifier, messageIdentifier)
+				else { continue }
+				line.redact()
+				let payload = ChatLineStoredPayload(line: line)
+				guard let encoded = try? PropertyListEncoder().encode(payload) else {
+					return .failed(CocoaError(.coderInvalidValue).localizedDescription)
+				}
+				row.setValue(encoded, forKey: ScrollbackAttribute.lineData.rawValue)
+				redactedLine = redactedLine ?? line
+			}
+			return redactedLine.map { .redacted($0) } ?? .missing
+		} catch { return .failed(error.localizedDescription) }
+	}
+
 	@discardableResult
 	static func quickSave(_ context: NSManagedObjectContext) -> ScrollbackSaveOutcome {
 		guard context.hasChanges else { return .saved }

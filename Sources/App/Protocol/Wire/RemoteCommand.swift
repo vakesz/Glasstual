@@ -54,6 +54,7 @@ nonisolated enum RemoteCommand: String, Sendable, CaseIterable {
 	/// selecting this case.
 	case privmsgAction = "privmsg action"
 	case quit
+	case redact
 	case setname
 	case shun
 	case silence
@@ -140,6 +141,8 @@ nonisolated extension RemoteCommand { // nonisolated: pure
 		.privmsg: .startsAtArgument(1),
 		.privmsgAction: .startsAtArgument(1),
 		.quit: .startsAtArgument(0),
+		/* `REDACT <target> <msgid> [:reason]`: the reason is the only free text. */
+		.redact: .startsAtArgument(2),
 		.setname: .startsAtArgument(0),
 		.shun: .startsAtArgument(2),
 		.silence: .never,

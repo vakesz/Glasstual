@@ -86,6 +86,15 @@ extension TranscriptView {
 				range: (body.string as NSString).rangeOfComposedCharacterSequence(at: 0)
 			)
 		}
+		if line.lineType == .redacted, body.length > 0 {
+			/* The placeholder is italic text, which says nothing to a screen
+			 reader about why the message is gone; the word is spoken first. */
+			body.addAttribute(
+				.accessibilityCustomText,
+				value: [String(localized: .Transcript.messageDeletedAccessibility)],
+				range: (body.string as NSString).rangeOfComposedCharacterSequence(at: 0)
+			)
+		}
 		TranscriptIsolate.appendIsolated(body, to: result, isolateAttributes: metadata)
 		result.addAttribute(.transcriptSelectionSegment, value: "body",
 		                    range: NSRange(location: bodyStart, length: result.length - bodyStart))

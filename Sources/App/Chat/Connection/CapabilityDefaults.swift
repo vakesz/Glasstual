@@ -73,6 +73,14 @@ extension CapabilityRegistry {
 			),
 
 			Capability(
+				name: "draft/message-redaction",
+				identifier: .messageRedaction,
+				requestedByDefault: true,
+				dependencies: ["message-tags"],
+				specification: ircv3Specification("message-redaction")
+			),
+
+			Capability(
 				name: "draft/read-marker",
 				identifier: .readMarker,
 				requestedByDefault: true,

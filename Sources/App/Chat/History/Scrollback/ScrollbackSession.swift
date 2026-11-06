@@ -246,6 +246,24 @@ actor ScrollbackSession {
 		return await store.replaceChatLine(entry)
 	}
 
+	/// Redaction follows the write of the line it redacts and any clear already
+	/// requested, for the same reason a replacement does.
+	nonisolated func redact( // nonisolated: pure
+		messageIdentifier: String,
+		inView viewIdentifier: String,
+		completion: @escaping @MainActor @Sendable (ScrollbackRedactionOutcome) -> Void
+	) {
+		changes.yield { [self] in
+			let outcome = await redactEntry(messageIdentifier, inView: viewIdentifier)
+			await completion(outcome)
+		}
+	}
+
+	private func redactEntry(_ messageIdentifier: String, inView viewIdentifier: String) async -> ScrollbackRedactionOutcome {
+		guard await ensureLoaded(), !isTerminating else { return .unavailable }
+		return await store.redactChatLine(messageIdentifier: messageIdentifier, inView: viewIdentifier)
+	}
+
 	/// Queues a view's removal behind the writes already asked for it, and reports
 	/// whether the queue took it.
 	nonisolated func removeHistory( // nonisolated: pure

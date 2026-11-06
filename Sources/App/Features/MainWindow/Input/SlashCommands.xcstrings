@@ -8064,6 +8064,150 @@
           }
         }
       }
+    },
+    "description-redact": {
+      "comment": "The /redact command. Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete a message in the selected conversation"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Üzenet törlése a kijelölt beszélgetésben"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eine Nachricht in der ausgewählten Unterhaltung löschen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Elimina un mensaje de la conversación seleccionada"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Supprimez un message de la conversation sélectionnée"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "選択中の会話のメッセージを削除する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Exclua uma mensagem da conversa selecionada"
+          }
+        }
+      }
+    },
+    "syntax-message-identifier-reason": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<message id> [reason]"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<üzenetazonosító> [indoklás]"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<Nachrichten-ID> [Grund]"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<message id> [reason]"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<message id> [reason]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<message id> [reason]"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "<message id> [reason]"
+          }
+        }
+      }
+    },
+    "hint-redact": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The message id is the message's msgid tag. Requires server support for message redaction."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Az üzenetazonosító az üzenet msgid címkéje. A kiszolgálónak támogatnia kell az üzenettörlést."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Nachrichten-ID ist das msgid-Tag der Nachricht. Erfordert Unterstützung für das Löschen von Nachrichten auf dem Server."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "El identificador es la etiqueta msgid del mensaje. Requiere que el servidor admita eliminar mensajes."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "L’identifiant est l’étiquette msgid du message. Nécessite la prise en charge de la suppression de messages par le serveur."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "メッセージ ID はメッセージの msgid タグです。サーバがメッセージの削除に対応している必要があります。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "O identificador é a etiqueta msgid da mensagem. Requer suporte do servidor à exclusão de mensagens."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

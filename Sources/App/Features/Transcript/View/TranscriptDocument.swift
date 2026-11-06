@@ -328,6 +328,24 @@ struct TranscriptDocument {
 		return index
 	}
 
+	/// Replaces every line that carries `messageIdentifier` with the deleted
+	/// placeholder, and answers with the indices the caller has to redraw. A
+	/// line that is already the placeholder is left alone.
+	mutating func redactMessage(messageIdentifier: String, placeholder: String) -> [Int] {
+		var changed: [Int] = []
+		for ordinal in messageLineOrdinals[MessageIdentifierKey(messageIdentifier)] ?? [] {
+			let index = ordinal - firstLineOrdinal
+			guard lines.indices.contains(index),
+			      lines[index].lineType != .redacted || lines[index].body.plainText != placeholder
+			else { continue }
+			highlightedLineCount -= lines[index].body.isHighlight ? 1 : 0
+			lines[index].redact(placeholder: placeholder)
+			inlineImages.removeValue(forKey: lines[index].lineNumber)
+			changed.append(index)
+		}
+		return changed
+	}
+
 	/// Merges reactions into every line that carries `messageIdentifier`, and
 	/// answers with the indices the caller has to redraw.
 	mutating func mergeReactions(_ reactions: [String: [String]], messageIdentifier: String) -> [Int] {

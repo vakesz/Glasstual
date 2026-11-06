@@ -193,6 +193,7 @@ struct CapabilityRegistryTests {
 		"batch",
 		"cap-notify",
 		"chghost",
+		"draft/message-redaction",
 		"draft/no-implicit-names",
 		"echo-message",
 		"message-tags",
@@ -220,7 +221,10 @@ struct CapabilityRegistryTests {
 		#expect(registry.capability(named: "plan.io/playback") == nil)
 	}
 
-	@Test("Draft extensions cannot negotiate their reserved future capability names", arguments: ["chathistory", "read-marker"])
+	@Test(
+		"Draft extensions cannot negotiate their reserved future capability names",
+		arguments: ["chathistory", "read-marker", "message-redaction"]
+	)
 	func draftCapabilityNamesRemainPrefixed(_ name: String) {
 		let registry = CapabilityRegistry.defaultRegistry
 		#expect(registry.capability(named: name) == nil)
