@@ -217,6 +217,12 @@ extension MenuGraph {
 			key: "3"
 		),
 		.item(
+			String(localized: .TranscriptLogViewer.menuTitle),
+			.browseTranscriptLogs,
+			#selector(MenuActionController.showTranscriptLogViewer(_:)),
+			key: "5"
+		),
+		.item(
 			String(localized: .MainWindow.menuWindowHighlightList),
 			.highlightList,
 			#selector(MenuActionController.showHighlightLog(_:)),

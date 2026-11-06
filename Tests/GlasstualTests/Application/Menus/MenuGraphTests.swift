@@ -48,7 +48,9 @@ struct MenuGraphTests {
 
 	@Test("Every title the menu graph draws comes from the String Catalog")
 	func everyMenuTitleIsLocalized() throws {
-		let values = try Self.catalogValues(feature: "MainWindow").union(Self.catalogValues(feature: "Sidebar"))
+		let values = try Self.catalogValues(feature: "MainWindow")
+			.union(Self.catalogValues(feature: "Sidebar"))
+			.union(Self.catalogValues(feature: "TranscriptLogViewer"))
 		let controller = MenuActionController()
 		let mainMenu = MenuGraph.builtMainMenu(for: controller)
 

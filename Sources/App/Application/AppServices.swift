@@ -22,6 +22,7 @@ enum AppServices {
 	static let highlightLogs = HighlightLogWindowSessions()
 	static let channelSpotlight = ChannelSpotlightWindow()
 	static let channelMaskList = ChannelMaskListWindow()
+	static let transcriptLogViewer = TranscriptLogViewerWindow()
 
 	static let theme = ThemeStore()
 	static let fileTransfers = FileTransferStore()

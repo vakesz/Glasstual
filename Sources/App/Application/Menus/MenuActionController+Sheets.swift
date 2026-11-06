@@ -46,6 +46,10 @@ extension MenuActionController {
 		presentServerPropertiesForSelectedSession(at: .default)
 	}
 
+	@objc func showTranscriptLogViewer(_: Any?) {
+		AppServices.transcriptLogViewer.open()
+	}
+
 	/// A window rather than a sheet: the list exists to jump into the transcript
 	/// with, and a sheet had to be dismissed to get there and reopened for the
 	/// next highlight.

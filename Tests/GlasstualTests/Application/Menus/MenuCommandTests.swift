@@ -52,6 +52,7 @@ struct MenuCommandTests {
 			(.quiets, .channel),
 			(.toggleMemberList, .window),
 			(.highlightList, .window),
+			(.browseTranscriptLogs, .window),
 			(.webSearch, .transcript),
 			(.transcriptReact, .transcript),
 			(.addIgnore, .member),

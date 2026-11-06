@@ -110,6 +110,7 @@ enum MenuCommand: String, CaseIterable, Sendable {
 	case mainWindow // Main Window
 	case addressBook // Address Book
 	case viewLogs // Show Logs in Finder
+	case browseTranscriptLogs // Transcript Logs
 	case highlightList // Highlight List
 	case fileTransfers // File Transfers
 	case bringAllToFront // Bring All to Front
@@ -212,7 +213,7 @@ extension MenuCommand {
 		case .minimize, .zoom, .toggleMemberList, .toggleSidebar,
 		     .appearanceSystem, .appearanceLight, .appearanceDark, .sortChannelList,
 		     .centerWindow, .resetWindow, .mainWindow, .addressBook, .viewLogs,
-		     .highlightList, .fileTransfers, .bringAllToFront:
+		     .browseTranscriptLogs, .highlightList, .fileTransfers, .bringAllToFront:
 			.window
 		case .webSearch, .transcriptDictionary, .transcriptChannelMenu,
 		     .transcriptReply, .transcriptReact:
@@ -325,7 +326,8 @@ extension MenuCommand {
 		// Window and Help menus.
 		.sortChannelList: "arrow.up.arrow.down", .centerWindow: "rectangle.center.inset.filled",
 		.resetWindow: "arrow.counterclockwise", .mainWindow: "macwindow",
-		.addressBook: "book.closed", .viewLogs: "folder", .highlightList: "bell.badge",
+		.addressBook: "book.closed", .viewLogs: "folder",
+		.browseTranscriptLogs: "doc.text.magnifyingglass", .highlightList: "bell.badge",
 		.fileTransfers: "tray.and.arrow.down",
 		.connectToHelpChannel: "questionmark.bubble", .connectToTestingChannel: "checkmark.bubble",
 	]

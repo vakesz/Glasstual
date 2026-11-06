@@ -12,6 +12,7 @@ enum ApplicationSceneID {
 	static let onboarding = "onboarding"
 	static let serverChannelList = "server-channel-list"
 	static let highlightLog = "highlight-log"
+	static let transcriptLogViewer = "transcript-log-viewer"
 }
 
 /** Stable identity for a window group that presents one logical window.
@@ -72,6 +73,7 @@ private struct ApplicationSceneGraph: Scene {
 		OnboardingScene()
 		ServerChannelListScene(windows: AppServices.serverChannelLists)
 		HighlightLogScene(windows: AppServices.highlightLogs)
+		TranscriptLogViewerScene(window: AppServices.transcriptLogViewer)
 		SettingsScene(request: settingsRequest)
 	}
 }

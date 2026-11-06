@@ -9,10 +9,111 @@ import Foundation
 
  The strings are folder names on the user's disk, so they stay as they are
  spelled there whatever the Swift vocabulary around them becomes. */
-enum TranscriptFolderName {
+nonisolated enum TranscriptFolderName {
 	static let console = "Console"
 	static let channel = "Channels"
 	static let direct = "Queries"
+}
+
+/** What kind of conversation a transcript folder holds, read back from the
+ folder's name.
+
+ The inverse of the folders ``TranscriptPath`` writes, for the log viewer: the
+ names are the ones on disk, shared with the writer so the two cannot drift. */
+nonisolated enum TranscriptKind: CaseIterable, Sendable {
+	case console
+	case channel
+	case direct
+
+	init?(folderName: String) {
+		guard let kind = Self.allCases.first(where: { $0.folderName == folderName }) else { return nil }
+		self = kind
+	}
+
+	var folderName: String {
+		switch self {
+		case .console: TranscriptFolderName.console
+		case .channel: TranscriptFolderName.channel
+		case .direct: TranscriptFolderName.direct
+		}
+	}
+}
+
+/** The connection folder a transcript is filed under: `Name (abcde)`, the
+ connection's name and the first five characters of its identifier. */
+nonisolated struct TranscriptServerFolder: Hashable, Sendable {
+	let name: String
+	/// The identifier prefix, empty when the folder was not written by this
+	/// application and carries none.
+	let identifier: String
+
+	init(folderName: String) {
+		guard folderName.hasSuffix(")"),
+		      let open = folderName.range(of: " (", options: .backwards)
+		else {
+			name = folderName
+			identifier = ""
+			return
+		}
+
+		let candidate = folderName[open.upperBound ..< folderName.index(before: folderName.endIndex)]
+		guard candidate.isEmpty == false, candidate.count <= 5, candidate.allSatisfy(\.isHexDigit) else {
+			name = folderName
+			identifier = ""
+			return
+		}
+
+		name = String(folderName[..<open.lowerBound])
+		identifier = String(candidate)
+	}
+}
+
+/** The day a transcript file holds, from its `YYYY-MM-DD.txt` name.
+
+ Calendar numbers rather than a `Date`: the writer chose the day in the time
+ zone it was written in, and the name is the only record of which. */
+nonisolated struct TranscriptDay: Hashable, Comparable, Sendable {
+	let year: Int
+	let month: Int
+	let day: Int
+
+	init(year: Int, month: Int, day: Int) {
+		self.year = year
+		self.month = month
+		self.day = day
+	}
+
+	/// `nil` for a file that is not a day's transcript.
+	init?(filename: String) {
+		let stem = filename.hasSuffix(".txt") ? String(filename.dropLast(4)) : ""
+		let parts = stem.split(separator: "-", omittingEmptySubsequences: false)
+		guard parts.count == 3, parts[0].count == 4, parts[1].count == 2, parts[2].count == 2,
+		      let year = Int(parts[0]), let month = Int(parts[1]), let day = Int(parts[2]),
+		      (1 ... 12).contains(month), (1 ... 31).contains(day)
+		else { return nil }
+
+		self.init(year: year, month: month, day: day)
+	}
+
+	/// The file name the writer gives this day.
+	var filename: String {
+		String(format: "%04d-%02d-%02d.txt", year, month, day)
+	}
+
+	/// The day as a date at noon in `calendar`, for display.
+	func date(in calendar: Calendar = .current) -> Date? {
+		calendar.date(from: DateComponents(year: year, month: month, day: day, hour: 12))
+	}
+
+	static func < (lhs: Self, rhs: Self) -> Bool {
+		if lhs.year != rhs.year {
+			return lhs.year < rhs.year
+		}
+		if lhs.month != rhs.month {
+			return lhs.month < rhs.month
+		}
+		return lhs.day < rhs.day
+	}
 }
 
 /** Where an item's transcript is written.
