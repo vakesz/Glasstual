@@ -58,6 +58,20 @@ extension MainWindow: ServerSessionPresenting {
 		return true
 	}
 
+	func maskListChangeRefused(
+		for session: ServerSession,
+		inChannelNamed channelName: String,
+		numeric: UInt,
+		text: String
+	) -> Bool {
+		AppServices.channelMaskList.receiveRefusal(
+			session: session,
+			channelName: channelName,
+			numeric: numeric,
+			text: text
+		)
+	}
+
 	/// The open mask list this reply belongs to, or `nil` when the reply is
 	/// from another connection, for another channel, or for another of its lists.
 	private func maskList(

@@ -13,6 +13,10 @@ extension ServerSession {
 		}
 		let shouldPrint = shouldPrintReceivedMessage(message)
 
+		if routeMaskListRefusal(message) {
+			return
+		}
+
 		/* Servers send error numerics this catalog has no case for, and those
 		 print the way any other error does. */
 		guard let numeric = ServerNumeric(rawValue: message.commandNumeric) else {
@@ -60,6 +64,25 @@ extension ServerSession {
 		if shouldPrint {
 			printErrorReply(message)
 		}
+	}
+
+	/** Hands a refused access-list change to the window that made it.
+
+	 `ERR_CHANOPRIVSNEEDED` and `ERR_BANLISTFULL` carry the channel as their
+	 first parameter and the reason as their last. Only an open list takes one;
+	 anything else prints as an error always has. */
+	private func routeMaskListRefusal(_ message: Message) -> Bool {
+		guard ChannelMaskListRefusal.isRefusal(message.commandNumeric),
+		      message.params.count > 2,
+		      stringIsChannelName(message.params[1])
+		else { return false }
+
+		return output?.maskListChangeRefused(
+			for: self,
+			inChannelNamed: message.params[1],
+			numeric: message.commandNumeric,
+			text: message.params[message.params.count - 1]
+		) == true
 	}
 
 	/** A rate limit answer for a command whose terminator never follows it.
@@ -161,5 +184,18 @@ private extension ServerSession {
 		} else {
 			printErrorReply(message)
 		}
+	}
+}
+
+/// The numerics a refused change to an access list is answered with. The
+/// protocol catalogue has no case for them, so they are compared as numbers.
+enum ChannelMaskListRefusal {
+	/// `ERR_BANLISTFULL`: `<channel> <mask> :Channel list is full`.
+	static let banListFull: UInt = 478
+	/// `ERR_CHANOPRIVSNEEDED`: `<channel> :You're not channel operator`.
+	static let chanOpPrivsNeeded: UInt = 482
+
+	static func isRefusal(_ numeric: UInt) -> Bool {
+		numeric == banListFull || numeric == chanOpPrivsNeeded
 	}
 }

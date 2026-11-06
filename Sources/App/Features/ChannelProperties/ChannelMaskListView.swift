@@ -26,15 +26,11 @@ private struct ChannelMaskListSceneRoot: View {
 
 	var body: some View {
 		if let session = window.current {
-			ChannelMaskListView(
-				model: session.model,
-				update: session.updateList,
-				removeSelected: session.removeSelectedEntries
-			)
-			.navigationTitle(session.heading)
-			.onDisappear {
-				window.didClose()
-			}
+			ChannelMaskListView(session: session)
+				.navigationTitle(session.heading)
+				.onDisappear {
+					window.didClose()
+				}
 		} else {
 			ContentUnavailableView(
 				String(localized: .ChannelProperties.emptyTitle),
@@ -47,12 +43,17 @@ private struct ChannelMaskListSceneRoot: View {
 }
 
 struct ChannelMaskListView: View {
-	@Bindable var model: ChannelMaskListModel
-	let update: () -> Void
-	let removeSelected: () -> Void
+	let session: ChannelMaskListSession
+
+	@FocusState private var fieldIsFocused: Bool
 
 	var body: some View {
+		@Bindable var model = session.model
+		let canEdit = session.canEdit
+
 		VStack(spacing: 0) {
+			editor(canEdit: canEdit)
+
 			HStack {
 				Spacer()
 				if model.isRefreshing {
@@ -65,7 +66,7 @@ struct ChannelMaskListView: View {
 					.monospacedDigit()
 			}
 			.padding(.horizontal, SheetMetrics.margin)
-			.padding(.vertical, UISpacing.wide)
+			.padding(.bottom, UISpacing.regular)
 
 			Table(model.entries, selection: $model.selection, sortOrder: $model.sortOrder) {
 				TableColumn(
@@ -75,6 +76,15 @@ struct ChannelMaskListView: View {
 					Text(verbatim: entry.entryMask)
 						.lineLimit(1)
 						.help(entry.entryMaskDescription ?? entry.entryMask)
+						.accessibilityLabel(
+							String(
+								localized: .ChannelProperties.rowDescription(
+									entry.entryMask,
+									entry.entryAuthor,
+									entry.entryCreationDateString
+								)
+							)
+						)
 				}
 				.width(min: 220, ideal: 360)
 
@@ -104,13 +114,21 @@ struct ChannelMaskListView: View {
 				}
 			}
 			.copyable(model.selectedMasks)
-			.onDeleteCommand(perform: removeSelected)
+			.onDeleteCommand(perform: session.removeSelectedEntries)
 			.contextMenu(forSelectionType: ChannelMaskListEntry.ID.self) { selection in
+				Button(.ChannelProperties.editSelected) {
+					model.selection = selection
+					edit()
+				}
+				.disabled(canEdit == false || selection.count != 1)
 				Button(.ChannelProperties.removeSelected, role: .destructive) {
 					model.selection = selection
-					removeSelected()
+					session.removeSelectedEntries()
 				}
-				.disabled(selection.isEmpty)
+				.disabled(canEdit == false || selection.isEmpty)
+			} primaryAction: { selection in
+				model.selection = selection
+				edit()
 			}
 			.onChange(of: model.sortOrder) { _, newOrder in model.sort(using: newOrder) }
 			.accessibilityLabel(.ChannelProperties.accessList)
@@ -126,10 +144,13 @@ struct ChannelMaskListView: View {
 
 			Divider()
 			HStack {
-				Button(.ChannelProperties.removeSelected, role: .destructive, action: removeSelected)
-					.disabled(model.selection.isEmpty)
+				Button(.ChannelProperties.removeSelected, role: .destructive, action: session.removeSelectedEntries)
+					.disabled(canEdit == false || model.selection.isEmpty)
+				Button(.ChannelProperties.editSelected, action: edit)
+					.keyboardShortcut("e", modifiers: .command)
+					.disabled(canEdit == false || model.selection.count != 1)
 				Spacer()
-				Button(.ChannelProperties.updateList, action: update)
+				Button(.ChannelProperties.updateList, action: session.updateList)
 					.keyboardShortcut("r", modifiers: .command)
 					.disabled(model.isRefreshing)
 			}
@@ -141,5 +162,63 @@ struct ChannelMaskListView: View {
 			minHeight: 320,
 			idealHeight: 400
 		)
+		.defaultFocus($fieldIsFocused, true)
+	}
+
+	/// The field above the table: add an entry, or replace the one being edited.
+	@ViewBuilder
+	private func editor(canEdit: Bool) -> some View {
+		@Bindable var model = session.model
+
+		VStack(alignment: .leading, spacing: UISpacing.tight) {
+			HStack(spacing: UISpacing.regular) {
+				TextField(text: $model.draft, prompt: Text(.ChannelProperties.addPlaceholder)) {
+					Text(.ChannelProperties.addFieldLabel)
+				}
+				.focused($fieldIsFocused)
+				.onExitCommand {
+					if model.editingMask != nil {
+						session.cancelEditing()
+					}
+				}
+				.disabled(canEdit == false)
+				.help(canEdit ? "" : String(localized: .ChannelProperties.noPermissionHint))
+
+				if model.editingMask != nil {
+					Button(.ChannelProperties.cancelEdit, action: session.cancelEditing)
+					Button(.ChannelProperties.replaceButton, action: session.submitDraft)
+						.keyboardShortcut(.defaultAction)
+						.disabled(canEdit == false)
+				} else {
+					Button(.ChannelProperties.addButton, action: session.submitDraft)
+						.keyboardShortcut(.defaultAction)
+						.disabled(canEdit == false || model.draft.isEmpty)
+				}
+			}
+
+			if canEdit == false {
+				Text(.ChannelProperties.noPermissionHint)
+					.font(.callout)
+					.foregroundStyle(.secondary)
+			} else if let mask = model.editingMask {
+				Text(.ChannelProperties.editingLabel(mask))
+					.font(.callout)
+					.foregroundStyle(.secondary)
+			}
+
+			if let issue = model.issue {
+				Text(verbatim: issue.message)
+					.font(.callout)
+					.foregroundStyle(.red)
+					.accessibilityAddTraits(.isStaticText)
+			}
+		}
+		.padding(.horizontal, SheetMetrics.margin)
+		.padding(.vertical, UISpacing.wide)
+	}
+
+	private func edit() {
+		session.beginEditingSelectedEntry()
+		fieldIsFocused = true
 	}
 }

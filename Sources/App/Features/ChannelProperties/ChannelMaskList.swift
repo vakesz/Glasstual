@@ -24,6 +24,43 @@ extension ChannelMaskKind {
 	}
 }
 
+/** Why a change to the list was not made, shown beside the field it came from.
+
+ The server answers a refused `MODE` with an error numeric, and the window keeps
+ the reason rather than letting it scroll past in a transcript the user is not
+ looking at. */
+enum ChannelMaskListIssue: Equatable, Sendable {
+	case invalid(MaskNormalizer.Rejection)
+	case duplicate
+	/// `ERR_CHANOPRIVSNEEDED`.
+	case notOperator
+	/// `ERR_BANLISTFULL`.
+	case listFull
+	/// Any other refusal, with the text the server gave.
+	case rejected(String)
+
+	var message: String {
+		switch self {
+		case .invalid(.empty):
+			String(localized: .ChannelProperties.issueEmpty)
+		case .invalid(.containsWhitespace):
+			String(localized: .ChannelProperties.issueWhitespace)
+		case .invalid(.startsWithColon):
+			String(localized: .ChannelProperties.issueColon)
+		case .invalid(.tooLong):
+			String(localized: .ChannelProperties.issueTooLong)
+		case .duplicate:
+			String(localized: .ChannelProperties.issueDuplicate)
+		case .notOperator:
+			String(localized: .ChannelProperties.issueNotOperator)
+		case .listFull:
+			String(localized: .ChannelProperties.issueListFull)
+		case let .rejected(text):
+			String(localized: .ChannelProperties.issueRejected(text))
+		}
+	}
+}
+
 struct ChannelMaskListEntry: Identifiable, Hashable, Sendable {
 	let id = UUID()
 	var entryMask = ""
@@ -73,6 +110,12 @@ final class ChannelMaskListModel {
 	]
 	var maximumEntries = 0
 	var isRefreshing = true
+	/// What is typed in the field above the table.
+	var draft = ""
+	/// The entry the field is replacing, or `nil` while it adds a new one.
+	var editingMask: String?
+	/// Why the last change could not be made, until the next one is tried.
+	var issue: ChannelMaskListIssue?
 	/** How many entries the list keeps.
 
 	 A channel's ban list arrives one line at a time and nothing bounded it, so
@@ -172,14 +215,6 @@ final class ChannelMaskListModel {
 		discardedEntryCount = 0
 	}
 
-	/// Drops the rows the server has just been told to unset, so the list shows
-	/// what it asked for without waiting for the server to say it again.
-	func remove(masks: [String]) {
-		let removed = Set(masks)
-		entries.removeAll { removed.contains($0.entryMask) }
-		selection = []
-	}
-
 	func sort(using order: [ChannelMaskListComparator]) {
 		entries.sort(using: order)
 	}
@@ -221,6 +256,12 @@ final class ChannelMaskListSession: ChannelScoped {
 	private var previousReplyIsOnScreen = false
 
 	let model = ChannelMaskListModel()
+
+	/// The refresh that follows a change, so a run of changes asks once.
+	@ObservationIgnored private var pendingRefresh: Task<Void, Never>?
+	/// How long a change waits for the server to apply it before the list is
+	/// asked for again.
+	static let refreshDelay: Duration = .milliseconds(600)
 
 	init?(maskKind: ChannelMaskKind, in channel: Conversation) {
 		guard Self.channel(channel, supportsMaskKind: maskKind),
@@ -306,15 +347,26 @@ final class ChannelMaskListSession: ChannelScoped {
 		session.sendModes([ModeChangeGroup(symbols: "+\(modeSymbol)")], inChannelNamed: channel.name)
 	}
 
+	/// Whether the user may change this list: an operator or half-operator of a
+	/// channel they are in, on a server that still advertises the list. Read
+	/// afresh each time, because privileges change while the window is open.
+	/// The server stays the final authority and its refusal is shown inline.
+	var canEdit: Bool {
+		modeSymbol != nil
+			&& ChannelActionPermissions(channel: channel, session: session).canChangeModes
+	}
+
 	/** Removing entries does not close the list.
 
 	 The changes used to be held until the sheet closed, and the button closed
 	 it -- so removing two entries meant opening the list twice. They are sent
-	 as they are made, and the window stays open for the next one. */
+	 as they are made, and the window stays open for the next one. The rows stay
+	 until the refresh that follows shows what the server actually did. */
 	func removeSelectedEntries() {
 		let masks = model.selectedMasks
-		guard masks.isEmpty == false, let modeSymbol else { return }
+		guard canEdit, masks.isEmpty == false, let modeSymbol else { return }
 
+		model.issue = nil
 		session.sendModes(
 			session.compileListOfModeChanges(
 				forModeSymbol: modeSymbol.description,
@@ -323,7 +375,124 @@ final class ChannelMaskListSession: ChannelScoped {
 			),
 			inChannelNamed: channel.name
 		)
-		model.remove(masks: masks)
+		scheduleRefresh()
+	}
+
+	/// Loads the selected entry into the field, so submitting replaces it.
+	func beginEditingSelectedEntry() {
+		guard canEdit, model.selection.count == 1, let mask = model.selectedMasks.first else { return }
+		model.issue = nil
+		model.editingMask = mask
+		model.draft = mask
+	}
+
+	func cancelEditing() {
+		model.editingMask = nil
+		model.draft = ""
+		model.issue = nil
+	}
+
+	/// Adds the draft, or replaces the entry being edited with it.
+	func submitDraft() {
+		guard canEdit, let modeSymbol else { return }
+
+		let mask: String
+		switch MaskNormalizer.normalize(model.draft) {
+		case let .success(normalized):
+			mask = normalized
+		case let .failure(rejection):
+			model.issue = .invalid(rejection)
+			return
+		}
+
+		let symbol = modeSymbol.description
+		if let editingMask = model.editingMask {
+			guard mask.caseInsensitiveCompare(editingMask) != .orderedSame else {
+				cancelEditing()
+				return
+			}
+			guard containsEntry(mask) == false else {
+				model.issue = .duplicate
+				return
+			}
+
+			/* One group, so a server that takes two modes in a command applies the
+			 swap together; one that takes fewer still gets the removal first. */
+			session.sendModes(
+				[ModeChangeGroup(symbols: "-\(symbol)+\(symbol)", parameters: [editingMask, mask])],
+				inChannelNamed: channel.name
+			)
+		} else {
+			guard containsEntry(mask) == false else {
+				model.issue = .duplicate
+				return
+			}
+
+			session.sendModes(
+				session.compileListOfModeChanges(forModeSymbol: symbol, modeIsSet: true, modeParameters: [mask]),
+				inChannelNamed: channel.name
+			)
+		}
+
+		model.editingMask = nil
+		model.draft = ""
+		model.issue = nil
+		scheduleRefresh()
+	}
+
+	private func containsEntry(_ mask: String) -> Bool {
+		model.entries.contains { $0.entryMask.caseInsensitiveCompare(mask) == .orderedSame }
+	}
+
+	/** Takes the server's refusal of a change this list made.
+
+	 Only the numerics a `MODE` on a list can draw are kept: a refusal for
+	 another channel is not this window's, and the transcript prints it as it
+	 always did. Called with the reply's raw numeric because the protocol layer
+	 has no case for these. Answers whether the window took the refusal. */
+	func receiveRefusal(
+		session: ServerSession,
+		channelName: String,
+		numeric: UInt,
+		text: String
+	) -> Bool {
+		/* `ERR_CHANOPRIVSNEEDED` also answers a kick or a topic change. Only a
+		 refusal that arrives while a change of this list is waiting for its
+		 refresh is the list's; any other still prints as an error. */
+		guard pendingRefresh != nil, session === self.session,
+		      session.supportInfo.casefoldString(channelName)
+		      == session.supportInfo.casefoldString(channel.name)
+		else { return false }
+
+		let issue: ChannelMaskListIssue = switch numeric {
+		case ChannelMaskListRefusal.chanOpPrivsNeeded: .notOperator
+		case ChannelMaskListRefusal.banListFull: .listFull
+		default: .rejected(text)
+		}
+		model.issue = issue
+		/* The change did not happen, so what the table shows is still right, but
+		 a refresh is cheap and drops any row another operator already changed. */
+		scheduleRefresh()
+
+		return true
+	}
+
+	/// Asks for the list again once the server has had time to apply a change.
+	/// A newer change replaces the wait rather than adding a second request.
+	private func scheduleRefresh() {
+		pendingRefresh?.cancel()
+		pendingRefresh = Task { [weak self] in
+			try? await Task.sleep(for: Self.refreshDelay)
+			guard Task.isCancelled == false else { return }
+			self?.pendingRefresh = nil
+			self?.updateList()
+		}
+	}
+
+	/// Stops a refresh that has not fired, for a window that is going away.
+	func cancelPendingRefresh() {
+		pendingRefresh?.cancel()
+		pendingRefresh = nil
 	}
 
 	static func channel(
@@ -380,13 +549,20 @@ final class ChannelMaskListWindow {
 	}
 
 	func didClose() {
+		current?.cancelPendingRefresh()
 		current = nil
+	}
+
+	/// Offers a refused change to the open list. `true` when it was this list's.
+	func receiveRefusal(session: ServerSession, channelName: String, numeric: UInt, text: String) -> Bool {
+		current?.receiveRefusal(session: session, channelName: channelName, numeric: numeric, text: text) ?? false
 	}
 
 	/// Closes the list when the channel or connection it is about goes away,
 	/// which is what the sheet it replaced got from the main window.
 	func close(matching isStale: (ChannelMaskListSession) -> Bool) {
 		guard let session = current, isStale(session) else { return }
+		session.cancelPendingRefresh()
 		current = nil
 		scenes.dismiss(ApplicationSceneID.channelMaskList)
 	}

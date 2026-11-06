@@ -66,6 +66,15 @@ protocol ServerSessionPresenting: AnyObject {
 	) -> Bool
 	/// The end of such a list. `true` when a window showing that list took it.
 	func maskListFinished(for session: ServerSession, inChannelNamed channelName: String, modeSymbol: String) -> Bool
+	/// The server refused a change to a channel's access list, with the numeric
+	/// it answered and its text. `true` when the open list for that channel took
+	/// it, in which case the protocol layer does not also print it.
+	func maskListChangeRefused(
+		for session: ServerSession,
+		inChannelNamed channelName: String,
+		numeric: UInt,
+		text: String
+	) -> Bool
 	/// Dismisses whatever sheet is scoped to a conversation that is going away.
 	/// The protocol layer knows the conversation is gone; which sheets were
 	/// hanging off it is the window layer's business.
@@ -98,4 +107,16 @@ protocol ServerSessionPresenting: AnyObject {
 
 	func clearContents(of item: ChatItem)
 	func destroyInputHistory(for item: ChatItem)
+}
+
+extension ServerSessionPresenting {
+	/// A presenter with no access-list window has nothing to take a refusal.
+	func maskListChangeRefused(
+		for _: ServerSession,
+		inChannelNamed _: String,
+		numeric _: UInt,
+		text _: String
+	) -> Bool {
+		false
+	}
 }
