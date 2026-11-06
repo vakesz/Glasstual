@@ -21,11 +21,11 @@ extension TranscriptView {
 	func themeColor(_ role: AdaptiveTranscriptColor) -> NSColor {
 		rendersForPrint
 			? role.resolved(isDark: false)
-			: AppServices.theme.resolved(role)
+			: themeStore.resolved(role)
 	}
 
 	func render(_ line: TranscriptRow) -> NSAttributedString {
-		let controller = AppServices.theme
+		let controller = themeStore
 		let header = line.header(using: controller.theme)
 		let result = NSMutableAttributedString()
 		for marker in line.markers {
@@ -110,7 +110,7 @@ extension TranscriptView {
 		for line: TranscriptRow,
 		paragraph: NSParagraphStyle
 	) -> [NSAttributedString.Key: Any] {
-		let controller = AppServices.theme
+		let controller = themeStore
 		let palette = controller.theme.palette
 		/* Digits of one width keep the column straight, and the theme's
 		 timestamp role keeps the clock from competing with the name beside it. */
@@ -132,7 +132,7 @@ extension TranscriptView {
 		for line: TranscriptRow,
 		paragraph: NSParagraphStyle
 	) -> [NSAttributedString.Key: Any] {
-		let controller = AppServices.theme
+		let controller = themeStore
 		let palette = controller.theme.palette
 		let fallback = line.memberType == .localUser ? palette.localNickname : palette.remoteNickname
 		let color = SettingsKeys.Messages.disableNicknameColorHashing.value
@@ -156,7 +156,7 @@ extension TranscriptView {
 		line: TranscriptRow,
 		paragraph: NSParagraphStyle
 	) -> [NSAttributedString.Key: Any] {
-		let controller = AppServices.theme
+		let controller = themeStore
 		let palette = controller.theme.palette
 		var attributes = lineAttributes(for: line)
 		var font = effectiveFont(controller)
@@ -236,7 +236,7 @@ extension TranscriptView {
 	}
 
 	func bubbleBackground(for line: TranscriptRow) -> NSColor? {
-		let controller = AppServices.theme
+		let controller = themeStore
 		guard controller.theme.layout == .bubbles else { return nil }
 		let palette = controller.theme.palette
 		let pair = line.memberType == .localUser ? palette.bubbleOutgoing : palette.bubbleIncoming
@@ -277,7 +277,7 @@ extension TranscriptView {
 	}
 
 	private func deliveryPresentation(for line: TranscriptRow) -> DeliveryPresentation? {
-		let controller = AppServices.theme
+		let controller = themeStore
 		let palette = controller.theme.palette
 		let clock = themeColor(palette.timestampText)
 		return switch line.deliveryState {
@@ -302,7 +302,7 @@ extension TranscriptView {
 		paragraph: NSParagraphStyle
 	) {
 		guard let presentation = deliveryPresentation(for: line) else { return }
-		let controller = AppServices.theme
+		let controller = themeStore
 		let font = NSFont.systemFont(ofSize: max(9, effectiveFont(controller).pointSize - 1))
 		var attributes = lineAttributes(for: line)
 		attributes[.font] = font
@@ -349,7 +349,7 @@ extension TranscriptView {
 		paragraph: NSParagraphStyle
 	) {
 		guard line.reactions.isEmpty == false else { return }
-		let controller = AppServices.theme
+		let controller = themeStore
 		let palette = controller.theme.palette
 		let font = NSFont.systemFont(ofSize: max(9, effectiveFont(controller).pointSize - 1))
 		let identifier = line.messageIdentifier ?? ""
@@ -431,7 +431,7 @@ extension TranscriptView {
 
 extension TranscriptView {
 	func render(_ marker: TranscriptMarker, lineNumber: String) -> NSAttributedString {
-		let controller = AppServices.theme
+		let controller = themeStore
 		let palette = controller.theme.palette
 		let paragraph = NSMutableParagraphStyle()
 		paragraph.alignment = .center

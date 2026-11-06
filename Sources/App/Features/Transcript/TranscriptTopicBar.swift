@@ -44,7 +44,10 @@ final class TranscriptTopicBar: NSView {
 	private var textScale: CGFloat = 1
 	private var lineHeightCache: (font: NSFont, height: CGFloat)?
 
-	init() {
+	private let themeStore: ThemeStore
+
+	init(themeStore: ThemeStore = AppServices.theme) {
+		self.themeStore = themeStore
 		super.init(frame: .zero)
 		translatesAutoresizingMaskIntoConstraints = false
 		configure()
@@ -297,12 +300,12 @@ final class TranscriptTopicBar: NSView {
 	// MARK: - Drawing
 
 	private func attributedTopic(_ topic: String) -> NSAttributedString {
-		let palette = AppServices.theme.theme.palette
+		let palette = themeStore.theme.palette
 		/* The topic is context, not conversation: secondary text at the body
 		 size, with only its links in the link colour. */
 		let bodySize = NSFont.preferredFont(forTextStyle: .body).pointSize
 		let font = NSFont.systemFont(ofSize: bodySize * textScale)
-		let secondary = AppServices.theme.resolved(palette.secondaryText)
+		let secondary = themeStore.resolved(palette.secondaryText)
 		/* A topic is wire text: it carries the same control codes a message
 		 does, and drawing the string as it arrived put the codes themselves in
 		 the bar, in its tooltip and on the pasteboard. */
@@ -329,7 +332,7 @@ final class TranscriptTopicBar: NSView {
 			}
 			result.addAttributes([
 				.link: url,
-				.foregroundColor: AppServices.theme.resolved(palette.link),
+				.foregroundColor: themeStore.resolved(palette.link),
 				.underlineStyle: NSUnderlineStyle.single.rawValue,
 			], range: link.range)
 		}
@@ -341,11 +344,11 @@ final class TranscriptTopicBar: NSView {
 	 Dimmer than the topic and a shade smaller, because it is the bar's own
 	 context rather than text anybody wrote. */
 	private func attributedTopicCaption(_ caption: String) -> NSAttributedString {
-		let palette = AppServices.theme.theme.palette
+		let palette = themeStore.theme.palette
 		let bodySize = NSFont.preferredFont(forTextStyle: .body).pointSize
 		return NSAttributedString(string: caption, attributes: [
 			.font: NSFont.monospacedDigitSystemFont(ofSize: bodySize * textScale * 0.9, weight: .regular),
-			.foregroundColor: AppServices.theme.resolved(palette.timestampText),
+			.foregroundColor: themeStore.resolved(palette.timestampText),
 		])
 	}
 }

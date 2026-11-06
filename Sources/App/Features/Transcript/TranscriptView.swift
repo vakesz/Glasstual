@@ -34,7 +34,8 @@ final class TranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 	/// answers.
 	var reactionPicker: ReactionPopover?
 
-	let topicBar = TranscriptTopicBar()
+	let themeStore: ThemeStore
+	let topicBar: TranscriptTopicBar
 	let scrollView = NSScrollView()
 	/* SwiftUI owns controls; this adapter only hosts them. */
 	let jumpToLatest = NSHostingView(rootView: TranscriptJumpToLatestButton(action: {}))
@@ -89,7 +90,9 @@ final class TranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 	/// light half: paper is white, and a dark transcript prints as ink.
 	private(set) var rendersForPrint = false
 
-	init(viewController: TranscriptController) {
+	init(viewController: TranscriptController, themeStore: ThemeStore = AppServices.theme) {
+		self.themeStore = themeStore
+		topicBar = TranscriptTopicBar(themeStore: themeStore)
 		self.viewController = viewController
 		commands = TranscriptCommands(sink: viewController.commandSink)
 		inlineImageLoader = viewController.inlineImageLoader
@@ -251,7 +254,7 @@ final class TranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 	}
 
 	private func applyThemeNow() {
-		let controller = AppServices.theme
+		let controller = themeStore
 		layer?.backgroundColor = controller.backgroundColor.cgColor
 		textView.insertionPointColor = controller.resolved(controller.theme.palette.primaryText)
 		refreshTopicBar()

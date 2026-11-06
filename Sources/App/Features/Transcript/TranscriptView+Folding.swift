@@ -142,14 +142,14 @@ extension TranscriptView {
 		expanded: Bool
 	) -> NSMutableAttributedString {
 		let result = renderFoldMarkers(line)
-		let theme = AppServices.theme.theme
+		let theme = themeStore.theme
 		let paragraph = TranscriptMetrics.transcriptParagraph(
 			lineSpacing: theme.lineSpacing,
 			messageSpacing: theme.messageSpacing,
 			horizontalPadding: theme.horizontalPadding
 		)
 		var attributes: [NSAttributedString.Key: Any] = [
-			.font: effectiveFont(AppServices.theme),
+			.font: effectiveFont(themeStore),
 			.foregroundColor: themeColor(theme.palette.eventText),
 			.paragraphStyle: paragraph,
 			.transcriptLineNumber: line.lineNumber,
