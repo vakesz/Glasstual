@@ -25,7 +25,12 @@ extension ServerSession {
 			isTerminating: isTerminating,
 			isCollapsingNetsplit: netsplitCollapse.isCollapsing,
 			nicknameIsLocalUser: nickname.map(nicknameIsMyself) ?? false,
-			conversationIsMuted: target.map { conversationIsMuted($0, for: event) } ?? false
+			conversationIsMuted: target.map { conversationIsMuted($0, for: event) } ?? false,
+			focusSuppresses: environment.services.chatSession?.focusFilter?.suppresses(
+				event: event,
+				network: config.uniqueIdentifier,
+				isDirect: target.map(\.isDirect)
+			) ?? false
 		)), let presenter = environment.services.notifications,
 		presenter.areNotificationsDisabled == false else { return }
 

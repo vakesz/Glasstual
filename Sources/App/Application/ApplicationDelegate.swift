@@ -54,6 +54,7 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 	var mainWindow: MainWindow!
 	weak var menuController: MenuActionController?
 	var chatSession: ChatSession!
+	private var idleMonitor: IdleMonitor?
 
 	// MARK: - Initialization
 
@@ -152,6 +153,11 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 		SystemSleepState.beginObserving()
 
 		startWatchingNetworkPath()
+
+		let idleMonitor = IdleMonitor(chatSession: { [weak self] in self?.chatSession })
+		idleMonitor.start()
+		self.idleMonitor = idleMonitor
+		Task { await GlasstualFocusFilter.restoreActiveFilter() }
 
 		let workspaceCenter = NSWorkspace.shared.notificationCenter
 		notifications.observe(NSWorkspace.didWakeNotification, center: workspaceCenter) { [weak self] notification in

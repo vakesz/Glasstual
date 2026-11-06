@@ -25,6 +25,10 @@ nonisolated struct ChatSettings: Sendable, Equatable {
 	var rejoinOnKick = false
 	var disconnectOnSleep = false
 	var awayOnScreenSleep = false
+	var awayOnIdle = false
+	var idleAwayMinutes = IdleAwayDecision.defaultMinutes
+	/// The away comment while idle. Empty means the localized default.
+	var idleAwayMessage = ""
 	var enableEchoMessageCapability = false
 	var requestChatHistory = true
 	var synchronizeReadMarkers = true

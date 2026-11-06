@@ -32,6 +32,12 @@ struct GeneralPane: View {
 				isOn: model.settings.binding(for: SettingsKeys.Connection.awayOnScreenSleep)
 			)
 			SettingsToggle(
+				title: .Settings.generalAwayOnIdle,
+				note: .Settings.generalAwayOnIdleNote,
+				isOn: model.settings.binding(for: SettingsKeys.Connection.awayOnIdle)
+			)
+			idleAwayRows
+			SettingsToggle(
 				title: .Settings.preventSleepWhileConnected,
 				note: .Settings.preventSleepExplanation,
 				isOn: model.settings.binding(for: SettingsKeys.Connection.preventSleepWhileConnected)
@@ -65,5 +71,27 @@ struct GeneralPane: View {
 		}
 
 		SettingsRecoverySection()
+	}
+
+	/// The idle threshold and message, drawn disabled while idle-away is off.
+	@ViewBuilder
+	private var idleAwayRows: some View {
+		let isEnabled = model.settings[SettingsKeys.Connection.awayOnIdle]
+		let minutes = model.settings.binding(for: SettingsKeys.Connection.idleAwayMinutes)
+
+		Stepper(
+			value: minutes,
+			in: IdleAwayDecision.minimumMinutes ... IdleAwayDecision.maximumMinutes,
+			step: 1
+		) {
+			Text(.Settings.generalAwayIdleMinutes(Int(IdleAwayDecision.clampedMinutes(minutes.wrappedValue))))
+		}
+		.disabled(isEnabled == false)
+
+		TextField(text: model.settings.binding(for: SettingsKeys.Connection.idleAwayMessage)) {
+			Text(.Settings.generalAwayIdleMessage)
+		}
+		.accessibilityLabel(Text(.Settings.generalAwayIdleMessage))
+		.disabled(isEnabled == false)
 	}
 }

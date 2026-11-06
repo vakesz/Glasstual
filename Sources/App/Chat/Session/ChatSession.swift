@@ -41,6 +41,13 @@ final class ChatSession {
 
 	var isImportingConfiguration = false
 
+	/// The automatic away reasons that hold on every network at once. A Focus
+	/// filter is per network, so it is read from `focusFilter` instead.
+	var autoAwayReasons: Set<AutoAwayReason> = []
+
+	/// The filter the active Focus delivered, or `nil` when none applies.
+	var focusFilter: FocusFilterState?
+
 	/** The application's chat session takes `ChatServices.shared`, so the window
 	 and menus only have to be installed once for both it and the protocol-layer
 	 entry points that have no session to ask. A chat session built with a
@@ -219,15 +226,11 @@ final class ChatSession {
 			return
 		}
 
-		for session in sessions {
-			session.setAwayForScreenSleep()
-		}
+		setAutoAwayReason(.screenSleep, holds: true)
 	}
 
 	func wakeFromScreenSleep() {
-		for session in sessions {
-			session.clearAwayAfterScreenSleep()
-		}
+		setAutoAwayReason(.screenSleep, holds: false)
 	}
 
 	func noteReachabilityChanged(_ reachable: Bool) {
@@ -245,6 +248,10 @@ final class ChatSession {
 	func settingsChanged(_ action: SettingsReloadAction) {
 		if action.contains(.settingsChanged) {
 			refreshEnvironmentSettings()
+			if environment.settings.awayOnIdle == false {
+				autoAwayReasons.remove(.idle)
+			}
+			applyAutoAway()
 			notifyObservers { $0.chatSessionSettingsDidChange(self) }
 		}
 

@@ -11,6 +11,9 @@ extension ChatSession {
 	/// thing the setting reads besides itself.
 	func noteLoginStateChanged() {
 		refreshSleepPrevention()
+		// A network that finishes registering while the user is away is marked
+		// away too, and one that dropped keeps nothing to clear.
+		applyAutoAway()
 	}
 
 	func refreshSleepPrevention() {

@@ -24,6 +24,17 @@ nonisolated extension SettingsKeys {
 			default: false
 		)
 		static let awayOnScreenSleep = SettingsKey(group + "Away On Screen Sleep", default: false)
+		/// Marks the user away once the Mac has had no input for `idleAwayMinutes`.
+		static let awayOnIdle = SettingsKey(group + "Away On Idle", default: false)
+		static let idleAwayMinutes = SettingsKey(
+			group + "Idle Away Minutes",
+			default: IdleAwayDecision.defaultMinutes,
+			validation: {
+				$0.isFinite && $0 >= IdleAwayDecision.minimumMinutes && $0 <= IdleAwayDecision.maximumMinutes
+			}
+		)
+		/// The away comment while idle. Empty uses the localized default.
+		static let idleAwayMessage = SettingsKey(group + "Idle Away Message", default: "")
 		static let displayServerMOTD = SettingsKey(group + "Display Server MOTD", default: true)
 		static let rejoinOnKick = SettingsKey(group + "Rejoin On Kick", default: false)
 		static let sendTypingNotifications = SettingsKey(group + "Send Typing Notifications", default: true)
@@ -58,6 +69,7 @@ nonisolated extension SettingsKeys {
 
 		static let all: [any AnySettingsKey] = [
 			autojoinOnInvite, autojoinDelayAfterIdentification, disconnectOnSleep, awayOnScreenSleep,
+			awayOnIdle, idleAwayMinutes, idleAwayMessage,
 			displayServerMOTD, rejoinOnKick, sendTypingNotifications, displayTypingNotifications,
 			confirmQuit, requestChatHistory, synchronizeReadMarkers, echoMessageCapability,
 			disabledCapabilities, stsPolicies, preventSleepWhileConnected,

@@ -20,16 +20,17 @@ struct AwayStatus {
 	var message: String?
 	/// The nickname to return to while an away nickname stands in for it.
 	var previousNickname: String?
-	/** Whether it was the screen going to sleep that set this.
+	/** The automatic reason that set this, or `nil` when the user did.
 
-	 Waking up only clears an away the sleep handler set, so an away the user
-	 asked for survives the display turning itself off. */
-	var forScreenSleep = false
+	 Only an away the application set is cleared when its reason ends, so an
+	 away the user asked for survives the display sleeping, the Mac coming
+	 back from idle and a Focus ending. */
+	var autoReason: AutoAwayReason?
 }
 
 extension ServerSession {
 	func toggleAwayStatus(_ setAway: Bool, withComment comment: String?) {
-		away.forScreenSleep = false
+		away.autoReason = nil
 		guard isLoggedIn, setAway == false || comment != nil else { return }
 		/* `AWAYLEN` is measured here rather than at each caller: the menu, the
 		 screen-sleep timer and `/away` all end up on this line, and only the
@@ -54,15 +55,30 @@ extension ServerSession {
 		}
 	}
 
-	func setAwayForScreenSleep() {
-		guard isLoggedIn, !away.isAway, away.message == nil, !away.forScreenSleep else { return }
-		toggleAwayStatus(true, withComment: String(localized: .IRC.beBackLater))
-		away.forScreenSleep = true
+	/** Marks the user away for `owner`, unless they already are.
+
+	 With `owner` or `message` `nil` no reason holds any more and an automatic
+	 away ends. An away already marked automatic only changes owner, so the
+	 server sees one `AWAY` however the reasons overlap. */
+	func applyAutoAway(owner: AutoAwayReason?, message: String?) {
+		guard let owner, let message else {
+			clearAutoAway()
+			return
+		}
+
+		if away.autoReason != nil {
+			away.autoReason = owner
+			return
+		}
+
+		guard isLoggedIn, !away.isAway, away.message == nil else { return }
+		toggleAwayStatus(true, withComment: message)
+		away.autoReason = owner
 	}
 
-	func clearAwayAfterScreenSleep() {
-		guard away.forScreenSleep else { return }
-		away.forScreenSleep = false
+	func clearAutoAway() {
+		guard away.autoReason != nil else { return }
+		away.autoReason = nil
 		if isLoggedIn {
 			toggleAwayStatus(false, withComment: nil)
 		} else {
