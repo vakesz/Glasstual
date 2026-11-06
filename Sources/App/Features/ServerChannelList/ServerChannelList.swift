@@ -76,10 +76,6 @@ final class ServerChannelList {
 		noteReply()
 	}
 
-	func clear() {
-		model.clear()
-	}
-
 	func addChannel(_ channel: String, count: UInt, topic: String?) {
 		model.enqueue(channelName: channel, memberCount: count, topic: topic)
 		if model.isRefreshing {

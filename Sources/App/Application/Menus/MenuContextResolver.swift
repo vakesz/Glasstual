@@ -94,7 +94,7 @@ final class MenuContextResolver {
 	/// set a mode and the items that tick it ask the same question. Only a
 	/// `#channel` carries modes, so the callers guard on that first.
 	func channelModeIsSet(_ symbol: String) -> Bool {
-		selectedConversation?.modeInfo?.modeInfo(for: symbol)?.modeIsSet == true
+		selectedConversation?.modeInfo?.modes.modeInfo(for: symbol)?.modeIsSet == true
 	}
 
 	/// Runs `perform` against the row a contextual menu was opened on, so that

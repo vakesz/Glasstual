@@ -452,10 +452,6 @@ class Conversation: ChatItem {
 		memberInfo?.findMember(nickname)
 	}
 
-	func sortMembers() {
-		memberInfo?.sortMembers()
-	}
-
 	private var isSelectedConversation: Bool {
 		self === associatedSession?.output?.selectedItem
 	}

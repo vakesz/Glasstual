@@ -114,9 +114,9 @@ struct ChannelModeTests {
 
 		_ = channelMode.updateModes("+bon *!*@host nick")
 
-		#expect(channelMode.modeInfo(for: "b") == nil)
-		#expect(channelMode.modeInfo(for: "o") == nil)
-		#expect(channelMode.modeInfo(for: "n") != nil)
+		#expect(channelMode.modes.modeInfo(for: "b") == nil)
+		#expect(channelMode.modes.modeInfo(for: "o") == nil)
+		#expect(channelMode.modes.modeInfo(for: "n") != nil)
 	}
 
 	@Test("A copied container edits and clears independently of the channel's own modes")
@@ -125,12 +125,12 @@ struct ChannelModeTests {
 		var modes = channelMode.modes
 		modes.changeMode("k", modeIsSet: true, modeParameter: "secret")
 
-		#expect(channelMode.modeIsDefined("k") == false)
+		#expect(channelMode.modes.modeIsDefined("k") == false)
 		#expect(modes.modeIsDefined("k"))
 
 		modes.clear()
 
-		#expect(channelMode.modeIsDefined("n"))
+		#expect(channelMode.modes.modeIsDefined("n"))
 		#expect(modes.modes.isEmpty)
 	}
 }
