@@ -101,6 +101,9 @@ settings:
   configs:
     Debug:
       SWIFT_COMPILATION_MODE: singlefile
+      # Caches compiler outputs by content, so a clean build after a branch
+      # switch or Clean Build Folder reuses them. Release builds stay uncached.
+      COMPILATION_CACHE_ENABLE_CACHING: YES
       VALIDATE_PRODUCT: NO
       # Hardened runtime blocks attaching the debugger to XPC services.
       ENABLE_HARDENED_RUNTIME: NO
