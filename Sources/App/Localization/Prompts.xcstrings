@@ -49,54 +49,6 @@
         }
       }
     },
-    "are-you-sure-you-want-to-open-the-file-named": {
-      "comment": "Legacy key: xfl-8e.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Are you sure you want to open the file named “%@” with Glasstual?"
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Biztosan megnyitod a(z) \"%@\" fájlt a Glasstuallal?"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Möchtest du die Datei \"%@\" wirklich mit Glasstual öffnen?"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "¿Seguro que quieres abrir el archivo «%@» con Glasstual?"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Voulez-vous vraiment ouvrir le fichier « %@ » avec Glasstual ?"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "「%@」という名前のファイルをGlasstualで開いてもよろしいですか？"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tem certeza de que deseja abrir o arquivo chamado “%@” com o Glasstual?"
-          }
-        }
-      }
-    },
     "are-you-sure-you-want-to-quit-glasstual": {
       "comment": "Legacy key: 6vj-2p.",
       "extractionState": "manual",
@@ -289,54 +241,6 @@
         }
       }
     },
-    "choose-file": {
-      "comment": "Legacy key: 502-6h.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choose File"
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fájl kiválasztása"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Datei auswählen"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Elegir archivo"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choisir un fichier"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ファイルを選択"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Escolher arquivo"
-          }
-        }
-      }
-    },
     "close": {
       "comment": "Legacy key: aqw-q1.",
       "extractionState": "manual",
@@ -525,54 +429,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Continuar"
-          }
-        }
-      }
-    },
-    "could-not-open-saved-conversation-history": {
-      "comment": "Title of the alert shown when the saved conversation history could not be opened. Legacy key: h99-3q.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Glasstual could not open your saved conversation history. Please report this problem at https://github.com/vakesz/Glasstual/issues"
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A Glasstual nem tudta megnyitni a mentett beszélgetési előzményeket. Jelentsd a hibát itt: https://github.com/vakesz/Glasstual/issues"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Glasstual konnte deinen gespeicherten Gesprächsverlauf nicht öffnen. Bitte melde das Problem unter https://github.com/vakesz/Glasstual/issues"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Glasstual no pudo abrir tu historial de conversaciones guardado. Informa de este problema en https://github.com/vakesz/Glasstual/issues"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Glasstual n’a pas pu ouvrir l’historique de vos conversations enregistrées. Signalez ce problème sur https://github.com/vakesz/Glasstual/issues"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Glasstualは保存済みの会話履歴を開けませんでした。この問題は https://github.com/vakesz/Glasstual/issues で報告してください。"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "O Glasstual não conseguiu abrir seu histórico de conversas salvo. Informe este problema em https://github.com/vakesz/Glasstual/issues"
           }
         }
       }
@@ -817,54 +673,6 @@
         }
       }
     },
-    "do-not-show-this-message-again": {
-      "comment": "Legacy key: 68u-z9.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Don’t ask again"
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ne kérdezze újra"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nicht erneut fragen"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No volver a preguntar"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ne plus demander"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "今後は確認しない"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Não perguntar novamente"
-          }
-        }
-      }
-    },
     "do-you-want-to-delete-named": {
       "comment": "Confirmation title for deleting the selected connection or channel; %@ is its name. Consolidates the identical legacy i8o-7z entry. Legacy key: 0kz-wd.",
       "extractionState": "manual",
@@ -909,54 +717,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Deseja apagar “%@”?"
-          }
-        }
-      }
-    },
-    "encryption-with-a-digital-certificate-keeps": {
-      "comment": "Legacy key: ihy-mz.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Encryption with a digital certificate keeps information private as it’s sent to or from the server “%1$@”"
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A digitális tanúsítvánnyal végzett titkosítás megvédi a(z) \"%1$@\" kiszolgálóval váltott adatokat"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Die Verschlüsselung mit einem digitalen Zertifikat schützt die Daten beim Austausch mit dem Server \"%1$@\""
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "El cifrado con un certificado digital mantiene la información privada mientras se envía hacia o desde el servidor «%1$@»"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Le chiffrement par certificat numérique préserve la confidentialité des informations envoyées au serveur « %1$@ » ou reçues de celui-ci"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "デジタル証明書による暗号化により、サーバ「%1$@」との間で送受信される情報の機密性が保たれます"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A criptografia com um certificado digital mantém as informações privadas quando enviadas para o servidor “%1$@” ou recebidas dele"
           }
         }
       }
@@ -1197,54 +957,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "O Glasstual está usando uma conexão criptografada com “%@”"
-          }
-        }
-      }
-    },
-    "intentionally-empty-informative-text": {
-      "comment": "Intentionally empty informative text for the document-open confirmation. Legacy key: 6tj-yp.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": ""
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": ""
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": ""
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": ""
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": ""
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": ""
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": ""
           }
         }
       }
@@ -1677,102 +1389,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Insira o vHost desejado (por exemplo, “apple.vhost”)"
-          }
-        }
-      }
-    },
-    "please-note-that-the-following-items": {
-      "comment": "Legacy key: jsh-1a.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Please note that the following items cannot be imported: custom addons, file transfer download location, log location, and passwords."
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A következő elemek nem importálhatók: egyéni kiegészítők, fájlátviteli letöltések helye, naplók helye és jelszavak."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Folgende Elemente können nicht importiert werden: eigene Add-ons, Downloadordner für Dateiübertragungen, Protokollspeicherort und Passwörter."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ten en cuenta que no se pueden importar los siguientes elementos: complementos personalizados, ubicación de descarga de transferencias de archivos, ubicación de los registros y contraseñas."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Notez que les éléments suivants ne peuvent pas être importés : extensions personnalisées, emplacement de téléchargement des transferts de fichiers, emplacement des journaux et mots de passe."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "次の項目は読み込めませんのでご注意ください: カスタムアドオン、ファイル転送のダウンロード先、ログの保存場所、パスワード。"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Observe que os itens a seguir não podem ser importados: complementos personalizados, local de download das transferências de arquivos, local dos registros e senhas."
-          }
-        }
-      }
-    },
-    "please-note-that-the-following-items-cannot-be-exported": {
-      "comment": "Legacy key: syp-al.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Please note that the following items cannot be exported: custom addons, file transfer download location, log location, and passwords."
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A következő elemek nem exportálhatók: egyéni kiegészítők, fájlátviteli letöltések helye, naplók helye és jelszavak."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Folgende Elemente können nicht exportiert werden: eigene Add-ons, Downloadordner für Dateiübertragungen, Protokollspeicherort und Passwörter."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ten en cuenta que no se pueden exportar los siguientes elementos: complementos personalizados, ubicación de descarga de transferencias de archivos, ubicación de los registros y contraseñas."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Notez que les éléments suivants ne peuvent pas être exportés : extensions personnalisées, emplacement de téléchargement des transferts de fichiers, emplacement des journaux et mots de passe."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "次の項目は書き出せませんのでご注意ください: カスタムアドオン、ファイル転送のダウンロード先、ログの保存場所、パスワード。"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Observe que os itens a seguir não podem ser exportados: complementos personalizados, local de download das transferências de arquivos, local dos registros e senhas."
           }
         }
       }
@@ -2305,102 +1921,6 @@
         }
       }
     },
-    "the-preferences-could-not-be-imported": {
-      "comment": "Title of the alert shown when importing a preferences file fails.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The settings could not be imported."
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nem sikerült importálni a beállításokat."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Die Einstellungen konnten nicht importiert werden."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No se pudieron importar los ajustes."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Impossible d’importer les réglages."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "設定を読み込めませんでした。"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Não foi possível importar os ajustes."
-          }
-        }
-      }
-    },
-    "the-selected-file-is-not-a-preferences-file": {
-      "comment": "Reason shown when an imported file is not a preferences property list.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The selected file is not a Glasstual settings file."
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A kiválasztott fájl nem Glasstual-beállításfájl."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Die ausgewählte Datei ist keine Glasstual-Einstellungsdatei."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "El archivo seleccionado no es un archivo de ajustes de Glasstual."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Le fichier sélectionné n’est pas un fichier de réglages Glasstual."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "選択したファイルは、Glasstualの設定ファイルではありません。"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "O arquivo selecionado não é um arquivo de ajustes do Glasstual."
-          }
-        }
-      }
-    },
     "there-is-no-undo-and-all": {
       "comment": "Legacy key: 516-ms.",
       "extractionState": "manual",
@@ -2541,102 +2061,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Todos os dados relacionados a esta conversa, exceto os registros, serão apagados. Esta ação não pode ser desfeita."
-          }
-        }
-      }
-    },
-    "this-action-will-overwrite-your-configuration": {
-      "comment": "Legacy key: itb-3x.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This action will overwrite your configuration with the contents of a file you choose"
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ez a művelet felülírja a beállításaidat a kiválasztott fájl tartalmával"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dieser Vorgang überschreibt deine Konfiguration mit dem Inhalt einer ausgewählten Datei"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Esta acción sobrescribirá tus ajustes con el contenido de un archivo que elijas"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cette action remplacera votre configuration par le contenu d’un fichier que vous choisissez"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "この操作により、設定が、選択したファイルの内容で上書きされます"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Esta ação substituirá sua configuração pelo conteúdo de um arquivo que você escolher"
-          }
-        }
-      }
-    },
-    "this-action-will-save-a-copy": {
-      "comment": "Legacy key: 1fm-up.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This action will save a copy of your configuration to a location of your choice"
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ez a művelet másolatot ment a beállításaidról a választott helyre"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dieser Vorgang sichert eine Kopie deiner Konfiguration an einem Ort deiner Wahl"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Esta acción guardará una copia de tus ajustes en la ubicación que elijas"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cette action enregistrera une copie de votre configuration à l’emplacement de votre choix"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "この操作により、設定のコピーが、指定した場所に保存されます"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Esta ação salvará uma cópia da sua configuração em um local à sua escolha"
           }
         }
       }
@@ -3069,54 +2493,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Você clicou em um link que vai conectá-lo a “%1$@” e entrar nos canais: %2$@"
-          }
-        }
-      }
-    },
-    "your-current-preferences-could-not-be-backed-up": {
-      "comment": "Reason shown when the backup taken before an import could not be written.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your current settings could not be backed up, so nothing was changed."
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nem sikerült biztonsági mentést készíteni a jelenlegi beállításokról, ezért semmi sem változott."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Deine aktuellen Einstellungen konnten nicht gesichert werden. Daher wurde nichts geändert."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No se pudo hacer una copia de seguridad de los ajustes actuales, por lo que no se ha cambiado nada."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Impossible de sauvegarder vos réglages actuels, donc rien n’a été modifié."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "現在の設定をバックアップできなかったため、何も変更されませんでした。"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Não foi possível fazer backup dos seus ajustes atuais, então nada foi alterado."
           }
         }
       }

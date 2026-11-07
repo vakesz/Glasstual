@@ -1,13 +1,13 @@
 # Loopback TLS identities
 
 `LoopbackTestIdentity.p12` is a self-signed RSA-2048 test identity for
-`127.0.0.1` and `localhost`. `AsyncCertificateValidationLoopbackTests` uses it
-to test certificate validation through the connection service.
-The E2E loopback peer loads it from `../TLS/LoopbackTestIdentity.p12`
-relative to `E2E_FIXTURE`.
+`127.0.0.1` and `localhost`. `AsyncCertificateValidationLoopbackTests` and
+`LegacyCipherSuiteFallbackTests` use it, and the E2E loopback peer loads it
+from `../TLS/LoopbackTestIdentity.p12` relative to `E2E_FIXTURE`.
 
-The public test passphrase is `glasstual`. Both test loaders use
-`kSecImportToMemoryOnly`; they do not write the identity to a keychain.
+The public test passphrase is `glasstual`. All loaders use
+`kSecImportToMemoryOnly`, so no fixture is written to a keychain or trust
+store.
 
 Regenerate it with:
 
@@ -24,16 +24,11 @@ openssl pkcs12 -export -legacy -out LoopbackTestIdentity.p12 \
 
 ## Client certificate chain
 
-`ClientChainTestIdentity.p12` contains a generated RSA-2048 client identity,
-its intermediate CA and its self-signed root CA. The client certificate has
-the TLS client-authentication extended key usage. All three certificates use
-SHA-256 signatures and expire in 2126. These are public test credentials,
-generated for this repository; the passphrase is `glasstual`.
-
-`TLSClientIdentityTests` imports the bundle into memory and verifies mutual
-TLS over loopback for TLS 1.2 and TLS 1.3. The peer trusts only the fixture
-root. Tests also cover a missing intermediate and duplicated-leaf prevention.
-No fixture is installed in the user's keychain or trust store.
+`ClientChainTestIdentity.p12` contains a generated RSA-2048 client identity
+with the TLS client-authentication extended key usage, its intermediate CA
+and its self-signed root CA. These are public test credentials, generated for
+this repository; the passphrase is `glasstual`. `TLSClientIdentityTests` uses
+it for mutual TLS over loopback, trusting only the fixture root.
 
 Regenerate in an empty temporary directory:
 

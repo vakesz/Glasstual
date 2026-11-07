@@ -33,36 +33,28 @@ views, models, strings and platform adapters together.
   the app and the IRC connection host. Shared framing and logging belong in
   `Sources/CocoaExtensions`.
 
-`Chat/Bouncer` owns soju network discovery: the listing, one connection per
-network and the sidebar hierarchy. `Chat/Session/Config` owns persisted server
-and conversation configuration; `Chat/Session/Keychain` owns secret storage
-for it.
+## Notable owners
 
-`Application/Intents` owns Shortcuts actions and entities.
-`Application/FocusFilter` owns the Focus filter intent.
-`Features/ScrollbackSearch` owns search across stored history and its window.
-`Features/TranscriptLogViewer` owns browsing transcript log files.
-`Features/Scripts` owns script discovery, execution, installation prompts and
-strings.
-
-`Features/Transcript` splits by role: `Controller` owns line delivery, history
-loading, reactions and redactions; `Rendering` turns lines into semantic
-`TranscriptRow` values; `View` holds the TextKit adapter; `InlineImages` owns
-bounded image fetching and decoding.
-
-`SettingsKeys/Keys` holds the typed key declarations, one file per family.
-`Localization/DateFormatting` owns shared date parsing and formatting.
-
-`LinkSchemeRules` owns URL permissions; `LinkParser` locates links in text.
-`SettingValue` converts property-list values; `SettingsKey` declares and
-validates settings; `SettingsKey+Storage` accesses defaults.
+- `Chat/Bouncer`: soju network discovery, one connection per network and the
+  sidebar hierarchy.
+- `Chat/Session/Config`: persisted server and conversation configuration.
+  `Chat/Session/Keychain` stores its secrets.
+- `Application/Intents`: Shortcuts actions and entities.
+- `Application/FocusFilter`: the Focus filter intent.
+- `Features/ScrollbackSearch`: search across stored history and its window.
+- `Features/TranscriptLogViewer`: browsing transcript log files.
+- `Features/Scripts`: script discovery, execution, installation prompts and
+  strings.
+- `Features/Transcript`: `Controller` owns line delivery, history loading,
+  reactions and redactions; `Rendering` turns lines into semantic
+  `TranscriptRow` values; `View` holds the TextKit adapter; `InlineImages` owns
+  bounded image fetching and decoding.
 
 ## UI
 
 SwiftUI owns layout, navigation, forms, sheets and scenes. The AppKit adapters
 listed in [AGENTS.md](../../AGENTS.md) provide native capabilities and list
-rendering. Adapters own native views and interaction state. Feature models own
-domain state.
+rendering. Feature models own domain state.
 
 The main window uses a navigation sidebar and a native member-list inspector.
 SwiftUI provides the inspector's resize interaction. A typed window setting

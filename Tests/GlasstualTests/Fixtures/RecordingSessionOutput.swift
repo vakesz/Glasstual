@@ -32,9 +32,6 @@ final class RecordingSessionOutput: ServerSessionPresenting {
 	private(set) var maskListEntries: [MaskListEntry] = []
 	/// The `(channel, mode letter)` pairs an end-of-list reply was routed to.
 	private(set) var maskListFinishes: [String] = []
-	var maskListFinishedCount: Int {
-		maskListFinishes.count
-	}
 
 	/// Tests can suspend the answer to exercise stale-session handling.
 	var confirmation: (@MainActor (AlertRequest) async -> Bool)?

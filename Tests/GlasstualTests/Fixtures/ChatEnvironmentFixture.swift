@@ -107,10 +107,4 @@ final class ChatEnvironmentFixture {
 		/* The directory installs itself in the services it is given. */
 		chatSession = ChatSession(environment: environment)
 	}
-
-	/// Re-reads the defaults store, for a test that writes a setting after
-	/// the session already exists.
-	func refreshSettings() {
-		environment.settings = .current()
-	}
 }

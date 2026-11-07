@@ -261,17 +261,6 @@ extension AccessibilityDriver {
 		}
 	}
 
-	/// A modal-opening AX press does not return until the modal session ends.
-	/// A native click lets the harness drive the panel that the button opens.
-	func clickButton(_ title: String, from parent: AXUIElement) async throws {
-		try await wait("enabled fixture UI button \(title)") { deadline in
-			guard let button = try named(title, role: kAXButtonRole, from: parent, deadline: deadline),
-			      try value(button, kAXEnabledAttribute, deadline: deadline) as? Bool == true else { return false }
-			try click(button, deadline: deadline)
-			return true
-		}
-	}
-
 	func key(_ code: CGKeyCode, flags: CGEventFlags = []) throws {
 		guard let down = CGEvent(keyboardEventSource: nil, virtualKey: code, keyDown: true),
 		      let up = CGEvent(keyboardEventSource: nil, virtualKey: code, keyDown: false)
