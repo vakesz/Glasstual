@@ -12,6 +12,9 @@ nonisolated enum MemberListLayout {
 	static let idealWidth: CGFloat = .init(SettingsKeys.MainWindow.memberListWidth.defaultValue)
 	static let maximumWidth: CGFloat = .init(SettingsKeys.MainWindow.memberListWidthRange.upperBound)
 	static let avatarSize: CGFloat = 24
+	/// A section header's row: one line of caption text and the group row's own
+	/// padding, compact beside the member rows it introduces.
+	static let sectionRowHeight: CGFloat = 22
 	static let profileAvatarSize: CGFloat = 64
 	static let profileLabelWidth: CGFloat = 72
 	static let profileMinimumWidth: CGFloat = 280

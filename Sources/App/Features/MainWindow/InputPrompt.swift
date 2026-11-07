@@ -70,8 +70,8 @@ struct InputPromptView: View {
 	let cancel: () -> Void
 
 	var body: some View {
-		VStack(alignment: .leading, spacing: 16) {
-			VStack(alignment: .leading, spacing: 6) {
+		VStack(alignment: .leading, spacing: UISpacing.loose) {
+			VStack(alignment: .leading, spacing: UISpacing.snug) {
 				Text(verbatim: presentation.request.title)
 					.font(.headline)
 				Text(verbatim: presentation.request.message)
@@ -101,7 +101,7 @@ struct InputPromptView: View {
 					.disabled(hasInput == false)
 			}
 		}
-		.padding(20)
+		.padding(UISpacing.spacious)
 		.frame(width: 380)
 		.onAppear {
 			inputIsFocused = true

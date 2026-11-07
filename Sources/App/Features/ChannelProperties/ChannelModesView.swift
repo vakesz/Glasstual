@@ -60,7 +60,7 @@ struct ChannelModesView: View {
 					 on the keystroke that crossed the limit: the answer belongs
 					 beside the field being typed in, not in a dialog over it. */
 					if let warning = model.keyLengthCaption {
-						Text(verbatim: warning).foregroundStyle(.red)
+						ValidationMessageLabel(warning)
 					} else {
 						Text(.ChannelProperties.channelKeyFieldHint)
 					}

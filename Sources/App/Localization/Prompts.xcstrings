@@ -776,7 +776,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Do not ask me again"
+            "value": "Don’t ask again"
           }
         },
         "hu": {
@@ -824,19 +824,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Do not show this message again"
+            "value": "Don’t ask again"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ne jelenjen meg újra ez az üzenet"
+            "value": "Ne kérdezze újra"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Diese Meldung nicht mehr anzeigen"
+            "value": "Nicht erneut fragen"
           }
         },
         "es": {
@@ -2114,25 +2114,25 @@
       }
     },
     "scrollback-database-could-not-be-opened": {
-      "comment": "Body of the alert shown when the scrollback database cannot be opened and the failure came with no description of its own.",
+      "comment": "Body of the alert shown when the saved history cannot be opened and the failure came with no description of its own.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The scrollback database could not be opened."
+            "value": "Glasstual could not open your saved history."
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nem sikerült megnyitni az előzményadatbázist."
+            "value": "A Glasstual nem tudta megnyitni a mentett előzményeket."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die Verlaufsdatenbank konnte nicht geöffnet werden."
+            "value": "Glasstual konnte deinen gespeicherten Verlauf nicht öffnen."
           }
         },
         "es": {
@@ -2408,19 +2408,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "There is no undo and all data related to this channel, except for logs, will be erased."
+            "value": "All data related to this channel, except for logs, will be erased. This action cannot be undone."
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ez nem vonható vissza. A naplók kivételével a csatornához tartozó összes adat törlődik."
+            "value": "A naplók kivételével a csatornához tartozó összes adat törlődik. Ez a művelet nem vonható vissza."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dies kann nicht rückgängig gemacht werden. Alle Daten dieses Kanals außer den Protokollen werden gelöscht."
+            "value": "Alle Daten dieses Kanals außer den Protokollen werden gelöscht. Diese Aktion kann nicht rückgängig gemacht werden."
           }
         },
         "es": {
@@ -2456,19 +2456,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "There is no undo and all data related to this server, except for logs, will be erased."
+            "value": "All data related to this server, except for logs, will be erased. This action cannot be undone."
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ez nem vonható vissza. A naplók kivételével a kiszolgálóhoz tartozó összes adat törlődik."
+            "value": "A naplók kivételével a kiszolgálóhoz tartozó összes adat törlődik. Ez a művelet nem vonható vissza."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dies kann nicht rückgängig gemacht werden. Alle Daten dieses Servers außer den Protokollen werden gelöscht."
+            "value": "Alle Daten dieses Servers außer den Protokollen werden gelöscht. Diese Aktion kann nicht rückgängig gemacht werden."
           }
         },
         "es": {
@@ -2504,19 +2504,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "There is no undo and all data related to this query, except for logs, will be erased."
+            "value": "All data related to this query, except for logs, will be erased. This action cannot be undone."
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ez nem vonható vissza. A naplók kivételével a privát beszélgetéshez tartozó összes adat törlődik."
+            "value": "A naplók kivételével a privát beszélgetéshez tartozó összes adat törlődik. Ez a művelet nem vonható vissza."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dies kann nicht rückgängig gemacht werden. Alle Daten dieses Gesprächs außer den Protokollen werden gelöscht."
+            "value": "Alle Daten dieses Gesprächs außer den Protokollen werden gelöscht. Diese Aktion kann nicht rückgängig gemacht werden."
           }
         },
         "es": {
@@ -3309,6 +3309,486 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Tente novamente"
+          }
+        }
+      }
+    },
+    "drop-send-title": {
+      "comment": "Title of the sheet that confirms sending dropped files. The first argument names the files, the second the recipient.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send %1$@ to %2$@?"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ elküldése neki: %2$@?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ an %2$@ senden?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "¿Enviar %1$@ a %2$@?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Envoyer %1$@ à %2$@ ?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@を%2$@に送信しますか?"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Enviar %1$@ para %2$@?"
+          }
+        }
+      }
+    },
+    "drop-send-body": {
+      "comment": "Body of the sheet that confirms sending dropped files. The argument is the recipient.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ will be asked to accept the transfer."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kérést kap az átvitel elfogadására."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ wird gebeten, die Übertragung anzunehmen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Se pedirá a %@ que acepte la transferencia."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ devra accepter le transfert."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@に転送の承認が求められます。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ será solicitado a aceitar a transferência."
+          }
+        }
+      }
+    },
+    "moderation-kick-title": {
+      "comment": "Title of the sheet that confirms a moderation kick. The first argument names the members, the second the channel.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kick %1$@ from %2$@?"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kirúgod őt: %1$@ a(z) %2$@ csatornából?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ aus %2$@ kicken?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "¿Expulsar a %1$@ de %2$@?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Expulser %1$@ de %2$@ ?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@を%2$@からキックしますか?"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Expulsar %1$@ de %2$@?"
+          }
+        }
+      }
+    },
+    "moderation-ban-title": {
+      "comment": "Title of the sheet that confirms a moderation ban. The first argument names the members, the second the channel.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ban %1$@ from %2$@?"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kitiltod őt: %1$@ a(z) %2$@ csatornából?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ aus %2$@ bannen?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "¿Prohibir a %1$@ en %2$@?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Bannir %1$@ de %2$@ ?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@を%2$@から禁止しますか?"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Banir %1$@ de %2$@?"
+          }
+        }
+      }
+    },
+    "moderation-kickban-title": {
+      "comment": "Title of the sheet that confirms a moderation kick and ban. The first argument names the members, the second the channel.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kick and ban %1$@ from %2$@?"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kirúgod és kitiltod őt: %1$@ a(z) %2$@ csatornából?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ aus %2$@ kicken und bannen?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "¿Expulsar y prohibir a %1$@ en %2$@?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Expulser et bannir %1$@ de %2$@ ?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@を%2$@からキックして禁止しますか?"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Expulsar e banir %1$@ de %2$@?"
+          }
+        }
+      }
+    },
+    "moderation-kick-body": {
+      "comment": "Body of the moderation kick confirmation sheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "They are removed from the channel and can join again."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eltávolításra kerülnek a csatornából, de újra csatlakozhatnak."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sie werden aus dem Kanal entfernt und können erneut beitreten."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Se les expulsa del canal y pueden volver a unirse."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ils sont retirés du canal et peuvent le rejoindre à nouveau."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "チャンネルから削除されますが、再び参加できます。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Eles são removidos do canal e podem entrar novamente."
+          }
+        }
+      }
+    },
+    "moderation-ban-body": {
+      "comment": "Body of the moderation ban confirmation sheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "They cannot join the channel again until the ban is removed."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nem csatlakozhatnak újra a csatornához, amíg a kitiltást fel nem oldják."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sie können dem Kanal erst wieder beitreten, wenn der Bann aufgehoben wird."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No podrán volver a unirse al canal hasta que se quite la prohibición."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ils ne peuvent pas rejoindre le canal tant que le bannissement n’est pas levé."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "禁止が解除されるまでチャンネルに再参加できません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Eles não podem entrar no canal novamente até que o banimento seja removido."
+          }
+        }
+      }
+    },
+    "moderation-kick-button": {
+      "comment": "Moderation button that kicks the members.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kick"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kirúgás"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kicken"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Expulsar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Expulser"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "キック"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Expulsar"
+          }
+        }
+      }
+    },
+    "moderation-ban-button": {
+      "comment": "Moderation button that bans the members.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ban"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kitiltás"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bannen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Prohibir"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Bannir"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "禁止"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Banir"
+          }
+        }
+      }
+    },
+    "moderation-kickban-button": {
+      "comment": "Moderation button that kicks and bans the members.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kick and Ban"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kirúgás és kitiltás"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kicken und bannen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Expulsar y prohibir"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Expulser et bannir"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "キックして禁止"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Expulsar e banir"
           }
         }
       }

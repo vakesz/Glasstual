@@ -129,6 +129,9 @@ enum SettingsReload {
 		reload(.scrollbackVisibleLimit, on: [SettingsKeys.Logging.scrollbackVisibleLimit])
 		reload(.logTranscripts, on: [SettingsKeys.Logging.logToDisk])
 		reload(.sidebar, on: [SettingsKeys.Sessions.serverSessions])
+		// The sidebar and the member list draw the theme's chrome ground only
+		// when this is on, and their rows resolve against it too.
+		reload([.sidebar, .memberList], on: [SettingsKeys.Appearance.themesWindowChrome])
 
 		return actions
 	}()

@@ -53,7 +53,7 @@ final class MemberListTableController: NSObject, NSTableViewDataSource, NSTableV
 	var redirectTyping: (String) -> Void = { _ in }
 	var performDoubleClick: () -> Void = { AppServices.delegate.menuController?.memberInMemberListDoubleClicked() }
 	var sendFiles: ([String], String) -> Void = { paths, nickname in
-		AppServices.delegate.menuController?.sendDroppedFiles(paths, nickname: nickname)
+		AppServices.delegate.menuController?.confirmSendDroppedFiles(paths, to: nickname)
 	}
 
 	init(model: MemberList) {
@@ -181,7 +181,7 @@ final class MemberListTableController: NSObject, NSTableViewDataSource, NSTableV
 	}
 
 	func tableView(_: NSTableView, heightOfRow row: Int) -> CGFloat {
-		member(at: row) == nil ? 26 : MemberListLayout.avatarSize + 8
+		member(at: row) == nil ? MemberListLayout.sectionRowHeight : MemberListLayout.avatarSize + 8
 	}
 
 	func tableView(_ tableView: NSTableView, viewFor _: NSTableColumn?, row: Int) -> NSView? {

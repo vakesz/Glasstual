@@ -70,12 +70,9 @@ private struct BouncerAccountForm: View {
 						.foregroundStyle(.secondary)
 				}
 				if let failure = networks.failure {
-					Label {
-						Text(.ServerProperties.bouncerNetworkFailure(failure.description, failure.code))
-					} icon: {
-						Image(systemName: "exclamationmark.triangle.fill")
-					}
-					.foregroundStyle(.red)
+					ValidationMessageLabel(
+						String(localized: .ServerProperties.bouncerNetworkFailure(failure.description, failure.code))
+					)
 				}
 			}
 		}

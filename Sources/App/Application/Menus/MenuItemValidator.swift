@@ -126,9 +126,6 @@ struct MenuItemValidator {
 			/* The Query menu's item and the transcript menu's are the same
 			 command, so one guard answers for both. */
 			return conversation?.isDirect == true && ApplicationPaths.isWritingTranscripts
-		case .developerMode:
-			item.state = SettingsKeys.Commands.developerMode.value ? .on : .off
-			return true
 		case .muteNotifications:
 			/* A mode is ticked while it is in force. The item used to be
 			 renamed instead, so the menu read as a command and its two homes

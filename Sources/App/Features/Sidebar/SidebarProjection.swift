@@ -144,15 +144,7 @@ struct SidebarProjection {
 	}
 
 	private static func conversationRow(_ conversation: Conversation, unreadBadgeTint: NSColor?) -> ConversationRow {
-		let kind: ConversationRow.Kind = if conversation.isChannel {
-			.channel
-		} else if conversation.isDirectChat {
-			.directChat
-		} else if conversation.isConsole {
-			.console
-		} else {
-			.direct
-		}
+		let kind = ConversationRow.Kind(conversation)
 		return ConversationRow(
 			id: conversation.uniqueIdentifier,
 			title: conversation.label,

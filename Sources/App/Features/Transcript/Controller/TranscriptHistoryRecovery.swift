@@ -155,50 +155,44 @@ struct TranscriptHistoryRecoveryView: View {
 		serverFailed: Bool
 	) -> some View {
 		if message != nil || serverFailed || isRetrying {
-			HStack(alignment: .top) {
-				/* The glyph is the only thing that says this is a warning, so it
-				 is tinted like one and named for a reader who cannot see it. */
-				Image(systemName: "exclamationmark.triangle.fill")
-					.foregroundStyle(.orange)
-					.accessibilityLabel(String(localized: .Transcript.warningAccessibility))
-				VStack(alignment: .leading, spacing: UISpacing.tight) {
-					Text(serverFailed && message == nil ?
-						String(localized: .Transcript.serverHistoryCouldNotBeLoaded) :
-						String(localized: .Transcript.localHistoryNeedsAttention))
-						.font(.headline)
-					if let detail = message ?? history?.serverFailureReason {
-						Text(verbatim: detail).font(.caption).textSelection(.enabled)
+			let retryLocal = message != nil
+			let retryServer = serverFailed
+			let localAction = TranscriptNoticeBanner.Action(
+				title: String(localized: .Transcript.retry),
+				identifier: "history-retry",
+				isEnabled: isRetrying == false
+			) {
+				if let controller {
+					controller.retryHistory()
+				} else {
+					storage.isRetrying = true
+					Task {
+						_ = await Scrollback.shared.retryLoading()
+						storage.isRetrying = false
 					}
-				}
-				Spacer()
-				if isRetrying {
-					ProgressView().controlSize(.small)
-				}
-				if message != nil {
-					Button(String(localized: .Transcript.retry)) {
-						if let controller {
-							controller.retryHistory()
-						} else {
-							storage.isRetrying = true
-							Task {
-								_ = await Scrollback.shared.retryLoading()
-								storage.isRetrying = false
-							}
-						}
-					}
-					.disabled(isRetrying)
-					.accessibilityIdentifier("history-retry")
-				}
-				if serverFailed {
-					Button(String(localized: .Transcript.retryServer)) { controller?.retryServerHistory() }
-						.disabled(history?.serverRetryIsAvailable != true)
-						.accessibilityIdentifier("server-history-retry")
 				}
 			}
-			.padding(UISpacing.regular)
-			.background(.bar)
-			.accessibilityElement(children: .contain)
-			.accessibilityIdentifier("history-recovery")
+			let serverAction = TranscriptNoticeBanner.Action(
+				title: String(localized: .Transcript.retryServer),
+				identifier: "server-history-retry",
+				isEnabled: history?.serverRetryIsAvailable == true
+			) { controller?.retryServerHistory() }
+			/* One action leads. The local store's retry comes first when it is
+			 what failed; the server's retry leads only when it is all that did,
+			 and stays reachable beside the local one when both have. */
+			TranscriptNoticeBanner(
+				symbol: "exclamationmark.triangle.fill",
+				symbolTint: .orange,
+				symbolLabel: String(localized: .Transcript.warningAccessibility),
+				title: serverFailed && message == nil ?
+					String(localized: .Transcript.serverHistoryCouldNotBeLoaded) :
+					String(localized: .Transcript.localHistoryNeedsAttention),
+				detail: message ?? history?.serverFailureReason,
+				isBusy: isRetrying,
+				primaryAction: retryLocal ? localAction : (retryServer ? serverAction : nil),
+				secondaryAction: retryLocal && retryServer ? serverAction : nil,
+				identifier: "history-recovery"
+			)
 		}
 	}
 }
@@ -210,19 +204,15 @@ struct TranscriptDetachedBanner: View {
 	let returnToLive: () -> Void
 
 	var body: some View {
-		HStack {
-			Image(systemName: "clock.arrow.circlepath")
-				.foregroundStyle(.secondary)
-				.accessibilityHidden(true)
-			Text(.Transcript.viewingHistory)
-				.font(.headline)
-			Spacer()
-			Button(String(localized: .Transcript.returnToLive), action: returnToLive)
-				.accessibilityIdentifier("history-return-to-live")
-		}
-		.padding(UISpacing.regular)
-		.background(.bar)
-		.accessibilityElement(children: .contain)
-		.accessibilityIdentifier("history-window-banner")
+		TranscriptNoticeBanner(
+			symbol: "clock.arrow.circlepath",
+			title: String(localized: .Transcript.viewingHistory),
+			primaryAction: .init(
+				title: String(localized: .Transcript.returnToLive),
+				identifier: "history-return-to-live",
+				perform: returnToLive
+			),
+			identifier: "history-window-banner"
+		)
 	}
 }

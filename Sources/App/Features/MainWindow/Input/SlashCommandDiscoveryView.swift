@@ -9,8 +9,6 @@ struct SlashCommandDiscoveryView: View {
 	let model: SlashCommandDiscoveryModel
 	let insert: (SlashCommandSuggestion) -> Void
 
-	@Environment(\.colorSchemeContrast) private var contrast
-
 	static let rowHeight: CGFloat = 32
 	private static let detailHeight: CGFloat = 84
 	private static let footerHeight: CGFloat = 22
@@ -45,7 +43,7 @@ struct SlashCommandDiscoveryView: View {
 			}
 			.padding(.vertical, Self.verticalPadding)
 			.frame(height: Self.height(for: model))
-			.glassEffect(.regular, in: .rect(cornerRadius: 12))
+			.background(.regularMaterial, in: .rect(cornerRadius: InputBarLayout.accessoryCornerRadius))
 			.accessibilityElement(children: .contain)
 			.accessibilityLabel(String(localized: .SlashCommands.commandSuggestions))
 			.accessibilityIdentifier("slash-command-discovery")
@@ -85,17 +83,17 @@ struct SlashCommandDiscoveryView: View {
 			HStack(spacing: UISpacing.regular) {
 				Text("/" + suggestion.name)
 					.font(.system(.body, design: .monospaced))
-					.foregroundStyle(.primary)
+					.foregroundStyle(selected ? Color(nsColor: .alternateSelectedControlTextColor) : .primary)
 				Text(suggestion.description)
 					.font(.callout)
-					.foregroundStyle(.secondary)
+					.foregroundStyle(selected ? Color(nsColor: .alternateSelectedControlTextColor) : .secondary)
 					.frame(maxWidth: .infinity, alignment: .leading)
 			}
 			.lineLimit(1)
 			.padding(.horizontal, UISpacing.regular)
 			.frame(height: Self.rowHeight)
 			.frame(maxWidth: .infinity, alignment: .leading)
-			.background(selected ? Color.accentColor.opacity(contrast == .increased ? 0.32 : 0.16) : .clear)
+			.background(selected ? Color(nsColor: .selectedContentBackgroundColor) : .clear, in: .rect(cornerRadius: UISpacing.tight))
 			.contentShape(.rect)
 		}
 		.buttonStyle(.plain)

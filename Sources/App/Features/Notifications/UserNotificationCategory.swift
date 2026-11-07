@@ -16,7 +16,7 @@ import UserNotifications
  actions. */
 enum UserNotificationCategory: String, CaseIterable {
 	/// Messages, mentions, joins and connection changes: every event with no
-	/// actions of its own.
+	/// actions of its own beyond marking its conversation read.
 	case activity = "GlasstualNotificationCategoryActivity"
 	case fileTransfer = "GlasstualNotificationCategoryFileTransfer"
 	case privateMessage = "GlasstualNotificationCategoryPrivateMessage"
@@ -27,6 +27,7 @@ enum UserNotificationCategory: String, CaseIterable {
 		case acceptFileTransfer = "GlasstualNotificationActionAcceptFileTransfer"
 		case declineFileTransfer = "GlasstualNotificationActionDeclineFileTransfer"
 		case replyToPrivateMessage = "GlasstualNotificationActionReplyToPrivateMessage"
+		case markConversationAsRead = "GlasstualNotificationActionMarkConversationAsRead"
 	}
 
 	init(event: UserNotificationEvent) {
@@ -51,7 +52,7 @@ enum UserNotificationCategory: String, CaseIterable {
 	private var actions: [UNNotificationAction] {
 		switch self {
 		case .activity:
-			[]
+			[markAsReadAction]
 		case .fileTransfer:
 			[
 				UNNotificationAction(
@@ -65,7 +66,7 @@ enum UserNotificationCategory: String, CaseIterable {
 				UNNotificationAction(
 					identifier: Action.declineFileTransfer.rawValue,
 					title: String(localized: .Notifications.fileTransferDeclineAction),
-					options: [.destructive]
+					options: []
 				),
 			]
 		case .privateMessage:
@@ -77,8 +78,19 @@ enum UserNotificationCategory: String, CaseIterable {
 					textInputButtonTitle: String(localized: .Notifications.replySendButton),
 					textInputPlaceholder: String(localized: .Notifications.replyPlaceholder)
 				),
+				markAsReadAction,
 			]
 		}
+	}
+
+	/// Clears the conversation's unread state without bringing Glasstual forward:
+	/// the person has read it elsewhere, or does not mean to.
+	private var markAsReadAction: UNNotificationAction {
+		UNNotificationAction(
+			identifier: Action.markConversationAsRead.rawValue,
+			title: String(localized: .Notifications.markAsReadAction),
+			options: []
+		)
 	}
 
 	/// What the system shows instead of the title and body when the person

@@ -113,6 +113,7 @@ enum SettingsPaneKeys {
 		.init(SettingsKeys.Logging.scrollbackSaveLimit, .Settings.styleScrollbackSaveLimit),
 		.init(SettingsKeys.Messages.disableNicknameColorHashing, .Settings.styleDisableNicknameColors),
 		.init(SettingsKeys.Connection.displayServerMOTD, .Settings.styleShowMotd),
+		.init(SettingsKeys.Appearance.themesWindowChrome, .Settings.styleThemesWindowChrome),
 	]
 
 	private static let notificationsKeys: [SettingsBoundKey] = [
@@ -207,6 +208,7 @@ enum SettingsPaneKeys {
 	private static let logLocationKeys: [SettingsBoundKey] = [.init(SettingsKeys.Logging.logToDisk, .Settings.logLocationToggle)]
 
 	private static let hiddenKeys: [SettingsBoundKey] = [
+		.init(SettingsKeys.Commands.developerMode, .Settings.hiddenDeveloperMode),
 		.init(SettingsKeys.Internals.appSleepDisabled, .Settings.hiddenAppNap),
 		.init(SettingsKeys.Logging.loadHistoryLazily, .Settings.hiddenLoadHistoryLazily),
 		.init(SettingsKeys.Logging.scrollbackVisibleLimit, .Settings.hiddenScrollbackVisibleLimit),

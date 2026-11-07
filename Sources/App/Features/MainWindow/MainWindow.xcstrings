@@ -2430,43 +2430,43 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "List of Ban Exceptions…"
+            "value": "List of Ban Exceptions"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kitiltási kivételek listája…"
+            "value": "Kitiltási kivételek listája"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bann-Ausnahmen…"
+            "value": "Bann-Ausnahmen"
           }
         },
         "es": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Lista de excepciones de la prohibición..."
+            "value": "Lista de excepciones de la prohibición"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Liste des exceptions de bannissement..."
+            "value": "Liste des exceptions de bannissement"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "禁止例外のリスト…"
+            "value": "禁止例外のリスト"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Lista de exceções de banimento..."
+            "value": "Lista de exceções de banimento"
           }
         }
       }
@@ -2478,43 +2478,43 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "List of Bans…"
+            "value": "List of Bans"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kitiltások listája…"
+            "value": "Kitiltások listája"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bannliste…"
+            "value": "Bannliste"
           }
         },
         "es": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Lista de prohibiciones..."
+            "value": "Lista de prohibiciones"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Liste des interdictions..."
+            "value": "Liste des interdictions"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "禁止リスト…"
+            "value": "禁止リスト"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Lista de Bans..."
+            "value": "Lista de Bans"
           }
         }
       }
@@ -2622,43 +2622,43 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "List of Invite Exceptions…"
+            "value": "List of Invite Exceptions"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Meghívási kivételek listája…"
+            "value": "Meghívási kivételek listája"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Einladungs-Ausnahmen…"
+            "value": "Einladungs-Ausnahmen"
           }
         },
         "es": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Lista de excepciones de invitación..."
+            "value": "Lista de excepciones de invitación"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Liste des exceptions d'invitation..."
+            "value": "Liste des exceptions d'invitation"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "招待例外のリスト…"
+            "value": "招待例外のリスト"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Lista de exceções de convites..."
+            "value": "Lista de exceções de convites"
           }
         }
       }
@@ -2766,43 +2766,43 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Invite Only (+i)"
+            "value": "Invite Only"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Csak meghívással (+i)"
+            "value": "Csak meghívással"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nur auf Einladung (+i)"
+            "value": "Nur auf Einladung"
           }
         },
         "es": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Solo invitación (+i)"
+            "value": "Solo invitación"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Invitation uniquement (+i)"
+            "value": "Invitation uniquement"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "招待のみ (+i)"
+            "value": "招待のみ"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Apenas convite (+i)"
+            "value": "Apenas convite"
           }
         }
       }
@@ -2862,43 +2862,43 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Moderated (+m)"
+            "value": "Moderated"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Moderált (+m)"
+            "value": "Moderált"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Moderiert (+m)"
+            "value": "Moderiert"
           }
         },
         "es": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Moderado (+m)"
+            "value": "Moderado"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Modéré (+m)"
+            "value": "Modéré"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "中程度 (+m)"
+            "value": "モデレート"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Moderado (+m)"
+            "value": "Moderado"
           }
         }
       }
@@ -3054,43 +3054,43 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "List of Quiets…"
+            "value": "List of Quiets"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Némítások listája…"
+            "value": "Némítások listája"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Stummschaltungsliste…"
+            "value": "Stummschaltungsliste"
           }
         },
         "es": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Lista de Tranquilos..."
+            "value": "Lista de silenciados"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Liste des Silencieux..."
+            "value": "Liste des utilisateurs réduits au silence"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "静かな人のリスト…"
+            "value": "ミュート済みリスト"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Lista de Silenciosos..."
+            "value": "Lista de silenciados"
           }
         }
       }
@@ -3139,6 +3139,54 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Visualizar logs"
+          }
+        }
+      }
+    },
+    "menu-dock-show-main-window": {
+      "comment": "Dock menu item title. Shows the main window.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show Main Window"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Főablak megjelenítése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hauptfenster anzeigen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mostrar ventana principal"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Afficher la fenêtre principale"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "メインウインドウを表示"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mostrar janela principal"
           }
         }
       }
@@ -3246,7 +3294,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Check Grammar With Spelling"
+            "value": "Check Grammar with Spelling"
           }
         },
         "hu": {
@@ -3264,25 +3312,25 @@
         "es": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Comprueba la gramática con la ortografía"
+            "value": "Comprobar gramática con ortografía"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Vérifiez la grammaire avec l'orthographe"
+            "value": "Vérifier la grammaire avec l'orthographe"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "スペルと文法を確認する"
+            "value": "スペルと文法を確認"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Verifique a gramática com a ortografia"
+            "value": "Verificar gramática com ortografia"
           }
         }
       }
@@ -5015,54 +5063,6 @@
         }
       }
     },
-    "menu-help-advanced": {
-      "comment": "Help menu item title.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Advanced"
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Haladó"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Erweitert"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Avanzado"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "avancé"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "高度な"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "avançado"
-          }
-        }
-      }
-    },
     "menu-help-connect-to-help-channel": {
       "comment": "Help menu item title.",
       "extractionState": "manual",
@@ -5159,150 +5159,6 @@
         }
       }
     },
-    "menu-help-developer-mode": {
-      "comment": "Help ▸ Advanced menu item title. Ticked while developer mode is on, so the title names the mode rather than the act of enabling it.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Developer Mode"
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fejlesztői mód"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Entwicklermodus"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Modo de desarrollador"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Mode développeur"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "開発者モード"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Modo de desenvolvedor"
-          }
-        }
-      }
-    },
-    "menu-help-hidden-settings": {
-      "comment": "Help menu item title.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hidden Settings…"
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rejtett beállítások…"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Verborgene Einstellungen…"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Configuración oculta..."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Paramètres cachés..."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "隠された設定…"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Configurações ocultas..."
-          }
-        }
-      }
-    },
-    "menu-help-reset-warnings": {
-      "comment": "Help menu item title.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reset All Warnings"
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Minden figyelmeztetés visszaállítása"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Alle Warnungen zurücksetzen"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Restablecer todas las advertencias"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Réinitialiser tous les avertissements"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "すべての警告をリセットする"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Redefinir todas as advertências"
-          }
-        }
-      }
-    },
     "menu-help-welcome": {
       "comment": "Help menu item title.",
       "extractionState": "manual",
@@ -5310,43 +5166,43 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Welcome to Glasstual…"
+            "value": "Welcome to Glasstual"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Üdvözöl a Glasstual…"
+            "value": "Üdvözöl a Glasstual"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Willkommen bei Glasstual…"
+            "value": "Willkommen bei Glasstual"
           }
         },
         "es": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Bienvenido a Glasstual..."
+            "value": "Bienvenido a Glasstual"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Bienvenue sur Glasstual..."
+            "value": "Bienvenue sur Glasstual"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Glasstualへようこそ…"
+            "value": "Glasstualへようこそ"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Bem-vindo ao Glasstual..."
+            "value": "Bem-vindo ao Glasstual"
           }
         }
       }
@@ -5838,43 +5694,43 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Give Halfop (+h)"
+            "value": "Give Half-Operator Status"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Féloperátori jog adása (+h)"
+            "value": "Féloperátori jog adása"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Halboperatorstatus vergeben (+h)"
+            "value": "Halboperatorstatus vergeben"
           }
         },
         "es": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Dar Halfop (+h)"
+            "value": "Dar estado de semioperador"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Donnez Halfop (+h)"
+            "value": "Donner le statut de semi-opérateur"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "ハーフオプ（+h）を与える"
+            "value": "ハーフオペレーター権限を与える"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Dar Halfop (+h)"
+            "value": "Dar status de semioperador"
           }
         }
       }
@@ -5886,43 +5742,43 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Give Op (+o)"
+            "value": "Give Operator Status"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Operátori jog adása (+o)"
+            "value": "Operátori jog adása"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Operatorstatus vergeben (+o)"
+            "value": "Operatorstatus vergeben"
           }
         },
         "es": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Dar Op (+o)"
+            "value": "Dar estado de operador"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Donner Op (+o)"
+            "value": "Donner le statut d'opérateur"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Op（+o）を与える"
+            "value": "オペレーター権限を与える"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Dar Op (+o)"
+            "value": "Dar status de operador"
           }
         }
       }
@@ -5934,43 +5790,43 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Give Voice (+v)"
+            "value": "Give Voice"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hozzászólási jog adása (+v)"
+            "value": "Hozzászólási jog adása"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sprechrecht vergeben (+v)"
+            "value": "Sprechrecht vergeben"
           }
         },
         "es": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Dar voz (+v)"
+            "value": "Dar voz"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Donner une voix (+v)"
+            "value": "Donner la parole"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "声を与える（+v）"
+            "value": "発言権を与える"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Dar Voz (+v)"
+            "value": "Dar voz"
           }
         }
       }
@@ -6174,43 +6030,43 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ban and Kick"
+            "value": "Kick and Ban"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kitiltás és kirúgás"
+            "value": "Kirúgás és kitiltás"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bannen und kicken"
+            "value": "Kicken und bannen"
           }
         },
         "es": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Prohibir y expulsar"
+            "value": "Expulsar y prohibir"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Interdire et chasser"
+            "value": "Expulser et bannir"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "禁止とキック"
+            "value": "キックして禁止"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Banir e Expulsar"
+            "value": "Expulsar e banir"
           }
         }
       }
@@ -6606,43 +6462,43 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Take Halfop (-h)"
+            "value": "Take Half-Operator Status"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Féloperátori jog elvétele (-h)"
+            "value": "Féloperátori jog elvétele"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Halboperatorstatus entziehen (-h)"
+            "value": "Halboperatorstatus entziehen"
           }
         },
         "es": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Toma Halfop (-h)"
+            "value": "Quitar estado de semioperador"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Prenez Halfop (-h)"
+            "value": "Retirer le statut de semi-opérateur"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "ハーフロップ（-h）を取る"
+            "value": "ハーフオペレーター権限を取り消す"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Pegue Halfop (-h)"
+            "value": "Remover status de semioperador"
           }
         }
       }
@@ -6654,43 +6510,43 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Take Op (-o)"
+            "value": "Take Operator Status"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Operátori jog elvétele (-o)"
+            "value": "Operátori jog elvétele"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Operatorstatus entziehen (-o)"
+            "value": "Operatorstatus entziehen"
           }
         },
         "es": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Tomar Op (-o)"
+            "value": "Quitar estado de operador"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Prenez Op (-o)"
+            "value": "Retirer le statut d'opérateur"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Op（-o）を取る"
+            "value": "オペレーター権限を取り消す"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Pegue Op (-o)"
+            "value": "Remover status de operador"
           }
         }
       }
@@ -6702,43 +6558,43 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Take Voice (-v)"
+            "value": "Take Voice"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hozzászólási jog elvétele (-v)"
+            "value": "Hozzászólási jog elvétele"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sprechrecht entziehen (-v)"
+            "value": "Sprechrecht entziehen"
           }
         },
         "es": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Tomar Voz (-v)"
+            "value": "Quitar voz"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Prendre la voix (-v)"
+            "value": "Retirer la parole"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "音声を取る（-v）"
+            "value": "発言権を取り消す"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Pegar Voz (-v)"
+            "value": "Remover voz"
           }
         }
       }
@@ -6936,49 +6792,49 @@
       }
     },
     "menu-navigation-channel-list": {
-      "comment": "Navigation menu item title.",
+      "comment": "Navigation menu item title. A submenu that lists every conversation, not the server channel list window.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Channel List…"
+            "value": "Conversations"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Csatornalista…"
+            "value": "Beszélgetések"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kanalliste…"
+            "value": "Unterhaltungen"
           }
         },
         "es": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Lista de canales..."
+            "value": "Conversaciones"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Liste des chaînes..."
+            "value": "Conversations"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "チャンネルリスト…"
+            "value": "会話"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Lista de Canais..."
+            "value": "Conversas"
           }
         }
       }
@@ -8286,43 +8142,43 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Channel List…"
+            "value": "Channel List"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Csatornalista…"
+            "value": "Csatornalista"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kanalliste…"
+            "value": "Kanalliste"
           }
         },
         "es": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Lista de canales..."
+            "value": "Lista de canales"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Liste des chaînes..."
+            "value": "Liste des chaînes"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "チャンネルリスト…"
+            "value": "チャンネルリスト"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Lista de Canais..."
+            "value": "Lista de Canais"
           }
         }
       }
@@ -9672,7 +9528,7 @@
       }
     },
     "menu-window-sort-channel-list": {
-      "comment": "Window menu item title.",
+      "comment": "View menu item title for sorting the channel list.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -9720,7 +9576,7 @@
       }
     },
     "menu-window-view-logs": {
-      "comment": "Window menu item title.",
+      "comment": "File menu item title for showing logs in Finder.",
       "extractionState": "manual",
       "localizations": {
         "en": {

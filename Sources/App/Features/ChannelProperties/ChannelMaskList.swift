@@ -24,6 +24,19 @@ extension ChannelMaskKind {
 	}
 }
 
+extension ChannelMaskKind {
+	/// What an empty table says, by the list it is: "No Bans" rather than a
+	/// title that is the same whichever list came back empty.
+	var emptyTitle: LocalizedStringResource {
+		switch self {
+		case .ban: .ChannelProperties.emptyTitleBans
+		case .banException: .ChannelProperties.emptyTitleBanExceptions
+		case .inviteException: .ChannelProperties.emptyTitleInviteExceptions
+		case .quiet: .ChannelProperties.emptyTitleQuiets
+		}
+	}
+}
+
 /** Why a change to the list was not made, shown beside the field it came from.
 
  The server answers a refused `MODE` with an error numeric, and the window keeps

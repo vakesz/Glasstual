@@ -146,7 +146,7 @@ struct MainWindowRootView: View {
 	/// top-leading corner, as the geometry reader it replaces did.
 	private var conversationDetail: some View {
 		VStack(spacing: 0) {
-			if let connection = chrome.connection {
+			if let connection = chrome.connection, connection.hasActions {
 				MainWindowConnectionRow(presentation: connection) { action in
 					connection.perform(action, in: columns.window, commands: commands)
 				}

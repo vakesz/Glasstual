@@ -56,6 +56,8 @@ final class TranscriptCommands: NSObject {
 	private let sink: TranscriptCommandSink
 	private var openingLinkTask: Task<Void, Never>?
 	private var deletingMessageTask: Task<Void, Never>?
+	/// The picker behind the Share item of the menu that is open.
+	private var sharingPicker: NSSharingServicePicker?
 
 	init(sink: TranscriptCommandSink) {
 		self.sink = sink
@@ -69,8 +71,9 @@ final class TranscriptCommands: NSObject {
 
 	func contextMenu(for transcript: TranscriptView, defaultMenuItems: [NSMenuItem]) -> NSMenu {
 		let menu = NSMenu()
+		let target = transcript.takeContextMenuTarget()
 		for item in menuItems(
-			for: transcript.takeContextMenuTarget(),
+			for: target,
 			in: transcript,
 			defaultMenuItems: defaultMenuItems
 		) {
@@ -84,7 +87,33 @@ final class TranscriptCommands: NSObject {
 			}
 		}
 		MenuPresentation.apply(to: menu)
+		addShareItem(to: menu, selection: transcript.selection, target: target, defaultMenuItems: defaultMenuItems)
 		return menu
+	}
+
+	/** The system Share menu for the selected text.
+
+	 The standard item lists the services the system offers for it. A picker
+	 whose item is copied into a menu loses its services, so the item is added
+	 after the copy, and the picker is held for as long as the menu can be
+	 used. NSTextView's own menu can already carry a Share item, and a second
+	 one would only repeat it. */
+	private func addShareItem(
+		to menu: NSMenu,
+		selection: String?,
+		target: TranscriptContextTarget,
+		defaultMenuItems: [NSMenuItem]
+	) {
+		guard let selection, selection.isEmpty == false, target.inlineImage == nil else { return }
+		let picker = NSSharingServicePicker(items: [selection])
+		let shareItem = picker.standardShareMenuItem
+		let alreadyOffered = defaultMenuItems.contains { $0.title == shareItem.title }
+		guard alreadyOffered == false else { return }
+		sharingPicker = picker
+		if menu.items.last?.isSeparatorItem == false {
+			menu.addItem(.separator())
+		}
+		menu.addItem(shareItem)
 	}
 
 	func channelNameDoubleClicked(in view: TranscriptView) {
@@ -218,7 +247,7 @@ final class TranscriptCommands: NSObject {
 			.flatMap { URL(string: $0)?.deletingPathExtension().lastPathComponent }
 			.flatMap { $0.isEmpty ? nil : $0 }
 			.map { "\($0).png" } ?? "image.png"
-		panel.begin { response in
+		let save: @MainActor (NSApplication.ModalResponse) -> Void = { response in
 			guard response == .OK, let url = panel.url else { return }
 			Task {
 				do {
@@ -227,6 +256,13 @@ final class TranscriptCommands: NSObject {
 					NSApp.presentError(error)
 				}
 			}
+		}
+		/* A sheet keeps the panel with the window it belongs to: a free-floating
+		 panel can be left behind another application's windows. */
+		if let window = NSApp.keyWindow ?? NSApp.mainWindow {
+			panel.beginSheetModal(for: window, completionHandler: save)
+		} else {
+			panel.begin(completionHandler: save)
 		}
 	}
 

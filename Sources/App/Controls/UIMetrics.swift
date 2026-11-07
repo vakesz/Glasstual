@@ -6,21 +6,31 @@ import AppKit
 /** The window's spacing scale.
 
  Everything the app spaces by is one of these, so a value that drifted off the
- four-point grid shows up as a name that does not exist rather than as a number
- nobody questions. There used to be one of these per feature -- the main
+ scale shows up as a name that does not exist rather than as a number nobody
+ questions. The steps are four points apart, with two named in-betweens
+ (`snug` and `comfortable`) for the places the input bar and the capsule's
+ content need them. There used to be one of these per feature -- the main
  window's, the member list's, the sidebar's, the input bar's -- with the same
  four numbers under four sets of names, which is three chances for one of them
  to be edited on its own and the columns beside it to stop lining up. */
 enum UISpacing {
 	/// 4 pt. Between an icon and the label it belongs to.
 	static let tight: CGFloat = 4
+	/// 6 pt. The input capsule's own vertical padding and its gap from the
+	/// column's foot: tighter than `regular`, looser than `tight`.
+	static let snug: CGFloat = 6
 	/// 8 pt. Between neighbouring controls in a strip.
 	static let regular: CGFloat = 8
+	/// 10 pt. The inset of a field's content from its capsule's sides, and a
+	/// transcript's default side padding.
+	static let comfortable: CGFloat = 10
 	/// 12 pt. A strip's own side margin.
 	static let wide: CGFloat = 12
 	/// 16 pt. The gap the input capsule keeps from the column's sides, and the
 	/// margin a popover keeps around its content.
 	static let loose: CGFloat = 16
+	/// 20 pt. The margin a sheet keeps around its content.
+	static let spacious: CGFloat = 20
 }
 
 /// The glyph column both side columns are built around. The member list and

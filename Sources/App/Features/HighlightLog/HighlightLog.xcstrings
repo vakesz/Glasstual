@@ -152,19 +152,19 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The highlights logged for this connection are removed. This cannot be undone."
+            "value" : "The highlights logged for this connection are removed. This action cannot be undone."
           }
         },
         "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "A kapcsolathoz naplózott említések törlődnek. Ez nem vonható vissza."
+            "value" : "A kapcsolathoz naplózott említések törlődnek. Ez a művelet nem vonható vissza."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Die protokollierten Hervorhebungen für diese Verbindung werden entfernt. Dies kann nicht rückgängig gemacht werden."
+            "value" : "Die protokollierten Hervorhebungen für diese Verbindung werden entfernt. Diese Aktion kann nicht rückgängig gemacht werden."
           }
         },
         "es" : {

@@ -59,7 +59,15 @@ enum MenuGraph {
 		controller.transcriptURLMenu = contextMenu([
 			.item(String(localized: .MainWindow.menuTranscriptCopyUrl), .copyLinkURL, #selector(MenuActionController.copyURL(_:))),
 		], controller)
+		/* Conversations with something unread are inserted after the first item
+		 each time the menu opens: `MenuActionController.menuNeedsUpdate(_:)`. */
 		controller.dockMenu = contextMenu([
+			.item(
+				String(localized: .MainWindow.menuDockShowMainWindow),
+				.mainWindow,
+				#selector(MenuActionController.showMainWindow(_:))
+			),
+			.separator(),
 			.item(
 				String(localized: .MainWindow.menuMuteNotifications),
 				.muteNotifications,

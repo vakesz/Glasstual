@@ -24,6 +24,9 @@ struct TranscriptCommandSink {
 	var modifyTopic: () -> Void = {}
 	var react: (MessageMenuContext) -> Void = { _ in }
 	var sendDroppedFiles: ([String]) -> Void = { _ in }
+	/// Whether a file dropped now would have a recipient. A drop is highlighted
+	/// and accepted only while this holds.
+	var acceptsDroppedFiles: () -> Bool = { false }
 	/// The window's menu for a channel name, whose items the transcript copies.
 	var channelNameMenu: () -> NSMenu? = { nil }
 	/// The window's menu for a link.
@@ -62,6 +65,7 @@ struct TranscriptCommandSink {
 				menuActionController?.reactToMessage(sender)
 			},
 			sendDroppedFiles: { menuActionController?.sendDroppedFilesToSelectedConversation($0) },
+			acceptsDroppedFiles: { menuActionController?.acceptsDroppedFiles ?? false },
 			channelNameMenu: { menuActionController?.transcriptChannelNameMenu },
 			linkMenu: { menuActionController?.transcriptURLMenu },
 			memberMenu: { menuActionController?.userControlMenu },

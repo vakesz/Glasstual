@@ -44,7 +44,7 @@ struct FileTransferListView: View {
 					.monospacedDigit()
 			}
 			.padding(.horizontal, UISpacing.wide)
-			.padding(.vertical, 10)
+			.padding(.vertical, UISpacing.comfortable)
 
 			List(selection: $model.selection) {
 				ForEach(model.visibleTransfers, id: \.uniqueIdentifier) { transfer in
@@ -71,19 +71,15 @@ struct FileTransferListView: View {
 				return .handled
 			}
 			.onDeleteCommand(perform: model.selection.isEmpty ? nil : { center.perform(.remove, on: model.selection) })
-
-			Divider()
-			HStack(spacing: UISpacing.regular) {
-				Button(.FileTransfer.clearAllStoppedTransfers, action: center.clearStoppedTransfers)
-					.disabled(model.canClearStoppedTransfers == false)
-
-				Spacer()
-
+		}
+		.toolbar {
+			ToolbarItemGroup {
 				Button {
 					center.perform(.start, on: model.selection)
 				} label: {
 					Label(model.startActionTitle(), systemImage: "play.fill")
 				}
+				.help(model.startActionTitle())
 				.disabled(model.canPerform(.start) == false)
 
 				Button {
@@ -91,6 +87,7 @@ struct FileTransferListView: View {
 				} label: {
 					Label(.FileTransfer.downloadTo, systemImage: "folder.badge.arrow.down")
 				}
+				.help(Text(.FileTransfer.downloadTo))
 				.disabled(model.canPerform(.downloadTo) == false)
 
 				Button {
@@ -98,6 +95,7 @@ struct FileTransferListView: View {
 				} label: {
 					Label(.FileTransfer.cancelTransfer, systemImage: "stop.fill")
 				}
+				.help(Text(.FileTransfer.cancelTransfer))
 				.disabled(model.canPerform(.stop) == false)
 
 				Button {
@@ -105,10 +103,19 @@ struct FileTransferListView: View {
 				} label: {
 					Label(.FileTransfer.quickLook, systemImage: "eye")
 				}
+				.help(Text(.FileTransfer.quickLook))
 				.disabled(model.canPerform(.preview) == false)
 			}
-			.controlSize(.small)
-			.padding(10)
+
+			ToolbarSpacer()
+
+			ToolbarItem {
+				Button(action: center.clearStoppedTransfers) {
+					Label(.FileTransfer.clearAllStoppedTransfers, systemImage: "xmark.bin")
+				}
+				.help(Text(.FileTransfer.clearAllStoppedTransfers))
+				.disabled(model.canClearStoppedTransfers == false)
+			}
 		}
 		.task { model.activate(restoring: storedDirectionFilter) }
 		.onExitCommand(perform: center.dismiss)
@@ -194,7 +201,7 @@ private struct FileTransferRowView: View {
 			FileTransferIconView(filename: transfer.filename)
 				.equatable()
 
-			VStack(alignment: .leading, spacing: 5) {
+			VStack(alignment: .leading, spacing: UISpacing.tight) {
 				HStack {
 					Text(verbatim: presentation.filename)
 						.lineLimit(1)
@@ -218,7 +225,7 @@ private struct FileTransferRowView: View {
 					.accessibilityIdentifier("file-transfer-status-\(transfer.uniqueIdentifier)")
 			}
 		}
-		.padding(.vertical, 5)
+		.padding(.vertical, UISpacing.tight)
 		.accessibilityElement(children: .contain)
 		.accessibilityIdentifier("file-transfer-row-\(transfer.uniqueIdentifier)")
 	}

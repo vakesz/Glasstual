@@ -57,7 +57,7 @@ struct OnboardingView: View {
 				} else {
 					ScrollView {
 						stepContent
-							.padding(.horizontal, 32)
+							.padding(.horizontal, UISpacing.loose * 2)
 							.padding(.bottom, UISpacing.loose)
 					}
 					.scrollBounceBehavior(.basedOnSize)
@@ -90,7 +90,7 @@ struct OnboardingView: View {
 	}
 
 	private var header: some View {
-		VStack(spacing: 6) {
+		VStack(spacing: UISpacing.snug) {
 			applicationIcon
 				.resizable()
 				.scaledToFit()
@@ -106,8 +106,8 @@ struct OnboardingView: View {
 				.multilineTextAlignment(.center)
 				.frame(maxWidth: 560)
 		}
-		.padding(.top, 24)
-		.padding(.bottom, 14)
+		.padding(.top, UISpacing.spacious)
+		.padding(.bottom, UISpacing.wide)
 	}
 
 	@ViewBuilder
@@ -131,38 +131,38 @@ struct OnboardingView: View {
 	}
 
 	private var footer: some View {
-		HStack {
-			/* Onboarding has to be dismissible without answering it, and
-			 without it asking again at the next launch. */
-			Button(.Onboarding.windowChromeSetUpLater, action: setUpLater)
-				.buttonStyle(.borderless)
-				.keyboardShortcut(.cancelAction)
-
-			Button(.Onboarding.windowChromeSkip) { model.skip() }
-				.buttonStyle(.borderless)
-				.disabled(model.currentStep.isSkippable == false)
-				.opacity(model.currentStep.isSkippable ? 1 : 0)
-				.accessibilityHidden(model.currentStep.isSkippable == false)
-
-			Spacer()
-
+		/* The page indicator sits behind the buttons rather than between
+		 them, so it stays centred whichever of them a step shows. */
+		ZStack {
 			OnboardingPageIndicator(
 				currentStep: model.currentStep.rawValue,
 				stepCount: OnboardingStep.allCases.count,
 				accessibilityDescription: model.progressDescription
 			)
 
-			Spacer()
+			HStack {
+				if model.isFirstStep == false {
+					Button(.Onboarding.windowChromeBack, action: model.moveBack)
+						.keyboardShortcut(.leftArrow, modifiers: .command)
+				}
 
-			Button(.Onboarding.windowChromeBack, action: model.moveBack)
-				.disabled(model.isFirstStep)
-				.opacity(model.isFirstStep ? 0 : 1)
-				.accessibilityHidden(model.isFirstStep)
-				.keyboardShortcut(.leftArrow, modifiers: .command)
+				/* Onboarding has to be dismissible without answering it, and
+				 without it asking again at the next launch. */
+				Button(.Onboarding.windowChromeSetUpLater, action: setUpLater)
+					.buttonStyle(.borderless)
+					.keyboardShortcut(.cancelAction)
 
-			Button(model.primaryButtonTitle, action: advance)
-				.keyboardShortcut(.defaultAction)
-				.disabled(model.isCurrentStepValid == false)
+				Spacer()
+
+				if model.currentStep.isSkippable {
+					Button(.Onboarding.windowChromeSkip) { model.skip() }
+						.buttonStyle(.borderless)
+				}
+
+				Button(model.primaryButtonTitle, action: advance)
+					.keyboardShortcut(.defaultAction)
+					.disabled(model.isCurrentStepValid == false)
+			}
 		}
 		.disabled(model.isCompleting)
 		.padding(UISpacing.loose)

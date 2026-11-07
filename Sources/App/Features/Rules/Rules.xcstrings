@@ -251,43 +251,43 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Add Filter"
+            "value": "Add Filter…"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Szűrő hozzáadása"
+            "value": "Szűrő hozzáadása…"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Filter hinzufügen"
+            "value": "Filter hinzufügen…"
           }
         },
         "es": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Añadir filtro"
+            "value": "Añadir filtro…"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Ajouter un filtre"
+            "value": "Ajouter un filtre…"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "フィルターを追加する"
+            "value": "フィルターを追加する…"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Adicionar Filtro"
+            "value": "Adicionar Filtro…"
           }
         }
       }
@@ -347,19 +347,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "There is no undo and all data related to this filter will be erased."
+            "value": "All data related to this filter will be erased. This action cannot be undone."
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ez nem vonható vissza. A szűrőhöz tartozó összes adat törlődik."
+            "value": "A szűrőhöz tartozó összes adat törlődik. Ez a művelet nem vonható vissza."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dies kann nicht rückgängig gemacht werden. Alle Daten dieses Filters werden gelöscht."
+            "value": "Alle Daten dieses Filters werden gelöscht. Diese Aktion kann nicht rückgängig gemacht werden."
           }
         },
         "es": {
@@ -539,43 +539,43 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Edit Filter"
+            "value": "Edit Filter…"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Szűrő szerkesztése"
+            "value": "Szűrő szerkesztése…"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Filter bearbeiten"
+            "value": "Filter bearbeiten…"
           }
         },
         "es": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Editar filtro"
+            "value": "Editar filtro…"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Modifier le filtre"
+            "value": "Modifier le filtre…"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "フィルターを編集する"
+            "value": "フィルターを編集する…"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Editar Filtro"
+            "value": "Editar Filtro…"
           }
         }
       }
@@ -1019,19 +1019,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Choose a filter file that Chat Filter exported."
+            "value": "Choose a filter file that Glasstual exported."
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Válassz a Csevegésszűrő által exportált szűrőfájlt."
+            "value": "Válassz a Glasstual által exportált szűrőfájlt."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wähle eine vom Chatfilter exportierte Filterdatei."
+            "value": "Wähle eine von Glasstual exportierte Filterdatei."
           }
         },
         "es": {
@@ -1248,54 +1248,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "OK"
-          }
-        }
-      }
-    },
-    "preferences-pane-title": {
-      "comment": "Name of the Chat Filter preferences pane. Migrated from legacy key jq1-6r.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Chat Filter"
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Csevegésszűrő"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Chatfilter"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Filtro de chat"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Filtre de chat"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "チャットフィルター"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Filtro de bate-papo"
           }
         }
       }

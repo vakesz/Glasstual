@@ -81,7 +81,7 @@ struct SettingsTransferPreviewView: View {
 							Text(.SettingsTransfer.keysNotImported(preview.archive.ignoredKeys.count))
 						}
 					} else {
-						Text(.SettingsTransfer.fileIsNotAValidConfigurationSnapshot).foregroundStyle(.red)
+						ValidationMessageLabel(String(localized: .SettingsTransfer.fileIsNotAValidConfigurationSnapshot))
 					}
 				}
 				.frame(maxWidth: .infinity, alignment: .leading)

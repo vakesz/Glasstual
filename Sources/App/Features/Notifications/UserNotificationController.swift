@@ -399,6 +399,13 @@ extension UserNotificationController: UNUserNotificationCenterDelegate {
 			return
 		}
 
+		/* Marking read is answered where it was chosen too: nothing is raised
+		 and the selection stays where it is. */
+		if actionIdentifier == UserNotificationCategory.Action.markConversationAsRead.rawValue {
+			markConversationAsRead(for: payload, in: chatSession)
+			return
+		}
+
 		/* A reply is answered where it was typed. Raising the main window over it,
 		 or moving its selection to that conversation, is what the person did not
 		 ask for. */
@@ -426,6 +433,18 @@ extension UserNotificationController: UNUserNotificationCenterDelegate {
 		}
 
 		AppServices.delegate.mainWindow.select(conversation)
+	}
+
+	private func markConversationAsRead(for payload: UserNotificationPayload, in chatSession: ChatSession) {
+		guard let sessionId = payload.sessionIdentifier,
+		      let conversationId = payload.conversationIdentifier,
+		      let conversation = chatSession.findConversation(withId: conversationId, onSessionWithId: sessionId)
+		else {
+			return
+		}
+
+		conversation.resetState()
+		DockIcon.updateDockIcon()
 	}
 
 	private func sendReply(_ replyMessage: String?, for payload: UserNotificationPayload, in chatSession: ChatSession) {

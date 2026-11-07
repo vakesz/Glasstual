@@ -26,7 +26,7 @@ struct UIShellLocalizationCatalogTests {
 			String(localized: .Onboarding.notificationsAreAllowedForGlasstual)
 				== "Notifications are allowed for Glasstual."
 		)
-		#expect(String(localized: .Onboarding.suggestedChannels) == "Suggested channels")
+		#expect(String(localized: .Onboarding.suggestedChannels) == "Suggested Channels")
 		#expect(String(localized: .NetworkPicker.customServer) == "Custom Server")
 		#expect(String(localized: .Onboarding.enterAPortBetween1) == "Enter a port between 1 and 65535.")
 	}
@@ -40,7 +40,7 @@ struct UIShellLocalizationCatalogTests {
 		#expect(
 			[
 				String(localized: .ServerProperties.navigationSectionConnection),
-				String(localized: .ServerProperties.vendorSpecific),
+				String(localized: .ServerProperties.bouncer),
 				String(localized: .ServerProperties.serverPropertiesNavigationMenuAdvanced),
 				String(localized: .ServerProperties.addressBook),
 				String(localized: .ServerProperties.channelList),
@@ -56,7 +56,7 @@ struct UIShellLocalizationCatalogTests {
 				String(localized: .ServerProperties.networkSocket),
 				String(localized: .ServerProperties.proxyServer),
 			] == [
-				"Connection", "Vendor Specific", "Advanced", "Address Book", "Channel List",
+				"Connection", "Bouncer", "Advanced", "Address Book", "Channel List",
 				"Connect Commands", "Encoding", "General", "Identity", "Highlights", "Messages",
 				"ZNC Bouncer", "Client Certificate", "Flood Control", "Network Socket", "Proxy Server",
 			]

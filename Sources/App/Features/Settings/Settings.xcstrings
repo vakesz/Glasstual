@@ -5905,6 +5905,102 @@
         }
       }
     },
+    "hidden-developer-mode": {
+      "comment": "Toggle in the Advanced pane that turns developer mode on, which unlocks the developer-only slash commands.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Developer Mode"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fejlesztői mód"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entwicklermodus"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Modo de desarrollador"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mode développeur"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "開発者モード"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Modo de desenvolvedor"
+          }
+        }
+      }
+    },
+    "hidden-reset-warnings": {
+      "comment": "Button in the Advanced pane that resets every warning the person chose not to see again.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset All Warnings"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minden figyelmeztetés visszaállítása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle Warnungen zurücksetzen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Restablecer todas las advertencias"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Réinitialiser tous les avertissements"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "すべての警告をリセットする"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Redefinir todas as advertências"
+          }
+        }
+      }
+    },
     "hidden-app-nap": {
       "comment": "Checkbox in the Hidden pane.",
       "extractionState": "manual",
@@ -7544,19 +7640,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The colors you chose will be replaced and cannot be brought back."
+            "value": "The colors you chose will be replaced. This action cannot be undone."
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "A választott színek felülíródnak, és nem állíthatók vissza."
+            "value": "A választott színek felülíródnak. Ez a művelet nem vonható vissza."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deine gewählten Farben werden ersetzt und können nicht wiederhergestellt werden."
+            "value": "Deine gewählten Farben werden ersetzt. Diese Aktion kann nicht rückgängig gemacht werden."
           }
         },
         "es": {
@@ -7640,19 +7736,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The fonts and colors you chose will be replaced and cannot be brought back. Export the theme first to keep a copy."
+            "value": "The fonts and colors you chose will be replaced. Export the theme first to keep a copy. This action cannot be undone."
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "A választott betűtípusok és színek felülíródnak, és nem állíthatók vissza. Másolat megőrzéséhez először exportáld a témát."
+            "value": "A választott betűtípusok és színek felülíródnak. Másolat megőrzéséhez először exportáld a témát. Ez a művelet nem vonható vissza."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deine gewählten Schriften und Farben werden ersetzt und können nicht wiederhergestellt werden. Exportiere das Design vorher, um eine Kopie zu behalten."
+            "value": "Deine gewählten Schriften und Farben werden ersetzt. Exportiere das Design vorher, um eine Kopie zu behalten. Diese Aktion kann nicht rückgängig gemacht werden."
           }
         },
         "es": {
@@ -10274,7 +10370,7 @@
       }
     },
     "log-location-clear-destination": {
-      "comment": "Menu item that forgets the chosen folder.",
+      "comment": "Button next to the log location path that forgets the chosen folder.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -10370,25 +10466,25 @@
       }
     },
     "log-location-select-destination": {
-      "comment": "Menu item that opens a folder chooser.",
+      "comment": "Button next to the log location path that opens a folder chooser.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Select Destination…"
+            "value": "Choose…"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Célmappa kiválasztása…"
+            "value": "Kiválasztás…"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ziel auswählen…"
+            "value": "Auswählen…"
           }
         },
         "es": {
@@ -14157,6 +14253,102 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Mantém essa lista atualizada quando redes são adicionadas, alteradas ou removidas."
+          }
+        }
+      }
+    },
+    "style-themes-window-chrome": {
+      "comment": "Checkbox in the Style pane that draws the sidebar and member list with the theme colors.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use Theme Colors for Window Chrome"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Témaszínek használata az ablak elemein"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Designfarben für Fensterelemente verwenden"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Usar los colores del tema en el marco de la ventana"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Utiliser les couleurs du thème pour le cadre de la fenêtre"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ウインドウの枠にテーマの色を使用"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Usar as cores do tema na moldura da janela"
+          }
+        }
+      }
+    },
+    "style-themes-window-chrome-note": {
+      "comment": "Note under the window chrome checkbox in the Style pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Draws the sidebar and member list with the transcript theme’s colors instead of the system materials."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Az oldalsávot és a tagok listáját a rendszer anyagai helyett az átirattéma színeivel rajzolja ki."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zeichnet die Seitenleiste und die Mitgliederliste mit den Farben des Transkript-Designs statt mit den Systemmaterialien."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Dibuja la barra lateral y la lista de miembros con los colores del tema de la transcripción en lugar de los materiales del sistema."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Dessine la barre latérale et la liste des membres avec les couleurs du thème de la transcription plutôt qu’avec les matériaux du système."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "サイドバーとメンバーリストを、システムのマテリアルではなくトランスクリプトテーマの色で描画します。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Desenha a barra lateral e a lista de membros com as cores do tema da transcrição em vez dos materiais do sistema."
           }
         }
       }

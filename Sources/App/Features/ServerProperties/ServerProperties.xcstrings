@@ -8,43 +8,43 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Add Entry"
+            "value" : "Add Entry…"
           }
         },
         "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bejegyzés hozzáadása"
+            "value" : "Bejegyzés hozzáadása…"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Eintrag hinzufügen"
+            "value" : "Eintrag hinzufügen…"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Añadir entrada"
+            "value" : "Añadir entrada…"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Ajouter une entrée"
+            "value" : "Ajouter une entrée…"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "エントリを追加する"
+            "value" : "エントリを追加する…"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Adicionar entrada"
+            "value" : "Adicionar entrada…"
           }
         }
       }
@@ -56,43 +56,43 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Add Channel"
+            "value" : "Add Channel…"
           }
         },
         "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Csatorna hozzáadása"
+            "value" : "Csatorna hozzáadása…"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kanal hinzufügen"
+            "value" : "Kanal hinzufügen…"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Añadir canal"
+            "value" : "Añadir canal…"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Ajouter une chaîne"
+            "value" : "Ajouter une chaîne…"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "チャンネルを追加する"
+            "value" : "チャンネルを追加する…"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Adicionar Canal"
+            "value" : "Adicionar Canal…"
           }
         }
       }
@@ -104,43 +104,43 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Add Highlight"
+            "value" : "Add Highlight…"
           }
         },
         "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kiemelés hozzáadása"
+            "value" : "Kiemelés hozzáadása…"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hervorhebung hinzufügen"
+            "value" : "Hervorhebung hinzufügen…"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Añadir resaltar"
+            "value" : "Añadir resaltar…"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Ajouter en surlignant"
+            "value" : "Ajouter en surlignant…"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "ハイライトを追加する"
+            "value" : "ハイライトを追加する…"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Adicionar Destacar"
+            "value" : "Adicionar Destacar…"
           }
         }
       }
@@ -2216,43 +2216,43 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Edit Entry"
+            "value" : "Edit Entry…"
           }
         },
         "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bejegyzés szerkesztése"
+            "value" : "Bejegyzés szerkesztése…"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Eintrag bearbeiten"
+            "value" : "Eintrag bearbeiten…"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Editar entrada"
+            "value" : "Editar entrada…"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Modifier l'entrée"
+            "value" : "Modifier l'entrée…"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "エントリを編集する"
+            "value" : "エントリを編集する…"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Editar entrada"
+            "value" : "Editar entrada…"
           }
         }
       }
@@ -2264,43 +2264,43 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Edit Channel"
+            "value" : "Edit Channel…"
           }
         },
         "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Csatorna szerkesztése"
+            "value" : "Csatorna szerkesztése…"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kanal bearbeiten"
+            "value" : "Kanal bearbeiten…"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Editar canal"
+            "value" : "Editar canal…"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Modifier la chaîne"
+            "value" : "Modifier la chaîne…"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "チャンネルを編集する"
+            "value" : "チャンネルを編集する…"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Editar Canal"
+            "value" : "Editar Canal…"
           }
         }
       }
@@ -2312,43 +2312,43 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Edit Highlight"
+            "value" : "Edit Highlight…"
           }
         },
         "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kiemelés szerkesztése"
+            "value" : "Kiemelés szerkesztése…"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hervorhebung bearbeiten"
+            "value" : "Hervorhebung bearbeiten…"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Editar resaltar"
+            "value" : "Editar resaltar…"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Modifier mettre en évidence"
+            "value" : "Modifier mettre en évidence…"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "ハイライトの編集"
+            "value" : "ハイライトの編集…"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Editar Destacar"
+            "value" : "Editar Destacar…"
           }
         }
       }
@@ -3224,43 +3224,43 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Open System Settings…"
+            "value" : "Open System Settings"
           }
         },
         "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Rendszerbeállítások megnyitása…"
+            "value" : "Rendszerbeállítások megnyitása"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Systemeinstellungen öffnen…"
+            "value" : "Systemeinstellungen öffnen"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Abrir Ajustes del sistema..."
+            "value" : "Abrir Ajustes del sistema"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Ouvrez les paramètres du système..."
+            "value" : "Ouvrez les paramètres du système"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "システム設定を開きます…"
+            "value" : "システム設定を開きます"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Abra as Configurações do Sistema..."
+            "value" : "Abra as Configurações do Sistema"
           }
         }
       }
@@ -5048,7 +5048,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Select a certificate to send when you connect securely."
+            "value" : "Choose a certificate to send when you connect securely."
           }
         },
         "hu" : {
@@ -5096,7 +5096,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Select Certificate…"
+            "value" : "Choose Certificate…"
           }
         },
         "hu" : {
@@ -6577,50 +6577,50 @@
         }
       }
     },
-    "vendor-specific" : {
-      "comment" : "Server properties navigation menu. Legacy key: v27-8w.",
+    "bouncer" : {
+      "comment" : "Server properties navigation section for the bouncer settings. Legacy key: v27-8w.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vendor Specific"
+            "value" : "Bouncer"
           }
         },
         "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Gyártóspecifikus"
+            "value" : "Bouncer"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Herstellerspezifisch"
+            "value" : "Bouncer"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Específico del proveedor"
+            "value" : "Bouncer"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Spécifique au fournisseur"
+            "value" : "Bouncer"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "ベンダー固有"
+            "value" : "Bouncer"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Específico do fornecedor"
+            "value" : "Bouncer"
           }
         }
       }
@@ -8600,43 +8600,43 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Add Network"
+            "value" : "Add Network…"
           }
         },
         "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hálózat hozzáadása"
+            "value" : "Hálózat hozzáadása…"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Netzwerk hinzufügen"
+            "value" : "Netzwerk hinzufügen…"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Añadir red"
+            "value" : "Añadir red…"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Ajouter un réseau"
+            "value" : "Ajouter un réseau…"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "ネットワークを追加"
+            "value" : "ネットワークを追加…"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Adicionar rede"
+            "value" : "Adicionar rede…"
           }
         }
       }
@@ -8648,43 +8648,43 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Edit Network"
+            "value" : "Edit Network…"
           }
         },
         "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hálózat szerkesztése"
+            "value" : "Hálózat szerkesztése…"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Netzwerk bearbeiten"
+            "value" : "Netzwerk bearbeiten…"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Editar red"
+            "value" : "Editar red…"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Modifier le réseau"
+            "value" : "Modifier le réseau…"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "ネットワークを編集"
+            "value" : "ネットワークを編集…"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Editar rede"
+            "value" : "Editar rede…"
           }
         }
       }

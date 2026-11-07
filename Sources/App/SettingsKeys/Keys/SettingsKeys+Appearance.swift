@@ -64,8 +64,13 @@ nonisolated extension SettingsKeys {
 			default: false
 		)
 
+		/// Whether the sidebar and the member list draw the transcript theme's
+		/// opaque chrome ground. Off, they use the system's sidebar and
+		/// inspector material.
+		static let themesWindowChrome = SettingsKey(group + "Themes Window Chrome", default: false)
+
 		static let all: [any AnySettingsKey] = [
-			preferredAppearance, memberListNoModeSymbol,
+			preferredAppearance, memberListNoModeSymbol, themesWindowChrome,
 			memberListSortFavorsServerStaff, memberListUpdatesPopoverOnScroll,
 			conversationTrackingIncludesModeSymbol, trackUserAwayStatusMaximumChannelSize,
 			conversationNavigationIsServerSpecific, connectOnDoubleClick, disconnectOnDoubleClick,

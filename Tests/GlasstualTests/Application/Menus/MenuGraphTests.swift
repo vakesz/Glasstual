@@ -249,7 +249,6 @@ struct MenuGraphTests {
 		for title in [
 			String(localized: .MainWindow.menuFilePrint),
 			String(localized: .MainWindow.menuChannelModifyTopic),
-			String(localized: .MainWindow.menuChannelBans),
 			String(localized: .MainWindow.menuServerChangeNickname),
 			String(localized: .MainWindow.menuNavigationChannelSpotlight),
 			String(localized: .MainWindow.menuMemberAddIgnore),
@@ -260,6 +259,14 @@ struct MenuGraphTests {
 
 		/* A confirmation alert is not more input being asked for, and the
 		 sidebar filter is a field that is already on screen. */
+		/* A window that opens as it is, with nothing further asked first. */
+		for title in [
+			String(localized: .MainWindow.menuChannelBans),
+			String(localized: .MainWindow.menuServerChannelList),
+			String(localized: .MainWindow.menuHelpWelcome),
+		] {
+			#expect(title.hasSuffix("…") == false, "\(title) asks for nothing more, so it takes no ellipsis")
+		}
 		#expect(String(localized: .MainWindow.menuServerDeleteServer).hasSuffix("…") == false)
 		#expect(String(localized: .MainWindow.menuNavigationSearchChannels).hasSuffix("…") == false)
 	}
@@ -301,7 +308,7 @@ struct MenuGraphTests {
 		let mainMenu = try #require(NSApp.mainMenu)
 
 		let expected: [(MenuCommand, String)] = [
-			(.mainWindow, "1"), (.addressBook, "2"), (.viewLogs, "3"), (.highlightList, "4"),
+			(.mainWindow, "1"), (.addressBook, "2"), (.highlightList, "4"),
 		]
 		for (command, key) in expected {
 			let item = try #require(mainMenu.item(for: command))
@@ -336,18 +343,67 @@ struct MenuGraphTests {
 	}
 
 	/** Muting is an application-wide mode, and a mode is ticked rather than
-	 renamed. It used to sit in the File menu under two different names. */
-	@Test("The mute toggles sit in the application menu")
-	func muteTogglesLiveInTheApplicationMenu() throws {
-		_ = MenuActionController()
+	 renamed. It sits in View, and the Dock menu offers it as well. */
+	@Test("The mute toggles sit in the View menu and the Dock menu")
+	func muteTogglesLiveInTheViewMenu() throws {
+		let controller = MenuActionController()
 		let mainMenu = try #require(NSApp.mainMenu)
+		let view = try #require(mainMenu.item(for: .viewMenu)?.submenu)
 		let application = try #require(mainMenu.item(for: .applicationMenu)?.submenu)
 		let file = try #require(mainMenu.item(for: .fileMenu)?.submenu)
 
-		#expect(application.item(for: .muteNotifications) != nil)
-		#expect(application.item(for: .muteNotificationSounds) != nil)
+		#expect(view.item(for: .muteNotifications) != nil)
+		#expect(view.item(for: .muteNotificationSounds) != nil)
+		#expect(application.item(for: .muteNotifications) == nil)
 		#expect(file.item(for: .muteNotifications) == nil)
+		#expect(controller.dockMenu.item(for: .muteNotifications) != nil)
 		#expect(String(localized: .MainWindow.menuMuteNotifications) == "Mute Notifications")
+	}
+
+	@Test("Sort Channel List is a View command and Show Logs in Finder a File command")
+	func commandsLiveInTheMenuTheyBelongTo() throws {
+		_ = MenuActionController()
+		let mainMenu = try #require(NSApp.mainMenu)
+		let view = try #require(mainMenu.item(for: .viewMenu)?.submenu)
+		let file = try #require(mainMenu.item(for: .fileMenu)?.submenu)
+		let window = try #require(mainMenu.item(for: .windowMenu)?.submenu)
+
+		#expect(view.item(for: .sortChannelList) != nil)
+		#expect(window.item(for: .sortChannelList) == nil)
+		let logs = try #require(file.item(for: .viewLogs))
+		#expect(logs.keyEquivalent == "3")
+		#expect(window.item(for: .viewLogs) == nil)
+	}
+
+	@Test("The application menu has no hidden Advanced submenu")
+	func applicationMenuHasNoAdvancedSubmenu() throws {
+		_ = MenuActionController()
+		let mainMenu = try #require(NSApp.mainMenu)
+		let application = try #require(mainMenu.item(for: .applicationMenu)?.submenu)
+
+		#expect(application.items.allSatisfy { $0.isHidden == false || $0.isSeparatorItem })
+		#expect(application.items.contains { $0.title == String(localized: .MainWindow.menuApplicationServices) })
+		#expect(application.items.allSatisfy { $0.submenu == nil || $0.command == .services })
+	}
+
+	@Test("The Dock menu opens the main window above the mute toggles")
+	func dockMenuOffersTheMainWindow() throws {
+		let controller = MenuActionController()
+		let items = controller.dockMenu.items
+
+		#expect(items.first?.command == .mainWindow)
+		let main = try #require(items.firstIndex { $0.command == .mainWindow })
+		let mute = try #require(items.firstIndex { $0.command == .muteNotifications })
+		#expect(main < mute)
+	}
+
+	@Test("Every command takes a symbol of its own")
+	func symbolsAreUnique() {
+		var seen: [String: MenuCommand] = [:]
+		for (command, name) in MenuCommand.symbolNames {
+			#expect(seen[name] == nil, "\(command) shares \(name) with \(String(describing: seen[name]))")
+			seen[name] = command
+		}
 	}
 
 	/// A menu whose shape follows the selection cannot be learned, so the

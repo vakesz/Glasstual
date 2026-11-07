@@ -420,10 +420,7 @@ struct RuleEditorView: View {
 	@ViewBuilder
 	private func validationMessage(_ message: String?) -> some View {
 		if let message {
-			Text(message)
-				.font(.caption)
-				.foregroundStyle(.red)
-				.accessibilityLabel(message)
+			ValidationMessageLabel(message)
 		}
 	}
 

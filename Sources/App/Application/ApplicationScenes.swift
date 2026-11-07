@@ -5,7 +5,6 @@ import AppKit
 import SwiftUI
 
 enum ApplicationSceneID {
-	static let about = "about"
 	static let channelMaskList = "channel-ban-list"
 	static let channelSpotlight = "channel-spotlight"
 	static let fileTransfers = "file-transfers"
@@ -67,7 +66,6 @@ private struct ApplicationSceneGraph: Scene {
 	let settingsRequest: SettingsSceneRequest
 
 	var body: some Scene {
-		AboutScene()
 		ChannelMaskListScene(window: AppServices.channelMaskList)
 		ChannelSpotlightScene(window: AppServices.channelSpotlight)
 		FileTransferListScene(center: AppServices.fileTransfers)

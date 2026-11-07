@@ -17,7 +17,7 @@ enum TranscriptMetrics {
 
 	/// The topic bar's side margin. It matches the transcript theme's default
 	/// horizontal padding, so the topic starts where the messages start.
-	static let topicSideInset: CGFloat = 10
+	static let topicSideInset = UISpacing.comfortable
 
 	/// Between the topic and the chevron that unfolds it, and between the
 	/// topic bar and the first line of the transcript.

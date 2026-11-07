@@ -125,6 +125,22 @@ final class TranscriptTextView: NSTextView {
 		}
 	}
 
+	override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
+		owner?.draggingEntered(sender) ?? []
+	}
+
+	override func draggingUpdated(_ sender: NSDraggingInfo) -> NSDragOperation {
+		owner?.draggingUpdated(sender) ?? []
+	}
+
+	override func draggingExited(_ sender: NSDraggingInfo?) {
+		owner?.draggingExited(sender)
+	}
+
+	override func draggingEnded(_ sender: NSDraggingInfo) {
+		owner?.draggingEnded(sender)
+	}
+
 	override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
 		owner?.performDragOperation(sender) ?? false
 	}

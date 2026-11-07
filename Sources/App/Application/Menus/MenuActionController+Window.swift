@@ -107,14 +107,6 @@ extension MenuActionController {
 		mainWindow.toggleMemberListVisibility()
 	}
 
-	@objc func toggleDeveloperMode(_: Any?) {
-		SettingsKeys.Commands.developerMode.value.toggle()
-	}
-
-	@objc func resetSuppressedWarnings(_: Any?) {
-		AlertSuppression.resetAll()
-	}
-
 	func setNotificationsMuted(_ muted: Bool) {
 		AppServices.notifications.areNotificationsDisabled = muted
 		/* The sidebar's overflow menu names the next press from this. */

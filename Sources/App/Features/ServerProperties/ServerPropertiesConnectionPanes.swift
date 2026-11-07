@@ -133,8 +133,7 @@ struct ServerPropertiesIdentityPane: View {
 						.disabled(model.hasSigningKey == false)
 				}
 				if let error = model.signingKeyError {
-					Text(verbatim: error)
-						.foregroundStyle(.red)
+					ValidationMessageLabel(error)
 				}
 			} header: {
 				Text(.ServerProperties.saslEcdsaKeyHeader)

@@ -51,7 +51,7 @@ struct ServerPropertiesView: View {
 						Section(.ServerProperties.navigationSectionConnection) {
 							navigationRows([.channelList, .highlights, .addressBook, .connectCommands])
 						}
-						Section(.ServerProperties.vendorSpecific) {
+						Section(.ServerProperties.bouncer) {
 							navigationRows([.bouncerNetworks])
 						}
 					} else {
@@ -61,7 +61,7 @@ struct ServerPropertiesView: View {
 								.connectCommands, .disconnectMessages, .encoding,
 							])
 						}
-						Section(.ServerProperties.vendorSpecific) {
+						Section(.ServerProperties.bouncer) {
 							navigationRows([.zncBouncer, .bouncerNetworks])
 						}
 						Section(.ServerProperties.serverPropertiesNavigationMenuAdvanced) {
@@ -96,11 +96,8 @@ struct ServerPropertiesView: View {
 	/// The selected pane under its own heading: the heading is drawn here, once,
 	/// from the selection that named the pane.
 	private var pane: some View {
-		VStack(alignment: .leading, spacing: UISpacing.wide) {
-			Text(model.selection.title)
-				.font(.title2)
-				.fontWeight(.semibold)
-				.padding([.horizontal, .top], SheetMetrics.margin)
+		VStack(alignment: .leading, spacing: 0) {
+			SheetHeading(Text(model.selection.title))
 
 			selectedPane
 		}

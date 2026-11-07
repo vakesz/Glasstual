@@ -39,7 +39,8 @@ extension MenuActionController {
 	}
 
 	@objc func showAboutWindow(_: Any?) {
-		AppServices.scenes.open(ApplicationSceneID.about)
+		NSApp.orderFrontStandardAboutPanel(options: [.credits: AboutCredits.make()])
+		NSApp.activate()
 	}
 
 	@objc func showServerPropertiesSheet(_: Any?) {
@@ -89,10 +90,6 @@ extension MenuActionController {
 
 	@objc func showSettingsWindow(_: Any?) {
 		AppServices.scenes.openSettings(.default)
-	}
-
-	@objc func showHiddenSettings(_: Any?) {
-		AppServices.scenes.openSettings(.hiddenSettings)
 	}
 
 	/// Swift-only: the notification the alert answers carries no menu item.

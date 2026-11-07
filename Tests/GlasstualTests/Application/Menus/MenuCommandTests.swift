@@ -25,7 +25,7 @@ struct MenuCommandTests {
 		let expected: [MenuCommand] = [
 			.applicationMenu, .settings, .closeWindow, .paste, .markAllRead,
 			.connect, .serverProperties, .joinChannel, .bans, .toggleMemberList,
-			.mainWindow, .highlightList, .developerMode,
+			.mainWindow, .highlightList,
 		]
 		for command in expected {
 			#expect(menus.contains { $0.item(for: command) != nil }, "\(command) is missing from the menu graph")

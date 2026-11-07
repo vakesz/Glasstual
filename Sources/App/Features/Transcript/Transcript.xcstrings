@@ -2372,19 +2372,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The server removes it for everyone in the conversation. This cannot be undone."
+            "value": "The server removes it for everyone in the conversation. This action cannot be undone."
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "A kiszolgáló mindenkitől eltávolítja a beszélgetésben. Ez nem vonható vissza."
+            "value": "A kiszolgáló mindenkitől eltávolítja a beszélgetésben. Ez a művelet nem vonható vissza."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Der Server entfernt sie für alle in der Unterhaltung. Dies kann nicht rückgängig gemacht werden."
+            "value": "Der Server entfernt sie für alle in der Unterhaltung. Diese Aktion kann nicht rückgängig gemacht werden."
           }
         },
         "es": {

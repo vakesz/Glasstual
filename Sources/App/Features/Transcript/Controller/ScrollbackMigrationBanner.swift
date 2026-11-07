@@ -13,17 +13,12 @@ struct ScrollbackMigrationBanner: View {
 
 	var body: some View {
 		if let fraction = recovery.migrationFraction {
-			VStack(alignment: .leading, spacing: UISpacing.tight) {
-				Text(.Transcript.historyUpgradeProgress)
-					.font(.headline)
-				ProgressView(value: fraction)
-					.accessibilityLabel(Text(.Transcript.historyUpgradeProgress))
-			}
-			.padding(UISpacing.regular)
-			.frame(maxWidth: .infinity, alignment: .leading)
-			.background(.bar)
-			.accessibilityElement(children: .contain)
-			.accessibilityIdentifier("history-upgrade-progress")
+			TranscriptNoticeBanner(
+				symbol: nil,
+				title: String(localized: .Transcript.historyUpgradeProgress),
+				progress: fraction,
+				identifier: "history-upgrade-progress"
+			)
 		}
 	}
 }

@@ -48,13 +48,15 @@ struct MemberListView: View {
 				redirectTyping: redirectTyping
 			)
 		}
-		// No glass here: the member column is flat and opaque in the theme's
-		// chrome ground, so the inspector's material never shows through the
-		// table's clear rows.
+		/* The system's inspector material by default, showing through the
+		 table's clear rows. The theme's opaque chrome ground is drawn only when
+		 the reader asks the theme to carry the window's chrome. */
 		.background {
-			Rectangle()
-				.fill(Color(nsColor: AppServices.theme.chromeBackground))
-				.ignoresSafeArea(.container, edges: .top)
+			if settings[SettingsKeys.Appearance.themesWindowChrome] {
+				Rectangle()
+					.fill(Color(nsColor: AppServices.theme.chromeBackground))
+					.ignoresSafeArea(.container, edges: .top)
+			}
 		}
 		.onDisappear { model.hideProfile() }
 	}

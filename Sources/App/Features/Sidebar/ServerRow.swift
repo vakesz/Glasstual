@@ -86,3 +86,30 @@ struct ConversationRow: Identifiable, Equatable {
 		showsUnreadCount && unreadCount > 0
 	}
 }
+
+extension ConversationRow.Kind {
+	/** The glyph that names this kind of conversation, wherever one is listed.
+
+	 The sidebar leaves a channel's glyph out, because a channel is what most
+	 rows are and the pin already marks the ones that matter; a list that holds
+	 channels beside people, as the switcher does, needs it drawn. */
+	var glyphSymbolName: String {
+		switch self {
+		case .channel: "number"
+		case .directChat: "bubble.left.and.bubble.right.fill"
+		case .direct, .console: "person.fill"
+		}
+	}
+
+	init(_ conversation: Conversation) {
+		self = if conversation.isChannel {
+			.channel
+		} else if conversation.isDirectChat {
+			.directChat
+		} else if conversation.isConsole {
+			.console
+		} else {
+			.direct
+		}
+	}
+}

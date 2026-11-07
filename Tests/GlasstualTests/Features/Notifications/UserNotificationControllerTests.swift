@@ -232,7 +232,7 @@ struct UserNotificationControllerTests {
 		#expect(registered.categorySummaryFormat.contains("%u"))
 	}
 
-	@Test("A file transfer request offers Accept and Decline, and a private message offers Reply")
+	@Test("A file transfer request offers Accept and Decline, and a message offers Mark as Read")
 	func eventsCarryTheirActions() {
 		let fileTransfer = UserNotificationCategory(event: .fileTransferReceiveRequested).userNotificationCategory
 		let privateMessage = UserNotificationCategory(event: .privateMessage).userNotificationCategory
@@ -242,7 +242,11 @@ struct UserNotificationControllerTests {
 			UserNotificationCategory.Action.acceptFileTransfer.rawValue,
 			UserNotificationCategory.Action.declineFileTransfer.rawValue,
 		])
-		#expect(privateMessage.actions.map(\.identifier) == [UserNotificationCategory.Action.replyToPrivateMessage.rawValue])
-		#expect(highlight.actions.isEmpty)
+		#expect(privateMessage.actions.map(\.identifier) == [
+			UserNotificationCategory.Action.replyToPrivateMessage.rawValue,
+			UserNotificationCategory.Action.markConversationAsRead.rawValue,
+		])
+		#expect(highlight.actions.map(\.identifier) == [UserNotificationCategory.Action.markConversationAsRead.rawValue])
+		#expect(fileTransfer.actions.allSatisfy { $0.options.contains(.destructive) == false })
 	}
 }

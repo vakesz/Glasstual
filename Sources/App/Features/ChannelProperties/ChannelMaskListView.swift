@@ -107,12 +107,13 @@ struct ChannelMaskListView: View {
 			.overlay {
 				if model.entries.isEmpty, model.isRefreshing == false {
 					ContentUnavailableView(
-						String(localized: .ChannelProperties.emptyTitle),
+						String(localized: session.maskKind.emptyTitle),
 						systemImage: "checkmark.shield",
 						description: Text(.ChannelProperties.emptyDescription)
 					)
 				}
 			}
+			.alternatingRowBackgrounds(model.entries.isEmpty ? .disabled : .enabled)
 			.copyable(model.selectedMasks)
 			.onDeleteCommand(perform: session.removeSelectedEntries)
 			.contextMenu(forSelectionType: ChannelMaskListEntry.ID.self) { selection in
@@ -207,10 +208,7 @@ struct ChannelMaskListView: View {
 			}
 
 			if let issue = model.issue {
-				Text(verbatim: issue.message)
-					.font(.callout)
-					.foregroundStyle(.red)
-					.accessibilityAddTraits(.isStaticText)
+				ValidationMessageLabel(issue.message)
 			}
 		}
 		.padding(.horizontal, SheetMetrics.margin)

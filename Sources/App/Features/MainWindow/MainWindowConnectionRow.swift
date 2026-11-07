@@ -26,6 +26,21 @@ struct MainWindowConnectionPresentation: Equatable {
 		}
 	}
 
+	/// Whether the row has anything to offer. The status itself is the toolbar
+	/// subtitle's to say; a row with no action would only repeat it.
+	var hasActions: Bool {
+		actions.isEmpty == false
+	}
+
+	/// Whether the connection is in progress, which the row marks with a spinner
+	/// beside its Cancel button rather than with a second status line.
+	var isInProgress: Bool {
+		switch status {
+		case .connecting, .reconnecting, .loggingOn: true
+		default: false
+		}
+	}
+
 	func perform(_ action: Action, in window: MainWindow?, commands: MenuActionController?) {
 		guard let session = window?.selectedSession, let commands,
 		      session.uniqueIdentifier == sessionIdentifier,
@@ -46,30 +61,17 @@ struct MainWindowConnectionRow: View {
 	let perform: (MainWindowConnectionPresentation.Action) -> Void
 
 	var body: some View {
-		ViewThatFits(in: .horizontal) {
-			HStack(spacing: UISpacing.regular) {
-				status
-				Spacer(minLength: UISpacing.regular)
-				actions
+		HStack(spacing: UISpacing.regular) {
+			if presentation.isInProgress {
+				ProgressView().controlSize(.small)
 			}
-			VStack(alignment: .leading, spacing: UISpacing.regular) {
-				status
-				actions
-			}
-			.frame(maxWidth: .infinity, alignment: .leading)
+			Spacer(minLength: UISpacing.regular)
+			actions
 		}
 		.padding(UISpacing.regular)
 		.background(.bar)
-	}
-
-	private var status: some View {
-		HStack(spacing: UISpacing.regular) {
-			if [.connecting, .reconnecting, .loggingOn].contains(presentation.status) {
-				ProgressView().controlSize(.small)
-			}
-			Text(presentation.status.title).foregroundStyle(.secondary)
-		}
-		.fixedSize(horizontal: true, vertical: false)
+		.accessibilityElement(children: .contain)
+		.accessibilityLabel(presentation.status.title)
 	}
 
 	private var actions: some View {

@@ -507,7 +507,11 @@ extension TranscriptController {
 		attachedWindow?.redirectKeyDown(event)
 	}
 
-	func transcriptViewReceivedDrop(withFile filename: String) {
-		commandSink.sendDroppedFiles([filename])
+	func transcriptViewReceivedDrop(withFiles filenames: [String]) {
+		commandSink.sendDroppedFiles(filenames)
+	}
+
+	var transcriptViewAcceptsDroppedFiles: Bool {
+		commandSink.acceptsDroppedFiles()
 	}
 }

@@ -190,11 +190,54 @@ final class TranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 		return (0xF700 ... 0xF8FF).contains(scalar.value) == false
 	}
 
+	/// The file URLs a drag carries, which are the only thing a drop here takes.
+	private func droppedFileURLs(_ sender: NSDraggingInfo) -> [URL] {
+		let options: [NSPasteboard.ReadingOptionKey: Any] = [.urlReadingFileURLsOnly: true]
+		return sender.draggingPasteboard.readObjects(forClasses: [NSURL.self], options: options) as? [URL] ?? []
+	}
+
+	/** The operation a drag gets, and the highlight that says so.
+
+	 The transcript outlines itself only where a drop is accepted: a
+	 conversation that is not one-to-one, or a connection that is not signed
+	 in, answers "no" and draws nothing. */
+	private func dragOperation(for sender: NSDraggingInfo) -> NSDragOperation {
+		let accepts = viewController?.transcriptViewAcceptsDroppedFiles == true
+			&& droppedFileURLs(sender).isEmpty == false
+		setDropHighlight(accepts)
+		return accepts ? .copy : []
+	}
+
+	override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
+		dragOperation(for: sender)
+	}
+
+	override func draggingUpdated(_ sender: NSDraggingInfo) -> NSDragOperation {
+		dragOperation(for: sender)
+	}
+
+	override func draggingExited(_: NSDraggingInfo?) {
+		setDropHighlight(false)
+	}
+
+	override func draggingEnded(_: NSDraggingInfo) {
+		setDropHighlight(false)
+	}
+
+	private func setDropHighlight(_ isHighlighted: Bool) {
+		guard scrollView.wantsLayer || isHighlighted else { return }
+		scrollView.wantsLayer = true
+		scrollView.layer?.borderWidth = isHighlighted ? 3 : 0
+		scrollView.layer?.borderColor = NSColor.controlAccentColor.cgColor
+		scrollView.layer?.cornerRadius = isHighlighted ? 8 : 0
+	}
+
 	override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
-		guard let fileURL = NSURL(from: sender.draggingPasteboard) as URL?, fileURL.isFileURL else {
-			return false
-		}
-		viewController?.transcriptViewReceivedDrop(withFile: fileURL.path)
+		setDropHighlight(false)
+		guard viewController?.transcriptViewAcceptsDroppedFiles == true else { return false }
+		let paths = droppedFileURLs(sender).map(\.path)
+		guard paths.isEmpty == false else { return false }
+		viewController?.transcriptViewReceivedDrop(withFiles: paths)
 		return true
 	}
 

@@ -72,20 +72,55 @@ final class MenuActionController: NSObject, NSMenuDelegate, NSMenuItemValidation
 	/// is the menus' delegate, and a delegate is not consulted about
 	/// enablement.
 	func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
-		validator.validate(menuItem)
+		/* The Dock menu is used while the application is in the background,
+		 when the main window answers for no command; its conversation entries
+		 name their own target. */
+		if isDockConversationItem(menuItem) {
+			return true
+		}
+		return validator.validate(menuItem)
 	}
 }
 
 // MARK: - Dropped files
 
 extension MenuActionController {
-	/// Files dropped on the transcript go to the person on the other side, so
-	/// this applies to a one-to-one conversation and to nothing else.
+	/// Whether a drop on the transcript has anyone to go to: files go to the
+	/// person on the other side, so this holds for a logged-in one-to-one
+	/// conversation and for nothing else. The transcript highlights itself from
+	/// this, so the highlight and the drop agree.
+	var acceptsDroppedFiles: Bool {
+		guard let session = context.selectedSession, let conversation = context.selectedConversation
+		else { return false }
+		return session.isLoggedIn && conversation.isDirect
+	}
+
+	/** Asks before offering dropped files: a drop is easy to make by accident,
+	 and the offer goes to another person. The sheet names the files and the
+	 recipient; nothing is sent until it is accepted. */
 	func sendDroppedFilesToSelectedConversation(_ files: [String]) {
-		guard let session = context.selectedSession, let conversation = context.selectedConversation,
-		      session.isLoggedIn, conversation.isDirect
-		else { return }
-		sendDroppedFiles(files, nickname: conversation.name)
+		guard acceptsDroppedFiles, let conversation = context.selectedConversation else { return }
+		confirmSendDroppedFiles(files, to: conversation.name)
+	}
+
+	/** The same confirmation for a drop on a member row, whose recipient is the
+	 member rather than the selected conversation. */
+	func confirmSendDroppedFiles(_ files: [String], to nickname: String) {
+		guard let session = context.selectedSession, session.isLoggedIn else { return }
+		let names = files.map { URL(fileURLWithPath: $0).lastPathComponent }
+		guard names.isEmpty == false else { return }
+
+		Alerts.present(AlertRequest(
+			title: String(localized: .Prompts.dropSendTitle(names.formatted(.list(type: .and)), nickname)),
+			body: String(localized: .Prompts.dropSendBody(nickname)),
+			defaultButton: PromptStrings.Action.send,
+			alternateButton: PromptStrings.Action.cancel
+		), on: .mainWindow) { [weak self] outcome in
+			guard outcome.response == .default, let self,
+			      context.selectedSession === session, session.isLoggedIn
+			else { return }
+			sendDroppedFiles(files, nickname: nickname)
+		}
 	}
 
 	func sendDroppedFiles(_ files: [String], nickname: String) {
