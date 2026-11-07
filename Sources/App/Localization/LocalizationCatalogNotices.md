@@ -10,7 +10,8 @@ for additional information.
 Catalog copyright notices:
 
 - `About.xcstrings`, `Accessibility.xcstrings`,
-  `Application.xcstrings`, `ChannelSpotlight.xcstrings`, `ChatNotifications.xcstrings`,
+  `Application.xcstrings`, `ChannelSpotlight.xcstrings`,
+  `ChatNotifications.xcstrings`,
   `FileTransfer.xcstrings`, `HighlightLog.xcstrings`,
   `MemberList.xcstrings`, `NetworkPicker.xcstrings`,
   `Notifications.xcstrings`, `Onboarding.xcstrings`,
@@ -22,8 +23,8 @@ Catalog copyright notices:
   `CommonErrors.xcstrings`:
   Copyright (c) 2018 Codeux Software, LLC & respective contributors.
 - `IRC.xcstrings`, `MainWindow.xcstrings`, `Prompts.xcstrings`,
-  `Settings.xcstrings` and `SettingsLabels.xcstrings`: Copyright (c) 2010 - 2020 Codeux Software, LLC &
-  respective contributors.
+  `Settings.xcstrings` and `SettingsLabels.xcstrings`:
+  Copyright (c) 2010 - 2020 Codeux Software, LLC & respective contributors.
 - `MainWindow.xcstrings` also contains menu text copyrighted 2010 - 2018 by
   Codeux Software, LLC & respective contributors.
 - `Rules.xcstrings`: Copyright (c) 2015 - 2018 Codeux Software, LLC &

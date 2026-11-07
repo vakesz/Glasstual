@@ -7,7 +7,7 @@ views, models, strings and platform adapters together.
 
 | Directory | Owns |
 | --- | --- |
-| `Application` | Lifecycle, scenes, menus, alerts, URL handling, resources and service composition. |
+| `Application` | Lifecycle, scenes, menus, alerts, URL handling, Shortcuts intents, Focus filter, resources and service composition. |
 | `Protocol` | IRC wire parsing, command vocabulary, capability definitions, mode grammar, formatting and transport-security policies. |
 | `Chat` | Sessions, conversations, inbound handling, outbound delivery, connection negotiation, history, address book, notifications, local commands, logging, DCC, network catalog and bouncer networks. |
 | `SettingsKeys` | Typed settings, storage, validation, registration, repair and reload requests. |
@@ -34,7 +34,23 @@ views, models, strings and platform adapters together.
   `Sources/CocoaExtensions`.
 
 `Chat/Bouncer` owns soju network discovery: the listing, one connection per
-network and the sidebar hierarchy. `Features/Scripts` owns script discovery, execution, installation prompts and strings.
+network and the sidebar hierarchy. `Chat/Session/Config` owns persisted server
+and conversation configuration; `Chat/Session/Keychain` owns secret storage
+for it.
+
+`Application/Intents` owns Shortcuts actions and entities.
+`Application/FocusFilter` owns the Focus filter intent.
+`Features/ScrollbackSearch` owns search across stored history and its window.
+`Features/TranscriptLogViewer` owns browsing transcript log files.
+`Features/Scripts` owns script discovery, execution, installation prompts and
+strings.
+
+`Features/Transcript` splits by role: `Controller` owns line delivery, history
+loading, reactions and redactions; `Rendering` turns lines into semantic
+`TranscriptRow` values; `View` holds the TextKit adapter; `InlineImages` owns
+bounded image fetching and decoding.
+
+`SettingsKeys/Keys` holds the typed key declarations, one file per family.
 `Localization/DateFormatting` owns shared date parsing and formatting.
 
 `LinkSchemeRules` owns URL permissions; `LinkParser` locates links in text.
