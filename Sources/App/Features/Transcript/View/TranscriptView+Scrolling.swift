@@ -61,7 +61,8 @@ extension TranscriptView {
 	/// The button is offered exactly while the reader is somewhere other than
 	/// the end of a transcript that has an end to go to.
 	func updateJumpToLatestVisibility() {
-		jumpToLatest.isHidden = followsBottom || document.isEmpty
+		let showsLiveEnd = viewController?.historyRecovery.isDetachedFromLive != true
+		jumpToLatest.isHidden = (followsBottom && showsLiveEnd) || document.isEmpty
 	}
 
 	func jump(to lineNumber: String) -> Bool {

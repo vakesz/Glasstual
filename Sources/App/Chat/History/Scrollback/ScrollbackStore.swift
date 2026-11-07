@@ -8,7 +8,7 @@ import os
 /// The transaction the store is about to run, for a test that has to hold one
 /// in flight. Nothing in the app observes it.
 nonisolated enum ScrollbackStoreOperation: Equatable, Sendable {
-	case open, write, reset, forget, close, save, resize, fetch
+	case open, write, reset, forget, close, save, resize, fetch, search
 }
 
 /** The Core Data transaction, and every view's counters.
@@ -65,14 +65,15 @@ actor ScrollbackStore {
 
 	init(
 		filenameSetting: ScrollbackFilenameSetting,
-		makeStack: @escaping MakeStack = { try ScrollbackQueries.makeStack(at: $0) },
+		makeStack: MakeStack? = nil,
+		migrationProgress: @escaping @Sendable (Double) -> Void = { _ in },
 		resizeDelay: @escaping ResizeDelay = { .seconds(Int.random(in: 0 ..< 1800)) },
 		saveInterval: Duration = .seconds(120),
 		willPerform: (@Sendable (ScrollbackStoreOperation) async -> Void)? = nil,
 		deletionHandler: @escaping DeletionHandler = { _, _ in }
 	) {
 		self.filenameSetting = filenameSetting
-		self.makeStack = makeStack
+		self.makeStack = makeStack ?? { try ScrollbackQueries.makeStack(at: $0, migrationProgress: migrationProgress) }
 		self.resizeDelay = resizeDelay
 		self.saveInterval = saveInterval
 		self.willPerform = willPerform
@@ -302,9 +303,60 @@ actor ScrollbackStore {
 			case let .rowPage(cursor, limit, date):
 				ScrollbackQueries.fetchRowPage(in: context, viewIdentifier: request.viewIdentifier, before: cursor,
 				                               fetchLimit: limit, limitToDate: date)
+			case let .window(cursor, olderLimit, newerLimit):
+				ScrollbackQueries.fetchWindow(in: context, viewIdentifier: request.viewIdentifier, around: cursor,
+				                              olderLimit: olderLimit, newerLimit: newerLimit)
 			}
 		}
 		return Task.isCancelled ? .cancelled : outcome
+	}
+
+	/** Searches the stored text of the views a query names, newest match first.
+
+	 The store is held only to save what is pending and to read the database
+	 once per view, never across the whole search: a reader context of its own
+	 does the reading, so a long search over a large history does not keep
+	 lines from being written. A search sees what has been saved, which is
+	 everything accepted before it began. Cancelling the task stops it between
+	 views. */
+	func search(_ query: ScrollbackSearchQuery) async -> ScrollbackSearchOutcome {
+		guard !Task.isCancelled else { return .cancelled }
+		guard lifecycle == .open else { return .unavailable }
+		await enter()
+		await willPerform?(.search)
+		guard let context else {
+			leave()
+			return .unavailable
+		}
+		let saved = await context.perform { ScrollbackQueries.quickSave(context) }
+		leave()
+		if case let .failed(reason) = saved {
+			return .failed(reason)
+		}
+
+		let reader = await context.perform { () -> NSManagedObjectContext? in
+			guard let coordinator = context.persistentStoreCoordinator else { return nil }
+			let reader = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
+			reader.persistentStoreCoordinator = coordinator
+			reader.undoManager = nil
+			return reader
+		}
+		guard let reader else { return .unavailable }
+		let normalized = query.normalized
+		var hits: [ScrollbackSearchHit] = []
+		for view in normalized.viewIdentifiers {
+			guard !Task.isCancelled else { return .cancelled }
+			let found = await reader.perform {
+				ScrollbackQueries.search(in: reader, viewIdentifier: view, query: normalized)
+			}
+			switch found {
+			case let .success(rows): hits.append(contentsOf: rows)
+			case let .failure(reason): return .failed(reason)
+			}
+		}
+		hits.sort { $0.sortsBefore($1) }
+		let truncated = hits.count > normalized.limit
+		return .results(Array(hits.prefix(normalized.limit)), truncated: truncated)
 	}
 
 	@discardableResult

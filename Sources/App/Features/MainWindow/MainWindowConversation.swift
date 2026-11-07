@@ -17,6 +17,7 @@ struct MainWindowConversation: View {
 	/// bottom inset. Feeding SwiftUI geometry back into layout can cause a loop.
 	var body: some View {
 		VStack(spacing: 0) {
+			ScrollbackMigrationBanner(recovery: Scrollback.shared.recovery)
 			TranscriptHistoryRecoveryView(controller: columns.transcript?.viewController)
 			ZStack(alignment: .bottom) {
 				// The native scroll view stays inside the toolbar safe area.

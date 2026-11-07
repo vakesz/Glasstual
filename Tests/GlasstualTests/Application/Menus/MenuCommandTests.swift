@@ -53,6 +53,7 @@ struct MenuCommandTests {
 			(.toggleMemberList, .window),
 			(.highlightList, .window),
 			(.browseTranscriptLogs, .window),
+			(.findInAllConversations, .general),
 			(.webSearch, .transcript),
 			(.transcriptReact, .transcript),
 			(.addIgnore, .member),

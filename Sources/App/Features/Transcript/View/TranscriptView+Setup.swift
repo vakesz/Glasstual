@@ -138,7 +138,11 @@ extension TranscriptView {
 		jumpToLatest.translatesAutoresizingMaskIntoConstraints = false
 		jumpToLatest.isHidden = true
 		jumpToLatest.rootView = TranscriptJumpToLatestButton { [weak self] in
-			self?.scrollToBottom()
+			guard let controller = self?.viewController else {
+				self?.scrollToBottom()
+				return
+			}
+			controller.jumpToPresent()
 		}
 	}
 

@@ -70,6 +70,26 @@ final class TranscriptHistoryRecovery {
 		loadPhase = .unloaded
 	}
 
+	/** Whether the transcript shows a window of stored history rather than the
+	 live end of the conversation. While it does, new lines are stored and not
+	 drawn, and the banner offers the way back. */
+	private(set) var isDetachedFromLive = false
+
+	/// A window replaces whatever the view held, so a load that has not run yet
+	/// has nothing left to add and must not run later on top of it. Coming back
+	/// reads stored history as any later reload does.
+	func beginDetached() {
+		isDetachedFromLive = true
+		hasEverLoaded = true
+		if case .unloaded = loadPhase {
+			loadPhase = .loaded
+		}
+	}
+
+	func endDetached() {
+		isDetachedFromLive = false
+	}
+
 	func beginOlderPage() {
 		olderPagePhase = .loading
 	}
@@ -114,6 +134,26 @@ struct TranscriptHistoryRecoveryView: View {
 		let message = history?.localMessage ?? storage.localMessage
 		let isRetrying = history?.isRetrying ?? storage.isRetrying
 		let serverFailed = history?.serverFailed ?? false
+		VStack(spacing: 0) {
+			if history?.isDetachedFromLive == true {
+				TranscriptDetachedBanner { controller?.returnToLive() }
+			}
+			failureBanner(
+				controller: controller, history: history, storage: storage,
+				message: message, isRetrying: isRetrying, serverFailed: serverFailed
+			)
+		}
+	}
+
+	@ViewBuilder
+	private func failureBanner(
+		controller: TranscriptController?,
+		history: TranscriptHistoryRecovery?,
+		storage: ScrollbackStorageRecovery,
+		message: String?,
+		isRetrying: Bool,
+		serverFailed: Bool
+	) -> some View {
 		if message != nil || serverFailed || isRetrying {
 			HStack(alignment: .top) {
 				/* The glyph is the only thing that says this is a warning, so it
@@ -160,5 +200,29 @@ struct TranscriptHistoryRecoveryView: View {
 			.accessibilityElement(children: .contain)
 			.accessibilityIdentifier("history-recovery")
 		}
+	}
+}
+
+/** The banner over a window of stored history: this is not the end of the
+ conversation, and one control returns to it. New lines are stored while it is
+ up, so nothing is missed. */
+struct TranscriptDetachedBanner: View {
+	let returnToLive: () -> Void
+
+	var body: some View {
+		HStack {
+			Image(systemName: "clock.arrow.circlepath")
+				.foregroundStyle(.secondary)
+				.accessibilityHidden(true)
+			Text(.Transcript.viewingHistory)
+				.font(.headline)
+			Spacer()
+			Button(String(localized: .Transcript.returnToLive), action: returnToLive)
+				.accessibilityIdentifier("history-return-to-live")
+		}
+		.padding(UISpacing.regular)
+		.background(.bar)
+		.accessibilityElement(children: .contain)
+		.accessibilityIdentifier("history-window-banner")
 	}
 }

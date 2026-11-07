@@ -218,7 +218,8 @@ nonisolated struct ChatLine: Codable, Hashable, Sendable, CustomStringConvertibl
 			uniqueIdentifier: uniqueIdentifier,
 			viewIdentifier: viewIdentifier,
 			sessionIdentifier: sessionIdentifier,
-			creationDate: receivedAt.timeIntervalSince1970
+			creationDate: receivedAt.timeIntervalSince1970,
+			search: ScrollbackSearchFields(line: self)
 		)
 	}
 

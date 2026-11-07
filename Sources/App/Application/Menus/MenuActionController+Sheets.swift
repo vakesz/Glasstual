@@ -46,6 +46,12 @@ extension MenuActionController {
 		presentServerPropertiesForSelectedSession(at: .default)
 	}
 
+	/// A window rather than a sheet: the matches exist to jump into the
+	/// transcript with, and the window stays up for the next one.
+	@objc func showScrollbackSearch(_: Any?) {
+		AppServices.scrollbackSearch.open()
+	}
+
 	@objc func showTranscriptLogViewer(_: Any?) {
 		AppServices.transcriptLogViewer.open()
 	}

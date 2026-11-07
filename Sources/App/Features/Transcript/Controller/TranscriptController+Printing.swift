@@ -84,7 +84,10 @@ extension TranscriptController {
 		}
 		let projectionAction = transcriptProjection.record(result)
 		forgetRetiredProjectionMessages()
-		if case .append = projectionAction, !alreadyDisplayed {
+		/* Showing a window of old history, a new line is stored below and drawn
+		 when the reader returns to the live end, which reads it back. */
+		let drawsLine = !historyRecovery.isDetachedFromLive
+		if case .append = projectionAction, !alreadyDisplayed, drawsLine {
 			var displayedLine = applyingCurrentState(to: result.transcriptLine)
 			if transcriptSessionBoundary.consumePendingMarker(for: result) {
 				displayedLine.markers.insert(
@@ -94,7 +97,7 @@ extension TranscriptController {
 			}
 			backingView?.appendLines([displayedLine])
 		}
-		if case .append = projectionAction, !alreadyDisplayed, result.processesInlineMedia {
+		if case .append = projectionAction, !alreadyDisplayed, drawsLine, result.processesInlineMedia {
 			processInlineMedia(result.links, atLineNumber: lineNumber)
 		}
 		if alreadyPrinted == false {

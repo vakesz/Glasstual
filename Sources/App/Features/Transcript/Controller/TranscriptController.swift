@@ -90,6 +90,14 @@ final class TranscriptController: ChatItemPresenting, ServerHistoryPresenting {
 	/// drawn. See ``TranscriptRedactionLedger``.
 	var redactions = TranscriptRedactionLedger()
 	private(set) var viewLoadedTimestamp: TimeInterval = 0
+
+	/// The view counts as loaded from now: history it reads next ends at this
+	/// moment, which is how a return to the live end takes in what was stored
+	/// while a window was showing.
+	func markViewLoadedNow() {
+		viewLoadedTimestamp = Date().timeIntervalSince1970
+	}
+
 	var lastLineStorage: ChatLine?
 	/** The lines handed to `print` that have not been applied to the view yet.
 
@@ -255,7 +263,7 @@ final class TranscriptController: ChatItemPresenting, ServerHistoryPresenting {
 		await renderScheduler.drain()
 	}
 
-	private func cancelOlderHistory() {
+	func cancelOlderHistory() {
 		historyRetryTask?.cancel()
 		historyRetryTask = nil
 		historyRecovery.isRetrying = false

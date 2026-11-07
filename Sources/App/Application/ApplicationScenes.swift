@@ -10,6 +10,7 @@ enum ApplicationSceneID {
 	static let channelSpotlight = "channel-spotlight"
 	static let fileTransfers = "file-transfers"
 	static let onboarding = "onboarding"
+	static let scrollbackSearch = "scrollback-search"
 	static let serverChannelList = "server-channel-list"
 	static let highlightLog = "highlight-log"
 	static let transcriptLogViewer = "transcript-log-viewer"
@@ -71,6 +72,7 @@ private struct ApplicationSceneGraph: Scene {
 		ChannelSpotlightScene(window: AppServices.channelSpotlight)
 		FileTransferListScene(center: AppServices.fileTransfers)
 		OnboardingScene()
+		ScrollbackSearchScene(window: AppServices.scrollbackSearch)
 		ServerChannelListScene(windows: AppServices.serverChannelLists)
 		HighlightLogScene(windows: AppServices.highlightLogs)
 		TranscriptLogViewerScene(window: AppServices.transcriptLogViewer)

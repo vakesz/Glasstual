@@ -211,6 +211,11 @@ final class Scrollback {
 	func fetchOutcome(_ request: ScrollbackFetchRequest) async -> ScrollbackFetchOutcome {
 		await session.fetchOutcome(request)
 	}
+
+	/// Searches the stored text of the views the query names.
+	func search(_ query: ScrollbackSearchQuery) async -> ScrollbackSearchOutcome {
+		await session.search(query)
+	}
 }
 
 /** The callers waiting on the save that application termination asked for.

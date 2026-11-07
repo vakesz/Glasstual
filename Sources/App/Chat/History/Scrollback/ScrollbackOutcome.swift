@@ -62,3 +62,12 @@ nonisolated enum ScrollbackRedactionOutcome: Equatable, Sendable {
 	case unavailable
 	case failed(String)
 }
+
+/// What a search over stored history answers. Matches arrive newest first and
+/// capped; `truncated` says there were more than the cap.
+nonisolated enum ScrollbackSearchOutcome: Equatable, Sendable {
+	case results([ScrollbackSearchHit], truncated: Bool)
+	case unavailable
+	case failed(String)
+	case cancelled
+}

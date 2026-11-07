@@ -76,6 +76,9 @@ actor ScrollbackSession {
 		self.init(
 			store: ScrollbackStore(
 				filenameSetting: filenameSetting,
+				migrationProgress: { fraction in
+					Task { @MainActor in Scrollback.shared.recovery.noteMigrationProgress(fraction) }
+				},
 				deletionHandler: { identifiers, viewIdentifier in
 					await Scrollback.noteWillDeleteLines(identifiers, inView: viewIdentifier)
 				}
@@ -305,6 +308,18 @@ actor ScrollbackSession {
 		await drain()
 		guard !isTerminating, !Task.isCancelled else { return .cancelled }
 		let outcome = await store.fetchOutcome(request)
+		return isTerminating || Task.isCancelled ? .cancelled : outcome
+	}
+
+	/// Searches stored history after every change already asked for has run, so
+	/// a line printed a moment ago is found.
+	func search(_ query: ScrollbackSearchQuery) async -> ScrollbackSearchOutcome {
+		guard !isTerminating, !Task.isCancelled else { return .cancelled }
+		guard await ensureLoaded()
+		else { return isTerminating || Task.isCancelled ? .cancelled : .unavailable }
+		await drain()
+		guard !isTerminating, !Task.isCancelled else { return .cancelled }
+		let outcome = await store.search(query)
 		return isTerminating || Task.isCancelled ? .cancelled : outcome
 	}
 

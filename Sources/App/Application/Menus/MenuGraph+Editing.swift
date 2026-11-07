@@ -95,6 +95,16 @@ extension MenuGraph {
 				#selector(MenuActionController.showFindPrompt(_:)),
 				key: "e"
 			),
+			.separator(),
+			/* Shift-Command-F, the key Xcode and Finder use for searching beyond the
+				document in front: Command-F stays the find bar of the open transcript. */
+			.item(
+				String(localized: .ScrollbackSearch.menuTitle),
+				.findInAllConversations,
+				#selector(MenuActionController.showScrollbackSearch(_:)),
+				key: "f",
+				modifiers: [.command, .shift]
+			),
 		]),
 		/* The standard AppKit editing commands, with the selectors AppKit's own
 			menu uses: every one of them is answered by whatever text view is first

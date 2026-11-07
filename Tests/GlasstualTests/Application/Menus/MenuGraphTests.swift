@@ -51,6 +51,7 @@ struct MenuGraphTests {
 		let values = try Self.catalogValues(feature: "MainWindow")
 			.union(Self.catalogValues(feature: "Sidebar"))
 			.union(Self.catalogValues(feature: "TranscriptLogViewer"))
+			.union(Self.catalogValues(feature: "ScrollbackSearch"))
 		let controller = MenuActionController()
 		let mainMenu = MenuGraph.builtMainMenu(for: controller)
 
@@ -227,6 +228,22 @@ struct MenuGraphTests {
 
 	/// A title that opens a sheet ends in an ellipsis, and one that only asks
 	/// for confirmation does not.
+	/// Command-F stays the open transcript's find bar; the search across every
+	/// conversation is the shifted one, the way Xcode and Finder separate them.
+	@Test("Find in All Conversations opens the history search on Shift-Command-F")
+	func findInAllConversationsHasItsOwnShortcut() throws {
+		let controller = MenuActionController()
+		let mainMenu = MenuGraph.builtMainMenu(for: controller)
+
+		let find = try #require(mainMenu.item(for: .find)?.submenu)
+		let item = try #require(find.item(for: .findInAllConversations))
+		#expect(item.title == String(localized: .ScrollbackSearch.menuTitle))
+		#expect(item.keyEquivalent == "f")
+		#expect(item.keyEquivalentModifierMask == [.command, .shift])
+		#expect(item.action == #selector(MenuActionController.showScrollbackSearch(_:)))
+		#expect(find.item(for: .findText)?.keyEquivalentModifierMask == [.command])
+	}
+
 	@Test("Menu titles say whether more is being asked for")
 	func menuTitlesUseEllipsesForSheets() {
 		for title in [

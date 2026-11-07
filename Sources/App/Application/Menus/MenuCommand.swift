@@ -150,6 +150,7 @@ enum MenuCommand: String, CaseIterable, Sendable {
 	case findNext // Find Next
 	case findPrevious // Find Previous
 	case useSelectionForFind // Use Selection for Find
+	case findInAllConversations // Find in All Conversations…
 	case channelModeModerated // Moderated (+m)
 	case channelModeInviteOnly // Invite Only (+i)
 	case channelModeManageAll // Manage All Modes…
@@ -328,7 +329,7 @@ extension MenuCommand {
 		.resetWindow: "arrow.counterclockwise", .mainWindow: "macwindow",
 		.addressBook: "book.closed", .viewLogs: "folder",
 		.browseTranscriptLogs: "doc.text.magnifyingglass", .highlightList: "bell.badge",
-		.fileTransfers: "tray.and.arrow.down",
+		.fileTransfers: "tray.and.arrow.down", .findInAllConversations: "text.magnifyingglass",
 		.connectToHelpChannel: "questionmark.bubble", .connectToTestingChannel: "checkmark.bubble",
 	]
 }

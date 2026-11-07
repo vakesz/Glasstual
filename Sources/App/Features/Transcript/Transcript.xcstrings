@@ -2510,6 +2510,153 @@
           }
         }
       }
+    },
+    "viewing-history": {
+      "comment": "Banner over a transcript that shows a window of earlier history, not the live end of the conversation, so the reader knows new messages are not drawn yet.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Viewing earlier messages"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Korábbi üzenetek megtekintése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frühere Nachrichten werden angezeigt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Viendo mensajes anteriores"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Affichage de messages plus anciens"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "以前のメッセージを表示しています"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Exibindo mensagens anteriores"
+          }
+        }
+      }
+    },
+    "return-to-live": {
+      "comment": "Button in the viewing-history banner that returns the transcript to the live end of the conversation.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Return to Live"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vissza az élő nézethez"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zur Live-Ansicht"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Volver al directo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Revenir au direct"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ライブに戻る"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Voltar ao vivo"
+          }
+        }
+      }
+    },
+    "history-upgrade-progress": {
+      "comment": "Banner shown while the saved history is upgraded once so it can be searched. History appears when it finishes.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparing saved history for search. History appears when this finishes."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A mentett előzmények előkészítése a kereséshez. Az előzmények a befejezés után jelennek meg."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der gespeicherte Verlauf wird für die Suche vorbereitet. Der Verlauf erscheint, sobald dies abgeschlossen ist."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Preparando el historial guardado para la búsqueda. El historial aparecerá cuando termine."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Préparation de l’historique enregistré pour la recherche. L’historique apparaîtra une fois terminé."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "保存済みの履歴を検索用に準備しています。完了すると履歴が表示されます。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Preparando o histórico salvo para a pesquisa. O histórico aparece quando isso terminar."
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

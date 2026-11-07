@@ -20,8 +20,14 @@ extension TranscriptController {
 		}
 	}
 
+	/// The end of the conversation: the bottom of what is drawn, or, when a
+	/// window of old history is showing, the live end that window left.
 	func jumpToPresent() {
-		backingView?.scrollToBottom()
+		if historyRecovery.isDetachedFromLive {
+			returnToLive()
+		} else {
+			backingView?.scrollToBottom()
+		}
 	}
 
 	func jump(toLine lineNumber: String, completionHandler: ((Bool) -> Void)? = nil) {

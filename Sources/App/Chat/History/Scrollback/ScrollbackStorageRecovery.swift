@@ -17,6 +17,21 @@ final class ScrollbackStorageRecovery {
 	var storageFailure: String?
 	var deletionFailures: [String: String] = [:]
 	var isRetrying = false
+	/** How far the one-time upgrade of an existing history store has got, from
+	 0 to 1, while it runs; `nil` when none is running. History is unavailable
+	 until it finishes, so the window says why. */
+	private(set) var migrationFraction: Double?
+
+	/// Records the upgrade's progress. Progress arrives from the store's own
+	/// task as a series of hops to the main actor, which can land out of order,
+	/// so an earlier fraction never replaces a later one.
+	func noteMigrationProgress(_ fraction: Double) {
+		if fraction >= 1 {
+			migrationFraction = nil
+		} else if fraction > (migrationFraction ?? -1) {
+			migrationFraction = fraction
+		}
+	}
 
 	/// What the storage failures read as, or nothing while the database is
 	/// healthy.
