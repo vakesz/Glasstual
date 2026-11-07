@@ -38,6 +38,16 @@ nonisolated enum ApplicationLink: Equatable {
 		}
 	}
 
+	/// The link that selects a conversation or server by its identifier, which
+	/// `goto` resolves against the sidebar's rows. `nil` for an identifier that
+	/// cannot sit in a URL path.
+	static func conversationLink(identifier: String) -> String? { // nonisolated: pure
+		guard let encoded = identifier.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
+		      encoded.isEmpty == false, encoded.contains("/") == false
+		else { return nil }
+		return "glasstual://goto/" + encoded
+	}
+
 	/// Parses the application-owned `glasstual:`, `irc:` and `ircs:` schemes.
 	/// All three are registered in the application's URL types.
 	static func parse(_ location: String) -> Self? { // nonisolated: pure
@@ -127,6 +137,12 @@ enum ApplicationLinkHandler {
 			 word leaves nothing to diagnose it with. */
 			applicationLinkLogger.info("Ignoring a malformed application link")
 		}
+	}
+
+	/// Opens what a Spotlight result names: the identifier the index was given.
+	static func openIndexedItem(identifier: String) {
+		guard let link = ApplicationLink.conversationLink(identifier: identifier) else { return }
+		open(link)
 	}
 
 	private static func perform(_ action: ApplicationLink.Action, source: URL) {

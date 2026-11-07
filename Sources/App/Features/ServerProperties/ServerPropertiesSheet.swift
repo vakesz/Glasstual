@@ -31,6 +31,7 @@ final class ServerPropertiesSheet: SheetSession, SessionScoped, ServerProperties
 		if let session {
 			session.updateStoredConfiguration()
 			model = ServerPropertiesModel(config: session.config)
+			model.bouncerNetworks = BouncerNetworksModel(session: session)
 		} else {
 			// A new connection starts from the network list rather than a blank form.
 			var config = ServerConfig()
@@ -56,7 +57,7 @@ final class ServerPropertiesSheet: SheetSession, SessionScoped, ServerProperties
 	/// needs to start on.
 	func start(at destination: ServerPropertiesDestination = .default) {
 		model.selection = switch destination {
-		case .default: .general
+		case .default: model.isBouncerNetwork ? .channelList : .general
 		case .addressBook, .newIgnoreEntry, .editIgnoreEntry: .addressBook
 		}
 		startSheet()
@@ -147,8 +148,7 @@ final class ServerPropertiesSheet: SheetSession, SessionScoped, ServerProperties
 		) { [weak self] channelConfig in
 			self?.applyChannel(channelConfig)
 		}
-		sheet.window = window
-		sheet.startSheet()
+		presentEditor(sheet)
 	}
 
 	func deleteChannel() {
@@ -157,13 +157,8 @@ final class ServerPropertiesSheet: SheetSession, SessionScoped, ServerProperties
 		model.selectedChannelID = nil
 	}
 
-	private func applyChannel(_ config: ConversationConfig) {
-		if let index = model.config.conversationList.firstIndex(where: { $0.uniqueIdentifier == config.uniqueIdentifier }) {
-			model.config.conversationList[index] = config
-		} else {
-			model.config.conversationList.append(config)
-		}
-		model.selectedChannelID = config.uniqueIdentifier
+	private func applyChannel(_ entry: ConversationConfig) {
+		upsert(entry, id: \.uniqueIdentifier, in: \.conversationList, selecting: \.selectedChannelID)
 	}
 
 	func addHighlight() {
@@ -180,8 +175,7 @@ final class ServerPropertiesSheet: SheetSession, SessionScoped, ServerProperties
 		let sheet = HighlightRuleSheet(config: config, channels: model.config.conversationList) { [weak self] entry in
 			self?.applyHighlight(entry)
 		}
-		sheet.window = window
-		sheet.startSheet()
+		presentEditor(sheet)
 	}
 
 	func deleteHighlight() {
@@ -190,15 +184,8 @@ final class ServerPropertiesSheet: SheetSession, SessionScoped, ServerProperties
 		model.selectedHighlightID = nil
 	}
 
-	private func applyHighlight(_ config: HighlightMatchCondition) {
-		if let index = model.config.highlightList
-			.firstIndex(where: { $0.uniqueIdentifier == config.uniqueIdentifier })
-		{
-			model.config.highlightList[index] = config
-		} else {
-			model.config.highlightList.append(config)
-		}
-		model.selectedHighlightID = config.uniqueIdentifier
+	private func applyHighlight(_ entry: HighlightMatchCondition) {
+		upsert(entry, id: \.uniqueIdentifier, in: \.highlightList, selecting: \.selectedHighlightID)
 	}
 
 	func applyTemplate() {
@@ -211,17 +198,17 @@ final class ServerPropertiesSheet: SheetSession, SessionScoped, ServerProperties
 
 	private func addIgnoreAddressBookEntry(hostmask: String?) {
 		guard let hostmask else {
-			presentAddressBookSheet(AddressBookEntrySheet(entryType: .ignore, onSave: applyAddressBookEntry))
+			presentEditor(AddressBookEntrySheet(entryType: .ignore, onSave: applyAddressBookEntry))
 			return
 		}
-		presentAddressBookSheet(AddressBookEntrySheet(
+		presentEditor(AddressBookEntrySheet(
 			entry: .newIgnoreEntry(forHostmask: hostmask),
 			onSave: applyAddressBookEntry
 		))
 	}
 
 	func addTrackingEntry() {
-		presentAddressBookSheet(AddressBookEntrySheet(
+		presentEditor(AddressBookEntrySheet(
 			entryType: .userTracking,
 			onSave: applyAddressBookEntry
 		))
@@ -230,12 +217,29 @@ final class ServerPropertiesSheet: SheetSession, SessionScoped, ServerProperties
 	func editAddressBookEntry() {
 		guard let id = model.selectedAddressBookEntryID,
 		      let entry = model.config.ignoreList.first(where: { $0.uniqueIdentifier == id }) else { return }
-		presentAddressBookSheet(AddressBookEntrySheet(entry: entry, onSave: applyAddressBookEntry))
+		presentEditor(AddressBookEntrySheet(entry: entry, onSave: applyAddressBookEntry))
 	}
 
-	private func presentAddressBookSheet(_ sheet: AddressBookEntrySheet) {
+	/// Hangs a child editor sheet off this sheet's window and starts it.
+	private func presentEditor(_ sheet: SheetSession) {
 		sheet.window = window
 		sheet.startSheet()
+	}
+
+	/// Replaces the entry that shares `entry`'s identifier, or appends it, and
+	/// selects it.
+	private func upsert<Entry>(
+		_ entry: Entry,
+		id: KeyPath<Entry, String>,
+		in list: WritableKeyPath<ServerConfig, [Entry]>,
+		selecting selection: ReferenceWritableKeyPath<ServerPropertiesModel, String?>
+	) {
+		if let index = model.config[keyPath: list].firstIndex(where: { $0[keyPath: id] == entry[keyPath: id] }) {
+			model.config[keyPath: list][index] = entry
+		} else {
+			model.config[keyPath: list].append(entry)
+		}
+		model[keyPath: selection] = entry[keyPath: id]
 	}
 
 	func deleteAddressBookEntry() {
@@ -245,12 +249,7 @@ final class ServerPropertiesSheet: SheetSession, SessionScoped, ServerProperties
 	}
 
 	private func applyAddressBookEntry(_ entry: AddressBookEntry) {
-		if let index = model.config.ignoreList.firstIndex(where: { $0.uniqueIdentifier == entry.uniqueIdentifier }) {
-			model.config.ignoreList[index] = entry
-		} else {
-			model.config.ignoreList.append(entry)
-		}
-		model.selectedAddressBookEntryID = entry.uniqueIdentifier
+		upsert(entry, id: \.uniqueIdentifier, in: \.ignoreList, selecting: \.selectedAddressBookEntryID)
 	}
 
 	/// Copies the command that registers the fingerprint with NickServ, which
@@ -324,8 +323,8 @@ final class ServerPropertiesSheet: SheetSession, SessionScoped, ServerProperties
 
 	private func addConfigurationDidChangeObserver() {
 		guard let session else { return }
-		notifications.observe(.serverSessionConfigWasUpdated, object: session) { [weak self] notification in
-			self?.underlyingConfigurationChanged(notification)
+		notifications.observe(ServerSessionConfigWasUpdated.self, of: session) { [weak self] message in
+			self?.underlyingConfigurationChanged(message)
 		}
 	}
 
@@ -339,8 +338,8 @@ final class ServerPropertiesSheet: SheetSession, SessionScoped, ServerProperties
 	 The alert is a sheet on the window this sheet is already on, so it arrives
 	 over the edits it is asking about. Keeping what is typed is the default;
 	 reloading is the destructive answer, because it throws those edits away. */
-	private func underlyingConfigurationChanged(_ notification: Notification) {
-		guard let session = notification.object as? ServerSession else { return }
+	private func underlyingConfigurationChanged(_ message: ServerSessionConfigWasUpdated) {
+		let session = message.subject
 		Alerts.present(AlertRequest(
 			title: String(localized: .ServerProperties.thisConnectionsConfigurationHasChangedDo),
 			body: String(localized: .ServerProperties.youWillLooseUnsavedChangesIf),

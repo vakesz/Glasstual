@@ -4,27 +4,69 @@
 
 import Foundation
 
-/** Who sent a message: either a user (nickname!username@address) or the server
- itself. A plain value — callers that need to change a field copy and assign. */
-nonisolated struct Prefix: Hashable, Sendable {
-	var isServer: Bool
-	var hostmask: String
-	var nickname: String
-	var username: String?
-	var address: String?
+/** Who sent a message: the server itself or a user (nickname!username@address).
+ A plain value — callers that need a change build a new prefix. */
+nonisolated enum Prefix: Hashable, Sendable {
+	case server(name: String)
+	case user(User)
 
-	init(
-		nickname: String = "",
-		username: String? = nil,
-		address: String? = nil,
-		hostmask: String = "",
-		isServer: Bool = false
-	) {
-		self.nickname = nickname
-		self.username = username
-		self.address = address
-		self.hostmask = hostmask
-		self.isServer = isServer
+	/** The sender of a line that names none: the server, which may be unnamed. */
+	static let unnamed = Prefix.server(name: "")
+
+	/** A person named by a prefix. The username is absent in `nick` and
+	 `nick@host`, and the address in a bare `nick`. `hostmask` keeps the wire
+	 spelling, which is not always a rebuild of the parts (`nick!@host`). */
+	struct User: Hashable, Sendable {
+		var nickname: String
+		var username: String?
+		var address: String?
+		var hostmask: String
+
+		init(nickname: String, username: String? = nil, address: String? = nil, hostmask: String) {
+			self.nickname = nickname
+			self.username = username
+			self.address = address
+			self.hostmask = hostmask
+		}
+	}
+
+	var isServer: Bool {
+		if case .server = self {
+			return true
+		}
+		return false
+	}
+
+	/// The server name, or the user's nickname.
+	var nickname: String {
+		switch self {
+		case let .server(name): name
+		case let .user(user): user.nickname
+		}
+	}
+
+	/// The server name, or the user's hostmask as the wire spelled it.
+	var hostmask: String {
+		switch self {
+		case let .server(name): name
+		case let .user(user): user.hostmask
+		}
+	}
+
+	var username: String? {
+		if case let .user(user) = self {
+			user.username
+		} else {
+			nil
+		}
+	}
+
+	var address: String? {
+		if case let .user(user) = self {
+			user.address
+		} else {
+			nil
+		}
 	}
 
 	/** The user a prefix names, or `nil` when the prefix is a server name.
@@ -39,12 +81,12 @@ nonisolated struct Prefix: Hashable, Sendable {
 	 nickname and filed the message in the console. */
 	static func user(parsing prefix: String, maximumNicknameLength: Int) -> Prefix? {
 		if let hostmask = Hostmask(parsing: prefix, maximumNicknameLength: maximumNicknameLength) {
-			return Prefix(
+			return .user(User(
 				nickname: hostmask.nickname,
 				username: hostmask.username,
 				address: hostmask.address,
 				hostmask: prefix
-			)
+			))
 		}
 
 		guard let separator = prefix.firstIndex(of: "@") else {
@@ -77,7 +119,7 @@ nonisolated struct Prefix: Hashable, Sendable {
 			return nil
 		}
 
-		return Prefix(nickname: nickname, address: address, hostmask: prefix)
+		return .user(User(nickname: nickname, address: address, hostmask: prefix))
 	}
 
 	/** A prefix with no `@` at all, read as the bare `nickname` RFC 2812 2.3.1
@@ -96,6 +138,6 @@ nonisolated struct Prefix: Hashable, Sendable {
 			return nil
 		}
 
-		return Prefix(nickname: prefix, hostmask: prefix)
+		return .user(User(nickname: prefix, hostmask: prefix))
 	}
 }

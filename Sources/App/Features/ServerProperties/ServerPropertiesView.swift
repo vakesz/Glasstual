@@ -45,17 +45,28 @@ struct ServerPropertiesView: View {
 		VStack(spacing: 0) {
 			NavigationSplitView {
 				List(selection: $model.selection) {
-					Section(.ServerProperties.navigationSectionConnection) {
-						navigationRows([
-							.general, .identity, .channelList, .highlights, .addressBook,
-							.connectCommands, .disconnectMessages, .encoding,
-						])
-					}
-					Section(.ServerProperties.vendorSpecific) {
-						navigationRows([.zncBouncer])
-					}
-					Section(.ServerProperties.serverPropertiesNavigationMenuAdvanced) {
-						navigationRows([.clientCertificate, .networkSocket, .proxyServer, .floodControl])
+					if model.isBouncerNetwork {
+						/* A network of a bouncer account takes its identity, endpoint and
+						 socket settings from the account. */
+						Section(.ServerProperties.navigationSectionConnection) {
+							navigationRows([.channelList, .highlights, .addressBook, .connectCommands])
+						}
+						Section(.ServerProperties.bouncer) {
+							navigationRows([.bouncerNetworks])
+						}
+					} else {
+						Section(.ServerProperties.navigationSectionConnection) {
+							navigationRows([
+								.general, .identity, .channelList, .highlights, .addressBook,
+								.connectCommands, .disconnectMessages, .encoding,
+							])
+						}
+						Section(.ServerProperties.bouncer) {
+							navigationRows([.zncBouncer, .bouncerNetworks])
+						}
+						Section(.ServerProperties.serverPropertiesNavigationMenuAdvanced) {
+							navigationRows([.clientCertificate, .networkSocket, .proxyServer, .floodControl])
+						}
 					}
 				}
 				.listStyle(.sidebar)
@@ -85,11 +96,8 @@ struct ServerPropertiesView: View {
 	/// The selected pane under its own heading: the heading is drawn here, once,
 	/// from the selection that named the pane.
 	private var pane: some View {
-		VStack(alignment: .leading, spacing: UISpacing.wide) {
-			Text(model.selection.title)
-				.font(.title2)
-				.fontWeight(.semibold)
-				.padding([.horizontal, .top], SheetMetrics.margin)
+		VStack(alignment: .leading, spacing: 0) {
+			SheetHeading(Text(model.selection.title))
 
 			selectedPane
 		}
@@ -108,6 +116,7 @@ struct ServerPropertiesView: View {
 		case .disconnectMessages: ServerPropertiesDisconnectMessagesPane(model: model)
 		case .encoding: ServerPropertiesEncodingPane(model: model)
 		case .zncBouncer: ServerPropertiesZNCBouncerPane(model: model)
+		case .bouncerNetworks: ServerPropertiesBouncerPane(model: model)
 		case .clientCertificate: ServerPropertiesClientCertificatePane(model: model, commands: commands)
 		case .networkSocket: ServerPropertiesNetworkSocketPane(model: model)
 		case .proxyServer: ServerPropertiesProxyServerPane(model: model)

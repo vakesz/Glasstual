@@ -134,8 +134,8 @@ struct InboundWireParsingTests {
 
 		let modeInfo = try #require(channel.modeInfo)
 
-		#expect(modeInfo.modeInfo(for: "k")?.modeParameter == "secret")
-		#expect(modeInfo.modeInfo(for: "l")?.modeParameter == "50")
+		#expect(modeInfo.modes.modeInfo(for: "k")?.modeParameter == "secret")
+		#expect(modeInfo.modes.modeInfo(for: "l")?.modeParameter == "50")
 	}
 
 	/// What the server says stands, even where it is narrower than the RFC's.

@@ -1,0 +1,55 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "deletion-not-repeated" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "comment" : "Shown when clearing a conversation's history failed. Retry History repairs loading and saving only; it never repeats a deletion, because newer messages may have arrived since.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "History could not be cleared. Clear the conversation again to try once more."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nem sikerült törölni az előzményeket. Az újrapróbálkozáshoz töröld ismét a beszélgetést."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Verlauf konnte nicht geleert werden. Leere die Unterhaltung erneut, um es noch einmal zu versuchen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se ha podido borrar el historial. Vacía la conversación de nuevo para volver a intentarlo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’historique n’a pas pu être effacé. Effacez à nouveau la conversation pour réessayer."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "履歴をクリアできませんでした。もう一度会話の履歴をクリアしてください。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não foi possível limpar o histórico. Limpe a conversa de novo para tentar outra vez."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

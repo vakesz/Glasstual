@@ -22,8 +22,8 @@ struct ChannelModeQueryPurityTests {
 		let (session, channelMode) = try channelMode(currentModes: "")
 		defer { withExtendedLifetime(session) {} }
 
-		#expect(channelMode.modeInfo(for: "n") == nil)
-		#expect(channelMode.modeIsDefined("n") == false)
+		#expect(channelMode.modes.modeInfo(for: "n") == nil)
+		#expect(channelMode.modes.modeIsDefined("n") == false)
 	}
 
 	@Test("Reading modes for the properties sheet does not produce a removal command")

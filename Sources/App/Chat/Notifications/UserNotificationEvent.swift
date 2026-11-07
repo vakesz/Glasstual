@@ -64,25 +64,25 @@ nonisolated enum UserNotificationEvent: UInt, CaseIterable, Sendable {
 	 said in the title what the subtitle already said. */
 	var title: LocalizedStringResource {
 		switch self {
-		case .addressBookMatch: .Notifications.typeAddressBook
-		case .channelMessage: .Notifications.typeChannelMessage
-		case .channelNotice: .Notifications.typeChannelNotice
-		case .connect: .Notifications.typeConnected
-		case .disconnect: .Notifications.typeDisconnected
-		case .invite: .Notifications.typeChannelInvitation
-		case .kick: .Notifications.typeKicked
-		case .newPrivateMessage: .Notifications.typeNewPrivateMessage
-		case .privateMessage: .Notifications.typePrivateMessage
-		case .privateNotice: .Notifications.typePrivateNotice
-		case .highlight: .Notifications.typeHighlight
-		case .fileTransferSendSuccessful: .Notifications.typeFileTransferSendSuccessful
-		case .fileTransferReceiveSuccessful: .Notifications.typeFileTransferReceiveSuccessful
-		case .fileTransferSendFailed: .Notifications.typeFileTransferSendFailed
-		case .fileTransferReceiveFailed: .Notifications.typeFileTransferReceiveFailed
-		case .fileTransferReceiveRequested: .Notifications.typeFileTransferRequest
-		case .userJoined: .Notifications.typeUserJoined
-		case .userParted: .Notifications.typeUserParted
-		case .userDisconnected: .Notifications.typeUserDisconnected
+		case .addressBookMatch: .ChatNotifications.typeAddressBook
+		case .channelMessage: .ChatNotifications.typeChannelMessage
+		case .channelNotice: .ChatNotifications.typeChannelNotice
+		case .connect: .ChatNotifications.typeConnected
+		case .disconnect: .ChatNotifications.typeDisconnected
+		case .invite: .ChatNotifications.typeChannelInvitation
+		case .kick: .ChatNotifications.typeKicked
+		case .newPrivateMessage: .ChatNotifications.typeNewPrivateMessage
+		case .privateMessage: .ChatNotifications.typePrivateMessage
+		case .privateNotice: .ChatNotifications.typePrivateNotice
+		case .highlight: .ChatNotifications.typeHighlight
+		case .fileTransferSendSuccessful: .ChatNotifications.typeFileTransferSendSuccessful
+		case .fileTransferReceiveSuccessful: .ChatNotifications.typeFileTransferReceiveSuccessful
+		case .fileTransferSendFailed: .ChatNotifications.typeFileTransferSendFailed
+		case .fileTransferReceiveFailed: .ChatNotifications.typeFileTransferReceiveFailed
+		case .fileTransferReceiveRequested: .ChatNotifications.typeFileTransferRequest
+		case .userJoined: .ChatNotifications.typeUserJoined
+		case .userParted: .ChatNotifications.typeUserParted
+		case .userDisconnected: .ChatNotifications.typeUserDisconnected
 		}
 	}
 
@@ -92,15 +92,15 @@ nonisolated enum UserNotificationEvent: UInt, CaseIterable, Sendable {
 
 		return switch self {
 		case .fileTransferSendSuccessful:
-			String(localized: .Notifications.bodyFileTransferSendSuccessful(filename, size))
+			String(localized: .ChatNotifications.bodyFileTransferSendSuccessful(filename, size))
 		case .fileTransferReceiveSuccessful:
-			String(localized: .Notifications.bodyFileTransferReceiveSuccessful(filename, size))
+			String(localized: .ChatNotifications.bodyFileTransferReceiveSuccessful(filename, size))
 		case .fileTransferSendFailed:
-			String(localized: .Notifications.bodyFileTransferSendFailed(filename))
+			String(localized: .ChatNotifications.bodyFileTransferSendFailed(filename))
 		case .fileTransferReceiveFailed:
-			String(localized: .Notifications.bodyFileTransferReceiveFailed(filename))
+			String(localized: .ChatNotifications.bodyFileTransferReceiveFailed(filename))
 		case .fileTransferReceiveRequested:
-			String(localized: .Notifications.bodyFileTransferRequest(filename, size))
+			String(localized: .ChatNotifications.bodyFileTransferRequest(filename, size))
 		default:
 			nil
 		}

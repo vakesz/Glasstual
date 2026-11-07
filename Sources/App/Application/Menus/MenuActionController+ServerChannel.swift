@@ -82,15 +82,21 @@ extension MenuActionController {
 			guard outcome.response == .default,
 			      MenuServerActionRules(session: session).canDeleteServer
 			else { return }
-			chatSession.destroySession(session)
+			chatSession.destroySessionWithBouncerNetworks(session)
 			chatSession.save()
+		}
+		var body = PromptStrings.Deletion.warning(for: .server)
+		let networks = chatSession.bouncerChildren(of: session)
+		if networks.isEmpty == false {
+			let names = networks.map(\.label).formatted(.list(type: .and))
+			body += "\n\n" + String(localized: .Bouncer.deleteAccountNetworksNotice(names))
 		}
 		/* Delete/Cancel, not Yes/No: the default button says what it does, which
 		 is what makes a destructive confirmation readable at a glance. The
 		 Return key still belongs to Cancel — see `AlertRequest`. */
 		Alerts.present(AlertRequest(
 			title: PromptStrings.Deletion.confirmationTitle(named: session.name),
-			body: PromptStrings.Deletion.warning(for: .server),
+			body: body,
 			defaultButton: PromptStrings.Action.delete,
 			alternateButton: PromptStrings.Action.cancel,
 			destructiveButton: .default

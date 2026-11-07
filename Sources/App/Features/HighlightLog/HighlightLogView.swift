@@ -118,12 +118,19 @@ struct HighlightLogView: View {
 					.font(.caption)
 					.foregroundStyle(.secondary)
 				Spacer()
-				Button(.HighlightLog.clearList, role: .destructive) {
-					clearConfirmationIsPresented = true
-				}
-				.disabled(model.rows.isEmpty)
 			}
 			.padding(UISpacing.wide)
+		}
+		.toolbar {
+			ToolbarItem {
+				Button(role: .destructive) {
+					clearConfirmationIsPresented = true
+				} label: {
+					Label(.HighlightLog.clearList, systemImage: "trash")
+				}
+				.help(Text(.HighlightLog.clearList))
+				.disabled(model.rows.isEmpty)
+			}
 		}
 		.confirmationDialog(
 			.HighlightLog.clearListConfirmationTitle,

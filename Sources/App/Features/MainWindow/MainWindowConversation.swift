@@ -17,6 +17,7 @@ struct MainWindowConversation: View {
 	/// bottom inset. Feeding SwiftUI geometry back into layout can cause a loop.
 	var body: some View {
 		VStack(spacing: 0) {
+			ScrollbackMigrationBanner(recovery: Scrollback.shared.recovery)
 			TranscriptHistoryRecoveryView(controller: columns.transcript?.viewController)
 			ZStack(alignment: .bottom) {
 				// The native scroll view stays inside the toolbar safe area.
@@ -36,33 +37,32 @@ struct MainWindowConversation: View {
 		.background(columns.conversationBackground)
 	}
 
-	/// The reply banner and input capsule share a glass backdrop.
+	/// The input capsule is the only glass surface; the reply banner and the
+	/// command list above it are flat material, so no glass sits on glass.
 	private var inputBar: some View {
-		GlassEffectContainer(spacing: 0) {
-			VStack(spacing: 0) {
-				SlashCommandDiscoveryView(model: inputContentView.textView.commandDiscovery) { suggestion in
-					inputContentView.textView.acceptSlashCommand(suggestion)
-				}
-				.padding(.horizontal, UISpacing.regular)
-
-				InputAccessoryView(model: inputContentView.textView.accessoryModel) {
-					inputContentView.textView.focus()
-				}
-				// Align the reply text with the field's text inset.
-				.padding(.horizontal, UISpacing.loose)
-
-				/* The field's own height constraint is the capsule's height. A
-				 SwiftUI frame around it let a short column squeeze the capsule
-				 below the field: the field overflowed the glass, and the
-				 transcript's inset, measured from the field, missed the bar. */
-				MainWindowInputRepresentable(contentView: inputContentView)
-					.padding(.horizontal, UISpacing.regular)
-					.padding(.vertical, InputBarLayout.fieldVerticalPadding)
-					.glassEffect(.regular, in: .capsule)
-					.overlay(focusRing)
-					.padding(.horizontal, UISpacing.regular)
-					.padding(.bottom, InputBarLayout.bottomPadding)
+		VStack(spacing: 0) {
+			SlashCommandDiscoveryView(model: inputContentView.textView.commandDiscovery) { suggestion in
+				inputContentView.textView.acceptSlashCommand(suggestion)
 			}
+			.padding(.horizontal, UISpacing.regular)
+
+			InputAccessoryView(model: inputContentView.textView.accessoryModel) {
+				inputContentView.textView.focus()
+			}
+			// Align the reply text with the field's text inset.
+			.padding(.horizontal, UISpacing.loose)
+
+			/* The field's own height constraint is the capsule's height. A
+			 SwiftUI frame around it let a short column squeeze the capsule
+			 below the field: the field overflowed the glass, and the
+			 transcript's inset, measured from the field, missed the bar. */
+			MainWindowInputRepresentable(contentView: inputContentView)
+				.padding(.horizontal, UISpacing.regular)
+				.padding(.vertical, InputBarLayout.fieldVerticalPadding)
+				.glassEffect(.regular, in: .capsule)
+				.overlay(focusRing)
+				.padding(.horizontal, UISpacing.regular)
+				.padding(.bottom, InputBarLayout.bottomPadding)
 		}
 	}
 

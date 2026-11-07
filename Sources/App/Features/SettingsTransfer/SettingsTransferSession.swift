@@ -179,7 +179,7 @@ final class SettingsTransferSession {
 			nil
 		}
 		self.editing = editing ?? applicationEditing
-		recoveryStore = SettingsRecoveryStore(directory: recoveryDirectory ?? SettingsRecoveryStore.defaultDirectory)
+		recoveryStore = SettingsRecoveryStore(directory: recoveryDirectory ?? SettingsRecoveryDirectory.url)
 	}
 
 	// MARK: - Derived state

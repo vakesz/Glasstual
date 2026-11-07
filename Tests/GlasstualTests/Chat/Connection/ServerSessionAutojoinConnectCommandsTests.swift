@@ -10,12 +10,12 @@ import Testing
 @MainActor
 @Suite("Autojoin waiting for the connect commands")
 struct ServerSessionAutojoinConnectCommandsTests {
-	/// Short enough that a test can wait it out, long enough that the assertion
-	/// before it is not racing the sleep.
-	private static let settlingDelay: TimeInterval = 0.2
+	/// Virtual seconds: the test steps a ``ManualTimerClock`` past it.
+	private static let settlingDelay: TimeInterval = 3
 
-	/** The autojoin delay setting is zero so `startAutojoinTimer()` joins
-	 inline rather than leaving the assertion to race a second timer. */
+	private let clock = ManualTimerClock()
+
+	/// The settling delay runs on the suite's manual clock, so no test sleeps.
 	private func makeSession(
 		waitsForConnectCommands: Bool,
 		connectCommands: [String] = [],
@@ -30,18 +30,10 @@ struct ServerSessionAutojoinConnectCommandsTests {
 			nicknamePassword: nil,
 			fixture: ChatEnvironmentFixture(settings: ChatSettings())
 		)
+		session.startupClock = clock.timerClock
 		session.userNickname = "swift-user"
 		session.markAsLoggedIn()
 		return session
-	}
-
-	/// Waits for the settling task rather than for a fixed interval, so a busy
-	/// machine cannot turn the delay into a failure.
-	private func waitForJoin(on session: TestServerSession) async throws {
-		let deadline = ContinuousClock.now + .seconds(5)
-		while joinLines(of: session).isEmpty, ContinuousClock.now < deadline {
-			try await Task.sleep(for: .milliseconds(10), clock: .continuous)
-		}
 	}
 
 	private func joinLines(of session: TestServerSession) -> [String] {
@@ -106,7 +98,11 @@ struct ServerSessionAutojoinConnectCommandsTests {
 		#expect(joinLines(of: session).isEmpty)
 		#expect(session.isAutojoined == false)
 
-		try await waitForJoin(on: session)
+		await clock.advance(by: Self.settlingDelay - 1)
+		#expect(session.connectCommandsHaveSettled == false)
+		#expect(joinLines(of: session).isEmpty)
+
+		await clock.advance(by: 1)
 
 		#expect(session.connectCommandsHaveSettled)
 		#expect(joinLines(of: session).contains { $0.contains("#swift") })

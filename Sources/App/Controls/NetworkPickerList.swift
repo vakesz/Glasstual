@@ -124,7 +124,8 @@ extension NetworkList {
 
  The onboarding step and the connection sheet's template step both show it:
  one goes on to ask for an account, the other opens the full connection form.
- Double-clicking a row selects it and confirms in one go. */
+ Double-clicking a row selects it and confirms in one go; Return confirms
+ the selected row. */
 struct NetworkPickerListView: View {
 	@Bindable var model: NetworkPickerListModel
 	let confirm: () -> Void
@@ -163,6 +164,16 @@ struct NetworkPickerListView: View {
 				}
 			}
 			.listStyle(.inset)
+			/* Return confirms the highlighted row, as double-clicking does. It
+			 is the list's own key press, so the search field keeps Return, and
+			 with nothing selected it falls through to the window's default
+			 button. */
+			.onKeyPress(.return) {
+				guard model.selection != nil else { return .ignored }
+
+				confirm()
+				return .handled
+			}
 			.accessibilityIdentifier("network-picker-list")
 			.accessibilityLabel(.NetworkPicker.networks)
 			.searchable(text: $model.query, prompt: Text(.NetworkPicker.searchNetworks))

@@ -114,8 +114,8 @@ final class MemberListTableCell: NSTableCellView {
 			host.setAccessibilityChildren([])
 			addSubview(host)
 			NSLayoutConstraint.activate([
-				host.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 6),
-				host.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -6),
+				host.leadingAnchor.constraint(equalTo: leadingAnchor, constant: UISpacing.snug),
+				host.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -UISpacing.snug),
 				host.topAnchor.constraint(equalTo: topAnchor),
 				host.bottomAnchor.constraint(equalTo: bottomAnchor),
 			])
@@ -141,7 +141,7 @@ private struct MemberListTableRowContent: View {
 			switch row {
 			case let .section(section, count):
 				HStack {
-					Text(section.title).font(.caption.weight(.semibold))
+					Text(section.title).font(.caption.weight(.semibold)).lineLimit(1)
 					Spacer()
 					Text(count, format: .number).font(.caption).monospacedDigit()
 				}

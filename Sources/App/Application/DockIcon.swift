@@ -2,13 +2,18 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 import AppKit
-import SwiftUI
 
+/** The Dock tile's badge: the standard label, so the system draws it and the
+ accessibility and appearance settings apply without this file knowing them.
+
+ One number stands for everything that wants attention. A conversation counts
+ its unread messages as the badge settings allow, and its highlights always;
+ a highlighted message is also an unread one, so the larger of the two is that
+ conversation's share rather than their sum. */
 enum DockIcon {
 	private static let maximumDisplayedCount: UInt = 9999
 
-	@MainActor private static var cachedHighlightCount = -1
-	@MainActor private static var cachedMessageCount = -1
+	@MainActor private static var cachedCount = -1
 
 	@MainActor static func updateDockIcon() {
 		/* Turning the setting off has to clear whatever is already drawn:
@@ -20,73 +25,35 @@ enum DockIcon {
 
 		guard let chatSession = AppServices.chatSession else { return }
 
-		var highlightCount: UInt = 0
-		var messageCount: UInt = 0
+		var total: UInt = 0
 		for session in chatSession.sessions {
 			for conversation in session.conversationList {
-				if conversation.config.pushNotifications {
-					messageCount += UInt(conversation.dockUnreadCount)
-				}
-				highlightCount += UInt(conversation.nicknameHighlightCount)
+				total += attentionCount(for: conversation)
 			}
 		}
 
-		if messageCount == 0, highlightCount == 0 {
-			drawWithoutCount()
-		} else {
-			draw(withHighlightCount: highlightCount, messageCount: messageCount)
-		}
+		draw(withCount: total)
+	}
+
+	/// What one conversation adds to the badge.
+	@MainActor static func attentionCount(for conversation: Conversation) -> UInt {
+		let messages = conversation.config.pushNotifications ? conversation.dockUnreadCount : 0
+		return UInt(max(messages, conversation.nicknameHighlightCount, 0))
 	}
 
 	@MainActor static func resetCachedCount() {
-		cachedMessageCount = -1
-		cachedHighlightCount = -1
+		cachedCount = -1
 	}
 
 	@MainActor static func drawWithoutCount() {
-		guard cachedHighlightCount != 0 || cachedMessageCount != 0 else { return }
-		cachedMessageCount = 0
-		cachedHighlightCount = 0
-
-		clearTile()
+		draw(withCount: 0)
 	}
 
-	@MainActor static func draw(withHighlightCount highlightCount: UInt, messageCount: UInt) {
-		guard cachedHighlightCount != Int(highlightCount) || cachedMessageCount != Int(messageCount) else {
-			return
-		}
+	@MainActor static func draw(withCount count: UInt) {
+		guard cachedCount != Int(count) else { return }
+		cachedCount = Int(count)
 
-		cachedHighlightCount = Int(highlightCount)
-		cachedMessageCount = Int(messageCount)
-
-		guard highlightCount > 0 || messageCount > 0 else {
-			clearTile()
-			return
-		}
-
-		let dockTile = NSApp.dockTile
-		dockTile.badgeLabel = nil
-		let badgeView = dockTile.contentView as? DockIconBadgeHostingView ?? {
-			let view = DockIconBadgeHostingView(
-				rootView: DockIconBadgeContent(highlightCount: 0, messageCount: 0)
-			)
-			view.frame = NSRect(origin: .zero, size: dockTile.size)
-			dockTile.contentView = view
-			return view
-		}()
-
-		badgeView.rootView = DockIconBadgeContent(
-			highlightCount: highlightCount,
-			messageCount: messageCount
-		)
-		dockTile.display()
-	}
-
-	@MainActor private static func clearTile() {
-		let dockTile = NSApp.dockTile
-		dockTile.badgeLabel = nil
-		dockTile.contentView = nil
-		dockTile.display()
+		NSApp.dockTile.badgeLabel = count == 0 ? nil : badgeString(forCount: count)
 	}
 
 	static func badgeString(forCount count: UInt) -> String {
@@ -96,66 +63,5 @@ enum DockIcon {
 			))
 		}
 		return count.formatted(.number)
-	}
-}
-
-typealias DockIconBadgeHostingView = NSHostingView<DockIconBadgeContent>
-
-/** Two counts on one tile, which `badgeLabel` cannot draw.
-
- Highlights and unread messages are separate things — one names you, the other
- does not — and the standard badge holds a single string. The colours are the
- system's own, so they follow the accessibility settings that change what red
- and green mean. */
-struct DockIconBadgeContent: View {
-	private enum Layout {
-		static let stackSpacing: CGFloat = 1
-		static let topPadding: CGFloat = 1
-		static let badgeHeightRatio: CGFloat = 0.26
-		static let fontSizeRatio: CGFloat = 0.62
-		static let horizontalPaddingRatio: CGFloat = 0.3
-		static let outlineOpacity: Double = 0.9
-		static let outlineWidthRatio: CGFloat = 0.06
-	}
-
-	let highlightCount: UInt
-	let messageCount: UInt
-
-	var body: some View {
-		GeometryReader { geometry in
-			ZStack(alignment: .topTrailing) {
-				if let icon = NSApp.applicationIconImage {
-					Image(nsImage: icon)
-						.resizable()
-						.scaledToFit()
-				}
-
-				VStack(alignment: .trailing, spacing: Layout.stackSpacing) {
-					let height = geometry.size.height * Layout.badgeHeightRatio
-					if highlightCount > 0 {
-						badge(highlightCount, color: Color(nsColor: .systemGreen), height: height)
-					}
-					if messageCount > 0 {
-						badge(messageCount, color: Color(nsColor: .systemRed), height: height)
-					}
-				}
-				.padding(.top, Layout.topPadding)
-			}
-		}
-	}
-
-	private func badge(_ count: UInt, color: Color, height: CGFloat) -> some View {
-		Text(DockIcon.badgeString(forCount: count))
-			.font(.system(size: height * Layout.fontSizeRatio, weight: .bold))
-			.foregroundStyle(.white)
-			.padding(.horizontal, height * Layout.horizontalPaddingRatio)
-			.frame(minWidth: height, minHeight: height)
-			.background(color, in: Capsule())
-			.overlay(
-				Capsule().stroke(
-					.white.opacity(Layout.outlineOpacity),
-					lineWidth: max(1, height * Layout.outlineWidthRatio)
-				)
-			)
 	}
 }

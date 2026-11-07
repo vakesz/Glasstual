@@ -66,7 +66,7 @@ struct ChatHistoryReferenceTests {
 		let message = try #require(Message(line: "@label=\(label) :server \(numeric) me CHATHISTORY :Rejected", on: session))
 		session.processIncomingMessageOnMainActor(message)
 		#expect(session.chatHistory.serverRequests.isEmpty)
-		#expect(pending.timeoutTask == nil)
+		#expect(pending.timeoutTimer == nil)
 		#expect(session.canRetryServerHistory(for: channel))
 		#expect(session.printedLines.count > 0, "The numeric still follows its ordinary presentation path")
 	}
@@ -98,7 +98,7 @@ struct ChatHistoryReferenceTests {
 		}
 
 		#expect(session.chatHistory.serverRequests.isEmpty)
-		#expect(pending.timeoutTask == nil)
+		#expect(pending.timeoutTimer == nil)
 		#expect(session.processedMessages.count == 1)
 	}
 

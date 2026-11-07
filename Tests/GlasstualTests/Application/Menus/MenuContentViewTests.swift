@@ -500,10 +500,10 @@ struct MenuContentViewTests {
 	@Test("A hidden item inside a submenu is dropped too")
 	func hiddenSubmenuItemsAreDropped() {
 		let validator = MenuValidator()
-		validator.hiddenTitles = ["Take Op (-o)"]
+		validator.hiddenTitles = ["Take Operator Status"]
 
 		let parent = menu(["Modes"], validatedBy: validator)
-		parent.item(at: 0)?.submenu = menu(["Give Op (+o)", "Take Op (-o)"], validatedBy: validator)
+		parent.item(at: 0)?.submenu = menu(["Give Operator Status", "Take Operator Status"], validatedBy: validator)
 
 		let entries = MenuItemSnapshot.validating(parent)
 
@@ -511,6 +511,6 @@ struct MenuContentViewTests {
 			Issue.record("The entry should carry a submenu")
 			return
 		}
-		#expect(children.map(\.title) == ["Give Op (+o)"])
+		#expect(children.map(\.title) == ["Give Operator Status"])
 	}
 }

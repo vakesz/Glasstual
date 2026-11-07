@@ -6,10 +6,12 @@ import CocoaExtensions
 import Foundation
 import os
 
-extension Notification.Name {
-	static let conversationConfigWasUpdated = Notification.Name(
-		"Glasstual.conversationConfigWasUpdated"
-	)
+struct ConversationConfigWasUpdated: SubjectMessage {
+	typealias Subject = Conversation
+
+	nonisolated static let name = Notification.Name("Glasstual.conversationConfigWasUpdated")
+
+	let subject: Conversation
 }
 
 class Conversation: ChatItem {
@@ -114,11 +116,25 @@ class Conversation: ChatItem {
 		}
 
 		if fireChangedNotification {
-			NotificationCenter.default.post(
-				name: .conversationConfigWasUpdated,
-				object: self
-			)
+			ConversationConfigWasUpdated(subject: self).post()
 		}
+	}
+
+	/** Puts a channel under the name the server renamed it to
+	 (`draft/channel-rename`).
+
+	 The conversation, its identifier and so its stored history, members and
+	 settings stay as they are: only the name changes, and the stored list is
+	 rewritten so autojoin and restoration use the new one. `updateConfig`
+	 refuses a different name for a channel because there it would mean a
+	 different channel; here the server has said it is the same one. */
+	func applyChannelRename(to newName: String) {
+		guard isChannel, newName.isEmpty == false, newName != config.name else { return }
+
+		associatedSession?.typingSender.remove(in: self)
+		config.name = newName
+		associatedSession?.updateStoredConversationList()
+		ConversationConfigWasUpdated(subject: self).post()
 	}
 
 	var configurationDictionary: [String: PropertyListValue] {
@@ -451,10 +467,6 @@ class Conversation: ChatItem {
 
 	func findMember(_ nickname: String) -> Member? {
 		memberInfo?.findMember(nickname)
-	}
-
-	func sortMembers() {
-		memberInfo?.sortMembers()
 	}
 
 	private var isSelectedConversation: Bool {

@@ -101,30 +101,36 @@ struct SettingsFolderPicker: View {
 
 	var body: some View {
 		LabeledContent {
-			Menu {
-				Button(action: select) {
-					Text(.Settings.logLocationSelectDestination)
-				}
-				Button(action: clear) {
-					Text(clearTitle)
-				}
-				.disabled(canClear == false)
-			} label: {
-				HStack(spacing: 4) {
+			HStack(spacing: UISpacing.regular) {
+				HStack(spacing: UISpacing.tight) {
 					if let folder {
 						Image(nsImage: NSWorkspace.shared.icon(forFile: folder.path))
 							.resizable()
-							.frame(width: 16, height: 16)
+							.frame(width: UIListMetrics.glyphWidth, height: UIListMetrics.glyphWidth)
 							.accessibilityHidden(true)
 						Text(verbatim: folder.lastPathComponent)
+							.lineLimit(1)
+							.truncationMode(.middle)
 					} else {
 						Text(emptyTitle)
+							.foregroundStyle(.secondary)
 					}
 				}
+				.accessibilityElement(children: .ignore)
+				.accessibilityLabel(Text(accessibilityLabel))
+				.accessibilityValue(folder.map { Text(verbatim: $0.path) } ?? Text(emptyTitle))
+				.help(folder.map { Text(verbatim: $0.path) } ?? Text(emptyTitle))
+
+				Button(action: select) {
+					Text(.Settings.logLocationSelectDestination)
+				}
+
+				Button(action: clear) {
+					Text(clearTitle)
+				}
+				.buttonStyle(.borderless)
+				.disabled(canClear == false)
 			}
-			.accessibilityLabel(Text(accessibilityLabel))
-			.accessibilityValue(folder.map { Text(verbatim: $0.path) } ?? Text(emptyTitle))
-			.help(folder.map { Text(verbatim: $0.path) } ?? Text(emptyTitle))
 		} label: {
 			Text(label)
 		}

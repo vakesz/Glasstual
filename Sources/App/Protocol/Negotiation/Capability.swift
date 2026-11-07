@@ -110,4 +110,10 @@ nonisolated struct CapabilitySet: OptionSet, Hashable, Sendable {
 	static let inviteNotify = Self(rawValue: 1 << 32)
 	static let extendedMonitor = Self(rawValue: 1 << 33)
 	static let preAway = Self(rawValue: 1 << 34)
+	static let noImplicitNames = Self(rawValue: 1 << 35)
+	static let messageRedaction = Self(rawValue: 1 << 36)
+	static let multiline = Self(rawValue: 1 << 37)
+	static let channelRename = Self(rawValue: 1 << 38)
+	static let bouncerNetworks = Self(rawValue: 1 << 39)
+	static let bouncerNetworksNotify = Self(rawValue: 1 << 40)
 }

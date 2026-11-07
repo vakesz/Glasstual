@@ -18,24 +18,19 @@ struct ConnectionInboundDeliveryTests {
 		                            makeService: { NSXPCConnection(serviceName: "test.glasstual.unavailable-service") })
 		session.socket = connection
 		connection.open()
-		let deadline = ContinuousClock.now + .seconds(5)
-		while session.socket != nil, ContinuousClock.now < deadline {
-			try await Task.sleep(for: .milliseconds(10))
-		}
+		try await Eventually.until("the failed connection to be released") { session.socket == nil }
 		#expect(session.socket == nil)
 		#expect(!session.isConnecting)
 	}
 
 	@Test("TLS publishes sidebar and title before 001, even for unknown cipher descriptions")
-	func securityCallbackRefreshesBeforeRegistration() async {
+	func securityCallbackRefreshesBeforeRegistration() async throws {
 		let (session, connection) = connectedSession()
 		connection.callbackReceiver.didSecureConnection(
 			withProtocolType: tlsProtocolVersionUnknown,
 			cipherSuite: tlsCipherSuiteUnknown
 		)
-		for _ in 0 ..< 100 where session.recordedOutput.reloadedItems.isEmpty {
-			await Task.yield()
-		}
+		try await Eventually.until("the sidebar reload") { !session.recordedOutput.reloadedItems.isEmpty }
 		#expect(connection.isSecured)
 		#expect(session.isLoggedIn == false)
 		#expect(session.recordedOutput.reloadedItems.contains { $0 === session })
@@ -46,7 +41,7 @@ struct ConnectionInboundDeliveryTests {
 	func finalErrorBeforeEOF() async throws {
 		let (session, connection) = connectedSession()
 		let receiver = connection.callbackReceiver
-		try await observe(.serverSessionDidDisconnect, from: session) {
+		try await observe(ServerSessionDidDisconnect.self, from: session) {
 			receiver.didReceive([Data("ERROR :Final rejection".utf8)]) {}
 			receiver.didCloseReadStream()
 			receiver.didDisconnect(withError: nil)
@@ -150,13 +145,7 @@ struct ConnectionInboundDeliveryTests {
 			notePrinted.finish()
 		}
 		let (acknowledgements, acknowledge) = AsyncStream<Void>.makeStream()
-		let deadline = Task {
-			try? await Task.sleep(for: .seconds(5))
-			notePrinted.finish()
-			acknowledge.finish()
-		}
 		defer {
-			deadline.cancel()
 			if let pending {
 				admission.finish(pending)
 			}
@@ -170,17 +159,22 @@ struct ConnectionInboundDeliveryTests {
 			acknowledge.yield()
 			acknowledge.finish()
 		}
-		for await _ in printed {}
-		let identifier = try #require(pending)
-		#expect(list.presentationRevision == revision + 1)
-		#expect(channel.findMember("alice") != nil)
-		#expect(channel.findMember("bob") == nil)
-		admission.finish(identifier)
-		var didAcknowledge = false
-		for await _ in acknowledgements {
-			didAcknowledge = true
-		}
-		try #require(didAcknowledge, "The read was not acknowledged")
+		try await Eventually.withDeadline(onExpiry: {
+			notePrinted.finish()
+			acknowledge.finish()
+		}, perform: {
+			for await _ in printed {}
+			let identifier = try #require(pending)
+			#expect(list.presentationRevision == revision + 1)
+			#expect(channel.findMember("alice") != nil)
+			#expect(channel.findMember("bob") == nil)
+			admission.finish(identifier)
+			var didAcknowledge = false
+			for await _ in acknowledgements {
+				didAcknowledge = true
+			}
+			try #require(didAcknowledge, "The read was not acknowledged")
+		})
 		#expect(list.presentationRevision == revision + 2)
 		#expect(channel.findMember("bob") != nil)
 	}
@@ -243,7 +237,7 @@ struct ConnectionInboundDeliveryTests {
 		config.serverPort = 6667
 		let plain = Connection(config: config, onSession: session)
 		session.socket = plain
-		try await observe(.serverSessionDidConnect, from: session) {
+		try await observe(ServerSessionDidConnect.self, from: session) {
 			plain.callbackReceiver.didConnect(toHost: origin.serverAddress)
 		}
 		try #require(plain.isConnected)
@@ -266,7 +260,7 @@ struct ConnectionInboundDeliveryTests {
 		#expect(session.server?.uniqueIdentifier == origin.uniqueIdentifier)
 		let secured = Connection(config: endpoint, onSession: session)
 		session.socket = secured
-		try await observe(.serverSessionDidConnect, from: session) {
+		try await observe(ServerSessionDidConnect.self, from: session) {
 			secured.callbackReceiver.didConnect(toHost: endpoint.serverAddress)
 		}
 		let passwords = session.sentLines.compactMap { $0 as? String }.filter { $0.hasPrefix("PASS ") }
@@ -292,7 +286,7 @@ struct ConnectionInboundDeliveryTests {
 		let origin = ServerEndpoint(serverAddress: "origin.invalid", pendingServerPassword: .set("do-not-forward"))
 		session.config.serverList = [origin]
 		session.server = origin
-		try await observe(.serverSessionDidConnect, from: session) {
+		try await observe(ServerSessionDidConnect.self, from: session) {
 			socket.callbackReceiver.didConnect(toHost: origin.serverAddress)
 		}
 		try #require(socket.isConnected)
@@ -311,7 +305,7 @@ struct ConnectionInboundDeliveryTests {
 		#expect(session.server == nil)
 		let redirected = Connection(config: endpoint, onSession: session)
 		session.socket = redirected
-		try await observe(.serverSessionDidConnect, from: session) {
+		try await observe(ServerSessionDidConnect.self, from: session) {
 			redirected.callbackReceiver.didConnect(toHost: endpoint.serverAddress)
 		}
 		#expect(session.sentLines.compactMap { $0 as? String }.contains { $0.hasPrefix("PASS ") } == false)
@@ -332,7 +326,7 @@ struct ConnectionInboundDeliveryTests {
 		config.serverPort = 6667
 		let plain = Connection(config: config, onSession: session)
 		session.socket = plain
-		try await observe(.serverSessionDidConnect, from: session) {
+		try await observe(ServerSessionDidConnect.self, from: session) {
 			plain.callbackReceiver.didConnect(toHost: origin.serverAddress)
 		}
 		session.sentCapabilityCommands.removeAllObjects()
@@ -356,7 +350,7 @@ struct ConnectionInboundDeliveryTests {
 		config.connectionPrefersSecuredConnection = secured
 		let socket = Connection(config: config, onSession: session)
 		session.socket = socket
-		try await observe(.serverSessionDidConnect, from: session) {
+		try await observe(ServerSessionDidConnect.self, from: session) {
 			socket.callbackReceiver.didConnect(toHost: origin.serverAddress)
 		}
 
@@ -433,31 +427,27 @@ struct ConnectionInboundDeliveryTests {
 	}
 
 	/// Register before injecting callbacks, so even synchronous completion is observed.
-	private func observe(
-		_ name: Notification.Name, from session: ServerSession, performing action: () -> Void
+	private func observe<Message: SubjectMessage>(
+		_ messageType: Message.Type, from session: Message.Subject, performing action: () -> Void
 	) async throws {
 		let (events, continuation) = AsyncStream<Void>.makeStream(bufferingPolicy: .bufferingOldest(1))
-		let observer = NotificationCenter.default.addObserver(forName: name, object: session, queue: nil) { _ in
+		let observer = NotificationCenter.default.addObserver(of: session, for: messageType) { _ in
 			continuation.yield()
 			continuation.finish()
 		}
-		let deadline = Task {
-			try? await Task.sleep(for: .seconds(30))
-			guard !Task.isCancelled else { return }
-			continuation.finish()
-		}
 		defer {
-			deadline.cancel()
 			NotificationCenter.default.removeObserver(observer)
 			continuation.finish()
 		}
 		action()
 		var observed = false
-		for await _ in events {
-			observed = true
-			break
-		}
-		try #require(observed, "Connection lifecycle event did not arrive before the deadline: \(name.rawValue)")
+		await Eventually.withDeadline(.seconds(30), onExpiry: { continuation.finish() }, perform: {
+			for await _ in events {
+				observed = true
+				break
+			}
+		})
+		try #require(observed, "Connection lifecycle event did not arrive before the deadline: \(Message.name.rawValue)")
 	}
 
 	/// The connection drains the host's callbacks through one ordered stream, so
@@ -502,11 +492,11 @@ struct ConnectionInboundDeliveryTests {
 		session.autoConnect(withDelay: 20, afterWakeUp: false)
 		session.startReconnectTimer()
 		let scheduled = session.pendingConnectionTask
-		let rejoin = Task {}
+		let rejoin = SessionTimer.once(after: 60) {}
 		session.rejoinTasks["#test"] = rejoin
 		session.isTerminating = true
 		#expect(scheduled?.isCancelled == true)
-		#expect(rejoin.isCancelled)
+		#expect(rejoin.isActive == false)
 		#expect(session.rejoinTasks.isEmpty)
 		session.autoConnect(withDelay: 20, afterWakeUp: false)
 		session.startReconnectTimer()

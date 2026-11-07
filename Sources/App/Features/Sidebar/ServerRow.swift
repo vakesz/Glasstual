@@ -25,7 +25,24 @@ struct ServerRow: Identifiable, Equatable {
 	/// what is closed. A filter is the one thing that takes rows out of this.
 	let conversations: [ConversationRow]
 	var isFavoritesGroup = false
+	/// The bouncer networks nested under this connection, each a row of its own.
+	var networks: [ServerRow] = []
+	/// What the bouncer says of a network connection, when it is not simply up.
+	var bouncerStatus: BouncerNetworkStatus?
 	var identityStyle = ServerIdentityStyle()
+	/// The icon the network advertises, drawn in place of the identity glyph
+	/// once it has been fetched. Decorative: the row's label is its name.
+	var networkIcon: NSImage?
+}
+
+/// How a bouncer network is doing when that is worth a line under its name.
+enum BouncerNetworkStatus: Equatable {
+	case connecting
+	case disconnected
+	/// The bouncer could not reach the upstream server; the reason is its own text.
+	case failed(String)
+	/// The bouncer no longer lists the network; its history is still readable.
+	case removed
 }
 
 /// One conversation in the sidebar.
@@ -67,5 +84,32 @@ struct ConversationRow: Identifiable, Equatable {
 
 	var showsUnreadBadge: Bool {
 		showsUnreadCount && unreadCount > 0
+	}
+}
+
+extension ConversationRow.Kind {
+	/** The glyph that names this kind of conversation, wherever one is listed.
+
+	 The sidebar leaves a channel's glyph out, because a channel is what most
+	 rows are and the pin already marks the ones that matter; a list that holds
+	 channels beside people, as the switcher does, needs it drawn. */
+	var glyphSymbolName: String {
+		switch self {
+		case .channel: "number"
+		case .directChat: "bubble.left.and.bubble.right.fill"
+		case .direct, .console: "person.fill"
+		}
+	}
+
+	init(_ conversation: Conversation) {
+		self = if conversation.isChannel {
+			.channel
+		} else if conversation.isDirectChat {
+			.directChat
+		} else if conversation.isConsole {
+			.console
+		} else {
+			.direct
+		}
 	}
 }

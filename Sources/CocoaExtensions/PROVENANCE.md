@@ -20,11 +20,11 @@ String Catalog attribution is in
 | `FoundationExtensions.swift` | Foundation and file-system extensions. |
 | `StringExtensions.swift` | String, character-set and address utilities. |
 | `CommandTokenizer.swift` | Command token parsing. |
-| `KeychainStore.swift` | Generic-password storage in the process's entitled access group. |
+| `KeychainStore.swift` | Generic-password storage in the process's entitled access group, including the SASL ECDSA signing key item. |
 | `Logging.swift` | Framework log identifier. |
 | `PortMapper.swift` | Port mapping through DNS-SD. |
 | `RegularExpression.swift` | Cached expressions with bounded matching. |
-| `SecureTransportSupport.swift` | TLS cipher policy, client-certificate chains, names and error descriptions. |
+| `SecureTransport.swift` | TLS cipher policy, client-certificate chains, names and error descriptions. |
 | `SystemSleepState.swift` | System sleep observation. |
 | `TrustPanelPresenter.swift` | Certificate trust sheet. |
 
@@ -40,7 +40,7 @@ The following files are maintained by this project:
 
 These notices appear in full in the corresponding source files:
 
-- `SecureTransportSupport.swift` includes cipher-suite naming derived from
+- `SecureTransport.swift` includes cipher-suite naming derived from
   Chromium's `ssl_cipher_suite_names.cc`, copyright 2013 The Chromium Authors,
   under the 3-clause BSD license.
 - `AppKitExtensions.swift`, `DataExtensions.swift` and

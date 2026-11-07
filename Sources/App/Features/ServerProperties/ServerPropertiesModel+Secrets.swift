@@ -35,7 +35,11 @@ extension ServerPropertiesModel {
 	}
 
 	private var secretKeychainItems: [KeychainItem] {
-		var items = [config.nicknamePasswordKeychainItem, config.proxyPasswordKeychainItem]
+		var items = [
+			config.nicknamePasswordKeychainItem,
+			config.proxyPasswordKeychainItem,
+			config.saslSigningKeyKeychainItem,
+		]
 
 		if let primaryServer {
 			items.append(primaryServer.keychainItem)
@@ -52,16 +56,16 @@ extension ServerPropertiesModel {
 		 emptied one included, which is why this asks what was edited rather
 		 than what is empty. */
 		if editedSecretFields.contains(.serverPassword) == false {
-			serverPasswordText = secret(
+			secretTexts[.serverPassword] = secret(
 				primaryServer?.pendingServerPassword ?? .unchanged,
 				from: primaryServer?.keychainItem
 			)
 		}
 		if editedSecretFields.contains(.nicknamePassword) == false {
-			nicknamePasswordText = secret(config.pendingNicknamePassword, from: config.nicknamePasswordKeychainItem)
+			secretTexts[.nicknamePassword] = secret(config.pendingNicknamePassword, from: config.nicknamePasswordKeychainItem)
 		}
 		if editedSecretFields.contains(.proxyPassword) == false {
-			proxyPasswordText = secret(config.pendingProxyPassword, from: config.proxyPasswordKeychainItem)
+			secretTexts[.proxyPassword] = secret(config.pendingProxyPassword, from: config.proxyPasswordKeychainItem)
 		}
 	}
 

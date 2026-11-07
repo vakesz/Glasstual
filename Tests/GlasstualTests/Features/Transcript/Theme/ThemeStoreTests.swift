@@ -99,9 +99,8 @@ struct ThemeStoreTests {
 		let store = source.makeStore(fixture)
 		let announcements = Mutex(0)
 		let token = NotificationCenter.default.addObserver(
-			forName: .themeAppearanceChanged,
-			object: store,
-			queue: nil
+			of: store,
+			for: ThemeAppearanceChanged.self
 		) { _ in
 			announcements.withLock { $0 += 1 }
 		}

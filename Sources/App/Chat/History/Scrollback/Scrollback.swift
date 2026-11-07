@@ -37,7 +37,7 @@ final class Scrollback {
 	// MARK: - Process life cycle
 
 	func resetMaximumLineCount() {
-		Task { await session.applyMaximumLineCount() }
+		session.enqueueMaximumLineCountUpdate()
 	}
 
 	func prepareForApplicationTermination(
@@ -74,6 +74,7 @@ final class Scrollback {
 	func writeNewEntry(_ entry: ScrollbackEntry, for chatLine: ChatLine) {
 		let viewIdentifier = entry.viewIdentifier
 		let indexed = duplicates.indexChatLine(chatLine, forView: viewIdentifier)
+		defer { applyPendingRedaction(to: chatLine, inView: viewIdentifier) }
 		session.write(entry) { [weak self] outcome in
 			guard let self else { return }
 			if case .accepted = outcome {
@@ -103,6 +104,55 @@ final class Scrollback {
 			case let .failed(reason): recovery.storageFailure = reason
 			}
 		}
+	}
+
+	/** Overwrites the stored line a redaction names, so the deleted text is
+	 gone from history and not only from the screen.
+
+	 A redaction can arrive before the line it names has been stored, as a
+	 history replay or a line still rendering. The identifier is then kept and
+	 applied the moment such a line is written, so the text is never stored
+	 after it was deleted. */
+	func redactMessage(withIdentifier messageIdentifier: String, inView viewIdentifier: String) {
+		guard messageIdentifier.isEmpty == false else { return }
+		session.redact(messageIdentifier: messageIdentifier, inView: viewIdentifier) { [weak self] outcome in
+			guard let self else { return }
+			switch outcome {
+			case let .redacted(line):
+				duplicates.replaceChatLine(line, forView: viewIdentifier)
+				pendingRedactions[viewIdentifier]?.remove(MessageIdentifierKey(messageIdentifier))
+			case .missing:
+				rememberPendingRedaction(messageIdentifier, inView: viewIdentifier)
+			case .unavailable:
+				recovery.storageFailure = PromptStrings.Logging.scrollbackFailureBody
+			case let .failed(reason):
+				recovery.storageFailure = reason
+			}
+		}
+	}
+
+	/// Message identifiers redacted before their line was stored, per view.
+	/// Bounded: an identifier is dropped when it is applied, and the oldest
+	/// are dropped first beyond the ceiling.
+	private var pendingRedactions: [String: Set<MessageIdentifierKey>] = [:]
+	private static let pendingRedactionLimit = 512
+
+	private func rememberPendingRedaction(_ messageIdentifier: String, inView viewIdentifier: String) {
+		var pending = pendingRedactions[viewIdentifier] ?? []
+		if pending.count >= Self.pendingRedactionLimit, let dropped = pending.first {
+			pending.remove(dropped)
+		}
+		pending.insert(MessageIdentifierKey(messageIdentifier))
+		pendingRedactions[viewIdentifier] = pending
+	}
+
+	/// Whether a line about to be stored was already redacted, in which case
+	/// the redaction is queued behind its write.
+	private func applyPendingRedaction(to chatLine: ChatLine, inView viewIdentifier: String) {
+		guard let identifier = chatLine.messageIdentifier, identifier.isEmpty == false,
+		      pendingRedactions[viewIdentifier]?.contains(MessageIdentifierKey(identifier)) == true
+		else { return }
+		redactMessage(withIdentifier: identifier, inView: viewIdentifier)
 	}
 
 	/// Drops a view's history. `forget` also drops what the store remembers
@@ -160,6 +210,11 @@ final class Scrollback {
 
 	func fetchOutcome(_ request: ScrollbackFetchRequest) async -> ScrollbackFetchOutcome {
 		await session.fetchOutcome(request)
+	}
+
+	/// Searches the stored text of the views the query names.
+	func search(_ query: ScrollbackSearchQuery) async -> ScrollbackSearchOutcome {
+		await session.search(query)
 	}
 }
 

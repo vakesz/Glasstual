@@ -59,4 +59,68 @@ struct SASLPolicyTests {
 
 		#expect(shortChunks == ["aGVsbG8="])
 	}
+
+	@Test("A configured key is tried after EXTERNAL and before either password mechanism")
+	func signingKeyComesAheadOfPasswords() {
+		#expect(
+			SASLPolicy.supportedMechanisms(
+				hasClientCertificate: true,
+				externalMechanismDisabled: false,
+				hasPassword: true,
+				hasSigningKey: true,
+				preferredMechanism: nil
+			) == ["EXTERNAL", "ECDSA-NIST256P-CHALLENGE", "SCRAM-SHA-256", "PLAIN"]
+		)
+		#expect(
+			SASLPolicy.supportedMechanisms(
+				hasClientCertificate: false,
+				externalMechanismDisabled: false,
+				hasPassword: true,
+				hasSigningKey: true,
+				sendsPasswordInClear: false,
+				preferredMechanism: nil
+			) == ["ECDSA-NIST256P-CHALLENGE", "SCRAM-SHA-256"]
+		)
+	}
+
+	@Test("A key alone is enough to sign in, and a stated preference still wins")
+	func signingKeyNeedsNoPassword() {
+		#expect(
+			SASLPolicy.supportedMechanisms(
+				hasClientCertificate: false,
+				externalMechanismDisabled: false,
+				hasPassword: false,
+				hasSigningKey: true,
+				preferredMechanism: nil
+			) == ["ECDSA-NIST256P-CHALLENGE"]
+		)
+		#expect(
+			SASLPolicy.supportedMechanisms(
+				hasClientCertificate: false,
+				externalMechanismDisabled: false,
+				hasPassword: true,
+				hasSigningKey: true,
+				preferredMechanism: "plain"
+			) == ["PLAIN", "ECDSA-NIST256P-CHALLENGE", "SCRAM-SHA-256"]
+		)
+	}
+
+	@Test("A refused key falls back to the next mechanism the server offers")
+	func refusedKeyFallsBack() {
+		let supported = ["ECDSA-NIST256P-CHALLENGE", "SCRAM-SHA-256", "PLAIN"]
+
+		#expect(
+			SASLPolicy.nextMechanism(from: supported, offered: [], tried: []) == "ECDSA-NIST256P-CHALLENGE"
+		)
+		#expect(
+			SASLPolicy.nextMechanism(
+				from: supported,
+				offered: ["ecdsa-nist256p-challenge", "plain"],
+				tried: ["ECDSA-NIST256P-CHALLENGE"]
+			) == "PLAIN"
+		)
+		#expect(
+			SASLPolicy.nextMechanism(from: supported, offered: ["PLAIN"], tried: []) == "PLAIN"
+		)
+	}
 }

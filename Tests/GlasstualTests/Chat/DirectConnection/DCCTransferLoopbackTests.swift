@@ -307,6 +307,56 @@ struct DCCTransferLoopbackTests {
 		#expect(await events.value.last.flatMap(TransferFixture.failure) == .connectTimeout)
 	}
 
+	@Test("A plain listener's window is bounded and no shorter than a minute")
+	func listeningWindowIsBounded() async throws {
+		let directory = try TransferFixture.makeDirectory()
+		defer { TransferFixture.remove(directory) }
+		let source = directory.appendingPathComponent("source")
+		try Data([1]).write(to: source)
+		let file = try await DCCTransferFile.open(url: source, receiving: false)
+		let window = DCCTransfer.Config.defaultAcceptanceTimeout
+
+		#expect(window >= .seconds(60))
+		#expect(window <= .seconds(120))
+		#expect(TransferFixture.listeningSender(file: file, fileSize: 1).acceptanceTimeout == window)
+		await file.close()
+	}
+
+	@Test("A listener that expects one address takes nothing from another", .timeLimit(.minutes(1)))
+	func listenerRefusesAnUnexpectedPeer() async throws {
+		let directory = try TransferFixture.makeDirectory()
+		defer { TransferFixture.remove(directory) }
+		let source = directory.appendingPathComponent("source")
+		let destination = directory.appendingPathComponent("destination")
+		try Data([1]).write(to: source)
+		let sourceFile = try await DCCTransferFile.open(url: source, receiving: false)
+		let destinationFile = try await DCCTransferFile.open(url: destination, receiving: true)
+		var config = TransferFixture.listeningReceiver(file: destinationFile, fileSize: 1)
+		// Documentation range: never the loopback address the peer dials from.
+		config.expectedPeerAddress = "192.0.2.7"
+		config.acceptanceTimeout = .seconds(2)
+		let listener = DCCTransfer(config: config)
+		var local: [DCCTransferEvent] = []
+		var peerEvents: Task<[DCCTransferEvent], Never>?
+		await listener.start()
+		for await event in listener.events {
+			local.append(event)
+			if case let .listening(port) = event {
+				let peer = DCCTransfer(config: TransferFixture.diallingSender(
+					port: port, file: sourceFile, fileSize: 1
+				))
+				peerEvents = TransferFixture.collectEvents(from: peer)
+				await peer.start()
+			}
+		}
+		_ = await peerEvents?.value
+		let failure = try #require(local.last.flatMap(TransferFixture.failure))
+		#expect([DCCTransferError.rejectedPeerAddress, .connectTimeout].contains(failure))
+		#expect(try await destinationFile.size() == 0)
+		await sourceFile.close()
+		await destinationFile.close()
+	}
+
 	/// A connected peer that stops sending has stalled; it was reported as never
 	/// having answered the connection attempt, which it had.
 	@Test("An idle connected sender cannot hold a receiver forever, and is reported as stalled", .timeLimit(.minutes(1)))

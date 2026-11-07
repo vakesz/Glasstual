@@ -109,6 +109,11 @@ struct StylePane: View {
 
 		Section {
 			colorGrid
+			SettingsToggle(
+				title: .Settings.styleThemesWindowChrome,
+				note: .Settings.styleThemesWindowChromeNote,
+				isOn: model.settings.binding(for: SettingsKeys.Appearance.themesWindowChrome)
+			)
 		} header: {
 			Text(.TranscriptTheme.colors)
 		} footer: {

@@ -23,6 +23,22 @@ nonisolated enum IRCCaseFolding {
 			return string.lowercased().precomposedStringWithCanonicalMapping
 		}
 
+		/* Names are overwhelmingly ASCII: fold their bytes in place and build
+		 the string once, or hand the original back when nothing changes. */
+		var bytes = Array(string.utf8)
+		if bytes.allSatisfy({ $0 < 0x80 }) {
+			var changed = false
+			for index in bytes.indices {
+				let folded = asciiFolded(bytes[index], under: caseMapping)
+				if folded != bytes[index] {
+					bytes[index] = folded
+					changed = true
+				}
+			}
+			guard changed else { return string }
+			return String(bytes: bytes, encoding: .utf8) ?? string
+		}
+
 		let scalars = string.unicodeScalars.map { scalar -> UnicodeScalar in
 			let value = scalar.value
 
@@ -44,5 +60,24 @@ nonisolated enum IRCCaseFolding {
 		}
 
 		return String(String.UnicodeScalarView(scalars))
+	}
+
+	/// One ASCII byte under `.ascii`, `.strictRFC1459` or `.rfc1459`.
+	private static func asciiFolded(_ byte: UInt8, under caseMapping: ISupportCaseMapping) -> UInt8 {
+		if byte >= 65, byte <= 90 {
+			return byte + 32
+		}
+
+		guard caseMapping != .ascii else {
+			return byte
+		}
+
+		switch byte {
+		case UInt8(ascii: "["): return UInt8(ascii: "{")
+		case UInt8(ascii: "]"): return UInt8(ascii: "}")
+		case UInt8(ascii: "\\"): return UInt8(ascii: "|")
+		case UInt8(ascii: "~") where caseMapping == .rfc1459: return UInt8(ascii: "^")
+		default: return byte
+		}
 	}
 }

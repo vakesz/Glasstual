@@ -4,22 +4,6 @@
 
 import Foundation
 
-/** Where a file-log operation is carried out.
-
- A value holding one closure rather than a protocol: the only thing that varies
- is which actor is behind it, and the one production actor is
- ``FileLogSink``. */
-nonisolated struct FileLogSinkPort: Sendable {
-	let process: @Sendable (FileLogOperation) async -> FileLogResult
-
-	/// The real transcript files on disk.
-	static func fileSystem() -> Self {
-		let sink = FileLogSink()
-
-		return Self { await sink.process($0) }
-	}
-}
-
 /// One consumer, not one Task per write. Awaiting even a reentrant test sink
 /// cannot let the next command overtake the current one.
 @MainActor
@@ -32,6 +16,7 @@ final class FileLogCommands {
 	private let continuation: AsyncStream<Command>.Continuation
 	private var idleSweep: SessionTimer?
 	private var finished = false
+	private var flushWaiters: [UUID: CheckedContinuation<Bool, Never>] = [:]
 
 	/// `reportNoSpace` is how the disk filling up is told to whoever presents it;
 	/// a stream built without one simply drops the lines it cannot write.
@@ -83,11 +68,35 @@ final class FileLogCommands {
 	}
 
 	/// Reports all failures since this stream was created, not merely fsync errors.
+	/// A cancelled caller or a stream that no longer takes commands answers `false`.
 	func flush() async -> Bool {
-		guard !finished else { return false }
-		return await withCheckedContinuation { barrier in
-			continuation.yield(Command(operation: .flush, completion: { barrier.resume(returning: $0) }))
+		guard !finished, Task.isCancelled == false else { return false }
+		let identifier = UUID()
+		return await withTaskCancellationHandler {
+			await withCheckedContinuation { barrier in
+				flushWaiters[identifier] = barrier
+				/* `onCancel` hops back to the main actor, so it can run before the
+				 waiter is stored. Storing it first and then reading the
+				 cancellation means one of the two always resumes it. */
+				guard Task.isCancelled == false else {
+					finishFlush(identifier, succeeded: false)
+					return
+				}
+				let result = continuation.yield(Command(operation: .flush, completion: { [weak self] succeeded in
+					self?.finishFlush(identifier, succeeded: succeeded)
+				}))
+				if case .terminated = result {
+					finishFlush(identifier, succeeded: false)
+				}
+			}
+		} onCancel: {
+			Task { await self.finishFlush(identifier, succeeded: false) }
 		}
+	}
+
+	/// Resumes a waiter once; whichever of the stream and a cancellation comes second finds nothing.
+	private func finishFlush(_ identifier: UUID, succeeded: Bool) {
+		flushWaiters.removeValue(forKey: identifier)?.resume(returning: succeeded)
 	}
 
 	func finish(completion: @escaping @MainActor @Sendable (Bool) -> Void) {

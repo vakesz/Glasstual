@@ -219,6 +219,15 @@ extension FileTransfer {
 			return
 		}
 
+		/* A reverse DCC names the peer in its offer, and that address is the
+		 only thing that tells the peer from a stranger. Listening without one
+		 would take the first connector, so it is refused instead. */
+		guard isSender || hostAddress.isEmpty == false else {
+			fileTransferLogger.error("Reverse DCC offer named no address to expect a connection from")
+			close(with: .connectionUnavailable)
+			return
+		}
+
 		guard let file = prepareTransferFile() else { return }
 
 		startTransfer(with: transferConfig(
@@ -247,7 +256,9 @@ extension FileTransfer {
 
 	 A reverse DCC names the peer in its own offer, so that address is the
 	 answer. A plain `DCC SEND` negotiates none — we listen, and the peer
-	 announces itself by arriving — and there is nothing to compare against.
+	 announces itself by arriving — and there is nothing to compare against,
+	 which is why the listener closes after its first connection and why the
+	 reverse DCC setting exists.
 
 	 The peer's hostmask is not that answer, however literal it looks. The
 	 address the server publishes is the one the peer reached *the server*
@@ -358,6 +369,10 @@ extension FileTransfer {
 					token: transferToken
 				)
 			} else {
+				/* A plain `DCC SEND` has no token to carry: the receiver dials
+				 the port and nothing in that connection says who it is. The
+				 listener takes one connection and closes, within a bounded
+				 window, and a reverse offer is the setting that binds a token. */
 				session.sendFile(
 					peerNickname,
 					port: hostPort,

@@ -99,7 +99,7 @@ struct ServerSessionAutojoinIdentificationTests {
 		let identifier = session.startup.identifier
 		session.quit(withComment: "bye")
 		defer { session.cancelDelayedDisconnect(); session.stopAllTimers() }
-		#expect(session.startup.authenticationTask == nil)
+		#expect(session.startup.authenticationTimer == nil)
 		session.authenticationDeadlineExpired(for: identifier)
 		#expect(joinLines(of: session).isEmpty)
 	}
@@ -123,12 +123,12 @@ struct ServerSessionAutojoinIdentificationTests {
 		let session = try registeredIdentificationSession()
 		defer { session.stopAllTimers(); session.cancelPendingSessionTasks() }
 		let identifier = session.startup.identifier
-		let unattendedDeadline = try #require(session.startup.authenticationTask)
+		let unattendedDeadline = try #require(session.startup.authenticationTimer)
 		#expect(session.startup.authentication == .waiting)
 		session.noteNickServIdentificationWritten()
-		let writeDeadline = try #require(session.startup.authenticationTask)
-		#expect(unattendedDeadline.isCancelled)
-		#expect(writeDeadline.isCancelled == false)
+		let writeDeadline = try #require(session.startup.authenticationTimer)
+		#expect(unattendedDeadline.isActive == false)
+		#expect(writeDeadline.isActive)
 		#expect(joinLines(of: session).isEmpty)
 		try receive(":NickServ!NickServ@services. NOTICE swift-user :Invalid password", on: session)
 		#expect(joinLines(of: session).isEmpty)
@@ -136,7 +136,7 @@ struct ServerSessionAutojoinIdentificationTests {
 		session.authenticationDeadlineExpired(for: identifier)
 		try receive(Self.identifiedNotice, on: session)
 		#expect(joinLines(of: session).count == 1)
-		#expect(session.startup.authenticationTask == nil)
+		#expect(session.startup.authenticationTimer == nil)
 	}
 
 	@Test("Cancelling startup makes old deadlines harmless")

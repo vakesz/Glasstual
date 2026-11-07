@@ -20,6 +20,11 @@ extension ChatSettings {
 		snapshot.rejoinOnKick = stores[SettingsKeys.Connection.rejoinOnKick]
 		snapshot.disconnectOnSleep = stores[SettingsKeys.Connection.disconnectOnSleep]
 		snapshot.awayOnScreenSleep = stores[SettingsKeys.Connection.awayOnScreenSleep]
+		snapshot.awayOnIdle = stores[SettingsKeys.Connection.awayOnIdle]
+		snapshot.idleAwayMinutes = IdleAwayDecision.clampedMinutes(
+			stores[SettingsKeys.Connection.idleAwayMinutes]
+		)
+		snapshot.idleAwayMessage = stores[SettingsKeys.Connection.idleAwayMessage]
 		snapshot.enableEchoMessageCapability = stores[SettingsKeys.Connection.echoMessageCapability]
 		snapshot.requestChatHistory = stores[SettingsKeys.Connection.requestChatHistory]
 		snapshot.synchronizeReadMarkers = stores[SettingsKeys.Connection.synchronizeReadMarkers]

@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 import Foundation
+import Synchronization
 
 /** A nickname written the way the theme's nickname format asks for.
 
@@ -23,50 +24,131 @@ nonisolated enum NicknameFormat {
 	/// setting, so it needs a bound rather than trust.
 	private static let maximumPaddingWidth = 256
 
-	static func apply(_ nickname: String, modeSymbol: String, format: String) -> String {
-		let scanner = Scanner(string: format)
-		scanner.charactersToBeSkipped = nil
+	/// One piece of a parsed format.
+	private enum Token: Sendable {
+		case literal(String)
+		/// `width` is signed and already clamped to `maximumPaddingWidth`.
+		case substitution(width: Int, kind: Kind)
+	}
 
-		var output = ""
+	private enum Kind: Sendable {
+		case modeSymbol
+		case nickname
+		case percent
+	}
 
-		while scanner.isAtEnd == false {
-			if let literal = scanner.scanUpToString("%") {
-				output += literal
+	/// The last format parsed. Every row of a transcript asks for the same
+	/// format, so one entry is the whole working set.
+	private static let parsedCache = Mutex<(format: String, tokens: [Token])?>(nil)
+
+	private static func tokens(for format: String) -> [Token] {
+		if let cached = parsedCache.withLock({ $0 }), cached.format == format {
+			return cached.tokens
+		}
+		let tokens = parse(format)
+		parsedCache.withLock { $0 = (format, tokens) }
+		return tokens
+	}
+
+	/// Reads the format the way a `Scanner` with no skipped characters does: a
+	/// `%`, an optional signed decimal width, then `@`, `n` or `%`. Anything
+	/// else after the width leaves the width consumed and the next character to
+	/// read as literal text.
+	private static func parse(_ format: String) -> [Token] {
+		let bytes = Array(format.utf8)
+		var tokens: [Token] = []
+		var literalStart = 0
+		var index = 0
+		let percent = UInt8(ascii: "%")
+
+		func flushLiteral(upTo end: Int) {
+			if end > literalStart {
+				tokens.append(.literal(String(bytes: bytes[literalStart ..< end], encoding: .utf8) ?? ""))
+			}
+		}
+
+		while index < bytes.count {
+			guard bytes[index] == percent else {
+				index += 1
+				continue
 			}
 
-			guard scanner.scanString("%") != nil else {
-				break
+			flushLiteral(upTo: index)
+			index += 1
+
+			var cursor = index
+			var negative = false
+			if cursor < bytes.count, bytes[cursor] == UInt8(ascii: "-") || bytes[cursor] == UInt8(ascii: "+") {
+				negative = bytes[cursor] == UInt8(ascii: "-")
+				cursor += 1
+			}
+			var magnitude = 0
+			var digitCount = 0
+			while cursor < bytes.count, bytes[cursor] >= UInt8(ascii: "0"), bytes[cursor] <= UInt8(ascii: "9") {
+				if magnitude <= maximumPaddingWidth {
+					magnitude = magnitude * 10 + Int(bytes[cursor] - UInt8(ascii: "0"))
+				}
+				digitCount += 1
+				cursor += 1
 			}
 
-			let paddingWidth = scanner.scanInt() ?? 0
-			let substitution: String? = if scanner.scanString("@") != nil {
-				modeSymbol
-			} else if scanner.scanString("n") != nil {
-				nickname
-			} else if scanner.scanString("%") != nil {
-				"%"
+			var width = 0
+			if digitCount > 0 {
+				index = cursor
+				width = min(magnitude, maximumPaddingWidth)
+				if negative {
+					width = -width
+				}
+			}
+
+			let kind: Kind? = if index < bytes.count {
+				switch bytes[index] {
+				case UInt8(ascii: "@"): .modeSymbol
+				case UInt8(ascii: "n"): .nickname
+				case percent: .percent
+				default: nil
+				}
 			} else {
 				nil
 			}
 
-			guard let substitution else {
-				continue
+			if let kind {
+				index += 1
+				tokens.append(.substitution(width: width, kind: kind))
 			}
+			literalStart = index
+		}
 
-			let substitutionLength = (substitution as NSString).length
-			// `abs(Int.min)` traps, and no sane format asks for more padding
-			// than a line can hold, so the magnitude is clamped instead.
-			let requestedWidth = Int(min(paddingWidth.magnitude, UInt(maximumPaddingWidth)))
-			let padding = String(repeating: " ", count: max(0, requestedWidth - substitutionLength))
+		flushLiteral(upTo: bytes.count)
+		return tokens
+	}
 
-			if paddingWidth < 0 {
-				output += padding
-			}
+	static func apply(_ nickname: String, modeSymbol: String, format: String) -> String {
+		var output = ""
 
-			output += substitution
-
-			if paddingWidth > 0 {
-				output += padding
+		for token in tokens(for: format) {
+			switch token {
+			case let .literal(text):
+				output += text
+			case let .substitution(width, kind):
+				let substitution = switch kind {
+				case .modeSymbol: modeSymbol
+				case .nickname: nickname
+				case .percent: "%"
+				}
+				// The width is clamped when the format is parsed, so no sane
+				// format asks for more padding than a line can hold.
+				let padding = String(
+					repeating: " ",
+					count: max(0, abs(width) - (substitution as NSString).length)
+				)
+				if width < 0 {
+					output += padding
+				}
+				output += substitution
+				if width > 0 {
+					output += padding
+				}
 			}
 		}
 

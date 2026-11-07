@@ -79,9 +79,7 @@ private struct SettingsCommittedInput: View {
 				.onDisappear(perform: finishEditing)
 
 			if draft.wasRejected, let rejectionMessage {
-				Text(rejectionMessage)
-					.font(.caption)
-					.foregroundStyle(.red)
+				ValidationMessageLabel(String(localized: rejectionMessage))
 			}
 		}
 	}

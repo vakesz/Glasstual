@@ -49,9 +49,30 @@ nonisolated struct Member: Identifiable, Hashable, Sendable {
 		user.id
 	}
 
-	var user: User
+	var user: User {
+		didSet {
+			if oldValue.nickname != user.nickname {
+				foldedNickname = prefixes.casefold(user.nickname)
+				foldedCaseMapping = prefixes.caseMapping
+			}
+		}
+	}
+
 	var modes = ChannelModeSymbolSet()
-	var prefixes: UserPrefixTable
+	var prefixes: UserPrefixTable {
+		didSet {
+			if oldValue.caseMapping != prefixes.caseMapping {
+				foldedNickname = prefixes.casefold(user.nickname)
+				foldedCaseMapping = prefixes.caseMapping
+			}
+		}
+	}
+
+	/// The nickname folded under `foldedCaseMapping`, the sort key of the member
+	/// list. Kept in step with the nickname and the stamped casemapping by their
+	/// observers, and left out of equality and hashing as derived state.
+	private var foldedNickname: String
+	private var foldedCaseMapping: ISupportCaseMapping
 
 	private var incomingWeightStorage = 0.0
 	private var outgoingWeightStorage = 0.0
@@ -61,6 +82,8 @@ nonisolated struct Member: Identifiable, Hashable, Sendable {
 	init(user: User, prefixes: UserPrefixTable = UserPrefixTable()) {
 		self.user = user
 		self.prefixes = prefixes
+		foldedNickname = prefixes.casefold(user.nickname)
+		foldedCaseMapping = prefixes.caseMapping
 	}
 
 	/** Two members are the same when they are the same person with the same
@@ -276,8 +299,13 @@ nonisolated struct Member: Identifiable, Hashable, Sendable {
 			return .orderedDescending
 		}
 
-		let localNickname = table.casefold(user.nickname)
-		let remoteNickname = table.casefold(other.user.nickname)
+		/* The cached key is only the answer when it was folded under the table
+		 the whole sort uses; a member stamped under another casemapping folds
+		 again, so both sides are always compared under one mapping. */
+		let localNickname = foldedCaseMapping == table.caseMapping
+			? foldedNickname : table.casefold(user.nickname)
+		let remoteNickname = other.foldedCaseMapping == table.caseMapping
+			? other.foldedNickname : table.casefold(other.user.nickname)
 
 		return localNickname.compare(remoteNickname)
 	}

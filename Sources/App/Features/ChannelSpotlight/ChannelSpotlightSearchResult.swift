@@ -20,6 +20,8 @@ nonisolated struct ChannelSpotlightSearchResult: Identifiable, Hashable, Sendabl
 	let networkName: String
 	let highlightCount: Int
 	let unreadCount: Int
+	/// The sidebar's glyph for this kind of conversation.
+	let glyphSymbolName: String
 	/// How well the conversation name matches what was typed. Zero until it is
 	/// scored, which is also what an empty search leaves it at.
 	var distance = 0.0
@@ -31,6 +33,7 @@ nonisolated struct ChannelSpotlightSearchResult: Identifiable, Hashable, Sendabl
 		networkName: String,
 		highlightCount: Int = 0,
 		unreadCount: Int = 0,
+		glyphSymbolName: String = "number",
 		distance: Double = 0
 	) {
 		self.id = id
@@ -39,6 +42,7 @@ nonisolated struct ChannelSpotlightSearchResult: Identifiable, Hashable, Sendabl
 		self.networkName = networkName
 		self.highlightCount = highlightCount
 		self.unreadCount = unreadCount
+		self.glyphSymbolName = glyphSymbolName
 		self.distance = distance
 	}
 
@@ -88,7 +92,8 @@ extension ChannelSpotlightSearchResult {
 			conversationName: conversation.name,
 			networkName: conversation.associatedSession?.networkNameAlt ?? "",
 			highlightCount: conversation.nicknameHighlightCount,
-			unreadCount: conversation.unreadCount
+			unreadCount: conversation.unreadCount,
+			glyphSymbolName: ConversationRow.Kind(conversation).glyphSymbolName
 		)
 	}
 }

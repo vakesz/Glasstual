@@ -16,9 +16,9 @@ struct MessageTests {
 		#expect(message.command == "PRIVMSG")
 		#expect(message.commandNumeric == 0)
 		#expect(message.senderNickname == "nick")
-		#expect(message.senderUsername == "user")
-		#expect(message.senderAddress == "host")
-		#expect(message.senderIsServer == false)
+		#expect(message.sender.username == "user")
+		#expect(message.sender.address == "host")
+		#expect(message.sender.isServer == false)
 		#expect(message.params.count == 2)
 		#expect(message.param(at: 0) == "#channel")
 		#expect(message.param(at: 1) == "hello  world")
@@ -30,7 +30,7 @@ struct MessageTests {
 		let message = try #require(Message(line: ":irc.example.net 001 me :Welcome"))
 
 		#expect(message.commandNumeric == 1)
-		#expect(message.senderIsServer)
+		#expect(message.sender.isServer)
 		#expect(message.senderNickname == "irc.example.net")
 		#expect(message.param(at: 1) == "Welcome")
 	}
@@ -104,7 +104,7 @@ struct MessageTests {
 	func missingSenderFallsBackToServerAddress() throws {
 		let message = try #require(Message(line: "NOTICE * :*** Looking up your hostname"))
 
-		#expect(message.senderIsServer)
+		#expect(message.sender.isServer)
 		#expect(message.senderNickname == "")
 		#expect(message.param(at: 1) == "*** Looking up your hostname")
 	}
@@ -134,7 +134,7 @@ struct MessageTests {
 		var rewritten = message
 		rewritten.rewrite(as: .notice)
 		rewritten.params = ["#c", "rewritten"]
-		rewritten.sender = Prefix(nickname: "other", hostmask: "other", isServer: true)
+		rewritten.sender = Prefix.server(name: "other")
 
 		#expect(rewritten.command == "NOTICE")
 		#expect(rewritten.remoteCommand == .notice)
@@ -159,13 +159,13 @@ struct MessageTests {
 		)
 
 		#expect(message.senderNickname == "irc.example.net")
-		#expect(message.senderIsServer)
+		#expect(message.sender.isServer)
 		#expect(message.hasServerTime)
 		#expect(message.receivedAt == Date(timeIntervalSince1970: 1_704_164_645))
 
 		let longNickname = String(repeating: "u", count: 12)
 		let overlong = try #require(Message(line: ":\(longNickname)!u@h PRIVMSG #c :hi", context: context))
 
-		#expect(overlong.senderIsServer)
+		#expect(overlong.sender.isServer)
 	}
 }

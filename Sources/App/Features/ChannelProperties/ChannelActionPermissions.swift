@@ -27,7 +27,7 @@ struct ChannelActionPermissions {
 		// moderation. isHalfOp falls back to operator when PREFIX has no half-op.
 		let member = channel.findMember(session.userNickname)
 		canChangeModes = member.map { $0.isOp || $0.isHalfOp } == true
-		let topicIsRestricted = channel.modeInfo?.modeInfo(for: ChannelMode.operatorTopic.rawValue)?.modeIsSet == true
+		let topicIsRestricted = channel.modeInfo?.modes.modeInfo(for: ChannelMode.operatorTopic.rawValue)?.modeIsSet == true
 		canModifyTopic = topicIsRestricted == false || canChangeModes
 	}
 }

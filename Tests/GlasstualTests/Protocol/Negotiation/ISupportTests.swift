@@ -50,7 +50,7 @@ struct ISupportTests {
 		#expect(session.stringIsNickname("alice"))
 		#expect("alice!u@host".hostmask(on: session)?.nickname == "alice")
 		let message = try #require(Message(line: ":alice!u@host PRIVMSG #test :hello", on: session))
-		#expect(message.senderIsServer == false)
+		#expect(message.sender.isServer == false)
 		#expect(message.senderNickname == "alice")
 		#expect("alice".padNickname(
 			withCharacter: 95,
@@ -68,7 +68,7 @@ struct ISupportTests {
 		let nickname = String(repeating: "n", count: 60)
 		let message = try #require(Message(line: ":\(nickname)!u@host PRIVMSG #test :hello", on: session))
 
-		#expect(message.senderIsServer == (advertisesWiderLimit == false))
+		#expect(message.sender.isServer == (advertisesWiderLimit == false))
 	}
 
 	@Test(

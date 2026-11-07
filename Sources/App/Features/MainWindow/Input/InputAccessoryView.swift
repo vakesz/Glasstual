@@ -27,7 +27,7 @@ struct InputAccessoryView: View {
 	private var replyBanner: some View {
 		HStack(spacing: UISpacing.tight) {
 			Image(systemName: "arrowshape.turn.up.left")
-				.font(.caption.weight(.medium))
+				.font(.subheadline.weight(.medium))
 				.foregroundStyle(.secondary)
 				.accessibilityHidden(true)
 
@@ -45,8 +45,8 @@ struct InputAccessoryView: View {
 			.help(String(localized: .MainWindow.cancelReply))
 		}
 		.padding(.horizontal, UISpacing.wide)
-		.frame(height: InputBarLayout.replyBannerHeight)
-		.glassEffect(.regular, in: .rect(cornerRadius: 8))
+		.frame(minHeight: InputBarLayout.replyBannerHeight)
+		.background(.regularMaterial, in: .rect(cornerRadius: InputBarLayout.accessoryCornerRadius))
 	}
 
 	/** The banner's own text, with the message it is quoting as its tooltip.
@@ -56,7 +56,7 @@ struct InputAccessoryView: View {
 	@ViewBuilder
 	private var replyLabel: some View {
 		let label = Text(replyText)
-			.font(.caption)
+			.font(.subheadline)
 			.lineLimit(1)
 			.truncationMode(.tail)
 
@@ -69,11 +69,11 @@ struct InputAccessoryView: View {
 
 	private var replyText: AttributedString {
 		var result = AttributedString(InputAccessoryView.replyTarget(model.replyNickname))
-		result.font = .caption.bold()
+		result.font = .subheadline.bold()
 
 		if let excerpt = model.replyExcerpt, excerpt.isEmpty == false {
 			var suffix = AttributedString(": \(excerpt.replacingOccurrences(of: "\n", with: " "))")
-			suffix.font = .caption
+			suffix.font = .subheadline
 			suffix.foregroundColor = .secondary
 			result.append(suffix)
 		}
@@ -86,7 +86,7 @@ struct InputAccessoryView: View {
 			/* The dots pulse forever, which is exactly what Reduce Motion asks
 			 an interface not to do; the row itself still says who is typing. */
 			Image(systemName: "ellipsis")
-				.font(.footnote.bold())
+				.font(.subheadline.bold())
 				.symbolEffect(
 					.variableColor.cumulative.reversing,
 					options: .repeating,
@@ -94,13 +94,13 @@ struct InputAccessoryView: View {
 				)
 				.accessibilityHidden(true)
 			Text(InputAccessoryView.typingCaption(for: model.typingNicknames))
-				.font(.caption)
+				.font(.subheadline)
 				.lineLimit(1)
 				.truncationMode(.tail)
 		}
 		.foregroundStyle(.secondary)
 		.padding(.horizontal, UISpacing.wide)
-		.frame(height: InputBarLayout.typingRowHeight)
+		.frame(minHeight: InputBarLayout.typingRowHeight)
 		.help(model.typingNicknames.joined(separator: ", "))
 	}
 }

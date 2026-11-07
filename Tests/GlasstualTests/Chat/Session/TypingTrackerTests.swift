@@ -35,15 +35,14 @@ struct TypingTrackerTests {
 		let notificationCount = Mutex(0)
 		let notifiedChannel = Mutex<Conversation?>(nil)
 		let token = NotificationCenter.default.addObserver(
-			forName: .typingTrackerDidChange,
-			object: session,
-			queue: nil
-		) { notification in
+			of: session,
+			for: TypingTrackerDidChange.self
+		) { message in
 			notificationCount.withLock { count in
 				count += 1
 			}
 			notifiedChannel.withLock { notifiedChannel in
-				notifiedChannel = notification.userInfo?[typingTrackerConversationKey] as? Conversation
+				notifiedChannel = message.conversation
 			}
 		}
 		defer { NotificationCenter.default.removeObserver(token) }
@@ -63,9 +62,8 @@ struct TypingTrackerTests {
 		let channel = makeChannel(named: "#chat")
 		let notificationCount = Mutex(0)
 		let token = NotificationCenter.default.addObserver(
-			forName: .typingTrackerDidChange,
-			object: session,
-			queue: nil
+			of: session,
+			for: TypingTrackerDidChange.self
 		) { _ in
 			notificationCount.withLock { count in
 				count += 1

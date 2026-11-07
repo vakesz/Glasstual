@@ -102,8 +102,8 @@ final class ChannelPropertiesSheet: SheetSession, ChannelScoped {
 
 	private func observeConfigurationChanges() {
 		guard let channel else { return }
-		notifications.observe(.conversationConfigWasUpdated, object: channel) { [weak self] note in
-			self?.underlyingConfigurationChanged(note)
+		notifications.observe(ConversationConfigWasUpdated.self, of: channel) { [weak self] message in
+			self?.underlyingConfigurationChanged(message)
 		}
 	}
 
@@ -117,8 +117,8 @@ final class ChannelPropertiesSheet: SheetSession, ChannelScoped {
 	 over the edits it is asking about rather than on whatever window happened
 	 to be visible. Keeping what is typed is the default; reloading is the
 	 destructive answer, because it throws those edits away. */
-	private func underlyingConfigurationChanged(_ notification: Notification) {
-		guard let channel = notification.object as? Conversation else { return }
+	private func underlyingConfigurationChanged(_ message: ConversationConfigWasUpdated) {
+		let channel = message.subject
 		Alerts.present(AlertRequest(
 			title: String(localized: .ChannelProperties.thisChannelsConfigurationHasChangedDo),
 			body: String(localized: .ChannelProperties.youWillLooseUnsavedChangesIf),

@@ -17,6 +17,8 @@ nonisolated enum RemoteCommand: String, Sendable, CaseIterable {
 	case authenticate
 	case away
 	case batch
+	/// soju's `soju.im/bouncer-networks`: `BOUNCER <subcommand> [<netid>] [<attributes>]`.
+	case bouncer
 	case cap
 	case certinfo
 	case chathistory
@@ -54,6 +56,9 @@ nonisolated enum RemoteCommand: String, Sendable, CaseIterable {
 	/// selecting this case.
 	case privmsgAction = "privmsg action"
 	case quit
+	case redact
+	/// IRCv3 `draft/channel-rename`: `RENAME <old> <new> [:reason]`.
+	case rename
 	case setname
 	case shun
 	case silence
@@ -107,6 +112,9 @@ nonisolated extension RemoteCommand { // nonisolated: pure
 		.authenticate: .never,
 		.away: .startsAtArgument(0),
 		.batch: .never,
+		/* Every parameter of a BOUNCER subcommand is one token: attribute lists
+			escape their spaces like message tags do. */
+		.bouncer: .never,
 		.cap: .never,
 		.certinfo: .never,
 		/* Every parameter of a CHATHISTORY subcommand is one token: the subcommand,
@@ -140,6 +148,10 @@ nonisolated extension RemoteCommand { // nonisolated: pure
 		.privmsg: .startsAtArgument(1),
 		.privmsgAction: .startsAtArgument(1),
 		.quit: .startsAtArgument(0),
+		/* `REDACT <target> <msgid> [:reason]`: the reason is the only free text. */
+		.redact: .startsAtArgument(2),
+		/* `RENAME <old> <new> [:reason]`: the reason is the only free text. */
+		.rename: .startsAtArgument(2),
 		.setname: .startsAtArgument(0),
 		.shun: .startsAtArgument(2),
 		.silence: .never,

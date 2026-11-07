@@ -13,7 +13,7 @@ nonisolated extension SettingsKeys {
 		Identity.all, Connection.all, Sessions.all, Commands.all, Messages.all, Logging.all,
 		Appearance.all, Theme.all, Badges.all, MainWindow.all, Notifications.all,
 		Input.all, Highlights.all, Reactions.all, FileTransfers.all, Rules.all,
-		Internals.all, LinkSchemes.all,
+		Internals.all, LinkSchemes.all, Spotlight.all,
 	]
 
 	static let allKeys: [any AnySettingsKey] = allDomains.flatMap(\.self)

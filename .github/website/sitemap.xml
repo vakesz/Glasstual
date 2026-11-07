@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- No <lastmod>: it is optional, a one-URL sitemap gains nothing from it, and
-     nothing in the Pages deploy updates it, so a hardcoded date is only ever
-     wrong. -->
+<!-- No <lastmod>: nothing in the Pages deploy updates it, so a hardcoded date is only ever wrong. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://vakesz.github.io/Glasstual/</loc>
-  </url>
+  <url><loc>https://vakesz.github.io/Glasstual/</loc></url>
+  <url><loc>https://vakesz.github.io/Glasstual/support.html</loc></url>
+  <url><loc>https://vakesz.github.io/Glasstual/privacy.html</loc></url>
 </urlset>

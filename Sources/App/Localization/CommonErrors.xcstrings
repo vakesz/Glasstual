@@ -25,25 +25,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Introduzca un número entero entre 1 y 65.535."
+            "state" : "translated",
+            "value" : "Introduce un número entero entre 1 y 65 535."
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Entrez un nombre entier entre 1 et 65 535."
+            "state" : "translated",
+            "value" : "Saisissez un nombre entier compris entre 1 et 65 535."
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "1と65,535の間の整数を入力してください。"
+            "state" : "translated",
+            "value" : "1〜65,535の整数を入力してください。"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Digite um número inteiro entre 1 e 65.535."
           }
         }
@@ -112,20 +112,20 @@
             "plural" : {
               "many" : {
                 "stringUnit" : {
-                  "state" : "needs_review",
-                  "value" : "La longitud máxima es %ld bytes."
+                  "state" : "translated",
+                  "value" : "La longitud máxima es de %ld bytes."
                 }
               },
               "one" : {
                 "stringUnit" : {
-                  "state" : "needs_review",
-                  "value" : "La longitud máxima es %ld de bytes."
+                  "state" : "translated",
+                  "value" : "La longitud máxima es de %ld byte."
                 }
               },
               "other" : {
                 "stringUnit" : {
-                  "state" : "needs_review",
-                  "value" : "La longitud máxima es %ld bytes."
+                  "state" : "translated",
+                  "value" : "La longitud máxima es de %ld bytes."
                 }
               }
             }
@@ -136,19 +136,19 @@
             "plural" : {
               "many" : {
                 "stringUnit" : {
-                  "state" : "needs_review",
+                  "state" : "translated",
                   "value" : "La longueur maximale est de %ld octets."
                 }
               },
               "one" : {
                 "stringUnit" : {
-                  "state" : "needs_review",
-                  "value" : "La longueur maximale est de %ld octets."
+                  "state" : "translated",
+                  "value" : "La longueur maximale est de %ld octet."
                 }
               },
               "other" : {
                 "stringUnit" : {
-                  "state" : "needs_review",
+                  "state" : "translated",
                   "value" : "La longueur maximale est de %ld octets."
                 }
               }
@@ -160,8 +160,8 @@
             "plural" : {
               "other" : {
                 "stringUnit" : {
-                  "state" : "needs_review",
-                  "value" : "最大長さは%ldバイトです。"
+                  "state" : "translated",
+                  "value" : "最大の長さは%ldバイトです。"
                 }
               }
             }
@@ -172,20 +172,20 @@
             "plural" : {
               "many" : {
                 "stringUnit" : {
-                  "state" : "needs_review",
-                  "value" : "O comprimento máximo é %ld bytes."
+                  "state" : "translated",
+                  "value" : "O comprimento máximo é de %ld bytes."
                 }
               },
               "one" : {
                 "stringUnit" : {
-                  "state" : "needs_review",
-                  "value" : "O comprimento máximo é %ld byte."
+                  "state" : "translated",
+                  "value" : "O comprimento máximo é de %ld byte."
                 }
               },
               "other" : {
                 "stringUnit" : {
-                  "state" : "needs_review",
-                  "value" : "O comprimento máximo é %ld bytes."
+                  "state" : "translated",
+                  "value" : "O comprimento máximo é de %ld bytes."
                 }
               }
             }
@@ -217,25 +217,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Un apodo puede contener letras, dígitos y - [ ] \\ ` _ ^ { | } y no puede comenzar con un dígito."
+            "state" : "translated",
+            "value" : "Un apodo puede contener letras, dígitos y - [ ] \\ ` _ ^ { | } y no puede empezar por un dígito."
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Un surnom peut contenir des lettres, des chiffres et - [ ] \\ ` _ ^ { | } et ne peut pas commencer par un chiffre."
+            "state" : "translated",
+            "value" : "Un pseudo peut contenir des lettres, des chiffres et - [ ] \\ ` _ ^ { | } et ne peut pas commencer par un chiffre."
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ニックネームには文字、数字、- [ ] \\ ` _ ^ { | }が含まれ、数字で始まらないでください。"
+            "state" : "translated",
+            "value" : "ニックネームには、文字、数字、- [ ] \\ ` _ ^ { | } を使用でき、数字で始めることはできません。"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Um apelido pode conter letras, números e - [ ] \\ ` _ ^ { | } e não pode começar com um número."
           }
         }
@@ -265,25 +265,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Introduzca un nombre real en una línea."
+            "state" : "translated",
+            "value" : "Introduce un nombre real en una sola línea."
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Entrez un vrai nom sur une seule ligne."
+            "state" : "translated",
+            "value" : "Saisissez un nom réel sur une seule ligne."
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "1行に実名を入力してください。"
+            "state" : "translated",
+            "value" : "本名は1行で入力してください。"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Digite um nome real em uma linha."
           }
         }
@@ -313,26 +313,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Introduce un nombre de host como irc.libera.chat o elige una red de la lista."
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Saisissez un nom d’hôte tel que irc.libera.chat, ou choisissez un réseau dans la liste."
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "irc.libera.chatなどのホスト名を入力するか、リストからネットワークを選択します。"
+            "state" : "translated",
+            "value" : "irc.libera.chatなどのホスト名を入力するか、リストからネットワークを選択してください。"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Digite um nome de hospedeiro, como irc.libera.chat, ou escolha uma rede na lista."
+            "state" : "translated",
+            "value" : "Digite um nome de host, como irc.libera.chat, ou escolha uma rede na lista."
           }
         }
       }
@@ -361,26 +361,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "No puede contener más de una línea."
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Ne peut contenir plus d'une ligne."
+            "state" : "translated",
+            "value" : "Ne peut pas contenir plus d’une ligne."
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "1行以上は含めることができません。"
+            "state" : "translated",
+            "value" : "複数行にすることはできません。"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Não pode conter mais de uma linha."
+            "state" : "translated",
+            "value" : "Não pode ter mais de uma linha."
           }
         }
       }

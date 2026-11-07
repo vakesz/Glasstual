@@ -36,8 +36,8 @@ struct MessageRuleMatchingTests {
 
 	private func shouldPrint(
 		_ text: String,
-		from sender: Prefix = Prefix(nickname: "alice", username: "user", address: "host",
-		                             hostmask: "alice!user@host"),
+		from sender: Prefix = Prefix.user(.init(nickname: "alice", username: "user", address: "host",
+		                                        hostmask: "alice!user@host")),
 		in destination: Conversation?,
 		on session: TestServerSession,
 		using engine: MessageRuleMatcher
@@ -99,7 +99,7 @@ struct MessageRuleMatchingTests {
 		var rule = rule(matching: "spoiler")
 		rule.ignoresOperators = true
 		let engine = engine(rule)
-		let bob = Prefix(nickname: "bob", username: "user", address: "host", hostmask: "bob!user@host")
+		let bob = Prefix.user(.init(nickname: "bob", username: "user", address: "host", hostmask: "bob!user@host"))
 
 		#expect(shouldPrint("a spoiler here", in: chat, on: session, using: engine))
 		#expect(shouldPrint("a spoiler here", from: bob, in: chat, on: session, using: engine) == false)
@@ -112,8 +112,8 @@ struct MessageRuleMatchingTests {
 		var rule = rule(matching: "")
 		rule.senderMatch = "@host"
 		let engine = engine(rule)
-		let elsewhere = Prefix(nickname: "bob", username: "user", address: "other",
-		                       hostmask: "bob!user@other")
+		let elsewhere = Prefix.user(.init(nickname: "bob", username: "user", address: "other",
+		                                  hostmask: "bob!user@other"))
 
 		#expect(shouldPrint("anything", in: chat, on: session, using: engine) == false)
 		#expect(shouldPrint("anything", from: elsewhere, in: chat, on: session, using: engine))
@@ -144,11 +144,11 @@ struct MessageRuleMatchingTests {
 		let engine = engine(rule)
 
 		#expect(engine.shouldPrintCommand(
-			"JOIN", text: nil, authoredBy: Prefix(nickname: "alice", hostmask: "alice!user@host"),
+			"JOIN", text: nil, authoredBy: Prefix.user(.init(nickname: "alice", hostmask: "alice!user@host")),
 			destinedFor: chat, onSession: session, receivedAt: Date(), messageParameters: []
 		) == false)
 		#expect(engine.shouldPrintCommand(
-			"PART", text: nil, authoredBy: Prefix(nickname: "alice", hostmask: "alice!user@host"),
+			"PART", text: nil, authoredBy: Prefix.user(.init(nickname: "alice", hostmask: "alice!user@host")),
 			destinedFor: chat, onSession: session, receivedAt: Date(), messageParameters: []
 		))
 	}

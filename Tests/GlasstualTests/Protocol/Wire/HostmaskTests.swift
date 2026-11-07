@@ -48,4 +48,31 @@ struct HostmaskTests {
 		#expect(Hostmask(parsing: "nick!user name@example.test") == nil)
 		#expect(Hostmask(parsing: "long-nickname!user@example.test", maximumNicknameLength: 4) == nil)
 	}
+
+	@Test
+	func missingSeparatorsAndEmptyPartsAreRejected() {
+		#expect(Hostmask(parsing: "") == nil)
+		#expect(Hostmask(parsing: "nick!") == nil)
+		#expect(Hostmask(parsing: "nick!user") == nil)
+		#expect(Hostmask(parsing: "!user@host") == nil)
+		#expect(Hostmask(parsing: "nick!@host") == nil)
+		#expect(Hostmask(parsing: "nick!user@") == nil)
+	}
+
+	@Test
+	func multibyteComponentsSurviveSlicing() throws {
+		let hostmask = try #require(Hostmask(parsing: "n\u{00EF}ck!us\u{00E9}r@h\u{00F6}st.test"))
+
+		#expect(hostmask.nickname == "n\u{00EF}ck")
+		#expect(hostmask.username == "us\u{00E9}r")
+		#expect(hostmask.address == "h\u{00F6}st.test")
+	}
+
+	@Test
+	func aCombiningMarkAfterASeparatorDoesNotHideIt() throws {
+		let hostmask = try #require(Hostmask(parsing: "nick!\u{0301}user@host.test"))
+
+		#expect(hostmask.nickname == "nick")
+		#expect(hostmask.username == "\u{0301}user")
+	}
 }

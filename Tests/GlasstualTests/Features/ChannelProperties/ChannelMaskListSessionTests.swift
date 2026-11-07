@@ -54,16 +54,35 @@ struct ChannelMaskListSessionTests {
 		#expect(list.model.isRefreshing)
 	}
 
-	/** Removing entries used to close the sheet, so removing two meant opening
-	 the list twice. The window drops the rows it asked the server to unset and
-	 stays open for the next removal. */
-	@Test("Removing the selected masks drops their rows and keeps the list")
-	func removingSelectedMasksKeepsTheList() throws {
+	/// A joined channel on a server that advertises the ban list, with the local
+	/// user holding `modes`.
+	private func makeList(
+		modes: String,
+		channelName: String,
+		kind: ChannelMaskKind = .ban
+	) throws -> (TestServerSession, ChannelMaskListSession) {
 		let session = TestServerSession()
-		session.supportInfo.processConfigurationData("CHANMODES=beI,k,l,imnpst PREFIX=(ov)@+")
-		let channel = try #require(session.findConversationOrCreate("#removal"))
+		session.userNickname = "local"
+		session.markAsLoggedIn()
+		session.supportInfo.processConfigurationData("CHANMODES=beI,k,l,imnpst PREFIX=(ov)@+ EXCEPTS=e")
+		let channel = try #require(session.findConversationOrCreate(channelName))
 		channel.activate()
-		let list = try #require(ChannelMaskListSession(maskKind: .ban, in: channel))
+		var member = Member(user: session.findUserOrCreate(session.userNickname), prefixes: session.currentUserPrefixes)
+		member.modes = ChannelModeSymbolSet(letters: modes)
+		channel.addMember(member)
+		return try (session, #require(ChannelMaskListSession(maskKind: kind, in: channel)))
+	}
+
+	private func sentModeLines(_ session: TestServerSession) -> [String] {
+		session.sentLines.compactMap { $0 as? String }.filter { $0.hasPrefix("MODE ") }
+	}
+
+	/** Removing entries used to close the sheet, so removing two meant opening
+	 the list twice. The window sends the removal and stays open, and keeps the
+	 rows until the refresh that follows shows what the server did. */
+	@Test("Removing the selected masks sends the change and keeps the rows for the refresh")
+	func removingSelectedMasksKeepsTheRows() throws {
+		let (session, list) = try makeList(modes: "o", channelName: "#removal")
 		list.receiveEntry(mask: "*!*@kept.example", setBy: "alice", creationDate: nil)
 		list.receiveEntry(mask: "*!*@gone.example", setBy: "bob", creationDate: nil)
 		let doomed = try #require(list.model.entries.first { $0.entryMask == "*!*@gone.example" })
@@ -71,8 +90,155 @@ struct ChannelMaskListSessionTests {
 
 		list.removeSelectedEntries()
 
-		#expect(list.model.entries.map(\.entryMask) == ["*!*@kept.example"])
-		#expect(list.model.selection.isEmpty)
+		#expect(sentModeLines(session).contains { $0.contains("-b") && $0.hasSuffix("*!*@gone.example") })
+		#expect(list.model.entries.count == 2)
+		list.cancelPendingRefresh()
+	}
+
+	@Test("Someone who is not an operator cannot change the list")
+	func nonOperatorCannotChange() throws {
+		let (session, list) = try makeList(modes: "v", channelName: "#plain")
+		list.model.draft = "nick"
+
+		list.submitDraft()
+
+		#expect(list.canEdit == false)
+		#expect(sentModeLines(session).isEmpty)
+	}
+
+	@Test("A half-operator can change the list on a server that advertises half-operators")
+	func halfOperatorCanChange() throws {
+		let session = TestServerSession()
+		session.userNickname = "local"
+		session.markAsLoggedIn()
+		session.supportInfo.processConfigurationData("CHANMODES=beI,k,l,imnpst PREFIX=(ohv)@%+")
+		let channel = try #require(session.findConversationOrCreate("#half"))
+		channel.activate()
+		var member = Member(user: session.findUserOrCreate(session.userNickname), prefixes: session.currentUserPrefixes)
+		member.modes = ChannelModeSymbolSet(letters: "h")
+		channel.addMember(member)
+		let list = try #require(ChannelMaskListSession(maskKind: .ban, in: channel))
+
+		#expect(list.canEdit)
+	}
+
+	@Test("Adding a bare nickname sends a ban on its expanded mask and clears the field")
+	func addingSendsTheExpandedMask() throws {
+		let (session, list) = try makeList(modes: "o", channelName: "#add")
+		list.model.draft = "troll"
+
+		list.submitDraft()
+
+		#expect(sentModeLines(session).contains { $0.contains("+b") && $0.hasSuffix("troll!*@*") })
+		#expect(list.model.draft.isEmpty)
+		#expect(list.model.issue == nil)
+		list.cancelPendingRefresh()
+	}
+
+	@Test("The list's own letter is used for exceptions")
+	func addingUsesTheListLetter() throws {
+		let (session, list) = try makeList(modes: "o", channelName: "#exceptions", kind: .banException)
+		list.model.draft = "friend!*@trusted.example"
+
+		list.submitDraft()
+
+		#expect(sentModeLines(session).contains { $0.contains("+e") && $0.hasSuffix("friend!*@trusted.example") })
+		list.cancelPendingRefresh()
+	}
+
+	@Test("An entry already in the list is refused without sending anything")
+	func duplicateIsRefused() throws {
+		let (session, list) = try makeList(modes: "o", channelName: "#dupes")
+		list.receiveEntry(mask: "troll!*@*", setBy: "alice", creationDate: nil)
+		list.model.draft = "TROLL"
+
+		list.submitDraft()
+
+		#expect(list.model.issue == .duplicate)
+		#expect(sentModeLines(session).isEmpty)
+	}
+
+	@Test("An empty or malformed draft sets an issue and sends nothing")
+	func invalidDraftIsRefused() throws {
+		let (session, list) = try makeList(modes: "o", channelName: "#invalid")
+		list.model.draft = "two words"
+
+		list.submitDraft()
+
+		#expect(list.model.issue == .invalid(.containsWhitespace))
+		#expect(sentModeLines(session).isEmpty)
+	}
+
+	@Test("Editing the selected entry replaces it in one mode change")
+	func editingReplacesInOneChange() throws {
+		let (session, list) = try makeList(modes: "o", channelName: "#edit")
+		list.receiveEntry(mask: "old!*@*", setBy: "alice", creationDate: nil)
+		list.model.selection = Set(list.model.entries.map(\.id))
+
+		list.beginEditingSelectedEntry()
+		#expect(list.model.editingMask == "old!*@*")
+		#expect(list.model.draft == "old!*@*")
+
+		list.model.draft = "new!*@*"
+		list.submitDraft()
+
+		let lines = sentModeLines(session)
+		#expect(lines.count == 1)
+		#expect(lines.first?.contains("-b+b") == true)
+		#expect(lines.first?.hasSuffix("old!*@* new!*@*") == true)
+		#expect(list.model.editingMask == nil)
+		list.cancelPendingRefresh()
+	}
+
+	@Test("Submitting an edit that changes nothing sends nothing")
+	func unchangedEditSendsNothing() throws {
+		let (session, list) = try makeList(modes: "o", channelName: "#same")
+		list.receiveEntry(mask: "same!*@*", setBy: "alice", creationDate: nil)
+		list.model.selection = Set(list.model.entries.map(\.id))
+		list.beginEditingSelectedEntry()
+
+		list.submitDraft()
+
+		#expect(sentModeLines(session).isEmpty)
+		#expect(list.model.editingMask == nil)
+	}
+
+	@Test("A refusal after a change becomes an inline issue, and one with no change waiting is left alone")
+	func refusalsAreShownInline() throws {
+		let (session, list) = try makeList(modes: "o", channelName: "#refused")
+		let unrelated = list.receiveRefusal(
+			session: session,
+			channelName: "#refused",
+			numeric: ChannelMaskListRefusal.chanOpPrivsNeeded,
+			text: "You're not channel operator"
+		)
+		#expect(unrelated == false)
+
+		list.model.draft = "troll"
+		list.submitDraft()
+
+		#expect(list.receiveRefusal(
+			session: session,
+			channelName: "#REFUSED",
+			numeric: ChannelMaskListRefusal.chanOpPrivsNeeded,
+			text: "You're not channel operator"
+		))
+		#expect(list.model.issue == .notOperator)
+
+		#expect(list.receiveRefusal(
+			session: session,
+			channelName: "#refused",
+			numeric: ChannelMaskListRefusal.banListFull,
+			text: "Channel list is full"
+		))
+		#expect(list.model.issue == .listFull)
+		#expect(list.receiveRefusal(
+			session: session,
+			channelName: "#elsewhere",
+			numeric: ChannelMaskListRefusal.banListFull,
+			text: "Channel list is full"
+		) == false)
+		list.cancelPendingRefresh()
 	}
 
 	/** A server can withdraw an ISUPPORT token mid-session with a `-` prefixed

@@ -60,19 +60,24 @@ nonisolated enum ScrollbackQueries {
 
 	/// Builds the stack, or throws what stopped it. The reason travels: it is
 	/// the only thing the failure alert has to tell the reader.
-	static func makeStack(at url: URL) throws -> NSManagedObjectContext {
-		let unindexedModel: NSManagedObjectModel
+	///
+	/// - Parameter migrationProgress: Told how far an upgrade of an existing
+	///   store has got, from 0 to 1. Not called for a store that needs none.
+	static func makeStack(
+		at url: URL,
+		migrationProgress: (@Sendable (Double) -> Void)? = nil
+	) throws -> NSManagedObjectContext {
+		let versions: ScrollbackModelVersions
 		do {
-			unindexedModel = try ScrollbackModelMigration.loadUnindexedModel()
+			versions = try ScrollbackModelMigration.versions()
 		} catch {
 			logger.error("Scrollback model is missing")
 			throw error
 		}
-		let model = try ScrollbackModelMigration.indexedModel(from: unindexedModel)
 
-		let coordinator = NSPersistentStoreCoordinator(managedObjectModel: model)
-		// The explicit index upgrade handles only the known unindexed schema.
-		// Never infer a migration for any other store at ordinary open.
+		let coordinator = NSPersistentStoreCoordinator(managedObjectModel: versions.searchable)
+		// The explicit upgrade handles only the known earlier schemas. Never
+		// infer a migration for any other store at ordinary open.
 		let options: [AnyHashable: Any] = [
 			NSMigratePersistentStoresAutomaticallyOption: false,
 			NSInferMappingModelAutomaticallyOption: false,
@@ -81,7 +86,7 @@ nonisolated enum ScrollbackQueries {
 
 		do {
 			try ScrollbackModelMigration.upgradeIfNeeded(
-				at: url, from: unindexedModel, to: model, using: coordinator, options: options
+				at: url, versions: versions, using: coordinator, options: options, progress: migrationProgress
 			)
 			_ = try coordinator.addPersistentStore(type: .sqlite, at: url, options: options)
 		} catch {
@@ -193,6 +198,7 @@ nonisolated enum ScrollbackQueries {
 		)
 		entry.setValue(chatLine.viewIdentifier, forKey: ScrollbackAttribute.viewID.rawValue)
 		entry.setValue(chatLine.data, forKey: ScrollbackAttribute.lineData.rawValue)
+		chatLine.search.write(to: entry)
 		entry.setValue(chatLine.uniqueIdentifier, forKey: ScrollbackAttribute.lineID.rawValue)
 		entry.setValue(
 			NSNumber(value: chatLine.sessionIdentifier),
@@ -213,8 +219,50 @@ nonisolated enum ScrollbackQueries {
 			for row in rows {
 				// Preserve physical cursors and insertion order already handed to views.
 				row.setValue(entry.data, forKey: ScrollbackAttribute.lineData.rawValue)
+				entry.search.write(to: row)
 			}
 			return .replaced
+		} catch { return .failed(error.localizedDescription) }
+	}
+
+	/** Overwrites the stored payload of the line `messageIdentifier` names in one
+	 view with the line redacted, so the deleted text does not stay in the
+	 database.
+
+	 The identifier lives inside the payload rather than in a column, so this
+	 reads the view's rows. An ASCII identifier is first looked for as bytes in
+	 the stored payload, which spares decoding every row that cannot be the one.
+	 The row keeps its cursor, order and line identity: only `lineData` changes. */
+	static func redact(
+		messageIdentifier: String,
+		viewIdentifier: String,
+		in context: NSManagedObjectContext
+	) -> ScrollbackRedactionOutcome {
+		guard messageIdentifier.isEmpty == false else { return .missing }
+		let request = NSFetchRequest<NSManagedObject>(entityName: entityName)
+		request.predicate = NSPredicate(format: "%K == %@", ScrollbackAttribute.viewID.rawValue, viewIdentifier)
+		request.includesPendingChanges = true
+		request.fetchBatchSize = 256
+		let needle = messageIdentifier.data(using: .ascii)
+		do {
+			var redactedLine: ChatLine?
+			for row in try context.fetch(request) {
+				guard let data = row.value(forKey: ScrollbackAttribute.lineData.rawValue) as? Data,
+				      needle.map({ data.range(of: $0) != nil }) ?? true,
+				      var line = ChatLine(data: data),
+				      MessageIdentifierKey.equal(line.messageIdentifier, messageIdentifier)
+				else { continue }
+				line.redact()
+				let payload = ChatLineStoredPayload(line: line)
+				guard let encoded = try? PropertyListEncoder().encode(payload) else {
+					return .failed(CocoaError(.coderInvalidValue).localizedDescription)
+				}
+				row.setValue(encoded, forKey: ScrollbackAttribute.lineData.rawValue)
+				// The words are withdrawn from every column, not only from the archive.
+				ScrollbackSearchFields(line: line).write(to: row)
+				redactedLine = redactedLine ?? line
+			}
+			return redactedLine.map { .redacted($0) } ?? .missing
 		} catch { return .failed(error.localizedDescription) }
 	}
 
@@ -440,7 +488,7 @@ nonisolated extension ScrollbackQueries {
 		} catch { return .failed(.read(error.localizedDescription)) }
 	}
 
-	private static func rowBucket(_ cursor: ScrollbackRowCursor) -> NSPredicate {
+	static func rowBucket(_ cursor: ScrollbackRowCursor) -> NSPredicate {
 		NSPredicate(format: "%K == %@ AND %K == %@ AND %K == %@",
 		            ScrollbackAttribute.createdAt.rawValue, NSNumber(value: cursor.timestamp),
 		            ScrollbackAttribute.entryID.rawValue, NSNumber(value: cursor.insertionIdentifier),

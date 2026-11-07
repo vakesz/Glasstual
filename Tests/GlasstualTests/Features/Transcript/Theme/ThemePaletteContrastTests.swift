@@ -84,6 +84,32 @@ struct ThemePaletteContrastTests {
 		}
 	}
 
+	/** Bubble layouts draw the same text roles on the bubble grounds, which are
+	 darker than the page in light mode and lighter in dark mode, so a role that
+	 clears the page can still fail there. */
+	@Test("Every text role clears the contrast floor against both bubble grounds")
+	func textRolesClearContrastOnBubbles() {
+		let palette = TranscriptTheme.defaultPalette
+
+		for increasesContrast in [false, true] {
+			let floor = increasesContrast ? 7.0 : 4.5
+
+			for isDark in [false, true] {
+				for (bubbleName, bubble) in [("incoming", palette.bubbleIncoming), ("outgoing", palette.bubbleOutgoing)] {
+					let ground = bubble.resolved(isDark: isDark, increasesContrast: increasesContrast)
+
+					for role in textRoles {
+						let ratio = palette[keyPath: role.color]
+							.resolved(isDark: isDark, increasesContrast: increasesContrast)
+							.contrastRatio(against: ground)
+						let mode = "\(isDark ? "dark" : "light")\(increasesContrast ? " high-contrast" : "")"
+						#expect(ratio >= floor, "\(role.name) on the \(mode) \(bubbleName) bubble: \(ratio)")
+					}
+				}
+			}
+		}
+	}
+
 	/// The clock is meant to recede behind the names and the message it labels;
 	/// what it may not do is recede out of legibility.
 	@Test("The timestamp is quieter than the secondary text it used to share")

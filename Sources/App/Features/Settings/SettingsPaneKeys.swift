@@ -54,7 +54,12 @@ enum SettingsPaneKeys {
 		.init(SettingsKeys.Internals.appLanguages, .Settings.appLanguage),
 		.init(SettingsKeys.Connection.confirmQuit, .Settings.generalConfirmQuit),
 		.init(SettingsKeys.Connection.awayOnScreenSleep, .Settings.generalAwayOnScreenSleep),
+		.init(SettingsKeys.Connection.awayOnIdle, .Settings.generalAwayOnIdle),
+		.init(SettingsKeys.Connection.idleAwayMinutes, .Settings.generalAwayIdleThreshold),
+		.init(SettingsKeys.Connection.idleAwayMessage, .Settings.generalAwayIdleMessage),
 		.init(SettingsKeys.Connection.preventSleepWhileConnected, .Settings.preventSleepWhileConnected),
+		.init(SettingsKeys.Spotlight.indexConversations, .Settings.generalSpotlightConversations),
+		.init(SettingsKeys.Spotlight.indexDirectMessages, .Settings.generalSpotlightDirectMessages),
 		.init(SettingsKeys.Connection.rejoinOnKick, .Settings.generalRejoinOnKick),
 		.init(SettingsKeys.Connection.autojoinOnInvite, .Settings.generalAutojoinOnInvite),
 		.init(SettingsKeys.Logging.reloadScrollbackOnLaunch, .Settings.generalReloadScrollback),
@@ -108,6 +113,7 @@ enum SettingsPaneKeys {
 		.init(SettingsKeys.Logging.scrollbackSaveLimit, .Settings.styleScrollbackSaveLimit),
 		.init(SettingsKeys.Messages.disableNicknameColorHashing, .Settings.styleDisableNicknameColors),
 		.init(SettingsKeys.Connection.displayServerMOTD, .Settings.styleShowMotd),
+		.init(SettingsKeys.Appearance.themesWindowChrome, .Settings.styleThemesWindowChrome),
 	]
 
 	private static let notificationsKeys: [SettingsBoundKey] = [
@@ -202,6 +208,7 @@ enum SettingsPaneKeys {
 	private static let logLocationKeys: [SettingsBoundKey] = [.init(SettingsKeys.Logging.logToDisk, .Settings.logLocationToggle)]
 
 	private static let hiddenKeys: [SettingsBoundKey] = [
+		.init(SettingsKeys.Commands.developerMode, .Settings.hiddenDeveloperMode),
 		.init(SettingsKeys.Internals.appSleepDisabled, .Settings.hiddenAppNap),
 		.init(SettingsKeys.Logging.loadHistoryLazily, .Settings.hiddenLoadHistoryLazily),
 		.init(SettingsKeys.Logging.scrollbackVisibleLimit, .Settings.hiddenScrollbackVisibleLimit),

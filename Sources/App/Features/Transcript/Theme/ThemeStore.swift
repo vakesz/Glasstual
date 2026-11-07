@@ -8,9 +8,20 @@ import Observation
 import os
 import Synchronization
 
-extension Notification.Name {
-	static let themeAppearanceChanged = Notification.Name("Glasstual.themeAppearanceChanged")
-	static let themeWasModified = Notification.Name("Glasstual.themeWasModified")
+struct ThemeAppearanceChanged: SubjectMessage {
+	typealias Subject = ThemeStore
+
+	nonisolated static let name = Notification.Name("Glasstual.themeAppearanceChanged")
+
+	let subject: ThemeStore
+}
+
+struct ThemeWasModified: SubjectMessage {
+	typealias Subject = ThemeStore
+
+	nonisolated static let name = Notification.Name("Glasstual.themeWasModified")
+
+	let subject: ThemeStore
 }
 
 /// The immutable theme values message rendering may read away from the main
@@ -85,9 +96,39 @@ final class ThemeStore {
 	}
 
 	var font: NSFont {
-		NSFont(name: theme.fontName, size: theme.fontSize)
-			?? NSFont.systemFont(ofSize: theme.fontSize)
+		resolvedFont(size: theme.fontSize)
 	}
+
+	/// The theme's font at `scale` times its point size.
+	func scaledFont(scale: CGFloat) -> NSFont {
+		resolvedFont(size: theme.fontSize * scale)
+	}
+
+	/// Resolving a font by name is a lookup in the system's font catalogue, and
+	/// every attribute run of every line asks for one. The cache is keyed by
+	/// name and size, so a theme or scale change reaches a new key and the old
+	/// entries only age out when the table is cleared at its small bound.
+	private func resolvedFont(size: CGFloat) -> NSFont {
+		let key = FontKey(name: theme.fontName, size: size)
+		if let cached = fontCache[key] {
+			return cached
+		}
+		let font = NSFont(name: key.name, size: size) ?? NSFont.systemFont(ofSize: size)
+		if fontCache.count >= Self.fontCacheLimit {
+			fontCache.removeAll(keepingCapacity: true)
+		}
+		fontCache[key] = font
+		return font
+	}
+
+	private struct FontKey: Hashable {
+		let name: String
+		let size: CGFloat
+	}
+
+	private static let fontCacheLimit = 16
+
+	@ObservationIgnored private var fontCache: [FontKey: NSFont] = [:]
 
 	var backgroundColor: NSColor {
 		resolved(theme.palette.background)
@@ -115,10 +156,11 @@ final class ThemeStore {
 		 resolved against, and the system's own light/dark switch never passes
 		 through a setting change, so the appearance notifications are the
 		 only thing that says the snapshot has gone stale. */
-		for name in [Notification.Name.applicationAppearanceChanged, .systemAppearanceChanged] {
-			notifications.observe(name) { [weak self] _ in
-				self?.appearanceDidChange()
-			}
+		notifications.observe(ApplicationAppearanceChanged.self) { [weak self] _ in
+			self?.appearanceDidChange()
+		}
+		notifications.observe(SystemAppearanceChanged.self) { [weak self] _ in
+			self?.appearanceDidChange()
 		}
 
 		/* Increase Contrast and Differentiate Without Color both change what a
@@ -192,7 +234,7 @@ final class ThemeStore {
 			return
 		}
 
-		NotificationCenter.default.post(name: .themeAppearanceChanged, object: self)
+		ThemeAppearanceChanged(subject: self).post()
 	}
 
 	/// Resolves `color` against the published appearance, so a colour drawn
@@ -217,7 +259,7 @@ final class ThemeStore {
 			}
 		}
 
-		NotificationCenter.default.post(name: .themeWasModified, object: self)
+		ThemeWasModified(subject: self).post()
 	}
 
 	/// Reports whether the snapshot moved, so a caller can skip announcing a

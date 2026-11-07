@@ -114,6 +114,41 @@ struct WireRedactionTests {
 		#expect(WireRedaction.redactedRawChatLine(line) == line)
 	}
 
+	@Test("Channel keys in JOIN are masked and the channels stay legible")
+	func joinKeysAreMasked() {
+		#expect(WireRedaction.redactedRawChatLine("JOIN #a swordfish") == "JOIN #a \(mask)")
+		#expect(
+			WireRedaction.redactedRawChatLine("JOIN #a,#b,#c k1,,k3")
+				== "JOIN #a,#b,#c \(mask),,\(mask)"
+		)
+		#expect(WireRedaction.redactedRawChatLine("JOIN #a,#b") == "JOIN #a,#b")
+		#expect(WireRedaction.redactedRawChatLine("JOIN #a :swordfish") == "JOIN #a :\(mask)")
+	}
+
+	@Test("A channel key set or removed with MODE is masked")
+	func modeKeysAreMasked() {
+		#expect(WireRedaction.redactedRawChatLine("MODE #a +k swordfish") == "MODE #a +k \(mask)")
+		#expect(WireRedaction.redactedRawChatLine("MODE #a -k swordfish") == "MODE #a -k \(mask)")
+		#expect(WireRedaction.redactedRawChatLine("MODE #a +lk 10 swordfish") == "MODE #a +lk 10 \(mask)")
+		#expect(WireRedaction.redactedRawChatLine("MODE #a +kl swordfish 10") == "MODE #a +kl \(mask) 10")
+		#expect(WireRedaction.redactedRawChatLine("MODE #a +o-k mara swordfish") == "MODE #a +o-k mara \(mask)")
+		// `-l` takes no argument, so the key is the first one.
+		#expect(WireRedaction.redactedRawChatLine("MODE #a -lk swordfish") == "MODE #a -lk \(mask)")
+		#expect(WireRedaction.redactedRawChatLine("MODE #a +k :swordfish") == "MODE #a +k :\(mask)")
+	}
+
+	@Test("A mode string with a letter this walk does not know masks every argument")
+	func unknownModeLettersFailClosed() {
+		#expect(WireRedaction.redactedRawChatLine("MODE #a +Xk 5 swordfish") == "MODE #a +Xk \(mask) \(mask)")
+	}
+
+	@Test("Modes that carry no key are untouched")
+	func keylessModesAreUntouched() {
+		#expect(WireRedaction.redactedRawChatLine("MODE #a +b bad!*@*") == "MODE #a +b bad!*@*")
+		#expect(WireRedaction.redactedRawChatLine("MODE #a") == "MODE #a")
+		#expect(WireRedaction.redactedRawChatLine("MODE mara +i") == "MODE mara +i")
+	}
+
 	/// A message to somebody who merely happens to start a line with IDENTIFY
 	/// is a message, not a credential.
 	@Test("A conversation with a person is not treated as a service exchange")

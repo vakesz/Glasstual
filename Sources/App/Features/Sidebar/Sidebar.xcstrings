@@ -121,26 +121,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Menciones"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Mentions"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "言及"
+            "state": "translated",
+            "value": "メンション"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Mencões"
+            "state": "translated",
+            "value": "Menções"
           }
         }
       }
@@ -169,25 +169,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Filtrar conversaciones"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Filtrez les conversations"
+            "state": "translated",
+            "value": "Filtrer les conversations"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "会話をフィルタリングする"
+            "state": "translated",
+            "value": "会話を絞り込む"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Filtrar conversas"
           }
         }
@@ -217,25 +217,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Favoritos"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Favoris"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "お気に入り"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Favoritos"
           }
         }
@@ -265,25 +265,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Pinchar en Favoritos"
+            "state": "translated",
+            "value": "Fijar en Favoritos"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Coller dans les favoris"
+            "state": "translated",
+            "value": "Épingler aux favoris"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "お気に入りに追加"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Fixar nos Favoritos"
           }
         }
@@ -313,25 +313,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Eliminar de favoritos"
+            "state": "translated",
+            "value": "Quitar de Favoritos"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Supprimer des favoris"
+            "state": "translated",
+            "value": "Retirer des favoris"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "お気に入りから削除する"
+            "state": "translated",
+            "value": "お気に入りから削除"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Remover dos Favoritos"
           }
         }
@@ -361,26 +361,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Marcado en Favoritos"
+            "state": "translated",
+            "value": "Fijado en Favoritos"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Encollé dans les favoris"
+            "state": "translated",
+            "value": "Épinglé aux favoris"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "お気に入りに追加"
+            "state": "translated",
+            "value": "お気に入りに追加済み"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Marcado como Favoritos"
+            "state": "translated",
+            "value": "Fixado nos Favoritos"
           }
         }
       }
@@ -409,25 +409,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Sin conversaciones sin leer"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Aucune conversation non lue"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "未読の会話はありません"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Nenhuma conversa não lida"
           }
         }
@@ -457,25 +457,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Sin menciones"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Aucune mention"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "言及なし"
+            "state": "translated",
+            "value": "メンションなし"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Nenhuma menção"
           }
         }
@@ -505,26 +505,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Las conversaciones en las que alguien te menciona aparecen aquí."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Les conversations où quelqu'un vous mentionne apparaissent ici."
+            "state": "translated",
+            "value": "Les conversations où quelqu’un vous mentionne apparaissent ici."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "誰かがあなたを言及している会話が表示されます。"
+            "state": "translated",
+            "value": "誰かがあなたにメンションした会話がここに表示されます。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Conversas onde alguém menciona você aparecem aqui."
+            "state": "translated",
+            "value": "As conversas em que alguém menciona você aparecem aqui."
           }
         }
       }
@@ -553,26 +553,266 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Las conversaciones con nuevos mensajes aparecen aquí."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Les conversations avec de nouveaux messages apparaissent ici."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "新しいメッセージの会話がここに表示されます。"
+            "state": "translated",
+            "value": "新しいメッセージのある会話がここに表示されます。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Conversas com novas mensagens aparecem aqui."
+            "state": "translated",
+            "value": "As conversas com novas mensagens aparecem aqui."
+          }
+        }
+      }
+    },
+    "outline-accessibility-label": {
+      "comment": "Accessibility label of the sidebar list of servers, channels and private conversations.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Servers and conversations"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server und Unterhaltungen"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kiszolgálók és beszélgetések"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Servidores y conversaciones"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serveurs et conversations"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバと会話"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Servidores e conversas"
+          }
+        }
+      }
+    },
+    "bouncer-status-connecting": {
+      "comment": "Line under a bouncer network's name in the sidebar while the bouncer connects it to its server.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connecting"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapcsolódás"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbindung wird hergestellt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conectando"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connexion en cours"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "接続中"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conectando"
+          }
+        }
+      }
+    },
+    "bouncer-status-disconnected": {
+      "comment": "Line under a bouncer network's name in the sidebar while the bouncer is not connected to its server.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnected"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapcsolat bontva"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Getrennt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desconectado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Déconnecté"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "切断済み"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desconectada"
+          }
+        }
+      }
+    },
+    "bouncer-status-failed": {
+      "comment": "Line under a bouncer network's name in the sidebar when the bouncer could not reach its server. The argument is the reason the bouncer gave.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connection failed: %@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapcsolódás sikertelen: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbindung fehlgeschlagen: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Error de conexión: %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Échec de la connexion : %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "接続に失敗しました: %@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falha na conexão: %@"
+          }
+        }
+      }
+    },
+    "bouncer-status-removed": {
+      "comment": "Line under a bouncer network's name in the sidebar when the bouncer no longer lists the network.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removed from the bouncer"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eltávolítva a bouncerből"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vom Bouncer entfernt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminada del bouncer"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retiré du bouncer"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "バウンサーから削除済み"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removida do bouncer"
           }
         }
       }

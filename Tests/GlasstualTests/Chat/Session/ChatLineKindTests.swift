@@ -6,17 +6,19 @@ import Testing
 
 @Suite("Log line types")
 struct ChatLineKindTests {
-	@Test("What a person said is conversation")
-	func spokenLinesAreConversation() {
-		for type in [ChatLineKind.privateMessage, .privateMessageNoHighlight, .action, .actionNoHighlight, .notice] {
-			#expect(type.isConversation, "\(type)")
-		}
+	@Test(
+		"What a person said is conversation",
+		arguments: [ChatLineKind.privateMessage, .privateMessageNoHighlight, .action, .actionNoHighlight, .notice]
+	)
+	func spokenLinesAreConversation(_ type: ChatLineKind) {
+		#expect(type.isConversation, "\(type)")
 	}
 
-	@Test("What the session narrates on join is not")
-	func narratedEventsAreNotConversation() {
-		for type in [ChatLineKind.join, .part, .quit, .mode, .topic, .nick, .kick, .debug, .website] {
-			#expect(type.isConversation == false, "\(type)")
-		}
+	@Test(
+		"What the session narrates on join is not",
+		arguments: [ChatLineKind.join, .part, .quit, .mode, .topic, .nick, .kick, .debug, .website]
+	)
+	func narratedEventsAreNotConversation(_ type: ChatLineKind) {
+		#expect(type.isConversation == false, "\(type)")
 	}
 }

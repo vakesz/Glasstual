@@ -9,15 +9,20 @@ import Foundation
  Copyright © 2000 - 2012 the Colloquy IRC Client. Redistribution is permitted
  under the three-clause BSD license reproduced in Acknowledgements.pdf. */
 
-extension Notification.Name {
-	static let serverSessionConfigWasUpdated = Self("Glasstual.serverSessionConfigWasUpdated")
-	static let serverSessionConversationListWasModified = Self("Glasstual.serverSessionConversationListWasModified")
-	static let serverSessionWillConnect = Self("Glasstual.serverSessionWillConnect")
-	static let serverSessionDidConnect = Self("Glasstual.serverSessionDidConnect")
-	static let serverSessionWillSendQuit = Self("Glasstual.serverSessionWillSendQuit")
-	static let serverSessionWillDisconnect = Self("Glasstual.serverSessionWillDisconnect")
-	static let serverSessionDidDisconnect = Self("Glasstual.serverSessionDidDisconnect")
-	nonisolated static let serverSessionUserNicknameChanged = Self("Glasstual.serverSessionUserNicknameChanged")
+struct ServerSessionConfigWasUpdated: SubjectMessage {
+	typealias Subject = ServerSession
+
+	nonisolated static let name = Notification.Name("Glasstual.serverSessionConfigWasUpdated")
+
+	let subject: ServerSession
+}
+
+struct ServerSessionConversationListWasModified: SubjectMessage {
+	typealias Subject = ServerSession
+
+	nonisolated static let name = Notification.Name("Glasstual.serverSessionConversationListWasModified")
+
+	let subject: ServerSession
 }
 
 class ServerSession: ChatItem {
@@ -152,15 +157,20 @@ class ServerSession: ChatItem {
 	var disconnectCallbacks: [() -> Void] = []
 	/** Both delays are cancellable so that a reconnect inside the delay window
 	 cannot have a stale block act on the new session. */
-	var pendingDisconnectTask: Task<Void, Never>?
+	var pendingDisconnectTask: SessionTimer?
 	var pendingConnectionTask: Task<Void, Never>?
 	var credentialLoader: @Sendable ([KeychainItem]) async -> [KeychainItem: String] = {
 		await KeychainSecretLoader.passwords(for: $0)
 	}
 
 	var startup = StartupState()
-	var trackedUserPopulationTask: Task<Void, Never>?
-	var rejoinTasks: [String: Task<Void, Never>] = [:]
+
+	/// Paces the settling delay after connect commands; tests step their own.
+	var startupClock = TimerClock.continuous
+	/// The scripts this session started that are still running.
+	let scriptTasks = ScriptTaskBag()
+	var trackedUserPopulationTask: SessionTimer?
+	var rejoinTasks: [String: SessionTimer] = [:]
 	var pendingConfirmationTasks: [UUID: Task<Void, Never>] = [:]
 	var renderAdmission = RenderAdmission()
 	/// Member ordering and native-list presentation for one bounded inbound read
@@ -288,9 +298,13 @@ class ServerSession: ChatItem {
 	/** `findConversation(_:)` sits on the path of nearly every inbound line, so the
 	 conversation list is mirrored by casefolded name. The mirror is rebuilt
 	 whenever the list or a conversation's configuration changes; a lookup still
-	 verifies its hit and falls back to a scan, because a rename or a new
-	 CASEMAPPING can arrive without either. */
+	 verifies its hit. A miss is only trusted while the index was folded under
+	 the CASEMAPPING now in force; names change only through paths that
+	 rebuild it. */
 	var conversationIndex = CasefoldedIndex<Conversation>()
+	/// The CASEMAPPING the index was folded under, or `nil` before the first
+	/// rebuild. A different one means every key in the index is stale.
+	var conversationIndexCaseMapping: ISupportCaseMapping?
 	weak var lastSelectedConversation: Conversation?
 	let addressBookMatchCache = AddressBookMatchCache()
 	/// The netsplit or netjoin batch being collapsed into one summary line, and
@@ -298,6 +312,8 @@ class ServerSession: ChatItem {
 	var netsplitCollapse = NetsplitCollapse()
 	/// The bouncer session, when the server on the other end is a ZNC.
 	var znc = ZNCSession()
+	/// What the connection knows about soju's bouncer networks.
+	var bouncer = BouncerSession()
 	var successfulConnects: UInt = 0
 	let isonTimer: SessionTimer
 	let whoTimer: SessionTimer
@@ -382,7 +398,7 @@ class ServerSession: ChatItem {
 
 	isolated deinit {
 		sasl.scramTask?.cancel()
-		pendingDisconnectTask?.cancel()
+		pendingDisconnectTask?.stop()
 		pendingConnectionTask?.cancel()
 		outboundTextProducer?.cancel()
 		notifications.cancelAll()
@@ -392,8 +408,9 @@ class ServerSession: ChatItem {
 			sasl.timeoutTimer,
 		].forEach { timer in timer.stop() }
 		startup.cancel()
-		trackedUserPopulationTask?.cancel()
-		rejoinTasks.values.forEach { $0.cancel() }
+		scriptTasks.cancelAll()
+		trackedUserPopulationTask?.stop()
+		rejoinTasks.values.forEach { $0.stop() }
 		pendingConfirmationTasks.values.forEach { $0.cancel() }
 		labeledResponses.deadlineTask?.cancel()
 	}
@@ -488,64 +505,5 @@ enum SessionDisconnectMode: UInt, Sendable {
 		case .reachabilityChange: String(localized: .IRC.disconnectedFromServerBecauseTheInternet)
 		@unknown default: String(localized: .IRC.miscellaneousMessagesRelatedDisconnected)
 		}
-	}
-}
-
-extension ServerSession {
-	var networkName: String? {
-		supportInfo.networkNameFormatted
-	}
-
-	var networkNameAlt: String {
-		networkName ?? config.connectionName
-	}
-
-	var serverAddress: String? {
-		supportInfo.serverAddress ?? socket?.config.serverAddress ?? server?.serverAddress
-	}
-
-	var isReconnecting: Bool {
-		reconnect.timer.isActive
-	}
-
-	var isSecured: Bool {
-		socket?.isSecured ?? false
-	}
-
-	var zncBouncerCertificateChainData: Data? {
-		guard znc.isConnected,
-		      znc.isSendingCertificateInfo == false,
-		      let certificateData = znc.certificateChainText
-		else { return nil }
-		return certificateData.data(using: .ascii)
-	}
-}
-
-/// The name questions a connection answers with its own ISUPPORT: whether a
-/// name is the local user's, how the server folds it, and what kind of name
-/// it is.
-extension ServerSession {
-	func messageIsFromMyself(_ message: Message) -> Bool {
-		nicknameIsMyself(message.senderNickname ?? "")
-	}
-
-	func nicknameIsMyself(_ nickname: String) -> Bool {
-		casefoldNickname(userNickname) == casefoldNickname(nickname)
-	}
-
-	func casefoldNickname(_ nickname: String) -> String {
-		supportInfo.casefoldString(nickname)
-	}
-
-	func stringIsNickname(_ string: String) -> Bool {
-		string.isHostmaskNickname(on: self) && string.isChannelName(on: self) == false
-	}
-
-	func stringIsChannelName(_ string: String) -> Bool {
-		string.isChannelName(on: self)
-	}
-
-	func stringIsChannelNameOrZero(_ string: String) -> Bool {
-		stringIsChannelName(string) || string == "0"
 	}
 }

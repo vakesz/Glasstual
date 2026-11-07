@@ -15,9 +15,12 @@ import UserNotifications
  naming a category the application no longer registers, and so loses its
  actions. */
 enum UserNotificationCategory: String, CaseIterable {
-	/// Messages, mentions, joins and connection changes: every event with no
-	/// actions of its own.
+	/// Highlights and channel messages: events with no actions of their own
+	/// beyond marking their conversation read.
 	case activity = "GlasstualNotificationCategoryActivity"
+	/// Kicks, invitations, address book matches and connection changes: events
+	/// that are not a message, so there is no conversation to mark read.
+	case event = "GlasstualNotificationCategoryEvent"
 	case fileTransfer = "GlasstualNotificationCategoryFileTransfer"
 	case privateMessage = "GlasstualNotificationCategoryPrivateMessage"
 
@@ -27,13 +30,15 @@ enum UserNotificationCategory: String, CaseIterable {
 		case acceptFileTransfer = "GlasstualNotificationActionAcceptFileTransfer"
 		case declineFileTransfer = "GlasstualNotificationActionDeclineFileTransfer"
 		case replyToPrivateMessage = "GlasstualNotificationActionReplyToPrivateMessage"
+		case markConversationAsRead = "GlasstualNotificationActionMarkConversationAsRead"
 	}
 
 	init(event: UserNotificationEvent) {
 		switch event {
 		case .fileTransferReceiveRequested: self = .fileTransfer
 		case .newPrivateMessage, .privateMessage: self = .privateMessage
-		default: self = .activity
+		case .highlight, .channelMessage, .channelNotice, .privateNotice: self = .activity
+		default: self = .event
 		}
 	}
 
@@ -51,6 +56,8 @@ enum UserNotificationCategory: String, CaseIterable {
 	private var actions: [UNNotificationAction] {
 		switch self {
 		case .activity:
+			[markAsReadAction]
+		case .event:
 			[]
 		case .fileTransfer:
 			[
@@ -65,7 +72,7 @@ enum UserNotificationCategory: String, CaseIterable {
 				UNNotificationAction(
 					identifier: Action.declineFileTransfer.rawValue,
 					title: String(localized: .Notifications.fileTransferDeclineAction),
-					options: [.destructive]
+					options: []
 				),
 			]
 		case .privateMessage:
@@ -77,15 +84,26 @@ enum UserNotificationCategory: String, CaseIterable {
 					textInputButtonTitle: String(localized: .Notifications.replySendButton),
 					textInputPlaceholder: String(localized: .Notifications.replyPlaceholder)
 				),
+				markAsReadAction,
 			]
 		}
+	}
+
+	/// Clears the conversation's unread state without bringing Glasstual forward:
+	/// the person has read it elsewhere, or does not mean to.
+	private var markAsReadAction: UNNotificationAction {
+		UNNotificationAction(
+			identifier: Action.markConversationAsRead.rawValue,
+			title: String(localized: .Notifications.markAsReadAction),
+			options: []
+		)
 	}
 
 	/// What the system shows instead of the title and body when the person
 	/// hides notification previews.
 	private var hiddenPreviewsBodyPlaceholder: String {
 		switch self {
-		case .activity: String(localized: .Notifications.hiddenPreviewActivity)
+		case .activity, .event: String(localized: .Notifications.hiddenPreviewActivity)
 		case .fileTransfer: String(localized: .Notifications.hiddenPreviewFileTransfer)
 		case .privateMessage: String(localized: .Notifications.hiddenPreviewPrivateMessage)
 		}
@@ -100,7 +118,7 @@ enum UserNotificationCategory: String, CaseIterable {
 		let count = "%u"
 
 		return switch self {
-		case .activity: String(localized: .Notifications.summaryActivity(count))
+		case .activity, .event: String(localized: .Notifications.summaryActivity(count))
 		case .fileTransfer: String(localized: .Notifications.summaryFileTransfers(count))
 		case .privateMessage: String(localized: .Notifications.summaryPrivateMessages(count))
 		}

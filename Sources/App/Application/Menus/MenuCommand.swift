@@ -65,7 +65,7 @@ enum MenuCommand: String, CaseIterable, Sendable {
 	case connectWithoutProxy // Connect Without Proxy
 	case disconnect // Disconnect
 	case cancelReconnect // Cancel Reconnect
-	case channelList // Channel List…
+	case channelList // Channel List
 	case changeNickname // Change Nickname…
 	case addServer // Add Server…
 	case duplicateServer // Duplicate Server
@@ -78,10 +78,10 @@ enum MenuCommand: String, CaseIterable, Sendable {
 	case viewChannelLogs // View Logs
 	case modifyTopic // Modify Topic…
 	case modes // Modes
-	case bans // List of Bans…
-	case banExceptions // List of Ban Exceptions…
-	case inviteExceptions // List of Invite Exceptions…
-	case quiets // List of Quiets…
+	case bans // List of Bans
+	case banExceptions // List of Ban Exceptions
+	case inviteExceptions // List of Invite Exceptions
+	case quiets // List of Quiets
 	case channelProperties // Channel Properties…
 	case copyChannelIdentifier // Copy Unique Identifier
 	case toggleFavorite // Pin to Favorites
@@ -94,7 +94,7 @@ enum MenuCommand: String, CaseIterable, Sendable {
 	case previousHighlight // Previous Highlight
 	case jumpToCurrentSession // Jump to Current Session
 	case jumpToPresent // Jump to Present
-	case navigationChannelList // Channel List
+	case navigationChannelList // Conversations
 	case searchChannels // Filter Sidebar
 	case channelSpotlight // Channel Search…
 	case minimize // Minimize
@@ -110,14 +110,14 @@ enum MenuCommand: String, CaseIterable, Sendable {
 	case mainWindow // Main Window
 	case addressBook // Address Book
 	case viewLogs // Show Logs in Finder
+	case browseTranscriptLogs // Transcript Logs
 	case highlightList // Highlight List
 	case fileTransfers // File Transfers
 	case bringAllToFront // Bring All to Front
 	case acknowledgements // Acknowledgements
 	case connectToHelpChannel // Connect to Help Channel
 	case connectToTestingChannel // Connect to Testing Channel
-	case advanced // Advanced
-	case welcome // Welcome to Glasstual…
+	case welcome // Welcome to Glasstual
 	case channelNameJoinChannel // Join Channel
 	case copyLinkURL // Copy URL
 	case webSearch // Search With %@
@@ -131,15 +131,15 @@ enum MenuCommand: String, CaseIterable, Sendable {
 	case inviteTo // Invite to…
 	case whois // Get Info (Whois)
 	case startDirectConversation // Private Message (Query)
-	case giveOp // Give Op (+o)
-	case giveHalfop // Give Halfop (+h)
-	case giveVoice // Give Voice (+v)
-	case takeOp // Take Op (-o)
-	case takeHalfop // Take Halfop (-h)
-	case takeVoice // Take Voice (-v)
+	case giveOp // Give Operator Status
+	case giveHalfop // Give Half-Operator Status
+	case giveVoice // Give Voice
+	case takeOp // Take Operator Status
+	case takeHalfop // Take Half-Operator Status
+	case takeVoice // Take Voice
 	case ban // Ban
 	case kick // Kick
-	case kickban // Ban and Kick
+	case kickban // Kick and Ban
 	case ctcp // Client-to-Client
 	case ircOperator // IRC Operator
 	case changeColor // Change Color…
@@ -149,8 +149,9 @@ enum MenuCommand: String, CaseIterable, Sendable {
 	case findNext // Find Next
 	case findPrevious // Find Previous
 	case useSelectionForFind // Use Selection for Find
-	case channelModeModerated // Moderated (+m)
-	case channelModeInviteOnly // Invite Only (+i)
+	case findInAllConversations // Find in All Conversations…
+	case channelModeModerated // Moderated
+	case channelModeInviteOnly // Invite Only
 	case channelModeManageAll // Manage All Modes…
 	case nextServer // Next Server
 	case previousServer // Previous Server
@@ -162,9 +163,6 @@ enum MenuCommand: String, CaseIterable, Sendable {
 	case previousActiveChannel // Previous Active Channel
 	case nextUnreadChannel // Next Unread Channel
 	case previousUnreadChannel // Previous Unread Channel
-	case developerMode // Developer Mode
-	case hiddenSettings // Hidden Settings…
-	case resetWarnings // Reset All Warnings
 	case ctcpSendFile // Send File…
 	case ctcpPing // Lag (PING)
 	case ctcpTime // Local Time (TIME)
@@ -212,7 +210,7 @@ extension MenuCommand {
 		case .minimize, .zoom, .toggleMemberList, .toggleSidebar,
 		     .appearanceSystem, .appearanceLight, .appearanceDark, .sortChannelList,
 		     .centerWindow, .resetWindow, .mainWindow, .addressBook, .viewLogs,
-		     .highlightList, .fileTransfers, .bringAllToFront:
+		     .browseTranscriptLogs, .highlightList, .fileTransfers, .bringAllToFront:
 			.window
 		case .webSearch, .transcriptDictionary, .transcriptChannelMenu,
 		     .transcriptReply, .transcriptReact:
@@ -243,8 +241,7 @@ extension MenuCommand {
 	/// Commands that stay live while a sheet is attached to the main window.
 	var isAvailableDuringSheets: Bool {
 		switch self {
-		case .about, .settings, .muteNotifications, .muteNotificationSounds,
-		     .developerMode, .hiddenSettings:
+		case .about, .settings, .muteNotifications, .muteNotificationSounds:
 			true
 		default:
 			false
@@ -256,7 +253,7 @@ extension MenuCommand {
 	var isEssential: Bool {
 		switch self {
 		case .about, .settings, .quit, .printLog, .closeWindow, .paste, .mainWindow,
-		     .acknowledgements, .advanced, .welcome, .exportSettings:
+		     .acknowledgements, .welcome, .exportSettings:
 			true
 		default:
 			false
@@ -285,27 +282,27 @@ extension MenuCommand {
 		.disconnect: "bolt.slash", .cancelReconnect: "xmark.circle",
 		.channelList: "list.bullet", .changeNickname: "pencil",
 		.addServer: "plus", .duplicateServer: "plus.square.on.square",
-		.deleteServer: "trash", .serverProperties: "slider.horizontal.3",
+		.deleteServer: "trash.square", .serverProperties: "gearshape.2",
 		.joinChannel: "arrow.right.square", .leaveChannel: "arrow.left.square",
-		.addChannel: "plus.circle", .deleteChannel: "trash",
+		.addChannel: "plus.circle", .deleteChannel: "minus.circle",
 		.viewChannelLogs: "doc.text", .modifyTopic: "text.quote",
 		.modes: "slider.horizontal.3", .bans: "hand.raised",
-		.channelProperties: "gearshape", .copyChannelIdentifier: "link", .toggleFavorite: "pin",
-		.closeQuery: "xmark", .queryLogs: "doc.text",
-		.channelNameJoinChannel: "arrow.right.square", .copyLinkURL: "link",
-		.webSearch: "magnifyingglass", .transcriptDictionary: "book",
+		.channelProperties: "slider.vertical.3", .copyChannelIdentifier: "number.square", .toggleFavorite: "pin",
+		.closeQuery: "xmark", .queryLogs: "doc.plaintext",
+		.channelNameJoinChannel: "arrow.right.circle", .copyLinkURL: "link",
+		.webSearch: "globe", .transcriptDictionary: "book",
 		.transcriptChannelMenu: "number",
-		.muteUser: "speaker.slash", .unmuteUser: "speaker.wave.2",
-		.addIgnore: "hand.raised", .modifyIgnore: "pencil",
+		.muteUser: "person.crop.circle.badge.minus", .unmuteUser: "person.crop.circle.badge.checkmark",
+		.addIgnore: "eye.slash", .modifyIgnore: "pencil.circle",
 		.removeIgnore: "hand.raised.slash", .inviteTo: "envelope",
 		.whois: "info.circle", .startDirectConversation: "bubble.left",
-		.ban: "nosign", .kick: "person.fill.xmark", .kickban: "nosign",
+		.ban: "nosign", .kick: "person.fill.xmark", .kickban: "hammer",
 		.ctcp: "arrow.left.arrow.right", .ircOperator: "shield",
 		.changeColor: "paintpalette",
 		// Application, File and Edit menus.
 		.settings: "gearshape", .printLog: "printer",
 		.importSettings: "square.and.arrow.down", .exportSettings: "square.and.arrow.up",
-		.closeWindow: "xmark", .undo: "arrow.uturn.backward", .redo: "arrow.uturn.forward",
+		.closeWindow: "xmark.rectangle", .undo: "arrow.uturn.backward", .redo: "arrow.uturn.forward",
 		.cut: "scissors", .delete: "trash", .selectAll: "selection.pin.in.out",
 		.find: "magnifyingglass",
 		// View and Navigation menus.
@@ -315,18 +312,19 @@ extension MenuCommand {
 		.increaseFont: "textformat.size.larger", .decreaseFont: "textformat.size.smaller",
 		.actualSize: "textformat.size",
 		.enterFullScreen: "arrow.up.left.and.arrow.down.right",
-		.navigationServers: "server.rack", .navigationChannels: "number",
+		.navigationServers: "server.rack", .navigationChannels: "number.circle",
 		.moveBackward: "chevron.backward", .moveForward: "chevron.forward",
 		.jumpToPresent: "arrow.down.to.line",
-		.searchChannels: "line.3.horizontal.decrease", .channelSpotlight: "magnifyingglass",
+		.searchChannels: "line.3.horizontal.decrease", .channelSpotlight: "magnifyingglass.circle",
 		// Channel menu.
 		.banExceptions: "checkmark.shield", .inviteExceptions: "envelope.open",
-		.quiets: "speaker.slash",
+		.quiets: "speaker.zzz",
 		// Window and Help menus.
 		.sortChannelList: "arrow.up.arrow.down", .centerWindow: "rectangle.center.inset.filled",
 		.resetWindow: "arrow.counterclockwise", .mainWindow: "macwindow",
-		.addressBook: "book.closed", .viewLogs: "folder", .highlightList: "bell.badge",
-		.fileTransfers: "tray.and.arrow.down",
+		.addressBook: "book.closed", .viewLogs: "folder",
+		.browseTranscriptLogs: "doc.text.magnifyingglass", .highlightList: "bell.badge",
+		.fileTransfers: "tray.and.arrow.down", .findInAllConversations: "text.magnifyingglass",
 		.connectToHelpChannel: "questionmark.bubble", .connectToTestingChannel: "checkmark.bubble",
 	]
 }

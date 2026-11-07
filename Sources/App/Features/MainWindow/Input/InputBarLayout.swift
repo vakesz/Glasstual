@@ -9,11 +9,29 @@ import AppKit
  accessory strip; adding `bottomPadding` to it counts that edge twice. */
 enum InputBarLayout {
 	/// Above and below the field, inside the capsule.
-	static let fieldVerticalPadding: CGFloat = 6
+	static let fieldVerticalPadding = UISpacing.snug
 	/// Between the capsule and the column's foot; SwiftUI's side only.
-	static let bottomPadding: CGFloat = 6
-	static let replyBannerHeight: CGFloat = 30
-	static let typingRowHeight: CGFloat = 18
+	static let bottomPadding = UISpacing.snug
+
+	/** The reply banner's height: one line of the banner's own text style and
+	 the room above and below it. The banner is sized by its content with this
+	 as its minimum, so the transcript's inset -- which AppKit computes from
+	 this number rather than from a SwiftUI measurement -- and the banner agree
+	 without feeding SwiftUI geometry back into layout. */
+	static var replyBannerHeight: CGFloat {
+		ceil(TextLineMetrics.lineHeight(for: .preferredFont(forTextStyle: .subheadline))) + UISpacing.regular * 2
+	}
+
+	/// The typing row's height, from the same reasoning.
+	static var typingRowHeight: CGFloat {
+		ceil(TextLineMetrics.lineHeight(for: .preferredFont(forTextStyle: .subheadline))) + UISpacing.tight
+	}
+
+	/** The corner radius of a surface set above the capsule. The capsule is a
+	 stadium about 40 pt tall, so its radius is about 20 pt; the accessory
+	 surfaces sit `loose - regular` (8 pt) further in than the capsule's sides,
+	 and a concentric curve is the capsule's radius less that inset, 12 pt. */
+	static let accessoryCornerRadius = UISpacing.wide
 
 	/* The same capsule measured from the AppKit side: the container the field's
 	 scroll view sits in, inset from the host view, and the scroll view's own
@@ -22,14 +40,14 @@ enum InputBarLayout {
 	 from two directions. */
 
 	/// The container's inset from the host view.
-	static let containerTopInset: CGFloat = 7
-	static let containerBottomInset: CGFloat = 6
-	static let containerHorizontalInset: CGFloat = 10
+	static let containerTopInset = UISpacing.snug
+	static let containerBottomInset = UISpacing.snug
+	static let containerHorizontalInset = UISpacing.comfortable
 	/// The host view's height before the field has measured any text.
-	static let hostInitialHeight: CGFloat = 38
+	static let hostInitialHeight = containerTopInset + containerBottomInset + scrollViewVerticalInset * 2 + minimumTextHeight
 	/// The scroll view's inset inside the container.
-	static let scrollViewTrailingInset: CGFloat = 10
-	static let scrollViewVerticalInset: CGFloat = 3
+	static let scrollViewTrailingInset = UISpacing.comfortable
+	static let scrollViewVerticalInset = UISpacing.tight
 	/// The shortest the text view itself may be: one line.
 	static let minimumTextHeight: CGFloat = 19
 
@@ -37,7 +55,7 @@ enum InputBarLayout {
 	static let fieldInset = NSSize(width: 1, height: 2)
 	/// The vertical room the bar's background adds around one line of text,
 	/// which is what sets the bar's minimum height.
-	static let fieldBorderPadding: CGFloat = 23
+	static let fieldBorderPadding = containerTopInset + containerBottomInset + scrollViewVerticalInset * 2 + fieldInset.height * 2
 
 	/// The field's font for a text-size setting. The sizes track the system
 	/// text styles so they follow the reader's text size settings rather

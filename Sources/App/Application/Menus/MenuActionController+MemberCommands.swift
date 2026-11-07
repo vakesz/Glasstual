@@ -97,19 +97,19 @@ extension MenuActionController {
 	}
 
 	@objc func memberKickFromChannel(_ sender: NSMenuItem?) {
-		performChannelModeration(sender: sender) { session, channel, nickname in
+		performChannelModeration(.kick, sender: sender) { session, channel, nickname in
 			session.kick(nickname, in: channel)
 		}
 	}
 
 	@objc func memberBanFromChannel(_ sender: NSMenuItem?) {
-		performChannelModeration(sender: sender) { session, channel, nickname in
+		performChannelModeration(.ban, sender: sender) { session, channel, nickname in
 			session.sendCommand("BAN \(nickname)", completeTarget: true, target: channel.name)
 		}
 	}
 
 	@objc func memberKickbanFromChannel(_ sender: NSMenuItem?) {
-		performChannelModeration(sender: sender) { session, channel, nickname in
+		performChannelModeration(.kickban, sender: sender) { session, channel, nickname in
 			session.sendCommand(
 				MemberModerationCommand.kickban(nickname, reason: SettingsKeys.Commands.kickMessage.value),
 				completeTarget: true,
@@ -270,16 +270,70 @@ private extension MenuActionController {
 		)
 	}
 
-	/// Kick, ban and kickban only mean anything inside a `#channel`, so the one
-	/// guard they share sits here.
-	func performChannelModeration(sender: NSMenuItem?, action: (ServerSession, Conversation, String) -> Void) {
+	/// The channel moderation commands that remove someone, which is why each
+	/// one asks before it acts.
+	enum ChannelModeration {
+		case kick
+		case ban
+		case kickban
+
+		func title(members: String, channel: String) -> String {
+			switch self {
+			case .kick: String(localized: .Prompts.moderationKickTitle(members, channel))
+			case .ban: String(localized: .Prompts.moderationBanTitle(members, channel))
+			case .kickban: String(localized: .Prompts.moderationKickbanTitle(members, channel))
+			}
+		}
+
+		var body: String {
+			switch self {
+			case .kick: String(localized: .Prompts.moderationKickBody)
+			case .ban, .kickban: String(localized: .Prompts.moderationBanBody)
+			}
+		}
+
+		var button: String {
+			switch self {
+			case .kick: String(localized: .Prompts.moderationKickButton)
+			case .ban: String(localized: .Prompts.moderationBanButton)
+			case .kickban: String(localized: .Prompts.moderationKickbanButton)
+			}
+		}
+	}
+
+	/** Asks, then applies `action` to each selected member. Kick, ban and kickban
+	 only mean anything inside a `#channel`, so the one guard they share sits here.
+
+	 The target is read once, before the sheet: the selection can change while
+	 it is up, and the question names the people the answer will act on. */
+	func performChannelModeration(
+		_ kind: ChannelModeration,
+		sender: NSMenuItem?,
+		action: @escaping (ServerSession, Conversation, String) -> Void
+	) {
 		guard let target = context.commandTarget(for: sender),
 		      target.session.isLoggedIn, target.conversation.isChannel
 		else { return }
-		for nickname in target.nicknames {
-			action(target.session, target.conversation, nickname)
+		let session = target.session
+		let channel = target.conversation
+		let nicknames = target.nicknames
+		guard nicknames.isEmpty == false else { return }
+
+		/* Cancel is the Return key: a confirmation whose default removes
+		 someone turns a reflex into a ban. */
+		Alerts.present(AlertRequest(
+			title: kind.title(members: nicknames.formatted(.list(type: .and)), channel: channel.name),
+			body: kind.body,
+			defaultButton: kind.button,
+			alternateButton: PromptStrings.Action.cancel,
+			destructiveButton: .default
+		), on: .anyVisibleWindow) { outcome in
+			guard outcome.response == .default, session.isLoggedIn else { return }
+			for nickname in nicknames {
+				action(session, channel, nickname)
+			}
+			self.context.deselectMembers(for: sender)
 		}
-		context.deselectMembers(for: sender)
 	}
 
 	func performOperatorCommand(_ command: String, reason: String, sender: NSMenuItem?) {
@@ -359,14 +413,5 @@ private extension MenuActionController {
 				}
 			}
 		}
-	}
-}
-
-/// Where the nickname insertion above landed once it has replaced a selection.
-/// The replaced range describes storage that no longer exists, so nothing may
-/// be measured against it afterwards.
-nonisolated enum MenuInsertionRangePolicy {
-	static func insertedRange(replacing replaced: NSRange, with insertion: String) -> NSRange {
-		NSRange(location: replaced.location, length: insertion.utf16.count)
 	}
 }

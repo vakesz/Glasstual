@@ -63,33 +63,23 @@ struct MainWindowRootView: View {
 					}
 				}
 			} detail: {
-				GeometryReader { _ in
-					VStack(spacing: 0) {
-						if let connection = chrome.connection {
-							MainWindowConnectionRow(presentation: connection) { action in
-								connection.perform(action, in: columns.window, commands: commands)
+				conversationDetail
+					.background(columns.conversationBackground.ignoresSafeArea(.container, edges: .top))
+					.inspector(isPresented: memberListVisibility) {
+						MemberListView(model: memberList, redirectTyping: redirectTyping)
+							.onGeometryChange(for: CGFloat.self) { geometry in
+								geometry.size.width.rounded()
+							} action: { width in
+								guard columns.isMemberListVisible else { return }
+								columns.recordMemberListWidth(width)
+								memberListWidthWriter.record(width)
 							}
-						}
-						MainWindowConversation(columns: columns, inputContentView: inputContentView)
+							.inspectorColumnWidth(
+								min: MemberListLayout.minimumWidth,
+								ideal: min(memberListIdealWidth, memberListMaximumWidth),
+								max: memberListMaximumWidth
+							)
 					}
-					.frame(minWidth: MainWindowConstants.conversationMinimumWidth, maxWidth: .infinity, maxHeight: .infinity)
-				}
-				.background(columns.conversationBackground.ignoresSafeArea(.container, edges: .top))
-				.inspector(isPresented: memberListVisibility) {
-					MemberListView(model: memberList, redirectTyping: redirectTyping)
-						.onGeometryChange(for: CGFloat.self) { geometry in
-							geometry.size.width.rounded()
-						} action: { width in
-							guard columns.isMemberListVisible else { return }
-							columns.recordMemberListWidth(width)
-							memberListWidthWriter.record(width)
-						}
-						.inspectorColumnWidth(
-							min: MemberListLayout.minimumWidth,
-							ideal: min(memberListIdealWidth, memberListMaximumWidth),
-							max: memberListMaximumWidth
-						)
-				}
 			}
 			.navigationSplitViewStyle(.balanced)
 			.onGeometryChange(for: CGFloat.self) { geometry in
@@ -146,20 +136,41 @@ struct MainWindowRootView: View {
 			onCompletion: sheets.completeTransferFileSelection
 		)
 		.settingsTransfer(sheets.settingsTransfer)
-		.sheet(item: inputPrompt) { prompt in
-			InputPromptView(
-				presentation: prompt,
-				submit: {
-					sheets.completeInputPrompt(.submitted(prompt.value), for: prompt)
-				},
-				cancel: {
-					sheets.completeInputPrompt(.cancelled, for: prompt)
-				}
-			)
-		}
+		.sheet(item: inputPrompt, content: inputPromptSheet)
 		.sheet(item: presentedSheet) { presentation in
 			MainWindowSheetHost(model: sheets, presentation: presentation)
 		}
+	}
+
+	/// The connection row above the conversation. It fills the column from the
+	/// top-leading corner, as the geometry reader it replaces did.
+	private var conversationDetail: some View {
+		VStack(spacing: 0) {
+			if let connection = chrome.connection, connection.hasActions {
+				MainWindowConnectionRow(presentation: connection) { action in
+					connection.perform(action, in: columns.window, commands: commands)
+				}
+			}
+			MainWindowConversation(columns: columns, inputContentView: inputContentView)
+		}
+		.frame(
+			minWidth: MainWindowConstants.conversationMinimumWidth,
+			maxWidth: .infinity,
+			maxHeight: .infinity,
+			alignment: .topLeading
+		)
+	}
+
+	private func inputPromptSheet(_ prompt: InputPromptPresentation) -> some View {
+		InputPromptView(
+			presentation: prompt,
+			submit: {
+				sheets.completeInputPrompt(.submitted(prompt.value), for: prompt)
+			},
+			cancel: {
+				sheets.completeInputPrompt(.cancelled, for: prompt)
+			}
+		)
 	}
 
 	private var sidebarFilterMenu: some View {

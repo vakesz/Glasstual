@@ -34,22 +34,7 @@ nonisolated enum BundleResources {
 	/// `Sendable` and so needed an escape hatch to be a global. Caching the file
 	/// contents instead keeps the point of the cache — none of these files is
 	/// read from disk twice — around a value the compiler can check.
-	private static let resourceFileContents = Mutex<[String: Data]>([:])
-
-	/// Empties the cache. Tests plant entries in it, and it is process-wide.
-	static func removeAllCachedResources() {
-		resourceFileContents.withLock { contents in
-			contents.removeAll()
-		}
-	}
-
-	/// Whether `name`'s contents have been read already. For tests: the cache is
-	/// an optimisation, so nothing else has a reason to ask.
-	static func hasCachedResource(named name: String, inDirectory subpath: String? = nil) -> Bool {
-		resourceFileContents.withLock { contents in
-			contents[cacheKey(name: name, subpath: subpath)] != nil
-		}
-	}
+	static let resourceFileContents = Mutex<[String: Data]>([:])
 
 	// MARK: - Loading
 
@@ -155,7 +140,7 @@ nonisolated enum BundleResources {
 		return fileContents
 	}
 
-	private static func cacheKey(name: String, subpath: String?) -> String {
+	static func cacheKey(name: String, subpath: String?) -> String {
 		"\(name).plist / \(subpath ?? "Root Folder")"
 	}
 

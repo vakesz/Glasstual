@@ -31,21 +31,6 @@ extension MenuGraph {
 			key: ","
 		),
 		.separator(),
-		/* Muting is an application-wide mode, not a document command: it sits
-			beside Settings rather than in a File menu it has nothing to do with. */
-		.item(
-			String(localized: .MainWindow.menuMuteNotifications),
-			.muteNotifications,
-			#selector(MenuActionController.toggleMuteOnNotifications(_:))
-		),
-		.item(
-			String(localized: .MainWindow.menuMuteNotificationSounds),
-			.muteNotificationSounds,
-			#selector(MenuActionController.toggleMuteOnNotificationSounds(_:)),
-			key: "m",
-			modifiers: [.command, .shift]
-		),
-		.separator(),
 		.item(String(localized: .MainWindow.menuApplicationServices), .services, children: []),
 		.separator(),
 		.item(String(localized: .MainWindow.menuApplicationHide), .hideApplication, #selector(NSApplication.hide(_:)), key: "h"),
@@ -73,6 +58,13 @@ extension MenuGraph {
 			String(localized: .MainWindow.menuFileExportSettings),
 			.exportSettings,
 			#selector(MenuActionController.exportSettings(_:))
+		),
+		.separator(),
+		.item(
+			String(localized: .MainWindow.menuWindowViewLogs),
+			.viewLogs,
+			#selector(MenuActionController.openLogLocation(_:)),
+			key: "3"
 		),
 		.separator(),
 		.item(String(localized: .MainWindow.menuFileCloseWindow), .closeWindow, #selector(MenuActionController.closeWindow(_:)), key: "w"),
@@ -124,6 +116,14 @@ extension MenuGraph {
 			key: "k"
 		),
 		.separator(),
+		/* No key equivalent: ⌘R reads as Reload everywhere else on the system,
+			and this rearranges the sidebar. */
+		.item(
+			String(localized: .MainWindow.menuWindowSortChannelList),
+			.sortChannelList,
+			#selector(MenuActionController.sortConversationList(_:))
+		),
+		.separator(),
 		.item(
 			String(localized: .MainWindow.menuViewIncreaseFontSize),
 			.increaseFont,
@@ -166,6 +166,20 @@ extension MenuGraph {
 			),
 		]),
 		.separator(),
+		/* Muting is an application-wide mode. The Dock menu offers it as well. */
+		.item(
+			String(localized: .MainWindow.menuMuteNotifications),
+			.muteNotifications,
+			#selector(MenuActionController.toggleMuteOnNotifications(_:))
+		),
+		.item(
+			String(localized: .MainWindow.menuMuteNotificationSounds),
+			.muteNotificationSounds,
+			#selector(MenuActionController.toggleMuteOnNotificationSounds(_:)),
+			key: "m",
+			modifiers: [.command, .shift]
+		),
+		.separator(),
 		.item(
 			String(localized: .MainWindow.menuViewEnterFullScreen),
 			.enterFullScreen,
@@ -178,14 +192,6 @@ extension MenuGraph {
 	static let windowEntries: [Entry] = [
 		.item(String(localized: .MainWindow.menuWindowMinimize), .minimize, #selector(NSWindow.performMiniaturize(_:)), key: "m"),
 		.item(String(localized: .MainWindow.menuWindowZoom), .zoom, #selector(NSWindow.performZoom(_:))),
-		.separator(),
-		/* No key equivalent: ⌘R reads as Reload everywhere else on the system,
-			and this rearranges the sidebar. */
-		.item(
-			String(localized: .MainWindow.menuWindowSortChannelList),
-			.sortChannelList,
-			#selector(MenuActionController.sortConversationList(_:))
-		),
 		.separator(),
 		.item(
 			String(localized: .MainWindow.menuWindowCenter),
@@ -211,10 +217,10 @@ extension MenuGraph {
 			key: "2"
 		),
 		.item(
-			String(localized: .MainWindow.menuWindowViewLogs),
-			.viewLogs,
-			#selector(MenuActionController.openLogLocation(_:)),
-			key: "3"
+			String(localized: .TranscriptLogViewer.menuTitle),
+			.browseTranscriptLogs,
+			#selector(MenuActionController.showTranscriptLogViewer(_:)),
+			key: "5"
 		),
 		.item(
 			String(localized: .MainWindow.menuWindowHighlightList),
@@ -258,24 +264,6 @@ extension MenuGraph {
 			.acknowledgements,
 			#selector(MenuActionController.openAcknowledgements(_:))
 		),
-		.separator(),
-		.item(String(localized: .MainWindow.menuHelpAdvanced), .advanced, children: [
-			.item(
-				String(localized: .MainWindow.menuHelpDeveloperMode),
-				.developerMode,
-				#selector(MenuActionController.toggleDeveloperMode(_:))
-			),
-			.item(
-				String(localized: .MainWindow.menuHelpHiddenSettings),
-				.hiddenSettings,
-				#selector(MenuActionController.showHiddenSettings(_:))
-			),
-			.item(
-				String(localized: .MainWindow.menuHelpResetWarnings),
-				.resetWarnings,
-				#selector(MenuActionController.resetSuppressedWarnings(_:))
-			),
-		]),
 	]
 
 	/*  The transcript's own menu.

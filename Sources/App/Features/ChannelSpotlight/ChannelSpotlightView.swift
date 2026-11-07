@@ -85,7 +85,7 @@ struct ChannelSpotlightActivation {
 /// window is asked for; naming them once is what keeps the two in step.
 private enum ChannelSpotlightLayout {
 	static let width: CGFloat = 600
-	static let searchFieldHeight: CGFloat = 76
+	static let searchFieldHeight: CGFloat = 60
 	static let rowHeight: CGFloat = 54
 	static let emptyStateHeight: CGFloat = 72
 	/// How many matches the panel grows to before it starts scrolling.
@@ -133,7 +133,7 @@ struct ChannelSpotlightView: View {
 						}
 					}
 			}
-			.font(.largeTitle.weight(.light))
+			.font(.title2)
 			.padding(.horizontal, UISpacing.loose)
 			.frame(height: ChannelSpotlightLayout.searchFieldHeight)
 
@@ -244,7 +244,11 @@ private struct ChannelSpotlightRow: View {
 
 	var body: some View {
 		HStack(spacing: UISpacing.wide) {
-			VStack(alignment: .leading, spacing: 2) {
+			Image(systemName: result.glyphSymbolName)
+				.foregroundStyle(.secondary)
+				.frame(width: UIListMetrics.glyphWidth)
+				.accessibilityHidden(true)
+			VStack(alignment: .leading, spacing: UISpacing.tight / 2) {
 				Text(verbatim: result.title)
 					.font(.headline)
 					.lineLimit(1)

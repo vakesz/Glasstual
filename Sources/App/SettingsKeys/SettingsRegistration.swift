@@ -29,7 +29,7 @@ enum SettingsRegistration {
 		registerDynamicDefaults()
 		SettingsLaunchRepair.run(
 			stores: .live,
-			backupDirectory: SettingsRecoveryStore.defaultDirectory
+			backupDirectory: SettingsRecoveryDirectory.url
 		)
 	}
 

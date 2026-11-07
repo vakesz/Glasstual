@@ -78,9 +78,13 @@ enum TextFormatterCommand: Int, CaseIterable, Sendable {
  hands it to the first of the two. */
 @MainActor
 final class TextFormattingMenu: NSObject, NSMenuItemValidation {
-	private(set) var formatterMenu: NSMenuItem!
-	private(set) var foregroundColorMenu: NSMenu!
-	private(set) var backgroundColorMenu: NSMenu!
+	let formatterMenu = NSMenuItem(
+		title: String(localized: .MainWindow.ircFormatting),
+		action: nil,
+		keyEquivalent: ""
+	)
+	let foregroundColorMenu = NSMenu(title: TextFormatterCommand.foregroundColorSet.menuTitle)
+	let backgroundColorMenu = NSMenu(title: TextFormatterCommand.backgroundColorSet.menuTitle)
 
 	private let colorPanel = TextFormatterColorPanel()
 
@@ -99,8 +103,7 @@ final class TextFormattingMenu: NSObject, NSMenuItemValidation {
 	}
 
 	private func installMenus() {
-		let root = NSMenu(title: String(localized: .MainWindow.ircFormatting))
-		formatterMenu = NSMenuItem(title: root.title, action: nil, keyEquivalent: "")
+		let root = NSMenu(title: formatterMenu.title)
 		formatterMenu.submenu = root
 
 		for command in Self.formattingCommands {
@@ -117,10 +120,7 @@ final class TextFormattingMenu: NSObject, NSMenuItemValidation {
 
 		root.addItem(.separator())
 
-		foregroundColorMenu = colorMenu(
-			title: TextFormatterCommand.foregroundColorSet.menuTitle,
-			action: #selector(applyForegroundColor)
-		)
+		populateColorMenu(foregroundColorMenu, action: #selector(applyForegroundColor))
 		addColorItems(
 			to: root,
 			setCommand: .foregroundColorSet,
@@ -129,10 +129,7 @@ final class TextFormattingMenu: NSObject, NSMenuItemValidation {
 			menu: foregroundColorMenu
 		)
 
-		backgroundColorMenu = colorMenu(
-			title: TextFormatterCommand.backgroundColorSet.menuTitle,
-			action: #selector(applyBackgroundColor)
-		)
+		populateColorMenu(backgroundColorMenu, action: #selector(applyBackgroundColor))
 		addColorItems(
 			to: root,
 			setCommand: .backgroundColorSet,
@@ -150,7 +147,7 @@ final class TextFormattingMenu: NSObject, NSMenuItemValidation {
 	 be read. `makeMenu()` copies the items, so the menu bar's Format menu
 	 carries them too. */
 	private func installDecorations() {
-		for menu in [foregroundColorMenu!, backgroundColorMenu!] {
+		for menu in [foregroundColorMenu, backgroundColorMenu] {
 			for item in menu.items where item.isSeparatorItem == false && item.action != nil {
 				item.image = Self.colorSwatch(forColorTag: item.tag)
 				/* The title only numbers the colour, which is the IRC code.
@@ -236,8 +233,7 @@ final class TextFormattingMenu: NSObject, NSMenuItemValidation {
 		root.addItem(choose)
 	}
 
-	private func colorMenu(title: String, action: Selector) -> NSMenu {
-		let menu = NSMenu(title: title)
+	private func populateColorMenu(_ menu: NSMenu, action: Selector) {
 		for index in NSColor.formatterColors.indices {
 			let item = NSMenuItem(
 				title: ApplicationStrings.ircColor(at: index),
@@ -256,8 +252,6 @@ final class TextFormattingMenu: NSObject, NSMenuItemValidation {
 			item.target = self
 			menu.addItem(item)
 		}
-
-		return menu
 	}
 
 	// MARK: - The field the menu formats

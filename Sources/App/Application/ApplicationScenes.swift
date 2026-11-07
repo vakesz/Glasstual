@@ -5,13 +5,14 @@ import AppKit
 import SwiftUI
 
 enum ApplicationSceneID {
-	static let about = "about"
 	static let channelMaskList = "channel-ban-list"
 	static let channelSpotlight = "channel-spotlight"
 	static let fileTransfers = "file-transfers"
 	static let onboarding = "onboarding"
+	static let scrollbackSearch = "scrollback-search"
 	static let serverChannelList = "server-channel-list"
 	static let highlightLog = "highlight-log"
+	static let transcriptLogViewer = "transcript-log-viewer"
 }
 
 /** Stable identity for a window group that presents one logical window.
@@ -65,13 +66,14 @@ private struct ApplicationSceneGraph: Scene {
 	let settingsRequest: SettingsSceneRequest
 
 	var body: some Scene {
-		AboutScene()
 		ChannelMaskListScene(window: AppServices.channelMaskList)
 		ChannelSpotlightScene(window: AppServices.channelSpotlight)
 		FileTransferListScene(center: AppServices.fileTransfers)
 		OnboardingScene()
+		ScrollbackSearchScene(window: AppServices.scrollbackSearch)
 		ServerChannelListScene(windows: AppServices.serverChannelLists)
 		HighlightLogScene(windows: AppServices.highlightLogs)
+		TranscriptLogViewerScene(window: AppServices.transcriptLogViewer)
 		SettingsScene(request: settingsRequest)
 	}
 }

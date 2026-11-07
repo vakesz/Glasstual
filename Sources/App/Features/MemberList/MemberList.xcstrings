@@ -25,26 +25,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Disponible"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "disponible"
+            "state" : "translated",
+            "value" : "Disponible"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "利用可能"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "disponível"
+            "state" : "translated",
+            "value" : "Disponível"
           }
         }
       }
@@ -73,26 +73,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Fuera"
+            "state" : "translated",
+            "value" : "Ausente"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "à l'extérieur"
+            "state" : "translated",
+            "value" : "Absent"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "遠くへ"
+            "state" : "translated",
+            "value" : "不在"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "longe"
+            "state" : "translated",
+            "value" : "Ausente"
           }
         }
       }
@@ -121,26 +121,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Botón"
+            "state" : "translated",
+            "value" : "Bot"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Bot"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "ボット"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "robô"
+            "state" : "translated",
+            "value" : "Bot"
           }
         }
       }
@@ -169,26 +169,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Cambiar color"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Changer de couleur"
+            "state" : "translated",
+            "value" : "Changer la couleur"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "色を変更する"
+            "state" : "translated",
+            "value" : "色を変更"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Mudar cor"
+            "state" : "translated",
+            "value" : "Alterar cor"
           }
         }
       }
@@ -217,25 +217,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Elige un color personalizado para este apodo."
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Choisissez une couleur personnalisée pour ce surnom."
+            "state" : "translated",
+            "value" : "Choisissez une couleur personnalisée pour ce pseudo."
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "このニックネームにカスタムカラーを選択してください。"
+            "state" : "translated",
+            "value" : "このニックネームのカスタムカラーを選択します。"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Escolha uma cor personalizada para este apelido."
           }
         }
@@ -265,26 +265,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Color"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Couleur"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "色"
+            "state" : "translated",
+            "value" : "カラー"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "cor"
+            "state" : "translated",
+            "value" : "Cor"
           }
         }
       }
@@ -313,26 +313,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Cuenta"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "compte"
+            "state" : "translated",
+            "value" : "Compte"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "アカウント"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "conta"
+            "state" : "translated",
+            "value" : "Conta"
           }
         }
       }
@@ -361,26 +361,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Dirección"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "adresse"
+            "state" : "translated",
+            "value" : "Adresse"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "住所"
+            "state" : "translated",
+            "value" : "アドレス"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "endereço"
+            "state" : "translated",
+            "value" : "Endereço"
           }
         }
       }
@@ -409,25 +409,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Privilegios"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Privilèges"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "特権"
+            "state" : "translated",
+            "value" : "権限"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Privilégios"
           }
         }
@@ -457,25 +457,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Nombre real"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Nom réel"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "実名"
+            "state" : "translated",
+            "value" : "本名"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Nome real"
           }
         }
@@ -505,26 +505,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Estado"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "statut"
+            "state" : "translated",
+            "value" : "Statut"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "ステータス"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "status"
+            "state" : "translated",
+            "value" : "Status"
           }
         }
       }
@@ -553,26 +553,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Nombre de usuario"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "nom d'utilisateur"
+            "state" : "translated",
+            "value" : "Nom d’utilisateur"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ユーザー名"
+            "state" : "translated",
+            "value" : "ユーザ名"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "nome de usuário"
+            "state" : "translated",
+            "value" : "Nome de usuário"
           }
         }
       }
@@ -601,25 +601,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "—"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "—"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "—"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "—"
           }
         }
@@ -649,26 +649,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Iniciado sesión como %@"
+            "state" : "translated",
+            "value" : "Sesión iniciada como %@"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Connecté en tant que %@"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "%@ としてログインしました"
+            "state" : "translated",
+            "value" : "%@としてログイン中"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Entrou como %@"
+            "state" : "translated",
+            "value" : "Conectado como %@"
           }
         }
       }
@@ -697,25 +697,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "No iniciado sesión"
+            "state" : "translated",
+            "value" : "Sesión no iniciada"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Pas connecté"
+            "state" : "translated",
+            "value" : "Non connecté"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "ログインしていません"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Não conectado"
           }
         }
@@ -745,25 +745,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Vista previa de %@ en el color elegido"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Aperçu de %@ dans la couleur choisie"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "選択した色での%@のプレビュー"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Prévia de %@ na cor escolhida"
           }
         }
@@ -793,26 +793,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Administrador"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "administratif"
+            "state" : "translated",
+            "value" : "Administrateur"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "管理者"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "administração"
+            "state" : "translated",
+            "value" : "Administrador"
           }
         }
       }
@@ -841,25 +841,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Propietario del canal"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Propriétaire de la chaîne"
+            "state" : "translated",
+            "value" : "Propriétaire du canal"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "チャンネル所有者"
+            "state" : "translated",
+            "value" : "チャンネルオーナー"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Proprietário do canal"
           }
         }
@@ -889,26 +889,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Mejor operador"
+            "state" : "translated",
+            "value" : "Semioperador"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Demi-opérateur"
+            "state" : "translated",
+            "value" : "Semi-opérateur"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "ハーフオペレーター"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Meio operador"
+            "state" : "translated",
+            "value" : "Semioperador"
           }
         }
       }
@@ -937,26 +937,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Ninguno"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "aucun"
+            "state" : "translated",
+            "value" : "Aucun"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "なし"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "nenhum"
+            "state" : "translated",
+            "value" : "Nenhum"
           }
         }
       }
@@ -985,26 +985,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Operador"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "opérateur"
+            "state" : "translated",
+            "value" : "Opérateur"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "オペレーター"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "operador"
+            "state" : "translated",
+            "value" : "Operador"
           }
         }
       }
@@ -1033,26 +1033,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Voz"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "voix"
+            "state" : "translated",
+            "value" : "Voix"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "声"
+            "state" : "translated",
+            "value" : "ボイス"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "voz"
+            "state" : "translated",
+            "value" : "Voz"
           }
         }
       }
@@ -1081,25 +1081,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "%1$@ (%2$@)"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "%1$@ (%2$@)"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "%1$@ (%2$@)"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "%1$@ (%2$@)"
           }
         }
@@ -1129,26 +1129,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Personal del servidor"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Personnel du serveur"
+            "state" : "translated",
+            "value" : "Équipe du serveur"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "サーバースタッフ"
+            "state" : "translated",
+            "value" : "サーバスタッフ"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Equipe de servidores"
+            "state" : "translated",
+            "value" : "Equipe do servidor"
           }
         }
       }
@@ -1177,25 +1177,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Administradores"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Administrateurs"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "管理者"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Administradores"
           }
         }
@@ -1225,26 +1225,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Mejoradores"
+            "state" : "translated",
+            "value" : "Semioperadores"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Demi-opérateurs"
+            "state" : "translated",
+            "value" : "Semi-opérateurs"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "ハーフオペレーター"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Meio-Operadores"
+            "state" : "translated",
+            "value" : "Semioperadores"
           }
         }
       }
@@ -1273,25 +1273,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Miembros"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Membres"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "メンバー"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Membros"
           }
         }
@@ -1321,25 +1321,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Operadores"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Opérateurs"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "オペレーター"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Operadores"
           }
         }
@@ -1369,26 +1369,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Propietarios"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Propriétaires"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "所有者"
+            "state" : "translated",
+            "value" : "オーナー"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Donos"
+            "state" : "translated",
+            "value" : "Proprietários"
           }
         }
       }
@@ -1417,25 +1417,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Con voz"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Voiced"
+            "state" : "translated",
+            "value" : "Avec voix"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "音声付き"
+            "state" : "translated",
+            "value" : "ボイスあり"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Com voz"
           }
         }
@@ -1465,26 +1465,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Mostrar perfil"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Afficher le profil"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "プロフィールを表示する"
+            "state" : "translated",
+            "value" : "プロフィールを表示"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Mostrar Perfil"
+            "state" : "translated",
+            "value" : "Mostrar perfil"
           }
         }
       }
@@ -1513,25 +1513,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Usar el color predeterminado"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Utiliser la couleur par défaut"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "デフォルトの色を使用する"
+            "state" : "translated",
+            "value" : "デフォルトの色を使用"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Usar cor padrão"
           }
         }
@@ -1561,26 +1561,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Elimina la superposición de color personalizado para este apodo."
+            "state" : "translated",
+            "value" : "Elimina el color personalizado de este apodo."
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Supprimez la surcharge de couleur personnalisée pour ce surnom."
+            "state" : "translated",
+            "value" : "Retirez la couleur personnalisée de ce pseudo."
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "このニックネームのカスタムカラーオーバーライドを削除します。"
+            "state" : "translated",
+            "value" : "このニックネームのカスタムカラーの設定を削除します。"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Remova a sobreposição de cor personalizada para este apelido."
+            "state" : "translated",
+            "value" : "Remover a cor personalizada deste apelido."
           }
         }
       }
@@ -1609,25 +1609,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "El usuario es un bot"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "L'utilisateur est un bot"
+            "state" : "translated",
+            "value" : "L’utilisateur est un bot"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ユーザーはボットです。"
+            "state" : "translated",
+            "value" : "ユーザはボットです"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "O usuário é um bot"
           }
         }
@@ -1657,26 +1657,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "El usuario está ausente"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "L'utilisateur est absent"
+            "state" : "translated",
+            "value" : "L’utilisateur est absent"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ユーザーは不在です"
+            "state" : "translated",
+            "value" : "ユーザは不在です"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Usuário está ausente"
+            "state" : "translated",
+            "value" : "O usuário está ausente"
           }
         }
       }
@@ -1705,25 +1705,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "El usuario no está ausente"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "L'utilisateur n'est pas absent"
+            "state" : "translated",
+            "value" : "L’utilisateur n’est pas absent"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ユーザーは不在ではありません"
+            "state" : "translated",
+            "value" : "ユーザは不在ではありません"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "O usuário não está ausente"
           }
         }
@@ -1753,26 +1753,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Color para \"%@\""
+            "state" : "translated",
+            "value" : "Color de «%@»"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Couleur pour « %@ »"
+            "state" : "translated",
+            "value" : "Couleur pour « %@ »"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "「%@」の色"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Cor para \"%@\""
+            "state" : "translated",
+            "value" : "Cor de “%@”"
           }
         }
       }

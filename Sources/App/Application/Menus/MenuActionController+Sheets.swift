@@ -39,11 +39,22 @@ extension MenuActionController {
 	}
 
 	@objc func showAboutWindow(_: Any?) {
-		AppServices.scenes.open(ApplicationSceneID.about)
+		NSApp.orderFrontStandardAboutPanel(options: [.credits: AboutCredits.make()])
+		NSApp.activate()
 	}
 
 	@objc func showServerPropertiesSheet(_: Any?) {
 		presentServerPropertiesForSelectedSession(at: .default)
+	}
+
+	/// A window rather than a sheet: the matches exist to jump into the
+	/// transcript with, and the window stays up for the next one.
+	@objc func showScrollbackSearch(_: Any?) {
+		AppServices.scrollbackSearch.open()
+	}
+
+	@objc func showTranscriptLogViewer(_: Any?) {
+		AppServices.transcriptLogViewer.open()
 	}
 
 	/// A window rather than a sheet: the list exists to jump into the transcript
@@ -79,10 +90,6 @@ extension MenuActionController {
 
 	@objc func showSettingsWindow(_: Any?) {
 		AppServices.scenes.openSettings(.default)
-	}
-
-	@objc func showHiddenSettings(_: Any?) {
-		AppServices.scenes.openSettings(.hiddenSettings)
 	}
 
 	/// Swift-only: the notification the alert answers carries no menu item.

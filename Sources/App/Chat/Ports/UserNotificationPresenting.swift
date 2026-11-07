@@ -24,6 +24,12 @@ protocol UserNotificationPresenting: AnyObject {
 
 	func post(_ notification: PendingUserNotification)
 
+	/// Speaks `message` to a person using VoiceOver. Unlike a notification it
+	/// is not gated by focus or by the notification settings: the presenter
+	/// alone decides whether the person asked for announcements and whether a
+	/// screen reader is running.
+	func announce(_ message: String)
+
 	/// Asks the application to draw attention to itself, which is the Dock
 	/// bounce beside the banner. The connection decides that an event is worth
 	/// interrupting for; how the interruption looks is not its business.

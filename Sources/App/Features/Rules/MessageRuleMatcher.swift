@@ -107,14 +107,25 @@ final class MessageRuleMatcher {
 		return true
 	}
 
-	/// Whether the rule's pattern matches the text of an event.
-	private func matchesText(_ rule: MessageRule, text: String?, allowingNil: Bool) -> Bool {
-		guard var text else { return allowingNil }
+	/** Whether the rule's pattern matches the text of an event.
+
+	 `searchable` holds the text with its control codes removed, produced the
+	 first time a rule with a pattern needs it, so one message is stripped once
+	 however many rules read it. */
+	private func matchesText(
+		_ rule: MessageRule,
+		text: String?,
+		allowingNil: Bool,
+		searchable: inout String?
+	) -> Bool {
+		guard let text else { return allowingNil }
 		guard !rule.match.isEmpty else { return true }
-		if SettingsKeys.Messages.removeAllFormatting.value == false {
-			text = TextFormatting.removingControlCodes(from: text)
+		if searchable == nil {
+			searchable = SettingsKeys.Messages.removeAllFormatting.value == false
+				? TextFormatting.removingControlCodes(from: text)
+				: text
 		}
-		return matches(rule.match, subject: text)
+		return matches(rule.match, subject: searchable ?? text)
 	}
 
 	/** Whether a user-authored pattern matches remote text, within a budget.
@@ -170,10 +181,11 @@ final class MessageRuleMatcher {
 		receivedAt: Date,
 		messageParameters: [String]
 	) -> Bool {
+		var searchable: String?
 		for rule in rules where rule.isCommandEnabled(command) {
 			guard matchesDestination(rule, author: author, destination: destination, session: session),
 			      matchesSender(rule, author: author, destination: destination, session: session),
-			      matchesText(rule, text: text, allowingNil: true)
+			      matchesText(rule, text: text, allowingNil: true, searchable: &searchable)
 			else { continue }
 
 			performAction(
@@ -201,10 +213,11 @@ final class MessageRuleMatcher {
 		receivedAt: Date,
 		wasEncrypted: Bool
 	) -> Bool {
+		var searchable: String?
 		for rule in rules where accepts(lineType, rule: rule) {
 			guard matchesDestination(rule, author: author, destination: destination, session: session),
 			      matchesSender(rule, author: author, destination: destination, session: session),
-			      matchesText(rule, text: text, allowingNil: false)
+			      matchesText(rule, text: text, allowingNil: false, searchable: &searchable)
 			else { continue }
 
 			performAction(

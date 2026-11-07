@@ -34,11 +34,24 @@ protocol ChatItemPresenting: AnyObject {
 	/// How many of the view's conversation lines are newer than `date`, which is
 	/// how many messages a read marker placed at `date` leaves unread.
 	func conversationLineCount(after date: Date) -> Int
+	/** The message identifier of the newest line `isSender` accepts the nickname
+	 of, among the lines this view has loaded: a message, action or notice that
+	 carries an identifier and has not been deleted. `nil` when none is loaded.
+
+	 Only the lines the view holds are read, never the stored history, so the
+	 search is bounded by what the transcript keeps. */
+	func newestMessageIdentifier(sentBy isSender: (String) -> Bool) -> String?
 	func setTopic(_ topic: String?)
 
 	func mark()
 	func mark(at date: Date)
 	func noteReaction(_ emoji: String, fromNickname nickname: String, toMessageIdentifier identifier: String)
+	/** A message was deleted. The view replaces it with a placeholder, and the
+	 history behind it overwrites the stored text.
+
+	 A redaction can name a line that has not been drawn or stored yet, so the
+	 conformer keeps it until that line arrives. */
+	func noteRedaction(ofMessageIdentifier identifier: String)
 	func replacePendingLine(_ line: ChatLine, reason: String?)
 	func updateDeliveryState(
 		forLineNumber lineNumber: String,
@@ -59,6 +72,9 @@ protocol ChatItemPresenting: AnyObject {
 }
 
 extension ChatItemPresenting {
+	/// A presentation that draws no messages has nothing to replace.
+	func noteRedaction(ofMessageIdentifier _: String) {}
+
 	func replacePendingLine(_ line: ChatLine, reason: String?) {
 		updateDeliveryState(forLineNumber: line.uniqueIdentifier, state: line.deliveryState,
 		                    messageIdentifier: line.messageIdentifier, reason: reason)
@@ -74,6 +90,17 @@ extension ChatItemPresenting {
 		guard let chatLine = lastPrintedLine(), chatLine.lineType.isConversation else { return nil }
 
 		return chatLine.receivedAt
+	}
+
+	/// A presentation that keeps no history of its own answers from the last line
+	/// it printed.
+	func newestMessageIdentifier(sentBy isSender: (String) -> Bool) -> String? {
+		guard let chatLine = lastPrintedLine(), chatLine.lineType.isRedactableMessage,
+		      let nickname = chatLine.nickname, isSender(nickname),
+		      let identifier = chatLine.messageIdentifier, identifier.isEmpty == false
+		else { return nil }
+
+		return identifier
 	}
 
 	func conversationLineCount(after date: Date) -> Int {

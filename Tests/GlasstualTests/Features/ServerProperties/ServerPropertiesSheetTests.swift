@@ -37,7 +37,7 @@ struct ServerPropertiesSheetTests {
 		model.proxyAddress = "proxy.example.test"
 		model.proxyPort = "8080"
 		model.proxyUsername = "proxy-user"
-		model.proxyPassword = "proxy-secret"
+		model.setSecretText("proxy-secret", for: .proxyPassword)
 		let submitted = try #require(model.submittedConfig())
 		#expect(submitted.proxyType == proxyType)
 		#expect(submitted.proxyAddress == "proxy.example.test")
@@ -189,13 +189,13 @@ struct ServerPropertiesSheetTests {
 	@Test("Emptying a secret asks for the keychain item to go")
 	func emptiedSecretsAreCleared() throws {
 		let model = ServerPropertiesModel(config: Self.configuration(withSecrets: true))
-		#expect(model.nicknamePassword == "nick-secret")
-		#expect(model.proxyPassword == "proxy-secret")
-		#expect(model.serverPassword == "server-secret")
+		#expect(model.secretText(.nicknamePassword) == "nick-secret")
+		#expect(model.secretText(.proxyPassword) == "proxy-secret")
+		#expect(model.secretText(.serverPassword) == "server-secret")
 
-		model.nicknamePassword = ""
-		model.proxyPassword = "  "
-		model.serverPassword = ""
+		model.setSecretText("", for: .nicknamePassword)
+		model.setSecretText("  ", for: .proxyPassword)
+		model.setSecretText("", for: .serverPassword)
 		let submitted = try #require(model.submittedConfig())
 
 		#expect(submitted.pendingNicknamePassword == .cleared)
@@ -228,9 +228,9 @@ struct ServerPropertiesSheetTests {
 		let model = ServerPropertiesModel(config: config)
 		/* Nothing has answered yet, so the fields are showing secrets they do
 		 not have. */
-		#expect(model.serverPassword.isEmpty)
-		#expect(model.nicknamePassword.isEmpty)
-		#expect(model.proxyPassword.isEmpty)
+		#expect(model.secretText(.serverPassword).isEmpty)
+		#expect(model.secretText(.nicknamePassword).isEmpty)
+		#expect(model.secretText(.proxyPassword).isEmpty)
 
 		let submitted = try #require(model.submittedConfig())
 
@@ -248,9 +248,9 @@ struct ServerPropertiesSheetTests {
 		let model = ServerPropertiesModel(config: config)
 		await model.loadSecrets()
 
-		#expect(model.nicknamePassword == "stored-nickname")
-		#expect(model.proxyPassword == "stored-proxy")
-		#expect(model.serverPassword == "stored-server")
+		#expect(model.secretText(.nicknamePassword) == "stored-nickname")
+		#expect(model.secretText(.proxyPassword) == "stored-proxy")
+		#expect(model.secretText(.serverPassword) == "stored-server")
 
 		let submitted = try #require(model.submittedConfig())
 
@@ -260,8 +260,8 @@ struct ServerPropertiesSheetTests {
 
 		/* Emptying a field the person can now see is still what deletes the
 		 secret behind it. */
-		model.nicknamePassword = ""
-		model.serverPassword = "replacement"
+		model.setSecretText("", for: .nicknamePassword)
+		model.setSecretText("replacement", for: .serverPassword)
 
 		let edited = try #require(model.submittedConfig())
 
@@ -339,13 +339,24 @@ struct ServerPropertiesSheetTests {
 		return config
 	}
 
+	@Test("Setting a secret field to its current value is not an edit; a different value is",
+	      arguments: ServerPropertiesModel.SecretField.allCases)
+	func secretEditTracking(field: ServerPropertiesModel.SecretField) {
+		let model = ServerPropertiesModel(config: Self.configuration(withSecrets: false))
+		model.setSecretText(model.secretText(field), for: field)
+		#expect(model.editedSecretFields.isEmpty)
+		model.setSecretText("typed", for: field)
+		#expect(model.editedSecretFields == [field])
+		#expect(model.secretBinding(field).wrappedValue == "typed")
+	}
+
 	@Test("Endpoint editing sees pending primary values without submitting unrelated drafts")
 	func endpointEditingUsesPendingPrimary() throws {
 		let model = ServerPropertiesModel(config: Self.configuration(withSecrets: true))
 		model.serverAddress = "pending.example.test"
 		model.serverPort = "7000"
-		model.serverPassword = "new-server-secret"
-		model.nicknamePassword = ""
+		model.setSecretText("new-server-secret", for: .serverPassword)
+		model.setSecretText("", for: .nicknamePassword)
 		model.proxyPort = "not yet valid"
 		let servers = try #require(model.serverListForEditing())
 		let child = ServerEndpointListModel()
@@ -361,14 +372,14 @@ struct ServerPropertiesSheetTests {
 	@Test("Saving alternate servers preserves unrelated parent drafts and secret clear intent")
 	func endpointSavePreservesParentDrafts() throws {
 		let model = ServerPropertiesModel(config: Self.configuration(withSecrets: true))
-		model.nicknamePassword = ""
-		model.proxyPassword = "replacement-proxy-secret"
+		model.setSecretText("", for: .nicknamePassword)
+		model.setSecretText("replacement-proxy-secret", for: .proxyPassword)
 		model.proxyAddress = "pending-proxy.example.test"
 		model.proxyPort = "1234"
 		model.proxyUsername = "pending-user"
 		model.alternateNicknames = "second third"
 		model.connectCommands = "/mode +i\n/join #pending"
-		model.serverPassword = ""
+		model.setSecretText("", for: .serverPassword)
 		let child = ServerEndpointListModel()
 		try child.replace(with: #require(model.serverListForEditing()))
 		#expect(child.entries.first?.password == "")
@@ -383,8 +394,8 @@ struct ServerPropertiesSheetTests {
 		#expect(model.serverAddress == "edited.example.test")
 		#expect(model.serverPort == "6699")
 		#expect(model.primaryServerIsSecured)
-		#expect(model.nicknamePassword == "")
-		#expect(model.proxyPassword == "replacement-proxy-secret")
+		#expect(model.secretText(.nicknamePassword) == "")
+		#expect(model.secretText(.proxyPassword) == "replacement-proxy-secret")
 		#expect(model.proxyAddress == "pending-proxy.example.test")
 		#expect(model.proxyPort == "1234")
 		#expect(model.proxyUsername == "pending-user")
@@ -412,11 +423,11 @@ struct ServerPropertiesSheetTests {
 		config.serverList.append(ServerEndpoint(serverAddress: "alternate.example.test", serverPort: 6697,
 		                                        pendingServerPassword: .set("alternate-secret")))
 		let model = ServerPropertiesModel(config: config)
-		model.serverPassword = ""
+		model.setSecretText("", for: .serverPassword)
 		var servers = try #require(model.serverListForEditing())
 		servers.swapAt(0, 1)
 		model.applyServerList(servers)
-		#expect(model.serverPassword == "alternate-secret")
+		#expect(model.secretText(.serverPassword) == "alternate-secret")
 		let submitted = try #require(model.submittedConfig())
 		#expect(submitted.serverList[0].pendingServerPassword == .set("alternate-secret"))
 		#expect(submitted.serverList[1].pendingServerPassword == .cleared)

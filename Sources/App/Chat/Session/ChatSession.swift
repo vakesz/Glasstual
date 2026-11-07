@@ -6,32 +6,10 @@ import CocoaExtensions
 import Foundation
 import os
 
-/// What tearing a conversation down does beyond removing it. Named options rather
-/// than positional booleans, so a call site says which of them it means.
-struct ConversationDestruction: OptionSet, Sendable {
-	let rawValue: Int
-
-	/// Move the selection off the conversation and redraw the navigation list. The
-	/// session drops the conversation either way; this names the redraw.
-	static let reloadsSidebar = Self(rawValue: 1 << 0)
-	/// Send `PART` for a channel that is still joined.
-	static let partsChannel = Self(rawValue: 1 << 1)
-	/// Keep the conversation's logs, keychain item and input history.
-	static let preservesLocalData = Self(rawValue: 1 << 2)
-
-	/// What the user asking to close a conversation means.
-	static let `default`: Self = [.reloadsSidebar, .partsChannel]
-}
-
 private enum ChatSessionTiming {
 	static let autoConnectDelay: UInt = 1
 	static let reconnectAfterWakeupDelay: UInt = 8
 	static let savePeriodicallyThreshold: CFAbsoluteTime = 300
-}
-
-extension Notification.Name {
-	static let chatSessionListWasModified = Notification.Name("Glasstual.chatSessionListWasModified")
-	static let chatSessionWillDestroySession = Notification.Name("Glasstual.chatSessionWillDestroySession")
 }
 
 /** The application's one chat session: every server session it has open, and
@@ -48,9 +26,9 @@ final class ChatSession {
 	private var storedSessions: [ServerSession] = []
 
 	/// What every connection has sent and received this session.
-	private var traffic = ConnectionTraffic()
+	var traffic = ConnectionTraffic()
 	/// The idle-sleep assertion held while a connection is logged in.
-	private let sleepPrevention = SleepPrevention()
+	let sleepPrevention = SleepPrevention()
 
 	/// When the session list was last written by the periodic save.
 	private var savePeriodicallyLastSave = CFAbsoluteTimeGetCurrent()
@@ -62,6 +40,13 @@ final class ChatSession {
 	var environment: ChatEnvironment
 
 	var isImportingConfiguration = false
+
+	/// The automatic away reasons that hold on every network at once. A Focus
+	/// filter is per network, so it is read from `focusFilter` instead.
+	var autoAwayReasons: Set<AutoAwayReason> = []
+
+	/// The filter the active Focus delivered, or `nil` when none applies.
+	var focusFilter: FocusFilterState?
 
 	/** The application's chat session takes `ChatServices.shared`, so the window
 	 and menus only have to be installed once for both it and the protocol-layer
@@ -123,6 +108,10 @@ final class ChatSession {
 			_ = createSession(with: config)
 		}
 
+		for parent in sessions where parent.config.bouncerNetwork == nil {
+			propagateBouncerParentSettings(from: parent)
+		}
+
 		notifyObservers { $0.chatSessionDidEndBulkUpdate(self) }
 
 		isImportingConfiguration = false
@@ -171,21 +160,6 @@ final class ChatSession {
 		refreshSleepPrevention()
 	}
 
-	// MARK: - Sleep
-
-	/// Called when a session's registration state changes, which is the only
-	/// thing the setting reads besides itself.
-	func noteLoginStateChanged() {
-		refreshSleepPrevention()
-	}
-
-	private func refreshSleepPrevention() {
-		sleepPrevention.refresh(
-			shouldHold: SettingsKeys.Connection.preventSleepWhileConnected.value
-				&& sessions.contains(where: \.isLoggedIn)
-		)
-	}
-
 	/// Re-reads the defaults store and republishes the snapshot to every session.
 	func refreshEnvironmentSettings() {
 		applySettings(.current())
@@ -214,7 +188,7 @@ final class ChatSession {
 	// MARK: - Lifecycle
 
 	private func postSessionListWasModifiedNotification() {
-		NotificationCenter.default.post(name: .chatSessionListWasModified, object: self)
+		ChatSessionListWasModified(subject: self).post()
 	}
 
 	func autoConnect(afterWakeup afterWakeUp: Bool) {
@@ -256,15 +230,11 @@ final class ChatSession {
 			return
 		}
 
-		for session in sessions {
-			session.setAwayForScreenSleep()
-		}
+		setAutoAwayReason(.screenSleep, holds: true)
 	}
 
 	func wakeFromScreenSleep() {
-		for session in sessions {
-			session.clearAwayAfterScreenSleep()
-		}
+		setAutoAwayReason(.screenSleep, holds: false)
 	}
 
 	func noteReachabilityChanged(_ reachable: Bool) {
@@ -282,38 +252,16 @@ final class ChatSession {
 	func settingsChanged(_ action: SettingsReloadAction) {
 		if action.contains(.settingsChanged) {
 			refreshEnvironmentSettings()
+			if environment.settings.awayOnIdle == false {
+				autoAwayReasons.remove(.idle)
+			}
+			applyAutoAway()
 			notifyObservers { $0.chatSessionSettingsDidChange(self) }
 		}
 
 		for session in sessions {
 			session.settingsChanged(action)
 		}
-	}
-
-	// MARK: - Traffic counters
-
-	var messagesSent: UInt {
-		traffic.messagesSent
-	}
-
-	var messagesReceived: UInt {
-		traffic.messagesReceived
-	}
-
-	var bandwidthIn: UInt64 {
-		traffic.bandwidthIn
-	}
-
-	var bandwidthOut: UInt64 {
-		traffic.bandwidthOut
-	}
-
-	func noteMessageSent(length: UInt) {
-		traffic.noteSent(length: length)
-	}
-
-	func noteMessageReceived(length: UInt) {
-		traffic.noteReceived(length: length)
 	}
 
 	// MARK: - Sidebar items
@@ -488,10 +436,7 @@ final class ChatSession {
 			return
 		}
 
-		NotificationCenter.default.post(
-			name: .chatSessionWillDestroySession,
-			object: session
-		)
+		ChatSessionWillDestroySession(subject: session).post()
 		selectOtherBeforeDestroy(session)
 		session.prepareForRemoval(preservingLocalData: preservingLocalData)
 		notifyObservers { $0.chatSession(self, didRemoveSession: session) }

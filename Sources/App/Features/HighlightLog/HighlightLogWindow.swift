@@ -26,17 +26,17 @@ struct HighlightLogRow: Identifiable, Equatable {
 
 		let line = entry.lineLogged
 		let formattedMessage = if line.lineType == .action {
-			String(localized: .Notifications.bodyActionWithNickname(line.nickname ?? "", line.messageBody))
+			String(localized: .ChatNotifications.bodyActionWithNickname(line.nickname ?? "", line.messageBody))
 		} else {
 			String(
-				localized: .Notifications.bodyMessageWithNickname(
+				localized: .ChatNotifications.bodyMessageWithNickname(
 					line.formattedNickname(in: conversation) ?? "",
 					line.messageBody
 				)
 			)
 		}
 		let renderedMessage = (formattedMessage as NSString).attributedString(
-			withIRCFormatting: NSFont.systemFont(ofSize: 13),
+			withIRCFormatting: NSFont.preferredFont(forTextStyle: .body),
 			preferredFontColor: .controlTextColor
 		) ?? NSAttributedString(string: formattedMessage)
 		message = AttributedString(renderedMessage)

@@ -282,10 +282,10 @@ struct IRCSpecParserCorpusTests {
 		let session = TestServerSession()
 		let message = try #require(Message(line: ":coolguy@127.0.0.1 PRIVMSG #chan :hi", on: session))
 
-		#expect(message.senderIsServer == false)
+		#expect(message.sender.isServer == false)
 		#expect(message.senderNickname == "coolguy")
-		#expect(message.senderUsername == nil)
-		#expect(message.senderAddress == "127.0.0.1")
+		#expect(message.sender.username == nil)
+		#expect(message.sender.address == "127.0.0.1")
 	}
 
 	/** A prefix that cannot name a user is still a server name, and the whole
@@ -302,7 +302,7 @@ struct IRCSpecParserCorpusTests {
 		let session = TestServerSession()
 		let message = try #require(Message(line: ":\(source) NOTICE * :hello", on: session))
 
-		#expect(message.senderIsServer)
+		#expect(message.sender.isServer)
 		#expect(message.senderNickname == source)
 	}
 
@@ -314,10 +314,10 @@ struct IRCSpecParserCorpusTests {
 		let session = TestServerSession()
 		let message = try #require(Message(line: ":coolguy NOTICE * :hello", on: session))
 
-		#expect(message.senderIsServer == false)
+		#expect(message.sender.isServer == false)
 		#expect(message.senderNickname == "coolguy")
-		#expect(message.senderUsername == nil)
-		#expect(message.senderAddress == nil)
+		#expect(message.sender.username == nil)
+		#expect(message.sender.address == nil)
 	}
 
 	// MARK: - mask-match

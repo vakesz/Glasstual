@@ -26,25 +26,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Todos los canales seleccionados"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Tous les canaux sélectionnés"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "すべてのチャンネルが選択されました"
+            "state": "translated",
+            "value": "すべてのチャンネルが選択されています"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Todos os canais selecionados"
           }
         }
@@ -75,25 +75,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Algunos canales seleccionados"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Certains canaux sélectionnés"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "一部のチャンネルが選択されました"
+            "state": "translated",
+            "value": "一部のチャンネルが選択されています"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Alguns canais selecionados"
           }
         }
@@ -124,368 +124,368 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Ningún canal seleccionado"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Aucun canal sélectionné"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "チャンネルが選択されていません"
+            "state": "translated",
+            "value": "選択されているチャンネルはありません"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Nenhum canal selecionado"
           }
         }
       }
     },
     "action-log-user": {
-      "comment": "Log message for a filter action without a channel. Arguments are the filter title and user nickname. Migrated from legacy key yla-he.",
+      "comment": "Log message for a rule action without a channel. Arguments are the rule title and user nickname. Migrated from legacy key yla-he.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Performing action defined by the filter “%1$@“ against the user “%2$@“"
+            "value": "Performing action defined by the rule “%1$@“ against the user “%2$@“"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "A(z) \"%1$@\" szűrő műveletének végrehajtása a(z) \"%2$@\" felhasználón"
+            "value": "A(z) \"%1$@\" szabály műveletének végrehajtása a(z) \"%2$@\" felhasználón"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aktion des Filters \"%1$@\" für Benutzer \"%2$@\" wird ausgeführt"
+            "value": "Aktion der Regel \"%1$@\" für Benutzer \"%2$@\" wird ausgeführt"
           }
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Realizando una acción definida por el filtro “%1$@” contra el usuario “%2$@”"
+            "state": "translated",
+            "value": "Se está aplicando la acción definida por la regla «%1$@» al usuario «%2$@»"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Exécution d'une action définie par le filtre « %1$@ » contre l'utilisateur « %2$@ »"
+            "state": "translated",
+            "value": "Exécution de l’action définie par la règle « %1$@ » contre l’utilisateur « %2$@ »"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "フィルター「%1$@」によって定義されたアクションを実行し、「%2$@」ユーザーに対して行われています。"
+            "state": "translated",
+            "value": "ルール「%1$@」で定義されたアクションを、ユーザ「%2$@」に対して実行しています"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Executando ação definida pelo filtro “%1$@“ contra o usuário “%2$@“"
+            "state": "translated",
+            "value": "Executando a ação definida pela regra “%1$@” contra o usuário “%2$@”"
           }
         }
       }
     },
     "action-log-user-in-channel": {
-      "comment": "Log message for a filter action in a channel. Arguments are the filter title, user nickname, and channel name. Migrated from legacy key jcm-xj.",
+      "comment": "Log message for a rule action in a channel. Arguments are the rule title, user nickname, and channel name. Migrated from legacy key jcm-xj.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Performing action defined by the filter “%1$@“ against the user “%2$@“ in the channel “%3$@“"
+            "value": "Performing action defined by the rule “%1$@“ against the user “%2$@“ in the channel “%3$@“"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "A(z) \"%1$@\" szűrő műveletének végrehajtása a(z) \"%2$@\" felhasználón a(z) \"%3$@\" csatornán"
+            "value": "A(z) \"%1$@\" szabály műveletének végrehajtása a(z) \"%2$@\" felhasználón a(z) \"%3$@\" csatornán"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aktion des Filters \"%1$@\" für Benutzer \"%2$@\" im Kanal \"%3$@\" wird ausgeführt"
+            "value": "Aktion der Regel \"%1$@\" für Benutzer \"%2$@\" im Kanal \"%3$@\" wird ausgeführt"
           }
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Realizando una acción definida por el filtro “%1$@” contra el usuario “%2$@” en el canal “%3$@”"
+            "state": "translated",
+            "value": "Se está aplicando la acción definida por la regla «%1$@» al usuario «%2$@» en el canal «%3$@»"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Exécution d'une action définie par le filtre « %1$@ » contre l'utilisateur « %2$@ » dans le canal « %3$@ »"
+            "state": "translated",
+            "value": "Exécution de l’action définie par la règle « %1$@ » contre l’utilisateur « %2$@ » dans le canal « %3$@ »"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "チャンネル「%3$@」におけるユーザー「%2$@」に対して、フィルター「%1$@」で定義されたアクションを実行しています。"
+            "state": "translated",
+            "value": "チャンネル「%3$@」で、ユーザ「%2$@」に対して、ルール「%1$@」で定義されたアクションを実行しています"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Executando ação definida pelo filtro “%1$@“ contra o usuário “%2$@“ no canal “%3$@“"
+            "state": "translated",
+            "value": "Executando a ação definida pela regra “%1$@” contra o usuário “%2$@” no canal “%3$@”"
           }
         }
       }
     },
-    "add-filter-button": {
-      "comment": "Button that begins creating a chat filter.",
+    "add-rule-button": {
+      "comment": "Button that begins creating a rule.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Add Filter"
+            "value": "Add Rule…"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Szűrő hozzáadása"
+            "value": "Szabály hozzáadása…"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Filter hinzufügen"
+            "value": "Regel hinzufügen…"
           }
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Añadir filtro"
+            "state": "translated",
+            "value": "Añadir regla…"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Ajouter un filtre"
+            "state": "translated",
+            "value": "Ajouter une règle…"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "フィルターを追加する"
+            "state": "translated",
+            "value": "ルールを追加…"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Adicionar Filtro"
+            "state": "translated",
+            "value": "Adicionar regra…"
           }
         }
       }
     },
-    "delete-filter-button": {
-      "comment": "Destructive button that confirms deleting a chat filter.",
+    "delete-rule-button": {
+      "comment": "Destructive button that confirms deleting a rule.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Delete Filter"
+            "value": "Delete Rule"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Szűrő törlése"
+            "value": "Szabály törlése"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Filter löschen"
+            "value": "Regel löschen"
           }
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Eliminar filtro"
+            "state": "translated",
+            "value": "Eliminar regla"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Supprimer le filtre"
+            "state": "translated",
+            "value": "Supprimer la règle"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "フィルターを削除する"
+            "state": "translated",
+            "value": "ルールを削除"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Excluir Filtro"
+            "state": "translated",
+            "value": "Apagar regra"
           }
         }
       }
     },
-    "delete-filter-message": {
-      "comment": "Message explaining that deleting a chat filter cannot be undone. Migrated from legacy key dj6-fn.",
+    "delete-rule-message": {
+      "comment": "Message explaining that deleting a rule cannot be undone. Migrated from legacy key dj6-fn.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "There is no undo and all data related to this filter will be erased."
+            "value": "All data related to this rule will be erased. This action cannot be undone."
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ez nem vonható vissza. A szűrőhöz tartozó összes adat törlődik."
+            "value": "A szabályhoz tartozó összes adat törlődik. Ez a művelet nem vonható vissza."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dies kann nicht rückgängig gemacht werden. Alle Daten dieses Filters werden gelöscht."
+            "value": "Alle Daten dieser Regel werden gelöscht. Diese Aktion kann nicht rückgängig gemacht werden."
           }
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "No hay deshacer y todos los datos relacionados con este filtro serán borrados."
+            "state": "translated",
+            "value": "Se borrarán todos los datos relacionados con esta regla. Esta acción no se puede deshacer."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Il n'y a pas d'annulation et toutes les données liées à ce filtre seront effacées."
+            "state": "translated",
+            "value": "Toutes les données associées à cette règle seront effacées. Cette action est irréversible."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "取り消しはありません。このフィルターに関連するすべてのデータは消去されます。"
+            "state": "translated",
+            "value": "このルールに関連するすべてのデータが消去されます。この操作は取り消せません。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Não há desfecho e todos os dados relacionados a este filtro serão apagados."
+            "state": "translated",
+            "value": "Todos os dados relacionados a esta regra serão apagados. Esta ação não pode ser desfeita."
           }
         }
       }
     },
-    "delete-filter-title": {
-      "comment": "Title of the confirmation alert shown before deleting a chat filter. Migrated from legacy key c0k-xj.",
+    "delete-rule-title": {
+      "comment": "Title of the confirmation alert shown before deleting a rule. Migrated from legacy key c0k-xj.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Delete this filter?"
+            "value": "Delete this rule?"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Törlöd ezt a szűrőt?"
+            "value": "Törlöd ezt a szabályt?"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Diesen Filter löschen?"
+            "value": "Diese Regel löschen?"
           }
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "¿Eliminar este filtro?"
+            "state": "translated",
+            "value": "¿Eliminar esta regla?"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Supprimer ce filtre ?"
+            "state": "translated",
+            "value": "Supprimer cette règle ?"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "このフィルターを削除しますか？"
+            "state": "translated",
+            "value": "このルールを削除しますか？"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Excluir este filtro?"
+            "state": "translated",
+            "value": "Apagar esta regra?"
           }
         }
       }
     },
-    "duplicate-filter-button": {
-      "comment": "Menu item that duplicates the selected chat filter.",
+    "duplicate-rule-button": {
+      "comment": "Menu item that duplicates the selected rule.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Duplicate Filter"
+            "value": "Duplicate Rule"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Szűrő megkettőzése"
+            "value": "Szabály megkettőzése"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Filter duplizieren"
+            "value": "Regel duplizieren"
           }
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Filtro de duplicados"
+            "state": "translated",
+            "value": "Duplicar regla"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Filtre de duplication"
+            "state": "translated",
+            "value": "Dupliquer la règle"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "重複フィルター"
+            "state": "translated",
+            "value": "ルールを複製"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Filtrar duplicados"
+            "state": "translated",
+            "value": "Duplicar regra"
           }
         }
       }
     },
     "duplicate-filter-title": {
-      "comment": "Title assigned to a duplicated chat filter. The argument is the original title.",
+      "comment": "Title assigned to a duplicated rule. The argument is the original title.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -508,128 +508,128 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@ (Duplicado)"
+            "state": "translated",
+            "value": "%@ (copia)"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@ (Duplicata)"
+            "state": "translated",
+            "value": "%@ (copie)"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@（重複）"
+            "state": "translated",
+            "value": "%@(複製)"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@ (Duplicado)"
+            "state": "translated",
+            "value": "%@ (cópia)"
           }
         }
       }
     },
-    "edit-filter-button": {
-      "comment": "Button that edits the selected chat filter.",
+    "edit-rule-button": {
+      "comment": "Button that edits the selected rule.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Edit Filter"
+            "value": "Edit Rule…"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Szűrő szerkesztése"
+            "value": "Szabály szerkesztése…"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Filter bearbeiten"
+            "value": "Regel bearbeiten…"
           }
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Editar filtro"
+            "state": "translated",
+            "value": "Editar regla…"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Modifier le filtre"
+            "state": "translated",
+            "value": "Modifier la règle…"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "フィルターを編集する"
+            "state": "translated",
+            "value": "ルールを編集…"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Editar Filtro"
+            "state": "translated",
+            "value": "Editar regra…"
           }
         }
       }
     },
-    "edited-filter-removed": {
-      "comment": "The edited filter was removed by an import or another settings change before the editor saved.",
+    "edited-rule-removed": {
+      "comment": "The edited rule was removed by an import or another settings change before the editor saved.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This filter no longer exists. Your changes were not saved."
+            "value": "This rule no longer exists. Your changes were not saved."
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ez a szűrő már nem létezik. A módosításaid nem lettek elmentve."
+            "value": "Ez a szabály már nem létezik. A módosításaid nem lettek elmentve."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dieser Filter ist nicht mehr vorhanden. Deine Änderungen wurden nicht gesichert."
+            "value": "Diese Regel ist nicht mehr vorhanden. Deine Änderungen wurden nicht gesichert."
           }
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Este filtro ya no existe. Tus cambios no se han guardado."
+            "state": "translated",
+            "value": "Esta regla ya no existe. Tus cambios no se han guardado."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Ce filtre n'existe plus. Vos modifications n'ont pas été enregistrées."
+            "state": "translated",
+            "value": "Cette règle n’existe plus. Vos modifications n’ont pas été enregistrées."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "このフィルターは存在しません。変更は保存されませんでした。"
+            "state": "translated",
+            "value": "このルールは存在しなくなりました。変更は保存されませんでした。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Este filtro não existe mais. Suas alterações não foram salvas."
+            "state": "translated",
+            "value": "Esta regra não existe mais. Suas alterações não foram salvas."
           }
         }
       }
     },
     "forwarded-message": {
-      "comment": "Message forwarded by a chat filter. Arguments are the IRC command and original message. Migrated from legacy key dct-7h.",
+      "comment": "Message forwarded by a rule. Arguments are the IRC command and original message. Migrated from legacy key dct-7h.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -652,176 +652,176 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Mensaje(%1$@): %2$@"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Message(%1$@) : %2$@"
+            "state": "translated",
+            "value": "Message (%1$@) : %2$@"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "メッセージ(%1$@): %2$@"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Mensagem(%1$@): %2$@"
+            "state": "translated",
+            "value": "Mensagem (%1$@): %2$@"
           }
         }
       }
     },
     "save-failed-title": {
-      "comment": "Alert title shown when an edited filter can no longer be stored.",
+      "comment": "Alert title shown when an edited rule can no longer be stored.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The filter could not be saved"
+            "value": "The rule could not be saved"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nem sikerült menteni a szűrőt"
+            "value": "Nem sikerült menteni a szabályt"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Der Filter konnte nicht gesichert werden"
+            "value": "Die Regel konnte nicht gesichert werden"
           }
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "El filtro no se pudo guardar"
+            "state": "translated",
+            "value": "No se pudo guardar la regla"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Le filtre n'a pas pu être sauvegardé"
+            "state": "translated",
+            "value": "Impossible d’enregistrer la règle"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "フィルターを保存できませんでした。"
+            "state": "translated",
+            "value": "ルールを保存できませんでした"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "O filtro não pôde ser salvo"
+            "state": "translated",
+            "value": "A regra não pôde ser salva"
           }
         }
       }
     },
-    "export-filter-button": {
-      "comment": "Menu item that exports the selected chat filter.",
+    "export-rule-button": {
+      "comment": "Menu item that exports the selected rule.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Export Filter…"
+            "value": "Export Rule…"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Szűrő exportálása…"
+            "value": "Szabály exportálása…"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Filter exportieren…"
+            "value": "Regel exportieren…"
           }
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Filtrar exportación..."
+            "state": "translated",
+            "value": "Exportar regla…"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Filtrer l'exportation..."
+            "state": "translated",
+            "value": "Exporter la règle…"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "エクスポートフィルター…"
+            "state": "translated",
+            "value": "ルールを書き出す…"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Filtrar Exportar..."
+            "state": "translated",
+            "value": "Exportar regra…"
           }
         }
       }
     },
     "export-failed-title": {
-      "comment": "Alert title shown when a filter cannot be written to a file.",
+      "comment": "Alert title shown when a rule cannot be written to a file.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The filter could not be exported"
+            "value": "The rule could not be exported"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nem sikerült exportálni a szűrőt"
+            "value": "Nem sikerült exportálni a szabályt"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Der Filter konnte nicht exportiert werden"
+            "value": "Die Regel konnte nicht exportiert werden"
           }
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "El filtro no pudo ser exportado"
+            "state": "translated",
+            "value": "No se pudo exportar la regla"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Le filtre n'a pas pu être exporté"
+            "state": "translated",
+            "value": "Impossible d’exporter la règle"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "フィルターをエクスポートできませんでした。"
+            "state": "translated",
+            "value": "ルールを書き出せませんでした"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "O filtro não pôde ser exportado"
+            "state": "translated",
+            "value": "A regra não pôde ser exportada"
           }
         }
       }
     },
     "export-failed-recovery": {
-      "comment": "Recovery sentence under the filter export failure.",
+      "comment": "Recovery sentence under the rule export failure.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -844,224 +844,224 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Elige una carpeta en la que puedas escribirlo e inténtalo de nuevo."
+            "state": "translated",
+            "value": "Elige una carpeta en la que puedas escribir e inténtalo de nuevo."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Choisissez un dossier sur lequel vous pouvez écrire et réessayez."
+            "state": "translated",
+            "value": "Choisissez un dossier dans lequel vous pouvez écrire, puis réessayez."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "書き込むことができるフォルダを選択して、もう一度お試しください。"
+            "state": "translated",
+            "value": "書き込み可能なフォルダを選択して、もう一度お試しください。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Escolha uma pasta para escrever e tente novamente."
+            "state": "translated",
+            "value": "Escolha uma pasta na qual você possa gravar e tente novamente."
           }
         }
       }
     },
-    "filter-description": {
-      "comment": "Description of a chat filter. The argument is the filter title. Migrated from legacy key dka-bx.",
+    "rule-description": {
+      "comment": "Description of a rule. The argument is the rule title. Migrated from legacy key dka-bx.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Filter “%@“"
+            "value": "Rule “%@“"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "\"%@\" szűrő"
+            "value": "\"%@\" szabály"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Filter \"%@\""
+            "value": "Regel \"%@\""
           }
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Filtrar \"%@\""
+            "state": "translated",
+            "value": "Regla «%@»"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Filtrer « %@ »"
+            "state": "translated",
+            "value": "Règle « %@ »"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "フィルター「%@」"
+            "state": "translated",
+            "value": "ルール「%@」"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Filtrar \"%@\""
+            "state": "translated",
+            "value": "Regra “%@”"
           }
         }
       }
     },
-    "import-filter-button": {
-      "comment": "Menu item that imports a chat filter.",
+    "import-rule-button": {
+      "comment": "Menu item that imports a rule.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Import Filter…"
+            "value": "Import Rule…"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Szűrő importálása…"
+            "value": "Szabály importálása…"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Filter importieren…"
+            "value": "Regel importieren…"
           }
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Filtrar importación..."
+            "state": "translated",
+            "value": "Importar regla…"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Filtrer l'importation..."
+            "state": "translated",
+            "value": "Importer une règle…"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "インポートフィルター…"
+            "state": "translated",
+            "value": "ルールを読み込む…"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Filtrar Importar..."
+            "state": "translated",
+            "value": "Importar regra…"
           }
         }
       }
     },
     "import-failed-title": {
-      "comment": "Alert title shown when a chosen filter file cannot be read.",
+      "comment": "Alert title shown when a chosen rule file cannot be read.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The filter could not be imported"
+            "value": "The rule could not be imported"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nem sikerült importálni a szűrőt"
+            "value": "Nem sikerült importálni a szabályt"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Der Filter konnte nicht importiert werden"
+            "value": "Die Regel konnte nicht importiert werden"
           }
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "El filtro no pudo importarse"
+            "state": "translated",
+            "value": "No se pudo importar la regla"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Le filtre n'a pas pu être importé"
+            "state": "translated",
+            "value": "Impossible d’importer la règle"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "フィルターをインポートできませんでした。"
+            "state": "translated",
+            "value": "ルールを読み込めませんでした"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "O filtro não pôde ser importado"
+            "state": "translated",
+            "value": "A regra não pôde ser importada"
           }
         }
       }
     },
     "import-failed-recovery": {
-      "comment": "Recovery sentence under the filter import failure.",
+      "comment": "Recovery sentence under the rule import failure.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Choose a filter file that Chat Filter exported."
+            "value": "Choose a rule file that Glasstual exported."
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Válassz a Csevegésszűrő által exportált szűrőfájlt."
+            "value": "Válassz egy Glasstual által exportált szabályfájlt."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wähle eine vom Chatfilter exportierte Filterdatei."
+            "value": "Wähle eine von Glasstual exportierte Regeldatei."
           }
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Elige un archivo de filtro que haya exportado el Filtro de Chat."
+            "state": "translated",
+            "value": "Elige un archivo de regla exportado por Glasstual."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Choisissez un fichier de filtre que le filtre de chat a exporté."
+            "state": "translated",
+            "value": "Choisissez un fichier de règle exporté par Glasstual."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Chat Filterでエクスポートされたフィルターファイルを選択します。"
+            "state": "translated",
+            "value": "Glasstualで書き出したルールファイルを選択してください。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Escolha um arquivo de filtro que o Filtro de Chat exportou."
+            "state": "translated",
+            "value": "Escolha um arquivo de regra exportado pelo Glasstual."
           }
         }
       }
     },
     "more-actions-button": {
-      "comment": "Menu containing additional chat-filter actions.",
+      "comment": "Menu containing additional chat-rule actions.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -1084,122 +1084,122 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Más acciones"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Plus d'actions"
+            "state": "translated",
+            "value": "Plus d’actions"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "その他のアクション"
+            "state": "translated",
+            "value": "その他の操作"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Mais ações"
           }
         }
       }
     },
-    "no-filters-description": {
-      "comment": "Explanation shown when no chat filters exist.",
+    "no-rules-description": {
+      "comment": "Explanation shown when no rules exist.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Add a filter to hide, forward, or act on matching messages."
+            "value": "Add a rule to hide, forward, or act on matching messages."
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Adj hozzá szűrőt az illeszkedő üzenetek elrejtéséhez, továbbításához vagy műveletek végrehajtásához."
+            "value": "Adj hozzá szabályt az illeszkedő üzenetek elrejtéséhez, továbbításához vagy műveletek végrehajtásához."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Füge einen Filter hinzu, um passende Nachrichten auszublenden, weiterzuleiten oder Aktionen auszuführen."
+            "value": "Füge eine Regel hinzu, um passende Nachrichten auszublenden, weiterzuleiten oder Aktionen auszuführen."
           }
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Añade un filtro para ocultar, reenviar o actuar sobre los mensajes coincidentes."
+            "state": "translated",
+            "value": "Añade una regla para ocultar, reenviar o actuar sobre los mensajes que coincidan."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Ajoutez un filtre pour masquer, transmettre ou agir sur les messages correspondants."
+            "state": "translated",
+            "value": "Ajoutez une règle pour masquer ou transférer les messages correspondants, ou agir dessus."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "一致するメッセージを非表示にする、転送する、またはアクションを実行するためにフィルターを追加します。"
+            "state": "translated",
+            "value": "一致するメッセージを非表示、転送、または処理するルールを追加します。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Adicione um filtro para ocultar, encaminhar ou agir em mensagens correspondentes."
+            "state": "translated",
+            "value": "Adicione uma regra para ocultar, encaminhar ou agir sobre mensagens correspondentes."
           }
         }
       }
     },
-    "no-filters-title": {
-      "comment": "Title shown when no chat filters exist.",
+    "no-rules-title": {
+      "comment": "Title shown when no rules exist.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "No Filters"
+            "value": "No Rules"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nincsenek szűrők"
+            "value": "Nincsenek szabályok"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Keine Filter"
+            "value": "Keine Regeln"
           }
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Sin filtros"
+            "state": "translated",
+            "value": "Sin reglas"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Pas de filtres"
+            "state": "translated",
+            "value": "Aucune règle"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "フィルターなし"
+            "state": "translated",
+            "value": "ルールなし"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Sem Filtros"
+            "state": "translated",
+            "value": "Nenhuma regra"
           }
         }
       }
@@ -1252,54 +1252,6 @@
         }
       }
     },
-    "preferences-pane-title": {
-      "comment": "Name of the Chat Filter preferences pane. Migrated from legacy key jq1-6r.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Chat Filter"
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Csevegésszűrő"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Chatfilter"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Filtro de chat"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Filtre de chat"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "チャットフィルター"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Filtro de bate-papo"
-          }
-        }
-      }
-    },
     "action-message-event": {
       "comment": "Event option for IRC action messages.",
       "extractionState": "manual",
@@ -1324,25 +1276,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Mensaje de acción"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Message d'action"
+            "state": "translated",
+            "value": "Message d’action"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "アクションメッセージ"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Mensagem de ação"
           }
         }
@@ -1372,26 +1324,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Añade comandos nombrados separados por comas o números del 1 al 999 que no se enumeran arriba."
+            "state": "translated",
+            "value": "Añade comandos con nombre o numéricos del 1 al 999 que no figuren arriba, separados por comas."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Ajoutez des commandes nommées ou des nombres séparés par des virgules de 1 à 999 qui ne figurent pas ci-dessus."
+            "state": "translated",
+            "value": "Ajoutez des commandes nommées ou des codes numériques de 1 à 999, séparés par des virgules, qui ne figurent pas ci-dessus."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "上記のリストにない、カンマで区切られた名前付きコマンドまたは1から999までの数値を追加します。"
+            "state": "translated",
+            "value": "上に記載されていない、名前付きコマンドまたは1〜999の数値を、カンマで区切って追加します。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Adicione comandos nomeados separados por vírgulas ou números de 1 a 999 que não estão listados acima."
+            "state": "translated",
+            "value": "Adicione comandos nomeados ou códigos numéricos de 1 a 999 que não estejam listados acima, separados por vírgulas."
           }
         }
       }
@@ -1420,26 +1372,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Comandos y números adicionales"
+            "state": "translated",
+            "value": "Comandos y códigos numéricos adicionales"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Commandes et numéros supplémentaires"
+            "state": "translated",
+            "value": "Commandes et codes numériques supplémentaires"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "追加のコマンドと数値"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Comandos adicionais e números"
+            "state": "translated",
+            "value": "Comandos e códigos numéricos adicionais"
           }
         }
       }
@@ -1468,32 +1420,32 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Comandos adicionales"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Commandes supplémentaires"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "追加コマンド"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Comandos adicionais"
           }
         }
       }
     },
     "advanced-tab": {
-      "comment": "Title of the advanced filter settings tab.",
+      "comment": "Title of the advanced rule settings tab.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -1516,26 +1468,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Avanzado"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "avancé"
+            "state": "translated",
+            "value": "Avancé"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "高度な"
+            "state": "translated",
+            "value": "詳細"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "avançado"
+            "state": "translated",
+            "value": "Avançado"
           }
         }
       }
@@ -1564,26 +1516,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Comparar la edad de la membresía"
+            "state": "translated",
+            "value": "Comparar antigüedad como miembro"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Comparer l'âge de l'adhésion"
+            "state": "translated",
+            "value": "Comparer l’ancienneté dans le canal"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "会員年齢を比較する"
+            "state": "translated",
+            "value": "メンバー歴を比較"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Compare a idade da associação"
+            "state": "translated",
+            "value": "Comparar tempo de associação"
           }
         }
       }
@@ -1612,26 +1564,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Edad en segundos"
+            "state": "translated",
+            "value": "Antigüedad en segundos"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Âge en secondes"
+            "state": "translated",
+            "value": "Ancienneté en secondes"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "秒単位の年齢"
+            "state": "translated",
+            "value": "メンバー歴(秒)"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Idade em segundos"
+            "state": "translated",
+            "value": "Tempo em segundos"
           }
         }
       }
@@ -1660,26 +1612,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Modo de canal cambiado"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Mode de canal modifié"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "チャンネルモードが変更されました"
+            "state": "translated",
+            "value": "チャンネルモードの変更"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Modo do canal mudado"
+            "state": "translated",
+            "value": "Modo do canal alterado"
           }
         }
       }
@@ -1708,26 +1660,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Modo de canal recibido"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Mode de canal reçu"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "チャンネルモードを受信しました"
+            "state": "translated",
+            "value": "チャンネルモードの受信"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Modo de Canal Recebido"
+            "state": "translated",
+            "value": "Modo do canal recebido"
           }
         }
       }
@@ -1756,26 +1708,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "El tema del canal ha cambiado"
+            "state": "translated",
+            "value": "Tema del canal modificado"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Le sujet de la chaîne a changé"
+            "state": "translated",
+            "value": "Sujet du canal modifié"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "チャンネルのトピックが変更されました"
+            "state": "translated",
+            "value": "チャンネルトピックの変更"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Assunto do canal mudado"
+            "state": "translated",
+            "value": "Tópico do canal alterado"
           }
         }
       }
@@ -1804,32 +1756,32 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Tema del canal recibido"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Sujet de canal reçu"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "チャンネルトピックを受信しました"
+            "state": "translated",
+            "value": "チャンネルトピックの受信"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Assunto do canal recebido"
+            "state": "translated",
+            "value": "Tópico do canal recebido"
           }
         }
       }
     },
     "channels-destination": {
-      "comment": "Destination option that limits a filter to channels.",
+      "comment": "Destination option that limits a rule to channels.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -1852,26 +1804,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Solo canales"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Canaux uniquement"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "チャンネルのみ"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Apenas Canais"
+            "state": "translated",
+            "value": "Somente canais"
           }
         }
       }
@@ -1900,32 +1852,32 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Canales"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Chaînes"
+            "state": "translated",
+            "value": "Canaux"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "チャンネル"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Canais"
           }
         }
       }
     },
     "events-tab": {
-      "comment": "Title of the filter events tab.",
+      "comment": "Title of the rule events tab.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -1948,86 +1900,86 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Eventos"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Événements"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "イベント"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Eventos"
           }
         }
       }
     },
-    "filter-action-section": {
-      "comment": "Section containing the command run for a filter match.",
+    "rule-action-section": {
+      "comment": "Section containing the command run for a rule match.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Filter Action"
+            "value": "Rule Action"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Szűrőművelet"
+            "value": "Szabályművelet"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Filteraktion"
+            "value": "Regelaktion"
           }
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Acción de filtrado"
+            "state": "translated",
+            "value": "Acción de la regla"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Action de filtrage"
+            "state": "translated",
+            "value": "Action de la règle"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "フィルターアクション"
+            "state": "translated",
+            "value": "ルールのアクション"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Ação de Filtro"
+            "state": "translated",
+            "value": "Ação da regra"
           }
         }
       }
     },
-    "filter-match-label": {
+    "rule-match-label": {
       "comment": "Label for the regular expression matched against message text.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Filter Match"
+            "value": "Rule Match"
           }
         },
         "hu": {
@@ -2044,128 +1996,128 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Combinación de filtro"
+            "state": "translated",
+            "value": "Coincidencia de la regla"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Correspondance du filtre"
+            "state": "translated",
+            "value": "Correspondance de la règle"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "フィルターマッチ"
+            "state": "translated",
+            "value": "ルールの一致条件"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Correspondência de filtro"
+            "state": "translated",
+            "value": "Correspondência da regra"
           }
         }
       }
     },
-    "filter-tab": {
-      "comment": "Title of the general filter tab.",
+    "rule-tab": {
+      "comment": "Title of the general rule tab.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Filter"
+            "value": "Rule"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Szűrő"
+            "value": "Szabály"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Filter"
+            "value": "Regel"
           }
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Filtrar"
+            "state": "translated",
+            "value": "Regla"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "filtre"
+            "state": "translated",
+            "value": "Règle"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "フィルター"
+            "state": "translated",
+            "value": "ルール"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "filtro"
+            "state": "translated",
+            "value": "Regra"
           }
         }
       }
     },
-    "filter-title-label": {
-      "comment": "Label for the chat filter title.",
+    "rule-title-label": {
+      "comment": "Label for the rule title.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Filter Title"
+            "value": "Rule Title"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Szűrő neve"
+            "value": "Szabály neve"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Filtername"
+            "value": "Regelname"
           }
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Título del filtro"
+            "state": "translated",
+            "value": "Título de la regla"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Titre du filtre"
+            "state": "translated",
+            "value": "Titre de la règle"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "フィルタタイトル"
+            "state": "translated",
+            "value": "ルールのタイトル"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Título do filtro"
+            "state": "translated",
+            "value": "Título da regra"
           }
         }
       }
     },
     "flood-control-section": {
-      "comment": "Section containing filter-action flood control.",
+      "comment": "Section containing rule-action flood control.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -2188,32 +2140,32 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Control de inundaciones"
+            "state": "translated",
+            "value": "Control de flood"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "prévention des inondations"
+            "state": "translated",
+            "value": "Limitation de fréquence"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "洪水制御"
+            "state": "translated",
+            "value": "フラッド制御"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "controle de inundação"
+            "state": "translated",
+            "value": "Controle de flood"
           }
         }
       }
     },
     "flood-control-seconds-label": {
-      "comment": "Label for the minimum seconds between filter actions.",
+      "comment": "Label for the minimum seconds between rule actions.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -2236,26 +2188,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Control de inundaciones en segundos"
+            "state": "translated",
+            "value": "Control de flood en segundos"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Contrôle des inondations en quelques secondes"
+            "state": "translated",
+            "value": "Limitation de fréquence (en secondes)"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "数秒で洪水対策"
+            "state": "translated",
+            "value": "フラッド制御(秒)"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Controle de Inundações em Segundos"
+            "state": "translated",
+            "value": "Controle de flood em segundos"
           }
         }
       }
@@ -2284,26 +2236,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Destino de envío"
+            "state": "translated",
+            "value": "Destino de reenvío"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Destination de destination"
+            "state": "translated",
+            "value": "Destination du transfert"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "転送先"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Destino de Envio"
+            "state": "translated",
+            "value": "Destino do encaminhamento"
           }
         }
       }
@@ -2332,26 +2284,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Destino de envío"
+            "state": "translated",
+            "value": "Destino de reenvío"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Destination de destination"
+            "state": "translated",
+            "value": "Destination du transfert"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "転送先"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Destino de Envio"
+            "state": "translated",
+            "value": "Destino do encaminhamento"
           }
         }
       }
@@ -2380,25 +2332,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Mayor que"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Plus grand que"
+            "state": "translated",
+            "value": "Supérieur à"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "大きい"
+            "state": "translated",
+            "value": "より大きい"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Maior que"
           }
         }
@@ -2428,32 +2380,32 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Ocultar el mensaje original"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Masquer le message original"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "元のメッセージを非表示にする"
+            "state": "translated",
+            "value": "元のメッセージを非表示"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Esconder Mensagem Original"
+            "state": "translated",
+            "value": "Ocultar mensagem original"
           }
         }
       }
     },
     "ignore-operators-toggle": {
-      "comment": "Toggle that excludes channel operators from a filter.",
+      "comment": "Toggle that excludes channel operators from a rule.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -2476,26 +2428,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Ignorar a los operadores de canales"
+            "state": "translated",
+            "value": "Ignorar a los operadores del canal"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Ignorer les opérateurs de canaux"
+            "state": "translated",
+            "value": "Ignorer les opérateurs de canal"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "チャンネルオペレーターを無視する"
+            "state": "translated",
+            "value": "チャンネルオペレーターを無視"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Ignorar Operadores de Canal"
+            "state": "translated",
+            "value": "Ignorar operadores de canal"
           }
         }
       }
@@ -2524,26 +2476,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Insertar espacio reservado"
+            "state": "translated",
+            "value": "Insertar marcador"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Insérer un espace réservé"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "プレースホルダーを挿入する"
+            "state": "translated",
+            "value": "プレースホルダを挿入"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Inserir espaço reservado"
+            "state": "translated",
+            "value": "Inserir marcador"
           }
         }
       }
@@ -2572,122 +2524,122 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Menos que"
+            "state": "translated",
+            "value": "Menor que"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Moins que"
+            "state": "translated",
+            "value": "Inférieur à"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "それより少ない"
+            "state": "translated",
+            "value": "より小さい"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Menos que"
+            "state": "translated",
+            "value": "Menor que"
           }
         }
       }
     },
-    "limit-filter-label": {
-      "comment": "Label for filter destination limits.",
+    "limit-rule-label": {
+      "comment": "Label for rule destination limits.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Limit Filter To"
+            "value": "Limit Rule To"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Szűrő korlátozása erre"
+            "value": "Szabály korlátozása erre"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Filter beschränken auf"
+            "value": "Regel beschränken auf"
           }
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Limitar el filtro a"
+            "state": "translated",
+            "value": "Limitar la regla a"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Limiter le filtre à"
+            "state": "translated",
+            "value": "Limiter la règle à"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "フィルターを以下に制限する"
+            "state": "translated",
+            "value": "ルールの適用範囲"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Limitar Filtro Para"
+            "state": "translated",
+            "value": "Limitar regra a"
           }
         }
       }
     },
-    "log-filter-match-toggle": {
-      "comment": "Toggle that logs a filter match and performed action.",
+    "log-rule-match-toggle": {
+      "comment": "Toggle that logs a rule match and performed action.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Log Filter Match and Action"
+            "value": "Log Rule Match and Action"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Szűrőegyezés és művelet naplózása"
+            "value": "Szabályegyezés és művelet naplózása"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Filtertreffer und Aktion protokollieren"
+            "value": "Regeltreffer und Aktion protokollieren"
           }
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Combinación y acción del filtro de registros"
+            "state": "translated",
+            "value": "Registrar coincidencia y acción de la regla"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Correspondance et action du filtre de journal"
+            "state": "translated",
+            "value": "Journaliser la correspondance et l’action de la règle"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ログフィルターのマッチングとアクション"
+            "state": "translated",
+            "value": "ルールの一致とアクションをログに記録"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Correspondência e ação do filtro de logs"
+            "state": "translated",
+            "value": "Registrar correspondência e ação da regra"
           }
         }
       }
@@ -2716,26 +2668,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Edad de membresía"
+            "state": "translated",
+            "value": "Antigüedad como miembro"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Âge d'adhésion"
+            "state": "translated",
+            "value": "Ancienneté dans le canal"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "会員年齢"
+            "state": "translated",
+            "value": "メンバー歴"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Idade da associação"
+            "state": "translated",
+            "value": "Tempo de associação"
           }
         }
       }
@@ -2764,32 +2716,32 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Sin servidores conectados"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Aucun serveur connecté"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "接続されたサーバーはありません"
+            "state": "translated",
+            "value": "接続中のサーバはありません"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Nenhum servidor conectado"
           }
         }
       }
     },
     "notes-section": {
-      "comment": "Section containing private notes about a filter.",
+      "comment": "Section containing private notes about a rule.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -2812,32 +2764,32 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Notas"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Notes"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "メモ"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Notas"
           }
         }
       }
     },
     "notes-tab": {
-      "comment": "Title of the filter notes tab.",
+      "comment": "Title of the rule notes tab.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -2860,25 +2812,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Notas"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Notes"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "メモ"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Notas"
           }
         }
@@ -2908,32 +2860,32 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Mensaje de notificación"
+            "state": "translated",
+            "value": "Mensaje de aviso"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Message d'avis"
+            "state": "translated",
+            "value": "Message de notice"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "通知メッセージ"
+            "state": "translated",
+            "value": "お知らせメッセージ"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Mensagem de Aviso"
+            "state": "translated",
+            "value": "Mensagem de aviso"
           }
         }
       }
     },
     "only-my-messages-toggle": {
-      "comment": "Toggle that restricts a filter to messages sent by the local user.",
+      "comment": "Toggle that restricts a rule to messages sent by the local user.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -2956,26 +2908,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Solo mis mensajes"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Seuls mes messages"
+            "state": "translated",
+            "value": "Uniquement mes messages"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "私のメッセージだけ"
+            "state": "translated",
+            "value": "自分のメッセージのみ"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Apenas minhas mensagens"
+            "state": "translated",
+            "value": "Somente minhas mensagens"
           }
         }
       }
@@ -3004,32 +2956,32 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Mensaje de texto simple"
+            "state": "translated",
+            "value": "Mensaje de texto sin formato"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Message texte simple"
+            "state": "translated",
+            "value": "Message en texte brut"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "プレーンテキストメッセージ"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Mensagem de texto simples"
           }
         }
       }
     },
     "private-messages-destination": {
-      "comment": "Destination option that limits a filter to private messages.",
+      "comment": "Destination option that limits a rule to private messages.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -3052,26 +3004,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Solo mensajes privados"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Messages privés uniquement"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "プライベートメッセージのみ"
+            "state": "translated",
+            "value": "ダイレクトメッセージのみ"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Apenas Mensagens Privadas"
+            "state": "translated",
+            "value": "Somente mensagens diretas"
           }
         }
       }
@@ -3100,32 +3052,32 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Combinación del remitente"
+            "state": "translated",
+            "value": "Coincidencia del remitente"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Correspondance de l'expéditeur"
+            "state": "translated",
+            "value": "Correspondance de l’expéditeur"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "送信者マッチ"
+            "state": "translated",
+            "value": "送信者の一致条件"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Correspondência do remetente"
           }
         }
       }
     },
     "sender-tab": {
-      "comment": "Title of the filter sender tab.",
+      "comment": "Title of the rule sender tab.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -3148,32 +3100,32 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Remitente"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "expéditeur"
+            "state": "translated",
+            "value": "Expéditeur"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "送信者"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "remetente"
+            "state": "translated",
+            "value": "Remetente"
           }
         }
       }
     },
     "specific-items-destination": {
-      "comment": "Destination option that limits a filter to selected items.",
+      "comment": "Destination option that limits a rule to selected items.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -3196,25 +3148,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Artículos específicos"
+            "state": "translated",
+            "value": "Elementos específicos"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Articles spécifiques"
+            "state": "translated",
+            "value": "Éléments spécifiques"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "特定の項目"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Itens específicos"
           }
         }
@@ -3244,26 +3196,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Servidores y canales específicos"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Serveurs et canaux spécifiques"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "特定のサーバーとチャンネル"
+            "state": "translated",
+            "value": "特定のサーバとチャンネル"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Servidores e Canais específicos"
+            "state": "translated",
+            "value": "Servidores e canais específicos"
           }
         }
       }
@@ -3292,32 +3244,32 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Eventos estándar"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Événements standards"
+            "state": "translated",
+            "value": "Événements standard"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "標準イベント"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Eventos Padrão"
+            "state": "translated",
+            "value": "Eventos padrão"
           }
         }
       }
     },
     "unrestricted-destination": {
-      "comment": "Destination option that does not limit a filter.",
+      "comment": "Destination option that does not limit a rule.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -3340,26 +3292,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Sin restricciones"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "illimité"
+            "state": "translated",
+            "value": "Sans restriction"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "制限なし"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "irrestrito"
+            "state": "translated",
+            "value": "Sem restrição"
           }
         }
       }
@@ -3388,26 +3340,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "El usuario cambió el apodo"
+            "state": "translated",
+            "value": "El usuario cambió de apodo"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "L'utilisateur a changé de surnom"
+            "state": "translated",
+            "value": "L’utilisateur a changé de pseudo"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ユーザーがニックネームを変更しました"
+            "state": "translated",
+            "value": "ユーザがニックネームを変更"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Usuário mudou o apelido"
+            "state": "translated",
+            "value": "Usuário alterou o apelido"
           }
         }
       }
@@ -3436,25 +3388,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Usuario desconectado"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Utilisateur déconnecté"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ユーザーが接続解除されました"
+            "state": "translated",
+            "value": "ユーザが切断"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Usuário desconectado"
           }
         }
@@ -3484,26 +3436,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Usuario se unió al canal"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "L'utilisateur a rejoint la chaîne"
+            "state": "translated",
+            "value": "L’utilisateur a rejoint le canal"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ユーザーがチャンネルに参加しました"
+            "state": "translated",
+            "value": "ユーザがチャンネルに参加"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Usuário ingressou no canal"
+            "state": "translated",
+            "value": "Usuário entrou no canal"
           }
         }
       }
@@ -3532,26 +3484,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Usuario expulsado del canal"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Utilisateur expulsé du canal"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ユーザーがチャンネルから追放されました"
+            "state": "translated",
+            "value": "ユーザがチャンネルからキックされた"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Usuário chutado do canal"
+            "state": "translated",
+            "value": "Usuário expulso do canal"
           }
         }
       }
@@ -3580,25 +3532,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "El usuario dejó el canal"
+            "state": "translated",
+            "value": "El usuario salió del canal"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Canal utilisateur gauche"
+            "state": "translated",
+            "value": "L’utilisateur a quitté le canal"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ユーザーがチャンネルを離れた"
+            "state": "translated",
+            "value": "ユーザがチャンネルから退出"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Usuário saiu do canal"
           }
         }
@@ -3628,25 +3580,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Cero desactiva este límite."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Zéro désactive cette limite."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ゼロはこの制限を無効にします。"
+            "state": "translated",
+            "value": "0を指定すると、この制限は無効になります。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Zero desativa este limite."
           }
         }
@@ -3676,32 +3628,32 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Por favor, introduzca una lista de comandos correctamente formateada.\n\n• Los comandos deben ser una lista separada por comas (,)\n• Los comandos solo deben contener los caracteres: a-z, A-Z, 0-9\n• Los números deben ser números enteros que sean mayores que cero (0) y menores o iguales a 999."
+            "state": "translated",
+            "value": "Introduce una lista de comandos con el formato correcto.\n\n• Los comandos deben ir separados por comas (,).\n• Los comandos solo pueden contener los caracteres: a-z, A-Z, 0-9\n• Los códigos numéricos deben ser números enteros mayores que cero (0) y menores o iguales que 999."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Veuillez saisir une liste de commandes correctement formatée.\n\n• Les commandes doivent être une liste séparée par des virgules (,)\n• Les commandes ne doivent contenir que les caractères : a-z, A-Z, 0-9\n• Les nombres doivent être des nombres entiers supérieurs à zéro (0) et inférieurs ou égaux à 999."
+            "state": "translated",
+            "value": "Saisissez une liste de commandes correctement formatée.\n\n• Les commandes doivent être séparées par des virgules (,).\n• Les commandes ne doivent contenir que les caractères : a-z, A-Z, 0-9.\n• Les codes numériques doivent être des nombres entiers supérieurs à zéro (0) et inférieurs ou égaux à 999."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "適切にフォーマットされたコマンドのリストを入力してください。\n\n• コマンドはカンマ（、）で区切られたリストである必要があります。\n• コマンドには、a-z、A-Z、0-9 の文字のみを含める必要があります。\n• 数字は0より大きく999以下である整数である必要があります。"
+            "state": "translated",
+            "value": "コマンドのリストを正しい形式で入力してください。\n\n• コマンドは、カンマ(,)で区切ったリストにしてください。\n• コマンドに使用できる文字は、a-z、A-Z、0-9のみです。\n• 数値コマンドは、0より大きく999以下の整数にしてください。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Por favor, insira uma lista de comandos corretamente formatada.\n\n• Os comandos devem ser uma lista separada por vírgula (,)\n• Os comandos devem conter apenas os caracteres: a-z, A-Z, 0-9\n• Os números devem ser números inteiros que sejam maiores que zero (0) e menores ou iguais a 999."
+            "state": "translated",
+            "value": "Insira uma lista de comandos formatada corretamente.\n\n• Os comandos devem ser uma lista separada por vírgulas (,).\n• Os comandos devem conter apenas os caracteres: a-z, A-Z, 0-9\n• Os códigos numéricos devem ser números inteiros maiores que zero (0) e menores ou iguais a 999."
           }
         }
       }
     },
     "destination-invalid": {
-      "comment": "Validation message for an improperly formatted filter destination. Migrated from legacy key 5kd-jt.",
+      "comment": "Validation message for an improperly formatted rule destination. Migrated from legacy key 5kd-jt.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -3724,32 +3676,32 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Por favor, introduzca un destino correctamente formateado.\n\nCaracteres aceptados: a-z, A-Z, 0-9, guiones (-), guiones bajos (_) y espacios."
+            "state": "translated",
+            "value": "Introduce un destino con el formato correcto.\n\nCaracteres admitidos: a-z, A-Z, 0-9, guiones (-), guiones bajos (_) y espacios."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Veuillez saisir une destination correctement formatée.\n\nCaractères acceptés : a-z, A-Z, 0-9, tirets (-), tirets souscripteurs (_) et espaces."
+            "state": "translated",
+            "value": "Saisissez une destination correctement formatée.\n\nCaractères acceptés : a-z, A-Z, 0-9, tirets (-), tirets bas (_) et espaces."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "適切にフォーマットされた目的地を入力してください。\n\n受け入れられる文字：a-z、A-Z、0-9、ハイフン（-）、アンダースコア（_）、スペース。"
+            "state": "translated",
+            "value": "宛先を正しい形式で入力してください。\n\n使用できる文字: a-z、A-Z、0-9、ハイフン(-)、アンダースコア(_)、スペース。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Por favor, insira um destino corretamente formatado.\n\nCaractere aceitos: a-z, A-Z, 0-9, traços de quebra (-), sublinhados (_), e espaços."
+            "state": "translated",
+            "value": "Insira um destino formatado corretamente.\n\nCaracteres aceitos: a-z, A-Z, 0-9, hifens (-), sublinhados (_) e espaços."
           }
         }
       }
     },
     "destination-too-long": {
-      "comment": "Validation message for a filter destination longer than the supported limit. Migrated from legacy key m0u-tw.",
+      "comment": "Validation message for a rule destination longer than the supported limit. Migrated from legacy key m0u-tw.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -3772,32 +3724,32 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Por favor, introduzca un destino más corto"
+            "state": "translated",
+            "value": "Introduce un destino más corto"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Veuillez saisir une destination plus courte"
+            "state": "translated",
+            "value": "Saisissez une destination plus courte"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "目的地を短くしてください"
+            "state": "translated",
+            "value": "宛先を短くしてください"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Por favor, insira um destino mais curto"
+            "state": "translated",
+            "value": "Insira um destino mais curto"
           }
         }
       }
     },
     "regular-expression-invalid": {
-      "comment": "Validation message for a filter match field that is not a valid regular expression. The argument is the reason compilation failed.",
+      "comment": "Validation message for a rule match field that is not a valid regular expression. The argument is the reason compilation failed.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -3820,80 +3772,80 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Por favor, introduzca una expresión regular válida.\n\n%@"
+            "state": "translated",
+            "value": "Introduce una expresión regular válida.\n\n%@"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Veuillez saisir une expression régulière valide.\n\n%@"
+            "state": "translated",
+            "value": "Saisissez une expression régulière valide.\n\n%@"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "有効な正規表現を入力してください。\n\n%@"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Por favor, insira uma expressão regular válida.\n\n%@"
+            "state": "translated",
+            "value": "Insira uma expressão regular válida.\n\n%@"
           }
         }
       }
     },
     "regular-expression-limits-explanation": {
-      "comment": "Explanation of the limits placed on filter match patterns. The argument is the number of bytes of a message a pattern is matched against.",
+      "comment": "Explanation of the limits placed on rule match patterns. The argument is the number of bytes of a message a pattern is matched against.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Patterns are matched against at most the first %@ bytes of a message. A pattern that can take a very long time to match cannot be saved, and one that runs too long while matching is skipped until the filters change."
+            "value": "Patterns are matched against at most the first %@ bytes of a message. A pattern that can take a very long time to match cannot be saved, and one that runs too long while matching is skipped until the rules change."
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "A mintákat legfeljebb az üzenet első %@ bájtjával vetjük össze. A túl hosszú illesztési időt igénylő minta nem menthető. Ha futás közben tart túl sokáig az illesztés, a mintát a szűrők módosításáig kihagyjuk."
+            "value": "A mintákat legfeljebb az üzenet első %@ bájtjával vetjük össze. A túl hosszú illesztési időt igénylő minta nem menthető. Ha futás közben tart túl sokáig az illesztés, a mintát a szabályok módosításáig kihagyjuk."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Muster werden mit höchstens den ersten %@ Byte einer Nachricht verglichen. Muster, deren Auswertung sehr lange dauern kann, können nicht gesichert werden. Dauert eine Auswertung zu lange, wird das Muster bis zur Änderung der Filter übersprungen."
+            "value": "Muster werden mit höchstens den ersten %@ Byte einer Nachricht verglichen. Muster, deren Auswertung sehr lange dauern kann, können nicht gesichert werden. Dauert eine Auswertung zu lange, wird das Muster bis zur Änderung der Regeln übersprungen."
           }
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Los patrones se comparan con como máximo los primeros %@ bytes de un mensaje. Un patrón que puede tardar mucho tiempo en coincidir no se puede guardar, y uno que tarda demasiado tiempo mientras se realiza la coincidencia se salta hasta que los filtros cambian."
+            "state": "translated",
+            "value": "Los patrones se comparan como máximo con los primeros %@ bytes de un mensaje. No se puede guardar un patrón que pueda tardar mucho en coincidir, y uno que tarde demasiado al comparar se omite hasta que cambien las reglas."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Les motifs sont comparés au maximum aux premiers octets %@ d'un message. Un motif qui peut prendre très longtemps pour être comparé ne peut pas être enregistré, et celui qui s'exécute trop longtemps pendant la comparaison est ignoré jusqu'à ce que les filtres changent."
+            "state": "translated",
+            "value": "Les motifs sont comparés au maximum aux %@ premiers octets d’un message. Un motif dont la correspondance peut prendre très longtemps ne peut pas être enregistré, et un motif dont l’exécution dure trop longtemps est ignoré jusqu’à ce que les règles changent."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "パターンはメッセージの最初の%@バイトまででマッチされます。マッチに非常に時間がかかるパターンは保存できず、マッチ中に長時間実行されるパターンはフィルターが変更されるまでスキップされます。"
+            "state": "translated",
+            "value": "パターンは、メッセージの先頭から最大%@バイトまでを対象に照合されます。照合に非常に長い時間がかかるパターンは保存できません。照合中に実行時間が長くなりすぎたパターンは、ルールが変更されるまでスキップされます。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Os padrões são comparados com no máximo os primeiros %@ bytes de uma mensagem. Um padrão que pode levar muito tempo para ser comparado não pode ser salvo, e um que executa por muito tempo durante a comparação é pego de lado até que os filtros mudem."
+            "state": "translated",
+            "value": "Os padrões são comparados com no máximo os primeiros %@ bytes de uma mensagem. Um padrão que pode levar muito tempo para ser comparado não pode ser salvo, e um padrão que leva tempo demais durante a comparação é ignorado até que as regras mudem."
           }
         }
       }
     },
     "regular-expression-nested-quantifier": {
-      "comment": "Validation message shown beside a filter match field whose pattern repeats a group that already repeats without bound, or repeats alternatives that match the same text. The filter cannot be saved until the pattern is rewritten.",
+      "comment": "Validation message shown beside a rule match field whose pattern repeats a group that already repeats without bound, or repeats alternatives that match the same text. The rule cannot be saved until the pattern is rewritten.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -3916,26 +3868,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Este patrón repite un grupo que puede coincidir con el mismo texto de más de una manera, como (a+)+ o (.|\\s)*. Un patrón de esa forma puede tardar mucho tiempo en coincidir, por lo que no se puede guardar. Redescríbelo sin la repetición anidada ni las alternativas superpuestas."
+            "state": "translated",
+            "value": "Este patrón repite un grupo que puede coincidir con el mismo texto de más de una manera, como (a+)+ o (.|\\s)*. Un patrón con esa forma puede tardar mucho en coincidir, por lo que no se puede guardar. Reescríbelo sin la repetición anidada ni las alternativas superpuestas."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Ce motif répète un groupe qui peut correspondre au même texte de plus d'une manière, comme (a+)+ ou (.|\\s)*. Un motif de cette forme peut prendre très longtemps à correspondre, il ne peut donc pas être enregistré. Réécrivez-le sans la répétition imbriquée ni les alternatives superposées."
+            "state": "translated",
+            "value": "Ce motif répète un groupe pouvant correspondre au même texte de plusieurs façons, comme (a+)+ ou (.|\\s)*. Un motif de cette forme peut prendre très longtemps à être évalué, il ne peut donc pas être enregistré. Réécrivez-le sans répétition imbriquée ni alternatives qui se chevauchent."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "このパターンは、(a+)+ や (.|\\s)* など、同じテキストを複数の方法で一致させることができるグループを繰り返します。そのような形状のパターンは一致に非常に時間がかかるため、保存できません。内包的な繰り返しや重なる代替案を削除して書き直してください。"
+            "state": "translated",
+            "value": "このパターンは、(a+)+ や (.|\\s)* のように、同じテキストに複数の方法で一致しうるグループを繰り返しています。この形のパターンは照合に非常に長い時間がかかるため、保存できません。入れ子の繰り返しや、重複する選択肢を使わないように書き直してください。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Este padrão repete um grupo que pode corresponder ao mesmo texto de mais de uma maneira, como (a+)+ ou (.|\\s)*. Um padrão dessa forma pode levar muito tempo para corresponder, portanto não pode ser salvo. Reescreva-o sem a repetição aninhada ou as alternativas sobrepostas."
+            "state": "translated",
+            "value": "Este padrão repete um grupo que pode corresponder ao mesmo texto de mais de uma maneira, como (a+)+ ou (.|\\s)*. Um padrão com esse formato pode levar muito tempo para ser comparado, portanto não pode ser salvo. Reescreva-o sem a repetição aninhada ou as alternativas sobrepostas."
           }
         }
       }
@@ -3964,25 +3916,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Nombre del canal"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Nom de la chaîne"
+            "state": "translated",
+            "value": "Nom du canal"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "チャンネル名"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Nome do canal"
           }
         }
@@ -4012,25 +3964,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Mi apodo"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Mon surnom"
+            "state": "translated",
+            "value": "Mon pseudo"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "私のニックネーム"
+            "state": "translated",
+            "value": "自分のニックネーム"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Meu apelido"
           }
         }
@@ -4060,25 +4012,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Nombre de la red"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Nom du réseau"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "ネットワーク名"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Nome da rede"
           }
         }
@@ -4108,25 +4060,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Mensaje original"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Message original"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "元のメッセージ"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Mensagem original"
           }
         }
@@ -4156,25 +4108,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Parámetro #1"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Paramètre n°1"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "パラメータ#1"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Parâmetro #1"
           }
         }
@@ -4204,25 +4156,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Parámetro #2"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Paramètre n°2"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "パラメータ#2"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Parâmetro #2"
           }
         }
@@ -4252,25 +4204,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Parámetro #3"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Paramètre n°3"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "パラメータ#3"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Parâmetro #3"
           }
         }
@@ -4300,25 +4252,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Parámetro #4"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Paramètre n°4"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "パラメータ#4"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Parâmetro #4"
           }
         }
@@ -4348,25 +4300,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Parámetro #5"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Paramètre n°5"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "パラメータ#5"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Parâmetro #5"
           }
         }
@@ -4396,25 +4348,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Parámetro #6"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Paramètre n°6"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "パラメータ#6"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Parâmetro #6"
           }
         }
@@ -4444,25 +4396,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Parámetro #7"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Paramètre n°7"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "パラメータ#7"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Parâmetro #7"
           }
         }
@@ -4492,25 +4444,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Parámetro #8"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Paramètre n°8"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "パラメータ#8"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Parâmetro #8"
           }
         }
@@ -4540,25 +4492,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Parámetro #9"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Paramètre n°9"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "パラメータ#9"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Parâmetro #9"
           }
         }
@@ -4588,25 +4540,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Dirección del remitente"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Adresse de l'expéditeur"
+            "state": "translated",
+            "value": "Adresse de l’expéditeur"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "送信者住所"
+            "state": "translated",
+            "value": "送信者のアドレス"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Endereço do remetente"
           }
         }
@@ -4636,26 +4588,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Máscara de anfitrión del remitente"
+            "state": "translated",
+            "value": "Máscara de host del remitente"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Masque d'hôte de l'expéditeur"
+            "state": "translated",
+            "value": "Masque d’hôte de l’expéditeur"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "送信者ホストマスク"
+            "state": "translated",
+            "value": "送信者のホストマスク"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Máscara de hospedeiro do remet"
+            "state": "translated",
+            "value": "Máscara de host do remetente"
           }
         }
       }
@@ -4684,25 +4636,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Apodo del remitente"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Pseudonyme de l'expéditeur"
+            "state": "translated",
+            "value": "Pseudo de l’expéditeur"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "送信者のニックネーム"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Apelido do remetente"
           }
         }
@@ -4732,25 +4684,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Nombre de usuario del remitente"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Nom d'utilisateur de l'expéditeur"
+            "state": "translated",
+            "value": "Nom d’utilisateur de l’expéditeur"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "送信者ユーザー名"
+            "state": "translated",
+            "value": "送信者のユーザ名"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Nome de usuário do remetente"
           }
         }
@@ -4780,25 +4732,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Dirección del servidor"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Adresse du serveur"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "サーバーアドレス"
+            "state": "translated",
+            "value": "サーバアドレス"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Endereço do servidor"
           }
         }

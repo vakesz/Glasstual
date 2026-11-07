@@ -11,6 +11,8 @@ struct UserNotificationAdmissionContext {
 	let nicknameIsLocalUser: Bool
 	/// The conversation the event happened in has alerts switched off.
 	let conversationIsMuted: Bool
+	/// The active Focus filter silences the event. Computed from `FocusFilterState`.
+	var focusSuppresses = false
 }
 
 /** Which events reach the person, and how loudly.
@@ -50,6 +52,12 @@ enum UserNotificationPolicy {
 		/* A file transfer belongs to no conversation, so muting one cannot
 		 silence the question it asks. */
 		if context.conversationIsMuted, context.event.isFileTransfer == false {
+			return false
+		}
+
+		/* Like a muted conversation, a Focus filter cannot silence the question
+		 a file transfer asks. */
+		if context.focusSuppresses, context.event.isFileTransfer == false {
 			return false
 		}
 

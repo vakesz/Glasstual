@@ -56,5 +56,15 @@ struct NotificationsPane: View {
 		} header: {
 			Text(.Settings.notificationsHeadingDelivery)
 		}
+
+		Section {
+			SettingsToggle(
+				title: .Settings.notificationsAnnounceVoiceover,
+				note: .Settings.notificationsAnnounceVoiceoverNote,
+				isOn: model.settings.binding(for: SettingsKeys.Notifications.announceToVoiceOver)
+			)
+		} header: {
+			Text(.Settings.notificationsHeadingAccessibility)
+		}
 	}
 }

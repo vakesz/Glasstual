@@ -78,11 +78,11 @@ struct RulesPane: View {
 			}
 			.contextMenu(forSelectionType: MessageRule.ID.self) { ids in
 				if ids.count == 1 {
-					Button(String(localized: .Rules.editFilterButton)) {
+					Button(String(localized: .Rules.editRuleButton)) {
 						controller.selection = ids.first
 						editSelection()
 					}
-					Button(String(localized: .Rules.deleteFilterButton), role: .destructive) {
+					Button(String(localized: .Rules.deleteRuleButton), role: .destructive) {
 						controller.selection = ids.first
 						showsDeleteConfirmation = true
 					}
@@ -96,9 +96,9 @@ struct RulesPane: View {
 			.overlay {
 				if controller.rules.isEmpty {
 					ContentUnavailableView(
-						String(localized: .Rules.noFiltersTitle),
+						String(localized: .Rules.noRulesTitle),
 						systemImage: "line.3.horizontal.decrease.circle",
-						description: Text(String(localized: .Rules.noFiltersDescription))
+						description: Text(String(localized: .Rules.noRulesDescription))
 					)
 				}
 			}
@@ -110,7 +110,7 @@ struct RulesPane: View {
 				if controller.save(rule, replacing: presentation.replacingIdentifier) == false {
 					failure = RuleEditorFailure(
 						operation: .saving,
-						reason: String(localized: .Rules.editedFilterRemoved)
+						reason: String(localized: .Rules.editedRuleRemoved)
 					)
 				}
 				editor = nil
@@ -163,15 +163,15 @@ struct RulesPane: View {
 			Text(failure.message)
 		}
 		.alert(
-			String(localized: .Rules.deleteFilterTitle),
+			String(localized: .Rules.deleteRuleTitle),
 			isPresented: $showsDeleteConfirmation
 		) {
-			Button(String(localized: .Rules.deleteFilterButton), role: .destructive) {
+			Button(String(localized: .Rules.deleteRuleButton), role: .destructive) {
 				controller.removeSelection()
 			}
 			Button(PromptStrings.Action.cancel, role: .cancel) {}
 		} message: {
-			Text(String(localized: .Rules.deleteFilterMessage))
+			Text(String(localized: .Rules.deleteRuleMessage))
 		}
 	}
 
@@ -191,37 +191,37 @@ struct RulesPane: View {
 			Button {
 				editor = RuleEditorPresentation(rule: MessageRule(), replacingIdentifier: nil)
 			} label: {
-				Label(String(localized: .Rules.addFilterButton), systemImage: "plus")
+				Label(String(localized: .Rules.addRuleButton), systemImage: "plus")
 			}
 
 			Button {
 				showsDeleteConfirmation = true
 			} label: {
-				Label(String(localized: .Rules.deleteFilterButton), systemImage: "minus")
+				Label(String(localized: .Rules.deleteRuleButton), systemImage: "minus")
 			}
 			.disabled(controller.selectedRule == nil)
 
 			Button {
 				editSelection()
 			} label: {
-				Label(String(localized: .Rules.editFilterButton), systemImage: "pencil")
+				Label(String(localized: .Rules.editRuleButton), systemImage: "pencil")
 			}
 			.disabled(controller.selectedRule == nil)
 
 			Spacer()
 
 			Menu {
-				Button(String(localized: .Rules.duplicateFilterButton)) {
+				Button(String(localized: .Rules.duplicateRuleButton)) {
 					duplicateSelection()
 				}
 				.disabled(controller.selectedRule == nil)
 
 				Divider()
 
-				Button(String(localized: .Rules.importFilterButton)) {
+				Button(String(localized: .Rules.importRuleButton)) {
 					showsImporter = true
 				}
-				Button(String(localized: .Rules.exportFilterButton)) {
+				Button(String(localized: .Rules.exportRuleButton)) {
 					exportSelection()
 				}
 				.disabled(controller.selectedRule == nil)

@@ -25,25 +25,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%1$@ en %2$@"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%1$@ sur %2$@"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$@は%2$@にあります"
+            "state": "translated",
+            "value": "%2$@の%1$@"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%1$@ em %2$@"
           }
         }
@@ -112,20 +112,20 @@
             "plural": {
               "many": {
                 "stringUnit": {
-                  "state": "needs_review",
-                  "value": "%ld destacados"
+                  "state": "translated",
+                  "value": "%ld menciones"
                 }
               },
               "one": {
                 "stringUnit": {
-                  "state": "needs_review",
-                  "value": "%ld resaltar"
+                  "state": "translated",
+                  "value": "%ld mención"
                 }
               },
               "other": {
                 "stringUnit": {
-                  "state": "needs_review",
-                  "value": "%ld destacados"
+                  "state": "translated",
+                  "value": "%ld menciones"
                 }
               }
             }
@@ -136,20 +136,20 @@
             "plural": {
               "many": {
                 "stringUnit": {
-                  "state": "needs_review",
-                  "value": "%ld points forts"
+                  "state": "translated",
+                  "value": "%ld mentions"
                 }
               },
               "one": {
                 "stringUnit": {
-                  "state": "needs_review",
-                  "value": "%ld mise en évidence"
+                  "state": "translated",
+                  "value": "%ld mention"
                 }
               },
               "other": {
                 "stringUnit": {
-                  "state": "needs_review",
-                  "value": "%ld points forts"
+                  "state": "translated",
+                  "value": "%ld mentions"
                 }
               }
             }
@@ -160,8 +160,8 @@
             "plural": {
               "other": {
                 "stringUnit": {
-                  "state": "needs_review",
-                  "value": "%ldハイライト"
+                  "state": "translated",
+                  "value": "%ld件のハイライト"
                 }
               }
             }
@@ -172,19 +172,19 @@
             "plural": {
               "many": {
                 "stringUnit": {
-                  "state": "needs_review",
+                  "state": "translated",
                   "value": "%ld destaques"
                 }
               },
               "one": {
                 "stringUnit": {
-                  "state": "needs_review",
-                  "value": "%ld destacar"
+                  "state": "translated",
+                  "value": "%ld destaque"
                 }
               },
               "other": {
                 "stringUnit": {
-                  "state": "needs_review",
+                  "state": "translated",
                   "value": "%ld destaques"
                 }
               }
@@ -217,25 +217,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%1$@, %2$@"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%1$@, %2$@"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%1$@、%2$@"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%1$@, %2$@"
           }
         }
@@ -265,26 +265,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Sin resultados"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Aucun résultat"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "結果はありません"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Sem resultados"
+            "state": "translated",
+            "value": "Nenhum resultado"
           }
         }
       }
@@ -313,25 +313,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Canales coincidentes"
+            "state": "translated",
+            "value": "Canales que coinciden"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Canaux correspondants"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "マッチングチャンネル"
+            "state": "translated",
+            "value": "一致するチャンネル"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Canais correspondentes"
           }
         }
@@ -361,26 +361,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Buscar un canal"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Rechercher une chaîne"
+            "state": "translated",
+            "value": "Rechercher un canal"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "チャンネルを検索する"
+            "state": "translated",
+            "value": "チャンネルを検索"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Pesquisar um canal"
+            "state": "translated",
+            "value": "Pesquisar canal"
           }
         }
       }
@@ -448,19 +448,19 @@
             "plural": {
               "many": {
                 "stringUnit": {
-                  "state": "needs_review",
+                  "state": "translated",
                   "value": "%ld mensajes no leídos"
                 }
               },
               "one": {
                 "stringUnit": {
-                  "state": "needs_review",
+                  "state": "translated",
                   "value": "%ld mensaje sin leer"
                 }
               },
               "other": {
                 "stringUnit": {
-                  "state": "needs_review",
+                  "state": "translated",
                   "value": "%ld mensajes no leídos"
                 }
               }
@@ -472,19 +472,19 @@
             "plural": {
               "many": {
                 "stringUnit": {
-                  "state": "needs_review",
+                  "state": "translated",
                   "value": "%ld messages non lus"
                 }
               },
               "one": {
                 "stringUnit": {
-                  "state": "needs_review",
+                  "state": "translated",
                   "value": "%ld message non lu"
                 }
               },
               "other": {
                 "stringUnit": {
-                  "state": "needs_review",
+                  "state": "translated",
                   "value": "%ld messages non lus"
                 }
               }
@@ -496,8 +496,8 @@
             "plural": {
               "other": {
                 "stringUnit": {
-                  "state": "needs_review",
-                  "value": "%ld 未読メッセージ"
+                  "state": "translated",
+                  "value": "未読メッセージ%ld件"
                 }
               }
             }
@@ -508,19 +508,19 @@
             "plural": {
               "many": {
                 "stringUnit": {
-                  "state": "needs_review",
+                  "state": "translated",
                   "value": "%ld mensagens não lidas"
                 }
               },
               "one": {
                 "stringUnit": {
-                  "state": "needs_review",
+                  "state": "translated",
                   "value": "%ld mensagem não lida"
                 }
               },
               "other": {
                 "stringUnit": {
-                  "state": "needs_review",
+                  "state": "translated",
                   "value": "%ld mensagens não lidas"
                 }
               }
@@ -553,26 +553,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Búsqueda de canales"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Recherche de chaînes"
+            "state": "translated",
+            "value": "Recherche de canaux"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "チャンネル検索"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Pesquisa de Canal"
+            "state": "translated",
+            "value": "Pesquisa de canais"
           }
         }
       }

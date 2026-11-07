@@ -26,7 +26,7 @@ final class SidebarCellView: NSTableCellView {
 		titleField.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
 		let spacer = NSView()
 		spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
-		subtitleField.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+		subtitleField.font = .preferredFont(forTextStyle: .subheadline)
 		subtitleField.lineBreakMode = .byTruncatingTail
 		subtitleField.maximumNumberOfLines = 1
 		subtitleField.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
@@ -92,13 +92,23 @@ final class SidebarCellView: NSTableCellView {
 		switch node.content {
 		case let .server(server):
 			titleField.stringValue = server.title
-			titleField.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .semibold)
+			titleField.font = .systemFont(
+				ofSize: NSFont.preferredFont(forTextStyle: .body).pointSize,
+				weight: .semibold
+			)
 			if server.isFavoritesGroup {
 				leadingImage.image = NSImage(systemSymbolName: "pin.fill", accessibilityDescription: nil)
+				leadingImage.isHidden = false
+			} else if let networkIcon = server.networkIcon {
+				leadingImage.image = networkIcon
 				leadingImage.isHidden = false
 			} else {
 				leadingImage.image = NSImage(systemSymbolName: server.identityStyle.icon.symbolName, accessibilityDescription: nil)
 				leadingImage.isHidden = false
+			}
+			if let status = server.bouncerStatus {
+				subtitleField.stringValue = status.text
+				subtitleStack.isHidden = false
 			}
 			if server.isSecured {
 				securityImage.image = NSImage(systemSymbolName: "lock.fill", accessibilityDescription: nil)
@@ -115,14 +125,13 @@ final class SidebarCellView: NSTableCellView {
 					networkImage.isHidden = false
 				}
 			}
-			titleField.font = .systemFont(ofSize: NSFont.systemFontSize)
+			titleField.font = .preferredFont(forTextStyle: .body)
 			let symbol: String? = if conversation.hasJoinError {
 				"exclamationmark.triangle.fill"
 			} else {
 				switch conversation.kind {
 				case .channel: conversation.isFavorite ? "pin.fill" : nil
-				case .directChat: "bubble.left.and.bubble.right.fill"
-				case .direct, .console: "person.fill"
+				case .directChat, .direct, .console: conversation.kind.glyphSymbolName
 				}
 			}
 			if let symbol {
@@ -183,6 +192,7 @@ final class SidebarCellView: NSTableCellView {
 		// NSTableCellView forwards backgroundStyle to direct controls. The
 		// stack owns these controls, so forward the native style through it.
 		titleField.cell?.backgroundStyle = backgroundStyle
+		badge.isOnSelectedRow = backgroundStyle == .emphasized
 		subtitleField.cell?.backgroundStyle = backgroundStyle
 		subtitleField.textColor = backgroundStyle == .emphasized ? .labelColor : .secondaryLabelColor
 		leadingImage.cell?.backgroundStyle = backgroundStyle
@@ -226,9 +236,23 @@ final class SidebarUnreadBadge: NSView {
 	private var emphasized = false
 	private var tint: NSColor?
 
+	/** Whether the badge sits on a selected, emphasized row. The row's own fill
+	 is the accent colour, so a badge filled with it -- or with the grey that
+	 stands for an ordinary count -- disappears; as in a source list, the badge
+	 turns white with accent text there. */
+	var isOnSelectedRow = false {
+		didSet {
+			guard isOnSelectedRow != oldValue else { return }
+			updateColors()
+		}
+	}
+
 	override init(frame frameRect: NSRect) {
 		super.init(frame: frameRect)
-		label.font = .monospacedDigitSystemFont(ofSize: NSFont.smallSystemFontSize, weight: .semibold)
+		label.font = .monospacedDigitSystemFont(
+			ofSize: NSFont.preferredFont(forTextStyle: .subheadline).pointSize,
+			weight: .semibold
+		)
 		label.alignment = .center
 		label.translatesAutoresizingMaskIntoConstraints = false
 		label.setAccessibilityElement(false)
@@ -255,15 +279,22 @@ final class SidebarUnreadBadge: NSView {
 	}
 
 	override var intrinsicContentSize: NSSize {
-		NSSize(width: max(24, label.intrinsicContentSize.width + 12), height: 18)
+		NSSize(width: max(24, label.intrinsicContentSize.width + UISpacing.wide), height: 18)
 	}
 
 	private var fillColor: NSColor {
-		emphasized ? (tint ?? .selectedContentBackgroundColor) : .quaternaryLabelColor
+		if isOnSelectedRow {
+			return .alternateSelectedControlTextColor
+		}
+		return emphasized ? (tint ?? .selectedContentBackgroundColor) : .quaternaryLabelColor
 	}
 
 	private func updateColors() {
-		label.textColor = emphasized ? fillColor.legibleForeground : .labelColor
+		if isOnSelectedRow {
+			label.textColor = .controlAccentColor
+		} else {
+			label.textColor = emphasized ? fillColor.legibleForeground : .labelColor
+		}
 		needsDisplay = true
 	}
 

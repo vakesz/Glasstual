@@ -97,7 +97,7 @@ struct TextFormatterMenuTargetTests {
 	func paletteColoursCarryTheirNames() throws {
 		let menu = TextFormattingMenu()
 
-		for palette in try [#require(menu.foregroundColorMenu), #require(menu.backgroundColorMenu)] {
+		for palette in [menu.foregroundColorMenu, menu.backgroundColorMenu] {
 			let colourItems = palette.items.filter {
 				$0.isSeparatorItem == false && NSColor.formatterColors.indices.contains($0.tag)
 			}

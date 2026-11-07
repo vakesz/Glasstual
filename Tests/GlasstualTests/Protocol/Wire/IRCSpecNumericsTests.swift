@@ -215,9 +215,9 @@ struct IRCSpecNumericsTests {
 
 		let modes = try #require(channel.modeInfo)
 
-		#expect(modes.modeIsDefined("n"))
-		#expect(modes.modeIsDefined("t"))
-		#expect(modes.modeInfo(for: "l")?.modeParameter == "50")
+		#expect(modes.modes.modeIsDefined("n"))
+		#expect(modes.modes.modeIsDefined("t"))
+		#expect(modes.modes.modeInfo(for: "l")?.modeParameter == "50")
 	}
 
 	/// A numeric whose parameters are shorter than its definition cannot be

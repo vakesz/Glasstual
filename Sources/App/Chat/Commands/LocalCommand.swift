@@ -84,6 +84,7 @@ enum LocalCommand: String, Sendable, CaseIterable {
 	case quote
 	case raw
 	case recv
+	case redact
 	case rejoin
 	case remove
 	case server
@@ -190,7 +191,7 @@ extension LocalCommand {
 		case .modeShortcut, .mode, .op, .deop, .halfop, .dehalfop, .voice, .devoice: .mode
 		case .query, .topicShortcut, .topic, .setqueryname: .conversation
 		case .aquote, .araw, .quote, .raw, .cap, .caps, .debug, .echo: .raw
-		case .ison, .names, .recv, .setname, .wallops: .request
+		case .ison, .names, .recv, .redact, .setname, .wallops: .request
 		case .gline, .gzline, .shun, .tempshun, .zline, .kill: .operatorControl
 		case .conn, .back, .away, .autojoin, .nick, .quit, .server, .sslcontext: .session
 		case .mute, .unmute, .notifybubble, .notifysound: .notification
@@ -287,6 +288,7 @@ extension LocalCommand {
 		.quote: "<input>",
 		.raw: "<input>",
 		.recv: "<input>",
+		.redact: "[message id [reason]]",
 		.remove: "[target]",
 		.server: "<address> [[+] port] [password]",
 		.setcolor: "<nickname>",

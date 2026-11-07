@@ -121,25 +121,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Cancelar transferencia"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Annuler le transfert"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "転送をキャンセルする"
+            "state": "translated",
+            "value": "転送をキャンセル"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Cancelar transferência"
           }
         }
@@ -169,26 +169,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Borrar todas las transferencias detenidas"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Effacer tous les transferts arrêtés"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "すべての停止された転送をクリアする"
+            "state": "translated",
+            "value": "停止した転送をすべてクリア"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Limpar todas as transferências paradas"
+            "state": "translated",
+            "value": "Limpar todas as transferências interrompidas"
           }
         }
       }
@@ -217,26 +217,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Descargar a..."
+            "state": "translated",
+            "value": "Descargar en…"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Télécharger vers..."
+            "state": "translated",
+            "value": "Télécharger vers…"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ダウンロードする…"
+            "state": "translated",
+            "value": "ダウンロード先…"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Baixar Para..."
+            "state": "translated",
+            "value": "Baixar para…"
           }
         }
       }
@@ -265,25 +265,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Transferencias de archivos"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Transferts de fichiers"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "ファイル転送"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Transferências de arquivos"
           }
         }
@@ -313,26 +313,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Sin transferencias de archivos"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Aucun transfert de fichiers"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "ファイル転送なし"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Sem transferências de arquivos"
+            "state": "translated",
+            "value": "Nenhuma transferência de arquivo"
           }
         }
       }
@@ -361,26 +361,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%1$@ de %2$@ (%3$@/s) recibido de %4$@"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$@ de %2$@ (%3$@/s) reçu de %4$@"
+            "state": "translated",
+            "value": "%1$@ sur %2$@ (%3$@/s), reçu de %4$@"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$@は%2$@（%3$@/s）から%4$@から受け取りました。"
+            "state": "translated",
+            "value": "%2$@中%1$@(%3$@/秒)を%4$@から受信"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$@ de %2$@ (%3$@/s) recebido de %4$@"
+            "state": "translated",
+            "value": "%1$@ de %2$@ (%3$@/s) recebidos de %4$@"
           }
         }
       }
@@ -409,26 +409,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%1$@ de %2$@ (%3$@/s) recibido de %4$@ — %5$@ restante"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$@ de %2$@ (%3$@/s) reçu de %4$@ — %5$@ restant"
+            "state": "translated",
+            "value": "%1$@ sur %2$@ (%3$@/s), reçu de %4$@ — %5$@ restant"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$@（%2$@（%3$@/s））は%4$@から受け取りました — 残りは%5$@です。"
+            "state": "translated",
+            "value": "%2$@中%1$@(%3$@/秒)を%4$@から受信 — 残り%5$@"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$@ de %2$@ (%3$@/s) recebido de %4$@ — %5$@ restante"
+            "state": "translated",
+            "value": "%1$@ de %2$@ (%3$@/s) recebidos de %4$@ — %5$@ restantes"
           }
         }
       }
@@ -457,26 +457,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%1$@ de %2$@ (%3$@/s) enviado a %4$@"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$@ de %2$@ (%3$@/s) envoyé à %4$@"
+            "state": "translated",
+            "value": "%1$@ sur %2$@ (%3$@/s), envoyé à %4$@"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$@は%2$@（%3$@/s）から%4$@に送信されました。"
+            "state": "translated",
+            "value": "%2$@中%1$@(%3$@/秒)を%4$@に送信"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$@ de %2$@ (%3$@/s) enviado para %4$@"
+            "state": "translated",
+            "value": "%1$@ de %2$@ (%3$@/s) enviados para %4$@"
           }
         }
       }
@@ -505,26 +505,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%1$@ de %2$@ (%3$@/s) enviado a %4$@ — %5$@ restante"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$@ de %2$@ (%3$@/s) envoyé à %4$@ — %5$@ restant"
+            "state": "translated",
+            "value": "%1$@ sur %2$@ (%3$@/s), envoyé à %4$@ — %5$@ restant"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$@（%2$@（%3$@/s））が%4$@に送信されました — 残りは%5$@です"
+            "state": "translated",
+            "value": "%2$@中%1$@(%3$@/秒)を%4$@に送信 — 残り%5$@"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$@ de %2$@ (%3$@/s) enviado para %4$@ — %5$@ restante"
+            "state": "translated",
+            "value": "%1$@ de %2$@ (%3$@/s) enviados para %4$@ — %5$@ restantes"
           }
         }
       }
@@ -553,26 +553,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Abrir archivo"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Ouvrir le fichier"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "ファイルを開く"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Abrir Arquivo"
+            "state": "translated",
+            "value": "Abrir arquivo"
           }
         }
       }
@@ -601,26 +601,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Preparando la transferencia..."
+            "state": "translated",
+            "value": "Preparando la transferencia…"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Préparation du transfert..."
+            "state": "translated",
+            "value": "Préparation du transfert…"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "転送の準備中…"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Preparando a transferência..."
+            "state": "translated",
+            "value": "Preparando a transferência…"
           }
         }
       }
@@ -649,26 +649,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Vista rápida"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Vue rapide"
+            "state": "translated",
+            "value": "Aperçu rapide"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "クイックビュー"
+            "state": "translated",
+            "value": "クイックルック"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Olhar rápido"
+            "state": "translated",
+            "value": "Visualização rápida"
           }
         }
       }
@@ -697,26 +697,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Recibiendo"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "des réceptions"
+            "state": "translated",
+            "value": "Réception"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "受け取る"
+            "state": "translated",
+            "value": "受信中"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "recepção"
+            "state": "translated",
+            "value": "Recebendo"
           }
         }
       }
@@ -745,25 +745,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Eliminar de la lista"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Supprimer de la liste"
+            "state": "translated",
+            "value": "Retirer de la liste"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "リストから削除する"
+            "state": "translated",
+            "value": "リストから削除"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Remover da lista"
           }
         }
@@ -793,26 +793,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Inténtalo de nuevo"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Réessayez"
+            "state": "translated",
+            "value": "Réessayer"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "もう一度試してください"
+            "state": "translated",
+            "value": "再試行"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Tente novamente"
+            "state": "translated",
+            "value": "Tentar novamente"
           }
         }
       }
@@ -841,25 +841,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Enviando"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Envoi"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "送信中"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Enviando"
           }
         }
@@ -890,26 +890,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Enviado a %@ sin un reconocimiento de pares."
+            "state": "translated",
+            "value": "Enviado a %@ sin confirmación de recepción."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Envoyé à %@ sans confirmation par un pair."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ピアの確認なしで%@に送信されました。"
+            "state": "translated",
+            "value": "ピアの受信確認なしで%@に送信しました。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Enviado para %@ sem reconhecimento de pares."
+            "state": "translated",
+            "value": "Enviado para %@ sem confirmação de recebimento."
           }
         }
       }
@@ -938,26 +938,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Compartir..."
+            "state": "translated",
+            "value": "Compartir…"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Partager..."
+            "state": "translated",
+            "value": "Partager…"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "共有する…"
+            "state": "translated",
+            "value": "共有…"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Compartilhar..."
+            "state": "translated",
+            "value": "Compartilhar…"
           }
         }
       }
@@ -1034,25 +1034,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Mostrar en Finder"
+            "state": "translated",
+            "value": "Mostrar en el Finder"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Afficher dans le Finder"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Finderで表示する"
+            "state": "translated",
+            "value": "Finderで表示"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Mostrar no Finder"
           }
         }
@@ -1082,26 +1082,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Iniciar transferencia"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Commencer le transfert"
+            "state": "translated",
+            "value": "Démarrer le transfert"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "転送を開始する"
+            "state": "translated",
+            "value": "転送を開始"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Começar transferência"
+            "state": "translated",
+            "value": "Iniciar transferência"
           }
         }
       }
@@ -1130,26 +1130,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Conectando a %@..."
+            "state": "translated",
+            "value": "Conectando con %@…"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Connexion à %@..."
+            "state": "translated",
+            "value": "Connexion à %@…"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%@に接続中…"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Conectando-se a %@..."
+            "state": "translated",
+            "value": "Conectando-se a %@…"
           }
         }
       }
@@ -1178,26 +1178,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%@ envió más de lo que indicaba la oferta, por lo que la transferencia se detuvo."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@ a envoyé plus que l'offre indiquée, donc le transfert a été arrêté."
+            "state": "translated",
+            "value": "%@ a envoyé plus de données que l’offre n’en indiquait, le transfert a donc été arrêté."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@は提示されたオファーを超えて送金したので、送金は停止されました。"
+            "state": "translated",
+            "value": "%@が提示されたサイズを超えるデータを送信したため、転送を停止しました。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@ enviou mais do que a oferta estipulada, então a transferência foi interrompida."
+            "state": "translated",
+            "value": "%@ enviou mais do que a oferta indicava, então a transferência foi interrompida."
           }
         }
       }
@@ -1226,25 +1226,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Recibido de %@."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Reçu de %@."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@から受け取りました。"
+            "state": "translated",
+            "value": "%@から受信しました。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Recebido de %@."
           }
         }
@@ -1274,26 +1274,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Esperando a que %@ se conecte."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "En attente que %@ se connecte."
+            "state": "translated",
+            "value": "En attente de la connexion de %@."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%@の接続を待っています。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Aguardando %@ se conectar."
+            "state": "translated",
+            "value": "Aguardando a conexão de %@."
           }
         }
       }
@@ -1322,26 +1322,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "La transferencia desde %@ no ha comenzado. Elija Aceptar para comenzar."
+            "state": "translated",
+            "value": "La transferencia desde %@ no ha comenzado. Elige Aceptar para comenzar."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Le transfert depuis %@ n'a pas commencé. Choisissez Accepter pour commencer."
+            "state": "translated",
+            "value": "Le transfert depuis %@ n’a pas démarré. Choisissez Accepter pour commencer."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@からの転送は開始されていません。開始するには「受け入れる」を選択してください。"
+            "state": "translated",
+            "value": "%@からの転送は開始されていません。開始するには「許可」を選択してください。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "A transferência de %@ não começou. Escolha Aceitar para começar."
+            "state": "translated",
+            "value": "A transferência de %@ não foi iniciada. Escolha Aceitar para começar."
           }
         }
       }
@@ -1370,25 +1370,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Esperando a que %@ acepte reanudar."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "En attente que %@ accepte de reprendre."
+            "state": "translated",
+            "value": "En attente de l’accord de %@ pour reprendre."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%@が再開に同意するのを待っています。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Aguardando %@ concordar em retomar."
           }
         }
@@ -1418,25 +1418,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Progreso de la transferencia"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Progression du transfert"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "転送の進捗状況"
+            "state": "translated",
+            "value": "転送の進行状況"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Progresso da transferência"
           }
         }
@@ -1466,25 +1466,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Enviado a %@."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Envoyé à %@."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@に送信されました。"
+            "state": "translated",
+            "value": "%@に送信しました。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Enviado para %@."
           }
         }
@@ -1514,25 +1514,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Esperando a que %@ acepte."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "En attente que %@ accepte."
+            "state": "translated",
+            "value": "En attente de l’acceptation de %@."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@の承認を待っています。"
+            "state": "translated",
+            "value": "%@が受け入れるのを待っています。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Aguardando %@ aceitar."
           }
         }
@@ -1562,26 +1562,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "La transferencia a %@ no ha comenzado. Elija Comenzar transferencia para comenzar."
+            "state": "translated",
+            "value": "La transferencia a %@ no ha comenzado. Elige Iniciar transferencia para comenzar."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Le transfert vers %@ n'a pas commencé. Choisissez Commencer le transfert pour commencer."
+            "state": "translated",
+            "value": "Le transfert vers %@ n’a pas démarré. Choisissez Démarrer le transfert pour commencer."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%@への転送は開始されていません。開始するには「転送を開始」を選択してください。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "A transferência para %@ não começou. Escolha Iniciar Transferência para começar."
+            "state": "translated",
+            "value": "A transferência para %@ não foi iniciada. Escolha Iniciar transferência para começar."
           }
         }
       }
@@ -1610,25 +1610,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Tamaño total: %@"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Taille totale : %@"
+            "state": "translated",
+            "value": "Taille totale : %@"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "総サイズ：%@"
+            "state": "translated",
+            "value": "合計サイズ: %@"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Tamanho total: %@"
           }
         }
@@ -1658,26 +1658,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Transferencia con %@ falló: %@"
+            "state": "translated",
+            "value": "Ha fallado la transferencia con %@: %@"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Le transfert avec %@ a échoué : %@"
+            "state": "translated",
+            "value": "Le transfert avec %@ a échoué : %@"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@での転送に失敗しました：%@"
+            "state": "translated",
+            "value": "%@との転送に失敗しました: %@"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Transferência com %@ falhou: %@"
+            "state": "translated",
+            "value": "A transferência com %@ falhou: %@"
           }
         }
       }
@@ -1706,26 +1706,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "No se pudo conectar a %@. Pueden estar fuera de línea o detrás de un cortafuegos."
+            "state": "translated",
+            "value": "No se pudo conectar con %@. Es posible que esté sin conexión o detrás de un cortafuegos."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Impossible de se connecter à %@. Ils peuvent être hors ligne ou derrière un pare-feu."
+            "state": "translated",
+            "value": "Impossible de se connecter à %@. La personne est peut-être hors ligne ou derrière un pare-feu."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@に接続できませんでした。オフラインになっているか、ファイアウォールの向こうにいる可能性があります。"
+            "state": "translated",
+            "value": "%@に接続できませんでした。相手がオフラインか、ファイアウォールの内側にいる可能性があります。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Não foi possível se conectar a %@. Eles podem estar offline ou atrás de um firewall."
+            "state": "translated",
+            "value": "Não foi possível conectar-se a %@. A pessoa pode estar offline ou atrás de um firewall."
           }
         }
       }
@@ -1754,26 +1754,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "No se pudo leer el archivo que se está enviando a %@. Comprueba que aún existe y que puedes abrirlo."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Impossible de lire le fichier envoyé à %@. Vérifiez qu'il existe toujours et que vous pouvez l'ouvrir."
+            "state": "translated",
+            "value": "Impossible de lire le fichier envoyé à %@. Vérifiez qu’il existe toujours et que vous pouvez l’ouvrir."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@に送信されているファイルを読み取れませんでした。まだ存在し、開くことができるかご確認ください。"
+            "state": "translated",
+            "value": "%@に送信するファイルを読み取れませんでした。ファイルが存在し、開けることを確認してください。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Não foi possível ler o arquivo sendo enviado para %@. Verifique se ele ainda existe e se você pode abri-lo."
+            "state": "translated",
+            "value": "Não foi possível ler o arquivo que está sendo enviado para %@. Verifique se ele ainda existe e se você pode abri-lo."
           }
         }
       }
@@ -1802,26 +1802,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "No se pudo escribir el archivo desde %@. Comprueba que la carpeta de destino sigue existiendo y que puedes escribir en ella."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Impossible d'écrire le fichier depuis %@. Vérifiez que le dossier de destination existe toujours et que vous pouvez y écrire."
+            "state": "translated",
+            "value": "Impossible d’écrire le fichier de %@. Vérifiez que le dossier de destination existe toujours et que vous pouvez y écrire."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@ からファイルを書き込めませんでした。宛先フォルダがまだ存在し、書き込めることを確認してください。"
+            "state": "translated",
+            "value": "%@から受信したファイルを書き込めませんでした。保存先のフォルダが存在し、書き込めることを確認してください。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Não foi possível escrever o arquivo de %@. Verifique se a pasta de destino ainda existe e se você pode escrevê-la."
+            "state": "translated",
+            "value": "Não foi possível gravar o arquivo de %@. Verifique se a pasta de destino ainda existe e se você tem permissão para gravar nela."
           }
         }
       }
@@ -1850,26 +1850,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@ no respondió a tiempo. Puede que estén fuera de línea o detrás de un cortafuegos."
+            "state": "translated",
+            "value": "%@ no respondió a tiempo. Es posible que esté sin conexión o detrás de un cortafuegos."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@ n'a pas répondu à temps. Ils peuvent être hors ligne ou derrière un pare-feu."
+            "state": "translated",
+            "value": "%@ n’a pas répondu à temps. La personne est peut-être hors ligne ou derrière un pare-feu."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@は時間内に応答しませんでした。オフラインになっているか、ファイアウォールの向こうにいる可能性があります。"
+            "state": "translated",
+            "value": "%@が時間内に応答しませんでした。相手がオフラインか、ファイアウォールの内側にいる可能性があります。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@ não respondeu a tempo. Eles podem estar offline ou atrás de um firewall."
+            "state": "translated",
+            "value": "%@ não respondeu a tempo. A pessoa pode estar offline ou atrás de um firewall."
           }
         }
       }
@@ -1898,26 +1898,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "No hay suficiente espacio libre para guardar el archivo desde %@. Libere algo de espacio y vuelva a iniciar la transferencia."
+            "state": "translated",
+            "value": "No hay suficiente espacio libre para guardar el archivo de %@. Libera algo de espacio y vuelve a iniciar la transferencia."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Il n'y a pas assez d'espace libre pour sauvegarder le fichier depuis %@. Libérez un peu d'espace, puis recommencez le transfert."
+            "state": "translated",
+            "value": "Il n’y a pas assez d’espace libre pour enregistrer le fichier de %@. Libérez de l’espace, puis relancez le transfert."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@からファイルを保存するのに十分な無料スペースがありません。スペースを空け、再度転送を開始してください。"
+            "state": "translated",
+            "value": "%@から受信したファイルを保存するための空き容量が足りません。空き容量を確保してから、もう一度転送を開始してください。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Não há espaço livre suficiente para salvar o arquivo de %@. Libere algum espaço e, em seguida, inicie a transferência novamente."
+            "state": "translated",
+            "value": "Não há espaço livre suficiente para salvar o arquivo de %@. Libere espaço e inicie a transferência novamente."
           }
         }
       }
@@ -1946,26 +1946,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@ cerró la conexión antes de que se completara la transferencia. Reiniciarla para continuar."
+            "state": "translated",
+            "value": "%@ cerró la conexión antes de que terminara la transferencia. Vuelve a iniciarla para reanudarla."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@ a fermé la connexion avant que le transfert ne soit terminé. Redémarrez-le pour reprendre."
+            "state": "translated",
+            "value": "%@ a fermé la connexion avant la fin du transfert. Relancez-le pour reprendre."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@は転送が完了する前に接続を閉じました。再開するには再度開始してください。"
+            "state": "translated",
+            "value": "転送が完了する前に%@が接続を閉じました。再開するには、もう一度開始してください。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@ fechou a conexão antes que a transferência terminasse. Reinicie-a para retomar."
+            "state": "translated",
+            "value": "%@ fechou a conexão antes de a transferência terminar. Inicie-a novamente para retomar."
           }
         }
       }
@@ -1994,25 +1994,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "No se pudo reanudar la transferencia con %@. Elija Intentarlo de nuevo para volver a empezar desde el principio."
+            "state": "translated",
+            "value": "No se pudo reanudar la transferencia con %@. Elige Inténtalo de nuevo para empezar desde el principio."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Impossible de reprendre le transfert avec %@. Choisissez Réessayer pour le recommencer depuis le début."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@で転送を再開できませんでした。最初からやり直すには「もう一度試す」を選択してください。"
+            "state": "translated",
+            "value": "%@との転送を再開できませんでした。最初からやり直すには「再試行」を選択してください。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Não foi possível retomar a transferência com %@. Escolha Tentar novamente para recomeçar do início."
           }
         }
@@ -2042,25 +2042,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@ no aceptó reanudar la transferencia. Elige Intentarlo de nuevo para volver a empezar desde el principio."
+            "state": "translated",
+            "value": "%@ no aceptó reanudar la transferencia. Elige Inténtalo de nuevo para empezar desde el principio."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@ n'a pas accepté de reprendre le transfert. Choisissez Réessayer pour le recommencer depuis le début."
+            "state": "translated",
+            "value": "%@ n’a pas accepté de reprendre le transfert. Choisissez Réessayer pour le recommencer depuis le début."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@は転送を再開することに同意しませんでした。最初からやり直すには「もう一度試す」を選択してください。"
+            "state": "translated",
+            "value": "%@が転送の再開に同意しませんでした。最初からやり直すには「再試行」を選択してください。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%@ não concordou em retomar a transferência. Escolha Tentar novamente para recomeçar do início."
           }
         }
@@ -2090,25 +2090,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "La conexión a %@ dejó de responder, por lo que la transferencia se canceló. Reiniciarla para continuar."
+            "state": "translated",
+            "value": "La conexión con %@ dejó de responder, por lo que se canceló la transferencia. Vuelve a iniciarla para reanudarla."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "La connexion à %@ a cessé de répondre, le transfert a donc été annulé. Redémarrez-la pour reprendre."
+            "state": "translated",
+            "value": "La connexion à %@ ne répond plus, le transfert a donc été annulé. Relancez-le pour reprendre."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@への接続が応答しなくなったため、転送がキャンセルされました。再開するには再度開始してください。"
+            "state": "translated",
+            "value": "%@への接続が応答しなくなったため、転送がキャンセルされました。再開するには、もう一度開始してください。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "A conexão com %@ parou de responder, então a transferência foi cancelada. Inicie-a novamente para retomar."
           }
         }
@@ -2138,26 +2138,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Ningún puerto estaba libre para la transferencia con %@. Amplía el rango de puertos en la configuración de Transferencia de archivos y vuelve a intentarlo."
+            "state": "translated",
+            "value": "No había ningún puerto libre para la transferencia con %@. Amplía el rango de puertos en los ajustes de Transferencia de archivos y vuelve a intentarlo."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Aucun port n'était disponible pour le transfert avec %@. Élargissez la plage de ports dans les paramètres du transfert de fichiers, puis réessayez."
+            "state": "translated",
+            "value": "Aucun port n’était libre pour le transfert avec %@. Élargissez la plage de ports dans les réglages Transfert de fichiers, puis réessayez."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@での転送にはポートが空いていませんでした。ファイル転送設定でポート範囲を広げ、もう一度お試しください。"
+            "state": "translated",
+            "value": "%@との転送に使用できるポートがありませんでした。「ファイル転送」設定でポート範囲を広げてから、もう一度お試しください。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Nenhum porta estava livre para a transferência com %@. Amplie a faixa de portas nas configurações de Transferência de Arquivos e tente novamente."
+            "state": "translated",
+            "value": "Nenhuma porta estava livre para a transferência com %@. Amplie o intervalo de portas nos ajustes de Transferência de arquivos e tente novamente."
           }
         }
       }
@@ -2186,26 +2186,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "No se ha podido determinar la dirección IP de este Mac para la transferencia con %@. Introduce una en la configuración de Transferencia de archivos y vuelve a intentarlo."
+            "state": "translated",
+            "value": "No se ha podido determinar la dirección IP de este Mac para la transferencia con %@. Escribe una en los ajustes de Transferencia de archivos y vuelve a intentarlo."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Impossible de déterminer l'adresse IP de ce Mac pour le transfert avec %@. Saisissez-en une dans les paramètres du transfert de fichiers, puis réessayez."
+            "state": "translated",
+            "value": "Impossible de déterminer l’adresse IP de ce Mac pour le transfert avec %@. Saisissez-en une dans les réglages Transfert de fichiers, puis réessayez."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@での転送用にこのMacのIPアドレスを特定できませんでした。ファイル転送設定に1つ入力してから、もう一度お試しください。"
+            "state": "translated",
+            "value": "%@との転送に必要な、このMacのIPアドレスを特定できませんでした。「ファイル転送」設定でIPアドレスを入力してから、もう一度お試しください。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Não foi possível determinar o endereço IP deste Mac para a transferência com %@. Insira um nas configurações de Transferência de Arquivos e tente novamente."
+            "state": "translated",
+            "value": "Não foi possível determinar o endereço IP deste Mac para a transferência com %@. Insira um nos ajustes de Transferência de arquivos e tente novamente."
           }
         }
       }
@@ -2234,26 +2234,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "La transferencia con %@ se ha detenido porque se ha perdido la conexión con el servidor. Vuelve a conectarte y vuelve a iniciarla."
+            "state": "translated",
+            "value": "La transferencia con %@ se ha detenido porque se perdió la conexión con el servidor. Vuelve a conectar y reiníciala."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Le transfert avec %@ a été arrêté car la connexion au serveur a été perdue. Redéconnectez-vous, puis rouvrez-le."
+            "state": "translated",
+            "value": "Le transfert avec %@ s’est arrêté, car la connexion au serveur a été perdue. Reconnectez-vous, puis relancez-le."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@での転送は、サーバーへの接続が途絶えたため停止されました。再接続してから、再度開始してください。"
+            "state": "translated",
+            "value": "サーバへの接続が失われたため、%@との転送を停止しました。再接続してから、もう一度開始してください。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "A transferência com %@ foi interrompida porque a conexão com o servidor foi perdida. Conecte-se novamente e reinicie-a."
+            "state": "translated",
+            "value": "A transferência com %@ foi interrompida porque a conexão com o servidor foi perdida. Reconecte-se e inicie-a novamente."
           }
         }
       }
@@ -2321,20 +2321,20 @@
             "plural": {
               "many": {
                 "stringUnit": {
-                  "state": "needs_review",
-                  "value": "%ld Transferencias"
+                  "state": "translated",
+                  "value": "%ld transferencias"
                 }
               },
               "one": {
                 "stringUnit": {
-                  "state": "needs_review",
-                  "value": "%ld Transferencia"
+                  "state": "translated",
+                  "value": "%ld transferencia"
                 }
               },
               "other": {
                 "stringUnit": {
-                  "state": "needs_review",
-                  "value": "%ld Transferencias"
+                  "state": "translated",
+                  "value": "%ld transferencias"
                 }
               }
             }
@@ -2345,20 +2345,20 @@
             "plural": {
               "many": {
                 "stringUnit": {
-                  "state": "needs_review",
-                  "value": "%ld Transferts"
+                  "state": "translated",
+                  "value": "%ld transferts"
                 }
               },
               "one": {
                 "stringUnit": {
-                  "state": "needs_review",
-                  "value": "%ld Transfert"
+                  "state": "translated",
+                  "value": "%ld transfert"
                 }
               },
               "other": {
                 "stringUnit": {
-                  "state": "needs_review",
-                  "value": "%ld Transferts"
+                  "state": "translated",
+                  "value": "%ld transferts"
                 }
               }
             }
@@ -2369,8 +2369,8 @@
             "plural": {
               "other": {
                 "stringUnit": {
-                  "state": "needs_review",
-                  "value": "%ld 転送"
+                  "state": "translated",
+                  "value": "転送%ld件"
                 }
               }
             }
@@ -2381,20 +2381,20 @@
             "plural": {
               "many": {
                 "stringUnit": {
-                  "state": "needs_review",
-                  "value": "%ld Transferências"
+                  "state": "translated",
+                  "value": "%ld transferências"
                 }
               },
               "one": {
                 "stringUnit": {
-                  "state": "needs_review",
-                  "value": "%ld Transferência"
+                  "state": "translated",
+                  "value": "%ld transferência"
                 }
               },
               "other": {
                 "stringUnit": {
-                  "state": "needs_review",
-                  "value": "%ld Transferências"
+                  "state": "translated",
+                  "value": "%ld transferências"
                 }
               }
             }
@@ -2426,26 +2426,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Los transferencias entrantes y salientes aparecen aquí."
+            "state": "translated",
+            "value": "Las transferencias entrantes y salientes aparecen aquí."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Les virements entrants et sortants apparaissent ici."
+            "state": "translated",
+            "value": "Les transferts entrants et sortants apparaissent ici."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "入金と出金の振込がここに表示されます。"
+            "state": "translated",
+            "value": "受信中および送信中の転送がここに表示されます。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Transferências recebidas e enviadas aparecem aqui."
+            "state": "translated",
+            "value": "As transferências recebidas e enviadas aparecem aqui."
           }
         }
       }

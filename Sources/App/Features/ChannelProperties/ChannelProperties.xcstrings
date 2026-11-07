@@ -25,26 +25,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Mensajes generales de eventos"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Messages généraux d'événements"
+            "state": "translated",
+            "value": "Messages généraux d’événements"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "一般的なイベントメッセージ"
+            "state": "translated",
+            "value": "一般イベントのメッセージ"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Mensagens gerais de evento"
+            "state": "translated",
+            "value": "Mensagens de evento gerais"
           }
         }
       }
@@ -121,26 +121,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Colapso"
+            "state": "translated",
+            "value": "Contraer"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "s'effondrer"
+            "state": "translated",
+            "value": "Réduire"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "崩壊する"
+            "state": "translated",
+            "value": "折りたたむ"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "colapso"
+            "state": "translated",
+            "value": "Recolher"
           }
         }
       }
@@ -217,26 +217,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Colapsa los grupos de eventos de canal consecutivos para que puedas expandirlos cuando sea necesario."
+            "state": "translated",
+            "value": "Contraer agrupa los eventos consecutivos del canal para que puedas expandirlos cuando sea necesario."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Faites se réduire les groupes d’événements consécutifs sur les canaux afin de pouvoir les agrandir lorsque cela est nécessaire."
+            "state": "translated",
+            "value": "Réduire regroupe les événements consécutifs du canal afin que vous puissiez les développer au besoin."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "グループを連続するチャンネルイベントで折りたたんで、必要に応じて展開できるようにします。"
+            "state": "translated",
+            "value": "連続するチャンネルのイベントをグループ化して折りたたみ、必要に応じて展開できるようにします。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Colapse os eventos consecutivos de canal para que você possa expandi-los quando necessário."
+            "state": "translated",
+            "value": "Recolher agrupa eventos consecutivos do canal para que você possa expandi-los quando necessário."
           }
         }
       }
@@ -265,26 +265,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Cambiar modos"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Changer de modes"
+            "state": "translated",
+            "value": "Modifier les modes"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "モードを変更する"
+            "state": "translated",
+            "value": "モードを変更"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Mudar de modos"
+            "state": "translated",
+            "value": "Alterar modos"
           }
         }
       }
@@ -379,7 +379,7 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%#@arg1@"
           },
           "substitutions": {
@@ -413,7 +413,7 @@
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%#@arg1@"
           },
           "substitutions": {
@@ -424,20 +424,20 @@
                 "plural": {
                   "many": {
                     "stringUnit": {
-                      "state": "needs_review",
-                      "value": "%arg trop de octets"
+                      "state": "translated",
+                      "value": "%arg octets en trop"
                     }
                   },
                   "one": {
                     "stringUnit": {
-                      "state": "needs_review",
-                      "value": "%arg trop de octets"
+                      "state": "translated",
+                      "value": "%arg octet en trop"
                     }
                   },
                   "other": {
                     "stringUnit": {
-                      "state": "needs_review",
-                      "value": "%arg trop de octets"
+                      "state": "translated",
+                      "value": "%arg octets en trop"
                     }
                   }
                 }
@@ -447,7 +447,7 @@
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%#@arg1@"
           },
           "substitutions": {
@@ -458,8 +458,8 @@
                 "plural": {
                   "other": {
                     "stringUnit": {
-                      "state": "needs_review",
-                      "value": "%argバイト数が多すぎる"
+                      "state": "translated",
+                      "value": "%argバイト超過"
                     }
                   }
                 }
@@ -469,7 +469,7 @@
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%#@arg1@"
           },
           "substitutions": {
@@ -480,19 +480,19 @@
                 "plural": {
                   "many": {
                     "stringUnit": {
-                      "state": "needs_review",
+                      "state": "translated",
                       "value": "%arg bytes a mais"
                     }
                   },
                   "one": {
                     "stringUnit": {
-                      "state": "needs_review",
-                      "value": "%arg bytes a mais"
+                      "state": "translated",
+                      "value": "%arg byte a mais"
                     }
                   },
                   "other": {
                     "stringUnit": {
-                      "state": "needs_review",
+                      "state": "translated",
                       "value": "%arg bytes a mais"
                     }
                   }
@@ -527,26 +527,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Introduzca la clave del canal utilizada por los miembros al unirse."
+            "state": "translated",
+            "value": "Introduce la clave del canal que usan los miembros al unirse."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Entrez la clé du canal utilisée par les membres lors de leur adhésion."
+            "state": "translated",
+            "value": "Saisissez la clé du canal que les membres utilisent pour le rejoindre."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "メンバーが参加時に使用したチャンネルキーを入力してください。"
+            "state": "translated",
+            "value": "メンバーが参加するときに使用するチャンネルキーを入力します。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Digite a chave do canal usada pelos membros ao ingressar."
+            "state": "translated",
+            "value": "Digite a chave do canal usada pelos membros ao entrar."
           }
         }
       }
@@ -575,25 +575,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Clave del canal (+k)"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Clé du canal (+k)"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "チャンネルキー（+k）"
+            "state": "translated",
+            "value": "チャンネルキー(+k)"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Chave do canal (+k)"
           }
         }
@@ -623,25 +623,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Llave del canal"
+            "state": "translated",
+            "value": "Clave del canal"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Clé du canal"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "チャンネルキー"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Chave do canal"
           }
         }
@@ -671,25 +671,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "#ejemplo"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "#exemple"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "#例"
+            "state": "translated",
+            "value": "#example"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "#exemplo"
           }
         }
@@ -719,26 +719,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Canal"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "canal"
+            "state": "translated",
+            "value": "Canal"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "チャンネル"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "canal"
+            "state": "translated",
+            "value": "Canal"
           }
         }
       }
@@ -767,25 +767,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Propiedades del canal"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Propriétés du canal"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "チャンネルのプロパティ"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Propriedades do canal"
           }
         }
@@ -815,26 +815,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Predeterminados"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Paramètres par défaut"
+            "state": "translated",
+            "value": "Valeurs par défaut"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "デフォルト設定"
+            "state": "translated",
+            "value": "デフォルト"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Definitivos"
+            "state": "translated",
+            "value": "Padrões"
           }
         }
       }
@@ -863,26 +863,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Se aplica cuando eres la primera persona en unirte al canal."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Appliqué lorsque vous êtes la première personne à rejoindre la chaîne."
+            "state": "translated",
+            "value": "Appliqué si vous êtes la première personne à rejoindre le canal."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "チャンネルに最初に参加したときに適用されます。"
+            "state": "translated",
+            "value": "あなたがチャンネルに最初に参加した場合に適用されます。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Aplicável quando você for a primeira pessoa a se juntar ao canal."
+            "state": "translated",
+            "value": "Aplicado quando você é a primeira pessoa a entrar no canal."
           }
         }
       }
@@ -911,26 +911,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Deshabilitar los mensajes generales de eventos"
+            "state": "translated",
+            "value": "Desactivar los mensajes generales de eventos"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Désactiver les messages d’événements généraux"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "一般的なイベントメッセージを無効にする"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Desativar mensagens gerais de eventos"
+            "state": "translated",
+            "value": "Desativar mensagens de evento gerais"
           }
         }
       }
@@ -959,25 +959,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Deshabilitar los resaltados"
+            "state": "translated",
+            "value": "Desactivar las menciones"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Désactiver les mises en évidence"
+            "state": "translated",
+            "value": "Désactiver les mentions"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "ハイライトを無効にする"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Desativar destaques"
           }
         }
@@ -1007,26 +1007,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Deshabilitar los medios en línea"
+            "state": "translated",
+            "value": "Desactivar el contenido multimedia integrado"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Désactiver les médias intégrés"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "インラインメディアを無効にする"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Desativar mídia inline"
+            "state": "translated",
+            "value": "Desativar mídia embutida"
           }
         }
       }
@@ -1055,26 +1055,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "General"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "général"
+            "state": "translated",
+            "value": "Général"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "一般"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "geral"
+            "state": "translated",
+            "value": "Geral"
           }
         }
       }
@@ -1103,26 +1103,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Modos para %@"
+            "state": "translated",
+            "value": "Modos de %@"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Modes pour %@"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@用のモード"
+            "state": "translated",
+            "value": "%@のモード"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Modos para %@"
+            "state": "translated",
+            "value": "Modos de %@"
           }
         }
       }
@@ -1151,26 +1151,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Invita a %@"
+            "state": "translated",
+            "value": "Invitar a %@"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Inviter %@"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@を招待する"
+            "state": "translated",
+            "value": "%@に招待"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Convide %@"
+            "state": "translated",
+            "value": "Convidar %@"
           }
         }
       }
@@ -1199,26 +1199,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Invitar"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "inviter"
+            "state": "translated",
+            "value": "Inviter"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "招待する"
+            "state": "translated",
+            "value": "招待"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "convidar"
+            "state": "translated",
+            "value": "Convidar"
           }
         }
       }
@@ -1247,26 +1247,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Canal solo para invitaciones (+i)"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Chaîne réservée aux invitations (+i)"
+            "state": "translated",
+            "value": "Canal sur invitation uniquement (+i)"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "招待限定チャンネル（+i）"
+            "state": "translated",
+            "value": "招待のみのチャンネル(+i)"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Canal apenas para convites (+i)"
+            "state": "translated",
+            "value": "Canal somente para convidados (+i)"
           }
         }
       }
@@ -1334,20 +1334,20 @@
             "plural": {
               "many": {
                 "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Usuarios de %ld"
+                  "state": "translated",
+                  "value": "%ld usuarios"
                 }
               },
               "one": {
                 "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Usuario %ld"
+                  "state": "translated",
+                  "value": "%ld usuario"
                 }
               },
               "other": {
                 "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Usuarios de %ld"
+                  "state": "translated",
+                  "value": "%ld usuarios"
                 }
               }
             }
@@ -1358,20 +1358,20 @@
             "plural": {
               "many": {
                 "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Utilisateurs %ld"
+                  "state": "translated",
+                  "value": "%ld utilisateurs"
                 }
               },
               "one": {
                 "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Utilisateur %ld"
+                  "state": "translated",
+                  "value": "%ld utilisateur"
                 }
               },
               "other": {
                 "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Utilisateurs %ld"
+                  "state": "translated",
+                  "value": "%ld utilisateurs"
                 }
               }
             }
@@ -1382,8 +1382,8 @@
             "plural": {
               "other": {
                 "stringUnit": {
-                  "state": "needs_review",
-                  "value": "%ldユーザー"
+                  "state": "translated",
+                  "value": "%ld人のユーザ"
                 }
               }
             }
@@ -1394,19 +1394,19 @@
             "plural": {
               "many": {
                 "stringUnit": {
-                  "state": "needs_review",
+                  "state": "translated",
                   "value": "%ld usuários"
                 }
               },
               "one": {
                 "stringUnit": {
-                  "state": "needs_review",
+                  "state": "translated",
                   "value": "%ld usuário"
                 }
               },
               "other": {
                 "stringUnit": {
-                  "state": "needs_review",
+                  "state": "translated",
                   "value": "%ld usuários"
                 }
               }
@@ -1439,26 +1439,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Únete a la conexión"
+            "state": "translated",
+            "value": "Unirse al conectar"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Rejoignez sur connect"
+            "state": "translated",
+            "value": "Rejoindre à la connexion"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "接続に参加する"
+            "state": "translated",
+            "value": "接続時に参加"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Junte-se no conecte"
+            "state": "translated",
+            "value": "Entrar ao conectar"
           }
         }
       }
@@ -1487,25 +1487,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%1$@ y %2$@"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%1$@ et %2$@"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%1$@と%2$@"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%1$@ e %2$@"
           }
         }
@@ -1535,26 +1535,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Cuando le das una etiqueta a un canal, esa etiqueta aparecerá en la barra lateral en lugar del nombre del canal."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Lorsque vous attribuez une étiquette à une chaîne, cette étiquette apparaîtra dans la barre latérale à la place du nom de la chaîne."
+            "state": "translated",
+            "value": "Lorsque vous donnez une étiquette à un canal, elle apparaît dans la barre latérale à la place du nom du canal."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "チャンネルにラベルを付けると、そのラベルはチャンネル名に代わってサイドバーに表示されます。"
+            "state": "translated",
+            "value": "チャンネルにラベルを付けると、チャンネル名の代わりにそのラベルがサイドバーに表示されます。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Quando você atribui uma etiqueta a um canal, essa etiqueta aparecerá na Barra Lateral em vez do nome do canal."
+            "state": "translated",
+            "value": "Quando você dá um rótulo a um canal, esse rótulo aparece na barra lateral no lugar do nome do canal."
           }
         }
       }
@@ -1583,26 +1583,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Etiqueta"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "étiquette"
+            "state": "translated",
+            "value": "Étiquette"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "ラベル"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "rótulo"
+            "state": "translated",
+            "value": "Rótulo"
           }
         }
       }
@@ -1631,25 +1631,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Canal moderado (+m)"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Chaîne modérée (+m)"
+            "state": "translated",
+            "value": "Canal modéré (+m)"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "モデレートされたチャンネル（+m）"
+            "state": "translated",
+            "value": "モデレート付きチャンネル(+m)"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Canal moderado (+m)"
           }
         }
@@ -1679,25 +1679,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Modos"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Modes"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "モード"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Modos"
           }
         }
@@ -1727,25 +1727,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Silenciar esta conversación"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Mutez cette conversation"
+            "state": "translated",
+            "value": "Mettre cette conversation en sourdine"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "この会話をミュートする"
+            "state": "translated",
+            "value": "この会話を消音"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Silenciar esta conversa"
           }
         }
@@ -1775,26 +1775,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Nombre"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "nom"
+            "state": "translated",
+            "value": "Nom"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "名前"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "nome"
+            "state": "translated",
+            "value": "Nome"
           }
         }
       }
@@ -1823,26 +1823,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Sin mensajes de canales externos (+n)"
+            "state": "translated",
+            "value": "Sin mensajes externos al canal (+n)"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Aucun message de canal externe (+n)"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "外部チャネルメッセージなし（+n）"
+            "state": "translated",
+            "value": "外部からのチャンネルメッセージを禁止(+n)"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Sem mensagens de canal externo (+n)"
+            "state": "translated",
+            "value": "Sem mensagens externas ao canal (+n)"
           }
         }
       }
@@ -1871,26 +1871,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Solo los operadores pueden cambiar de tema (+t)"
+            "state": "translated",
+            "value": "Solo los operadores pueden cambiar el tema (+t)"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Seuls les opérateurs peuvent changer de sujet (+t)"
+            "state": "translated",
+            "value": "Seuls les opérateurs peuvent modifier le sujet (+t)"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "トピックを変更できるのはオペレーターのみです（+t）"
+            "state": "translated",
+            "value": "トピックを変更できるのはオペレーターのみ(+t)"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Apenas operadores podem mudar de assunto (+t)"
+            "state": "translated",
+            "value": "Somente operadores podem alterar o tópico (+t)"
           }
         }
       }
@@ -1919,26 +1919,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Opcional"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "facultatif"
+            "state": "translated",
+            "value": "Facultatif"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "オプション"
+            "state": "translated",
+            "value": "任意"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "opcional"
+            "state": "translated",
+            "value": "Opcional"
           }
         }
       }
@@ -1967,26 +1967,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "La clave del canal, enviada al unirte. Guardada en tu llavero."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "La clé du canal, envoyée lors de l'inscription. Stockée dans votre porte-clés."
+            "state": "translated",
+            "value": "La clé du canal, envoyée à l’arrivée. Enregistrée dans votre trousseau."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "チャンネルのキーは、参加時に送信されます。キーホルダーに保存されています。"
+            "state": "translated",
+            "value": "参加時に送信されるチャンネルのキーです。キーチェーンに保存されます。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "A chave do canal, enviada ao entrar. Armazenada na sua chaveiro."
+            "state": "translated",
+            "value": "A chave do canal, enviada ao entrar. Armazenada no seu chaveiro."
           }
         }
       }
@@ -2015,26 +2015,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Contraseña"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "mot de passe"
+            "state": "translated",
+            "value": "Mot de passe"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "パスワード"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "senha"
+            "state": "translated",
+            "value": "Senha"
           }
         }
       }
@@ -2063,26 +2063,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Introduce un nombre de canal que comience con un prefijo de canal, como #example."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Saisissez le nom d’une chaîne commençant par un préfixe de chaîne, comme #example."
+            "state": "translated",
+            "value": "Saisissez un nom de canal commençant par un préfixe de canal, par exemple #example."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "チャンネルプレフィックス（#exampleなど）で始まるチャンネル名を入力します。"
+            "state": "translated",
+            "value": "#exampleのように、チャンネルプレフィックスで始まるチャンネル名を入力してください。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Digite o nome de um canal começando com um prefixo de canal, como #example."
+            "state": "translated",
+            "value": "Digite o nome de um canal começando com um prefixo de canal, como #exemplo."
           }
         }
       }
@@ -2111,25 +2111,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Canal privado (+p)"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Chaîne privée (+p)"
+            "state": "translated",
+            "value": "Canal privé (+p)"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "プライベートチャンネル（+p）"
+            "state": "translated",
+            "value": "プライベートチャンネル(+p)"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Canal privado (+p)"
           }
         }
@@ -2159,26 +2159,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Recargar"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "recharger"
+            "state": "translated",
+            "value": "Recharger"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "リロード"
+            "state": "translated",
+            "value": "再読み込み"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "recarregar"
+            "state": "translated",
+            "value": "Recarregar"
           }
         }
       }
@@ -2207,25 +2207,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Canal secreto (+s)"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Chaîne secrète (+s)"
+            "state": "translated",
+            "value": "Canal secret (+s)"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "秘密チャンネル（+s）"
+            "state": "translated",
+            "value": "秘密チャンネル(+s)"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Canal secreto (+s)"
           }
         }
@@ -2255,25 +2255,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%1$ld de %2$ld bytes"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%1$ld de %2$ld octets"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$ldは%2$ldバイトです"
+            "state": "translated",
+            "value": "%2$ldバイト中%1$ldバイト"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%1$ld de %2$ld bytes"
           }
         }
@@ -2303,26 +2303,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$@ acepta como máximo %2$ld bytes. Cualquier cosa más allá de eso puede ser cortada."
+            "state": "translated",
+            "value": "%1$@ acepta como máximo %2$ld bytes. Lo que exceda ese límite puede cortarse."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$@ accepte au maximum %2$ld octets. Tout ce qui dépasse cela peut être coupé."
+            "state": "translated",
+            "value": "%1$@ accepte au maximum %2$ld octets. Tout ce qui dépasse peut être tronqué."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$@は最大%2$ldバイトを受け付けます。それ以降のものは切り取られる可能性があります。"
+            "state": "translated",
+            "value": "%1$@が受け付けるのは最大%2$ldバイトです。それを超える部分は切り捨てられる場合があります。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$@ aceita no máximo %2$ld bytes. Qualquer coisa além disso pode ser cortada."
+            "state": "translated",
+            "value": "%1$@ aceita no máximo %2$ld bytes. O que passar disso pode ser cortado."
           }
         }
       }
@@ -2351,26 +2351,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Sección"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "section"
+            "state": "translated",
+            "value": "Section"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "セクション"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "seção"
+            "state": "translated",
+            "value": "Seção"
           }
         }
       }
@@ -2399,26 +2399,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Mostrar medios en línea"
+            "state": "translated",
+            "value": "Mostrar contenido multimedia integrado"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Afficher les médias intégrés"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "インラインメディアを表示する"
+            "state": "translated",
+            "value": "インラインメディアを表示"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Mostrar mídia inline"
+            "state": "translated",
+            "value": "Mostrar mídia embutida"
           }
         }
       }
@@ -2447,26 +2447,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Mostrar notificaciones para el canal"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Afficher les notifications pour la chaîne"
+            "state": "translated",
+            "value": "Afficher les notifications pour le canal"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "チャンネルの通知を表示する"
+            "state": "translated",
+            "value": "チャンネルの通知を表示"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Mostrar notificações para o canal"
+            "state": "translated",
+            "value": "Mostrar notificações do canal"
           }
         }
       }
@@ -2495,26 +2495,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Mostrar el número de mensajes no leídos en la lista de canales"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Afficher le nombre de messages non lus dans la liste des canaux"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "チャンネルリストに未読件数を表示する"
+            "state": "translated",
+            "value": "チャンネルリストに未読数を表示"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Mostrar o número de mensagens não lidas na lista de canais"
+            "state": "translated",
+            "value": "Mostrar contagem de não lidas na lista de canais"
           }
         }
       }
@@ -2543,26 +2543,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "¿Reiniciar la configuración del canal?"
+            "state": "translated",
+            "value": "¿Recargar los ajustes del canal?"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Réinitialiser les paramètres de la chaîne ?"
+            "state": "translated",
+            "value": "Recharger les réglages du canal ?"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "チャンネルの設定をリロードしますか？"
+            "state": "translated",
+            "value": "チャンネルの設定を再読み込みしますか？"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Recarregar as configurações do canal?"
+            "state": "translated",
+            "value": "Recarregar os ajustes do canal?"
           }
         }
       }
@@ -2639,25 +2639,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Introduzca un máximo de 0 a 99999."
+            "state": "translated",
+            "value": "Introduce un máximo de 0 a 99999."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Entrez un nombre maximal compris entre 0 et 99 999."
+            "state": "translated",
+            "value": "Saisissez un maximum de 0 à 99 999."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "0から99999までの最大値を入力してください。"
+            "state": "translated",
+            "value": "0〜99999の最大値を入力してください。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Digite um máximo de 0 a 99999."
           }
         }
@@ -2687,25 +2687,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Límite el número de usuarios (+l)"
+            "state": "translated",
+            "value": "Limitar el número de usuarios (+l)"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Limiter le nombre d'utilisateurs (+l)"
+            "state": "translated",
+            "value": "Limiter le nombre d’utilisateurs (+l)"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ユーザー数の制限 (+l)"
+            "state": "translated",
+            "value": "ユーザ数を制限(+l)"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Limitar o número de usuários (+l)"
           }
         }
@@ -2735,26 +2735,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "0-99999"
+            "state": "translated",
+            "value": "0–99999"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "0-99999"
+            "state": "translated",
+            "value": "0–99999"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "0-99999"
+            "state": "translated",
+            "value": "0〜99999"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "0-99999"
+            "state": "translated",
+            "value": "0–99999"
           }
         }
       }
@@ -2783,26 +2783,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Invitar al canal"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Invitation au canal"
+            "state": "translated",
+            "value": "Inviter dans le canal"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "チャンネルへの招待"
+            "state": "translated",
+            "value": "チャンネルに招待"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Convite para o Canal"
+            "state": "translated",
+            "value": "Convidar para o canal"
           }
         }
       }
@@ -2831,25 +2831,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Los cambios no guardados serán descartados."
+            "state": "translated",
+            "value": "Se descartarán los cambios sin guardar."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Vos modifications non enregistrées seront rejetées."
+            "state": "translated",
+            "value": "Vos modifications non enregistrées seront perdues."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "保存されていない変更は破棄されます。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Suas alterações não salvas serão descartadas."
           }
         }
@@ -2879,26 +2879,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Cambiar tema"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Changer de sujet"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "トピックを変更する"
+            "state": "translated",
+            "value": "トピックを変更"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Mudar de assunto"
+            "state": "translated",
+            "value": "Alterar tópico"
           }
         }
       }
@@ -2927,26 +2927,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Edita el tema. Se conserva el formato del texto IRC."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Modifiez le sujet. La mise en forme du texte IRC est préservée."
+            "state": "translated",
+            "value": "Modifiez le sujet. La mise en forme du texte IRC est conservée."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "トピックを編集します。IRCのテキストフォーマットは保持されます。"
+            "state": "translated",
+            "value": "トピックを編集します。IRCのテキスト書式は保持されます。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Edite o tópico. A formatação do texto IRC é preservada."
+            "state": "translated",
+            "value": "Edite o tópico. A formatação de texto IRC é preservada."
           }
         }
       }
@@ -2975,26 +2975,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Tema para %@"
+            "state": "translated",
+            "value": "Tema de %@"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Sujet pour %@"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%@のトピック"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Assunto para %@"
+            "state": "translated",
+            "value": "Tópico de %@"
           }
         }
       }
@@ -3089,7 +3089,7 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%#@arg1@"
           },
           "substitutions": {
@@ -3123,7 +3123,7 @@
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%#@arg1@"
           },
           "substitutions": {
@@ -3134,19 +3134,19 @@
                 "plural": {
                   "many": {
                     "stringUnit": {
-                      "state": "needs_review",
+                      "state": "translated",
                       "value": "%arg octets restants"
                     }
                   },
                   "one": {
                     "stringUnit": {
-                      "state": "needs_review",
+                      "state": "translated",
                       "value": "%arg octet restant"
                     }
                   },
                   "other": {
                     "stringUnit": {
-                      "state": "needs_review",
+                      "state": "translated",
                       "value": "%arg octets restants"
                     }
                   }
@@ -3157,7 +3157,7 @@
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%#@arg1@"
           },
           "substitutions": {
@@ -3168,8 +3168,8 @@
                 "plural": {
                   "other": {
                     "stringUnit": {
-                      "state": "needs_review",
-                      "value": "%arg 残りのバイト数"
+                      "state": "translated",
+                      "value": "残り%argバイト"
                     }
                   }
                 }
@@ -3179,7 +3179,7 @@
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%#@arg1@"
           },
           "substitutions": {
@@ -3190,19 +3190,19 @@
                 "plural": {
                   "many": {
                     "stringUnit": {
-                      "state": "needs_review",
+                      "state": "translated",
                       "value": "%arg bytes restantes"
                     }
                   },
                   "one": {
                     "stringUnit": {
-                      "state": "needs_review",
+                      "state": "translated",
                       "value": "%arg byte restante"
                     }
                   },
                   "other": {
                     "stringUnit": {
-                      "state": "needs_review",
+                      "state": "translated",
                       "value": "%arg bytes restantes"
                     }
                   }
@@ -3303,7 +3303,7 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%#@arg1@"
           },
           "substitutions": {
@@ -3337,7 +3337,7 @@
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%#@arg1@"
           },
           "substitutions": {
@@ -3348,20 +3348,20 @@
                 "plural": {
                   "many": {
                     "stringUnit": {
-                      "state": "needs_review",
-                      "value": "%arg trop de octets"
+                      "state": "translated",
+                      "value": "%arg octets en trop"
                     }
                   },
                   "one": {
                     "stringUnit": {
-                      "state": "needs_review",
-                      "value": "%arg trop de octets"
+                      "state": "translated",
+                      "value": "%arg octet en trop"
                     }
                   },
                   "other": {
                     "stringUnit": {
-                      "state": "needs_review",
-                      "value": "%arg trop de octets"
+                      "state": "translated",
+                      "value": "%arg octets en trop"
                     }
                   }
                 }
@@ -3371,7 +3371,7 @@
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%#@arg1@"
           },
           "substitutions": {
@@ -3382,8 +3382,8 @@
                 "plural": {
                   "other": {
                     "stringUnit": {
-                      "state": "needs_review",
-                      "value": "%argバイト数が多すぎる"
+                      "state": "translated",
+                      "value": "%argバイト超過"
                     }
                   }
                 }
@@ -3393,7 +3393,7 @@
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%#@arg1@"
           },
           "substitutions": {
@@ -3404,19 +3404,19 @@
                 "plural": {
                   "many": {
                     "stringUnit": {
-                      "state": "needs_review",
+                      "state": "translated",
                       "value": "%arg bytes a mais"
                     }
                   },
                   "one": {
                     "stringUnit": {
-                      "state": "needs_review",
-                      "value": "%arg bytes a mais"
+                      "state": "translated",
+                      "value": "%arg byte a mais"
                     }
                   },
                   "other": {
                     "stringUnit": {
-                      "state": "needs_review",
+                      "state": "translated",
                       "value": "%arg bytes a mais"
                     }
                   }
@@ -3451,26 +3451,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Lista de acceso a canales"
+            "state": "translated",
+            "value": "Lista de acceso del canal"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Liste d'accès aux canaux"
+            "state": "translated",
+            "value": "Liste d’accès du canal"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "チャンネルアクセスリスト"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Lista de acesso ao canal"
+            "state": "translated",
+            "value": "Lista de acesso do canal"
           }
         }
       }
@@ -3499,25 +3499,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Añadido por"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Ajouté par"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "追加者"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Adicionado por"
           }
         }
@@ -3547,26 +3547,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Excepciones de bloqueo en %@"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Exceptions de blocage dans %@"
+            "state": "translated",
+            "value": "Exceptions de bannissement dans %@"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@での禁止例外"
+            "state": "translated",
+            "value": "%@のBAN例外"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Exceções de bloqueio em %@"
+            "state": "translated",
+            "value": "Exceções de banimento em %@"
           }
         }
       }
@@ -3595,26 +3595,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Primeras entradas %ld"
+            "state": "translated",
+            "value": "Primeras %ld entradas"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Premières entrées %ld"
+            "state": "translated",
+            "value": "%ld premières entrées"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "最初の%ldエントリ"
+            "state": "translated",
+            "value": "最初の%ld件"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Primeiras entradas %ld"
+            "state": "translated",
+            "value": "Primeiras %ld entradas"
           }
         }
       }
@@ -3682,20 +3682,20 @@
             "plural": {
               "many": {
                 "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Entradas %ld"
+                  "state": "translated",
+                  "value": "%ld entradas"
                 }
               },
               "one": {
                 "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Entrada %ld"
+                  "state": "translated",
+                  "value": "%ld entrada"
                 }
               },
               "other": {
                 "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Entradas %ld"
+                  "state": "translated",
+                  "value": "%ld entradas"
                 }
               }
             }
@@ -3706,20 +3706,20 @@
             "plural": {
               "many": {
                 "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Entrées %ld"
+                  "state": "translated",
+                  "value": "%ld entrées"
                 }
               },
               "one": {
                 "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Entrée %ld"
+                  "state": "translated",
+                  "value": "%ld entrée"
                 }
               },
               "other": {
                 "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Entrées %ld"
+                  "state": "translated",
+                  "value": "%ld entrées"
                 }
               }
             }
@@ -3730,8 +3730,8 @@
             "plural": {
               "other": {
                 "stringUnit": {
-                  "state": "needs_review",
-                  "value": "%ld エントリ"
+                  "state": "translated",
+                  "value": "%ld件"
                 }
               }
             }
@@ -3742,19 +3742,19 @@
             "plural": {
               "many": {
                 "stringUnit": {
-                  "state": "needs_review",
+                  "state": "translated",
                   "value": "%ld entradas"
                 }
               },
               "one": {
                 "stringUnit": {
-                  "state": "needs_review",
+                  "state": "translated",
                   "value": "%ld entrada"
                 }
               },
               "other": {
                 "stringUnit": {
-                  "state": "needs_review",
+                  "state": "translated",
                   "value": "%ld entradas"
                 }
               }
@@ -3787,25 +3787,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Creado"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Créé"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "作成された"
+            "state": "translated",
+            "value": "作成日"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Criado"
           }
         }
@@ -3835,26 +3835,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "El servidor no informó de ninguna entrada para esta lista."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Le serveur n'a signalé aucune entrée pour cette liste."
+            "state": "translated",
+            "value": "Le serveur n’a signalé aucune entrée pour cette liste."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "サーバーはこのリストの項目がないと報告しました。"
+            "state": "translated",
+            "value": "サーバはこのリストに項目がないと報告しました。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "O servidor não relatou nenhuma entrada para esta lista."
+            "state": "translated",
+            "value": "O servidor informou que não há entradas nesta lista."
           }
         }
       }
@@ -3883,26 +3883,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Sin entradas"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Aucune entrée"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "エントリはありません"
+            "state": "translated",
+            "value": "項目なし"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Sem entradas"
+            "state": "translated",
+            "value": "Nenhuma entrada"
           }
         }
       }
@@ -3931,26 +3931,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Prohibiciones en %@"
+            "state": "translated",
+            "value": "Bloqueos en %@"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Interdictions dans %@"
+            "state": "translated",
+            "value": "Bannissements dans %@"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@での禁止事項"
+            "state": "translated",
+            "value": "%@のBAN"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Proibições em %@"
+            "state": "translated",
+            "value": "Banimentos em %@"
           }
         }
       }
@@ -3979,26 +3979,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Se apaga en %@"
+            "state": "translated",
+            "value": "Silenciamientos en %@"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Silence dans %@"
+            "state": "translated",
+            "value": "Mises en sourdine dans %@"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@で静かにする"
+            "state": "translated",
+            "value": "%@のミュート対象"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Silencia em %@"
+            "state": "translated",
+            "value": "Silenciamentos em %@"
           }
         }
       }
@@ -4027,26 +4027,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Invitar excepciones en %@"
+            "state": "translated",
+            "value": "Excepciones de invitación en %@"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Inviter des exceptions dans %@"
+            "state": "translated",
+            "value": "Exceptions d’invitation dans %@"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@で例外を招待する"
+            "state": "translated",
+            "value": "%@の招待例外"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Convidar exceções em %@"
+            "state": "translated",
+            "value": "Exceções de convite em %@"
           }
         }
       }
@@ -4075,26 +4075,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Máscara de anfitrión"
+            "state": "translated",
+            "value": "Máscara de host"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Masque d'hôte"
+            "state": "translated",
+            "value": "Masque d’hôte"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "ホストマスク"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Máscara de hospedeiro"
+            "state": "translated",
+            "value": "Máscara de host"
           }
         }
       }
@@ -4123,25 +4123,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "El servidor envió más entradas de las que esta ventana puede guardar."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Le serveur a envoyé plus d'entrées que cette fenêtre ne peut contenir."
+            "state": "translated",
+            "value": "Le serveur a envoyé plus d’entrées que cette fenêtre ne peut contenir."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "サーバーはこのウィンドウが保持しているよりも多くのエントリを送信しました。"
+            "state": "translated",
+            "value": "サーバがこのウインドウの保持上限を超える数の項目を送信しました。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "O servidor enviou mais entradas do que esta janela mantém."
           }
         }
@@ -4171,26 +4171,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Lista de carga"
+            "state": "translated",
+            "value": "Cargando lista"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Chargement de la liste"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "読み込みリスト"
+            "state": "translated",
+            "value": "読み込み中"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Lista de carregamento"
+            "state": "translated",
+            "value": "Carregando lista"
           }
         }
       }
@@ -4219,26 +4219,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$ld de entradas %2$ld"
+            "state": "translated",
+            "value": "%1$ld de %2$ld entradas"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$ld d'entrées %2$ld"
+            "state": "translated",
+            "value": "%1$ld sur %2$ld entrées"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$ldの%2$ldの項目"
+            "state": "translated",
+            "value": "%2$ld件中%1$ld件"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$ld de entradas %2$ld"
+            "state": "translated",
+            "value": "%1$ld de %2$ld entradas"
           }
         }
       }
@@ -4267,26 +4267,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Eliminar seleccionado"
+            "state": "translated",
+            "value": "Eliminar selección"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Supprimer sélectionné"
+            "state": "translated",
+            "value": "Supprimer la sélection"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "選択されたものを削除する"
+            "state": "translated",
+            "value": "選択項目を削除"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Remover Selecionado"
+            "state": "translated",
+            "value": "Remover selecionados"
           }
         }
       }
@@ -4315,26 +4315,1034 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Actualizar lista"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Mettre à jour la liste"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "リストを更新する"
+            "state": "translated",
+            "value": "リストを更新"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Atualizar Lista"
+            "state": "translated",
+            "value": "Atualizar lista"
+          }
+        }
+      }
+    },
+    "add-placeholder": {
+      "comment": "Placeholder in the field that adds an entry to a channel access list (bans, exceptions, invites, quiets).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nickname, host or hostmask"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Becenév, gép vagy címmaszk"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nickname, Host oder Hostmaske"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apodo, host o máscara de host"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pseudo, hôte ou masque d’hôte"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ニックネーム、ホスト、またはホストマスク"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apelido, host ou máscara de host"
+          }
+        }
+      }
+    },
+    "add-field-label": {
+      "comment": "Accessibility label of the field that adds an entry to a channel access list.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New entry"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Új bejegyzés"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neuer Eintrag"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nueva entrada"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nouvelle entrée"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新しい項目"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nova entrada"
+          }
+        }
+      }
+    },
+    "add-button": {
+      "comment": "Button that adds the typed entry to a channel access list.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hozzáadás"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hinzufügen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouter"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "追加"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adicionar"
+          }
+        }
+      }
+    },
+    "replace-button": {
+      "comment": "Button that replaces the entry being edited in a channel access list with the typed one.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replace"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csere"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ersetzen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reemplazar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remplacer"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "置き換え"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Substituir"
+          }
+        }
+      }
+    },
+    "cancel-edit": {
+      "comment": "Button that stops editing an entry of a channel access list.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mégse"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abbrechen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuler"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "キャンセル"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelar"
+          }
+        }
+      }
+    },
+    "edit-selected": {
+      "comment": "Button and menu item that loads the selected channel access-list entry into the field so it can be replaced.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit Selected"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kijelölt szerkesztése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausgewählten bearbeiten"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar selección"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modifier la sélection"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "選択項目を編集"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar selecionados"
+          }
+        }
+      }
+    },
+    "editing-label": {
+      "comment": "Editing caption shown while an access-list entry is being replaced. The argument is the entry's current mask.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replacing %@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csere: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ wird ersetzt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reemplazando %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remplacement de %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@を置き換え中"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Substituindo %@"
+          }
+        }
+      }
+    },
+    "no-permission-hint": {
+      "comment": "Shown, and read as the field's hint, when the user cannot change a channel access list because they are not an operator or half-operator.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You must be a channel operator or half-operator to change this list."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A lista módosításához csatornaoperátornak vagy féloperátornak kell lenned."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zum Ändern dieser Liste musst du Kanaloperator oder Halboperator sein."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Debes ser operador o semioperador del canal para cambiar esta lista."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous devez être opérateur ou semi-opérateur du canal pour modifier cette liste."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このリストを変更するには、チャンネルオペレーターまたはハーフオペレーターである必要があります。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Você precisa ser operador ou semioperador do canal para alterar esta lista."
+          }
+        }
+      }
+    },
+    "row-description": {
+      "comment": "Accessibility label of one channel access-list row. The arguments are the mask, who set it and when.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, set by %2$@, %3$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, beállította: %2$@, %3$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, gesetzt von %2$@, %3$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, establecido por %2$@, %3$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, défini par %2$@, %3$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@、設定者: %2$@、%3$@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, definido por %2$@, %3$@"
+          }
+        }
+      }
+    },
+    "issue-empty": {
+      "comment": "Error shown when an access-list entry is submitted empty.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a nickname, host or hostmask."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adj meg becenevet, gépet vagy címmaszkot."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gib einen Nicknamen, Host oder eine Hostmaske ein."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Introduce un apodo, host o máscara de host."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saisissez un pseudo, un hôte ou un masque d’hôte."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ニックネーム、ホスト、またはホストマスクを入力してください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Digite um apelido, host ou máscara de host."
+          }
+        }
+      }
+    },
+    "issue-whitespace": {
+      "comment": "Issue shown when an access-list entry contains whitespace, such as spaces.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An entry cannot contain spaces."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A bejegyzés nem tartalmazhat szóközt."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Eintrag darf keine Leerzeichen enthalten."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una entrada no puede contener espacios."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une entrée ne peut pas contenir d’espaces."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "項目にスペースは使用できません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uma entrada não pode conter espaços."
+          }
+        }
+      }
+    },
+    "issue-colon": {
+      "comment": "Error shown when an access-list entry starts with a colon.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An entry cannot start with a colon."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A bejegyzés nem kezdődhet kettősponttal."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Eintrag darf nicht mit einem Doppelpunkt beginnen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una entrada no puede empezar por dos puntos."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une entrée ne peut pas commencer par un deux-points."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "項目の先頭にコロンは使用できません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uma entrada não pode começar com dois pontos."
+          }
+        }
+      }
+    },
+    "issue-too-long": {
+      "comment": "Error shown when an access-list entry is too long to send.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That entry is too long."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ez a bejegyzés túl hosszú."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Eintrag ist zu lang."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esa entrada es demasiado larga."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cette entrée est trop longue."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "項目が長すぎます。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Essa entrada é longa demais."
+          }
+        }
+      }
+    },
+    "issue-duplicate": {
+      "comment": "Issue shown when an access-list entry duplicates one already in the list.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That entry is already in the list."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ez a bejegyzés már szerepel a listán."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Eintrag ist bereits in der Liste."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esa entrada ya está en la lista."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cette entrée figure déjà dans la liste."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この項目はすでにリストにあります。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Essa entrada já está na lista."
+          }
+        }
+      }
+    },
+    "issue-not-operator": {
+      "comment": "Error shown when the server refuses a channel access-list change because the user is not a channel operator.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server refused the change: you are not a channel operator."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A kiszolgáló elutasította a módosítást: nem vagy csatornaoperátor."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Server hat die Änderung abgelehnt: Du bist kein Kanaloperator."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servidor rechazó el cambio: no eres operador del canal."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le serveur a refusé la modification : vous n’êtes pas opérateur du canal."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバが変更を拒否しました: チャンネルオペレーターではありません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O servidor recusou a alteração: você não é operador do canal."
+          }
+        }
+      }
+    },
+    "issue-list-full": {
+      "comment": "Error shown when the server refuses a channel access-list change because the list is full.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server refused the change: the list is full."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A kiszolgáló elutasította a módosítást: a lista megtelt."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Server hat die Änderung abgelehnt: Die Liste ist voll."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servidor rechazó el cambio: la lista está llena."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le serveur a refusé la modification : la liste est pleine."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバが変更を拒否しました: リストがいっぱいです。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O servidor recusou a alteração: a lista está cheia."
+          }
+        }
+      }
+    },
+    "issue-rejected": {
+      "comment": "Issue shown when the server rejects a channel access-list change. The argument is the server's own explanation.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server refused the change: %@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A kiszolgáló elutasította a módosítást: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Server hat die Änderung abgelehnt: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servidor rechazó el cambio: %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le serveur a refusé la modification : %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバが変更を拒否しました: %@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O servidor recusou a alteração: %@"
+          }
+        }
+      }
+    },
+    "empty-title-bans": {
+      "comment": "Title shown when the ban list has no entries.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Bans"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincsenek kitiltások"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Banns"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin bloqueos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun bannissement"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BANなし"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nenhum banimento"
+          }
+        }
+      }
+    },
+    "empty-title-ban-exceptions": {
+      "comment": "Title shown when the ban exceptions list has no entries.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Exceptions"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincsenek kivételek"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Ausnahmen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin excepciones"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucune exception"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "例外なし"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nenhuma exceção"
+          }
+        }
+      }
+    },
+    "empty-title-invite-exceptions": {
+      "comment": "Title shown when the invite exceptions list has no entries.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Invite Exceptions"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincsenek meghívási kivételek"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Einladungsausnahmen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin excepciones de invitación"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucune exception d’invitation"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "招待の例外なし"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nenhuma exceção de convite"
+          }
+        }
+      }
+    },
+    "empty-title-quiets": {
+      "comment": "Title shown when the quiet list has no entries.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Quiets"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincsenek némítások"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Stummschaltungen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin silenciamientos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucune mise en sourdine"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ミュートなし"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nenhum silenciamento"
           }
         }
       }

@@ -37,6 +37,13 @@ struct AdvancedPane: View {
 
 		Section {
 			SettingsToggle(
+				title: .Settings.hiddenDeveloperMode,
+				isOn: model.settings.binding(for: SettingsKeys.Commands.developerMode)
+			)
+			Button(.Settings.hiddenResetWarnings) {
+				AlertSuppression.resetAll()
+			}
+			SettingsToggle(
 				title: .Settings.hiddenAppNap,
 				isOn: model.settings.invertedBinding(for: SettingsKeys.Internals.appSleepDisabled)
 			)

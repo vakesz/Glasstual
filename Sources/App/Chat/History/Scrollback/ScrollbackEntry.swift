@@ -14,6 +14,10 @@ nonisolated enum ScrollbackAttribute: String {
 	case lineID
 	case sessionID
 	case viewID
+	/// The searchable columns the second schema added beside `lineData`.
+	case plainText
+	case sender
+	case searchText
 }
 
 /// The value stored in Core Data between the archive and application models.
@@ -25,6 +29,8 @@ nonisolated struct ScrollbackEntry: Sendable {
 	let sessionIdentifier: UInt
 	let creationDate: TimeInterval
 	let cursor: ScrollbackRowCursor?
+	/// The plain text written beside the archive so the row can be searched.
+	let search: ScrollbackSearchFields
 
 	init(
 		lineData data: Data,
@@ -32,7 +38,8 @@ nonisolated struct ScrollbackEntry: Sendable {
 		viewIdentifier: String,
 		sessionIdentifier: UInt,
 		creationDate: TimeInterval,
-		cursor: ScrollbackRowCursor? = nil
+		cursor: ScrollbackRowCursor? = nil,
+		search: ScrollbackSearchFields = .empty
 	) {
 		self.data = data
 		self.uniqueIdentifier = uniqueIdentifier
@@ -40,6 +47,7 @@ nonisolated struct ScrollbackEntry: Sendable {
 		self.sessionIdentifier = sessionIdentifier
 		self.creationDate = creationDate
 		self.cursor = cursor
+		self.search = search
 	}
 
 	/// One malformed stored row is discarded without affecting the store.
@@ -72,6 +80,7 @@ nonisolated struct ScrollbackEntry: Sendable {
 		self.sessionIdentifier = sessionIdentifier
 		self.creationDate = creationDate
 		cursor = ScrollbackRowCursor(object: managedObject)
+		search = ScrollbackSearchFields(managedObject: managedObject)
 	}
 }
 

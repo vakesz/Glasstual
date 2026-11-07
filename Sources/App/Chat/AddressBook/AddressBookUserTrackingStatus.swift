@@ -6,7 +6,7 @@ import Foundation
 /** Where a watched person stands, as the last WATCH, MONITOR or ISON answer
  left them.
 
- The raw values travel in the `addressBookTrackingStatusKey` notification
+ The raw values travel in the `AddressBookTrackingStatusChanged` notification
  payload, so they are a wire vocabulary and not just an ordering. */
 enum AddressBookUserTrackingStatus: UInt, Sendable {
 	case unknown = 0

@@ -159,7 +159,7 @@ extension MainWindow {
 		inputTextField.resetSpellingIgnores()
 		updateMemberListVisibilityForSelection()
 		storeLastSelectedConversation()
-		NotificationCenter.default.post(name: .mainWindowSelectionChanged, object: self)
+		MainWindowSelectionChanged(subject: self).post()
 		DockIcon.updateDockIcon()
 		updateTitle()
 	}

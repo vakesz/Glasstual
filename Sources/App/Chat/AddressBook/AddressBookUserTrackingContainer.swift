@@ -3,27 +3,102 @@
 
 import Foundation
 
-extension Notification.Name {
-	static let addressBookTrackingStatusChanged = Self(
-		"Glasstual.addressBookTrackingStatusChanged"
-	)
-	static let addressBookTrackingAddedUser = Self(
-		"Glasstual.addressBookTrackingAddedUser"
-	)
-	static let addressBookTrackingRemovedUser = Self(
-		"Glasstual.addressBookTrackingRemovedUser"
-	)
-	static let addressBookTrackingRemovedAllUsers = Self(
-		"Glasstual.addressBookTrackingRemovedAllUsers"
-	)
+/// What a tracking message carries besides its subject, as `userInfo`.
+private enum AddressBookTrackingKey {
+	static let nickname = "nickname"
+	static let status = "status"
 }
 
-/// The nickname a tracking notification is about.
-nonisolated let addressBookTrackingNicknameKey = "nickname"
+/// A nickname whose tracked status changed. The status raw values are a wire
+/// vocabulary, see ``AddressBookUserTrackingStatus``.
+struct AddressBookTrackingStatusChanged: NotificationCenter.MainActorMessage {
+	typealias Subject = AddressBookUserTrackingContainer
 
-/// The `AddressBookUserTrackingStatus` raw value a status-change
-/// notification carries.
-nonisolated let addressBookTrackingStatusKey = "status"
+	nonisolated static let name = Notification.Name("Glasstual.addressBookTrackingStatusChanged")
+
+	let subject: AddressBookUserTrackingContainer
+	let nickname: String
+	let status: AddressBookUserTrackingStatus
+
+	static func makeMessage(_ notification: Notification) -> Self? {
+		guard let subject = notification.object as? AddressBookUserTrackingContainer,
+		      let nickname = notification.userInfo?[AddressBookTrackingKey.nickname] as? String,
+		      let rawStatus = notification.userInfo?[AddressBookTrackingKey.status] as? UInt,
+		      let status = AddressBookUserTrackingStatus(rawValue: rawStatus)
+		else { return nil }
+		return Self(subject: subject, nickname: nickname, status: status)
+	}
+
+	static func makeNotification(_ message: Self) -> Notification {
+		Notification(
+			name: name,
+			object: message.subject,
+			userInfo: [
+				AddressBookTrackingKey.nickname: message.nickname,
+				AddressBookTrackingKey.status: message.status.rawValue,
+			]
+		)
+	}
+}
+
+/// A nickname was added to the tracked list.
+struct AddressBookTrackedUserAdded: NotificationCenter.MainActorMessage {
+	typealias Subject = AddressBookUserTrackingContainer
+
+	nonisolated static let name = Notification.Name("Glasstual.addressBookTrackingAddedUser")
+
+	let subject: AddressBookUserTrackingContainer
+	let nickname: String
+
+	static func makeMessage(_ notification: Notification) -> Self? {
+		guard let subject = notification.object as? AddressBookUserTrackingContainer,
+		      let nickname = notification.userInfo?[AddressBookTrackingKey.nickname] as? String
+		else { return nil }
+		return Self(subject: subject, nickname: nickname)
+	}
+
+	static func makeNotification(_ message: Self) -> Notification {
+		Notification(
+			name: name,
+			object: message.subject,
+			userInfo: [AddressBookTrackingKey.nickname: message.nickname]
+		)
+	}
+}
+
+/// A nickname was removed from the tracked list.
+struct AddressBookTrackedUserRemoved: NotificationCenter.MainActorMessage {
+	typealias Subject = AddressBookUserTrackingContainer
+
+	nonisolated static let name = Notification.Name("Glasstual.addressBookTrackingRemovedUser")
+
+	let subject: AddressBookUserTrackingContainer
+	let nickname: String
+
+	static func makeMessage(_ notification: Notification) -> Self? {
+		guard let subject = notification.object as? AddressBookUserTrackingContainer,
+		      let nickname = notification.userInfo?[AddressBookTrackingKey.nickname] as? String
+		else { return nil }
+		return Self(subject: subject, nickname: nickname)
+	}
+
+	static func makeNotification(_ message: Self) -> Notification {
+		Notification(
+			name: name,
+			object: message.subject,
+			userInfo: [AddressBookTrackingKey.nickname: message.nickname]
+		)
+	}
+}
+
+/// The tracked list was emptied.
+struct AddressBookTrackedUsersCleared: SubjectMessage {
+	typealias Subject = AddressBookUserTrackingContainer
+
+	nonisolated static let name = Notification.Name("Glasstual.addressBookTrackingRemovedAllUsers")
+
+	let subject: AddressBookUserTrackingContainer
+}
 
 final class AddressBookUserTrackingContainer {
 	/** How the server folds nicknames.
@@ -63,12 +138,12 @@ final class AddressBookUserTrackingContainer {
 		}
 
 		availabilityByNickname[nickname] = false
-		postNotification(named: .addressBookTrackingAddedUser, nickname: nickname)
+		NotificationCenter.default.post(AddressBookTrackedUserAdded(subject: self, nickname: nickname), subject: self)
 	}
 
 	func addTrackedUserWithoutDuplicateCheck(_ nickname: String) {
 		availabilityByNickname[nickname] = false
-		postNotification(named: .addressBookTrackingAddedUser, nickname: nickname)
+		NotificationCenter.default.post(AddressBookTrackedUserAdded(subject: self, nickname: nickname), subject: self)
 	}
 
 	func removeTrackedUser(_ nickname: String) {
@@ -77,21 +152,18 @@ final class AddressBookUserTrackingContainer {
 		}
 
 		availabilityByNickname.removeValue(forKey: canonicalNickname)
-		postNotification(named: .addressBookTrackingRemovedUser, nickname: canonicalNickname)
+		NotificationCenter.default.post(AddressBookTrackedUserRemoved(subject: self, nickname: canonicalNickname), subject: self)
 	}
 
 	func removeTrackedUserWithoutLookup(_ nickname: String) {
 		availabilityByNickname.removeValue(forKey: nickname)
-		postNotification(named: .addressBookTrackingRemovedUser, nickname: nickname)
+		NotificationCenter.default.post(AddressBookTrackedUserRemoved(subject: self, nickname: nickname), subject: self)
 	}
 
 	func clearTrackedUsers() {
 		availabilityByNickname.removeAll()
 
-		NotificationCenter.default.post(
-			name: .addressBookTrackingRemovedAllUsers,
-			object: self
-		)
+		AddressBookTrackedUsersCleared(subject: self).post()
 	}
 
 	func status(ofTrackedNickname nickname: String, changedTo newStatus: AddressBookUserTrackingStatus) {
@@ -100,12 +172,8 @@ final class AddressBookUserTrackingContainer {
 		}
 
 		NotificationCenter.default.post(
-			name: .addressBookTrackingStatusChanged,
-			object: self,
-			userInfo: [
-				addressBookTrackingNicknameKey: nickname,
-				addressBookTrackingStatusKey: newStatus.rawValue,
-			]
+			AddressBookTrackingStatusChanged(subject: self, nickname: nickname, status: newStatus),
+			subject: self
 		)
 	}
 
@@ -151,13 +219,5 @@ final class AddressBookUserTrackingContainer {
 
 	private func casefolded(_ nickname: String) -> String {
 		IRCCaseFolding.fold(nickname, using: caseMapping)
-	}
-
-	private func postNotification(named name: Notification.Name, nickname: String) {
-		NotificationCenter.default.post(
-			name: name,
-			object: self,
-			userInfo: [addressBookTrackingNicknameKey: nickname]
-		)
 	}
 }

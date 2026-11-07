@@ -88,6 +88,9 @@ final class ISupport {
 	private(set) var extendedBanPrefix: String?
 	private(set) var networkName: String?
 	private(set) var networkNameFormatted: String?
+	/// `ICON=`: where the network publishes its icon. Only an `http` or `https`
+	/// address with a host is kept; anything else reads as no icon.
+	private(set) var networkIconURL: URL?
 	private(set) var caseMapping: ISupportCaseMapping = .rfc1459 {
 		didSet { rebuildUserPrefixTable() }
 	}
@@ -189,7 +192,7 @@ final class ISupport {
 		case .bot, .callerid, .casemapping, .chanmodes, .chantypes, .deaf,
 		     .excepts, .invex, .prefix, .statusmsg:
 			resetModeSetting(token)
-		case .chanlimit, .clienttagdeny, .elist, .extban, .maxlist, .msgreftypes, .network, .targmax:
+		case .chanlimit, .clienttagdeny, .elist, .extban, .icon, .maxlist, .msgreftypes, .network, .targmax:
 			resetCollection(token)
 		case .monitor, .namesx, .safelist, .uhnames, .utf8only, .watch, .whox:
 			resetAnnouncement(token, into: &effects)
@@ -275,6 +278,8 @@ final class ISupport {
 		case .network:
 			networkName = nil
 			networkNameFormatted = nil
+		case .icon:
+			networkIconURL = nil
 		case .targmax:
 			maximumTargetsByCommand = [:]
 		default:
@@ -409,6 +414,8 @@ private extension ISupport {
 			advertisedChannelModeKinds = kinds
 		case let .channelNamePrefixes(prefixes):
 			channelNamePrefixes = prefixes
+		case let .networkIcon(url):
+			networkIconURL = url
 		case let .networkName(name):
 			networkName = name
 			networkNameFormatted = String(localized: .IRC.ircNetwork(name))

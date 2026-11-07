@@ -232,7 +232,9 @@ struct UserNotificationControllerTests {
 		#expect(registered.categorySummaryFormat.contains("%u"))
 	}
 
-	@Test("A file transfer request offers Accept and Decline, and a private message offers Reply")
+	@Test(
+		"A file transfer request offers Accept and Decline, and a message offers Mark as Read, but a kick, invitation or address book match offers nothing"
+	)
 	func eventsCarryTheirActions() {
 		let fileTransfer = UserNotificationCategory(event: .fileTransferReceiveRequested).userNotificationCategory
 		let privateMessage = UserNotificationCategory(event: .privateMessage).userNotificationCategory
@@ -242,7 +244,17 @@ struct UserNotificationControllerTests {
 			UserNotificationCategory.Action.acceptFileTransfer.rawValue,
 			UserNotificationCategory.Action.declineFileTransfer.rawValue,
 		])
-		#expect(privateMessage.actions.map(\.identifier) == [UserNotificationCategory.Action.replyToPrivateMessage.rawValue])
-		#expect(highlight.actions.isEmpty)
+		#expect(privateMessage.actions.map(\.identifier) == [
+			UserNotificationCategory.Action.replyToPrivateMessage.rawValue,
+			UserNotificationCategory.Action.markConversationAsRead.rawValue,
+		])
+		#expect(highlight.actions.map(\.identifier) == [UserNotificationCategory.Action.markConversationAsRead.rawValue])
+		for event: UserNotificationEvent in [.kick, .invite, .addressBookMatch] {
+			#expect(UserNotificationCategory(event: event).userNotificationCategory.actions.isEmpty)
+		}
+		for event: UserNotificationEvent in [.highlight, .channelMessage, .channelNotice, .privateNotice] {
+			#expect(UserNotificationCategory(event: event).rawValue == "GlasstualNotificationCategoryActivity")
+		}
+		#expect(fileTransfer.actions.allSatisfy { $0.options.contains(.destructive) == false })
 	}
 }

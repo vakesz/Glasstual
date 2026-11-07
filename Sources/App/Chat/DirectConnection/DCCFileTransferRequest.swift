@@ -91,11 +91,11 @@ enum DCCFileTransferRequestParser {
 	}
 
 	private static func validToken(_ token: String?) -> Bool {
-		token?.allSatisfy(\.isNumber) ?? true
+		token?.allSatisfy(\.isASCIIDigit) ?? true
 	}
 
 	private static func validPort(_ value: String, allowsZero: Bool) -> UInt16? {
-		guard value.allSatisfy(\.isNumber), let integer = Int(value), integer >= 0, integer <= Int(UInt16.max),
+		guard value.allSatisfy(\.isASCIIDigit), let integer = Int(value), integer >= 0, integer <= Int(UInt16.max),
 		      integer > 0 || allowsZero else { return nil }
 		return UInt16(integer)
 	}
@@ -103,7 +103,15 @@ enum DCCFileTransferRequestParser {
 	/// A size or a resume position. An empty file is a file like any other, and
 	/// a position of zero is refused where it means nothing, not here.
 	private static func validFilesize(_ value: String) -> UInt64? {
-		guard value.allSatisfy(\.isNumber), let size = UInt64(value), size <= maximumFilesize else { return nil }
+		guard value.allSatisfy(\.isASCIIDigit), let size = UInt64(value), size <= maximumFilesize else { return nil }
 		return size
+	}
+}
+
+private extension Character {
+	/// Wire numbers are ASCII. `isNumber` also admits `²`, `٣` and `½`, which
+	/// are not digits a peer's client would send.
+	nonisolated var isASCIIDigit: Bool { // nonisolated: pure
+		isASCII && isNumber
 	}
 }

@@ -24,7 +24,7 @@ struct PromptLocalizationTests {
 		]
 		for (target, (resource, noun)) in cases {
 			try expectLocalizedCopy(PromptStrings.Deletion.warning(for: target), resource,
-			                        "There is no undo and all data related to this \(noun), except for logs, will be erased.")
+			                        "All data related to this \(noun), except for logs, will be erased. This action cannot be undone.")
 		}
 	}
 

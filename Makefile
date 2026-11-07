@@ -23,7 +23,7 @@ GLASSTUAL_TOOLS_DIR ?= $(HOME)/Library/Caches/Glasstual/Tools
 export GLASSTUAL_TOOLS_DIR
 TOOLS_BIN := $(GLASSTUAL_TOOLS_DIR)/bin
 
-.PHONY: help generate validate-generated-metadata build archive run test tsan smoke e2e e2e-build e2e-fixtures lint format format-check ensure-xcodegen ensure-formatters ensure-linters clean
+.PHONY: help generate validate-generated-metadata build archive run test tsan smoke website-screenshots e2e e2e-build e2e-fixtures lint format format-check ensure-xcodegen ensure-formatters ensure-linters clean
 
 help: ## Show this help
 	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z0-9_-]+:.*##/ {printf "  \033[1m%-27s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -66,6 +66,9 @@ tsan: generate ## Run the test suite under ThreadSanitizer
 
 smoke: ## Seeded launch of about a minute with an accessibility probe (see scripts/smoke.sh)
 	CONFIG=Debug bash scripts/smoke.sh
+
+website-screenshots: build ## Regenerate .github/website/assets screenshots from a seeded demo (needs Screen Recording + Accessibility, an unlocked screen)
+	CONFIG=Debug bash scripts/website-screenshots.sh
 
 e2e: e2e-build ## Real-app Swift Testing gate (disposable GUI login + AX grant)
 	CONFIG=Debug bash scripts/e2e.sh

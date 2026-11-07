@@ -7,17 +7,17 @@ import Testing
 
 @Suite("Playback classification")
 struct JoinBurstPolicyTests {
-	@Test("Only explicit history is excluded on ordinary servers", arguments: [0.0, 1.0, 10.0, 60.0])
-	func ordinaryServerPlayback(_ elapsed: TimeInterval) {
+	@Test(
+		"Only explicit history is excluded on ordinary servers",
+		arguments: [0.0, 1.0, 10.0, 60.0] as [TimeInterval], [(false, false), (false, true), (true, false), (true, true)]
+	)
+	func ordinaryServerPlayback(elapsed: TimeInterval, flags: (hasTime: Bool, replayed: Bool)) {
+		let (hasTime, replayed) = flags
 		let joined = Date(timeIntervalSince1970: 1_700_000_000)
-		for hasTime in [false, true] {
-			for replayed in [false, true] {
-				#expect(JoinBurstPolicy.isJoinBurstLine(
-					joinedAt: joined, now: joined.addingTimeInterval(elapsed), isReplayed: replayed,
-					hasServerTime: hasTime, receivedAt: joined.addingTimeInterval(-300)
-				) == replayed)
-			}
-		}
+		#expect(JoinBurstPolicy.isJoinBurstLine(
+			joinedAt: joined, now: joined.addingTimeInterval(elapsed), isReplayed: replayed,
+			hasServerTime: hasTime, receivedAt: joined.addingTimeInterval(-300)
+		) == replayed)
 	}
 
 	@Test("History does not need a JOIN timestamp")
@@ -26,15 +26,13 @@ struct JoinBurstPolicyTests {
 		                                        hasServerTime: false, receivedAt: Date()))
 	}
 
-	@Test("Legacy ZNC replay requires a timestamp")
-	func legacyBouncerRequiresTimestamp() {
+	@Test("Legacy ZNC replay requires a timestamp", arguments: [false, true])
+	func legacyBouncerRequiresTimestamp(hasTime: Bool) {
 		let joined = Date()
-		for hasTime in [false, true] {
-			#expect(JoinBurstPolicy.isJoinBurstLine(
-				joinedAt: joined, now: joined.addingTimeInterval(1), isReplayed: false,
-				hasServerTime: hasTime, receivedAt: joined.addingTimeInterval(-5), isKnownBouncer: true
-			) == hasTime)
-		}
+		#expect(JoinBurstPolicy.isJoinBurstLine(
+			joinedAt: joined, now: joined.addingTimeInterval(1), isReplayed: false,
+			hasServerTime: hasTime, receivedAt: joined.addingTimeInterval(-5), isKnownBouncer: true
+		) == hasTime)
 	}
 }
 

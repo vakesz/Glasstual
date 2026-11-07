@@ -65,19 +65,18 @@ struct ServerSessionReconnectSchedulingTests {
 		#expect(delay(50) == ConnectionTimerPolicy.maximumReconnectInterval)
 	}
 
-	@Test("Jitter shortens the delay by at most a quarter, and never past zero")
-	func jitterIsBounded() {
-		for attempt in UInt(0) ... 8 {
-			let full = ConnectionTimerPolicy.reconnectDelay(attempt: attempt, jitter: 0)
+	nonisolated static let jitterCases: [(attempt: UInt, jitter: Double)] = (UInt(0) ... 8).flatMap { attempt in
+		[0.0, 0.25, 0.5, 1.0, -3.0, 7.0].map { (attempt: attempt, jitter: $0) }
+	}
 
-			for jitter in [0.0, 0.25, 0.5, 1.0, -3.0, 7.0] {
-				let delay = ConnectionTimerPolicy.reconnectDelay(attempt: attempt, jitter: jitter)
+	@Test("Jitter shortens the delay by at most a quarter, and never past zero", arguments: Self.jitterCases)
+	func jitterIsBounded(_ attempt: UInt, _ jitter: Double) {
+		let full = ConnectionTimerPolicy.reconnectDelay(attempt: attempt, jitter: 0)
+		let delay = ConnectionTimerPolicy.reconnectDelay(attempt: attempt, jitter: jitter)
 
-				#expect(delay > 0)
-				#expect(delay <= full)
-				#expect(delay >= full * 0.75)
-			}
-		}
+		#expect(delay > 0)
+		#expect(delay <= full)
+		#expect(delay >= full * 0.75)
 	}
 
 	/// Each scheduled attempt has to wait longer than the last, or the backoff

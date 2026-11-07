@@ -139,14 +139,6 @@ final class ChannelModeState {
 		modes.clear()
 	}
 
-	func modeIsDefined(_ modeSymbol: String) -> Bool {
-		modes.modeIsDefined(modeSymbol)
-	}
-
-	func modeInfo(for modeSymbol: String) -> ModeInfo? {
-		modes.modeInfo(for: modeSymbol)
-	}
-
 	var string: String {
 		string(maskingPassword: false)
 	}

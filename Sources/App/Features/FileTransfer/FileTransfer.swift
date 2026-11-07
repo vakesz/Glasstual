@@ -7,24 +7,6 @@ import CocoaExtensions
 import Foundation
 import os
 
-private struct FileTransferPeerNicknameChange: NotificationCenter.MainActorMessage {
-	typealias Subject = ServerSession
-
-	static var name: Notification.Name {
-		.serverSessionUserNicknameChanged
-	}
-
-	let oldNickname: String
-	let newNickname: String
-
-	static func makeMessage(_ notification: Notification) -> Self? {
-		guard let oldNickname = notification.userInfo?["oldNickname"] as? String,
-		      let newNickname = notification.userInfo?["newNickname"] as? String
-		else { return nil }
-		return Self(oldNickname: oldNickname, newNickname: newNickname)
-	}
-}
-
 enum FileTransferLimits {
 	static let speedRecordCount = 10
 	static let connectTimeout: TimeInterval = 30
@@ -111,13 +93,13 @@ final class FileTransfer: SessionScoped {
 		self.session = session
 		self.center = center
 		sessionId = session.uniqueIdentifier
-		lifecycleNotifications.observe(.serverSessionDidDisconnect, object: session) { [weak self] notification in
-			self?.sessionDisconnected(notification)
+		lifecycleNotifications.observe(ServerSessionDidDisconnect.self, of: session) { [weak self] _ in
+			self?.sessionDisconnected()
 		}
 		/* A NICK must update the destination before another main-actor operation
 		 can send an offer, including the turn that resumes file preparation. */
 		peerNicknameObservation = NotificationCenter.default
-			.addObserver(of: session, for: FileTransferPeerNicknameChange.self) { [weak self] change in
+			.addObserver(of: session, for: ServerSessionNicknameChanged.self) { [weak self] change in
 				self?.peerNicknameChanged(from: change.oldNickname, to: change.newNickname)
 			}
 	}
@@ -202,7 +184,15 @@ final class FileTransfer: SessionScoped {
 		controller.filename = (path as NSString).lastPathComponent
 		controller.wireFilename = controller.filename.safeFilename
 
-		guard let file = try? await fileFactory(URL(fileURLWithPath: path), false, accessURL) else { return nil }
+		let file: DCCTransferFile
+		do {
+			file = try await fileFactory(URL(fileURLWithPath: path), false, accessURL)
+		} catch {
+			fileTransferLogger.error(
+				"Could not open \(controller.filename, privacy: .private) to send: \(error.localizedDescription, privacy: .public)"
+			)
+			return nil
+		}
 		guard !Task.isCancelled else {
 			await file.close()
 			return nil
@@ -345,7 +335,7 @@ extension FileTransfer {
 
 	/// A transfer still negotiating cannot finish without the connection it was
 	/// negotiated over; one already moving bytes is on its own socket.
-	func sessionDisconnected(_: Notification) {
+	func sessionDisconnected() {
 		guard transferStatus.isNegotiating else { return }
 		closeWithSessionDisconnectedErrorImmediately()
 	}

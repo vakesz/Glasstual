@@ -20,6 +20,7 @@ struct MainWindowConnectionPresentationTests {
 		#expect(MainWindowTitleContent(session: session, conversation: nil).subtitle.hasPrefix(waiting.status.title))
 		session.setConnectionTransportForTesting(.connecting)
 		#expect(MainWindowConnectionPresentation(session: session)?.actions == [.disconnect])
+		#expect(MainWindowConnectionPresentation(session: session)?.isInProgress == true)
 		session.setConnectionTransportForTesting(.idle)
 		session.setConnectionTransportForTesting(.connected)
 		#expect(MainWindowConnectionPresentation(session: session)?.status == .loggingOn)
@@ -27,6 +28,7 @@ struct MainWindowConnectionPresentationTests {
 		#expect(MainWindowConnectionPresentation(session: session) == nil)
 		session.setConnectionShutdownForTesting(.disconnecting)
 		#expect(MainWindowConnectionPresentation(session: session)?.actions == [])
+		#expect(MainWindowConnectionPresentation(session: session)?.hasActions == false)
 		session.isTerminating = true
 		#expect(MainWindowConnectionPresentation(session: session) == nil)
 	}

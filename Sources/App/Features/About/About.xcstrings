@@ -2,7 +2,7 @@
   "sourceLanguage" : "en",
   "strings" : {
     "acknowledgements-button" : {
-      "comment" : "Title of the button that opens third-party acknowledgements.",
+      "comment" : "Link in the About panel credits that opens third-party acknowledgements.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -25,176 +25,32 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Agradecimientos"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Remerciements"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "謝辞"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Agradecimentos"
           }
         }
       }
     },
-    "application-version" : {
-      "comment" : "The application version, shown under the application name. The argument is the short version. Legacy key: zjd-al.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Version %@"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ verzió"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Version %@"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Versión %@"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Version %@"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "バージョン%@"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Versão %@"
-          }
-        }
-      }
-    },
-    "application-version-with-build" : {
-      "comment" : "The application version and the build number in parentheses, shown under the application name. The arguments are the version and the build number.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Version %1$@ (%2$@)"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ verzió (%2$@)"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Version %1$@ (%2$@)"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Versión %1$@ (%2$@)"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Version %1$@ (%2$@)"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "バージョン%1$@（%2$@）"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Versão %1$@ (%2$@)"
-          }
-        }
-      }
-    },
-    "icon-accessibility" : {
-      "comment" : "Accessibility label for the application icon. The argument is the application name.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ application icon"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A(z) %@ alkalmazás ikonja"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "App-Symbol von %@"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Icono de la aplicación %@"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Icône de l’application %@"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "%@アプリケーションアイコン"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Ícone do aplicativo %@"
-          }
-        }
-      }
-    },
     "privacy-policy-link" : {
-      "comment" : "Link in the About window that opens the app privacy policy on the developer's website.",
+      "comment" : "Link in the About panel credits that opens the app privacy policy on the developer's website.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -217,32 +73,32 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Política de privacidad"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Politique de confidentialité"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "プライバシーポリシー"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "política de privacidade"
+            "state" : "translated",
+            "value" : "Política de privacidade"
           }
         }
       }
     },
     "support-link" : {
-      "comment" : "Link in the About window that opens the developer's support page.",
+      "comment" : "Link in the About panel credits that opens the developer's support page.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -265,26 +121,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Soporte"
+            "state" : "translated",
+            "value" : "Asistencia"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "soutien"
+            "state" : "translated",
+            "value" : "Assistance"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "サポート"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "suporte"
+            "state" : "translated",
+            "value" : "Suporte"
           }
         }
       }

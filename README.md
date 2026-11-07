@@ -13,12 +13,19 @@ Updates are installed manually.
 
 ## Features
 
-- Multiple servers, favorites, unread filters and mentions.
-- IRCv3 support, including SASL, typing notifications, replies, reactions,
-  read markers and chat history.
+- Multiple servers, favorites, unread filters and mentions, with network icons
+  and soju bouncer networks grouped under one account.
+- IRCv3 support, including SASL (with ECDSA keys), multiline messages, message
+  redaction, channel renames, no-implicit-names, extended-monitor, typing
+  notifications, replies, reactions, read markers and chat history.
+- Search across all stored history, and a viewer for transcript logs.
+- Shortcuts actions, Spotlight conversation search and a Focus filter that
+  mutes notifications and sets you away, also when idle.
+- Editors for channel ban, exception, invite exception and quiet lists.
 - Lines and Bubbles transcript styles with light and dark appearances.
 - Notifications, file transfers, local history and transcript logging.
 - Slash-command suggestions, message rules and user scripts.
+- A native macOS 26 interface built with SwiftUI and AppKit.
 
 ## Build
 

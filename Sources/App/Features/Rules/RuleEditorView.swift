@@ -112,7 +112,7 @@ struct RuleEditorView: View {
 		VStack(spacing: 0) {
 			TabView(selection: $selectedTab) {
 				generalForm
-					.tabItem { Text(String(localized: .Rules.filterTab)) }
+					.tabItem { Text(String(localized: .Rules.ruleTab)) }
 					.tag(RuleEditorTab.rule)
 				channelsForm
 					.tabItem { Text(String(localized: .Rules.channelsTab)) }
@@ -149,18 +149,18 @@ struct RuleEditorView: View {
 
 	private var generalForm: some View {
 		Form {
-			TextField(String(localized: .Rules.filterTitleLabel), text: $model.rule.title)
-			TextField(String(localized: .Rules.filterMatchLabel), text: $model.rule.match)
+			TextField(String(localized: .Rules.ruleTitleLabel), text: $model.rule.title)
+			TextField(String(localized: .Rules.ruleMatchLabel), text: $model.rule.match)
 			validationMessage(model.matchError)
 			Text(Self.patternLimitsExplanation)
 				.font(.caption)
 				.foregroundStyle(.secondary)
 
-			Section(String(localized: .Rules.filterActionSection)) {
+			Section(String(localized: .Rules.ruleActionSection)) {
 				TextEditor(text: $model.rule.action)
 					.font(.body.monospaced())
 					.frame(minHeight: 110)
-					.accessibilityLabel(.Rules.filterActionSection)
+					.accessibilityLabel(.Rules.ruleActionSection)
 				Menu(String(localized: .Rules.insertPlaceholderButton)) {
 					ForEach(RuleActionPlaceholder.all) { placeholder in
 						Button(String(localized: placeholder.title)) {
@@ -175,7 +175,7 @@ struct RuleEditorView: View {
 
 	private var channelsForm: some View {
 		Form {
-			Picker(String(localized: .Rules.limitFilterLabel), selection: $model.rule.destination) {
+			Picker(String(localized: .Rules.limitRuleLabel), selection: $model.rule.destination) {
 				ForEach(MessageRuleDestination.allCases) { destination in
 					Text(destinationTitle(destination)).tag(destination)
 				}
@@ -298,7 +298,7 @@ struct RuleEditorView: View {
 					isOn: $model.rule.ignoresContent
 				)
 				.toggleStyle(.checkbox)
-				Toggle(String(localized: .Rules.logFilterMatchToggle), isOn: $model.rule.logsMatch)
+				Toggle(String(localized: .Rules.logRuleMatchToggle), isOn: $model.rule.logsMatch)
 					.toggleStyle(.checkbox)
 			}
 
@@ -420,10 +420,7 @@ struct RuleEditorView: View {
 	@ViewBuilder
 	private func validationMessage(_ message: String?) -> some View {
 		if let message {
-			Text(message)
-				.font(.caption)
-				.foregroundStyle(.red)
-				.accessibilityLabel(message)
+			ValidationMessageLabel(message)
 		}
 	}
 

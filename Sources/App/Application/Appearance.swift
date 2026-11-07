@@ -12,90 +12,20 @@ private let appearanceLogger = Logger(
 	category: "Appearance"
 )
 
-extension Notification.Name {
-	static let applicationAppearanceChanged = Notification.Name("Glasstual.applicationAppearanceChanged")
-	static let systemAppearanceChanged = Notification.Name("Glasstual.systemAppearanceChanged")
+struct ApplicationAppearanceChanged: SubjectMessage {
+	typealias Subject = Appearance
+
+	nonisolated static let name = Notification.Name("Glasstual.applicationAppearanceChanged")
+
+	let subject: Appearance
 }
 
-/// Which of the two appearances the application draws in.
-enum AppearanceMode: UInt, Sendable {
-	case light
-	case dark
-}
+struct SystemAppearanceChanged: SubjectMessage {
+	typealias Subject = Appearance
 
-/// The system preference is independent of NSApp's explicit appearance.
-/// Foundation exposes the global domain; the key and its Dark value are macOS
-/// preference identifiers, so they stay at this external boundary.
-enum SystemAppearancePreference {
-	private static let interfaceStyleKey = "AppleInterfaceStyle"
-	private enum InterfaceStyle: String {
-		case dark = "Dark"
-	}
+	nonisolated static let name = Notification.Name("Glasstual.systemAppearanceChanged")
 
-	static func readMode() -> AppearanceMode {
-		let domain = UserDefaults.standard.persistentDomain(forName: UserDefaults.globalDomain)
-		return decode(interfaceStyle: domain?[interfaceStyleKey] as? String)
-	}
-
-	static func decode(interfaceStyle: String?) -> AppearanceMode {
-		interfaceStyle.flatMap(InterfaceStyle.init(rawValue:)) == .dark ? .dark : .light
-	}
-}
-
-/// A preview owns this read-only snapshot for as long as it is visible. It
-/// never changes the app's appearance or commits the draft preference.
-@Observable
-final class SystemAppearanceSnapshot {
-	private(set) var mode: AppearanceMode
-	@ObservationIgnored private let readMode: @MainActor () -> AppearanceMode
-	@ObservationIgnored private let notifications = NotificationSubscriptions()
-
-	init(readMode: @escaping @MainActor () -> AppearanceMode = SystemAppearancePreference.readMode,
-	     notificationCenter: NotificationCenter = .default)
-	{
-		self.readMode = readMode
-		mode = readMode()
-		for name in [UserDefaults.didChangeNotification, NSApplication.didBecomeActiveNotification] {
-			notifications.observe(name, center: notificationCenter) { [weak self] _ in
-				guard let self else { return }
-				mode = self.readMode()
-			}
-		}
-	}
-}
-
-/// An immutable snapshot of the appearance the application is currently
-/// drawing in. It is built once per appearance change and only ever read
-/// afterwards, so it is a value.
-struct ResolvedAppearance: Equatable, Sendable {
-	var mode: AppearanceMode = .light
-	/// Whether the appearance is the application's own choice rather than the
-	/// system's. Only then does a window carry an `NSAppearance`.
-	var overridesAppKitAppearance = false
-
-	var isDarkAppearance: Bool {
-		mode == .dark
-	}
-
-	var appKitAppearance: NSAppearance? {
-		guard overridesAppKitAppearance else {
-			return nil
-		}
-
-		return isDarkAppearance ? Self.appKitDarkAppearance() : Self.appKitLightAppearance()
-	}
-
-	@MainActor static func systemWideDarkModeEnabled() -> Bool {
-		NSApp.effectiveAppearance.bestMatch(from: [NSAppearance.Name.darkAqua]) != nil
-	}
-
-	static func appKitDarkAppearance() -> NSAppearance? {
-		NSAppearance(named: .darkAqua)
-	}
-
-	static func appKitLightAppearance() -> NSAppearance? {
-		NSAppearance(named: .aqua)
-	}
+	let subject: Appearance
 }
 
 @MainActor
@@ -260,16 +190,10 @@ final class Appearance: NSObject {
 	}
 
 	private func notifyApplicationAppearanceChanged() {
-		NotificationCenter.default.post(
-			name: .applicationAppearanceChanged,
-			object: self
-		)
+		ApplicationAppearanceChanged(subject: self).post()
 	}
 
 	private func notifySystemAppearanceChanged() {
-		NotificationCenter.default.post(
-			name: .systemAppearanceChanged,
-			object: self
-		)
+		SystemAppearanceChanged(subject: self).post()
 	}
 }

@@ -136,8 +136,8 @@ struct ModeParserTests {
 
 		#expect(state.string == "+klnt secret 5")
 		#expect(state.stringWithMaskedPassword == "+klnt ****** 5")
-		#expect(state.modeIsDefined("k"))
-		#expect(state.modeInfo(for: "k")?.modeParameter == "secret")
+		#expect(state.modes.modeIsDefined("k"))
+		#expect(state.modes.modeInfo(for: "k")?.modeParameter == "secret")
 	}
 
 	/// List modes and prefix modes belong to their own lists, not to the
@@ -146,7 +146,7 @@ struct ModeParserTests {
 	func aggregateStateRejectsListAndPrefixModes(modeSymbol: String) throws {
 		let state = try channelState(applying: "+bqov mask nick alice bob")
 
-		#expect(state.modeIsDefined(modeSymbol) == false)
+		#expect(state.modes.modeIsDefined(modeSymbol) == false)
 	}
 
 	@Test

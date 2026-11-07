@@ -29,11 +29,7 @@ struct RenderAdmissionTests {
 		let replacement = admission.submit(for: "view")
 		let producer = Task { await admission.waitForCapacity() }
 		defer { producer.cancel(); admission.finish(replacement) }
-		let deadline = ContinuousClock.now + .seconds(5)
-		while admission.waitingProducerCount == 0, ContinuousClock.now < deadline {
-			await Task.yield()
-		}
-		try #require(admission.waitingProducerCount == 1)
+		try await Eventually.until("a suspended producer") { admission.waitingProducerCount == 1 }
 		admission.finish(old)
 		#expect(admission.pendingCount == 1)
 		#expect(admission.waitingProducerCount == 1)
@@ -50,11 +46,7 @@ struct RenderAdmissionTests {
 		let cancelled = Task { await admission.waitForCapacity() }
 		let waiting = Task { await admission.waitForCapacity() }
 		defer { cancelled.cancel(); waiting.cancel(); admission.finish(ticket) }
-		let deadline = ContinuousClock.now + .seconds(5)
-		while admission.waitingProducerCount < 2, ContinuousClock.now < deadline {
-			await Task.yield()
-		}
-		try #require(admission.waitingProducerCount == 2)
+		try await Eventually.until("two suspended producers") { admission.waitingProducerCount == 2 }
 		cancelled.cancel()
 		await cancelled.value
 		#expect(admission.pendingCount == 1)
@@ -99,11 +91,9 @@ struct RenderAdmissionTests {
 			acknowledge.yield(())
 			acknowledge.finish()
 		}
-		let deadline = ContinuousClock.now + .seconds(5)
-		while session.renderAdmission.waitingProducerCount == 0, ContinuousClock.now < deadline {
-			await Task.yield()
+		try await Eventually.until("the acknowledgement to wait for capacity") {
+			session.renderAdmission.waitingProducerCount == 1
 		}
-		try #require(session.renderAdmission.waitingProducerCount == 1)
 		#expect(session.sentLines.count == 0)
 		session.renderAdmission.finish(ticket)
 		for await _ in acknowledgements {}

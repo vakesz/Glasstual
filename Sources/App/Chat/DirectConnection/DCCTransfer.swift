@@ -114,9 +114,11 @@ actor DCCTransfer {
 		var fileSize: UInt64
 		/// Where in the file to resume, for a DCC `RESUME`.
 		var resumeOffset: UInt64
-		/// Only a connection from this address is accepted. Empty accepts any,
-		/// which is what a plain `DCC SEND` has to do: we listen, and the peer
-		/// announces itself by arriving.
+		/// Only a connection from this address is accepted. Empty accepts the
+		/// first connection, which is all a plain `DCC SEND` offers: we listen,
+		/// the peer announces itself by arriving, and the protocol carries no
+		/// token that could tell a stranger from the peer. The listener is
+		/// closed once one connection is accepted.
 		var expectedPeerAddress: String
 		/// How long a single write may take before the transfer fails.
 		var sendTimeout: Duration?
@@ -124,6 +126,14 @@ actor DCCTransfer {
 		/// The whole window a listening transfer has to bind a port and take
 		/// the peer's connection, not a budget for each step in turn.
 		var acceptanceTimeout: Duration?
+
+		/** The default window for a listening transfer.
+
+		 While the port is open, the first connector wins, so the window is the
+		 exposure of a plain passive `DCC SEND`. It still has to outlast a
+		 person noticing the notification and pressing Accept, which a minute
+		 does not reliably do and a minute and a half does. */
+		static let defaultAcceptanceTimeout: Duration = .seconds(90)
 
 		init(
 			role: Role,
@@ -134,7 +144,7 @@ actor DCCTransfer {
 			expectedPeerAddress: String = "",
 			sendTimeout: Duration? = .seconds(30),
 			inactivityTimeout: Duration? = .seconds(30),
-			acceptanceTimeout: Duration? = .seconds(120)
+			acceptanceTimeout: Duration? = Config.defaultAcceptanceTimeout
 		) {
 			self.role = role
 			self.endpoint = endpoint

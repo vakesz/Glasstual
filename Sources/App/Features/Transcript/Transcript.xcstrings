@@ -1,289 +1,144 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "expand-general-events": {
-      "comment": "Disclosure link for a collapsed group. The argument is the number of channel events.",
-      "extractionState": "manual",
-      "generatesSymbol": true,
-      "localizations": {
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Show %ld general event"
+    "expand-general-events" : {
+      "comment" : "Disclosure link for a collapsed group. The argument is the number of channel events.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Show %ld general event"
                 }
               },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Show %ld general events"
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Show %ld general events"
                 }
               }
             }
           }
         },
-        "de": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%ld allgemeines Ereignis anzeigen"
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%ld allgemeines Ereignis anzeigen"
                 }
               },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%ld allgemeine Ereignisse anzeigen"
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%ld allgemeine Ereignisse anzeigen"
                 }
               }
             }
           }
         },
-        "hu": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%ld általános esemény megjelenítése"
+        "hu" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%ld általános esemény megjelenítése"
                 }
               },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%ld általános esemény megjelenítése"
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%ld általános esemény megjelenítése"
                 }
               }
             }
           }
         },
-        "es": {
-          "variations": {
-            "plural": {
-              "many": {
-                "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Mostrar eventos generales de %ld"
+        "es" : {
+          "variations" : {
+            "plural" : {
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Mostrar %ld eventos generales"
                 }
               },
-              "one": {
-                "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Mostrar evento general %ld"
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Mostrar %ld evento general"
                 }
               },
-              "other": {
-                "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Mostrar eventos generales de %ld"
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Mostrar %ld eventos generales"
                 }
               }
             }
           }
         },
-        "fr": {
-          "variations": {
-            "plural": {
-              "many": {
-                "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Afficher les événements généraux %ld"
+        "fr" : {
+          "variations" : {
+            "plural" : {
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Afficher %ld événements généraux"
                 }
               },
-              "one": {
-                "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Afficher l'événement général %ld"
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Afficher %ld événement général"
                 }
               },
-              "other": {
-                "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Afficher les événements généraux %ld"
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Afficher %ld événements généraux"
                 }
               }
             }
           }
         },
-        "ja": {
-          "variations": {
-            "plural": {
-              "other": {
-                "stringUnit": {
-                  "state": "needs_review",
-                  "value": "%ld 一般的なイベントを表示する"
+        "ja" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "一般イベント%ld件を表示"
                 }
               }
             }
           }
         },
-        "pt-BR": {
-          "variations": {
-            "plural": {
-              "many": {
-                "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Mostrar eventos gerais %ld"
+        "pt-BR" : {
+          "variations" : {
+            "plural" : {
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Mostrar %ld eventos gerais"
                 }
               },
-              "one": {
-                "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Mostrar evento geral %ld"
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Mostrar %ld evento geral"
                 }
               },
-              "other": {
-                "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Mostrar eventos gerais %ld"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "collapse-general-events": {
-      "comment": "Disclosure link for an expanded group. The argument is the number of channel events.",
-      "extractionState": "manual",
-      "generatesSymbol": true,
-      "localizations": {
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Collapse %ld general event"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Collapse %ld general events"
-                }
-              }
-            }
-          }
-        },
-        "de": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%ld allgemeines Ereignis einklappen"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%ld allgemeine Ereignisse einklappen"
-                }
-              }
-            }
-          }
-        },
-        "hu": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%ld általános esemény összecsukása"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%ld általános esemény összecsukása"
-                }
-              }
-            }
-          }
-        },
-        "es": {
-          "variations": {
-            "plural": {
-              "many": {
-                "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Colapsar %ld eventos generales"
-                }
-              },
-              "one": {
-                "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Colapsar %ld evento general"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Colapsar %ld eventos generales"
-                }
-              }
-            }
-          }
-        },
-        "fr": {
-          "variations": {
-            "plural": {
-              "many": {
-                "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Fermer %ld événements généraux"
-                }
-              },
-              "one": {
-                "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Effacer l'événement général %ld"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Fermer %ld événements généraux"
-                }
-              }
-            }
-          }
-        },
-        "ja": {
-          "variations": {
-            "plural": {
-              "other": {
-                "stringUnit": {
-                  "state": "needs_review",
-                  "value": "「%ld 一般的なイベント」を折りたたむ"
-                }
-              }
-            }
-          }
-        },
-        "pt-BR": {
-          "variations": {
-            "plural": {
-              "many": {
-                "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Colapsar %ld eventos gerais"
-                }
-              },
-              "one": {
-                "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Colapsar %ld evento geral"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Colapsar %ld eventos gerais"
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Mostrar %ld eventos gerais"
                 }
               }
             }
@@ -291,289 +146,144 @@
         }
       }
     },
-    "expand-muted-messages": {
-      "comment": "Disclosure link for collapsed messages from a muted user. Arguments: message count, nickname.",
-      "extractionState": "manual",
-      "generatesSymbol": true,
-      "localizations": {
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Show %1$ld muted message from %2$@"
+    "collapse-general-events" : {
+      "comment" : "Disclosure link for an expanded group. The argument is the number of channel events.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Collapse %ld general event"
                 }
               },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Show %1$ld muted messages from %2$@"
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Collapse %ld general events"
                 }
               }
             }
           }
         },
-        "de": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$ld stummgeschaltete Nachricht von %2$@ anzeigen"
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%ld allgemeines Ereignis einklappen"
                 }
               },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$ld stummgeschaltete Nachrichten von %2$@ anzeigen"
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%ld allgemeine Ereignisse einklappen"
                 }
               }
             }
           }
         },
-        "hu": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%2$@ %1$ld némított üzenetének megjelenítése"
+        "hu" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%ld általános esemény összecsukása"
                 }
               },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%2$@ %1$ld némított üzenetének megjelenítése"
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%ld általános esemény összecsukása"
                 }
               }
             }
           }
         },
-        "es": {
-          "variations": {
-            "plural": {
-              "many": {
-                "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Mostrar los mensajes en modo silencioso de %1$ld de %2$@"
+        "es" : {
+          "variations" : {
+            "plural" : {
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Contraer %ld eventos generales"
                 }
               },
-              "one": {
-                "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Mostrar el mensaje silenciado %1$ld de %2$@"
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Contraer %ld evento general"
                 }
               },
-              "other": {
-                "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Mostrar los mensajes en modo silencioso de %1$ld de %2$@"
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Contraer %ld eventos generales"
                 }
               }
             }
           }
         },
-        "fr": {
-          "variations": {
-            "plural": {
-              "many": {
-                "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Afficher les messages masqués de %1$ld provenant de %2$@"
+        "fr" : {
+          "variations" : {
+            "plural" : {
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Réduire %ld événements généraux"
                 }
               },
-              "one": {
-                "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Afficher le message masqué %1$ld de %2$@"
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Réduire %ld événement général"
                 }
               },
-              "other": {
-                "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Afficher les messages masqués de %1$ld provenant de %2$@"
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Réduire %ld événements généraux"
                 }
               }
             }
           }
         },
-        "ja": {
-          "variations": {
-            "plural": {
-              "other": {
-                "stringUnit": {
-                  "state": "needs_review",
-                  "value": "%1$ldからのミュートメッセージを表示 %2$@"
+        "ja" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "一般イベント%ld件を折りたたむ"
                 }
               }
             }
           }
         },
-        "pt-BR": {
-          "variations": {
-            "plural": {
-              "many": {
-                "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Mostrar mensagens silenciosas de %1$ld de %2$@"
+        "pt-BR" : {
+          "variations" : {
+            "plural" : {
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Recolher %ld eventos gerais"
                 }
               },
-              "one": {
-                "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Mostrar mensagem silenciosa %1$ld de %2$@"
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Recolher %ld evento geral"
                 }
               },
-              "other": {
-                "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Mostrar mensagens silenciosas de %1$ld de %2$@"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "collapse-muted-messages": {
-      "comment": "Disclosure link for expanded messages from a muted user. Arguments: message count, nickname.",
-      "extractionState": "manual",
-      "generatesSymbol": true,
-      "localizations": {
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Collapse %1$ld muted message from %2$@"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Collapse %1$ld muted messages from %2$@"
-                }
-              }
-            }
-          }
-        },
-        "de": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$ld stummgeschaltete Nachricht von %2$@ einklappen"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$ld stummgeschaltete Nachrichten von %2$@ einklappen"
-                }
-              }
-            }
-          }
-        },
-        "hu": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%2$@ %1$ld némított üzenetének összecsukása"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%2$@ %1$ld némított üzenetének összecsukása"
-                }
-              }
-            }
-          }
-        },
-        "es": {
-          "variations": {
-            "plural": {
-              "many": {
-                "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Colapsar los mensajes en silencio de %1$ld de %2$@"
-                }
-              },
-              "one": {
-                "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Collapse mensaje silenciado %1$ld de %2$@"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Colapsar los mensajes en silencio de %1$ld de %2$@"
-                }
-              }
-            }
-          }
-        },
-        "fr": {
-          "variations": {
-            "plural": {
-              "many": {
-                "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Fermer les messages masqués %1$ld de %2$@"
-                }
-              },
-              "one": {
-                "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Fermer le message étouffé %1$ld de %2$@"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Fermer les messages masqués %1$ld de %2$@"
-                }
-              }
-            }
-          }
-        },
-        "ja": {
-          "variations": {
-            "plural": {
-              "other": {
-                "stringUnit": {
-                  "state": "needs_review",
-                  "value": "%1$ldからのミュートメッセージを折りたたむ %2$@"
-                }
-              }
-            }
-          }
-        },
-        "pt-BR": {
-          "variations": {
-            "plural": {
-              "many": {
-                "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Colapse as mensagens silenciosas %1$ld de %2$@"
-                }
-              },
-              "one": {
-                "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Colapse mensagem silenciosa %1$ld de %2$@"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "needs_review",
-                  "value": "Colapse as mensagens silenciosas %1$ld de %2$@"
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Recolher %ld eventos gerais"
                 }
               }
             }
@@ -581,100 +291,390 @@
         }
       }
     },
-    "expand-messages": {
-      "comment": "Context menu action for a transcript message group.",
-      "extractionState": "manual",
-      "generatesSymbol": true,
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Expand Messages"
+    "expand-muted-messages" : {
+      "comment" : "Disclosure link for collapsed messages from a muted user. Arguments: message count, nickname.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Show %1$ld muted message from %2$@"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Show %1$ld muted messages from %2$@"
+                }
+              }
+            }
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nachrichten ausklappen"
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$ld stummgeschaltete Nachricht von %2$@ anzeigen"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$ld stummgeschaltete Nachrichten von %2$@ anzeigen"
+                }
+              }
+            }
           }
         },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Üzenetek kibontása"
+        "hu" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%2$@ %1$ld némított üzenetének megjelenítése"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%2$@ %1$ld némított üzenetének megjelenítése"
+                }
+              }
+            }
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Expandir mensajes"
+        "es" : {
+          "variations" : {
+            "plural" : {
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Mostrar %1$ld mensajes silenciados de %2$@"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Mostrar %1$ld mensaje silenciado de %2$@"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Mostrar %1$ld mensajes silenciados de %2$@"
+                }
+              }
+            }
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Développer les messages"
+        "fr" : {
+          "variations" : {
+            "plural" : {
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Afficher %1$ld messages en sourdine de %2$@"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Afficher %1$ld message en sourdine de %2$@"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Afficher %1$ld messages en sourdine de %2$@"
+                }
+              }
+            }
           }
         },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "メッセージを拡大する"
+        "ja" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%2$@からのミュート済みメッセージ%1$ld件を表示"
+                }
+              }
+            }
           }
         },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Expandir Mensagens"
+        "pt-BR" : {
+          "variations" : {
+            "plural" : {
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Mostrar %1$ld mensagens silenciadas de %2$@"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Mostrar %1$ld mensagem silenciada de %2$@"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Mostrar %1$ld mensagens silenciadas de %2$@"
+                }
+              }
+            }
           }
         }
       }
     },
-    "collapse-messages": {
-      "comment": "Context menu action for a transcript message group.",
-      "extractionState": "manual",
-      "generatesSymbol": true,
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Collapse Messages"
+    "collapse-muted-messages" : {
+      "comment" : "Disclosure link for expanded messages from a muted user. Arguments: message count, nickname.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Collapse %1$ld muted message from %2$@"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Collapse %1$ld muted messages from %2$@"
+                }
+              }
+            }
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nachrichten einklappen"
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$ld stummgeschaltete Nachricht von %2$@ einklappen"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$ld stummgeschaltete Nachrichten von %2$@ einklappen"
+                }
+              }
+            }
           }
         },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Üzenetek összecsukása"
+        "hu" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%2$@ %1$ld némított üzenetének összecsukása"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%2$@ %1$ld némított üzenetének összecsukása"
+                }
+              }
+            }
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Colapsar mensajes"
+        "es" : {
+          "variations" : {
+            "plural" : {
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Contraer %1$ld mensajes silenciados de %2$@"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Contraer %1$ld mensaje silenciado de %2$@"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Contraer %1$ld mensajes silenciados de %2$@"
+                }
+              }
+            }
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Fermer les messages"
+        "fr" : {
+          "variations" : {
+            "plural" : {
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Réduire %1$ld messages en sourdine de %2$@"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Réduire %1$ld message en sourdine de %2$@"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Réduire %1$ld messages en sourdine de %2$@"
+                }
+              }
+            }
           }
         },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "メッセージを折りたたむ"
+        "ja" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%2$@からのミュート済みメッセージ%1$ld件を折りたたむ"
+                }
+              }
+            }
           }
         },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Colapsar Mensagens"
+        "pt-BR" : {
+          "variations" : {
+            "plural" : {
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Recolher %1$ld mensagens silenciadas de %2$@"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Recolher %1$ld mensagem silenciada de %2$@"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Recolher %1$ld mensagens silenciadas de %2$@"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "expand-messages" : {
+      "comment" : "Context menu action for a transcript message group.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expand Messages"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nachrichten ausklappen"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Üzenetek kibontása"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expandir mensajes"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Développer les messages"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "メッセージを展開"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expandir Mensagens"
+          }
+        }
+      }
+    },
+    "collapse-messages" : {
+      "comment" : "Context menu action for a transcript message group.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collapse Messages"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nachrichten einklappen"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Üzenetek összecsukása"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contraer mensajes"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réduire les messages"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "メッセージを折りたたむ"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recolher Mensagens"
           }
         }
       }
@@ -703,26 +703,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "La imagen no se pudo convertir a PNG."
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "L'image n'a pas pu être convertie en PNG."
+            "state" : "translated",
+            "value" : "L’image n’a pas pu être convertie en PNG."
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "画像をPNGに変換できませんでした。"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "A imagem não pôde ser convertida para PNG."
+            "state" : "translated",
+            "value" : "Não foi possível converter a imagem para PNG."
           }
         }
       },
@@ -753,25 +753,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Copiar imagen"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Copier l'image"
+            "state" : "translated",
+            "value" : "Copier l’image"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "画像をコピーする"
+            "state" : "translated",
+            "value" : "画像をコピー"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Copiar Imagem"
           }
         }
@@ -802,26 +802,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Copiar tema"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Copier le sujet"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "トピックをコピーする"
+            "state" : "translated",
+            "value" : "トピックをコピー"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Copiar tópico"
+            "state" : "translated",
+            "value" : "Copiar Tópico"
           }
         }
       }
@@ -851,25 +851,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Sesión actual"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Session actuelle"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "現在のセッション"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Sessão atual"
           }
         }
@@ -900,75 +900,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Reacción personalizada"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Réaction personnalisée"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "カスタムリアクション"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Reação personalizada"
-          }
-        }
-      }
-    },
-    "deletion-not-repeated" : {
-      "extractionState" : "manual",
-      "generatesSymbol" : true,
-      "comment" : "Shown when clearing a conversation's history failed. Retry History repairs loading and saving only; it never repeats a deletion, because newer messages may have arrived since.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "History could not be cleared. Clear the conversation again to try once more."
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nem sikerült törölni az előzményeket. Az újrapróbálkozáshoz töröld ismét a beszélgetést."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Der Verlauf konnte nicht gelöscht werden. Leere das Gespräch erneut, um es noch einmal zu versuchen."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "No se ha podido borrar el historial. Borra la conversación de nuevo para intentarlo de nuevo."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "L’historique n’a pas pu être effacé. Effacez à nouveau la conversation pour réessayer."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "履歴をクリアできませんでした。もう一度会話をクリアして、もう一度お試しください。"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Não foi possível limpar o histórico. Limpe a conversa novamente para tentar novamente."
           }
         }
       }
@@ -998,25 +949,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Entregado"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Livré"
+            "state" : "translated",
+            "value" : "Distribué"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "配達済み"
+            "state" : "translated",
+            "value" : "配信済み"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Entregue"
           }
         }
@@ -1047,26 +998,75 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Fallado"
+            "state" : "translated",
+            "value" : "Fallido"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Échoué"
+            "state" : "translated",
+            "value" : "Échec"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "失敗した"
+            "state" : "translated",
+            "value" : "失敗"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "fracassado"
+            "state" : "translated",
+            "value" : "Falhou"
+          }
+        }
+      }
+    },
+    "highlight-accessibility" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "comment" : "Spoken before a message that mentions the reader or matches one of their highlight words, so a screen reader announces what the highlight colour shows. Spoken as a single word ahead of the message.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Highlighted"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kiemelt"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hervorgehoben"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Con mención"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mention"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ハイライト"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Destacada"
           }
         }
       }
@@ -1096,25 +1096,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Imagen de %@"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Image de %@"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "%@からの画像"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Imagem de %@"
           }
         }
@@ -1145,26 +1145,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "La historia local necesita atención"
+            "state" : "translated",
+            "value" : "El historial local requiere atención"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "L'histoire locale a besoin d'attention"
+            "state" : "translated",
+            "value" : "L’historique local nécessite votre attention"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "地域の歴史には注意が必要です。"
+            "state" : "translated",
+            "value" : "ローカルの履歴を確認する必要があります"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "A história local precisa de atenção"
+            "state" : "translated",
+            "value" : "O histórico local precisa de atenção"
           }
         }
       }
@@ -1194,26 +1194,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Modificar tema..."
+            "state" : "translated",
+            "value" : "Modificar tema…"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Modifier le sujet..."
+            "state" : "translated",
+            "value" : "Modifier le sujet…"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "トピックを変更する…"
+            "state" : "translated",
+            "value" : "トピックを変更…"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Modificar o tópico..."
+            "state" : "translated",
+            "value" : "Alterar Tópico…"
           }
         }
       }
@@ -1243,26 +1243,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Saltar al presente"
+            "state" : "translated",
+            "value" : "Ir al presente"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Passer à présent"
+            "state" : "translated",
+            "value" : "Aller à l’instant présent"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "プレゼンテーションにジャンプする"
+            "state" : "translated",
+            "value" : "最新に移動"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Pular para o Presente"
+            "state" : "translated",
+            "value" : "Ir para o Presente"
           }
         }
       }
@@ -1292,26 +1292,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Más emojis..."
+            "state" : "translated",
+            "value" : "Más emojis…"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Plus d'emojis..."
+            "state" : "translated",
+            "value" : "Plus d’émojis…"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "もっとエモジ…"
+            "state" : "translated",
+            "value" : "その他の絵文字…"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Mais Emojis..."
+            "state" : "translated",
+            "value" : "Mais Emojis…"
           }
         }
       }
@@ -1341,26 +1341,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Abrir enlace"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Ouvrir le lien"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "リンクを開く"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Abrir link"
+            "state" : "translated",
+            "value" : "Abrir Link"
           }
         }
       }
@@ -1390,26 +1390,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "¿Abrir este enlace en \"%@\"?"
+            "state" : "translated",
+            "value" : "¿Abrir este enlace en «%@»?"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Ouvrez ce lien dans « %@ » ?"
+            "state" : "translated",
+            "value" : "Ouvrir ce lien dans « %@ » ?"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "「%@」でこのリンクを開きますか？"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Abrir este link em \"%@\"?"
+            "state" : "translated",
+            "value" : "Abrir este link em “%@”?"
           }
         }
       }
@@ -1439,26 +1439,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "¿Abrir este enlace en otra aplicación?"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Ouvrir ce lien dans une autre application ?"
+            "state" : "translated",
+            "value" : "Ouvrir ce lien dans une autre app ?"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "このリンクを別のアプリで開きますか？"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Abrir este link em outro aplicativo?"
+            "state" : "translated",
+            "value" : "Abrir este link em outro app?"
           }
         }
       }
@@ -1488,26 +1488,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Pendiente"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "en instance"
+            "state" : "translated",
+            "value" : "En attente"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "保留中"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "pendente"
+            "state" : "translated",
+            "value" : "Pendente"
           }
         }
       }
@@ -1537,26 +1537,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Reacciona con %@"
+            "state" : "translated",
+            "value" : "Reaccionar con %@"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Réagissez avec %@"
+            "state" : "translated",
+            "value" : "Réagir avec %@"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "%@で反応する"
+            "state" : "translated",
+            "value" : "%@でリアクション"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Reaja com %@"
+            "state" : "translated",
+            "value" : "Reagir com %@"
           }
         }
       }
@@ -1652,7 +1652,7 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "%1$@, %#@arg2@"
           },
           "substitutions" : {
@@ -1686,7 +1686,7 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "%1$@, %#@arg2@"
           },
           "substitutions" : {
@@ -1697,20 +1697,20 @@
                 "plural" : {
                   "many" : {
                     "stringUnit" : {
-                      "state" : "needs_review",
-                      "value" : "Réactions %arg"
+                      "state" : "translated",
+                      "value" : "%arg réactions"
                     }
                   },
                   "one" : {
                     "stringUnit" : {
-                      "state" : "needs_review",
-                      "value" : "Réaction %arg"
+                      "state" : "translated",
+                      "value" : "%arg réaction"
                     }
                   },
                   "other" : {
                     "stringUnit" : {
-                      "state" : "needs_review",
-                      "value" : "Réactions %arg"
+                      "state" : "translated",
+                      "value" : "%arg réactions"
                     }
                   }
                 }
@@ -1720,7 +1720,7 @@
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "%1$@、%#@arg2@"
           },
           "substitutions" : {
@@ -1731,8 +1731,8 @@
                 "plural" : {
                   "other" : {
                     "stringUnit" : {
-                      "state" : "needs_review",
-                      "value" : "%arg反応"
+                      "state" : "translated",
+                      "value" : "%arg件のリアクション"
                     }
                   }
                 }
@@ -1742,7 +1742,7 @@
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "%1$@, %#@arg2@"
           },
           "substitutions" : {
@@ -1753,19 +1753,19 @@
                 "plural" : {
                   "many" : {
                     "stringUnit" : {
-                      "state" : "needs_review",
+                      "state" : "translated",
                       "value" : "%arg reações"
                     }
                   },
                   "one" : {
                     "stringUnit" : {
-                      "state" : "needs_review",
+                      "state" : "translated",
                       "value" : "%arg reação"
                     }
                   },
                   "other" : {
                     "stringUnit" : {
-                      "state" : "needs_review",
+                      "state" : "translated",
                       "value" : "%arg reações"
                     }
                   }
@@ -1801,26 +1801,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Historial de intentos de reinicio"
+            "state" : "translated",
+            "value" : "Reintentar historial"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Historique des tentatives de réessayage"
+            "state" : "translated",
+            "value" : "Réessayer l’historique"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "リトライ履歴"
+            "state" : "translated",
+            "value" : "履歴を再試行"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Histórico de tentativas de reinicialização"
+            "state" : "translated",
+            "value" : "Tentar abrir o histórico novamente"
           }
         }
       }
@@ -1850,26 +1850,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Historial de intentos de reinicio del servidor"
+            "state" : "translated",
+            "value" : "Reintentar historial del servidor"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Historique des tentatives de réessayage du serveur"
+            "state" : "translated",
+            "value" : "Réessayer l’historique du serveur"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "リトライサーバー履歴"
+            "state" : "translated",
+            "value" : "サーバ履歴を再試行"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Histórico de tentativas de reinicialização do servidor"
+            "state" : "translated",
+            "value" : "Tentar carregar o histórico do servidor novamente"
           }
         }
       }
@@ -1899,26 +1899,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Guardar imagen..."
+            "state" : "translated",
+            "value" : "Guardar imagen…"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Enregistrer l'image..."
+            "state" : "translated",
+            "value" : "Enregistrer l’image…"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "画像を保存…"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Salvar Imagem..."
+            "state" : "translated",
+            "value" : "Salvar Imagem…"
           }
         }
       }
@@ -1948,26 +1948,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "No se pudo cargar el historial del servidor"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "L'historique du serveur n'a pas pu être chargé"
+            "state" : "translated",
+            "value" : "Impossible de charger l’historique du serveur"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "サーバー履歴を読み込めませんでした"
+            "state" : "translated",
+            "value" : "サーバ履歴を読み込めませんでした"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Histórico do servidor não pôde ser carregado"
+            "state" : "translated",
+            "value" : "Não foi possível carregar o histórico do servidor"
           }
         }
       }
@@ -1997,25 +1997,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Mensajes en %@"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Messages dans %@"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "%@のメッセージ"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Mensagens em %@"
           }
         }
@@ -2046,26 +2046,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Transcripción"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "transcription"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "トランスクリプト"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "registo escolar"
+            "state" : "translated",
+            "value" : "transcrição"
           }
         }
       }
@@ -2095,25 +2095,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Mensajes no leídos"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Messages non lus"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "未読メッセージ"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Mensagens não lidas"
           }
         }
@@ -2144,26 +2144,516 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Advertencia"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "avertissement"
+            "state" : "translated",
+            "value" : "Avertissement"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "警告"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "aviso"
+            "state" : "translated",
+            "value" : "Aviso"
+          }
+        }
+      }
+    },
+    "message-deleted" : {
+      "comment" : "The text a deleted message is replaced with in the transcript. Short, in the past tense, with no punctuation.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Message deleted"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Üzenet törölve"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nachricht gelöscht"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mensaje eliminado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Message supprimé"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "メッセージは削除されました"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mensagem apagada"
+          }
+        }
+      }
+    },
+    "message-deleted-accessibility" : {
+      "comment" : "Spoken before the placeholder of a deleted message, so a screen reader says what the italic text means. A short noun phrase.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deleted message"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Törölt üzenet"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gelöschte Nachricht"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mensaje eliminado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Message supprimé"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "削除されたメッセージ"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mensagem apagada"
+          }
+        }
+      }
+    },
+    "menu-delete-message" : {
+      "comment" : "Context-menu item on a message that asks the server to delete it. Opens a confirmation, so it ends with an ellipsis.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete Message…"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Üzenet törlése…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nachricht löschen…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar mensaje…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimer le message…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "メッセージを削除…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apagar Mensagem…"
+          }
+        }
+      }
+    },
+    "delete-message-title" : {
+      "comment" : "Title of the confirmation shown before a message is deleted.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete this message?"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Törlöd ezt az üzenetet?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Nachricht löschen?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Eliminar este mensaje?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimer ce message ?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このメッセージを削除しますか？"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apagar esta mensagem?"
+          }
+        }
+      }
+    },
+    "delete-message-body" : {
+      "comment" : "Explanation in the confirmation shown before a message is deleted. The server removes the message for everyone in the conversation.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The server removes it for everyone in the conversation. This action cannot be undone."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A kiszolgáló mindenkitől eltávolítja a beszélgetésben. Ez a művelet nem vonható vissza."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Server entfernt sie für alle in der Unterhaltung. Diese Aktion kann nicht rückgängig gemacht werden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El servidor lo elimina para todos los participantes de la conversación. Esta acción no se puede deshacer."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le serveur le supprime pour tous les participants à la conversation. Cette action est irréversible."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サーバがこの会話の全員からメッセージを削除します。この操作は取り消せません。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O servidor a remove para todos na conversa. Esta ação não pode ser desfeita."
+          }
+        }
+      }
+    },
+    "delete-message-confirm" : {
+      "comment" : "Destructive button of the confirmation shown before a message is deleted.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Törlés"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Löschen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimer"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "削除"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apagar"
+          }
+        }
+      }
+    },
+    "delete-message-reason-placeholder" : {
+      "comment" : "Placeholder of the optional text field for the reason a message is deleted. Also its accessibility label.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reason (optional)"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indoklás (nem kötelező)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grund (optional)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Motivo (opcional)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Motif (facultatif)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "理由(任意)"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Motivo (opcional)"
+          }
+        }
+      }
+    },
+    "viewing-history" : {
+      "comment" : "Banner over a transcript that shows a window of earlier history, not the live end of the conversation, so the reader knows new messages are not drawn yet.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Viewing earlier messages"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Korábbi üzenetek megtekintése"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Frühere Nachrichten werden angezeigt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Viendo mensajes anteriores"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Affichage de messages plus anciens"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以前のメッセージを表示しています"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vendo mensagens anteriores"
+          }
+        }
+      }
+    },
+    "return-to-live" : {
+      "comment" : "Button in the viewing-history banner that returns the transcript to the live end of the conversation.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Return to Live"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vissza az élő nézethez"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zur Live-Ansicht"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volver al directo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revenir au direct"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ライブに戻る"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voltar ao vivo"
+          }
+        }
+      }
+    },
+    "history-upgrade-progress" : {
+      "comment" : "Banner shown while the saved history is upgraded once so it can be searched. History appears when it finishes.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preparing saved history for search. History appears when this finishes."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A mentett előzmények előkészítése a kereséshez. Az előzmények a befejezés után jelennek meg."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der gespeicherte Verlauf wird für die Suche vorbereitet. Der Verlauf erscheint, sobald dies abgeschlossen ist."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preparando el historial guardado para la búsqueda. El historial aparecerá cuando termine."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Préparation de l’historique enregistré pour la recherche. L’historique apparaîtra une fois terminé."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存済みの履歴を検索用に準備しています。完了すると履歴が表示されます。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preparando o histórico salvo para a pesquisa. O histórico aparece quando isso terminar."
           }
         }
       }

@@ -30,6 +30,7 @@ struct ChatLineKindRawValueTests {
 		(.quit, 19),
 		(.topic, 20),
 		(.website, 21),
+		(.redacted, 22),
 	])
 	func lineTypeRawValuesAreStable(type: ChatLineKind, rawValue: UInt) {
 		#expect(type.rawValue == rawValue)
@@ -54,7 +55,7 @@ struct ChatLineKindRawValueTests {
 	/// appended.
 	@Test("Nothing was inserted in the middle")
 	func numbersAreContiguous() {
-		let highest = ChatLineKind.website.rawValue
+		let highest = ChatLineKind.redacted.rawValue
 		let resolved = (0 ... highest).compactMap { ChatLineKind(rawValue: $0) }
 		#expect(resolved.count == Int(highest) + 1)
 	}

@@ -76,6 +76,9 @@ actor ScrollbackSession {
 		self.init(
 			store: ScrollbackStore(
 				filenameSetting: filenameSetting,
+				migrationProgress: { fraction in
+					Task { @MainActor in Scrollback.shared.recovery.noteMigrationProgress(fraction) }
+				},
 				deletionHandler: { identifiers, viewIdentifier in
 					await Scrollback.noteWillDeleteLines(identifiers, inView: viewIdentifier)
 				}
@@ -207,6 +210,14 @@ actor ScrollbackSession {
 
 	// MARK: - The order changes are asked in
 
+	/// Queues the stored-line ceiling behind the changes already asked for, so a
+	/// new limit is applied after the writes that preceded it and never before.
+	nonisolated func enqueueMaximumLineCountUpdate() { // nonisolated: pure
+		queue { [self] in
+			await applyMaximumLineCount()
+		}
+	}
+
 	/** Queues an archived line for storage, behind the changes already asked for.
 
 	 Nonisolated so that asking costs the caller nothing: the caller is the main
@@ -236,6 +247,24 @@ actor ScrollbackSession {
 	private func replaceEntry(_ entry: ScrollbackEntry) async -> ScrollbackReplacementOutcome {
 		guard await ensureLoaded(), !isTerminating else { return .unavailable }
 		return await store.replaceChatLine(entry)
+	}
+
+	/// Redaction follows the write of the line it redacts and any clear already
+	/// requested, for the same reason a replacement does.
+	nonisolated func redact( // nonisolated: pure
+		messageIdentifier: String,
+		inView viewIdentifier: String,
+		completion: @escaping @MainActor @Sendable (ScrollbackRedactionOutcome) -> Void
+	) {
+		changes.yield { [self] in
+			let outcome = await redactEntry(messageIdentifier, inView: viewIdentifier)
+			await completion(outcome)
+		}
+	}
+
+	private func redactEntry(_ messageIdentifier: String, inView viewIdentifier: String) async -> ScrollbackRedactionOutcome {
+		guard await ensureLoaded(), !isTerminating else { return .unavailable }
+		return await store.redactChatLine(messageIdentifier: messageIdentifier, inView: viewIdentifier)
 	}
 
 	/// Queues a view's removal behind the writes already asked for it, and reports
@@ -279,6 +308,18 @@ actor ScrollbackSession {
 		await drain()
 		guard !isTerminating, !Task.isCancelled else { return .cancelled }
 		let outcome = await store.fetchOutcome(request)
+		return isTerminating || Task.isCancelled ? .cancelled : outcome
+	}
+
+	/// Searches stored history after every change already asked for has run, so
+	/// a line printed a moment ago is found.
+	func search(_ query: ScrollbackSearchQuery) async -> ScrollbackSearchOutcome {
+		guard !isTerminating, !Task.isCancelled else { return .cancelled }
+		guard await ensureLoaded()
+		else { return isTerminating || Task.isCancelled ? .cancelled : .unavailable }
+		await drain()
+		guard !isTerminating, !Task.isCancelled else { return .cancelled }
+		let outcome = await store.search(query)
 		return isTerminating || Task.isCancelled ? .cancelled : outcome
 	}
 

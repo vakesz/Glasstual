@@ -31,36 +31,26 @@ final class ServerPropertiesModel {
 	 distinction matters because the read lands after the sheet is on screen:
 	 a field seeded from the pending edit alone reads empty until then, and
 	 submitting an empty field as an edit is what deletes the stored secret. */
-	var serverPassword: String {
-		get { serverPasswordText }
-		set {
-			guard newValue != serverPasswordText else { return }
-			serverPasswordText = newValue
-			editedSecretFields.insert(.serverPassword)
-		}
+	var secretTexts: [SecretField: String]
+
+	/// The text of one keychain-backed field. Setting it to a different value
+	/// marks the field as typed into.
+	func secretText(_ field: SecretField) -> String {
+		secretTexts[field] ?? ""
 	}
 
-	var nicknamePassword: String {
-		get { nicknamePasswordText }
-		set {
-			guard newValue != nicknamePasswordText else { return }
-			nicknamePasswordText = newValue
-			editedSecretFields.insert(.nicknamePassword)
-		}
+	func setSecretText(_ newValue: String, for field: SecretField) {
+		guard newValue != secretText(field) else { return }
+		secretTexts[field] = newValue
+		editedSecretFields.insert(field)
 	}
 
-	var proxyPassword: String {
-		get { proxyPasswordText }
-		set {
-			guard newValue != proxyPasswordText else { return }
-			proxyPasswordText = newValue
-			editedSecretFields.insert(.proxyPassword)
-		}
+	func secretBinding(_ field: SecretField) -> Binding<String> {
+		Binding(
+			get: { self.secretText(field) },
+			set: { self.setSecretText($0, for: field) }
+		)
 	}
-
-	var serverPasswordText: String
-	var nicknamePasswordText: String
-	var proxyPasswordText: String
 
 	/// Which of the three fields the person has typed into. A field that is not
 	/// in here keeps whatever edit the configuration already carried, so a sheet
@@ -68,7 +58,7 @@ final class ServerPropertiesModel {
 	/// stored secret alone.
 	var editedSecretFields: Set<SecretField> = []
 
-	enum SecretField {
+	enum SecretField: CaseIterable {
 		case serverPassword
 		case nicknamePassword
 		case proxyPassword
@@ -83,7 +73,20 @@ final class ServerPropertiesModel {
 	/// four times; there is nothing to show when there is no certificate.
 	var certificate: ClientCertificateDetails?
 
+	/// Why the last SASL ECDSA key import failed, shown beside the key controls
+	/// until the next key change.
+	var signingKeyError: String?
+
 	var submission = SubmissionGate()
+
+	/// The live bouncer networks of the connection being edited. `nil` for a
+	/// connection that does not exist yet.
+	var bouncerNetworks: BouncerNetworksModel?
+
+	/// Whether the connection is one network of a bouncer account.
+	var isBouncerNetwork: Bool {
+		config.bouncerNetwork != nil
+	}
 
 	/// The bundled network catalog the Server Address field completes against.
 	let networkList: NetworkList
@@ -136,9 +139,14 @@ final class ServerPropertiesModel {
 		 synchronous keychain lookups. `loadSecrets()` fills the rest in, and
 		 until it does an untouched field submits as `.unchanged` rather than as
 		 an emptied one. */
-		serverPasswordText = config.serverList.first?.pendingServerPassword.value(orStored: nil) ?? ""
-		nicknamePasswordText = config.pendingNicknamePassword.value(orStored: nil) ?? ""
-		proxyPasswordText = config.pendingProxyPassword.value(orStored: nil) ?? ""
+		secretTexts = [
+			.serverPassword: config.serverList.first?.pendingServerPassword.value(orStored: nil) ?? "",
+			.nicknamePassword: config.pendingNicknamePassword.value(orStored: nil) ?? "",
+			.proxyPassword: config.pendingProxyPassword.value(orStored: nil) ?? "",
+		]
+		if config.bouncerNetwork != nil {
+			selection = .channelList
+		}
 	}
 
 	/** The fields the sheet edits as text, taken apart from the configuration.
@@ -194,12 +202,12 @@ final class ServerPropertiesModel {
 		 actor every time anything else on the sheet changed. The replacement is
 		 a fresh configuration, so nothing in it has been typed into yet. */
 		editedSecretFields = []
-		serverPasswordText = secret(
+		secretTexts[.serverPassword] = secret(
 			primaryServer?.pendingServerPassword ?? .unchanged,
 			from: primaryServer?.keychainItem
 		)
-		nicknamePasswordText = secret(config.pendingNicknamePassword, from: config.nicknamePasswordKeychainItem)
-		proxyPasswordText = secret(config.pendingProxyPassword, from: config.proxyPasswordKeychainItem)
+		secretTexts[.nicknamePassword] = secret(config.pendingNicknamePassword, from: config.nicknamePasswordKeychainItem)
+		secretTexts[.proxyPassword] = secret(config.pendingProxyPassword, from: config.proxyPasswordKeychainItem)
 	}
 
 	/** Reads the sheet's secrets off the main actor.
@@ -239,7 +247,7 @@ final class ServerPropertiesModel {
 		primary.serverPort = UInt16(serverPort) ?? primary.serverPort
 		primary.pendingServerPassword = submittedSecret(
 			.serverPassword,
-			text: serverPassword,
+			text: secretText(.serverPassword),
 			pending: primary.pendingServerPassword
 		)
 		return primary
@@ -269,7 +277,7 @@ final class ServerPropertiesModel {
 		 synchronous keychain lookup on the main actor for a value that is
 		 already here. */
 		editedSecretFields.remove(.serverPassword)
-		serverPasswordText = secret(primary?.pendingServerPassword ?? .unchanged, from: primary?.keychainItem)
+		secretTexts[.serverPassword] = secret(primary?.pendingServerPassword ?? .unchanged, from: primary?.keychainItem)
 	}
 
 	/// Turns TLS on or off for the primary endpoint, moving the port with it the
@@ -297,7 +305,7 @@ final class ServerPropertiesModel {
 		result.ctcpVersionReply = Self.nilIfEmpty(result.ctcpVersionReply?.trimmed ?? "")
 		result.pendingNicknamePassword = submittedSecret(
 			.nicknamePassword,
-			text: nicknamePassword,
+			text: secretText(.nicknamePassword),
 			pending: result.pendingNicknamePassword
 		)
 		result.alternateNicknames = uniqueNonempty(alternateNicknames.components(separatedBy: .whitespaces))
@@ -306,7 +314,7 @@ final class ServerPropertiesModel {
 		result.proxyUsername = Self.nilIfEmpty(proxyUsername.firstToken)
 		result.pendingProxyPassword = submittedSecret(
 			.proxyPassword,
-			text: proxyPassword,
+			text: secretText(.proxyPassword),
 			pending: result.pendingProxyPassword
 		)
 		result.loginCommands = connectCommands.components(separatedBy: .newlines)

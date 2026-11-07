@@ -136,6 +136,7 @@ final class SettingsModel {
 	}
 
 	let themeStore: ThemeStore
+	private let fileTransfers: FileTransferStore
 
 	var transcriptTheme: TranscriptTheme {
 		themeStore.theme
@@ -170,9 +171,11 @@ final class SettingsModel {
 
 	init(
 		themeStore: ThemeStore = AppServices.theme,
+		fileTransfers: FileTransferStore = AppServices.fileTransfers,
 		readThemeDocument: @escaping @Sendable (URL) async throws -> Data = { try await SettingsDocumentReader.read(from: $0) }
 	) {
 		self.themeStore = themeStore
+		self.fileTransfers = fileTransfers
 		self.readThemeDocument = readThemeDocument
 		destinations = SettingsDestination.builtIn
 	}
@@ -206,10 +209,10 @@ final class SettingsModel {
 	private func prepareNotifications() {
 		guard notificationsAreActive == false else { return }
 		notificationsAreActive = true
-		notifications.observe(.sessionCapabilitiesDidChange) { [weak self] _ in
+		notifications.observe(SessionCapabilitiesDidChange.self) { [weak self] _ in
 			self?.refreshIRCv3Connections()
 		}
-		notifications.observe(.chatSessionListWasModified) { [weak self] _ in
+		notifications.observe(ChatSessionListWasModified.self) { [weak self] _ in
 			self?.refreshIRCv3Connections()
 		}
 	}
@@ -280,8 +283,8 @@ final class SettingsModel {
 
 	func refreshFolders() {
 		transcriptFolder = ApplicationPaths.transcriptFolderURL
-		downloadFolder = AppServices.fileTransfers.downloadDestinationURL
-		usesCustomDownloadFolder = AppServices.fileTransfers.hasCustomDownloadDestination
+		downloadFolder = fileTransfers.downloadDestinationURL
+		usesCustomDownloadFolder = fileTransfers.hasCustomDownloadDestination
 	}
 
 	func refreshIRCv3Connections() {
@@ -374,7 +377,7 @@ extension SettingsModel {
 	}
 
 	func clearDownloadFolder() {
-		AppServices.fileTransfers.setDownloadDestinationURL(nil)
+		fileTransfers.setDownloadDestinationURL(nil)
 		refreshFolders()
 	}
 
@@ -391,7 +394,7 @@ extension SettingsModel {
 				}
 			case .downloadFolder:
 				try withSecurityScopedAccess(to: url) {
-					try AppServices.fileTransfers.setDownloadDestinationURL(
+					try fileTransfers.setDownloadDestinationURL(
 						securityScopedBookmark(for: url)
 					)
 					refreshFolders()

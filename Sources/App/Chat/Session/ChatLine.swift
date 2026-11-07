@@ -30,13 +30,25 @@ enum ChatLineKind: UInt, Codable, Sendable {
 	case quit = 19
 	case topic = 20
 	case website = 21
+	/// A message its author or a moderator deleted. The line keeps its place,
+	/// time, sender and message identifier; the text is gone.
+	case redacted = 22
+
+	/// A line a server can delete by message identifier: what a person wrote,
+	/// not yet deleted.
+	nonisolated var isRedactableMessage: Bool { // nonisolated: pure
+		switch self {
+		case .privateMessage, .privateMessageNoHighlight, .action, .actionNoHighlight, .notice: true
+		default: false
+		}
+	}
 
 	/// Something a person said, as opposed to an event the session narrates —
 	/// a join, a mode, a topic. The unread marker is placed before the first
 	/// of these, not before the first line of any kind.
 	nonisolated var isConversation: Bool { // nonisolated: pure
 		switch self {
-		case .action, .actionNoHighlight, .notice, .privateMessage, .privateMessageNoHighlight:
+		case .action, .actionNoHighlight, .notice, .privateMessage, .privateMessageNoHighlight, .redacted:
 			true
 		default:
 			false
@@ -127,6 +139,19 @@ nonisolated struct ChatLine: Codable, Hashable, Sendable, CustomStringConvertibl
 		case uniqueIdentifier
 	}
 
+	/** Withdraws everything a reader could read from the line, keeping what
+	 places it: its time, sender, identifiers and delivery state. What is stored
+	 for the line is the redacted value, so the text does not survive in the
+	 history database. */
+	mutating func redact() {
+		guard lineType != .redacted else { return }
+		messageBody = ""
+		reactions = nil
+		highlightKeywords = nil
+		excludeKeywords = nil
+		lineType = .redacted
+	}
+
 	var readMarkerTimestamp: Date? {
 		lineType.isConversation ? serverTimestamp : nil
 	}
@@ -192,15 +217,6 @@ nonisolated struct ChatLine: Codable, Hashable, Sendable, CustomStringConvertibl
 		}
 	}
 
-	/// Restores the two identities a stored line carried. Every other field is
-	/// settable within the module; these are the line's own. A stored line that
-	/// carried none leaves them empty, which is what tells
-	/// `populateDefaultsPostflight` to mint a fresh one.
-	mutating func restoreIdentity(uniqueIdentifier: String?, sessionIdentifier: UInt) {
-		self.uniqueIdentifier = uniqueIdentifier ?? ""
-		self.sessionIdentifier = sessionIdentifier
-	}
-
 	func scrollbackEntry(forView viewIdentifier: String) -> ScrollbackEntry {
 		guard let data = try? PropertyListEncoder().encode(ChatLineStoredPayload(line: self)) else {
 			preconditionFailure("A chat line must remain encodable")
@@ -211,7 +227,8 @@ nonisolated struct ChatLine: Codable, Hashable, Sendable, CustomStringConvertibl
 			uniqueIdentifier: uniqueIdentifier,
 			viewIdentifier: viewIdentifier,
 			sessionIdentifier: sessionIdentifier,
-			creationDate: receivedAt.timeIntervalSince1970
+			creationDate: receivedAt.timeIntervalSince1970,
+			search: ScrollbackSearchFields(line: self)
 		)
 	}
 

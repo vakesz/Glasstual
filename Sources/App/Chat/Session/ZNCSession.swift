@@ -186,21 +186,21 @@ extension ServerSession {
 		let hostmask = body.nextToken()
 		guard hostmask.isEmpty == false else { return message }
 
-		var sender = message.sender
+		let sender: Prefix
 		/* The protocol maximum rather than the network's NICKLEN: a replayed
 		 line is about whoever the bouncer recorded, on whatever network it was
 		 connected to then, which is not necessarily this one. */
 		if let components = Hostmask(parsing: hostmask) {
 			guard components.nickname != userNickname else { return nil }
-			sender.nickname = components.nickname
-			sender.username = components.username
-			sender.address = components.address
-			sender.isServer = false
+			sender = .user(Prefix.User(
+				nickname: components.nickname,
+				username: components.username,
+				address: components.address,
+				hostmask: hostmask
+			))
 		} else {
-			sender.nickname = hostmask
-			sender.isServer = true
+			sender = .server(name: hostmask)
 		}
-		sender.hostmask = hostmask
 
 		let text = String(body.remainder)
 		guard let replay = Self.replayedEvent(in: text) else {
@@ -324,7 +324,7 @@ extension ServerSession {
 	}
 
 	func detectZNC(from message: Message) {
-		guard znc.isConnected == false, message.senderIsServer, message.senderNickname == ServerQuirks.ZNC.serverName else { return }
+		guard znc.isConnected == false, message.sender.isServer, message.senderNickname == ServerQuirks.ZNC.serverName else { return }
 
 		znc.isConnected = true
 		zncLogger.info("ZNC detected")

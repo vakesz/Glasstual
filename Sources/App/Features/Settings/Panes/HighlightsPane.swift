@@ -87,7 +87,7 @@ struct SettingsKeywordList: View {
 			Text(title)
 
 			List(selection: $selection) {
-				ForEach(Array(rowIdentities.identities.enumerated()), id: \.element) { index, identity in
+				ForEach(rowIdentities.identities, id: \.self) { identity in
 					HStack(spacing: UISpacing.tight) {
 						TextField(
 							text: binding(for: identity),
@@ -100,7 +100,7 @@ struct SettingsKeywordList: View {
 						.focused($focusedKeyword, equals: identity)
 						.accessibilityLabel(Text(title))
 
-						if let error = patternError(at: index) {
+						if let error = patternError(for: identity) {
 							Image(systemName: "exclamationmark.triangle.fill")
 								.foregroundStyle(.orange)
 								.help(Text(verbatim: error))
@@ -147,8 +147,8 @@ struct SettingsKeywordList: View {
 
 	/// The keyword at `index` is reported where it is typed, rather than
 	/// failing silently in the renderer when the pattern will not compile.
-	private func patternError(at index: Int) -> String? {
-		guard keywords.indices.contains(index) else { return nil }
+	private func patternError(for identity: UUID) -> String? {
+		guard let index = index(of: identity) else { return nil }
 		let keyword = keywords[index].string.trimmingCharacters(in: .whitespacesAndNewlines)
 		guard keyword.isEmpty == false else { return nil }
 

@@ -25,25 +25,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Error genérico de protocolo"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Erreur de protocole générique"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "一般的なプロトコルエラー"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Erro genérico de protocolo"
           }
         }
@@ -73,26 +73,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Fallo en la negociación de la combinación de cifrado"
+            "state": "translated",
+            "value": "Fallo en la negociación del conjunto de cifrado"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Échec de la négociation de la suite de chiffrement"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "暗号スイートの交渉失敗"
+            "state": "translated",
+            "value": "暗号スイートのネゴシエーションの失敗"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Falha na negociação do conjunto de chaves cifradas"
+            "state": "translated",
+            "value": "Falha na negociação do conjunto de cifras"
           }
         }
       }
@@ -121,25 +121,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Alerta fatal"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Alerte fatale"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "致命的な警告"
+            "state": "translated",
+            "value": "致命的なアラート"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Alerta fatal"
           }
         }
@@ -169,26 +169,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "I/O bloquearía"
+            "state": "translated",
+            "value": "La E/S se bloquearía"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "I/O bloquerait"
+            "state": "translated",
+            "value": "Opération d’E/S bloquante"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "I/Oがブロックされます"
+            "state": "translated",
+            "value": "I/Oがブロックされる可能性があります"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "I/O bloquearia"
+            "state": "translated",
+            "value": "A operação de E/S bloquearia"
           }
         }
       }
@@ -217,25 +217,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Intento de restaurar una sesión desconocida"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Tentative de restauration d'une session inconnue"
+            "state": "translated",
+            "value": "Tentative de restauration d’une session inconnue"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "不明なセッションの復元を試みる"
+            "state": "translated",
+            "value": "不明なセッションの復元を試行"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Tentativa de restaurar uma sessão desconhecida"
           }
         }
@@ -265,26 +265,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "La conexión se cerró de forma elegante"
+            "state": "translated",
+            "value": "La conexión se cerró correctamente"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "La connexion a été fermée avec élégance"
+            "state": "translated",
+            "value": "La connexion a été fermée normalement"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "接続は優しく閉じられました。"
+            "state": "translated",
+            "value": "接続は正常に閉じられました"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "A conexão foi fechada de forma graciosa"
+            "state": "translated",
+            "value": "A conexão foi encerrada normalmente"
           }
         }
       }
@@ -313,26 +313,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "La conexión se cerró como resultado de un error"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "La connexion a été fermée en raison d'une erreur."
+            "state": "translated",
+            "value": "La connexion a été fermée à cause d’une erreur"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "エラーにより接続が切断されました。"
+            "state": "translated",
+            "value": "接続はエラーにより閉じられました"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "A conexão foi fechada como resultado de um erro"
+            "state": "translated",
+            "value": "A conexão foi encerrada em decorrência de um erro"
           }
         }
       }
@@ -361,25 +361,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Cadena de certificados no válida"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Chaîne de certificats invalide"
+            "state": "translated",
+            "value": "Chaîne de certificats non valide"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "無効な証明書チェーン"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Cadeia de certificados inválida"
           }
         }
@@ -409,25 +409,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Formato de certificado inválido"
+            "state": "translated",
+            "value": "Formato de certificado no válido"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Format de certificat invalide"
+            "state": "translated",
+            "value": "Format de certificat non valide"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "無効な証明書形式"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Formato de certificado inválido"
           }
         }
@@ -457,25 +457,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Error criptográfico subyacente"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Erreur cryptographique sous-jacente"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "根本的な暗号化エラー"
+            "state": "translated",
+            "value": "基盤となる暗号化エラー"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Erro criptográfico subjacente"
           }
         }
@@ -505,25 +505,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Error interno"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Erreur interne"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "内部エラー"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Erro interno"
           }
         }
@@ -553,26 +553,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Fallo al adjuntar el módulo"
+            "state": "translated",
+            "value": "Fallo al asociar el módulo"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Échec de l’attachement du module"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "モジュール添付の失敗"
+            "state": "translated",
+            "value": "モジュールのアタッチに失敗"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Falha na anexação do módulo"
+            "state": "translated",
+            "value": "Falha ao anexar o módulo"
           }
         }
       }
@@ -601,25 +601,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Cadena de certificados válida con una raíz no confiable"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Chaîne de certificats valide avec une racine non fiable"
+            "state": "translated",
+            "value": "Chaîne de certificats valide avec une racine non approuvée"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "信頼できないルートを持つ有効な証明書チェーン"
+            "state": "translated",
+            "value": "信頼されていないルートを持つ有効な証明書チェーン"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Cadeia de certificados válida com uma raiz não confiável"
           }
         }
@@ -649,26 +649,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Sin certificado raíz para la cadena de certificados"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Aucun certificat racine pour la chaîne de certificats"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "証明書チェーンのルート証明書がない"
+            "state": "translated",
+            "value": "この証明書チェーンのルート証明書がありません"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Sem certificado raiz para a cadeia de certificados"
+            "state": "translated",
+            "value": "Nenhum certificado raiz para a cadeia de certificados"
           }
         }
       }
@@ -697,25 +697,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "La cadena de certificados tiene un certificado caducado"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "La chaîne de certificats contient un certificat expiré."
+            "state": "translated",
+            "value": "La chaîne de certificats contient un certificat expiré"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "証明書チェーンに期限切れの証明書があります。"
+            "state": "translated",
+            "value": "証明書チェーンに期限切れの証明書があります"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "A cadeia de certificados tem um certificado expirado"
           }
         }
@@ -745,25 +745,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "La cadena de certificados tiene un certificado que aún no es válido"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "La chaîne de certificats contient un certificat qui n'est pas encore valide."
+            "state": "translated",
+            "value": "La chaîne de certificats contient un certificat qui n’est pas encore valide"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "証明書チェーンにはまだ有効でない証明書があります。"
+            "state": "translated",
+            "value": "証明書チェーンに、まだ有効でない証明書があります"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "A cadeia de certificados tem um certificado que ainda não é válido"
           }
         }
@@ -793,26 +793,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "El servidor cerró la sesión sin notificación"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "La session du serveur a été fermée sans notification"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "サーバーは通知なしでセッションを終了しました。"
+            "state": "translated",
+            "value": "サーバが通知なしにセッションを閉じました"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Servidor fechou sessão sem notificação"
+            "state": "translated",
+            "value": "O servidor encerrou a sessão sem notificação"
           }
         }
       }
@@ -841,26 +841,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Se proporcionó un búfer insuficiente"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Buffer insuffisant fourni"
+            "state": "translated",
+            "value": "Tampon fourni insuffisant"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "十分なバッファーが提供されていません"
+            "state": "translated",
+            "value": "提供されたバッファが不足しています"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Buffer insuficiente fornecido"
+            "state": "translated",
+            "value": "Buffer fornecido insuficiente"
           }
         }
       }
@@ -889,26 +889,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Conjunto de cifrados configurado de forma incorrecta"
+            "state": "translated",
+            "value": "Conjunto de cifrado configurado incorrectamente"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Suite de chiffrement mal configurée"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "不適切に構成された暗号スイート"
+            "state": "translated",
+            "value": "暗号スイートの設定が正しくありません"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Conjunto de chifres configurado incorretamente"
+            "state": "translated",
+            "value": "Conjunto de cifras configurado incorretamente"
           }
         }
       }
@@ -937,25 +937,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Mensaje inesperado recibido"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Message inattendu reçu"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "予期せぬメッセージを受け取りました"
+            "state": "translated",
+            "value": "予期しないメッセージを受信しました"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Mensagem inesperada recebida"
           }
         }
@@ -985,26 +985,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "MAC malo"
+            "state": "translated",
+            "value": "MAC incorrecto"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Mauvais MAC"
+            "state": "translated",
+            "value": "MAC incorrect"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "悪いMAC"
+            "state": "translated",
+            "value": "不正なMAC"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "MAC ruim"
+            "state": "translated",
+            "value": "MAC inválido"
           }
         }
       }
@@ -1033,26 +1033,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "La descifrado falló"
+            "state": "translated",
+            "value": "Falló el descifrado"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Décryptage échoué"
+            "state": "translated",
+            "value": "Échec du déchiffrement"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "暗号解読に失敗しました"
+            "state": "translated",
+            "value": "復号に失敗しました"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Decifração falhou"
+            "state": "translated",
+            "value": "Falha na descriptografia"
           }
         }
       }
@@ -1081,26 +1081,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Sobrecarga de registros"
+            "state": "translated",
+            "value": "Desbordamiento de registro"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Overflow de enregistrement"
+            "state": "translated",
+            "value": "Dépassement de capacité de l’enregistrement"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "記録オーバーフロー"
+            "state": "translated",
+            "value": "レコードのオーバーフロー"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Superação de registros"
+            "state": "translated",
+            "value": "Estouro de registro"
           }
         }
       }
@@ -1129,26 +1129,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Fallo de descompresión"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Échec de la décompression"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "デコンプレッションの失敗"
+            "state": "translated",
+            "value": "展開に失敗"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Falha de decompressão"
+            "state": "translated",
+            "value": "Falha na descompressão"
           }
         }
       }
@@ -1177,26 +1177,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Fallo del apretón de manos"
+            "state": "translated",
+            "value": "Fallo en el handshake"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Échec de la poignée de main"
+            "state": "translated",
+            "value": "Échec de la prise de contact"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "握手失敗"
+            "state": "translated",
+            "value": "ハンドシェイクの失敗"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Falha no aperto de mão"
+            "state": "translated",
+            "value": "Falha no handshake"
           }
         }
       }
@@ -1225,26 +1225,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Certificado malo"
+            "state": "translated",
+            "value": "Certificado incorrecto"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Mauvais certificat"
+            "state": "translated",
+            "value": "Certificat incorrect"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "悪い証明書"
+            "state": "translated",
+            "value": "不正な証明書"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Certificado ruim"
+            "state": "translated",
+            "value": "Certificado inválido"
           }
         }
       }
@@ -1273,26 +1273,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Formato de certificado no válido o no soportado"
+            "state": "translated",
+            "value": "Formato de certificado no válido o no compatible"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Format de certificat invalide ou non pris en charge"
+            "state": "translated",
+            "value": "Format de certificat non valide ou non pris en charge"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "無効またはサポートされていない証明書形式"
+            "state": "translated",
+            "value": "無効、またはサポートされていない証明書形式"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Formato de certificado inválido ou não suportado"
+            "state": "translated",
+            "value": "Formato de certificado inválido ou sem suporte"
           }
         }
       }
@@ -1321,25 +1321,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Certificado revocado"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Certificat révoqué"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "証明書取り消し"
+            "state": "translated",
+            "value": "証明書が失効しています"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Certificado revogado"
           }
         }
@@ -1369,25 +1369,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Certificado caducado"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Le certificat a expiré"
+            "state": "translated",
+            "value": "Certificat expiré"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "証明書は期限切れです"
+            "state": "translated",
+            "value": "証明書の有効期限が切れています"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Certificado expirado"
           }
         }
@@ -1417,25 +1417,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Certificado desconocido"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Certificat inconnu"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "不明な証明書"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Certificado desconhecido"
           }
         }
@@ -1465,26 +1465,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Parámetro ilegal"
+            "state": "translated",
+            "value": "Parámetro no válido"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Paramètre illégal"
+            "state": "translated",
+            "value": "Paramètre non autorisé"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "違法なパラメータ"
+            "state": "translated",
+            "value": "不正なパラメータ"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Parâmetro ilegal"
+            "state": "translated",
+            "value": "Parâmetro inválido"
           }
         }
       }
@@ -1513,26 +1513,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Autoridad de certificación desconocida"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Autorité de certification inconnue"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "不明な証明書発行機関"
+            "state": "translated",
+            "value": "不明な認証局"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Autoridade de certificado desconhecida"
+            "state": "translated",
+            "value": "Autoridade certificadora desconhecida"
           }
         }
       }
@@ -1561,25 +1561,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Acceso denegado"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Accès refusé"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "アクセス拒否"
+            "state": "translated",
+            "value": "アクセスが拒否されました"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Acesso negado"
           }
         }
@@ -1609,25 +1609,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Error de decodificación"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Erreur de décodage"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "解読エラー"
+            "state": "translated",
+            "value": "デコードエラー"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Erro de decodificação"
           }
         }
@@ -1657,25 +1657,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Error de descifrado"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Erreur de déchiffrement"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "暗号解読エラー"
+            "state": "translated",
+            "value": "復号エラー"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Erro de descriptografia"
           }
         }
@@ -1705,25 +1705,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Restricción de exportación"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Restriction d'exportation"
+            "state": "translated",
+            "value": "Restriction d’exportation"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "輸出制限"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Restrição de exportação"
           }
         }
@@ -1753,26 +1753,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Versión de protocolo no válida"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Version de protocole invalide"
+            "state": "translated",
+            "value": "Version de protocole non valide"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "無効なプロトコルバージョン"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Versão do protocolo inválida"
+            "state": "translated",
+            "value": "Versão de protocolo inválida"
           }
         }
       }
@@ -1801,25 +1801,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Seguridad insuficiente"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Sécurité insuffisante"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "セキュリティが不十分です"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Segurança insuficiente"
           }
         }
@@ -1849,25 +1849,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Error interno"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Erreur interne"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "内部エラー"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Erro interno"
           }
         }
@@ -1897,26 +1897,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "El usuario canceló"
+            "state": "translated",
+            "value": "Cancelado por el usuario"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "L'utilisateur a annulé"
+            "state": "translated",
+            "value": "Annulé par l’utilisateur"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ユーザーがキャンセルしました"
+            "state": "translated",
+            "value": "ユーザがキャンセルしました"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Usuário cancelado"
+            "state": "translated",
+            "value": "Cancelado pelo usuário"
           }
         }
       }
@@ -1945,26 +1945,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "No se permite la renegociación"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "La rénegotiation n'est pas autorisée"
+            "state": "translated",
+            "value": "La renégociation n’est pas autorisée"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "再交渉は許可されていません"
+            "state": "translated",
+            "value": "再ネゴシエーションは許可されていません"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Renegociação não é permitida"
+            "state": "translated",
+            "value": "A renegociação não é permitida"
           }
         }
       }
@@ -1993,26 +1993,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "El certificado de pares es válido o fue ignorado si la verificación está desactivada"
+            "state": "translated",
+            "value": "El certificado del interlocutor es válido o se omitió si la verificación está desactivada"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Le certificat de pair est valide ou a été ignoré si la vérification est désactivée"
+            "state": "translated",
+            "value": "Le certificat du pair est valide ou a été ignoré si la vérification est désactivée"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ピア証明書は有効であるか、検証が無効になっている場合は無視されます。"
+            "state": "translated",
+            "value": "ピア証明書は有効です(検証が無効な場合は無視されました)"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "O certificado de pares é válido ou foi ignorado se a verificação estiver desativada"
+            "state": "translated",
+            "value": "O certificado do par é válido ou foi ignorado porque a verificação está desativada"
           }
         }
       }
@@ -2041,25 +2041,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "El servidor ha solicitado un certificado del lado del cliente"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Le serveur a demandé un certificat côté client"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "サーバーがクライアント側証明書をリクエストしました。"
+            "state": "translated",
+            "value": "サーバがクライアント側の証明書を要求しました"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "O servidor solicitou um certificado do lado do cliente"
           }
         }
@@ -2089,26 +2089,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Desajuste del anfitrión"
+            "state": "translated",
+            "value": "El host no coincide"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Incompatibilité d'hôte"
+            "state": "translated",
+            "value": "Nom d’hôte non concordant"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "ホストの不一致"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Desacordo de hospedeiro"
+            "state": "translated",
+            "value": "Incompatibilidade de host"
           }
         }
       }
@@ -2137,26 +2137,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "El compañero perdió la conexión antes de responder"
+            "state": "translated",
+            "value": "El interlocutor cortó la conexión antes de responder"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Le pair a coupé la connexion avant de répondre"
+            "state": "translated",
+            "value": "Le pair a interrompu la connexion avant de répondre"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ピアが応答する前に接続を切断しました。"
+            "state": "translated",
+            "value": "応答する前にピアが接続を切断しました"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Parceiro desconectou-se antes de responder"
+            "state": "translated",
+            "value": "O par encerrou a conexão antes de responder"
           }
         }
       }
@@ -2185,25 +2185,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Fallo en la descifrado"
+            "state": "translated",
+            "value": "Fallo de descifrado"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Échec de la déchiffrement"
+            "state": "translated",
+            "value": "Échec du déchiffrement"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "暗号解読失敗"
+            "state": "translated",
+            "value": "復号の失敗"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Falha na descriptografia"
           }
         }
@@ -2233,26 +2233,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "MAC malo"
+            "state": "translated",
+            "value": "MAC incorrecto"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Mauvais MAC"
+            "state": "translated",
+            "value": "MAC incorrect"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "悪いMAC"
+            "state": "translated",
+            "value": "不正なMAC"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "MAC ruim"
+            "state": "translated",
+            "value": "MAC inválido"
           }
         }
       }
@@ -2281,26 +2281,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Sobrecarga de registros"
+            "state": "translated",
+            "value": "Desbordamiento de registro"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Overflow de enregistrement"
+            "state": "translated",
+            "value": "Dépassement de capacité de l’enregistrement"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "記録オーバーフロー"
+            "state": "translated",
+            "value": "レコードのオーバーフロー"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Superação de registros"
+            "state": "translated",
+            "value": "Estouro de registro"
           }
         }
       }
@@ -2329,25 +2329,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Error de configuración"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Erreur de configuration"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "構成エラー"
+            "state": "translated",
+            "value": "設定エラー"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Erro de configuração"
           }
         }
@@ -2377,26 +2377,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Registro inesperado (omitido) en DTLS"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Enregistrement inattendu (omissé) dans DTLS"
+            "state": "translated",
+            "value": "Enregistrement inattendu (ignoré) dans DTLS"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "DTLSで予期せぬ（スキップされた）レコード"
+            "state": "translated",
+            "value": "DTLSで予期しない(スキップされた)レコード"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Registro inesperado (passado) no DTLS"
+            "state": "translated",
+            "value": "Registro inesperado (ignorado) no DTLS"
           }
         }
       }
@@ -2425,26 +2425,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "El servidor tiene una clave pública diférmica-Hellman efímera débil"
+            "state": "translated",
+            "value": "El servidor tiene una clave pública Diffie-Hellman efímera débil"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Le serveur possède une clé publique Diffie-Hellman éphémère faible."
+            "state": "translated",
+            "value": "Le serveur utilise une clé publique Diffie-Hellman éphémère faible"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "サーバーには弱い一時的なディフィ-ヘルマン公開鍵があります。"
+            "state": "translated",
+            "value": "サーバの一時的なDiffie-Hellman公開鍵が脆弱です"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "O servidor tem uma chave pública difusa-Hellman efêmera fraca"
+            "state": "translated",
+            "value": "O servidor tem uma chave pública Diffie-Hellman efêmera fraca"
           }
         }
       }
@@ -2473,26 +2473,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Hola recibido"
+            "state": "translated",
+            "value": "Mensaje Hello recibido"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Bonjour reçu"
+            "state": "translated",
+            "value": "ClientHello reçu"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "こんにちは、受け取りました"
+            "state": "translated",
+            "value": "Helloを受信しました"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Olá recebido"
+            "state": "translated",
+            "value": "Hello recebido"
           }
         }
       }
@@ -2521,26 +2521,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Cierre del conector (por ejemplo, TCP RST o FIN)"
+            "state": "translated",
+            "value": "Cierre del socket (p. ej., TCP RST o FIN)"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Arrêt du socket (par exemple TCP RST ou FIN)"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ソケットシャットダウン（例：TCP RSTまたはFIN）"
+            "state": "translated",
+            "value": "ソケットのシャットダウン(TCP RSTまたはFINなど)"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Desligamento do conector (por exemplo, TCP RST ou FIN)"
+            "state": "translated",
+            "value": "Encerramento do socket (por exemplo, TCP RST ou FIN)"
           }
         }
       }
@@ -2569,26 +2569,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Tiempo de espera de la red"
+            "state": "translated",
+            "value": "Tiempo de espera de red agotado"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Temps d'attente réseau écoulé"
+            "state": "translated",
+            "value": "Délai réseau dépassé"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ネットワークタイムアウト"
+            "state": "translated",
+            "value": "ネットワークのタイムアウト"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Tempo limite da rede"
+            "state": "translated",
+            "value": "Tempo de rede esgotado"
           }
         }
       }
@@ -2617,26 +2617,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "La configuración falló"
+            "state": "translated",
+            "value": "Falló la configuración"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "La configuration a échoué"
+            "state": "translated",
+            "value": "Échec de la configuration"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "構成に失敗しました"
+            "state": "translated",
+            "value": "設定に失敗しました"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Configuração falhou"
+            "state": "translated",
+            "value": "Falha na configuração"
           }
         }
       }
@@ -2665,26 +2665,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Extensión no soportada"
+            "state": "translated",
+            "value": "Extensión no compatible"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Extension non prise en charge"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "サポートされていない拡張子"
+            "state": "translated",
+            "value": "サポートされていない拡張"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Extensão não suportada"
+            "state": "translated",
+            "value": "Extensão sem suporte"
           }
         }
       }
@@ -2713,26 +2713,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "El compañero rechazó el mensaje inesperado"
+            "state": "translated",
+            "value": "El interlocutor rechazó un mensaje inesperado"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Le pair a rejeté le message inattendu"
+            "state": "translated",
+            "value": "Le pair a rejeté un message inattendu"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ピアが予期せぬメッセージを拒否しました"
+            "state": "translated",
+            "value": "ピアが予期しないメッセージを拒否しました"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Parceiro rejeitou mensagem inesperada"
+            "state": "translated",
+            "value": "O par rejeitou uma mensagem inesperada"
           }
         }
       }
@@ -2761,26 +2761,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "La descompresión falló"
+            "state": "translated",
+            "value": "Falló la descompresión"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "La décompression a échoué"
+            "state": "translated",
+            "value": "Échec de la décompression"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "デコンプレッションに失敗しました"
+            "state": "translated",
+            "value": "展開に失敗しました"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "A decompressão falhou"
+            "state": "translated",
+            "value": "Falha na descompressão"
           }
         }
       }
@@ -2809,26 +2809,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "El apretón de manos falló"
+            "state": "translated",
+            "value": "Falló el handshake"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "La poignée de main a échoué"
+            "state": "translated",
+            "value": "Échec de la prise de contact"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "握手に失敗しました"
+            "state": "translated",
+            "value": "ハンドシェイクに失敗しました"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Aumento de mão falhou"
+            "state": "translated",
+            "value": "Falha no handshake"
           }
         }
       }
@@ -2857,26 +2857,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Error al descifrar"
+            "state": "translated",
+            "value": "Falló la decodificación"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Décodage échoué"
+            "state": "translated",
+            "value": "Échec du décodage"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "解読に失敗しました"
+            "state": "translated",
+            "value": "デコードに失敗しました"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Decodificação falhou"
+            "state": "translated",
+            "value": "Falha na decodificação"
           }
         }
       }
@@ -2905,26 +2905,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Respaldo inapropiado"
+            "state": "translated",
+            "value": "Alternativa inadecuada"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Remplacement inapproprié"
+            "state": "translated",
+            "value": "Repli inapproprié"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "不適切なフォールバック"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Padrão de reposição inadequado"
+            "state": "translated",
+            "value": "Fallback inadequado"
           }
         }
       }
@@ -2953,26 +2953,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Extensión faltante"
+            "state": "translated",
+            "value": "Falta una extensión"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Extension manquante"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "拡張子が不足しています"
+            "state": "translated",
+            "value": "拡張が不足しています"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Extensão faltando"
+            "state": "translated",
+            "value": "Extensão ausente"
           }
         }
       }
@@ -3001,26 +3001,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Respuesta OCSP incorrecta"
+            "state": "translated",
+            "value": "Respuesta OCSP no válida"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Mauvaise réponse OCSP"
+            "state": "translated",
+            "value": "Réponse OCSP incorrecte"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "悪いOCSP応答"
+            "state": "translated",
+            "value": "不正なOCSP応答"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Resposta OCSP ruim"
+            "state": "translated",
+            "value": "Resposta OCSP inválida"
           }
         }
       }
@@ -3049,26 +3049,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Se requiere certificado"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Certificat requis"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "証明書が必要です"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Certificado necessário"
+            "state": "translated",
+            "value": "Certificado obrigatório"
           }
         }
       }
@@ -3097,25 +3097,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Identidad PSK desconocida"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Identité PSK inconnue"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "不明なPSK識別子"
+            "state": "translated",
+            "value": "不明なPSK ID"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Identidade PSK desconhecida"
           }
         }
@@ -3145,25 +3145,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Nombre desconocido o no reconocido"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Nom inconnu ou non reconnu"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "不明または認識されていない名前"
+            "state": "translated",
+            "value": "不明または認識できない名前"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Nome desconhecido ou não reconhecido"
           }
         }
@@ -3193,25 +3193,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Violación de ATS"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Violation ATS"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "ATS違反"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Violação do ATS"
           }
         }
@@ -3241,26 +3241,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Violación de ATS: la versión mínima del protocolo no cumple con ATS"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Violation ATS : la version minimale du protocole n'est pas conforme à ATS"
+            "state": "translated",
+            "value": "Violation ATS : la version minimale du protocole n’est pas conforme à ATS"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ATS違反：最小プロトコルバージョンがATS準拠ではありません"
+            "state": "translated",
+            "value": "ATS違反: 最小プロトコルバージョンがATSに準拠していません"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Violação ATS: a versão mínima do protocolo não é compatível com ATS"
+            "state": "translated",
+            "value": "Violação do ATS: a versão mínima do protocolo não está em conformidade com o ATS"
           }
         }
       }
@@ -3289,26 +3289,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Violación de ATS: el conjunto de cifrados seleccionado no cumple con ATS"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Violation ATS : le jeu de chiffrement sélectionné n'est pas conforme à ATS"
+            "state": "translated",
+            "value": "Violation ATS : la suite de chiffrement sélectionnée n’est pas conforme à ATS"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ATS違反：選択された暗号スイートはATSコンプライアンスではありません"
+            "state": "translated",
+            "value": "ATS違反: 選択された暗号スイートがATSに準拠していません"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Violação ATS: o conjunto de chifres selecionado não é compatível com ATS"
+            "state": "translated",
+            "value": "Violação do ATS: o conjunto de cifras selecionado não está em conformidade com o ATS"
           }
         }
       }
@@ -3337,26 +3337,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Violación de ATS: el tamaño de la clave de pares no cumple con ATS"
+            "state": "translated",
+            "value": "Violación de ATS: el tamaño de clave del interlocutor no cumple con ATS"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Violation ATS : la taille de la clé de pair n'est pas conforme à ATS"
+            "state": "translated",
+            "value": "Violation ATS : la taille de clé du pair n’est pas conforme à ATS"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ATS違反：ピアキーサイズがATSコンプライアンスではありません"
+            "state": "translated",
+            "value": "ATS違反: ピアの鍵サイズがATSに準拠していません"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Violação ATS: o tamanho da chave de pares não é compatível com ATS"
+            "state": "translated",
+            "value": "Violação do ATS: o tamanho da chave do par não está em conformidade com o ATS"
           }
         }
       }
@@ -3385,26 +3385,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Violación de ATS: el algoritmo de encriptación del certificado de hoja de pares no cumple con ATS"
+            "state": "translated",
+            "value": "Violación de ATS: el algoritmo de hash del certificado hoja del interlocutor no cumple con ATS"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Violation ATS : l'algorithme de hachage du certificat de feuille de pair n'est pas conforme à ATS"
+            "state": "translated",
+            "value": "Violation ATS : l’algorithme de hachage du certificat feuille du pair n’est pas conforme à ATS"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ATS違反：ピアリーフ証明書のハッシュアルゴリズムはATS準拠ではありません"
+            "state": "translated",
+            "value": "ATS違反: ピアのリーフ証明書のハッシュアルゴリズムがATSに準拠していません"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Violação ATS: o algoritmo de hash do certificado de folha de pares não é compatível com ATS"
+            "state": "translated",
+            "value": "Violação do ATS: o algoritmo de hash do certificado final do par não está em conformidade com o ATS"
           }
         }
       }
@@ -3433,26 +3433,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Violación de ATS: el algoritmo de encriptación de hash del certificado de pares no cumple con ATS"
+            "state": "translated",
+            "value": "Violación de ATS: el algoritmo de hash del certificado del interlocutor no cumple con ATS"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Violation ATS : l'algorithme de hachage du certificat de pair n'est pas conforme à ATS"
+            "state": "translated",
+            "value": "Violation ATS : l’algorithme de hachage du certificat du pair n’est pas conforme à ATS"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ATS違反：ピア証明書のハッシュアルゴリズムはATS準拠していません"
+            "state": "translated",
+            "value": "ATS違反: ピアの証明書のハッシュアルゴリズムがATSに準拠していません"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Violação ATS: o algoritmo de hash do certificado de pares não é compatível com ATS"
+            "state": "translated",
+            "value": "Violação do ATS: o algoritmo de hash do certificado do par não está em conformidade com o ATS"
           }
         }
       }
@@ -3481,26 +3481,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Violación de ATS: el certificado de compañero no es emitido por un compañero de confianza"
+            "state": "translated",
+            "value": "Violación de ATS: el certificado del interlocutor no lo ha emitido una entidad de confianza"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Violation ATS : le certificat de pair n'est pas émis par un pair de confiance"
+            "state": "translated",
+            "value": "Violation ATS : le certificat du pair n’est pas émis par un pair de confiance"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ATS違反：ピア証明書は信頼できるピアによって発行されていません"
+            "state": "translated",
+            "value": "ATS違反: ピアの証明書が信頼できる発行元から発行されていません"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Violação ATS: o certificado de parceiro não foi emitido por um parceiro confiável"
+            "state": "translated",
+            "value": "Violação do ATS: o certificado do par não foi emitido por uma entidade confiável"
           }
         }
       }
@@ -3529,26 +3529,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Datos de solicitud temprana rechazados por pares"
+            "state": "translated",
+            "value": "Datos de aplicación tempranos rechazados por el interlocutor"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Données de demande anticipées rejetées par les pairs"
+            "state": "translated",
+            "value": "Données d’application anticipées rejetées par le pair"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ピアによって早期申請データが拒否されました"
+            "state": "translated",
+            "value": "ピアによって早期アプリケーションデータが拒否されました"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Dados de aplicação antecipada rejeitados por pares"
+            "state": "translated",
+            "value": "Dados iniciais da aplicação rejeitados pelo par"
           }
         }
       }
@@ -3625,26 +3625,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Error de transporte seguro: %1$@ (%2$ld)"
+            "state": "translated",
+            "value": "Error de Secure Transport: %1$@ (%2$ld)"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Erreur de transport sécurisé : %1$@ (%2$ld)"
+            "state": "translated",
+            "value": "Erreur Secure Transport : %1$@ (%2$ld)"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "セキュリティ輸送エラー：%1$@ (%2$ld)"
+            "state": "translated",
+            "value": "Secure Transportエラー: %1$@ (%2$ld)"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Erro de Transporte Seguro: %1$@ (%2$ld)"
+            "state": "translated",
+            "value": "Erro do Secure Transport: %1$@ (%2$ld)"
           }
         }
       }
@@ -3673,26 +3673,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "No había ningún conjunto de cifrado en común con el servidor."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Il n'y avait pas de suite de chiffrement commune avec le serveur."
+            "state": "translated",
+            "value": "Aucune suite de chiffrement en commun avec le serveur."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "サーバーと共通する暗号化スイートはありませんでした。"
+            "state": "translated",
+            "value": "サーバと共通の暗号スイートがありませんでした。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Não havia nenhum conjunto de criptografia em comum com o servidor."
+            "state": "translated",
+            "value": "Não havia nenhum conjunto de cifras em comum com o servidor."
           }
         }
       }

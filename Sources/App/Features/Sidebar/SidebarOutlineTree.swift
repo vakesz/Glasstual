@@ -9,6 +9,15 @@ enum SidebarNodeID: Hashable {
 	case favorites
 	case favorite(String)
 
+	/// Whether the node is a connection rather than a conversation.
+	var isServer: Bool {
+		if case .server = self {
+			true
+		} else {
+			false
+		}
+	}
+
 	var isReorderable: Bool {
 		switch self {
 		case .server, .conversation: true
@@ -74,6 +83,9 @@ final class SidebarOutlineNode: NSObject {
 			var phrases = [server.isActive
 				? AccessibilityStrings.connectedServer(server.title)
 				: AccessibilityStrings.disconnectedServer(server.title)]
+			if let status = server.bouncerStatus {
+				phrases.append(status.text)
+			}
 			if server.isSecured {
 				phrases.append(String(localized: .MainWindow.connectionSecurity))
 			}
@@ -115,15 +127,9 @@ final class SidebarOutlineTree {
 	/// refreshes do not reload, replace, or animate native rows.
 	@discardableResult
 	func apply(_ snapshot: SidebarOutlineSnapshot) -> Bool {
-		let previousOrder = roots.map { [$0.identity] + $0.children.map(\.identity) }
+		let previousOrder = roots.map(Self.order(of:))
 		roots = snapshot.rows.map { server in
-			let parent = node(.server(server.id), content: .server(server))
-			parent.children = server.conversations.map { conversation in
-				let child = node(.conversation(conversation.id), content: .conversation(conversation))
-				child.parentIdentifier = server.id
-				return child
-			}
-			return parent
+			serverNode(server, parentIdentifier: nil)
 		}
 		if let favorites = snapshot.favorites {
 			let parent = node(.favorites, content: .server(favorites))
@@ -135,7 +141,25 @@ final class SidebarOutlineTree {
 			roots.insert(parent, at: 0)
 		}
 		nodes = nodes.filter { snapshot.knownIdentifiers.contains($0.key) }
-		return previousOrder != roots.map { [$0.identity] + $0.children.map(\.identity) }
+		return previousOrder != roots.map(Self.order(of:))
+	}
+
+	/// A connection's node: its own conversations first, then its networks.
+	private func serverNode(_ server: ServerRow, parentIdentifier: String?) -> SidebarOutlineNode {
+		let parent = node(.server(server.id), content: .server(server))
+		parent.parentIdentifier = parentIdentifier
+		let conversations = server.conversations.map { conversation in
+			let child = node(.conversation(conversation.id), content: .conversation(conversation))
+			child.parentIdentifier = server.id
+			return child
+		}
+		parent.children = conversations + server.networks.map { serverNode($0, parentIdentifier: server.id) }
+		return parent
+	}
+
+	/// The identities of a node and everything beneath it, in drawing order.
+	private static func order(of node: SidebarOutlineNode) -> [SidebarNodeID] {
+		[node.identity] + node.children.flatMap(order(of:))
 	}
 
 	func node(withItemIdentifier identifier: String) -> SidebarOutlineNode? {

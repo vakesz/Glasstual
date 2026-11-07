@@ -17,6 +17,11 @@ extension CapabilityRegistry {
 		URL(string: "https://wiki.znc.in/\(page)")
 	}
 
+	/// The soju documentation page a bouncer capability is described by.
+	private static func sojuSpecification(_ page: String) -> URL? {
+		URL(string: "https://git.sr.ht/~emersion/soju/tree/master/item/doc/ext/\(page).md")
+	}
+
 	private static var defaultCapabilities: [Capability] {
 		let saslGeneric = CapabilitySet.saslGeneric
 		let zncPlaybackModule = CapabilitySet.zncPlaybackModule
@@ -62,6 +67,11 @@ extension CapabilityRegistry {
 				identifier: .changeHost,
 				specification: ircv3Specification("chghost")
 			),
+			Capability.capability(
+				named: "draft/channel-rename",
+				identifier: .channelRename,
+				specification: ircv3Specification("channel-rename")
+			),
 			Capability(
 				name: "draft/chathistory",
 				identifier: .chatHistory,
@@ -70,6 +80,14 @@ extension CapabilityRegistry {
 				dependencies: ["batch", "server-time", "message-tags"],
 				negotiation: .automatic,
 				specification: ircv3Specification("chathistory")
+			),
+
+			Capability(
+				name: "draft/message-redaction",
+				identifier: .messageRedaction,
+				requestedByDefault: true,
+				dependencies: ["message-tags"],
+				specification: ircv3Specification("message-redaction")
 			),
 
 			Capability(
@@ -110,10 +128,22 @@ extension CapabilityRegistry {
 				negotiation: .automatic,
 				specification: ircv3Specification("labeled-response")
 			),
+			Capability(
+				name: MultilineLimits.capabilityName,
+				identifier: .multiline,
+				requestedByDefault: true,
+				dependencies: ["batch", "message-tags"],
+				specification: ircv3Specification("multiline")
+			),
 			Capability.capability(
 				named: "multi-prefix",
 				identifier: .multiPrefix,
 				specification: ircv3Specification("multi-prefix")
+			),
+			Capability.capability(
+				named: "draft/no-implicit-names",
+				identifier: .noImplicitNames,
+				specification: ircv3Specification("no-implicit-names")
 			),
 			Capability.capability(
 				named: "pre-away",
@@ -136,6 +166,22 @@ extension CapabilityRegistry {
 				named: "setname",
 				identifier: .setName,
 				specification: ircv3Specification("setname")
+			),
+			/* The listing arrives in a `BATCH`, so both depend on it. Notifications
+				build on the listing. A bound connection is never offered either. */
+			Capability(
+				name: "soju.im/bouncer-networks",
+				identifier: .bouncerNetworks,
+				requestedByDefault: true,
+				dependencies: ["batch"],
+				specification: sojuSpecification("bouncer-networks")
+			),
+			Capability(
+				name: "soju.im/bouncer-networks-notify",
+				identifier: .bouncerNetworksNotify,
+				requestedByDefault: true,
+				dependencies: ["soju.im/bouncer-networks"],
+				specification: sojuSpecification("bouncer-networks-notify")
 			),
 			Capability.capability(
 				named: "standard-replies",

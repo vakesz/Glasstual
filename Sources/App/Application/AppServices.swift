@@ -22,9 +22,19 @@ enum AppServices {
 	static let highlightLogs = HighlightLogWindowSessions()
 	static let channelSpotlight = ChannelSpotlightWindow()
 	static let channelMaskList = ChannelMaskListWindow()
+	static let transcriptLogViewer = TranscriptLogViewerWindow()
+	static let scrollbackSearch = ScrollbackSearchWindow()
 
 	static let theme = ThemeStore()
 	static let fileTransfers = FileTransferStore()
+
+	/// What Shortcuts, Siri and Spotlight may ask of the chat session, and the
+	/// index that tells Spotlight about its conversations.
+	static let intentActions: any IntentActions = ChatSessionIntentActions(
+		chatSession: { AppServices.chatSession },
+		openLink: { ApplicationLinkHandler.open($0) }
+	)
+	static let conversationIndex = ConversationIndexCoordinator(actions: AppServices.intentActions)
 
 	static let scripts = ScriptCatalogStore()
 	static let messageRules = MessageRules()

@@ -29,7 +29,8 @@ struct SidebarProjection {
 	}
 
 	init(
-		sessions: [ServerSession], selectedItemIdentifier: String?, filter: SidebarFilter, filterText: String
+		sessions: [ServerSession], selectedItemIdentifier: String?, filter: SidebarFilter, filterText: String,
+		networkIcon: (URL) -> NSImage? = { _ in nil }
 	) {
 		let query = filterText.trimmingCharacters(in: .whitespacesAndNewlines)
 		let filtering = filter != .all || query.isEmpty == false
@@ -45,9 +46,18 @@ struct SidebarProjection {
 			selectableItems.append(item)
 		}
 
-		for session in sessions {
+		let hierarchy = BouncerHierarchy(sessions: sessions)
+
+		/*  One connection's rows, with its networks nested inside. A connection
+		 whose bouncer row is hidden gives its networks to the level it was on. */
+		func rowsFor(_ session: ServerSession, isDisclosed: Bool) -> [ServerRow] {
+			let networks = hierarchy.children(of: session)
+			let isHidden = session.config.bouncerHidesParent && networks.isEmpty == false
+			let isShown = isDisclosed || filtering || session.uniqueIdentifier == selectedItemIdentifier
 			knownIdentifiers.insert(.server(session.uniqueIdentifier))
-			appendSelectable(session)
+			if isShown, isHidden == false {
+				appendSelectable(session)
+			}
 			var listed: [ConversationRow] = []
 			for conversation in session.conversationList {
 				knownIdentifiers.insert(.conversation(conversation.uniqueIdentifier))
@@ -58,14 +68,18 @@ struct SidebarProjection {
 					(query.isEmpty || conversation.label.localizedStandardContains(query))
 						&& filter.matches(conversation)
 				)
-				if session.sidebarItemIsExpanded || conversation.config.isFavorite
-					|| conversation.uniqueIdentifier == selectedItemIdentifier || (filtering && matches)
+				let isDrawn = isHidden == false
+					&& ((session.sidebarItemIsExpanded && isShown) || (filtering && matches))
+				if isDrawn || conversation.config.isFavorite
+					|| conversation.uniqueIdentifier == selectedItemIdentifier
 				{
 					appendSelectable(conversation)
 				}
-				guard matches else { continue }
+				guard matches, isHidden == false || conversation.config.isFavorite else { continue }
 				let row = Self.conversationRow(conversation, unreadBadgeTint: tint)
-				listed.append(row)
+				if isHidden == false {
+					listed.append(row)
+				}
 				if conversation.config.isFavorite {
 					var favorite = row
 					favorite.networkTitle = session.label
@@ -73,26 +87,53 @@ struct SidebarProjection {
 					favoriteRows.append(favorite)
 				}
 			}
+			let networkRows = networks.flatMap {
+				rowsFor($0, isDisclosed: isHidden || (isShown && session.sidebarItemIsExpanded))
+			}
+			guard isHidden == false else { return networkRows }
 			let visible = !filtering
 				|| (filter == .all && session.label.localizedStandardContains(query))
-				|| listed.isEmpty == false
-			guard visible else { continue }
-			rows.append(ServerRow(
+				|| listed.isEmpty == false || networkRows.isEmpty == false
+			guard visible else { return [] }
+			return [ServerRow(
 				id: session.uniqueIdentifier,
 				title: session.label,
 				isActive: session.isActive,
 				isSecured: session.isSecured,
 				isExpanded: filtering || session.sidebarItemIsExpanded,
-				showsDisclosure: listed.isEmpty == false,
+				showsDisclosure: listed.isEmpty == false || networkRows.isEmpty == false,
 				conversations: listed,
-				identityStyle: session.config.sidebarIdentity
-			))
+				networks: networkRows,
+				bouncerStatus: Self.bouncerStatus(of: session),
+				identityStyle: session.config.sidebarIdentity,
+				networkIcon: session.supportInfo.networkIconURL.flatMap(networkIcon)
+			)]
+		}
+
+		for root in hierarchy.roots {
+			rows.append(contentsOf: rowsFor(root, isDisclosed: true))
 		}
 		self.rows = rows
 		self.favoriteRows = favoriteRows
 		self.selectableItems = selectableItems
 		self.itemIndexes = itemIndexes
 		self.knownIdentifiers = knownIdentifiers
+	}
+
+	/// What a network connection shows under its name: nothing while it is up.
+	private static func bouncerStatus(of session: ServerSession) -> BouncerNetworkStatus? {
+		guard let binding = session.config.bouncerNetwork else { return nil }
+		if binding.isRemoved {
+			return .removed
+		}
+		if let error = session.bouncer.networkError {
+			return .failed(error)
+		}
+		switch session.bouncer.networkState {
+		case .connecting: return .connecting
+		case .disconnected: return .disconnected
+		case .connected, nil: return nil
+		}
 	}
 
 	private static var unreadBadgeTint: NSColor? {
@@ -103,15 +144,7 @@ struct SidebarProjection {
 	}
 
 	private static func conversationRow(_ conversation: Conversation, unreadBadgeTint: NSColor?) -> ConversationRow {
-		let kind: ConversationRow.Kind = if conversation.isChannel {
-			.channel
-		} else if conversation.isDirectChat {
-			.directChat
-		} else if conversation.isConsole {
-			.console
-		} else {
-			.direct
-		}
+		let kind = ConversationRow.Kind(conversation)
 		return ConversationRow(
 			id: conversation.uniqueIdentifier,
 			title: conversation.label,

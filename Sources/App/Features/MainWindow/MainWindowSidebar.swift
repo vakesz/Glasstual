@@ -14,18 +14,23 @@ struct MainWindowSidebar: View {
 	let commands: MenuActionController?
 	let redirectTyping: (String) -> Void
 
+	private let settings = ObservableSettings.shared
+
 	var body: some View {
 		VStack(spacing: 0) {
 			SidebarView(model: sidebar, redirectTyping: redirectTyping)
 			Divider()
 			sidebarFooter
 		}
-		// The theme's own chrome ground, opaque: the sidebar never shows the
-		// desktop through a material, so a preset carries the whole window.
+		/* The system's sidebar material by default. The theme's own chrome
+		 ground, opaque, is drawn only when the reader asks the theme to carry
+		 the window's chrome. */
 		.background {
-			Rectangle()
-				.fill(Color(nsColor: AppServices.theme.chromeBackground))
-				.ignoresSafeArea(.container, edges: .top)
+			if settings[SettingsKeys.Appearance.themesWindowChrome] {
+				Rectangle()
+					.fill(Color(nsColor: AppServices.theme.chromeBackground))
+					.ignoresSafeArea(.container, edges: .top)
+			}
 		}
 	}
 

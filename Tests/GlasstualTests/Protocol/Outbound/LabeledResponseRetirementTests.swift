@@ -339,3 +339,9 @@ private final class CallbackRecorder {
 		calls.append(value)
 	}
 }
+
+private extension ServerSession {
+	func attachLineNumber(_ lineNumber: String, toDeliveryWithLabel label: String) {
+		labeledResponses.pending[label]?.lineNumber = lineNumber
+	}
+}

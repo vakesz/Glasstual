@@ -73,26 +73,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "¿Estás seguro de que quieres abrir el archivo llamado “%@” con Glasstual?"
+            "state": "translated",
+            "value": "¿Seguro que quieres abrir el archivo «%@» con Glasstual?"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Êtes-vous sûr de vouloir ouvrir le fichier nommé « %@ » avec Glasstual ?"
+            "state": "translated",
+            "value": "Voulez-vous vraiment ouvrir le fichier « %@ » avec Glasstual ?"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "「%@」という名前のファイルを「Glasstual」で開きたいですか？"
+            "state": "translated",
+            "value": "「%@」という名前のファイルをGlasstualで開いてもよろしいですか？"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Você tem certeza de que quer abrir o arquivo chamado \"%@\" com Glasstual?"
+            "state": "translated",
+            "value": "Tem certeza de que deseja abrir o arquivo chamado “%@” com o Glasstual?"
           }
         }
       }
@@ -121,26 +121,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "¿Estás seguro de que quieres dejar Glasstual?"
+            "state": "translated",
+            "value": "¿Seguro que quieres salir de Glasstual?"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Êtes-vous sûr de vouloir quitter Glasstual ?"
+            "state": "translated",
+            "value": "Voulez-vous vraiment quitter Glasstual ?"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Glasstualを終了したいですか？"
+            "state": "translated",
+            "value": "Glasstualを終了してもよろしいですか？"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Você tem certeza de que quer desistir do Glasstual?"
+            "state": "translated",
+            "value": "Tem certeza de que deseja sair do Glasstual?"
           }
         }
       }
@@ -217,26 +217,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "El certificado de este servidor es inválido. Es posible que esté conectándose a un servidor que está haciéndose pasar por “%@”, lo que podría poner en riesgo su información confidencial. ¿Desea conectarse al servidor de todos modos?"
+            "state": "translated",
+            "value": "El certificado de este servidor no es válido. Es posible que te estés conectando a un servidor que se hace pasar por «%@», lo que podría poner en riesgo tu información confidencial. ¿Quieres conectarte al servidor de todos modos?"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Le certificat pour ce serveur est invalide. Vous pourriez vous connecter à un serveur qui se fait passer pour « %@ », ce qui pourrait mettre vos informations confidentielles en danger. Souhaitez-vous quand même vous connecter au serveur ?"
+            "state": "translated",
+            "value": "Le certificat de ce serveur n’est pas valide. Vous vous connectez peut-être à un serveur qui se fait passer pour « %@ », ce qui pourrait mettre en danger vos informations confidentielles. Voulez-vous tout de même vous connecter au serveur ?"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "このサーバーの証明書は無効です。「%@」を装っているサーバーに接続している可能性があります。これにより、機密情報がリスクにさらされる可能性があります。それでもサーバーに接続しますか？"
+            "state": "translated",
+            "value": "このサーバの証明書は無効です。「%@」になりすましているサーバに接続している可能性があり、機密情報が危険にさらされるおそれがあります。それでもサーバに接続しますか？"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "O certificado para este servidor é inválido. Você pode estar se conectando a um servidor que está se passando por “%@”, o que poderia colocar suas informações confidenciais em risco. Você gostaria de se conectar ao servidor de qualquer forma?"
+            "state": "translated",
+            "value": "O certificado deste servidor é inválido. Você pode estar se conectando a um servidor que finge ser “%@”, o que pode colocar suas informações confidenciais em risco. Deseja conectar ao servidor mesmo assim?"
           }
         }
       }
@@ -265,26 +265,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "\n\nEl certificado no fue confiado por el sistema: %@"
+            "state": "translated",
+            "value": "\n\nEl sistema no confía en el certificado: %@"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "\n\nLe certificat n'a pas été crédité par le système : %@"
+            "state": "translated",
+            "value": "\n\nLe certificat n’est pas approuvé par le système : %@"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "\n\nシステムは証明書を信頼していませんでした：%@"
+            "state": "translated",
+            "value": "\n\nこの証明書はシステムに信頼されませんでした: %@"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "\n\nO certificado não foi confiado pelo sistema: %@"
+            "state": "translated",
+            "value": "\n\nO certificado não foi considerado confiável pelo sistema: %@"
           }
         }
       }
@@ -313,26 +313,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Elegir archivo"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Choisir un fichier"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ファイルを選択する"
+            "state": "translated",
+            "value": "ファイルを選択"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Escolher Arquivo"
+            "state": "translated",
+            "value": "Escolher arquivo"
           }
         }
       }
@@ -409,26 +409,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "La conexión llamada “%1$@” ya está configurada para conectarse a esta dirección de servidor.\n\n¿Quieres añadir estos canales a esa conexión o preferirías crear una nueva conexión?"
+            "state": "translated",
+            "value": "La conexión llamada «%1$@» ya está configurada para conectarse a esta dirección de servidor.\n\n¿Quieres añadir estos canales a esa conexión o prefieres crear una nueva?"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "La connexion nommée « %1$@ » est déjà configurée pour se connecter à cette adresse de serveur.\n\nVoulez-vous ajouter ces canaux à cette connexion ou préférez-vous créer une nouvelle connexion ?"
+            "state": "translated",
+            "value": "La connexion nommée « %1$@ » est déjà configurée pour se connecter à cette adresse de serveur.\n\nVoulez-vous ajouter ces canaux à cette connexion ou préférez-vous créer une nouvelle connexion ?"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "「%1$@」という名前の接続は、すでにこのサーバーアドレスに接続するように設定されています。\n\nこれらのチャンネルをその接続に追加しますか、それとも新しい接続を作成したほうがよろしいですか？"
+            "state": "translated",
+            "value": "「%1$@」という接続は、すでにこのサーバアドレスに接続するように設定されています。\n\nこれらのチャンネルをその接続に追加しますか？それとも新しい接続を作成しますか？"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "A conexão chamada “%1$@” já está configurada para se conectar a este endereço de servidor.\n\nVocê quer adicionar esses canais a essa conexão ou prefere criar uma nova conexão?"
+            "state": "translated",
+            "value": "A conexão chamada “%1$@” já está configurada para se conectar a este endereço de servidor.\n\nDeseja adicionar esses canais a essa conexão ou prefere criar uma nova conexão?"
           }
         }
       }
@@ -457,26 +457,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "La conexión llamada “%1$@” ya está configurada para conectarse a esta dirección de servidor.\n\n¿Quieres añadir este canal a esa conexión o preferirías crear una nueva conexión?"
+            "state": "translated",
+            "value": "La conexión llamada «%1$@» ya está configurada para conectarse a esta dirección de servidor.\n\n¿Quieres añadir este canal a esa conexión o prefieres crear una nueva?"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "La connexion nommée « %1$@ » est déjà configurée pour se connecter à cette adresse de serveur.\n\nVoulez-vous ajouter cette chaîne à cette connexion ou préférez-vous créer une nouvelle connexion ?"
+            "state": "translated",
+            "value": "La connexion nommée « %1$@ » est déjà configurée pour se connecter à cette adresse de serveur.\n\nVoulez-vous ajouter ce canal à cette connexion ou préférez-vous créer une nouvelle connexion ?"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "「%1$@」という名前の接続は、すでにこのサーバーアドレスに接続するように設定されています。\n\nこのチャンネルをその接続に追加しますか、それとも新しい接続を作成したほうがよろしいですか？"
+            "state": "translated",
+            "value": "「%1$@」という接続は、すでにこのサーバアドレスに接続するように設定されています。\n\nこのチャンネルをその接続に追加しますか？それとも新しい接続を作成しますか？"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "A conexão chamada “%1$@” já está configurada para se conectar a este endereço de servidor.\n\nVocê quer adicionar este canal a essa conexão ou prefere criar uma nova conexão?"
+            "state": "translated",
+            "value": "A conexão chamada “%1$@” já está configurada para se conectar a este endereço de servidor.\n\nDeseja adicionar este canal a essa conexão ou prefere criar uma nova conexão?"
           }
         }
       }
@@ -553,26 +553,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Glasstual no pudo abrir su historial de conversaciones guardado. Por favor, informe de este problema en https://github.com/vakesz/Glasstual/issues"
+            "state": "translated",
+            "value": "Glasstual no pudo abrir tu historial de conversaciones guardado. Informa de este problema en https://github.com/vakesz/Glasstual/issues"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Glasstual n'a pas pu ouvrir votre historique de conversations enregistrées. Veuillez signaler ce problème à https://github.com/vakesz/Glasstual/issues."
+            "state": "translated",
+            "value": "Glasstual n’a pas pu ouvrir l’historique de vos conversations enregistrées. Signalez ce problème sur https://github.com/vakesz/Glasstual/issues"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Glasstualでは、保存済みの会話履歴を開けられませんでした。この問題はhttps://github.com/vakesz/Glasstual/issuesで報告してください。"
+            "state": "translated",
+            "value": "Glasstualは保存済みの会話履歴を開けませんでした。この問題は https://github.com/vakesz/Glasstual/issues で報告してください。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Glasstual não pôde abrir seu histórico de conversas salvado. Por favor, reporte este problema em https://github.com/vakesz/Glasstual/issues"
+            "state": "translated",
+            "value": "O Glasstual não conseguiu abrir seu histórico de conversas salvo. Informe este problema em https://github.com/vakesz/Glasstual/issues"
           }
         }
       }
@@ -601,25 +601,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Crear nueva conexión"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Créer une nouvelle connexion"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "新しい接続を作成する"
+            "state": "translated",
+            "value": "新しい接続を作成"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Criar nova conexão"
           }
         }
@@ -745,26 +745,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Solicitud de chat directo de %@"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Demande de chat direct de %@"
+            "state": "translated",
+            "value": "Demande de discussion directe de %@"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@からのダイレクトチャットリクエスト"
+            "state": "translated",
+            "value": "%@からのダイレクトチャットのリクエスト"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Solicitação de bate-papo direto de %@"
+            "state": "translated",
+            "value": "Solicitação de chat direto de %@"
           }
         }
       }
@@ -776,7 +776,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Do not ask me again"
+            "value": "Don’t ask again"
           }
         },
         "hu": {
@@ -793,26 +793,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "No me lo vuelvas a preguntar"
+            "state": "translated",
+            "value": "No volver a preguntar"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Ne me le demande plus"
+            "state": "translated",
+            "value": "Ne plus demander"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "もう私に尋ねないでください"
+            "state": "translated",
+            "value": "今後は確認しない"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Não me pergunte novamente"
+            "state": "translated",
+            "value": "Não perguntar novamente"
           }
         }
       }
@@ -824,43 +824,43 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Do not show this message again"
+            "value": "Don’t ask again"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ne jelenjen meg újra ez az üzenet"
+            "value": "Ne kérdezze újra"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Diese Meldung nicht mehr anzeigen"
+            "value": "Nicht erneut fragen"
           }
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "No mostrar este mensaje de nuevo"
+            "state": "translated",
+            "value": "No volver a preguntar"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Ne pas afficher ce message à nouveau"
+            "state": "translated",
+            "value": "Ne plus demander"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "このメッセージをもう表示しないでください"
+            "state": "translated",
+            "value": "今後は確認しない"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Não mostrar esta mensagem novamente"
+            "state": "translated",
+            "value": "Não perguntar novamente"
           }
         }
       }
@@ -889,26 +889,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "¿Quieres eliminar \"%@\"?"
+            "state": "translated",
+            "value": "¿Quieres eliminar «%@»?"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Voulez-vous supprimer « %@ » ?"
+            "state": "translated",
+            "value": "Voulez-vous supprimer « %@ » ?"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "「%@」を削除しますか？"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Você quer excluir “%@”?"
+            "state": "translated",
+            "value": "Deseja apagar “%@”?"
           }
         }
       }
@@ -937,26 +937,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "El cifrado con un certificado digital mantiene la información privada mientras se envía a o desde el servidor \"%1$@\"."
+            "state": "translated",
+            "value": "El cifrado con un certificado digital mantiene la información privada mientras se envía hacia o desde el servidor «%1$@»"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Le chiffrement avec un certificat numérique maintient les informations privées lorsqu'elles sont envoyées vers ou depuis le serveur « %1$@ »."
+            "state": "translated",
+            "value": "Le chiffrement par certificat numérique préserve la confidentialité des informations envoyées au serveur « %1$@ » ou reçues de celui-ci"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "デジタル証明書による暗号化により、「%1$@」サーバーへの送信または受信時に情報が機密保持されます。"
+            "state": "translated",
+            "value": "デジタル証明書による暗号化により、サーバ「%1$@」との間で送受信される情報の機密性が保たれます"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "A criptografia com um certificado digital mantém as informações privadas enquanto são enviadas para ou a partir do servidor \"%1$@\"."
+            "state": "translated",
+            "value": "A criptografia com um certificado digital mantém as informações privadas quando enviadas para o servidor “%1$@” ou recebidas dele"
           }
         }
       }
@@ -985,26 +985,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "El cifrado con un certificado digital mantiene la información privada mientras se envía a o desde el servidor \"%1$@\".\n\nInformación cifrada utilizando: %2$@"
+            "state": "translated",
+            "value": "El cifrado con un certificado digital mantiene la información privada mientras se envía hacia o desde el servidor «%1$@»\n\nInformación cifrada con: %2$@"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Le chiffrement avec un certificat numérique maintient les informations privées lorsqu'elles sont envoyées vers ou depuis le serveur « %1$@ ».\n\nInformations chiffrées à l'aide de : %2$@"
+            "state": "translated",
+            "value": "Le chiffrement par certificat numérique préserve la confidentialité des informations envoyées au serveur « %1$@ » ou reçues de celui-ci\n\nInformations chiffrées avec : %2$@"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "デジタル証明書による暗号化により、「%1$@」サーバーへの送信または受信時に情報が機密保持されます。\n\n情報を暗号化したもの：%2$@"
+            "state": "translated",
+            "value": "デジタル証明書による暗号化により、サーバ「%1$@」との間で送受信される情報の機密性が保たれます\n\n情報の暗号化に使用: %2$@"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "A criptografia com um certificado digital mantém as informações privadas enquanto são enviadas para ou a partir do servidor \"%1$@\".\n\nInformação criptografada usando: %2$@"
+            "state": "translated",
+            "value": "A criptografia com um certificado digital mantém as informações privadas quando enviadas para o servidor “%1$@” ou recebidas dele\n\nInformações criptografadas usando: %2$@"
           }
         }
       }
@@ -1081,26 +1081,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Glasstual no puede verificar la identidad del servidor “%@”"
+            "state": "translated",
+            "value": "Glasstual no puede verificar la identidad del servidor «%@»"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Glasstual ne peut pas vérifier l'identité du serveur « %@ »"
+            "state": "translated",
+            "value": "Glasstual ne peut pas vérifier l’identité du serveur « %@ »"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Glasstualはサーバー「%@」の身元を確認できません。"
+            "state": "translated",
+            "value": "Glasstualはサーバ「%@」の身元を確認できません"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Glasstual não pode verificar a identidade do servidor “%@”"
+            "state": "translated",
+            "value": "O Glasstual não consegue verificar a identidade do servidor “%@”"
           }
         }
       }
@@ -1129,26 +1129,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Glasstual ya no puede acceder a la carpeta establecida como ubicación de su registro."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Glasstual ne peut plus accéder au dossier défini comme emplacement de son journal."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Glasstualは、ログ場所として設定されたフォルダに到達できなくなりました。"
+            "state": "translated",
+            "value": "Glasstualは、ログの保存場所として設定されたフォルダにアクセスできなくなりました。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Glasstual não pode mais acessar a pasta definida como local de registro."
+            "state": "translated",
+            "value": "O Glasstual não consegue mais acessar a pasta definida como local dos registros."
           }
         }
       }
@@ -1177,26 +1177,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Glasstual está utilizando una conexión cifrada a “%@”"
+            "state": "translated",
+            "value": "Glasstual está usando una conexión cifrada con «%@»"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Glasstual utilise une connexion chiffrée vers « %@ »"
+            "state": "translated",
+            "value": "Glasstual utilise une connexion chiffrée vers « %@ »"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Glasstualは「%@」に暗号化された接続を使用しています。"
+            "state": "translated",
+            "value": "Glasstualは「%@」への暗号化された接続を使用しています"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Glasstual está usando uma conexão criptografada para “%@”"
+            "state": "translated",
+            "value": "O Glasstual está usando uma conexão criptografada com “%@”"
           }
         }
       }
@@ -1225,25 +1225,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": ""
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": ""
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": ""
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": ""
           }
         }
@@ -1273,25 +1273,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": ""
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": ""
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": ""
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": ""
           }
         }
@@ -1321,25 +1321,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Último mensaje de error conocido: %@"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Dernier message d'erreur connu : %@"
+            "state": "translated",
+            "value": "Dernier message d’erreur connu : %@"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "最後に知られているエラーメッセージ：%@"
+            "state": "translated",
+            "value": "最後に確認されたエラーメッセージ: %@"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Última mensagem de erro conhecida: %@"
           }
         }
@@ -1369,25 +1369,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "El registro se ha desactivado porque no hay suficiente espacio en el Mac"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Le journalisation a été désactivée car il n’y a pas assez d’espace sur votre Mac"
+            "state": "translated",
+            "value": "La journalisation a été désactivée, car il n’y a pas assez d’espace sur votre Mac"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Macに十分なストレージ容量がないため、ログ記録が無効になっています。"
+            "state": "translated",
+            "value": "Macの空き容量が不足しているため、ログの記録が無効になりました"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "O registro foi desativado porque não há espaço suficiente no seu Mac"
           }
         }
@@ -1417,25 +1417,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "El registro se reanudará cuando haya espacio libre disponible."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Le journalage reprendra lorsque de l'espace libre sera disponible."
+            "state": "translated",
+            "value": "La journalisation reprendra lorsque de l’espace libre sera disponible."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "空きスペースがあるときに、ログの記録が再開されます。"
+            "state": "translated",
+            "value": "空き容量が確保されると、ログの記録が再開されます。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "O registro será retomado quando houver espaço livre disponível."
           }
         }
@@ -1465,26 +1465,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Elige la carpeta de nuevo en Ajustes › Avanzado › Ubicación del registro."
+            "state": "translated",
+            "value": "Vuelve a elegir la carpeta en Ajustes › Avanzado › Ubicación del registro."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Choisissez à nouveau le dossier dans Paramètres › Avancé › Localisation des journaux."
+            "state": "translated",
+            "value": "Choisissez à nouveau le dossier dans Réglages › Avancé › Emplacement des journaux."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "「設定」＞「高度な設定」＞「ログの場所」で、フォルダをもう一度選択します。"
+            "state": "translated",
+            "value": "「設定」›「詳細」›「ログの保存場所」で、フォルダをもう一度選択してください。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Escolha a pasta novamente em Ajustes › Avançado › Localização do registro."
+            "state": "translated",
+            "value": "Escolha a pasta novamente em Ajustes › Avançado › Local dos registros."
           }
         }
       }
@@ -1561,25 +1561,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "No se encontraron registros"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Aucun journal n'a été trouvé"
+            "state": "translated",
+            "value": "Aucun journal n’a été trouvé"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ログが見つかりませんでした。"
+            "state": "translated",
+            "value": "ログが見つかりませんでした"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Nenhum registro foi encontrado"
           }
         }
@@ -1657,26 +1657,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Por favor, introduzca el vHost deseado (p. ej. \"apple.vhost\")"
+            "state": "translated",
+            "value": "Introduce el vHost que quieras (p. ej. «apple.vhost»)"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Veuillez saisir le vHost souhaité (par exemple \"apple.vhost\")"
+            "state": "translated",
+            "value": "Saisissez le vHost souhaité (par exemple « apple.vhost »)"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ご希望のvHostを入力してください（例：「apple.vhost」）"
+            "state": "translated",
+            "value": "使用したいvHostを入力してください(例: 「apple.vhost」)"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Por favor, insira o vHost desejado (por exemplo, \"apple.vhost\")"
+            "state": "translated",
+            "value": "Insira o vHost desejado (por exemplo, “apple.vhost”)"
           }
         }
       }
@@ -1705,26 +1705,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Tenga en cuenta que los siguientes elementos no se pueden importar: complementos personalizados, ubicación de descarga de transferencia de archivos, ubicación de los registros y contraseñas."
+            "state": "translated",
+            "value": "Ten en cuenta que no se pueden importar los siguientes elementos: complementos personalizados, ubicación de descarga de transferencias de archivos, ubicación de los registros y contraseñas."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Veuillez noter que les éléments suivants ne peuvent pas être importés : les ajouts personnalisés, l'emplacement de téléchargement du transfert de fichiers, l'emplacement des journaux et les mots de passe."
+            "state": "translated",
+            "value": "Notez que les éléments suivants ne peuvent pas être importés : extensions personnalisées, emplacement de téléchargement des transferts de fichiers, emplacement des journaux et mots de passe."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "以下の項目はインポートできませんのでご注意ください：カスタムアドオン、ファイル転送のダウンロード場所、ログの場所、パスワード。"
+            "state": "translated",
+            "value": "次の項目は読み込めませんのでご注意ください: カスタムアドオン、ファイル転送のダウンロード先、ログの保存場所、パスワード。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Observe que os seguintes itens não podem ser importados: adicionais personalizados, localização de download de transferência de arquivos, localização de logs e senhas."
+            "state": "translated",
+            "value": "Observe que os itens a seguir não podem ser importados: complementos personalizados, local de download das transferências de arquivos, local dos registros e senhas."
           }
         }
       }
@@ -1753,26 +1753,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Tenga en cuenta que los siguientes elementos no se pueden exportar: complementos personalizados, ubicación de descarga de transferencia de archivos, ubicación de los registros y contraseñas."
+            "state": "translated",
+            "value": "Ten en cuenta que no se pueden exportar los siguientes elementos: complementos personalizados, ubicación de descarga de transferencias de archivos, ubicación de los registros y contraseñas."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Veuillez noter que les éléments suivants ne peuvent pas être exportés : les ajouts personnalisés, l'emplacement de téléchargement du transfert de fichiers, l'emplacement des journaux et les mots de passe."
+            "state": "translated",
+            "value": "Notez que les éléments suivants ne peuvent pas être exportés : extensions personnalisées, emplacement de téléchargement des transferts de fichiers, emplacement des journaux et mots de passe."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "以下の項目はエクスポートできませんのでご注意ください：カスタムアドオン、ファイル転送のダウンロード場所、ログの場所、パスワードです。"
+            "state": "translated",
+            "value": "次の項目は書き出せませんのでご注意ください: カスタムアドオン、ファイル転送のダウンロード先、ログの保存場所、パスワード。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Observe que os seguintes itens não podem ser exportados: adicionais personalizados, localização de download de transferência de arquivos, localização de logs e senhas."
+            "state": "translated",
+            "value": "Observe que os itens a seguir não podem ser exportados: complementos personalizados, local de download das transferências de arquivos, local dos registros e senhas."
           }
         }
       }
@@ -1801,26 +1801,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Ya existe una consulta llamada “%@”. ¿Quieres eliminar esta consulta?"
+            "state": "translated",
+            "value": "Ya existe un mensaje directo llamado «%@». ¿Quieres eliminar este mensaje directo?"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Une requête nommée « %@ » existe déjà. Voulez-vous supprimer cette requête ?"
+            "state": "translated",
+            "value": "Une conversation privée nommée « %@ » existe déjà. Voulez-vous supprimer cette conversation privée ?"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "「%@」という名前のクエリはすでに存在しています。このクエリを削除しますか？"
+            "state": "translated",
+            "value": "「%@」という名前のダイレクトメッセージはすでに存在します。このダイレクトメッセージを削除しますか？"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Uma consulta chamada “%@” já existe. Você quer excluir esta consulta?"
+            "state": "translated",
+            "value": "Já existe uma conversa chamada “%@”. Deseja apagar esta conversa?"
           }
         }
       }
@@ -1897,26 +1897,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Cederte desconectará de cualquier servidor al que estés conectado hasta que reinicies Glasstual."
+            "state": "translated",
+            "value": "Al salir se te desconectará de todos los servidores a los que estés conectado hasta que vuelvas a abrir Glasstual."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Le déconnexion vous déconnectera de tout serveur auquel vous êtes connecté jusqu'à ce que vous redémarriez Glasstual."
+            "state": "translated",
+            "value": "Quitter vous déconnectera de tous les serveurs auxquels vous êtes connecté jusqu’au redémarrage de Glasstual."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ログアウトすると、Glasstualを再起動するまで、接続しているサーバーから接続が切断されます。"
+            "state": "translated",
+            "value": "終了すると、Glasstualを再起動するまで、接続中のすべてのサーバから切断されます。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "O desligamento irá desconectá-lo de qualquer servidor ao qual você esteja conectado até que você reinicie Glasstual."
+            "state": "translated",
+            "value": "Ao sair, você será desconectado de todos os servidores aos quais estiver conectado até reiniciar o Glasstual."
           }
         }
       }
@@ -2041,25 +2041,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Guardar archivo"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Enregistrer le fichier"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ファイルを保存する"
+            "state": "translated",
+            "value": "ファイルを保存"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Salvar arquivo"
           }
         }
@@ -2089,74 +2089,74 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "El script llamado \"%@\" se ha instalado con éxito."
+            "state": "translated",
+            "value": "El script llamado «%@» se ha instalado correctamente"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Le script nommé « %@ » a été installé avec succès."
+            "state": "translated",
+            "value": "Le script « %@ » a bien été installé"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "「%@」という名前のスクリプトが正常にインストールされました。"
+            "state": "translated",
+            "value": "「%@」というスクリプトが正常にインストールされました"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "O script chamado “%@” foi instalado com sucesso"
           }
         }
       }
     },
     "scrollback-database-could-not-be-opened": {
-      "comment": "Body of the alert shown when the scrollback database cannot be opened and the failure came with no description of its own.",
+      "comment": "Body of the alert shown when the saved history cannot be opened and the failure came with no description of its own.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The scrollback database could not be opened."
+            "value": "Glasstual could not open your saved history."
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nem sikerült megnyitni az előzményadatbázist."
+            "value": "A Glasstual nem tudta megnyitni a mentett előzményeket."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die Verlaufsdatenbank konnte nicht geöffnet werden."
+            "value": "Glasstual konnte deinen gespeicherten Verlauf nicht öffnen."
           }
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "No se pudo abrir la base de datos de retroceso."
+            "state": "translated",
+            "value": "Glasstual no pudo abrir tu historial guardado."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "La base de données de rétrospection n’a pas pu être ouverte."
+            "state": "translated",
+            "value": "Glasstual n’a pas pu ouvrir votre historique enregistré."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "スクロールバックデータベースを開くことができませんでした。"
+            "state": "translated",
+            "value": "Glasstualは保存済みの履歴を開けませんでした。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "O banco de dados de rolagem para trás não pôde ser aberto."
+            "state": "translated",
+            "value": "O Glasstual não conseguiu abrir seu histórico salvo."
           }
         }
       }
@@ -2281,25 +2281,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Configurar vHost del usuario"
+            "state": "translated",
+            "value": "Establecer vHost del usuario"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Définir l'hôte utilisateur vHost"
+            "state": "translated",
+            "value": "Définir le vHost de l’utilisateur"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ユーザーvHostを設定する"
+            "state": "translated",
+            "value": "ユーザのvHostを設定"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Definir vHost do usuário"
           }
         }
@@ -2329,26 +2329,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "No se pudo importar la configuración."
+            "state": "translated",
+            "value": "No se pudieron importar los ajustes."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Les paramètres n'ont pas pu être importés."
+            "state": "translated",
+            "value": "Impossible d’importer les réglages."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "設定をインポートできませんでした。"
+            "state": "translated",
+            "value": "設定を読み込めませんでした。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "As configurações não puderam ser importadas."
+            "state": "translated",
+            "value": "Não foi possível importar os ajustes."
           }
         }
       }
@@ -2377,26 +2377,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "El archivo seleccionado no es un archivo de configuración Glasstual."
+            "state": "translated",
+            "value": "El archivo seleccionado no es un archivo de ajustes de Glasstual."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Le fichier sélectionné n'est pas un fichier de paramètres Glasstual."
+            "state": "translated",
+            "value": "Le fichier sélectionné n’est pas un fichier de réglages Glasstual."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "選択されたファイルはGlasstual設定ファイルではありません。"
+            "state": "translated",
+            "value": "選択したファイルは、Glasstualの設定ファイルではありません。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "O arquivo selecionado não é um arquivo de configurações Glasstual."
+            "state": "translated",
+            "value": "O arquivo selecionado não é um arquivo de ajustes do Glasstual."
           }
         }
       }
@@ -2408,43 +2408,43 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "There is no undo and all data related to this channel, except for logs, will be erased."
+            "value": "All data related to this channel, except for logs, will be erased. This action cannot be undone."
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ez nem vonható vissza. A naplók kivételével a csatornához tartozó összes adat törlődik."
+            "value": "A naplók kivételével a csatornához tartozó összes adat törlődik. Ez a művelet nem vonható vissza."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dies kann nicht rückgängig gemacht werden. Alle Daten dieses Kanals außer den Protokollen werden gelöscht."
+            "value": "Alle Daten dieses Kanals außer den Protokollen werden gelöscht. Diese Aktion kann nicht rückgängig gemacht werden."
           }
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "No hay deshacer y todos los datos relacionados con este canal, excepto los registros, serán borrados."
+            "state": "translated",
+            "value": "Se borrarán todos los datos relacionados con este canal, excepto los registros. Esta acción no se puede deshacer."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Il n'y a pas d'annulation et toutes les données liées à cette chaîne, à l'exception des journaux, seront effacées."
+            "state": "translated",
+            "value": "Toutes les données associées à ce canal, à l’exception des journaux, seront effacées. Cette action est irréversible."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "元に戻すことはできず、ログを除き、このチャンネルに関連するすべてのデータは消去されます。"
+            "state": "translated",
+            "value": "このチャンネルに関連するログ以外のすべてのデータが消去されます。この操作は取り消せません。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Não há desfecho e todos os dados relacionados a este canal, exceto os registros, serão apagados."
+            "state": "translated",
+            "value": "Todos os dados relacionados a este canal, exceto os registros, serão apagados. Esta ação não pode ser desfeita."
           }
         }
       }
@@ -2456,43 +2456,43 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "There is no undo and all data related to this server, except for logs, will be erased."
+            "value": "All data related to this server, except for logs, will be erased. This action cannot be undone."
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ez nem vonható vissza. A naplók kivételével a kiszolgálóhoz tartozó összes adat törlődik."
+            "value": "A naplók kivételével a kiszolgálóhoz tartozó összes adat törlődik. Ez a művelet nem vonható vissza."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dies kann nicht rückgängig gemacht werden. Alle Daten dieses Servers außer den Protokollen werden gelöscht."
+            "value": "Alle Daten dieses Servers außer den Protokollen werden gelöscht. Diese Aktion kann nicht rückgängig gemacht werden."
           }
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "No hay deshacer y todos los datos relacionados con este servidor, excepto los registros, serán borrados."
+            "state": "translated",
+            "value": "Se borrarán todos los datos relacionados con este servidor, excepto los registros. Esta acción no se puede deshacer."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Il n'y a pas d'annulation et toutes les données liées à ce serveur, à l'exception des journaux, seront effacées."
+            "state": "translated",
+            "value": "Toutes les données associées à ce serveur, à l’exception des journaux, seront effacées. Cette action est irréversible."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "元に戻すことはできず、ログを除き、このサーバーに関連するすべてのデータは消去されます。"
+            "state": "translated",
+            "value": "このサーバに関連するログ以外のすべてのデータが消去されます。この操作は取り消せません。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Não há desfecho e todos os dados relacionados a este servidor, exceto os registros, serão apagados."
+            "state": "translated",
+            "value": "Todos os dados relacionados a este servidor, exceto os registros, serão apagados. Esta ação não pode ser desfeita."
           }
         }
       }
@@ -2504,43 +2504,43 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "There is no undo and all data related to this query, except for logs, will be erased."
+            "value": "All data related to this query, except for logs, will be erased. This action cannot be undone."
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ez nem vonható vissza. A naplók kivételével a privát beszélgetéshez tartozó összes adat törlődik."
+            "value": "A naplók kivételével a privát beszélgetéshez tartozó összes adat törlődik. Ez a művelet nem vonható vissza."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dies kann nicht rückgängig gemacht werden. Alle Daten dieses Gesprächs außer den Protokollen werden gelöscht."
+            "value": "Alle Daten dieses Gesprächs außer den Protokollen werden gelöscht. Diese Aktion kann nicht rückgängig gemacht werden."
           }
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "No hay deshacer y todos los datos relacionados con esta consulta, excepto los registros, serán borrados."
+            "state": "translated",
+            "value": "Se borrarán todos los datos relacionados con este mensaje directo, excepto los registros. Esta acción no se puede deshacer."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Il n'y a pas d'annulation et toutes les données liées à cette requête, à l'exception des journaux, seront effacées."
+            "state": "translated",
+            "value": "Toutes les données associées à cette conversation privée, à l’exception des journaux, seront effacées. Cette action est irréversible."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "取り消しはありません。ログを除き、このクエリに関連するすべてのデータは消去されます。"
+            "state": "translated",
+            "value": "このダイレクトメッセージに関連するログ以外のすべてのデータが消去されます。この操作は取り消せません。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Não há desfecho e todos os dados relacionados a esta consulta, exceto os registros, serão apagados."
+            "state": "translated",
+            "value": "Todos os dados relacionados a esta conversa, exceto os registros, serão apagados. Esta ação não pode ser desfeita."
           }
         }
       }
@@ -2569,26 +2569,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Esta acción sobrescribirá tu configuración con el contenido de un archivo que elijas"
+            "state": "translated",
+            "value": "Esta acción sobrescribirá tus ajustes con el contenido de un archivo que elijas"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Cette action remplacera votre configuration par le contenu d'un fichier que vous choisissez."
+            "state": "translated",
+            "value": "Cette action remplacera votre configuration par le contenu d’un fichier que vous choisissez"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "この操作により、選択したファイルのコンテンツで設定を上書きします。"
+            "state": "translated",
+            "value": "この操作により、設定が、選択したファイルの内容で上書きされます"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Esta ação substituirá sua configuração com o conteúdo de um arquivo que você escolher"
+            "state": "translated",
+            "value": "Esta ação substituirá sua configuração pelo conteúdo de um arquivo que você escolher"
           }
         }
       }
@@ -2617,26 +2617,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Esta acción guardará una copia de su configuración en una ubicación de su elección."
+            "state": "translated",
+            "value": "Esta acción guardará una copia de tus ajustes en la ubicación que elijas"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Cette action enregistrera une copie de votre configuration dans un emplacement de votre choix."
+            "state": "translated",
+            "value": "Cette action enregistrera une copie de votre configuration à l’emplacement de votre choix"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "この操作により、設定のコピーをご希望の場所に保存します。"
+            "state": "translated",
+            "value": "この操作により、設定のコピーが、指定した場所に保存されます"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Esta ação salvará uma cópia da sua configuração em um local de sua escolha"
+            "state": "translated",
+            "value": "Esta ação salvará uma cópia da sua configuração em um local à sua escolha"
           }
         }
       }
@@ -2665,25 +2665,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Escribe “/%@” en el campo de texto de entrada principal para ejecutar este script."
+            "state": "translated",
+            "value": "Escribe «/%@» en el campo de texto de entrada principal para ejecutar este script."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Saisissez “/%@” dans le champ de saisie principal pour exécuter ce script."
+            "state": "translated",
+            "value": "Saisissez « /%@ » dans le champ de saisie principal pour exécuter ce script."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "このスクリプトを実行するには、メインの入力テキストフィールドに“/%@”と入力します。"
+            "state": "translated",
+            "value": "このスクリプトを実行するには、メインの入力フィールドに「/%@」と入力します。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Digite “/%@” no campo de texto de entrada principal para executar este script."
           }
         }
@@ -2713,26 +2713,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Usar conexión existente"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Utiliser la connexion existante"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "既存の接続を使用する"
+            "state": "translated",
+            "value": "既存の接続を使用"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Usar Conexão Existente"
+            "state": "translated",
+            "value": "Usar conexão existente"
           }
         }
       }
@@ -2761,25 +2761,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "apple.vhost"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "apple.vhost"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "apple.vhost"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "apple.vhost"
           }
         }
@@ -2809,26 +2809,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%@ quiere iniciar un chat directo contigo. Un chat directo es una conexión entre los dos que no pasa por el servidor IRC, por lo que la otra persona conocerá tu dirección IP."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@ veut commencer un chat direct avec vous. Un chat direct est une connexion entre vous deux qui ne passe pas par le serveur IRC, de sorte que l'autre personne apprendra votre adresse IP."
+            "state": "translated",
+            "value": "%@ souhaite démarrer une discussion directe avec vous. Une discussion directe est une connexion entre vous deux qui ne passe pas par le serveur IRC ; l’autre personne connaîtra donc votre adresse IP."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@はあなたとダイレクトチャットを開始したいと考えています。ダイレクトチャットはIRCサーバーを経由せず、あなた方二人の間の接続であり、相手はあなたのIPアドレスを知ることになります。"
+            "state": "translated",
+            "value": "%@があなたとダイレクトチャットを開始しようとしています。ダイレクトチャットは、IRCサーバを経由せず、あなたと相手との間で直接行う接続のため、相手にあなたのIPアドレスが知られます。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@ quer iniciar um chat direto com você. Um chat direto é uma conexão entre vocês dois que não passa pelo servidor IRC, portanto a outra pessoa aprenderá seu endereço IP."
+            "state": "translated",
+            "value": "%@ quer iniciar um chat direto com você. Um chat direto é uma conexão entre vocês dois que não passa pelo servidor IRC, portanto a outra pessoa saberá seu endereço IP."
           }
         }
       }
@@ -2857,26 +2857,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%1$@ con el conjunto de cifrado: %2$@"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$@ avec le jeu de chiffrement : %2$@"
+            "state": "translated",
+            "value": "%1$@ avec la suite de chiffrement : %2$@"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$@、暗号スイート：%2$@を使用"
+            "state": "translated",
+            "value": "%1$@(暗号スイート: %2$@)"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$@ com o conjunto de criptografia: %2$@"
+            "state": "translated",
+            "value": "%1$@ com o conjunto de cifras: %2$@"
           }
         }
       }
@@ -2905,26 +2905,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$@ con el conjunto de cifrados: %2$@ (descontinuado)"
+            "state": "translated",
+            "value": "%1$@ con el conjunto de cifrado: %2$@ (obsoleto)"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$@ avec le jeu de chiffrement : %2$@ (déprécié)"
+            "state": "translated",
+            "value": "%1$@ avec la suite de chiffrement : %2$@ (obsolète)"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$@、暗号スイート：%2$@（不要になった）を使用しています。"
+            "state": "translated",
+            "value": "%1$@(暗号スイート: %2$@、非推奨)"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$@ com o conjunto de criptografias: %2$@ (descontinuado)"
+            "state": "translated",
+            "value": "%1$@ com o conjunto de cifras: %2$@ (obsoleto)"
           }
         }
       }
@@ -2953,25 +2953,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Sí"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Oui"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "はい"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Sim"
           }
         }
@@ -3001,26 +3001,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Has hecho clic en un enlace que te conectará a “%1$@” y te unirá al canal %2$@"
+            "state": "translated",
+            "value": "Has hecho clic en un enlace que te conectará a «%1$@» y te unirá al canal %2$@"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Vous avez cliqué sur un lien qui vous connectera à « %1$@ » et rejoindra le canal %2$@."
+            "state": "translated",
+            "value": "Vous avez cliqué sur un lien qui vous connectera à « %1$@ » et vous fera rejoindre le canal %2$@"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "「%1$@」に接続し、チャンネル%2$@に参加するリンクをクリックしました。"
+            "state": "translated",
+            "value": "「%1$@」に接続し、チャンネル%2$@に参加するリンクをクリックしました"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Você clicou em um link que o conectará a “%1$@” e se juntará ao canal %2$@"
+            "state": "translated",
+            "value": "Você clicou em um link que vai conectá-lo a “%1$@” e entrar no canal %2$@"
           }
         }
       }
@@ -3049,26 +3049,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Has hecho clic en un enlace que te conectará a “%1$@” y te unirá a los canales: %2$@"
+            "state": "translated",
+            "value": "Has hecho clic en un enlace que te conectará a «%1$@» y te unirá a los canales: %2$@"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Vous avez cliqué sur un lien qui vous connectera à « %1$@ » et rejoindra les canaux : %2$@"
+            "state": "translated",
+            "value": "Vous avez cliqué sur un lien qui vous connectera à « %1$@ » et vous fera rejoindre les canaux : %2$@"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "「%1$@」に接続し、チャンネル「%2$@」に参加するためのリンクをクリックしました。"
+            "state": "translated",
+            "value": "「%1$@」に接続し、次のチャンネルに参加するリンクをクリックしました: %2$@"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Você clicou em um link que o conectará a “%1$@” e se juntará aos canais: %2$@"
+            "state": "translated",
+            "value": "Você clicou em um link que vai conectá-lo a “%1$@” e entrar nos canais: %2$@"
           }
         }
       }
@@ -3097,26 +3097,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "No se pudo hacer una copia de seguridad de la configuración actual, por lo que no se ha cambiado nada."
+            "state": "translated",
+            "value": "No se pudo hacer una copia de seguridad de los ajustes actuales, por lo que no se ha cambiado nada."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Vos paramètres actuels n'ont pas pu être sauvegardés, donc rien n'a été modifié."
+            "state": "translated",
+            "value": "Impossible de sauvegarder vos réglages actuels, donc rien n’a été modifié."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "現在の設定をバックアップできませんでしたので、何も変更されませんでした。"
+            "state": "translated",
+            "value": "現在の設定をバックアップできなかったため、何も変更されませんでした。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "As suas configurações atuais não puderam ser salvas em backup, portanto nada foi alterado."
+            "state": "translated",
+            "value": "Não foi possível fazer backup dos seus ajustes atuais, então nada foi alterado."
           }
         }
       }
@@ -3145,26 +3145,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Algunos cambios de contraseña no se han guardado. Inténtalo de nuevo antes de salir, o sal sin guardar estos cambios."
+            "state": "translated",
+            "value": "Algunos cambios de contraseña no se han guardado. Inténtalo de nuevo antes de salir o sal sin guardar estos cambios."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Certaines modifications de mot de passe n'ont pas été enregistrées. Réessayez avant de quitter, ou quittez sans enregistrer ces modifications."
+            "state": "translated",
+            "value": "Certaines modifications de mot de passe n’ont pas été enregistrées. Réessayez avant de quitter, ou quittez sans enregistrer ces modifications."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "パスワードの変更がいくつか保存されませんでした。終了する前にもう一度試してください。または、これらの変更を保存せずに終了してください。"
+            "state": "translated",
+            "value": "一部のパスワードの変更が保存されていません。終了する前にもう一度お試しください。または、これらの変更を保存せずに終了することもできます。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Algumas alterações de senha não foram salvas. Tente novamente antes de sair, ou saia sem salvar essas alterações."
+            "state": "translated",
+            "value": "Algumas alterações de senha não foram salvas. Tente novamente antes de sair ou saia sem salvar essas alterações."
           }
         }
       }
@@ -3193,26 +3193,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Cancelar sin guardar"
+            "state": "translated",
+            "value": "Salir sin guardar"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Arrêter sans enregistrer"
+            "state": "translated",
+            "value": "Quitter sans enregistrer"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "保存せずに終了する"
+            "state": "translated",
+            "value": "保存せずに終了"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Cancelar sem salvar"
+            "state": "translated",
+            "value": "Sair sem salvar"
           }
         }
       }
@@ -3241,26 +3241,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "No se pudieron guardar las contraseñas"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Les mots de passe n'ont pas pu être enregistrés"
+            "state": "translated",
+            "value": "Les mots de passe n’ont pas pu être enregistrés"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "パスワードを保存できませんでした"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "As senhas não puderam ser salvas"
+            "state": "translated",
+            "value": "Não foi possível salvar as senhas"
           }
         }
       }
@@ -3289,26 +3289,506 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Inténtalo de nuevo"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Réessayez"
+            "state": "translated",
+            "value": "Réessayer"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "もう一度試してください"
+            "state": "translated",
+            "value": "再試行"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Tente novamente"
+            "state": "translated",
+            "value": "Tentar novamente"
+          }
+        }
+      }
+    },
+    "drop-send-title": {
+      "comment": "Title of the sheet that confirms sending dropped files. The first argument names the files, the second the recipient.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send %1$@ to %2$@?"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ elküldése – címzett: %2$@?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ an %2$@ senden?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Enviar %1$@ a %2$@?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envoyer %1$@ à %2$@ ?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@を%2$@に送信しますか？"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviar %1$@ para %2$@?"
+          }
+        }
+      }
+    },
+    "drop-send-body": {
+      "comment": "Body of the sheet that confirms sending dropped files. The argument is the recipient.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ will be asked to accept the transfer."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kérést kap az átvitel elfogadására."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ wird gebeten, die Übertragung anzunehmen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se pedirá a %@ que acepte la transferencia."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ devra accepter le transfert."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@に、転送の承認が求められます。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ receberá uma solicitação para aceitar a transferência."
+          }
+        }
+      }
+    },
+    "moderation-kick-title": {
+      "comment": "Title of the sheet that confirms a moderation kick. The first argument names the members, the second the channel.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kick %1$@ from %2$@?"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kirúgod a következőt a(z) %2$@ csatornáról: %1$@?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ aus %2$@ kicken?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Expulsar a %1$@ de %2$@?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expulser %1$@ de %2$@ ?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@から%1$@をキックしますか？"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expulsar %1$@ de %2$@?"
+          }
+        }
+      }
+    },
+    "moderation-ban-title": {
+      "comment": "Title of the sheet that confirms a moderation ban. The first argument names the members, the second the channel.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ban %1$@ from %2$@?"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kitiltod a következőt a(z) %2$@ csatornáról: %1$@?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ aus %2$@ bannen?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Bloquear a %1$@ en %2$@?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bannir %1$@ de %2$@ ?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@から%1$@をBANしますか？"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Banir %1$@ de %2$@?"
+          }
+        }
+      }
+    },
+    "moderation-kickban-title": {
+      "comment": "Title of the sheet that confirms a moderation kick and ban. The first argument names the members, the second the channel.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kick and ban %1$@ from %2$@?"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kirúgod és kitiltod a következőt a(z) %2$@ csatornáról: %1$@?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ aus %2$@ kicken und bannen?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Expulsar y bloquear a %1$@ de %2$@?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expulser et bannir %1$@ de %2$@ ?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@から%1$@をキックしてBANしますか？"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expulsar e banir %1$@ de %2$@?"
+          }
+        }
+      }
+    },
+    "moderation-kick-body": {
+      "comment": "Body of the moderation kick confirmation sheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "They are removed from the channel and can join again."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A csatornáról kikerülnek, de újra csatlakozhatnak."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sie werden aus dem Kanal entfernt und können erneut beitreten."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se les expulsa del canal y pueden volver a unirse."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ils sont retirés du canal et peuvent le rejoindre à nouveau."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "チャンネルから追い出されますが、再度参加できます。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eles são removidos do canal, mas podem entrar novamente."
+          }
+        }
+      }
+    },
+    "moderation-ban-body": {
+      "comment": "Body of the moderation ban confirmation sheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "They cannot join the channel again until the ban is removed."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nem csatlakozhatnak újra a csatornához, amíg a kitiltást fel nem oldják."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sie können dem Kanal erst wieder beitreten, wenn der Bann aufgehoben wird."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No podrán volver a unirse al canal hasta que se quite el bloqueo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ils ne peuvent pas rejoindre le canal tant que le bannissement n’est pas levé."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BANが解除されるまで、チャンネルに再度参加できません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eles não poderão entrar no canal novamente até que o banimento seja removido."
+          }
+        }
+      }
+    },
+    "moderation-kick-button": {
+      "comment": "Moderation button that kicks the members.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kick"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kirúgás"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kicken"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expulsar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expulser"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "キック"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expulsar"
+          }
+        }
+      }
+    },
+    "moderation-ban-button": {
+      "comment": "Moderation button that bans the members.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ban"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kitiltás"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bannen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bloquear"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bannir"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BAN"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Banir"
+          }
+        }
+      }
+    },
+    "moderation-kickban-button": {
+      "comment": "Moderation button that kicks and bans the members.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kick and Ban"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kirúgás és kitiltás"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kicken und bannen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expulsar y bloquear"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expulser et bannir"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "キックしてBAN"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expulsar e banir"
           }
         }
       }

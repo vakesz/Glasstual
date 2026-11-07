@@ -47,6 +47,8 @@ nonisolated func ircWireTimestampDate(from value: String) -> Date? { // nonisola
 	return Date(timeIntervalSince1970: seconds)
 }
 
+private nonisolated let digitsAndPoint = CharacterSet.decimalDigits.union(CharacterSet(charactersIn: "."))
+
 /** A `time` (or bouncer `t`) tag read as a date, or `nil` when it carries no
  timestamp the session can act on.
 
@@ -55,8 +57,6 @@ nonisolated func ircWireTimestampDate(from value: String) -> Date? { // nonisola
  bouncer sends. Either way a replayed line is filed when it was said rather than
  when it arrived. */
 private nonisolated func serverTimeDate(from value: String) -> Date? { // nonisolated: pure
-	let digitsAndPoint = CharacterSet.decimalDigits.union(CharacterSet(charactersIn: "."))
-
 	if value.unicodeScalars.allSatisfy(digitsAndPoint.contains) {
 		return ircWireTimestampDate(from: value)
 	}
@@ -93,7 +93,7 @@ nonisolated struct MessageParsingContext: Sendable {
  their own. The one reference it keeps is `parentBatchMessage`, the batch that
  holds it — that has identity, so it stays a class. */
 nonisolated struct Message {
-	var sender = Prefix()
+	var sender = Prefix.unnamed
 	/// The wire command as the server spelled it, upper-cased by the parser for
 	/// everything that is not a numeric.
 	private(set) var command = ""
@@ -121,20 +121,8 @@ nonisolated struct Message {
 		sender.nickname
 	}
 
-	var senderUsername: String? {
-		sender.username
-	}
-
-	var senderAddress: String? {
-		sender.address
-	}
-
 	var senderHostmask: String? {
 		sender.hostmask
-	}
-
-	var senderIsServer: Bool {
-		sender.isServer
 	}
 
 	var sequence: String {
@@ -156,13 +144,9 @@ nonisolated struct Message {
 
 		if let senderSection = parsed.senderSection {
 			sender = Prefix.user(parsing: senderSection, maximumNicknameLength: context.maximumNicknameLength)
-				?? Prefix(nickname: senderSection, hostmask: senderSection, isServer: true)
+				?? .server(name: senderSection)
 		} else {
-			sender = Prefix(
-				nickname: context.serverAddress,
-				hostmask: context.serverAddress,
-				isServer: true
-			)
+			sender = .server(name: context.serverAddress)
 		}
 
 		setCommand(parsed.command)
@@ -236,210 +220,5 @@ nonisolated struct Message {
 			inReplayBatch: false,
 			isKnownBouncer: context.isKnownBouncer
 		)
-	}
-}
-
-nonisolated struct ParsedLine: Sendable {
-	let messageTagSection: String?
-	let senderSection: String?
-	let command: String
-	let commandNumeric: UInt
-	let parameters: [String]
-
-	init(messageTagSection: String?, senderSection: String?, command: String, parameters: [String]) {
-		self.messageTagSection = messageTagSection
-		self.senderSection = senderSection
-		self.command = command
-		commandNumeric = Self.numericValue(of: command)
-		self.parameters = parameters
-	}
-
-	/// IRC numerics are exactly three ASCII digits. `CharacterSet.decimalDigits`
-	/// also matches non-ASCII digits, which `integerValue` then reads as 0,
-	/// and an oversized run of digits saturates rather than being rejected.
-	static func numericValue(of command: String) -> UInt {
-		guard command.count == 3, isASCIIDigits(command), let numeric = UInt(command) else {
-			return 0
-		}
-
-		return numeric
-	}
-
-	static func isASCIIDigits(_ string: String) -> Bool {
-		string.isEmpty == false && string.utf8.allSatisfy { $0 >= 48 && $0 <= 57 }
-	}
-}
-
-nonisolated enum LineParser {
-	/// RFC 1459/2812 and IRCv3 separate tokens on SPACE (0x20) only, never on
-	/// the wider Unicode whitespace set.
-	private static let space: Unicode.Scalar = " "
-
-	/// Splits a wire string into tokens on SPACE (0x20), dropping empty runs.
-	static func wireTokens(in string: String) -> [String] {
-		string.unicodeScalars.split(separator: space).map(String.init)
-	}
-
-	static func parsedLine(fromLine line: String) -> ParsedLine? {
-		var remainder = line.unicodeScalars[...]
-		var messageTagSection: String?
-		var senderSection: String?
-
-		if remainder.first == "@" {
-			let token = nextToken(from: &remainder)
-
-			guard token.count > 1 else {
-				return nil
-			}
-
-			messageTagSection = String(token.dropFirst())
-		}
-
-		if remainder.first == ":" {
-			let token = nextToken(from: &remainder)
-
-			guard token.count > 1 else {
-				return nil
-			}
-
-			senderSection = String(token.dropFirst())
-		}
-
-		let commandToken = nextToken(from: &remainder)
-
-		guard commandToken.isEmpty == false else {
-			return nil
-		}
-
-		let command = ParsedLine.isASCIIDigits(commandToken) ? commandToken : commandToken.uppercased()
-		var parameters: [String] = []
-
-		while remainder.isEmpty == false {
-			if remainder.first == ":" {
-				parameters.append(String(remainder.dropFirst()))
-				break
-			}
-
-			/* The last slot takes everything that is left, verbatim: a line of
-			 single-character parameters would otherwise cost one array element
-			 per two bytes received, before any handler sees the command. */
-			if parameters.count == ProtocolLimits.maximumInboundParameterCount - 1 {
-				parameters.append(String(remainder))
-				break
-			}
-
-			parameters.append(nextToken(from: &remainder))
-		}
-
-		return ParsedLine(
-			messageTagSection: messageTagSection,
-			senderSection: senderSection,
-			command: command,
-			parameters: parameters
-		)
-	}
-
-	private static func nextToken(from remainder: inout Substring.UnicodeScalarView) -> String {
-		guard let separator = remainder.firstIndex(of: space) else {
-			let token = String(remainder)
-
-			remainder = remainder[remainder.endIndex...]
-
-			return token
-		}
-
-		let token = String(remainder[..<separator])
-		let nextToken = remainder[separator...].firstIndex(where: { $0 != space })
-
-		remainder = nextToken.map { remainder[$0...] } ?? remainder[remainder.endIndex...]
-
-		return token
-	}
-}
-
-/// The message tags of one line, with the two the session reads by name pulled
-/// out of them.
-nonisolated struct ParsedMessageTags: Sendable, Equatable {
-	let tags: [String: String]
-	let messageIdentifier: String?
-	let senderAccount: String?
-
-	init(tags: [String: String]) {
-		self.tags = tags
-		messageIdentifier = tags["msgid"]?.nonEmpty
-		senderAccount = tags["account"]?.nonEmpty
-	}
-}
-
-nonisolated enum MessageTagParser {
-	/// IRCv3 message-tags caps the tag section at 8191 bytes, counting the
-	/// leading `@` and the space that ends it. Anything longer is a server
-	/// that is not playing by the rules, so its tags are dropped rather than
-	/// parsed into an unbounded dictionary.
-	static let maximumSectionLength = 8191
-
-	/// The `@` and the trailing space: counted by the cap, but already taken
-	/// off the section this parser is handed.
-	private static let sectionDelimiterLength = 2
-
-	/// - Parameter section: The tags between the `@` and the space.
-	static func parsedTags(fromSection section: String) -> ParsedMessageTags {
-		guard section.utf8.count + sectionDelimiterLength <= maximumSectionLength else {
-			return ParsedMessageTags(tags: [:])
-		}
-
-		var tags: [String: String] = [:]
-
-		for component in section.split(separator: ";", omittingEmptySubsequences: true) {
-			if let equals = component.firstIndex(of: "=") {
-				let name = String(component[..<equals])
-				let value = component[component.index(after: equals)...]
-
-				tags[name] = decode(value)
-			} else {
-				tags[String(component)] = ""
-			}
-		}
-
-		return ParsedMessageTags(tags: tags)
-	}
-
-	private static func decode(_ encoded: Substring) -> String {
-		var output: [UInt16] = []
-		let input = Array(encoded.utf16)
-		var index = 0
-
-		while index < input.count {
-			let character = input[index]
-
-			guard character == 0x5C else {
-				output.append(character)
-				index += 1
-				continue
-			}
-
-			index += 1
-
-			guard index < input.count else {
-				break
-			}
-
-			switch input[index] {
-			case 0x3A:
-				output.append(0x3B)
-			case 0x73:
-				output.append(0x20)
-			case 0x72:
-				output.append(0x0D)
-			case 0x6E:
-				output.append(0x0A)
-			default:
-				output.append(input[index])
-			}
-
-			index += 1
-		}
-
-		return String(decoding: output, as: UTF16.self)
 	}
 }

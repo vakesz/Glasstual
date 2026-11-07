@@ -3,27 +3,29 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- No meta refresh: a timed client-side redirect moves assistive
-         technology users mid-announcement (WCAG 2.2 SC 2.2.1) and makes every
-         missing path look to a crawler like the home page. noindex keeps this
-         page out of the index; the link below lets the reader choose. -->
+    <!-- No meta refresh: a timed redirect disrupts assistive technology (WCAG 2.2 SC 2.2.1)
+         and makes every missing path look like the home page to a crawler. -->
     <meta name="robots" content="noindex">
-    <meta name="theme-color" content="#eef3ff" media="(prefers-color-scheme: light)">
-    <meta name="theme-color" content="#0a0b10" media="(prefers-color-scheme: dark)">
-    <title>Page not found — Glasstual</title>
-    <!-- Deliberately not styles.css: that sheet strips link underlines for a
-         page that carries its own navigation chrome. Default link styling is
-         what this page wants. -->
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+    <title>Page Not Found - Glasstual</title>
+    <!-- Self-contained on purpose: a 404 can be served from any path, so relative
+         stylesheet and asset URLs would break. -->
     <style>
-      :root { color-scheme: light dark; }
-      body { margin: 0; padding: 12vh 24px; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif; line-height: 1.5; }
+      :root { color-scheme: light dark; --bg: #fff; --text: #1d1d1f; --muted: #6e6e73; --accent: #0066cc; }
+      @media (prefers-color-scheme: dark) { :root { --bg: #000; --text: #f5f5f7; --muted: #a1a1a6; --accent: #2997ff; } }
+      body { margin: 0; padding: 18vh 24px; background: var(--bg); color: var(--text); font: 17px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif; }
       main { width: min(52ch, 100%); margin-inline: auto; }
-      h1 { margin: 0 0 12px; font-size: clamp(28px, 5vw, 40px); letter-spacing: -0.03em; }
+      h1 { margin: 0 0 12px; font-size: clamp(32px, 7vw, 56px); line-height: 1.05; letter-spacing: -0.03em; }
+      p { margin: 0 0 12px; color: var(--muted); }
+      a { color: var(--accent); }
+      a:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
     </style>
   </head>
   <body>
     <main>
-      <h1>Page not found</h1>
+      <h1>Page Not Found</h1>
       <p>That address does not exist on this site.</p>
       <p><a href="/Glasstual/">Return to Glasstual</a></p>
     </main>

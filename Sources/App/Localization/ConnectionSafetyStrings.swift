@@ -38,11 +38,23 @@ nonisolated enum ConnectionSafetyStrings {
 		static var withheldOverPlaintext: String {
 			String(localized: .ConnectionSafety.credentialsWithheldOverPlaintext)
 		}
+
+		static func withheldFromUnconfiguredHost(_ host: String) -> String {
+			String(localized: .ConnectionSafety.credentialsWithheldUnconfiguredHost(host))
+		}
 	}
 
 	enum SASL {
 		static var credentialsContainNullCharacter: String {
 			String(localized: .ConnectionSafety.saslCredentialsContainANullCharacter)
+		}
+
+		static var ecdsaKeyUnavailable: String {
+			String(localized: .ConnectionSafety.saslEcdsaKeyUnavailable)
+		}
+
+		static var ecdsaChallengeInvalid: String {
+			String(localized: .ConnectionSafety.saslEcdsaChallengeInvalid)
 		}
 
 		static var timedOut: String {

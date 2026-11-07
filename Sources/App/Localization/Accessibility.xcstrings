@@ -25,26 +25,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Canal %@, Canal unido"
+            "state" : "translated",
+            "value" : "Canal %@, unido"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Chaîne %@, Chaîne jointe"
+            "state" : "translated",
+            "value" : "Canal %@, canal rejoint"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "チャンネル%@、チャンネルに参加しました"
+            "state" : "translated",
+            "value" : "チャンネル%@、参加中"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Canal %@, Canal Adicionado"
+            "state" : "translated",
+            "value" : "Canal %@, você está no canal"
           }
         }
       }
@@ -73,26 +73,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Canal %@, Canal no unido"
+            "state" : "translated",
+            "value" : "Canal %@, no unido"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Chaîne %@, Chaîne non jointe"
+            "state" : "translated",
+            "value" : "Canal %@, canal non rejoint"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "チャンネル%@、チャンネルに加入していません"
+            "state" : "translated",
+            "value" : "チャンネル%@、未参加"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Canal %@, Canal Não Convidado"
+            "state" : "translated",
+            "value" : "Canal %@, você não está no canal"
           }
         }
       }
@@ -121,26 +121,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Conexión %@, Conectada"
+            "state" : "translated",
+            "value" : "Conexión %@, conectada"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Connexion %@, Connectée"
+            "state" : "translated",
+            "value" : "Connexion %@, connectée"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "接続 %@、接続済み"
+            "state" : "translated",
+            "value" : "接続%@、接続済み"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Conexão %@, Conectada"
+            "state" : "translated",
+            "value" : "Conexão %@, conectada"
           }
         }
       }
@@ -169,26 +169,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Conexión %@, desconectada"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Connexion %@, Déconnectée"
+            "state" : "translated",
+            "value" : "Connexion %@, déconnectée"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "接続 %@、切断されました"
+            "state" : "translated",
+            "value" : "接続%@、切断済み"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Conexão %@, Desconectada"
+            "state" : "translated",
+            "value" : "Conexão %@, desconectada"
           }
         }
       }
@@ -217,25 +217,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Ventana principal"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Fenêtre principale"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "メインウィンドウ"
+            "state" : "translated",
+            "value" : "メインウインドウ"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Janela principal"
           }
         }
@@ -265,26 +265,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Consulta con el usuario %@"
+            "state" : "translated",
+            "value" : "Mensaje directo con el usuario %@"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Requête avec l'utilisateur %@"
+            "state" : "translated",
+            "value" : "Conversation privée avec l’utilisateur %@"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ユーザー%@とのクエリ"
+            "state" : "translated",
+            "value" : "ユーザ%@とのダイレクトメッセージ"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Consulta com o Usuário %@"
+            "state" : "translated",
+            "value" : "Conversa direta com %@"
           }
         }
       }
@@ -313,25 +313,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Mostrar tema completo"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Afficher le sujet complet"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "全トピックを表示する"
+            "state" : "translated",
+            "value" : "トピック全体を表示"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Mostrar tópico completo"
           }
         }
@@ -361,25 +361,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Mostrar menos del tema"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Afficher moins du sujet"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "トピックの表示を減らす"
+            "state" : "translated",
+            "value" : "トピックの表示を短くする"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Mostrar menos do tópico"
           }
         }
@@ -409,26 +409,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Usuario %@ en la lista de usuarios"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Utilisateur %@ dans la liste des utilisateurs"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ユーザーリストにユーザー%@があります"
+            "state" : "translated",
+            "value" : "ユーザリストのユーザ%@"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Usuário %@ na Lista de Usuários"
+            "state" : "translated",
+            "value" : "Usuário %@ na lista de usuários"
           }
         }
       }
