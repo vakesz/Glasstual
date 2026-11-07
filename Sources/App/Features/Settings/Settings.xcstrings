@@ -14016,6 +14016,54 @@
           }
         }
       }
+    },
+    "ircv3-capability-channel-rename": {
+      "comment": "Summary of the draft/channel-rename IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keeps a channel's members and history when its name changes."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Megőrzi a csatorna tagjait és előzményeit, ha megváltozik a neve."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Behält die Mitglieder und den Verlauf eines Kanals, wenn er umbenannt wird."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Conserva los miembros y el historial de un canal cuando cambia su nombre."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Conserve les membres et l’historique d’un canal lorsque son nom change."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "チャンネル名が変わっても、メンバーと履歴を保持します。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mantém os membros e o histórico de um canal quando o nome dele muda."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

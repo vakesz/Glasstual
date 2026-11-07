@@ -192,6 +192,8 @@ private extension ServerSession {
 			receiveReadMarker(message)
 		case .redact:
 			receiveRedact(message)
+		case .rename:
+			receiveRename(message)
 		default:
 			break
 		}

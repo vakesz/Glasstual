@@ -120,6 +120,23 @@ class Conversation: ChatItem {
 		}
 	}
 
+	/** Puts a channel under the name the server renamed it to
+	 (`draft/channel-rename`).
+
+	 The conversation, its identifier and so its stored history, members and
+	 settings stay as they are: only the name changes, and the stored list is
+	 rewritten so autojoin and restoration use the new one. `updateConfig`
+	 refuses a different name for a channel because there it would mean a
+	 different channel; here the server has said it is the same one. */
+	func applyChannelRename(to newName: String) {
+		guard isChannel, newName.isEmpty == false, newName != config.name else { return }
+
+		associatedSession?.typingSender.remove(in: self)
+		config.name = newName
+		associatedSession?.updateStoredConversationList()
+		ConversationConfigWasUpdated(subject: self).post()
+	}
+
 	var configurationDictionary: [String: PropertyListValue] {
 		PropertyListModel.encode(config)
 	}

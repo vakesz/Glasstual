@@ -62,6 +62,11 @@ extension CapabilityRegistry {
 				identifier: .changeHost,
 				specification: ircv3Specification("chghost")
 			),
+			Capability.capability(
+				named: "draft/channel-rename",
+				identifier: .channelRename,
+				specification: ircv3Specification("channel-rename")
+			),
 			Capability(
 				name: "draft/chathistory",
 				identifier: .chatHistory,

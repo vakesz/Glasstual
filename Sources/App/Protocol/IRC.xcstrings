@@ -13036,6 +13036,294 @@
           }
         }
       }
+    },
+    "channel-renamed": {
+      "comment": "Channel rename: Printed in a channel the server renamed. The first argument is the old channel name, the second the new one.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ was renamed to %2$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A(z) %1$@ csatorna új neve: %2$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ wurde in %2$@ umbenannt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@ se renombró a %2$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@ a été renommé en %2$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@ は %2$@ に名前が変更されました"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@ foi renomeado para %2$@"
+          }
+        }
+      }
+    },
+    "channel-renamed-with-reason": {
+      "comment": "Channel rename: Printed in a channel the server renamed, with the reason it gave. The first argument is the old channel name, the second the new one, the third the reason.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ was renamed to %2$@ (%3$@)"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A(z) %1$@ csatorna új neve: %2$@ (%3$@)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ wurde in %2$@ umbenannt (%3$@)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@ se renombró a %2$@ (%3$@)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@ a été renommé en %2$@ (%3$@)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@ は %2$@ に名前が変更されました (%3$@)"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@ foi renomeado para %2$@ (%3$@)"
+          }
+        }
+      }
+    },
+    "channel-rename-conflict": {
+      "comment": "Channel rename: Printed when the server renamed a channel to the name of a channel that is still open here, so the rename is not applied. The first argument is the old channel name, the second the new one.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not apply the rename of %1$@ to %2$@: a channel with that name is already open."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A(z) %1$@ átnevezése erre: %2$@ nem alkalmazható: ilyen nevű csatorna már meg van nyitva."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Umbenennung von %1$@ in %2$@ konnte nicht übernommen werden: Ein Kanal mit diesem Namen ist bereits geöffnet."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No se pudo aplicar el cambio de nombre de %1$@ a %2$@: ya hay un canal abierto con ese nombre."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Impossible d’appliquer le renommage de %1$@ en %2$@ : un canal portant ce nom est déjà ouvert."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@ を %2$@ に変更できませんでした。同じ名前のチャンネルがすでに開いています。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Não foi possível aplicar a renomeação de %1$@ para %2$@: já existe um canal aberto com esse nome."
+          }
+        }
+      }
+    },
+    "channel-rename-previous-name": {
+      "comment": "Channel rename: Display name given to a saved channel that was not joined when the server renamed another channel to its name. The argument is the channel name it had. Contains a space, so no channel can have it.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (old)"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (régi)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (alt)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ (anterior)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ (ancien)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ (旧)"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ (antigo)"
+          }
+        }
+      }
+    },
+    "channel-rename-previous-name-numbered": {
+      "comment": "Channel rename: Like the previous name, for when that display name is already in use. The first argument is the channel name, the second a number that tells the entries apart.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ (old %2$lld)"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ (régi %2$lld)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ (alt %2$lld)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@ (anterior %2$lld)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@ (ancien %2$lld)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@ (旧 %2$lld)"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@ (antigo %2$lld)"
+          }
+        }
+      }
+    },
+    "channel-rename-kept-old": {
+      "comment": "Channel rename: Printed in the renamed channel when a saved channel that already had the new name was kept under another name, with its history. The first argument is the new channel name, the second the name the saved channel now has.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A saved channel already named %1$@ was kept as %2$@, with its history."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A(z) %1$@ nevű mentett csatorna megmaradt %2$@ néven, az előzményeivel együtt."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein gespeicherter Kanal namens %1$@ wurde als %2$@ behalten, samt Verlauf."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Un canal guardado llamado %1$@ se conservó como %2$@, con su historial."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Un canal enregistré nommé %1$@ a été conservé sous le nom %2$@, avec son historique."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@ という保存済みのチャンネルは、履歴とともに %2$@ として残しました。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Um canal salvo chamado %1$@ foi mantido como %2$@, com seu histórico."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

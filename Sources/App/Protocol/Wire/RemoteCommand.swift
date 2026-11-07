@@ -55,6 +55,8 @@ nonisolated enum RemoteCommand: String, Sendable, CaseIterable {
 	case privmsgAction = "privmsg action"
 	case quit
 	case redact
+	/// IRCv3 `draft/channel-rename`: `RENAME <old> <new> [:reason]`.
+	case rename
 	case setname
 	case shun
 	case silence
@@ -143,6 +145,8 @@ nonisolated extension RemoteCommand { // nonisolated: pure
 		.quit: .startsAtArgument(0),
 		/* `REDACT <target> <msgid> [:reason]`: the reason is the only free text. */
 		.redact: .startsAtArgument(2),
+		/* `RENAME <old> <new> [:reason]`: the reason is the only free text. */
+		.rename: .startsAtArgument(2),
 		.setname: .startsAtArgument(0),
 		.shun: .startsAtArgument(2),
 		.silence: .never,

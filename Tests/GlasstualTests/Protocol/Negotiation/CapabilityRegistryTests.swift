@@ -2,6 +2,7 @@
 // Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
 // SPDX-License-Identifier: BSD-3-Clause
 
+import Foundation
 @testable import Glasstual
 import Testing
 
@@ -193,6 +194,7 @@ struct CapabilityRegistryTests {
 		"batch",
 		"cap-notify",
 		"chghost",
+		"draft/channel-rename",
 		"draft/message-redaction",
 		"draft/multiline",
 		"draft/no-implicit-names",
@@ -211,6 +213,19 @@ struct CapabilityRegistryTests {
 	])
 	func defaultRegistryOffersCapability(_ name: String) {
 		#expect(CapabilityRegistry.defaultRegistry.capability(named: name) != nil, "\(name) is missing")
+	}
+
+	@Test("Channel rename depends on nothing and owns a bit no other capability uses")
+	func channelRenameIsIndependent() throws {
+		let registry = CapabilityRegistry.defaultRegistry
+		let rename = try #require(registry.capability(named: "draft/channel-rename"))
+
+		#expect(rename.dependencies.isEmpty)
+		#expect(rename.identifier == .channelRename)
+		#expect(rename.identifier.rawValue.nonzeroBitCount == 1)
+		let others = registry.capabilities.filter { $0.name != rename.name }
+		#expect(others.allSatisfy { $0.identifier.isDisjoint(with: rename.identifier) })
+		#expect(rename.specification?.absoluteString == "https://ircv3.net/specs/extensions/channel-rename")
 	}
 
 	@Test("The default registry does not carry the retired capabilities")
