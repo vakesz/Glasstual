@@ -298,9 +298,13 @@ class ServerSession: ChatItem {
 	/** `findConversation(_:)` sits on the path of nearly every inbound line, so the
 	 conversation list is mirrored by casefolded name. The mirror is rebuilt
 	 whenever the list or a conversation's configuration changes; a lookup still
-	 verifies its hit and falls back to a scan, because a rename or a new
-	 CASEMAPPING can arrive without either. */
+	 verifies its hit. A miss is only trusted while the index was folded under
+	 the CASEMAPPING now in force; names change only through paths that
+	 rebuild it. */
 	var conversationIndex = CasefoldedIndex<Conversation>()
+	/// The CASEMAPPING the index was folded under, or `nil` before the first
+	/// rebuild. A different one means every key in the index is stale.
+	var conversationIndexCaseMapping: ISupportCaseMapping?
 	weak var lastSelectedConversation: Conversation?
 	let addressBookMatchCache = AddressBookMatchCache()
 	/// The netsplit or netjoin batch being collapsed into one summary line, and

@@ -163,7 +163,10 @@ final class Connection {
 				batchingSession = session
 			}
 			if let string = convertFromCommonEncoding(line) {
+				let signposter = PerformanceSignposts.signposter
+				let interval = signposter.beginInterval("InboundLine")
 				session.connectionDidReceive(string)
+				signposter.endInterval("InboundLine", interval)
 			}
 			if (index + 1).isMultiple(of: Self.linesPerTurn) {
 				batchingSession?.finishInboundMemberPresentationUpdates()

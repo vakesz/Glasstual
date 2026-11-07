@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 import Foundation
+import os
 
 /// What a print's render job hands back: the row to draw, and the line already
 /// archived for the view's store.
@@ -53,6 +54,9 @@ extension TranscriptController {
 		rendered: PrintedLineRender,
 		completionBlock postPrintBlock: PrintedLineCompletion?
 	) {
+		let signposter = PerformanceSignposts.signposter
+		let interval = signposter.beginInterval("ApplyPrintedLine")
+		defer { signposter.endInterval("ApplyPrintedLine", interval) }
 		let result = rendered.result
 		/* Withdrawn before any guard below, so a line one of them drops is not
 		 left counted as a line that is still on its way to the view. */

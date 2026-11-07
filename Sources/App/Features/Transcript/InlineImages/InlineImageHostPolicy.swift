@@ -65,7 +65,20 @@ nonisolated struct InlineImageHostResolver: Sendable {
  that is local by construction, or a name that resolves to any such address.
 
  The check and the connection resolve the name separately, so a host that
- answers differently the second time is not caught here. */
+ answers differently the second time (DNS rebinding) is not caught by the
+ check above. `InlineImageTransfer` closes most of that gap by reading the
+ address each connection actually reached from `URLSessionTaskMetrics` and
+ passing it to `permitsRemoteAddress(_:)`, discarding the body of a response
+ that came from a refused address.
+
+ Residual risk: URLSession offers no hook before it connects, so the request
+ itself (a GET with no credentials or cookies) is still sent to a rebound
+ private address, and only its response is withheld. A blind side effect of a
+ GET is therefore possible. Metrics also carry no address when the system
+ reports none or when the connection goes through a proxy, whose own address
+ is not the origin's; those cases are allowed, so they rest on the name check
+ alone. Closing the rest would need a Network.framework connection that
+ pins the resolved address. */
 nonisolated enum InlineImageHostPolicy {
 	enum Verdict: Equatable {
 		case refused
@@ -115,6 +128,16 @@ nonisolated enum InlineImageHostPolicy {
 		}
 
 		return .needsResolution
+	}
+
+	/** Whether a connection that reached `address` may deliver an image.
+
+	 `nil` means the system did not say, and is allowed: the name check is then
+	 all there is. */
+	static func permitsRemoteAddress(_ address: String?) -> Bool {
+		guard let address, address.isEmpty == false else { return true }
+		let numeric = address.split(separator: "%", maxSplits: 1).first.map(String.init) ?? address
+		return DCCWireFormat.isDialableAddress(numeric)
 	}
 
 	/// Whether `url` may be fetched, resolving its host when the spelling is

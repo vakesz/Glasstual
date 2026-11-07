@@ -4,6 +4,7 @@
 
 import AppKit
 import Foundation
+import os
 
 /** Every edit to the transcript's text: what it draws, where it draws it, and
  what the document has to be told afterwards. The bookkeeping itself lives in
@@ -160,6 +161,9 @@ extension TranscriptView {
 	/// Renders `newLines` and splices them into the document at `index`.
 	private func insert(_ newLines: [TranscriptRow], at index: Int) {
 		guard let storage = textView.textStorage, newLines.isEmpty == false else { return }
+		let signposter = PerformanceSignposts.signposter
+		let interval = signposter.beginInterval("TranscriptInsert")
+		defer { signposter.endInterval("TranscriptInsert", interval) }
 		let changed = foldInsertedLines(newLines, at: index)
 		beginNicknameColorBatch()
 		let origin = document.location(ofLineAt: index)

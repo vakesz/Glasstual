@@ -94,20 +94,34 @@ extension ServerSession {
 	}
 
 	func findConversation(_ name: String) -> Conversation? {
+		/* A new CASEMAPPING re-folds every name, and nothing rebuilds the index
+		 when a 005 arrives, so it is compared here rather than at its source. */
+		if conversationIndexCaseMapping != supportInfo.caseMapping {
+			rebuildConversationIndex()
+		}
+
 		let foldedName = casefoldNickname(name)
 
-		// A hit is only trusted while it still folds to the name asked for: a
-		// rename or a new CASEMAPPING can invalidate the mirror between builds.
-		if let hit = conversationIndex[foldedName: foldedName], casefoldNickname(hit.name) == foldedName {
+		guard let hit = conversationIndex[foldedName: foldedName] else {
+			// The list and every name in it go through a rebuild when they
+			// change, so an index under the current mapping has no stale miss.
+			return nil
+		}
+
+		// A hit is only trusted while it still folds to the name asked for.
+		if casefoldNickname(hit.name) == foldedName {
 			return hit
 		}
 
+		// The mirror disagrees with the conversation it holds: scan, and resync.
+		rebuildConversationIndex()
 		return conversationList.first { casefoldNickname($0.name) == foldedName }
 	}
 
 	/// Rebuilds the casefolded mirror of the conversation list.
 	func rebuildConversationIndex() {
 		conversationIndex.rebuild(from: conversationList, by: casefoldNickname, naming: \.name)
+		conversationIndexCaseMapping = supportInfo.caseMapping
 	}
 
 	func findConversationOrCreate(_ name: String, isDirect: Bool = false) -> Conversation? {

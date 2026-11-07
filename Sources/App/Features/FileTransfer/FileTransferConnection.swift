@@ -177,11 +177,22 @@ extension FileTransfer {
 		case let .completion(completion):
 			self.completion = completion
 		case .finished:
+			if isSender == false {
+				quarantineReceivedFile()
+			}
 			transferStatus = .complete
 			close()
 		case let .failed(error):
 			transferDidFail(with: error)
 		}
+	}
+
+	/// Marks the download as coming from the peer, inside the access the user
+	/// granted to the folder it landed in.
+	private func quarantineReceivedFile() {
+		guard let localFile else { return }
+		let origin = DCCQuarantine.Origin(peerNickname: peerNickname, hostAddress: hostAddress)
+		_ = localFile.withAccess { DCCQuarantine.apply(to: $0, origin: origin) }
 	}
 
 	private func transferDidProgress(to processedBytes: UInt64) {

@@ -108,6 +108,21 @@ nonisolated extension InlineImageTransfer: URLSessionDataDelegate { // nonisolat
 		completionHandler(failure == nil ? .allow : .cancel)
 	}
 
+	/** Metrics arrive after the last byte and before completion. A connection that
+	 reached a refused address, as a rebound name would, turns the download into
+	 a failure and drops what was read. */
+	func urlSession(_: URLSession, task _: URLSessionTask, didFinishCollecting metrics: URLSessionTaskMetrics) {
+		let refused = metrics.transactionMetrics.contains { transaction in
+			transaction.isProxyConnection == false
+				&& InlineImageHostPolicy.permitsRemoteAddress(transaction.remoteAddress) == false
+		}
+		guard refused else { return }
+		state.withLock { state in
+			state.failure = .hostNotAllowed
+			state.data = Data()
+		}
+	}
+
 	func urlSession(_: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
 		let cancel = state.withLock { state in
 			guard state.failure == nil else { return true }

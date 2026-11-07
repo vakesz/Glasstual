@@ -33,6 +33,15 @@ final class ConversationMembers {
 	private var memberContainer: [Member] = []
 	/// Position in `memberContainer` by the member's identity.
 	private var indexByUserID: [User.ID: Int] = [:]
+	/** Positions in `memberContainer` of members removed inside an update batch.
+
+	 Removing at a position shifts every later member, which costs a reindex per
+	 removal; k departures in one batch (a netsplit's QUITs) would cost k of them.
+	 Inside a batch a removal instead drops the identity from the index and
+	 leaves its slot behind, so every other position stays valid. The slots are
+	 compacted once by `compactRemovedMembers()`, which every reader of the whole
+	 container calls first. */
+	private var removedPositions: Set<Int> = []
 	private var presentationUpdateDepth = 0
 	private var presentationUpdatePending = false
 	/// Set while an update batch has appended members out of order; the batch
@@ -57,6 +66,7 @@ final class ConversationMembers {
 	}
 
 	func assign(_ presentation: ConversationMembersPresenting?) {
+		compactRemovedMembers()
 		presentation?.membersDidChange(memberContainer)
 		self.presentation = presentation
 	}
@@ -78,6 +88,7 @@ final class ConversationMembers {
 		precondition(presentationUpdateDepth > 0)
 		presentationUpdateDepth -= 1
 		guard presentationUpdateDepth == 0 else { return }
+		compactRemovedMembers()
 		if orderingPending {
 			orderingPending = false
 			sortStoredMembers()
@@ -97,7 +108,22 @@ final class ConversationMembers {
 			presentationUpdatePending = true
 			return
 		}
+		compactRemovedMembers()
 		presentation?.membersDidChange(memberContainer)
+	}
+
+	/// Drops the slots of members removed in this batch and renumbers the rest,
+	/// once, whatever the number of removals.
+	private func compactRemovedMembers() {
+		guard removedPositions.isEmpty == false else { return }
+		let removed = removedPositions
+		removedPositions = []
+		var position = -1
+		memberContainer.removeAll { _ in
+			position += 1
+			return removed.contains(position)
+		}
+		reindexMembers()
 	}
 
 	private func deferInboundPresentationIfNeeded() {
@@ -106,6 +132,7 @@ final class ConversationMembers {
 	}
 
 	private func sortedIndex(for member: Member) -> Int {
+		compactRemovedMembers()
 		var lowerBound = 0
 		var upperBound = memberContainer.count
 		/* Read once rather than on every comparison, and fold every nickname in
@@ -170,8 +197,15 @@ final class ConversationMembers {
 			return false
 		}
 
-		memberContainer.remove(at: index)
 		indexByUserID.removeValue(forKey: member.id)
+
+		if presentationUpdateDepth > 0 {
+			removedPositions.insert(index)
+			return true
+		}
+
+		compactRemovedMembers()
+		memberContainer.remove(at: index)
 		reindexMembers(from: index)
 		return true
 	}
@@ -194,6 +228,7 @@ final class ConversationMembers {
 	 removal goes through this index, so a second entry for the same person is a
 	 row no PART, QUIT or KICK could ever reach again. */
 	private func reindexMembers() {
+		assert(removedPositions.isEmpty, "Removed members must be compacted before a full reindex")
 		var indexes: [User.ID: Int] = [:]
 		indexes.reserveCapacity(memberContainer.count)
 		var uniqueMembers: [Member] = []
@@ -243,6 +278,7 @@ final class ConversationMembers {
 	}
 
 	func decayConversations() {
+		compactRemovedMembers()
 		// No array snapshot or presentation copy on this completion hot path.
 		for index in memberContainer.indices {
 			memberContainer[index].decayConversation()
@@ -430,6 +466,7 @@ final class ConversationMembers {
 	}
 
 	func sortMembers() {
+		compactRemovedMembers()
 		let previousOrder = memberContainer.map { ($0.id, $0.mark) }
 		/* Snapshot the setting so the comparator stays pure for the whole sort. */
 		let favorIRCop = settings.memberListSortFavorsServerStaff
@@ -456,6 +493,7 @@ final class ConversationMembers {
 	}
 
 	private func sortStoredMembers(favoringServerStaff favorIRCop: Bool, casefoldingWith prefixes: UserPrefixTable) {
+		compactRemovedMembers()
 		memberContainer.sort {
 			$0.compareRank(
 				to: $1,
@@ -468,6 +506,7 @@ final class ConversationMembers {
 	}
 
 	func clearMembers() {
+		compactRemovedMembers()
 		guard memberContainer.isEmpty == false else { return }
 		let conversation = conversation
 
@@ -483,11 +522,13 @@ final class ConversationMembers {
 	}
 
 	var numberOfMembers: UInt {
-		UInt(memberContainer.count)
+		compactRemovedMembers()
+		return UInt(memberContainer.count)
 	}
 
 	var memberList: [Member] {
-		memberContainer
+		compactRemovedMembers()
+		return memberContainer
 	}
 
 	func memberExists(_ nickname: String) -> Bool {

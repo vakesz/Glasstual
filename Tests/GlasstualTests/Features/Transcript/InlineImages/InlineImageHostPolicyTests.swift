@@ -28,6 +28,18 @@ struct InlineImageHostPolicyTests {
 		#expect(InlineImageHostPolicy.verdict(forHost: host) == .refused)
 	}
 
+	private nonisolated static let remoteAddressCases: [(String?, Bool)] = [
+		("127.0.0.1", false), ("10.0.0.5", false), ("169.254.169.254", false),
+		("fe80::1%en0", false), ("::1", false), ("not-an-address", false),
+		("8.8.8.8", true), ("2606:4700:4700::1111", true), (nil, true), ("", true),
+	]
+
+	@Test("A connection that reached a private address is refused, a public or unreported one is not",
+	      arguments: remoteAddressCases)
+	func remoteAddressDecision(address: String?, allowed: Bool) {
+		#expect(InlineImageHostPolicy.permitsRemoteAddress(address) == allowed)
+	}
+
 	@Test("A public literal is allowed without a lookup")
 	func publicLiteralIsAllowed() {
 		#expect(InlineImageHostPolicy.verdict(forHost: "8.8.8.8") == .allowed)
