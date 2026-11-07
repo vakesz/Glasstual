@@ -3,35 +3,49 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="robots" content="index, follow">
+    <title>Support - Glasstual</title>
     <meta name="description" content="Get help with Glasstual for macOS and report an issue.">
+    <meta name="robots" content="index, follow">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
     <link rel="canonical" href="https://vakesz.github.io/Glasstual/support.html">
     <link rel="icon" href="assets/app-icon.png">
+    <link rel="apple-touch-icon" href="assets/app-icon.png">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Glasstual">
+    <meta property="og:title" content="Support - Glasstual">
+    <meta property="og:description" content="Get help with Glasstual for macOS and report an issue.">
+    <meta property="og:url" content="https://vakesz.github.io/Glasstual/support.html">
+    <meta property="og:image" content="https://vakesz.github.io/Glasstual/assets/og.png">
     <link rel="stylesheet" href="styles.css">
-    <title>Support - Glasstual</title>
   </head>
   <body>
+    <a class="skip-link" href="#main">Skip to content</a>
     <header class="site-header">
-      <a class="wordmark" href="index.html" aria-label="Glasstual home">
-        <img src="assets/app-icon.png" alt="" width="36" height="36">
-        <span>Glasstual</span>
-      </a>
-      <nav aria-label="Main navigation">
-        <a href="index.html#features">Features</a>
-        <a href="privacy.html">Privacy</a>
-        <a class="github-link" href="https://github.com/vakesz/Glasstual">GitHub</a>
-      </nav>
+      <div class="shell">
+        <a class="wordmark" href="index.html" aria-label="Glasstual home">
+          <img src="assets/app-icon.png" alt="" width="28" height="28">
+          <span>Glasstual</span>
+        </a>
+        <nav aria-label="Main navigation">
+          <a href="index.html#features">Features</a>
+          <a href="support.html" aria-current="page">Support</a>
+          <a href="privacy.html">Privacy</a>
+          <a href="https://github.com/vakesz/Glasstual" rel="noopener">GitHub</a>
+        </nav>
+      </div>
     </header>
 
-    <main class="section-shell document-page">
-      <p class="eyebrow">Glasstual</p>
-      <h1>Support</h1>
-      <p class="document-lead">Need help connecting, moving your settings, or reporting a bug? Contact the Glasstual developer directly.</p>
+    <main id="main">
+      <div class="shell document">
+        <p class="eyebrow">Glasstual</p>
+        <h1>Support</h1>
+        <p class="lead">Need help connecting, moving your settings, or reporting a bug? Contact the Glasstual developer directly.</p>
 
-      <div class="document-content">
         <section aria-labelledby="contact">
           <h2 id="contact">Contact</h2>
-          <p>Email <a href="mailto:hello@vakesz.com">hello@vakesz.com</a> for support. You can also <a href="https://github.com/vakesz/Glasstual/issues/new/choose">open a GitHub issue</a> for a public bug report or feature request.</p>
+          <p>Email <a href="mailto:hello@vakesz.com">hello@vakesz.com</a> for support. You can also <a href="https://github.com/vakesz/Glasstual/issues/new/choose" rel="noopener">open a GitHub issue</a> for a public bug report or feature request.</p>
           <p>Include your macOS and Glasstual versions, what you expected, what happened, and steps to reproduce the issue. Please remove passwords, private messages, and personal data from screenshots or logs before sharing them.</p>
         </section>
 
@@ -41,15 +55,15 @@
         </section>
 
         <section aria-labelledby="safety">
-          <h2 id="safety">Unwanted messages</h2>
+          <h2 id="safety">Unwanted Messages</h2>
           <p>Use Mute User or Add Ignore from a member's menu to limit messages you see. IRC networks set their own conduct rules and handle reports about their users; contact the network's operators to report abuse. For help using Glasstual's controls, email <a href="mailto:hello@vakesz.com">hello@vakesz.com</a>.</p>
         </section>
 
         <section aria-labelledby="resources">
           <h2 id="resources">Resources</h2>
           <ul>
-            <li><a href="https://github.com/vakesz/Glasstual/releases">Release notes and downloads</a></li>
-            <li><a href="https://github.com/vakesz/Glasstual">Source code and build instructions</a></li>
+            <li><a href="https://github.com/vakesz/Glasstual/releases" rel="noopener">Release notes and downloads</a></li>
+            <li><a href="https://github.com/vakesz/Glasstual#build" rel="noopener">Source code and build instructions</a></li>
             <li><a href="privacy.html">Privacy information</a></li>
           </ul>
         </section>
@@ -57,12 +71,15 @@
     </main>
 
     <footer class="site-footer">
-      <div><span>Glasstual is an independent fork of Textual.</span></div>
-      <nav aria-label="Footer navigation">
-        <a href="index.html">Home</a>
-        <a href="privacy.html">Privacy</a>
-        <a href="https://github.com/vakesz/Glasstual/blob/master/LICENSE">Licenses</a>
-      </nav>
+      <div class="shell">
+        <p>Glasstual is an independent fork of Textual.</p>
+        <nav aria-label="Footer navigation">
+          <a href="index.html">Home</a>
+          <a href="support.html">Support</a>
+          <a href="privacy.html">Privacy</a>
+          <a href="https://github.com/vakesz/Glasstual/blob/master/LICENSE" rel="noopener">License</a>
+        </nav>
+      </div>
     </footer>
   </body>
 </html>
