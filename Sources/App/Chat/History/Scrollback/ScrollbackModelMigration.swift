@@ -251,20 +251,20 @@ nonisolated enum ScrollbackModelMigration {
 	/// What one old row carries across: its original columns exactly, and the
 	/// search columns its archive yields.
 	private struct CopiedRow: Sendable {
-		let createdAt: NSNumber?
-		let entryID: NSNumber?
+		let createdAt: Double?
+		let entryID: Int64?
 		let lineData: Data?
 		let lineID: String?
-		let sessionID: NSNumber?
+		let sessionID: Int64?
 		let viewID: String?
 		let search: ScrollbackSearchFields
 
 		init(_ row: NSManagedObject) {
-			createdAt = row.value(forKey: ScrollbackAttribute.createdAt.rawValue) as? NSNumber
-			entryID = row.value(forKey: ScrollbackAttribute.entryID.rawValue) as? NSNumber
+			createdAt = row.value(forKey: ScrollbackAttribute.createdAt.rawValue) as? Double
+			entryID = row.value(forKey: ScrollbackAttribute.entryID.rawValue) as? Int64
 			lineData = row.value(forKey: ScrollbackAttribute.lineData.rawValue) as? Data
 			lineID = row.value(forKey: ScrollbackAttribute.lineID.rawValue) as? String
-			sessionID = row.value(forKey: ScrollbackAttribute.sessionID.rawValue) as? NSNumber
+			sessionID = row.value(forKey: ScrollbackAttribute.sessionID.rawValue) as? Int64
 			viewID = row.value(forKey: ScrollbackAttribute.viewID.rawValue) as? String
 			search = ScrollbackModelMigration.searchFields(of: row)
 		}
