@@ -2268,7 +2268,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "ダイレクトメッセージ"
+            "value": "クエリ"
           }
         },
         "pt-BR": {
@@ -6204,7 +6204,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "ダイレクトメッセージ(クエリ)"
+            "value": "クエリ"
           }
         },
         "pt-BR": {
@@ -7884,7 +7884,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "ダイレクトメッセージを閉じる"
+            "value": "クエリを閉じる"
           }
         },
         "pt-BR": {
@@ -7932,7 +7932,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "ダイレクトメッセージのログ"
+            "value": "クエリのログ"
           }
         },
         "pt-BR": {
@@ -9150,43 +9150,43 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Address Book"
+            "value": "People"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Címjegyzék"
+            "value": "Személyek"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Adressbuch"
+            "value": "Personen"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Libreta de direcciones"
+            "value": "Personas"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Carnet d’adresses"
+            "value": "Personnes"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "アドレス帳"
+            "value": "ユーザ"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Catálogo de Endereços"
+            "value": "Pessoas"
           }
         }
       }

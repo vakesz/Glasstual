@@ -34,6 +34,15 @@ enum ChatLineKind: UInt, Codable, Sendable {
 	/// time, sender and message identifier; the text is gone.
 	case redacted = 22
 
+	/// A line a server can delete by message identifier: what a person wrote,
+	/// not yet deleted.
+	nonisolated var isRedactableMessage: Bool { // nonisolated: pure
+		switch self {
+		case .privateMessage, .privateMessageNoHighlight, .action, .actionNoHighlight, .notice: true
+		default: false
+		}
+	}
+
 	/// Something a person said, as opposed to an event the session narrates —
 	/// a join, a mode, a topic. The unread marker is placed before the first
 	/// of these, not before the first line of any kind.

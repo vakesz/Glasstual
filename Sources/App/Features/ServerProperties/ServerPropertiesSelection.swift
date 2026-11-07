@@ -33,7 +33,7 @@ enum ServerPropertiesSelection: CaseIterable, Hashable {
 		case .identity: .ServerProperties.serverPropertiesNavigationMenuIdentity
 		case .channelList: .ServerProperties.channelList
 		case .highlights: .ServerProperties.serverPropertiesNavigationMenuHighlights
-		case .addressBook: .ServerProperties.addressBook
+		case .addressBook: .ServerProperties.people
 		case .connectCommands: .ServerProperties.connectCommands
 		case .disconnectMessages: .ServerProperties.serverPropertiesNavigationMenuMessages
 		case .encoding: .ServerProperties.serverPropertiesNavigationMenuEncoding

@@ -64,6 +64,7 @@ struct ServerPropertiesGeneralPane: View {
 struct ServerPropertiesIdentityPane: View {
 	@Bindable var model: ServerPropertiesModel
 	@State private var isImportingSigningKey = false
+	@State private var isConfirmingSigningKeyDeletion = false
 
 	var body: some View {
 		Form {
@@ -129,8 +130,10 @@ struct ServerPropertiesIdentityPane: View {
 						NSPasteboard.general.stringContent = model.signingPublicKey
 					}
 					.disabled(model.hasSigningKey == false)
-					Button(.ServerProperties.saslEcdsaRemoveKeyButton, role: .destructive) { model.removeSigningKey() }
-						.disabled(model.hasSigningKey == false)
+					Button(.ServerProperties.saslEcdsaDeleteKeyButton, role: .destructive) {
+						isConfirmingSigningKeyDeletion = true
+					}
+					.disabled(model.hasSigningKey == false)
 				}
 				if let error = model.signingKeyError {
 					ValidationMessageLabel(error)
@@ -142,6 +145,17 @@ struct ServerPropertiesIdentityPane: View {
 			}
 			.fileImporter(isPresented: $isImportingSigningKey, allowedContentTypes: [.data]) { result in
 				model.importSigningKey(fromFile: result)
+			}
+			.alert(
+				String(localized: .ServerProperties.saslEcdsaDeleteKeyTitle),
+				isPresented: $isConfirmingSigningKeyDeletion
+			) {
+				Button(String(localized: .ServerProperties.saslEcdsaDeleteKeyConfirmButton), role: .destructive) {
+					model.removeSigningKey()
+				}
+				Button(PromptStrings.Action.cancel, role: .cancel) {}
+			} message: {
+				Text(.ServerProperties.saslEcdsaDeleteKeyMessage)
 			}
 
 			Section {

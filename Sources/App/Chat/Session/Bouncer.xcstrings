@@ -206,7 +206,7 @@
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ezt a hálózatot eltávolították a közvetítőből. A beszélgetései megmaradnak, de már nem tud csatlakozni."
+            "value": "Ezt a hálózatot eltávolították a bouncerből. A beszélgetései megmaradnak, de már nem tud csatlakozni."
           }
         },
         "de": {

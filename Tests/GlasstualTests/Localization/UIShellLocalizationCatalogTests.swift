@@ -42,7 +42,7 @@ struct UIShellLocalizationCatalogTests {
 				String(localized: .ServerProperties.navigationSectionConnection),
 				String(localized: .ServerProperties.bouncer),
 				String(localized: .ServerProperties.serverPropertiesNavigationMenuAdvanced),
-				String(localized: .ServerProperties.addressBook),
+				String(localized: .ServerProperties.people),
 				String(localized: .ServerProperties.channelList),
 				String(localized: .ServerProperties.connectCommands),
 				String(localized: .ServerProperties.serverPropertiesNavigationMenuEncoding),
@@ -56,7 +56,7 @@ struct UIShellLocalizationCatalogTests {
 				String(localized: .ServerProperties.networkSocket),
 				String(localized: .ServerProperties.proxyServer),
 			] == [
-				"Connection", "Bouncer", "Advanced", "Address Book", "Channel List",
+				"Connection", "Bouncer", "Advanced", "People", "Channel List",
 				"Connect Commands", "Encoding", "General", "Identity", "Highlights", "Messages",
 				"ZNC Bouncer", "Client Certificate", "Flood Control", "Network Socket", "Proxy Server",
 			]

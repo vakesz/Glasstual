@@ -37,6 +37,35 @@ extension TranscriptController {
 		return (displayed + awaiting).max()
 	}
 
+	/** The newest line the person sent that the view holds and has not deleted.
+	 Lines queued for rendering are newer than the displayed ones, so they are
+	 read first. The scan stops at the first match and reads only what the
+	 view keeps, never stored history. */
+	func newestMessageIdentifier(sentBy isSender: (String) -> Bool) -> String? {
+		func identifier(
+			of kind: ChatLineKind, nickname: String?, messageIdentifier: String?
+		) -> String? {
+			guard kind.isRedactableMessage, let nickname, isSender(nickname),
+			      let messageIdentifier, messageIdentifier.isEmpty == false,
+			      redactions.contains(messageIdentifier) == false
+			else { return nil }
+
+			return messageIdentifier
+		}
+
+		for line in awaitingRender.lines.reversed() {
+			if let found = identifier(of: line.lineType, nickname: line.nickname, messageIdentifier: line.messageIdentifier) {
+				return found
+			}
+		}
+		for row in (backingView?.displayedLines ?? []).reversed() {
+			if let found = identifier(of: row.lineType, nickname: row.nickname, messageIdentifier: row.messageIdentifier) {
+				return found
+			}
+		}
+		return nil
+	}
+
 	func conversationLineCount(after date: Date) -> Int {
 		let displayed = backingView?.displayedLines
 			.count { $0.lineType.isConversation && $0.receivedAt > date } ?? 0

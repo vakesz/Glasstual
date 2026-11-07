@@ -4712,43 +4712,43 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "L lists entries, S requests status, C clears the list. Add or remove people through the Address Book."
+            "value": "L lists entries, S requests status, C clears the list. Add or remove people in the People window."
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Az L listáz, az S állapotot kér, a C törli a listát. Személyeket a címjegyzékben adhatsz hozzá vagy távolíthatsz el."
+            "value": "Az L listáz, az S állapotot kér, a C törli a listát. Személyeket a Személyek ablakban adhatsz hozzá vagy távolíthatsz el."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "L zeigt Einträge, S fragt den Status ab, C leert die Liste. Personen über das Adressbuch hinzufügen oder entfernen."
+            "value": "L zeigt Einträge, S fragt den Status ab, C leert die Liste. Personen im Personen-Fenster hinzufügen oder entfernen."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "L muestra las entradas, S solicita el estado y C vacía la lista. Añade o quita personas desde la Libreta de direcciones."
+            "value": "L muestra las entradas, S solicita el estado y C vacía la lista. Añade o quita personas en la ventana Personas."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "L affiche les entrées, S demande le statut, C vide la liste. Ajoutez ou supprimez des personnes via le carnet d’adresses."
+            "value": "L affiche les entrées, S demande le statut, C vide la liste. Ajoutez ou supprimez des personnes dans la fenêtre Personnes."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lでエントリを一覧表示し、Sでステータスを要求し、Cでリストをクリアします。ユーザの追加や削除は、アドレス帳で行います。"
+            "value": "Lでエントリを一覧表示し、Sでステータスを要求し、Cでリストをクリアします。ユーザの追加や削除は、「ユーザ」ウインドウで行います。"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "L lista as entradas, S solicita o status, C limpa a lista. Adicione ou remova pessoas pelo Catálogo de Endereços."
+            "value": "L lista as entradas, S solicita o status, C limpa a lista. Adicione ou remova pessoas na janela Pessoas."
           }
         }
       }
@@ -4952,43 +4952,43 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Enter a nickname. If no matching user is available, the Address Book opens for editing."
+            "value": "Enter a nickname. If no matching user is available, the People window opens for editing."
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Adj meg egy becenevet. Ha nincs megfelelő felhasználó, szerkesztésre megnyílik a címjegyzék."
+            "value": "Adj meg egy becenevet. Ha nincs megfelelő felhasználó, szerkesztésre megnyílik a Személyek ablak."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gib einen Nickname ein. Falls keine passende Person verfügbar ist, öffnet sich das Adressbuch zur Bearbeitung."
+            "value": "Gib einen Nickname ein. Falls keine passende Person verfügbar ist, öffnet sich zur Bearbeitung das Personen-Fenster."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Introduce un apodo. Si no hay ningún usuario que coincida, se abre la Libreta de direcciones para editarlo."
+            "value": "Introduce un apodo. Si no hay ningún usuario que coincida, se abre la ventana Personas para editarlo."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Saisissez un pseudo. Si aucun utilisateur correspondant n’est disponible, le carnet d’adresses s’ouvre pour modification."
+            "value": "Saisissez un pseudo. Si aucun utilisateur correspondant n’est disponible, la fenêtre Personnes s’ouvre pour modification."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "ニックネームを入力します。一致するユーザがいない場合は、編集用にアドレス帳が開きます。"
+            "value": "ニックネームを入力します。一致するユーザがいない場合は、編集用に「ユーザ」ウインドウが開きます。"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Digite um apelido. Se nenhum usuário correspondente estiver disponível, o Catálogo de Endereços será aberto para edição."
+            "value": "Digite um apelido. Se nenhum usuário correspondente estiver disponível, a janela Pessoas será aberta para edição."
           }
         }
       }
@@ -8120,43 +8120,43 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "<message id> [reason]"
+            "value": "[message id [reason]]"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "<üzenetazonosító> [indoklás]"
+            "value": "[üzenetazonosító [indoklás]]"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "<Nachrichten-ID> [Grund]"
+            "value": "[Nachrichten-ID [Grund]]"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "<id del mensaje> [motivo]"
+            "value": "[id del mensaje [motivo]]"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "<identifiant du message> [raison]"
+            "value": "[identifiant du message [raison]]"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "<メッセージID> [理由]"
+            "value": "[メッセージID [理由]]"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "<id da mensagem> [motivo]"
+            "value": "[id da mensagem [motivo]]"
           }
         }
       }
@@ -8168,43 +8168,43 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The message id is the message's msgid tag. Requires server support for message redaction."
+            "value": "The message id is the message's msgid tag. Without a message id, your most recent message in the conversation is deleted. Requires server support for message redaction."
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Az üzenetazonosító az üzenet msgid címkéje. A kiszolgálónak támogatnia kell az üzenettörlést."
+            "value": "Az üzenetazonosító az üzenet msgid címkéje. Üzenetazonosító nélkül a beszélgetésben legutóbb küldött üzeneted törlődik. A kiszolgálónak támogatnia kell az üzenettörlést."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die Nachrichten-ID ist das msgid-Tag der Nachricht. Der Server muss das Löschen von Nachrichten unterstützen."
+            "value": "Die Nachrichten-ID ist das msgid-Tag der Nachricht. Ohne Nachrichten-ID wird deine letzte Nachricht in der Unterhaltung gelöscht. Der Server muss das Löschen von Nachrichten unterstützen."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El identificador es la etiqueta msgid del mensaje. Requiere compatibilidad del servidor con la eliminación de mensajes."
+            "value": "El identificador es la etiqueta msgid del mensaje. Sin identificador, se elimina tu último mensaje de la conversación. Requiere compatibilidad del servidor con la eliminación de mensajes."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "L’identifiant du message est l’étiquette msgid du message. Nécessite la prise en charge de la suppression de messages par le serveur."
+            "value": "L’identifiant du message est l’étiquette msgid du message. Sans identifiant, votre dernier message de la conversation est supprimé. Nécessite la prise en charge de la suppression de messages par le serveur."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "メッセージIDは、メッセージのmsgidタグです。サーバがメッセージの削除に対応している必要があります。"
+            "value": "メッセージIDは、メッセージのmsgidタグです。メッセージIDを省略すると、会話内で最後に送信した自分のメッセージが削除されます。サーバがメッセージの削除に対応している必要があります。"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O ID da mensagem é a tag msgid da mensagem. Requer suporte do servidor à remoção de mensagens."
+            "value": "O ID da mensagem é a tag msgid da mensagem. Sem o ID, sua mensagem mais recente na conversa é apagada. Requer suporte do servidor à remoção de mensagens."
           }
         }
       }

@@ -91,7 +91,7 @@ nonisolated struct MessageRule: Identifiable, Sendable {
 	}
 
 	var description: String {
-		String(localized: .Rules.filterDescription(title))
+		String(localized: .Rules.ruleDescription(title))
 	}
 
 	/// A field sitting on its default is left out, so a stored rule re-encodes to

@@ -1382,7 +1382,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "選択中のダイレクトメッセージを閉じる、または選択中のチャンネルから退出"
+            "value": "選択中のクエリを閉じる、または選択中のチャンネルから退出"
           }
         },
         "pt-BR": {
@@ -2918,7 +2918,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "ダイレクトメッセージを開く"
+            "value": "クエリを開く"
           }
         },
         "pt-BR": {
@@ -13742,7 +13742,7 @@
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Távolléti üzenet tétlenség esetén (üresen az alapértelmezett)"
+            "value": "Távol üzenet tétlenség esetén (üresen az alapértelmezett)"
           }
         },
         "de": {
@@ -13982,13 +13982,13 @@
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Közvetlen üzenetek belefoglalása"
+            "value": "Privát üzenetek belefoglalása"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Direktnachrichten einbeziehen"
+            "value": "Private Nachrichten einbeziehen"
           }
         },
         "es": {
@@ -14030,13 +14030,13 @@
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "A közvetlen beszélgetések személyekről kapják a nevüket, ezért csak akkor kerülnek a Spotlightba, ha ezt bekapcsolod."
+            "value": "A privát beszélgetések személyekről kapják a nevüket, ezért csak akkor kerülnek a Spotlightba, ha ezt bekapcsolod."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Direkte Unterhaltungen sind nach Personen benannt und bleiben daher außerhalb von Spotlight, solange du dies nicht einschaltest."
+            "value": "Private Unterhaltungen sind nach Personen benannt und bleiben daher außerhalb von Spotlight, solange du dies nicht einschaltest."
           }
         },
         "es": {
@@ -14174,7 +14174,7 @@
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Felsorolja egy soju-közvetítő fiókjának hálózatait, hogy mindegyik önálló kiszolgálóként jelenhessen meg."
+            "value": "Felsorolja egy soju-bouncer fiókjának hálózatait, hogy mindegyik önálló kiszolgálóként jelenhessen meg."
           }
         },
         "de": {

@@ -34,6 +34,13 @@ protocol ChatItemPresenting: AnyObject {
 	/// How many of the view's conversation lines are newer than `date`, which is
 	/// how many messages a read marker placed at `date` leaves unread.
 	func conversationLineCount(after date: Date) -> Int
+	/** The message identifier of the newest line `isSender` accepts the nickname
+	 of, among the lines this view has loaded: a message, action or notice that
+	 carries an identifier and has not been deleted. `nil` when none is loaded.
+
+	 Only the lines the view holds are read, never the stored history, so the
+	 search is bounded by what the transcript keeps. */
+	func newestMessageIdentifier(sentBy isSender: (String) -> Bool) -> String?
 	func setTopic(_ topic: String?)
 
 	func mark()
@@ -83,6 +90,17 @@ extension ChatItemPresenting {
 		guard let chatLine = lastPrintedLine(), chatLine.lineType.isConversation else { return nil }
 
 		return chatLine.receivedAt
+	}
+
+	/// A presentation that keeps no history of its own answers from the last line
+	/// it printed.
+	func newestMessageIdentifier(sentBy isSender: (String) -> Bool) -> String? {
+		guard let chatLine = lastPrintedLine(), chatLine.lineType.isRedactableMessage,
+		      let nickname = chatLine.nickname, isSender(nickname),
+		      let identifier = chatLine.messageIdentifier, identifier.isEmpty == false
+		else { return nil }
+
+		return identifier
 	}
 
 	func conversationLineCount(after date: Date) -> Int {

@@ -70,15 +70,27 @@ extension ServerSession {
 			connectionDidReceive(arguments)
 
 		case .redact:
-			guard isLoggedIn, requireArguments(parsed.arguments, for: parsed.command) else { return }
+			guard isLoggedIn else { return }
 			guard isCapabilityEnabled(.messageRedaction) else {
 				printDebugInformation(String(localized: .IRC.redactionUnsupported))
+				return
+			}
+			guard let conversation = output?.selectedConversation(on: self) else { return }
+			/* With no identifier the command deletes the newest message the
+			 person sent that the transcript still holds. */
+			if parsed.arguments.isEmpty {
+				guard let identifier = conversation.presentation?.newestMessageIdentifier(
+					sentBy: { [self] in nicknameIsMyself($0) }
+				) else {
+					printInvalidSyntaxMessage(for: parsed.command)
+					return
+				}
+				redactMessage(withIdentifier: identifier, in: conversation, reason: nil)
 				return
 			}
 			var tokens = parsed.arguments
 			let identifier = tokens.next()
 			let reason = tokens.rest
-			guard let conversation = output?.selectedConversation(on: self) else { return }
 			redactMessage(withIdentifier: identifier, in: conversation, reason: reason.isEmpty ? nil : reason)
 
 		case .setname:

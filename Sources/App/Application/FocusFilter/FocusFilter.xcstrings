@@ -446,13 +446,13 @@
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Csatornák és közvetlen üzenetek"
+            "value": "Csatornák és privát üzenetek"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kanäle und Direktnachrichten"
+            "value": "Kanäle und private Nachrichten"
           }
         },
         "es": {
@@ -542,13 +542,13 @@
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Csak közvetlen üzenetek"
+            "value": "Csak privát üzenetek"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nur Direktnachrichten"
+            "value": "Nur private Nachrichten"
           }
         },
         "es": {
@@ -590,13 +590,13 @@
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Említések és közvetlen üzenetek esetén továbbra is értesít"
+            "value": "Említések és privát üzenetek esetén továbbra is értesít"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bei Hervorhebungen und Direktnachrichten weiterhin benachrichtigen"
+            "value": "Bei Hervorhebungen und privaten Nachrichten weiterhin benachrichtigen"
           }
         },
         "es": {
@@ -638,7 +638,7 @@
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Távolléti üzenet (üresen az alapértelmezett)"
+            "value": "Távol üzenet (üresen az alapértelmezett)"
           }
         },
         "de": {

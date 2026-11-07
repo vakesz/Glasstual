@@ -288,7 +288,7 @@ extension LocalCommand {
 		.quote: "<input>",
 		.raw: "<input>",
 		.recv: "<input>",
-		.redact: "<message id> [reason]",
+		.redact: "[message id [reason]]",
 		.remove: "[target]",
 		.server: "<address> [[+] port] [password]",
 		.setcolor: "<nickname>",

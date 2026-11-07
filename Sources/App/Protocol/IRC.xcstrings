@@ -872,43 +872,43 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cannot remove ignore for \u0002%@\u0002 because Glasstual isn’t sure which to remove. More than one ignore exists that matches this user. To remove a specific ignore, open the \u0002Address Book\u0002 using the keyboard shortcut \u0002Control 3\u0002."
+            "value": "Cannot remove ignore for \u0002%@\u0002 because Glasstual isn’t sure which to remove. More than one ignore exists that matches this user. To remove a specific ignore, open \u0002People\u0002 using the keyboard shortcut \u0002Control 3\u0002."
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nem egyértelmű, melyik mellőzési szabályt kell eltávolítani ehhez: \u0002%@\u0002. Több szabály is illeszkedik erre a felhasználóra. Egy adott szabály eltávolításához nyisd meg a \u0002Címjegyzéket\u0002 a \u0002Control 3\u0002 billentyűparanccsal."
+            "value": "Nem egyértelmű, melyik mellőzési szabályt kell eltávolítani ehhez: \u0002%@\u0002. Több szabály is illeszkedik erre a felhasználóra. Egy adott szabály eltávolításához nyisd meg a \u0002Személyek\u0002 ablakot a \u0002Control 3\u0002 billentyűparanccsal."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die Ignorierregel für \u0002%@\u0002 kann nicht eindeutig bestimmt werden. Mehrere Regeln passen auf diesen Benutzer. Öffne das \u0002Adressbuch\u0002 mit \u0002Control 3\u0002, um eine bestimmte Regel zu entfernen."
+            "value": "Die Ignorierregel für \u0002%@\u0002 kann nicht eindeutig bestimmt werden. Mehrere Regeln passen auf diesen Benutzer. Öffne \u0002Personen\u0002 mit \u0002Control 3\u0002, um eine bestimmte Regel zu entfernen."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "No se puede quitar la regla de ignorar para \u0002%@\u0002 porque Glasstual no sabe cuál quitar. Hay más de una regla que coincide con este usuario. Para quitar una regla concreta, abre la \u0002Libreta de direcciones\u0002 con el atajo de teclado \u0002Control 3\u0002."
+            "value": "No se puede quitar la regla de ignorar para \u0002%@\u0002 porque Glasstual no sabe cuál quitar. Hay más de una regla que coincide con este usuario. Para quitar una regla concreta, abre \u0002Personas\u0002 con el atajo de teclado \u0002Control 3\u0002."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Impossible de supprimer l’exclusion pour \u0002%@\u0002, car Glasstual ne sait pas laquelle supprimer. Plusieurs exclusions correspondent à cet utilisateur. Pour supprimer une exclusion précise, ouvrez le \u0002carnet d’adresses\u0002 avec le raccourci clavier \u0002Contrôle 3\u0002."
+            "value": "Impossible de supprimer l’exclusion pour \u0002%@\u0002, car Glasstual ne sait pas laquelle supprimer. Plusieurs exclusions correspondent à cet utilisateur. Pour supprimer une exclusion précise, ouvrez \u0002Personnes\u0002 avec le raccourci clavier \u0002Contrôle 3\u0002."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "\u0002%@\u0002の無視を削除できません。Glasstualはどれを削除すべきか判断できません。このユーザに一致する無視が複数あります。特定の無視を削除するには、キーボードショートカット\u0002Control 3\u0002で\u0002アドレス帳\u0002を開いてください。"
+            "value": "\u0002%@\u0002の無視を削除できません。Glasstualはどれを削除すべきか判断できません。このユーザに一致する無視が複数あります。特定の無視を削除するには、キーボードショートカット\u0002Control 3\u0002で\u0002ユーザ\u0002を開いてください。"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Não é possível remover a regra de ignorar de \u0002%@\u0002 porque o Glasstual não sabe qual remover. Há mais de uma regra de ignorar que corresponde a este usuário. Para remover uma regra específica, abra o \u0002Catálogo de Endereços\u0002 com o atalho de teclado \u0002Control 3\u0002."
+            "value": "Não é possível remover a regra de ignorar de \u0002%@\u0002 porque o Glasstual não sabe qual remover. Há mais de uma regra de ignorar que corresponde a este usuário. Para remover uma regra específica, abra \u0002Pessoas\u0002 com o atalho de teclado \u0002Control 3\u0002."
           }
         }
       }
@@ -3438,43 +3438,43 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "An ignore already exists that matches \u0002%@\u0002. To modify this ignore, open the \u0002Address Book\u0002 using the keyboard shortcut \u0002Control 3\u0002."
+            "value": "An ignore already exists that matches \u0002%@\u0002. To modify this ignore, open \u0002People\u0002 using the keyboard shortcut \u0002Control 3\u0002."
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Már létezik mellőzési szabály ehhez: \u0002%@\u0002. Módosításához nyisd meg a \u0002Címjegyzéket\u0002 a \u0002Control 3\u0002 billentyűparanccsal."
+            "value": "Már létezik mellőzési szabály ehhez: \u0002%@\u0002. Módosításához nyisd meg a \u0002Személyek\u0002 ablakot a \u0002Control 3\u0002 billentyűparanccsal."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Es gibt bereits eine Ignorierregel für \u0002%@\u0002. Öffne das \u0002Adressbuch\u0002 mit \u0002Control 3\u0002, um sie zu ändern."
+            "value": "Es gibt bereits eine Ignorierregel für \u0002%@\u0002. Öffne \u0002Personen\u0002 mit \u0002Control 3\u0002, um sie zu ändern."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ya existe una regla para ignorar que coincide con \u0002%@\u0002. Para modificarla, abre la \u0002Libreta de direcciones\u0002 con el atajo de teclado \u0002Control 3\u0002."
+            "value": "Ya existe una regla para ignorar que coincide con \u0002%@\u0002. Para modificarla, abre \u0002Personas\u0002 con el atajo de teclado \u0002Control 3\u0002."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Une exclusion correspondant à \u0002%@\u0002 existe déjà. Pour modifier cette exclusion, ouvrez le \u0002carnet d’adresses\u0002 avec le raccourci clavier \u0002Contrôle 3\u0002."
+            "value": "Une exclusion correspondant à \u0002%@\u0002 existe déjà. Pour modifier cette exclusion, ouvrez \u0002Personnes\u0002 avec le raccourci clavier \u0002Contrôle 3\u0002."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "\u0002%@\u0002に一致する無視がすでに存在します。この無視を変更するには、キーボードショートカット\u0002Control 3\u0002で\u0002アドレス帳\u0002を開いてください。"
+            "value": "\u0002%@\u0002に一致する無視がすでに存在します。この無視を変更するには、キーボードショートカット\u0002Control 3\u0002で\u0002ユーザ\u0002を開いてください。"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Já existe uma regra de ignorar que corresponde a \u0002%@\u0002. Para modificá-la, abra o \u0002Catálogo de Endereços\u0002 com o atalho de teclado \u0002Control 3\u0002."
+            "value": "Já existe uma regra de ignorar que corresponde a \u0002%@\u0002. Para modificá-la, abra \u0002Pessoas\u0002 com o atalho de teclado \u0002Control 3\u0002."
           }
         }
       }
@@ -7388,43 +7388,43 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Please use the \u0002Address Book\u0002 to add or remove tracked users. Open the \u0002Address Book\u0002 using the keyboard shortcut \u0002Control 3\u0002."
+            "value": "Please use \u0002People\u0002 to add or remove tracked users. Open \u0002People\u0002 using the keyboard shortcut \u0002Control 3\u0002."
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "A követett felhasználókat a \u0002Címjegyzékben\u0002 adhatod hozzá és távolíthatod el. A \u0002Címjegyzéket\u0002 a \u0002Control 3\u0002 billentyűparanccsal nyithatod meg."
+            "value": "A követett felhasználókat a \u0002Személyek\u0002 ablakban adhatod hozzá és távolíthatod el. A \u0002Személyek\u0002 ablakot a \u0002Control 3\u0002 billentyűparanccsal nyithatod meg."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Verwende das \u0002Adressbuch\u0002, um beobachtete Benutzer hinzuzufügen oder zu entfernen. Öffne das \u0002Adressbuch\u0002 mit \u0002Control 3\u0002."
+            "value": "Verwende \u0002Personen\u0002, um beobachtete Benutzer hinzuzufügen oder zu entfernen. Öffne \u0002Personen\u0002 mit \u0002Control 3\u0002."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Usa la \u0002Libreta de direcciones\u0002 para añadir o quitar usuarios rastreados. Abre la \u0002Libreta de direcciones\u0002 con el atajo de teclado \u0002Control 3\u0002."
+            "value": "Usa \u0002Personas\u0002 para añadir o quitar usuarios rastreados. Abre \u0002Personas\u0002 con el atajo de teclado \u0002Control 3\u0002."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Utilisez le \u0002carnet d’adresses\u0002 pour ajouter ou retirer des utilisateurs suivis. Ouvrez le \u0002carnet d’adresses\u0002 avec le raccourci clavier \u0002Contrôle 3\u0002."
+            "value": "Utilisez \u0002Personnes\u0002 pour ajouter ou retirer des utilisateurs suivis. Ouvrez \u0002Personnes\u0002 avec le raccourci clavier \u0002Contrôle 3\u0002."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "追跡対象のユーザを追加または削除するには、\u0002アドレス帳\u0002を使用してください。キーボードショートカット\u0002Control 3\u0002で\u0002アドレス帳\u0002を開けます。"
+            "value": "追跡対象のユーザを追加または削除するには、\u0002ユーザ\u0002を使用してください。キーボードショートカット\u0002Control 3\u0002で\u0002ユーザ\u0002を開けます。"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Use o \u0002Catálogo de Endereços\u0002 para adicionar ou remover usuários acompanhados. Abra o \u0002Catálogo de Endereços\u0002 com o atalho de teclado \u0002Control 3\u0002."
+            "value": "Use \u0002Pessoas\u0002 para adicionar ou remover usuários acompanhados. Abra \u0002Pessoas\u0002 com o atalho de teclado \u0002Control 3\u0002."
           }
         }
       }

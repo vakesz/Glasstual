@@ -9,12 +9,18 @@ import Testing
 @MainActor
 private final class RedactionRecordingPresentation: ChatItemPresenting {
 	private(set) var redactedIdentifiers: [String] = []
+	/// The messages the view holds, oldest first, as sender and identifier.
+	var heldMessages: [(nickname: String, identifier: String)] = []
 
 	let presentationIdentifier = "redaction-recording-presentation"
 
 	func print(_: ChatLine, completionBlock _: PrintedLineCompletion?) {}
 	func lastPrintedLine() -> ChatLine? {
 		nil
+	}
+
+	func newestMessageIdentifier(sentBy isSender: (String) -> Bool) -> String? {
+		heldMessages.last(where: { isSender($0.nickname) })?.identifier
 	}
 
 	nonisolated func setTopic(_: String?) {} // nonisolated: pure
@@ -150,10 +156,55 @@ struct ServerSessionRedactionTests {
 		#expect(redactLines(of: session).isEmpty)
 	}
 
+	@Test("/redact with no identifier deletes the newest message the person sent")
+	func redactWithoutIdentifierDeletesTheNewestOwnMessage() throws {
+		let session = session()
+		session.enableCapability([.messageTags, .messageRedaction])
+		let channel = try #require(session.findConversationOrCreate("#chan"))
+		let presentation = RedactionRecordingPresentation()
+		presentation.heldMessages = [("Me", "msg-1"), ("alice", "msg-2"), ("me", "msg-3"), ("alice", "msg-4")]
+		channel.presentation = presentation
+		session.recordedOutput.selectedSession = session
+		session.recordedOutput.selectedConversation = channel
+
+		session.sendCommand("REDACT", completeTarget: false, target: nil)
+
+		#expect(redactLines(of: session) == ["REDACT #chan msg-3"])
+	}
+
+	@Test("/redact with no identifier and none of the person's messages loaded sends nothing")
+	func redactWithoutIdentifierNeedsALoadedOwnMessage() throws {
+		let session = session()
+		session.enableCapability([.messageTags, .messageRedaction])
+		let channel = try #require(session.findConversationOrCreate("#chan"))
+		let presentation = RedactionRecordingPresentation()
+		presentation.heldMessages = [("alice", "msg-2")]
+		channel.presentation = presentation
+		session.recordedOutput.selectedSession = session
+		session.recordedOutput.selectedConversation = channel
+
+		session.sendCommand("REDACT", completeTarget: false, target: nil)
+
+		#expect(redactLines(of: session).isEmpty)
+	}
+
+	@Test("/redact with an identifier still deletes that message")
+	func redactWithIdentifierDeletesThatMessage() throws {
+		let session = session()
+		session.enableCapability([.messageTags, .messageRedaction])
+		let channel = try #require(session.findConversationOrCreate("#chan"))
+		session.recordedOutput.selectedSession = session
+		session.recordedOutput.selectedConversation = channel
+
+		session.sendCommand("REDACT msg-7 spam", completeTarget: false, target: nil)
+
+		#expect(redactLines(of: session) == ["REDACT #chan msg-7 :spam"])
+	}
+
 	@Test("The /redact command takes the identifier first and the rest as the reason")
 	func redactCommandSplitsItsArguments() throws {
 		#expect(LocalCommand(typedName: "REDACT") == .redact)
-		#expect(LocalCommand.redact.arity == CommandArity(required: 1, optional: 1))
+		#expect(LocalCommand.redact.arity == CommandArity(required: 0, optional: 1))
 		#expect(LocalCommand.redact.group == .request)
 		#expect(RemoteCommand.redact.wireName == "REDACT")
 		#expect(

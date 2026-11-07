@@ -182,7 +182,7 @@ struct SettingsTransferPreviewView: View {
 	private static func description(of change: SettingsRiskyChange) -> String {
 		switch change {
 		case let .messageRuleAction(title, action):
-			String(localized: .SettingsTransfer.riskyChatFilterAction(title, action))
+			String(localized: .SettingsTransfer.riskyRuleAction(title, action))
 		case let .linkSchemes(schemes):
 			String(localized: .SettingsTransfer.riskyLinkSchemes(schemes.formatted(.list(type: .and))))
 		case .developerMode:

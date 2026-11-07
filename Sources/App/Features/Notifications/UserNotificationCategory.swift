@@ -15,9 +15,12 @@ import UserNotifications
  naming a category the application no longer registers, and so loses its
  actions. */
 enum UserNotificationCategory: String, CaseIterable {
-	/// Messages, mentions, joins and connection changes: every event with no
-	/// actions of its own beyond marking its conversation read.
+	/// Highlights and channel messages: events with no actions of their own
+	/// beyond marking their conversation read.
 	case activity = "GlasstualNotificationCategoryActivity"
+	/// Kicks, invitations, address book matches and connection changes: events
+	/// that are not a message, so there is no conversation to mark read.
+	case event = "GlasstualNotificationCategoryEvent"
 	case fileTransfer = "GlasstualNotificationCategoryFileTransfer"
 	case privateMessage = "GlasstualNotificationCategoryPrivateMessage"
 
@@ -34,7 +37,8 @@ enum UserNotificationCategory: String, CaseIterable {
 		switch event {
 		case .fileTransferReceiveRequested: self = .fileTransfer
 		case .newPrivateMessage, .privateMessage: self = .privateMessage
-		default: self = .activity
+		case .highlight, .channelMessage, .channelNotice, .privateNotice: self = .activity
+		default: self = .event
 		}
 	}
 
@@ -53,6 +57,8 @@ enum UserNotificationCategory: String, CaseIterable {
 		switch self {
 		case .activity:
 			[markAsReadAction]
+		case .event:
+			[]
 		case .fileTransfer:
 			[
 				UNNotificationAction(
@@ -97,7 +103,7 @@ enum UserNotificationCategory: String, CaseIterable {
 	/// hides notification previews.
 	private var hiddenPreviewsBodyPlaceholder: String {
 		switch self {
-		case .activity: String(localized: .Notifications.hiddenPreviewActivity)
+		case .activity, .event: String(localized: .Notifications.hiddenPreviewActivity)
 		case .fileTransfer: String(localized: .Notifications.hiddenPreviewFileTransfer)
 		case .privateMessage: String(localized: .Notifications.hiddenPreviewPrivateMessage)
 		}
@@ -112,7 +118,7 @@ enum UserNotificationCategory: String, CaseIterable {
 		let count = "%u"
 
 		return switch self {
-		case .activity: String(localized: .Notifications.summaryActivity(count))
+		case .activity, .event: String(localized: .Notifications.summaryActivity(count))
 		case .fileTransfer: String(localized: .Notifications.summaryFileTransfers(count))
 		case .privateMessage: String(localized: .Notifications.summaryPrivateMessages(count))
 		}

@@ -241,50 +241,50 @@
         }
       }
     },
-    "address-book" : {
-      "comment" : "Server properties navigation menu. Legacy key: 8zc-6y.",
+    "people" : {
+      "comment" : "Server properties navigation item for the list of ignored and tracked people. Legacy key: 8zc-6y.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Address Book"
+            "value" : "People"
           }
         },
         "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Címjegyzék"
+            "value" : "Személyek"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Adressbuch"
+            "value" : "Personen"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Libreta de direcciones"
+            "value" : "Personas"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Carnet d’adresses"
+            "value" : "Personnes"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "アドレス帳"
+            "value" : "ユーザ"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Catálogo de Endereços"
+            "value" : "Pessoas"
           }
         }
       }
@@ -4993,26 +4993,170 @@
         }
       }
     },
-    "sasl-ecdsa-remove-key-button" : {
-      "comment" : "Server properties Identity pane. Button that removes the stored SASL ECDSA key.",
+    "sasl-ecdsa-delete-key-button" : {
+      "comment" : "Server properties Identity pane. Button that asks to delete the stored SASL ECDSA key.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Remove Key"
+            "value" : "Delete Key…"
           }
         },
         "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kulcs eltávolítása"
+            "value" : "Kulcs törlése…"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Schlüssel entfernen"
+            "value" : "Schlüssel löschen…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar clave…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimer la clé…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "鍵を削除…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apagar chave…"
+          }
+        }
+      }
+    },
+    "sasl-ecdsa-delete-key-title" : {
+      "comment" : "Server properties Identity pane. Title of the alert that confirms deleting the SASL ECDSA key.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete this key?"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Törlöd ezt a kulcsot?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diesen Schlüssel löschen?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Eliminar esta clave?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimer cette clé ?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この鍵を削除しますか？"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apagar esta chave?"
+          }
+        }
+      }
+    },
+    "sasl-ecdsa-delete-key-message" : {
+      "comment" : "Server properties Identity pane. Message of the alert that confirms deleting the SASL ECDSA key.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The key is deleted when you save this server. After that, this action cannot be undone."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A kulcs a kiszolgáló mentésekor törlődik. Ezután ez a művelet nem vonható vissza."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Schlüssel wird gelöscht, wenn du diesen Server sicherst. Danach kann diese Aktion nicht rückgängig gemacht werden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La clave se elimina cuando guardas este servidor. Después, esta acción no se puede deshacer."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La clé est supprimée lorsque vous enregistrez ce serveur. Ensuite, cette action est irréversible."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "鍵は、このサーバを保存すると削除されます。その後、この操作は取り消せません。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A chave é apagada quando você salva este servidor. Depois disso, esta ação não pode ser desfeita."
+          }
+        }
+      }
+    },
+    "sasl-ecdsa-delete-key-confirm-button" : {
+      "comment" : "Server properties Identity pane. Destructive button that confirms deleting the SASL ECDSA key.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete Key"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kulcs törlése"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schlüssel löschen"
           }
         },
         "es" : {
@@ -5036,7 +5180,7 @@
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Remover chave"
+            "value" : "Apagar chave"
           }
         }
       }
@@ -6590,7 +6734,7 @@
         "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Közvetítő"
+            "value" : "Bouncer"
           }
         },
         "de" : {
@@ -8168,43 +8312,43 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "No Address Book Entries"
+            "value" : "No People"
           }
         },
         "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nincsenek címjegyzékbejegyzések"
+            "value" : "Nincsenek személyek"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Keine Adressbucheinträge"
+            "value" : "Keine Personen"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sin entradas en la libreta de direcciones"
+            "value" : "Sin personas"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Aucune entrée du carnet d’adresses"
+            "value" : "Aucune personne"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "アドレス帳の項目はありません"
+            "value" : "ユーザなし"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nenhuma entrada no Catálogo de Endereços"
+            "value" : "Nenhuma pessoa"
           }
         }
       }
@@ -8270,7 +8414,7 @@
         "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Közvetítőhálózatok"
+            "value" : "Bouncer-hálózatok"
           }
         },
         "de" : {
@@ -8318,7 +8462,7 @@
         "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "A közvetítő hálózatainak megjelenítése kiszolgálóként"
+            "value" : "A bouncer hálózatainak megjelenítése kiszolgálóként"
           }
         },
         "de" : {
@@ -8414,7 +8558,7 @@
         "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "soju-közvetítőkhöz. Minden hálózat külön csatlakozik, és ennek a kapcsolatnak a fiókjával jelentkezik be."
+            "value" : "soju-bouncerekhez. Minden hálózat külön csatlakozik, és ennek a kapcsolatnak a fiókjával jelentkezik be."
           }
         },
         "de" : {
@@ -8510,7 +8654,7 @@
         "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Csatlakozz egy soju-közvetítőhöz a hálózatainak kezeléséhez."
+            "value" : "Csatlakozz egy soju-bouncerhez a hálózatainak kezeléséhez."
           }
         },
         "de" : {
@@ -9326,7 +9470,7 @@
         "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hagyd üresen a jelszót, hogy a közvetítőn tárolt jelszó megmaradjon."
+            "value" : "Hagyd üresen a jelszót, hogy a bouncerben tárolt jelszó megmaradjon."
           }
         },
         "de" : {
@@ -9422,7 +9566,7 @@
         "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "A közvetítő törli a hálózatot és a beállításait. A beszélgetések és az előzmények megmaradnak a Glasstualban."
+            "value" : "A bouncer törli a hálózatot és a beállításait. A beszélgetések és az előzmények megmaradnak a Glasstualban."
           }
         },
         "de" : {
@@ -9470,7 +9614,7 @@
         "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "A közvetítő elutasította a kérést: %1$@ (%2$@)"
+            "value" : "A bouncer elutasította a kérést: %1$@ (%2$@)"
           }
         },
         "de" : {
@@ -9566,7 +9710,7 @@
         "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Közvetítőkapcsolat megjelenítése"
+            "value" : "Bouncer-kapcsolat megjelenítése"
           }
         },
         "de" : {

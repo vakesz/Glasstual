@@ -1520,51 +1520,51 @@
         }
       }
     },
-    "risky-chat-filter-action": {
-      "comment": "Import preview. A chat filter the file adds or changes that runs commands. The first argument is the filter's title, the second is its action text, which can span several lines.",
+    "risky-rule-action": {
+      "comment": "Import preview. A rule the file adds or changes that runs commands. The first argument is the rule's title, the second is its action text, which can span several lines.",
       "extractionState": "manual",
       "generatesSymbol": true,
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chat filter “%1$@” runs:\n%2$@"
+            "value": "Rule “%1$@” runs:\n%2$@"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "A(z) \"%1$@\" csevegésszűrő ezt futtatja:\n%2$@"
+            "value": "A(z) \"%1$@\" szabály ezt futtatja:\n%2$@"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chatfilter \"%1$@\" führt aus:\n%2$@"
+            "value": "Regel \"%1$@\" führt aus:\n%2$@"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El filtro de chat «%1$@» se ejecuta:\n%2$@"
+            "value": "La regla «%1$@» se ejecuta:\n%2$@"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Le filtre « %1$@ » exécute :\n%2$@"
+            "value": "La règle « %1$@ » exécute :\n%2$@"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "チャットフィルタ「%1$@」が実行する内容:\n%2$@"
+            "value": "ルール「%1$@」が実行する内容:\n%2$@"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O filtro de bate-papo “%1$@” executa:\n%2$@"
+            "value": "A regra “%1$@” executa:\n%2$@"
           }
         }
       }

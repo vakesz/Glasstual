@@ -206,13 +206,13 @@
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Közvetlen üzenetek itt: %@"
+            "value": "Privát üzenetek itt: %@"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Direktnachrichten auf %@"
+            "value": "Private Nachrichten auf %@"
           }
         },
         "es": {
@@ -1118,13 +1118,13 @@
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Megnyit egy csatornát vagy közvetlen beszélgetést a Glasstualban."
+            "value": "Megnyit egy csatornát vagy privát beszélgetést a Glasstualban."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Öffnet einen Kanal oder eine direkte Unterhaltung in Glasstual."
+            "value": "Öffnet einen Kanal oder eine private Unterhaltung in Glasstual."
           }
         },
         "es": {
