@@ -60,6 +60,14 @@ nonisolated enum SettingsSessionArchive {
 		return config
 	}
 
+	/** The connections a portable export carries.
+
+	 A bouncer network is made by discovery from its account connection, which
+	 is what an export keeps; the networks are found again when that connects. */
+	static func exportable(_ sessions: [ServerConfig]) -> [ServerConfig] {
+		sessions.filter { $0.bouncerNetwork == nil }
+	}
+
 	static func decode(_ value: PropertyListValue) throws -> [ServerConfig] {
 		guard let array = value.array, array.count <= 1000 else { throw SettingsTransferError.invalidDocument }
 		var identifiers: Set<String> = []
@@ -88,19 +96,22 @@ nonisolated enum SettingsSessionArchive {
 	}
 
 	private enum Record {
-		case session, server, channel, highlight, ignore
+		case session, server, channel, highlight, ignore, binding
 	}
 
 	private enum Field {
 		case text, flag, unsigned, port, real, bytes, texts
 		case records(Record)
+		case nested(Record)
 	}
 
 	private static func validate(_ dictionary: [String: PropertyListValue],
 	                             kind: Record) throws -> [String: PropertyListValue]
 	{
-		guard let identifier = dictionary["uniqueIdentifier"]?.string, !identifier.isEmpty else {
-			throw SettingsTransferError.invalidValue("uniqueIdentifier")
+		if kind != .binding {
+			guard let identifier = dictionary["uniqueIdentifier"]?.string, !identifier.isEmpty else {
+				throw SettingsTransferError.invalidValue("uniqueIdentifier")
+			}
 		}
 		var result: [String: PropertyListValue] = [:]
 		for (name, value) in dictionary {
@@ -114,6 +125,9 @@ nonisolated enum SettingsSessionArchive {
 			case .real: coerced = SettingsKey(name, default: 0.0).coerce(value)
 			case .bytes: coerced = value.data.map(PropertyListValue.data)
 			case .texts: coerced = value.stringArray.map(PropertyListValue.init)
+			case let .nested(record):
+				guard let entry = value.dictionary else { throw SettingsTransferError.invalidValue(name) }
+				coerced = try .dictionary(validate(entry, kind: record))
 			case let .records(record):
 				guard let array = value.array else { throw SettingsTransferError.invalidValue(name) }
 				var identifiers: Set<String> = []
@@ -160,6 +174,9 @@ nonisolated enum SettingsSessionArchive {
 				&& values["generalEventMessageDisplay"]?.string.map { GeneralEventMessageDisplay(rawValue: $0) != nil } != false
 		case .highlight: values["matchKeyword"]?.string?.isEmpty == false
 		case .ignore: unsigned("entryType").map { $0 <= 2 } != false
+		case .binding:
+			values["parentIdentifier"]?.string?.isEmpty == false
+				&& values["networkIdentifier"]?.string?.isEmpty == false
 		}
 		guard valid else { throw SettingsTransferError.invalidValue(SettingsKeys.Sessions.serverSessions.name) }
 	}
@@ -167,6 +184,12 @@ nonisolated enum SettingsSessionArchive {
 	private static func field(named name: String, kind: Record) -> Field? {
 		switch kind {
 		case .session: ServerConfig.CodingKeys(rawValue: name).map(sessionField)
+		case .binding:
+			switch name {
+			case "parentIdentifier", "networkIdentifier": .text
+			case "isRemoved": .flag
+			default: nil
+			}
 		case .server:
 			switch name {
 			case "uniqueIdentifier", "serverAddress": .text
@@ -230,7 +253,8 @@ nonisolated enum SettingsSessionArchive {
 		     .sendWhoCommandRequestsToChannels, .setInvisibleModeOnConnect, .runConnectCommandsSilently,
 		     .sidebarItemExpanded,
 		     .zncIgnoreConfiguredAutojoin, .zncIgnorePlaybackNotifications, .zncIgnoreUserNotifications,
-		     .zncOnlyPlaybackLatest: .flag
+		     .zncOnlyPlaybackLatest, .bouncerDiscoversNetworks, .bouncerHidesParent: .flag
+		case .bouncerNetwork: .nested(.binding)
 		}
 	}
 }

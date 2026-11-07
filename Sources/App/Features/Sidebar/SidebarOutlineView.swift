@@ -112,14 +112,7 @@ final class SidebarOutlineView: NSOutlineView, NSOutlineViewDataSource, NSOutlin
 			reloadData()
 		}
 		if contentChanged {
-			for root in tree.roots {
-				guard case let .server(server) = root.content else { continue }
-				if server.isExpanded {
-					expandItem(root)
-				} else {
-					collapseItem(root)
-				}
-			}
+			applyDisclosure(to: tree.roots)
 		}
 		let selected = selectionNode(identifier: next.selectedIdentifier, previous: previousNode)
 		let selectedIndex = selected.map { row(forItem: $0) } ?? -1
@@ -141,6 +134,20 @@ final class SidebarOutlineView: NSOutlineView, NSOutlineViewDataSource, NSOutlin
 		}
 		if previousSelection != next.selectedIdentifier, selectedIndex >= 0 {
 			scrollRowToVisible(selectedIndex)
+		}
+	}
+
+	/// Opens or closes each connection as its row says, parents before the
+	/// networks nested in them.
+	private func applyDisclosure(to nodes: [SidebarOutlineNode]) {
+		for node in nodes {
+			guard case let .server(server) = node.content else { continue }
+			if server.isExpanded {
+				expandItem(node)
+			} else {
+				collapseItem(node)
+			}
+			applyDisclosure(to: node.children)
 		}
 	}
 
@@ -344,11 +351,18 @@ final class SidebarOutlineView: NSOutlineView, NSOutlineViewDataSource, NSOutlin
 
 	private func adjacentMove(_ identity: SidebarNodeID, upward: Bool) -> SidebarOutlineMove? {
 		guard !model.isFiltering, identity.isReorderable, let node = tree.nodes[identity] else { return nil }
-		let siblings = node.parentIdentifier.flatMap { tree.nodes[.server($0)]?.children } ?? tree.roots
-			.filter { $0.identity != .favorites }
+		let siblings = siblings(of: node)
 		guard let index = siblings.firstIndex(where: { $0.identity == identity }) else { return nil }
 		let destination = upward ? index - 1 : index + 2
 		return proposedMove(identity: identity, parent: node.parentIdentifier, childIndex: destination)
+	}
+
+	/// The nodes `node` is ordered among: connections move among connections
+	/// and conversations among conversations, under the same parent.
+	private func siblings(of node: SidebarOutlineNode) -> [SidebarOutlineNode] {
+		let all = node.parentIdentifier.flatMap { tree.nodes[.server($0)]?.children }
+			?? tree.roots.filter { $0.identity != .favorites }
+		return all.filter { $0.identity.isServer == node.identity.isServer }
 	}
 
 	func canMove(_ identity: SidebarNodeID, upward: Bool) -> Bool {
@@ -364,7 +378,7 @@ final class SidebarOutlineView: NSOutlineView, NSOutlineViewDataSource, NSOutlin
 	func proposedMove(identity: SidebarNodeID, parent: String?, childIndex: Int) -> SidebarOutlineMove? {
 		guard !model.isFiltering, identity.isReorderable, childIndex >= 0, let node = tree.nodes[identity],
 		      node.parentIdentifier == parent else { return nil }
-		let siblings = parent.flatMap { tree.nodes[.server($0)]?.children } ?? tree.roots.filter { $0.identity != .favorites }
+		let siblings = siblings(of: node)
 		guard childIndex <= siblings.count, let from = siblings.firstIndex(where: { $0.identity == identity }),
 		      let move = SidebarReorderPolicy.move(fromOffsets: IndexSet(integer: from), toOffset: childIndex),
 		      siblings.indices.contains(move.to) else { return nil }
@@ -381,10 +395,12 @@ final class SidebarOutlineView: NSOutlineView, NSOutlineViewDataSource, NSOutlin
 	private func perform(_ move: SidebarOutlineMove) -> Bool {
 		guard !model.isFiltering else { return false }
 		let items: [ChatItem]
-		if let parent = move.parent {
+		if let parent = move.parent, move.identity.isServer == false {
 			guard let session = model.sessions.first(where: { $0.uniqueIdentifier == parent }) else { return false }
 			items = session.conversationList
 		} else {
+			/* Connections share one list; a network moves among its parent's
+			 by its place in it. */
 			items = model.sessions
 		}
 		guard let from = items.firstIndex(where: { $0.uniqueIdentifier == move.identity.itemIdentifier }) else { return false }
@@ -395,7 +411,7 @@ final class SidebarOutlineView: NSOutlineView, NSOutlineViewDataSource, NSOutlin
 		} else {
 			insertion = items.count
 		}
-		if let parent = move.parent {
+		if let parent = move.parent, move.identity.isServer == false {
 			return model.moveConversations(onServerWithID: parent, fromOffsets: IndexSet(integer: from), toOffset: insertion)
 		}
 		return model.moveServers(fromOffsets: IndexSet(integer: from), toOffset: insertion)
@@ -431,7 +447,14 @@ final class SidebarOutlineView: NSOutlineView, NSOutlineViewDataSource, NSOutlin
 			return nil
 		}
 		let favoriteOffset = parent == nil && tree.roots.first?.identity == .favorites ? 1 : 0
-		return proposedMove(identity: identity, parent: parent?.identity.itemIdentifier, childIndex: index - favoriteOffset)
+		/* A connection's conversations are drawn before its networks, so a network
+		 is placed relative to the networks alone. */
+		let conversationOffset = identity.isServer
+			? parent?.children.filter { !$0.identity.isServer }.count ?? 0 : 0
+		return proposedMove(
+			identity: identity, parent: parent?.identity.itemIdentifier,
+			childIndex: index - favoriteOffset - conversationOffset
+		)
 	}
 }
 

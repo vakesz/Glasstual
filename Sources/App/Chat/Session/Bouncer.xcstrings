@@ -97,6 +97,54 @@
         }
       }
     },
+    "delete-account-networks-notice": {
+      "comment": "Added to the confirmation for deleting a bouncer account connection: its networks are deleted too. The argument is the list of network names.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This also deletes its networks: %@. Their conversations stay in your history, read-only."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ez a hozzá tartozó hálózatokat is törli: %@. A beszélgetéseik az előzményekben maradnak, csak olvashatóként."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dadurch werden auch die zugehörigen Netzwerke gelöscht: %@. Ihre Unterhaltungen bleiben im Verlauf erhalten, nur lesbar."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Esto también elimina sus redes: %@. Sus conversaciones permanecen en el historial, solo de lectura."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Cela supprime aussi ses réseaux : %@. Leurs conversations restent dans l’historique, en lecture seule."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "このアカウントのネットワークも削除されます: %@。会話は履歴に読み取り専用で残ります。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Isso também exclui as redes dela: %@. As conversas ficam no histórico, somente leitura."
+          }
+        }
+      }
+    },
     "detach-confirmation": {
       "comment": "Confirmation shown after detaching a channel. The argument is the channel name. Migrated from legacy key 0fr-kb.",
       "extractionState": "manual",
@@ -141,6 +189,54 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "O \u0002separar\u0002 comando foi enviado para o canal \u0002%@\u0002. A adesão automática ao conectar para este canal também foi desativada. Use o comando \u0002anexar\u0002 a qualquer momento para ser devolvido a este canal e ter a inscrição automática reativada."
+          }
+        }
+      }
+    },
+    "network-removed-notice": {
+      "comment": "Printed in the console of a bouncer network that the bouncer no longer lists; the network connection can no longer be opened.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This network was removed from the bouncer. Its conversations are kept, but it can no longer connect."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ez a hálózat el lett távolítva a bouncerből. A beszélgetései megmaradnak, de már nem tud csatlakozni."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieses Netzwerk wurde vom Bouncer entfernt. Die Unterhaltungen bleiben erhalten, aber es kann keine Verbindung mehr herstellen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Esta red se ha eliminado del bouncer. Se conservan sus conversaciones, pero ya no puede conectarse."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ce réseau a été supprimé du bouncer. Ses conversations sont conservées, mais il ne peut plus se connecter."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "このネットワークはバウンサーから削除されました。会話は保持されますが、接続できなくなりました。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Esta rede foi removida do bouncer. As conversas são mantidas, mas ela não pode mais se conectar."
           }
         }
       }

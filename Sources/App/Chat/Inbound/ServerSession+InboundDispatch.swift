@@ -176,6 +176,8 @@ private extension ServerSession {
 			receiveAwayNotifyCapability(message)
 		case .batch:
 			receiveBatch(message)
+		case .bouncer:
+			receiveBouncer(message)
 		case .certinfo:
 			receiveCertInfo(message)
 		case .chghost:
@@ -220,6 +222,10 @@ extension ServerSession {
 		   !noteChatHistoryFailure(message)
 		{
 			return
+		}
+
+		if message.remoteCommand == .fail, RemoteCommand(wireName: command) == .bouncer {
+			receiveBouncerFailure(message)
 		}
 
 		if message.remoteCommand == .fail, RemoteCommand(wireName: command) == .redact {

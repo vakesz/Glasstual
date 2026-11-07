@@ -21,6 +21,7 @@ enum ServerPropertiesSelection: CaseIterable, Hashable {
 	case disconnectMessages
 	case encoding
 	case zncBouncer
+	case bouncerNetworks
 	case clientCertificate
 	case networkSocket
 	case proxyServer
@@ -37,6 +38,7 @@ enum ServerPropertiesSelection: CaseIterable, Hashable {
 		case .disconnectMessages: .ServerProperties.serverPropertiesNavigationMenuMessages
 		case .encoding: .ServerProperties.serverPropertiesNavigationMenuEncoding
 		case .zncBouncer: .ServerProperties.zncBouncer
+		case .bouncerNetworks: .ServerProperties.bouncerNetworks
 		case .clientCertificate: .ServerProperties.clientCertificate
 		case .networkSocket: .ServerProperties.networkSocket
 		case .proxyServer: .ServerProperties.proxyServer
@@ -56,6 +58,7 @@ enum ServerPropertiesSelection: CaseIterable, Hashable {
 		case .disconnectMessages: "text.bubble"
 		case .encoding: "character.book.closed"
 		case .zncBouncer: "server.rack"
+		case .bouncerNetworks: "point.3.connected.trianglepath.dotted"
 		case .clientCertificate: "checkmark.shield"
 		case .networkSocket: "cable.connector"
 		case .proxyServer: "arrow.triangle.branch"

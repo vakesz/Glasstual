@@ -14064,6 +14064,102 @@
           }
         }
       }
+    },
+    "ircv3-capability-bouncer-networks": {
+      "comment": "Summary of the soju.im/bouncer-networks capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lists the networks of a soju bouncer account so each can be shown as its own server."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Felsorolja egy soju bouncer-fiók hálózatait, hogy mindegyik önálló szerverként jelenhessen meg."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listet die Netzwerke eines soju-Bouncer-Kontos auf, damit jedes als eigener Server angezeigt werden kann."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Enumera las redes de una cuenta de bouncer soju para que cada una se muestre como un servidor propio."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Liste les réseaux d’un compte bouncer soju afin que chacun puisse apparaître comme un serveur à part entière."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "soju バウンサーアカウントのネットワークを一覧にし、それぞれを独立したサーバとして表示できるようにします。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Lista as redes de uma conta de bouncer soju para que cada uma apareça como um servidor próprio."
+          }
+        }
+      }
+    },
+    "ircv3-capability-bouncer-networks-notify": {
+      "comment": "Summary of the soju.im/bouncer-networks-notify capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keeps that list current when networks are added, changed or removed."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Naprakészen tartja a listát, amikor hálózatokat adnak hozzá, módosítanak vagy távolítanak el."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hält diese Liste aktuell, wenn Netzwerke hinzugefügt, geändert oder entfernt werden."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mantiene esa lista al día cuando se añaden, cambian o eliminan redes."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Maintient cette liste à jour lorsque des réseaux sont ajoutés, modifiés ou supprimés."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ネットワークが追加・変更・削除されたときに、その一覧を最新の状態に保ちます。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mantém essa lista atualizada quando redes são adicionadas, alteradas ou removidas."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

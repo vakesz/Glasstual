@@ -108,6 +108,10 @@ final class ChatSession {
 			_ = createSession(with: config)
 		}
 
+		for parent in sessions where parent.config.bouncerNetwork == nil {
+			propagateBouncerParentSettings(from: parent)
+		}
+
 		notifyObservers { $0.chatSessionDidEndBulkUpdate(self) }
 
 		isImportingConfiguration = false

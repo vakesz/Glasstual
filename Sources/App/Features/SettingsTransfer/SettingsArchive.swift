@@ -77,7 +77,8 @@ nonisolated struct SettingsArchive: Equatable, Sendable {
 
 	func encoded(includeConnectCommands: Bool = false) throws -> Data {
 		guard let sessions else { throw SettingsTransferError.invalidDocument }
-		let configurations = sessions.map { session in
+		let exported = SettingsSessionArchive.exportable(sessions)
+		let configurations = exported.map { session in
 			SettingsSessionArchive.portableDictionary(
 				session,
 				includeConnectCommands: includeConnectCommands
@@ -99,7 +100,6 @@ nonisolated struct SettingsArchive: Equatable, Sendable {
 	}
 
 	private func encode(configurations: [[String: PropertyListValue]], format: String) throws -> Data {
-		guard let sessions, sessions.count == configurations.count else { throw SettingsTransferError.invalidDocument }
 		let dictionary: [String: PropertyListValue] = [
 			"format": .string(format), "version": .integer(Self.version),
 			"preferences": .dictionary(values), "unset": .init(unset.sorted()),
@@ -161,7 +161,9 @@ nonisolated struct SettingsArchive: Equatable, Sendable {
 		if source == .localRecovery {
 			guard omitted.isEmpty else { throw SettingsTransferError.invalidDocument }
 		} else {
-			sessions = sessions?.map(SettingsSessionArchive.portable)
+			/* Networks of a bouncer account are discovered, never imported: an
+			 archive that names one would attach it to an account it does not own. */
+			sessions = sessions.map { SettingsSessionArchive.exportable($0).map(SettingsSessionArchive.portable) }
 		}
 		return Self(values: values, unset: unset, sessions: sessions, ignoredKeys: ignored.sorted(),
 		            source: source, omittedConnectCommands: omitted)

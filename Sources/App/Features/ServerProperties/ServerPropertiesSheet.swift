@@ -31,6 +31,7 @@ final class ServerPropertiesSheet: SheetSession, SessionScoped, ServerProperties
 		if let session {
 			session.updateStoredConfiguration()
 			model = ServerPropertiesModel(config: session.config)
+			model.bouncerNetworks = BouncerNetworksModel(session: session)
 		} else {
 			// A new connection starts from the network list rather than a blank form.
 			var config = ServerConfig()
@@ -56,7 +57,7 @@ final class ServerPropertiesSheet: SheetSession, SessionScoped, ServerProperties
 	/// needs to start on.
 	func start(at destination: ServerPropertiesDestination = .default) {
 		model.selection = switch destination {
-		case .default: .general
+		case .default: model.isBouncerNetwork ? .channelList : .general
 		case .addressBook, .newIgnoreEntry, .editIgnoreEntry: .addressBook
 		}
 		startSheet()

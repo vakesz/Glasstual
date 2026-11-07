@@ -70,9 +70,14 @@ extension ServerSession {
 	/// draining, before each session begins its own teardown.
 	var canContinueConnecting: Bool {
 		!isTerminating && environment.services.applicationState?.applicationIsTerminating != true
+			&& config.bouncerNetwork?.isRemoved != true
 	}
 
 	func connect(_ mode: SessionConnectMode = .normal, bypassProxy: Bool = false) {
+		guard config.bouncerNetwork?.isRemoved != true else {
+			printDebugInformation(toConsole: String(localized: .Bouncer.networkRemovedNotice))
+			return
+		}
 		connect(mode, bypassProxy: bypassProxy, retryingServerIdentifier: nil)
 	}
 

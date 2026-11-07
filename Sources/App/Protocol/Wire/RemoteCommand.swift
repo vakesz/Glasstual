@@ -17,6 +17,8 @@ nonisolated enum RemoteCommand: String, Sendable, CaseIterable {
 	case authenticate
 	case away
 	case batch
+	/// soju's `soju.im/bouncer-networks`: `BOUNCER <subcommand> [<netid>] [<attributes>]`.
+	case bouncer
 	case cap
 	case certinfo
 	case chathistory
@@ -110,6 +112,9 @@ nonisolated extension RemoteCommand { // nonisolated: pure
 		.authenticate: .never,
 		.away: .startsAtArgument(0),
 		.batch: .never,
+		/* Every parameter of a BOUNCER subcommand is one token: attribute lists
+			escape their spaces like message tags do. */
+		.bouncer: .never,
 		.cap: .never,
 		.certinfo: .never,
 		/* Every parameter of a CHATHISTORY subcommand is one token: the subcommand,

@@ -29,6 +29,11 @@ enum BatchPolicy {
 		type == MultilineLimits.batchType || type == "multiline"
 	}
 
+	/// soju's answer to `BOUNCER LISTNETWORKS`.
+	static func isBouncerNetworks(_ type: String?) -> Bool {
+		type == "soju.im/bouncer-networks"
+	}
+
 	static func isNetsplit(_ type: String?) -> Bool {
 		type == "netsplit" || type == "netjoin"
 	}
@@ -213,6 +218,8 @@ private extension ServerSession {
 			replayChatHistoryBatch(batch)
 		} else if BatchPolicy.isNetsplit(batch.batchType) {
 			replayNetsplitBatch(batch)
+		} else if BatchPolicy.isBouncerNetworks(batch.batchType) {
+			receiveBouncerNetworkBatch(batch)
 		} else {
 			processQueuedMessages(of: batch)
 		}

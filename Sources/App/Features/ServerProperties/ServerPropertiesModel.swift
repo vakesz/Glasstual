@@ -79,6 +79,15 @@ final class ServerPropertiesModel {
 
 	var submission = SubmissionGate()
 
+	/// The live bouncer networks of the connection being edited. `nil` for a
+	/// connection that does not exist yet.
+	var bouncerNetworks: BouncerNetworksModel?
+
+	/// Whether the connection is one network of a bouncer account.
+	var isBouncerNetwork: Bool {
+		config.bouncerNetwork != nil
+	}
+
 	/// The bundled network catalog the Server Address field completes against.
 	let networkList: NetworkList
 
@@ -135,6 +144,9 @@ final class ServerPropertiesModel {
 			.nicknamePassword: config.pendingNicknamePassword.value(orStored: nil) ?? "",
 			.proxyPassword: config.pendingProxyPassword.value(orStored: nil) ?? "",
 		]
+		if config.bouncerNetwork != nil {
+			selection = .channelList
+		}
 	}
 
 	/** The fields the sheet edits as text, taken apart from the configuration.

@@ -308,6 +308,8 @@ class ServerSession: ChatItem {
 	var netsplitCollapse = NetsplitCollapse()
 	/// The bouncer session, when the server on the other end is a ZNC.
 	var znc = ZNCSession()
+	/// What the connection knows about soju's bouncer networks.
+	var bouncer = BouncerSession()
 	var successfulConnects: UInt = 0
 	let isonTimer: SessionTimer
 	let whoTimer: SessionTimer

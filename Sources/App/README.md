@@ -9,7 +9,7 @@ views, models, strings and platform adapters together.
 | --- | --- |
 | `Application` | Lifecycle, scenes, menus, alerts, URL handling, resources and service composition. |
 | `Protocol` | IRC wire parsing, command vocabulary, capability definitions, mode grammar, formatting and transport-security policies. |
-| `Chat` | Sessions, conversations, inbound handling, outbound delivery, connection negotiation, history, address book, notifications, local commands, logging, DCC and network catalog. |
+| `Chat` | Sessions, conversations, inbound handling, outbound delivery, connection negotiation, history, address book, notifications, local commands, logging, DCC, network catalog and bouncer networks. |
 | `SettingsKeys` | Typed settings, storage, validation, registration, repair and reload requests. |
 | `Features` | User-facing features and their presentation state. |
 | `Controls` | Shared controls, keyboard dispatch, text editing, layout metrics, color math and link permissions. |
@@ -33,7 +33,8 @@ views, models, strings and platform adapters together.
   the app and the IRC connection host. Shared framing and logging belong in
   `Sources/CocoaExtensions`.
 
-`Features/Scripts` owns script discovery, execution, installation prompts and strings.
+`Chat/Bouncer` owns soju network discovery: the listing, one connection per
+network and the sidebar hierarchy. `Features/Scripts` owns script discovery, execution, installation prompts and strings.
 `Localization/DateFormatting` owns shared date parsing and formatting.
 
 `LinkSchemeRules` owns URL permissions; `LinkParser` locates links in text.

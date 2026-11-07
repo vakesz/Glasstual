@@ -107,6 +107,7 @@ extension ServerSession {
 		clearAddressBookCache()
 		populateISONTrackedUsersList()
 		ServerSessionConfigWasUpdated(subject: self).post()
+		chatSession?.propagateBouncerParentSettings(from: self)
 	}
 
 	func reloadSidebarItems() {
@@ -199,7 +200,7 @@ extension ServerSession {
 		clearTrackedUsers()
 		if !preservingLocalData {
 			KeychainPersistence.shared.persist(Dictionary(
-				config.keychainItems.map { ($0, PendingKeychainSecret.cleared) },
+				config.ownedKeychainItems.map { ($0, PendingKeychainSecret.cleared) },
 				uniquingKeysWith: { _, newest in newest }
 			))
 			output?.destroyInputHistory(for: self)

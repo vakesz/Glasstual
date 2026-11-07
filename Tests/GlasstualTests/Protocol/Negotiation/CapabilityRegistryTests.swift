@@ -203,6 +203,8 @@ struct CapabilityRegistryTests {
 		"multi-prefix",
 		"sasl",
 		"server-time",
+		"soju.im/bouncer-networks",
+		"soju.im/bouncer-networks-notify",
 		"standard-replies",
 		"userhost-in-names",
 		"znc.in/playback",
@@ -226,6 +228,46 @@ struct CapabilityRegistryTests {
 		let others = registry.capabilities.filter { $0.name != rename.name }
 		#expect(others.allSatisfy { $0.identifier.isDisjoint(with: rename.identifier) })
 		#expect(rename.specification?.absoluteString == "https://ircv3.net/specs/extensions/channel-rename")
+	}
+
+	@Test("Bouncer networks need batch, notifications need the listing, and each owns a bit")
+	func bouncerNetworksDependencies() throws {
+		let registry = CapabilityRegistry.defaultRegistry
+		let networks = try #require(registry.capability(named: "soju.im/bouncer-networks"))
+		let notify = try #require(registry.capability(named: "soju.im/bouncer-networks-notify"))
+
+		#expect(networks.dependencies == ["batch"])
+		#expect(notify.dependencies == ["soju.im/bouncer-networks"])
+		#expect(networks.identifier == .bouncerNetworks)
+		#expect(notify.identifier == .bouncerNetworksNotify)
+		for capability in [networks, notify] {
+			#expect(capability.identifier.rawValue.nonzeroBitCount == 1)
+			let others = registry.capabilities.filter { $0.name != capability.name }
+			#expect(others.allSatisfy { $0.identifier.isDisjoint(with: capability.identifier) })
+		}
+		#expect(networks.specification?.host == "git.sr.ht")
+	}
+
+	@Test("Notifications are eligible once the listing is enabled, and the listing needs batch")
+	func bouncerNotificationsWaitForTheirDependencies() throws {
+		let registry = CapabilityRegistry.defaultRegistry
+		let networks = try #require(registry.capability(named: "soju.im/bouncer-networks"))
+		let notify = try #require(registry.capability(named: "soju.im/bouncer-networks-notify"))
+
+		#expect(registry.dependenciesSatisfied(for: networks, by: []) == false)
+		#expect(registry.dependenciesSatisfied(for: networks, by: [.batch]))
+		#expect(registry.dependenciesSatisfied(for: notify, by: [.batch]) == false)
+		#expect(registry.dependenciesSatisfied(for: notify, by: [.bouncerNetworks]))
+	}
+
+	@Test("A bouncer that offers the listing without batch is not asked for it")
+	func bouncerListingNeedsBatchOffered() {
+		let registry = CapabilityRegistry.defaultRegistry
+
+		#expect(registry.capabilitiesToRequest(fromOffered: ["soju.im/bouncer-networks": []], settings: settings()).isEmpty)
+		#expect(registry.capabilitiesToRequest(
+			fromOffered: ["batch": [], "soju.im/bouncer-networks": []], settings: settings()
+		).map(\.name) == ["batch", "soju.im/bouncer-networks"])
 	}
 
 	@Test("The default registry does not carry the retired capabilities")

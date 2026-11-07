@@ -119,6 +119,14 @@ nonisolated struct ServerConfig: Codable, Equatable, Sendable {
 	var zncIgnorePlaybackNotifications = true
 	var zncIgnoreUserNotifications = false
 	var zncOnlyPlaybackLatest = true
+	/// Whether a soju bouncer's networks are listed here as servers of their own.
+	var bouncerDiscoversNetworks = true
+	/// Whether the bouncer connection itself leaves the sidebar once it has
+	/// networks to show.
+	var bouncerHidesParent = false
+	/// Set on a connection that is one network of a bouncer account, and only
+	/// there. Such a connection is made by discovery, not by the user.
+	var bouncerNetwork: BouncerNetworkBinding?
 
 	var normalLeavingComment = ApplicationStrings.defaultQuitMessage
 	var sleepModeLeavingComment = ApplicationStrings.sleepQuitMessage
@@ -185,16 +193,23 @@ nonisolated extension ServerConfig {
 // MARK: - Keychain-backed secrets
 
 nonisolated extension ServerConfig {
+	/// The identifier the connection's own secrets are filed under. A bouncer
+	/// network has none of its own: it signs in as its parent account, so it
+	/// reads the parent's items rather than keeping a second copy of them.
+	var credentialIdentifier: String {
+		bouncerNetwork?.parentIdentifier ?? uniqueIdentifier
+	}
+
 	var nicknamePasswordKeychainItem: KeychainItem {
-		.nicknamePassword(uniqueIdentifier)
+		.nicknamePassword(credentialIdentifier)
 	}
 
 	var proxyPasswordKeychainItem: KeychainItem {
-		.proxyPassword(uniqueIdentifier)
+		.proxyPassword(credentialIdentifier)
 	}
 
 	var saslSigningKeyKeychainItem: KeychainItem {
-		.saslSigningKey(uniqueIdentifier)
+		.saslSigningKey(credentialIdentifier)
 	}
 
 	var nicknamePasswordFromKeychain: String? {

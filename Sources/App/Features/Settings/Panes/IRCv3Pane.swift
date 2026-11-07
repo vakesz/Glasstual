@@ -36,6 +36,8 @@ struct IRCv3Pane: View {
 		"sasl": .Settings.ircv3CapabilitySasl,
 		"server-time": .Settings.ircv3CapabilityServerTime,
 		"setname": .Settings.ircv3CapabilitySetname,
+		"soju.im/bouncer-networks": .Settings.ircv3CapabilityBouncerNetworks,
+		"soju.im/bouncer-networks-notify": .Settings.ircv3CapabilityBouncerNetworksNotify,
 		"standard-replies": .Settings.ircv3CapabilityStandardReplies,
 		"userhost-in-names": .Settings.ircv3CapabilityUserhostInNames,
 		"znc.in/playback": .Settings.ircv3CapabilityZncPlayback,

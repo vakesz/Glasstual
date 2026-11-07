@@ -96,6 +96,7 @@ extension ServerSession {
 			)
 		}
 		requestPlayback()
+		requestBouncerNetworks()
 
 		let output = output
 		/* Presumed present until a MONITOR reply or the ISON poll says otherwise;

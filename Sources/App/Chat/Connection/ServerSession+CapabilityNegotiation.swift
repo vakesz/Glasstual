@@ -102,6 +102,12 @@ extension ServerSession {
 		return requestable.compactMap { capability in
 			let name = capability.name
 
+			/* A network connection is attached to its network instead, and a
+			 connection the user excluded never lists the account's. */
+			if name.hasPrefix("soju.im/bouncer-networks"), bouncerDiscoveryIsEnabled == false {
+				return nil
+			}
+
 			guard capabilityNegotiation.isAcknowledged(name) == false,
 			      capabilityNegotiation.isOutstanding(name) == false,
 			      capabilityNegotiation.isWithdrawn(name) == false,
@@ -238,6 +244,7 @@ extension ServerSession {
 		capabilityNegotiation.endSent = true
 		socket?.config.diagnostics?.record(.capabilitiesCompleted)
 		sendPreAwayIfNeeded()
+		sendBouncerBindIfNeeded()
 		sendCapability("END", data: nil)
 	}
 

@@ -103,6 +103,10 @@ final class SidebarCellView: NSTableCellView {
 				leadingImage.image = NSImage(systemSymbolName: server.identityStyle.icon.symbolName, accessibilityDescription: nil)
 				leadingImage.isHidden = false
 			}
+			if let status = server.bouncerStatus {
+				subtitleField.stringValue = status.text
+				subtitleStack.isHidden = false
+			}
 			if server.isSecured {
 				securityImage.image = NSImage(systemSymbolName: "lock.fill", accessibilityDescription: nil)
 				securityImage.toolTip = String(localized: .MainWindow.connectionSecurity)

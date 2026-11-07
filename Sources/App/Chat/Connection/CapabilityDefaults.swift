@@ -17,6 +17,11 @@ extension CapabilityRegistry {
 		URL(string: "https://wiki.znc.in/\(page)")
 	}
 
+	/// The soju documentation page a bouncer capability is described by.
+	private static func sojuSpecification(_ page: String) -> URL? {
+		URL(string: "https://git.sr.ht/~emersion/soju/tree/master/item/doc/ext/\(page).md")
+	}
+
 	private static var defaultCapabilities: [Capability] {
 		let saslGeneric = CapabilitySet.saslGeneric
 		let zncPlaybackModule = CapabilitySet.zncPlaybackModule
@@ -161,6 +166,22 @@ extension CapabilityRegistry {
 				named: "setname",
 				identifier: .setName,
 				specification: ircv3Specification("setname")
+			),
+			/* The listing arrives in a `BATCH`, so both depend on it. Notifications
+				build on the listing. A bound connection is never offered either. */
+			Capability(
+				name: "soju.im/bouncer-networks",
+				identifier: .bouncerNetworks,
+				requestedByDefault: true,
+				dependencies: ["batch"],
+				specification: sojuSpecification("bouncer-networks")
+			),
+			Capability(
+				name: "soju.im/bouncer-networks-notify",
+				identifier: .bouncerNetworksNotify,
+				requestedByDefault: true,
+				dependencies: ["soju.im/bouncer-networks"],
+				specification: sojuSpecification("bouncer-networks-notify")
 			),
 			Capability.capability(
 				named: "standard-replies",

@@ -61,6 +61,9 @@ nonisolated extension ServerConfig {
 		case zncIgnorePlaybackNotifications
 		case zncIgnoreUserNotifications
 		case zncOnlyPlaybackLatest
+		case bouncerDiscoversNetworks
+		case bouncerHidesParent
+		case bouncerNetwork
 
 		case normalLeavingComment
 		case sleepModeLeavingComment
@@ -281,6 +284,7 @@ nonisolated extension ServerConfig {
 		)
 
 		decodeZNCSettings(from: container)
+		decodeBouncerSettings(from: container)
 		decodeMessages(from: container)
 	}
 
@@ -305,6 +309,20 @@ nonisolated extension ServerConfig {
 			forKey: .zncOnlyPlaybackLatest,
 			default: Self.codingDefaults.zncOnlyPlaybackLatest
 		)
+	}
+
+	private mutating func decodeBouncerSettings(from container: DecodingContainer) {
+		bouncerDiscoversNetworks = container.decode(
+			Bool.self,
+			forKey: .bouncerDiscoversNetworks,
+			default: Self.codingDefaults.bouncerDiscoversNetworks
+		)
+		bouncerHidesParent = container.decode(
+			Bool.self,
+			forKey: .bouncerHidesParent,
+			default: Self.codingDefaults.bouncerHidesParent
+		)
+		bouncerNetwork = container.decodeOptional(BouncerNetworkBinding.self, forKey: .bouncerNetwork)
 	}
 
 	private mutating func decodeMessages(from container: DecodingContainer) {
@@ -433,6 +451,9 @@ nonisolated extension ServerConfig {
 		try encode(\.zncIgnorePlaybackNotifications, forKey: .zncIgnorePlaybackNotifications, &container)
 		try encode(\.zncIgnoreUserNotifications, forKey: .zncIgnoreUserNotifications, &container)
 		try encode(\.zncOnlyPlaybackLatest, forKey: .zncOnlyPlaybackLatest, &container)
+		try encode(\.bouncerDiscoversNetworks, forKey: .bouncerDiscoversNetworks, &container)
+		try encode(\.bouncerHidesParent, forKey: .bouncerHidesParent, &container)
+		try container.encodeIfPresent(bouncerNetwork, forKey: .bouncerNetwork)
 
 		try encodeMessages(into: &container)
 	}

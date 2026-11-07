@@ -159,8 +159,10 @@ final class Sidebar {
 		return chatSession?.findItem(withId: selectedItemIdentifier)
 	}
 
+	/// The connections in the order the sidebar draws them: each account
+	/// followed by its networks.
 	var groupItems: [ChatItem] {
-		sessions
+		BouncerHierarchy(sessions: sessions).ordered
 	}
 
 	func row(forItem item: ChatItem?) -> Int {
