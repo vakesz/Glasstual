@@ -14,36 +14,36 @@
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "A szöveg %lld sorból áll. A szerver egyetlen többsoros üzenetként kézbesítheti, vagy soronként külön üzenetben is elküldheted."
+            "value": "A szöveg %lld sorból áll. A kiszolgáló egyetlen többsoros üzenetként kézbesítheti, vagy soronként külön üzenetben is elküldheted."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Der Text hat %lld Zeilen. Der Server kann ihn als eine mehrzeilige Nachricht zustellen, oder er wird zeilenweise als einzelne Nachrichten gesendet."
+            "value": "Der Text hat %lld Zeilen. Der Server kann ihn als eine mehrzeilige Nachricht zustellen, oder er kann zeilenweise als einzelne Nachrichten gesendet werden."
           }
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "El texto tiene %lld líneas. El servidor puede entregarlo como un único mensaje de varias líneas, o se puede enviar como mensajes separados, uno por línea."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Le texte compte %lld lignes. Le serveur peut le remettre en un seul message multiligne, ou il peut être envoyé en messages séparés, un par ligne."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "テキストは%lld行です。サーバーは複数行の1つのメッセージとして配信できます。または、1行ごとに別のメッセージとして送信することもできます。"
+            "state": "translated",
+            "value": "テキストは%lld行あります。サーバは、複数行の1件のメッセージとして配信できます。または、1行ごとに個別のメッセージとして送信することもできます。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "O texto tem %lld linhas. O servidor pode entregá-lo como uma única mensagem de várias linhas, ou ele pode ser enviado em mensagens separadas, uma por linha."
           }
         }
@@ -73,25 +73,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "¿Enviar este texto como un solo mensaje?"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Envoyer ce texte en un seul message ?"
+            "state": "translated",
+            "value": "Envoyer ce texte en un seul message ?"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "このテキストを1つのメッセージとして送信しますか？"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Enviar este texto como uma única mensagem?"
           }
         }
@@ -121,26 +121,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Enviar como un mensaje"
+            "state": "translated",
+            "value": "Enviar como un solo mensaje"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Envoyer en un message"
+            "state": "translated",
+            "value": "Envoyer en un seul message"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "1つのメッセージとして送信"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Enviar como uma mensagem"
+            "state": "translated",
+            "value": "Enviar como uma só mensagem"
           }
         }
       }
@@ -169,25 +169,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Enviar línea por línea"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Envoyer ligne par ligne"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "1行ずつ送信"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Enviar linha por linha"
           }
         }
@@ -217,25 +217,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Enviar la primera parte"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Envoyer la première partie"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "最初の部分を送信"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Enviar a primeira parte"
           }
         }
@@ -254,7 +254,7 @@
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "A szerver legfeljebb %lld bájtot fogad el egy többsoros üzenetben, ez a szöveg viszont nagyobb. Elküldheted csak az első részt egy üzenetként, minden sort külön elküldhetsz, vagy megszakíthatod."
+            "value": "A kiszolgáló legfeljebb %lld bájtot fogad el egy többsoros üzenetben, ez a szöveg viszont nagyobb. Elküldheted csak az első részt egy üzenetként, minden sort külön elküldhetsz, vagy megszakíthatod."
           }
         },
         "de": {
@@ -265,26 +265,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "El servidor acepta como máximo %lld bytes en un mensaje de varias líneas, y este texto es mayor. Puedes enviar solo la primera parte como un mensaje, enviar cada línea por separado o cancelar."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Le serveur accepte au plus %lld octets dans un message multiligne, et ce texte est plus volumineux. Vous pouvez n'envoyer que la première partie en un message, envoyer chaque ligne séparément ou annuler."
+            "state": "translated",
+            "value": "Le serveur accepte au plus %lld octets dans un message multiligne, et ce texte est plus volumineux. Vous pouvez n’envoyer que la première partie en un message, envoyer chaque ligne séparément ou annuler."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "サーバーが複数行メッセージで受け付けるのは最大%lldバイトまでですが、このテキストはそれより大きくなっています。最初の部分だけを1つのメッセージとして送信するか、各行を個別に送信するか、キャンセルできます。"
+            "state": "translated",
+            "value": "サーバは複数行メッセージで最大%lldバイトまで受け付けますが、このテキストはそれを超えています。最初の部分だけを1つのメッセージとして送信するか、各行を個別に送信するか、キャンセルできます。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "O servidor aceita no máximo %lld bytes em uma mensagem de várias linhas, e este texto é maior. Você pode enviar só a primeira parte como uma mensagem, enviar cada linha separadamente ou cancelar."
+            "state": "translated",
+            "value": "O servidor aceita no máximo %lld bytes em uma mensagem de várias linhas, e este texto é maior. Você pode enviar somente a primeira parte como uma mensagem, enviar cada linha separadamente ou cancelar."
           }
         }
       }
@@ -302,7 +302,7 @@
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "A szerver legfeljebb %lld sort fogad el egy többsoros üzenetben, ez a szöveg viszont több sorból áll. Elküldheted csak az első részt egy üzenetként, minden sort külön elküldhetsz, vagy megszakíthatod."
+            "value": "A kiszolgáló legfeljebb %lld sort fogad el egy többsoros üzenetben, ez a szöveg viszont több sorból áll. Elküldheted csak az első részt egy üzenetként, minden sort külön elküldhetsz, vagy megszakíthatod."
           }
         },
         "de": {
@@ -313,26 +313,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "El servidor acepta como máximo %lld líneas en un mensaje de varias líneas, y este texto tiene más. Puedes enviar solo la primera parte como un mensaje, enviar cada línea por separado o cancelar."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Le serveur accepte au plus %lld lignes dans un message multiligne, et ce texte en compte davantage. Vous pouvez n'envoyer que la première partie en un message, envoyer chaque ligne séparément ou annuler."
+            "state": "translated",
+            "value": "Le serveur accepte au plus %lld lignes dans un message multiligne, et ce texte en compte davantage. Vous pouvez n’envoyer que la première partie en un message, envoyer chaque ligne séparément ou annuler."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "サーバーが複数行メッセージで受け付けるのは最大%lld行までですが、このテキストはそれより長くなっています。最初の部分だけを1つのメッセージとして送信するか、各行を個別に送信するか、キャンセルできます。"
+            "state": "translated",
+            "value": "サーバは複数行メッセージで最大%lld行まで受け付けますが、このテキストはそれより多くの行があります。最初の部分だけを1つのメッセージとして送信するか、各行を個別に送信するか、キャンセルできます。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "O servidor aceita no máximo %lld linhas em uma mensagem de várias linhas, e este texto tem mais. Você pode enviar só a primeira parte como uma mensagem, enviar cada linha separadamente ou cancelar."
+            "state": "translated",
+            "value": "O servidor aceita no máximo %lld linhas em uma mensagem de várias linhas, e este texto tem mais. Você pode enviar somente a primeira parte como uma mensagem, enviar cada linha separadamente ou cancelar."
           }
         }
       }
@@ -361,25 +361,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Este texto es demasiado largo para un mensaje"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Ce texte est trop long pour un seul message"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "このテキストは1つのメッセージには長すぎます"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Este texto é longo demais para uma mensagem"
           }
         }

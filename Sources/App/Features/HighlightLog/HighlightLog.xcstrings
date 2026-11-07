@@ -25,26 +25,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Los mensajes que comienzan con un punto (•) son acciones."
+            "state" : "translated",
+            "value" : "Los mensajes que comienzan con una viñeta (•) son acciones."
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Les messages commençant par un point d'interrogation (•) sont des actions."
+            "state" : "translated",
+            "value" : "Les messages commençant par une puce (•) sont des actions."
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "（•）で始まるメッセージはアクションです。"
+            "state" : "translated",
+            "value" : "黒丸(•)で始まるメッセージはアクションです。"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Mensagens que começam com um ponto (•) são ações."
+            "state" : "translated",
+            "value" : "Mensagens que começam com um marcador (•) são ações."
           }
         }
       }
@@ -73,26 +73,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Canal"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "canal"
+            "state" : "translated",
+            "value" : "Canal"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "チャンネル"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "canal"
+            "state" : "translated",
+            "value" : "Canal"
           }
         }
       }
@@ -121,25 +121,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Borrar lista"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Effacer la liste"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "リストをクリアする"
+            "state" : "translated",
+            "value" : "リストをクリア"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Limpar lista"
           }
         }
@@ -169,26 +169,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Los puntos destacados registrados para esta conexión se eliminan. Esto no se puede deshacer."
+            "state" : "translated",
+            "value" : "Se eliminan las menciones registradas para esta conexión. Esta acción no se puede deshacer."
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Les points forts enregistrés pour cette connexion sont supprimés. Cela ne peut pas être annulé."
+            "state" : "translated",
+            "value" : "Les mentions enregistrées pour cette connexion seront supprimées. Cette action est irréversible."
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "この接続で記録されたハイライトは削除されます。この操作は元に戻すことはできません。"
+            "state" : "translated",
+            "value" : "この接続に記録されたハイライトが削除されます。この操作は取り消せません。"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Os destaques registrados para esta conexão foram removidos. Isso não pode ser desfeito."
+            "state" : "translated",
+            "value" : "Os destaques registrados para esta conexão serão removidos. Esta ação não pode ser desfeita."
           }
         }
       }
@@ -217,25 +217,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "¿Borrar la lista de destacados?"
+            "state" : "translated",
+            "value" : "¿Borrar la lista de menciones?"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Effacer la liste des éléments mis en évidence ?"
+            "state" : "translated",
+            "value" : "Effacer la liste des mentions ?"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "ハイライトリストをクリアしますか？"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Limpar a lista de destaques?"
           }
         }
@@ -265,26 +265,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Los nuevos mensajes destacados aparecerán aquí mientras Glasstual está funcionando."
+            "state" : "translated",
+            "value" : "Los nuevos mensajes con menciones aparecerán aquí mientras Glasstual esté en ejecución."
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "De nouveaux messages mis en évidence apparaîtront ici pendant que Glasstual est en cours d'exécution."
+            "state" : "translated",
+            "value" : "Les nouveaux messages avec mention apparaîtront ici pendant l’exécution de Glasstual."
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Glasstualが実行されている間、ここに新しいハイライトされたメッセージが表示されます。"
+            "state" : "translated",
+            "value" : "Glasstualの実行中に新しくハイライトされたメッセージが、ここに表示されます。"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Novas mensagens destacadas aparecerão aqui enquanto Glasstual estiver executando."
+            "state" : "translated",
+            "value" : "As novas mensagens com destaque aparecerão aqui enquanto o Glasstual estiver em execução."
           }
         }
       }
@@ -313,26 +313,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Sin destacados"
+            "state" : "translated",
+            "value" : "Sin menciones"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Pas de points forts"
+            "state" : "translated",
+            "value" : "Aucune mention"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "ハイライトはありません"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Sem destaques"
+            "state" : "translated",
+            "value" : "Nenhum destaque"
           }
         }
       }
@@ -361,26 +361,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Ir al mensaje"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Aller au Message"
+            "state" : "translated",
+            "value" : "Aller au message"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "メッセージへ移動する"
+            "state" : "translated",
+            "value" : "メッセージに移動"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Ir para Mensagem"
+            "state" : "translated",
+            "value" : "Ir para a mensagem"
           }
         }
       }
@@ -409,26 +409,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Lista de resaltados"
+            "state" : "translated",
+            "value" : "Lista de menciones"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Liste des éléments mis en évidence"
+            "state" : "translated",
+            "value" : "Liste des mentions"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "ハイライトリスト"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Lista de destaque"
+            "state" : "translated",
+            "value" : "Lista de destaques"
           }
         }
       }
@@ -457,26 +457,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Mensaje"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "message"
+            "state" : "translated",
+            "value" : "Message"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "メッセージ"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "mensagem"
+            "state" : "translated",
+            "value" : "Mensagem"
           }
         }
       }
@@ -505,26 +505,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Tiempo"
+            "state" : "translated",
+            "value" : "Hora"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "temps"
+            "state" : "translated",
+            "value" : "Heure"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "時間"
+            "state" : "translated",
+            "value" : "時刻"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "tempo"
+            "state" : "translated",
+            "value" : "Hora"
           }
         }
       }
@@ -553,26 +553,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Destacados para %@"
+            "state" : "translated",
+            "value" : "Menciones de %@"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Points forts pour %@"
+            "state" : "translated",
+            "value" : "Mentions pour %@"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "%@のハイライト"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Destaques para %@"
+            "state" : "translated",
+            "value" : "Destaques de %@"
           }
         }
       }

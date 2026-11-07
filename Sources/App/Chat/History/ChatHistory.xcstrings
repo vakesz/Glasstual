@@ -21,31 +21,31 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Der Verlauf konnte nicht gelöscht werden. Leere das Gespräch erneut, um es noch einmal zu versuchen."
+            "value" : "Der Verlauf konnte nicht geleert werden. Leere die Unterhaltung erneut, um es noch einmal zu versuchen."
           }
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "No se ha podido borrar el historial. Borra la conversación de nuevo para intentarlo de nuevo."
+            "state" : "translated",
+            "value" : "No se ha podido borrar el historial. Vacía la conversación de nuevo para volver a intentarlo."
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "L’historique n’a pas pu être effacé. Effacez à nouveau la conversation pour réessayer."
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "履歴をクリアできませんでした。もう一度会話をクリアして、もう一度お試しください。"
+            "state" : "translated",
+            "value" : "履歴をクリアできませんでした。もう一度会話の履歴をクリアしてください。"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Não foi possível limpar o histórico. Limpe a conversa novamente para tentar novamente."
+            "state" : "translated",
+            "value" : "Não foi possível limpar o histórico. Limpe a conversa de novo para tentar outra vez."
           }
         }
       }

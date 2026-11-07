@@ -25,25 +25,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Desconectado de %@"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Déconnecté de %@"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%@から切断されました"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Desconectado de %@"
           }
         }
@@ -68,30 +68,30 @@
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Említés tőle: %1$@, itt: %2$@: %3$@"
+            "value": "Említés itt: %2$@, feladó: %1$@: %3$@"
           }
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Mención de %1$@ en %2$@: %3$@"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Mention de %1$@ dans %2$@ : %3$@"
+            "state": "translated",
+            "value": "Mention de %1$@ dans %2$@ : %3$@"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%2$@で%1$@からのハイライト: %3$@"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Destaque de %1$@ em %2$@: %3$@"
           }
         }
@@ -121,25 +121,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "• %1$@ %2$@"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "• %1$@ %2$@"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "• %1$@ %2$@"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "• %1$@ %2$@"
           }
         }
@@ -169,25 +169,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%@"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%@"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%@"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%@"
           }
         }
@@ -217,25 +217,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%1$@ (%2$@)"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%1$@ (%2$@)"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%1$@ (%2$@)"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%1$@ (%2$@)"
           }
         }
@@ -265,25 +265,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%1$@ (%2$@)"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%1$@ (%2$@)"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%1$@ (%2$@)"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%1$@ (%2$@)"
           }
         }
@@ -313,25 +313,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%@"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%@"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%@"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%@"
           }
         }
@@ -361,25 +361,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%1$@ (%2$@)"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%1$@ (%2$@)"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%1$@ (%2$@)"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%1$@ (%2$@)"
           }
         }
@@ -409,26 +409,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%1$@ te invitó a unirte a %2$@"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%1$@ vous a invité à rejoindre %2$@"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$@があなたを%2$@に参加するよう招待しました。"
+            "state": "translated",
+            "value": "%1$@から%2$@への参加に招待されました"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$@ convidou você a se juntar ao %2$@"
+            "state": "translated",
+            "value": "%1$@ convidou você para entrar em %2$@"
           }
         }
       }
@@ -457,26 +457,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$@ te empujó con razón: %2$@"
+            "state": "translated",
+            "value": "%1$@ te expulsó con motivo: %2$@"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$@ vous a giflé pour une raison : %2$@"
+            "state": "translated",
+            "value": "%1$@ vous a expulsé. Motif : %2$@"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$@は理由をつけてあなたを蹴りました：%2$@"
+            "state": "translated",
+            "value": "%1$@があなたをキックしました。理由: %2$@"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$@ te chutou com razão: %2$@"
+            "state": "translated",
+            "value": "%1$@ expulsou você. Motivo: %2$@"
           }
         }
       }
@@ -505,26 +505,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$@ te dio un puñetazo"
+            "state": "translated",
+            "value": "%1$@ te expulsó"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$@ vous a frappé"
+            "state": "translated",
+            "value": "%1$@ vous a expulsé"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$@があなたを蹴った"
+            "state": "translated",
+            "value": "%1$@があなたをキックしました"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$@ te chutou"
+            "state": "translated",
+            "value": "%1$@ expulsou você"
           }
         }
       }
@@ -553,25 +553,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%1$@ %2$@"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%1$@ %2$@"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%1$@ %2$@"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%1$@ %2$@"
           }
         }
@@ -601,25 +601,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "El usuario con el apodo \"%1$@\" está disponible"
+            "state": "translated",
+            "value": "El usuario con el apodo «%1$@» está disponible"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "L'utilisateur avec le surnom « %1$@ » est disponible"
+            "state": "translated",
+            "value": "L’utilisateur avec le pseudo « %1$@ » est disponible"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ニックネーム「%1$@」のユーザーが利用可能です。"
+            "state": "translated",
+            "value": "ニックネーム「%1$@」のユーザが利用可能です"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Usuário com o apelido “%1$@” está disponível"
           }
         }
@@ -649,25 +649,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "El usuario con el apodo “%1$@” ya no está disponible"
+            "state": "translated",
+            "value": "El usuario con el apodo «%1$@» ya no está disponible"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "L'utilisateur portant le surnom « %1$@ » n'est plus disponible."
+            "state": "translated",
+            "value": "L’utilisateur avec le pseudo « %1$@ » n’est plus disponible"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ニックネーム「%1$@」のユーザーは利用できません。"
+            "state": "translated",
+            "value": "ニックネーム「%1$@」のユーザは利用できなくなりました"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "O usuário com o apelido “%1$@” não está mais disponível"
           }
         }
@@ -697,25 +697,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "El usuario con el apodo \"%1$@\" ya está disponible"
+            "state": "translated",
+            "value": "El usuario con el apodo «%1$@» ya está disponible"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "L'utilisateur avec le surnom « %1$@ » est maintenant disponible."
+            "state": "translated",
+            "value": "L’utilisateur avec le pseudo « %1$@ » est maintenant disponible"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ニックネーム「%1$@」のユーザーが利用可能になりました。"
+            "state": "translated",
+            "value": "ニックネーム「%1$@」のユーザが利用可能になりました"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "O usuário com o apelido “%1$@” está agora disponível"
           }
         }
@@ -745,26 +745,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Libro de direcciones"
+            "state": "translated",
+            "value": "Libreta de direcciones"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "carnet d'adresses"
+            "state": "translated",
+            "value": "Carnet d’adresses"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "アドレス帳"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "livro de endereços"
+            "state": "translated",
+            "value": "Catálogo de Endereços"
           }
         }
       }
@@ -793,26 +793,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Invitación"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "invitation"
+            "state": "translated",
+            "value": "Invitation"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "招待状"
+            "state": "translated",
+            "value": "招待"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "convite"
+            "state": "translated",
+            "value": "Convite"
           }
         }
       }
@@ -841,26 +841,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Mensaje de canal"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Message de canal"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "チャンネルメッセージ"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Mensagem do canal"
+            "state": "translated",
+            "value": "Mensagem de canal"
           }
         }
       }
@@ -889,26 +889,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Aviso del canal"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Avis de canal"
+            "state": "translated",
+            "value": "Notice de canal"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "チャンネルのお知らせ"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Aviso do canal"
+            "state": "translated",
+            "value": "Aviso de canal"
           }
         }
       }
@@ -1033,26 +1033,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Descarga fallida"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Téléchargement échoué"
+            "state": "translated",
+            "value": "Échec du téléchargement"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "ダウンロードに失敗しました"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Download falhou"
+            "state": "translated",
+            "value": "Falha no download"
           }
         }
       }
@@ -1081,26 +1081,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Descarga completa"
+            "state": "translated",
+            "value": "Descarga completada"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Téléchargement terminé"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "ダウンロード完了"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Download Completo"
+            "state": "translated",
+            "value": "Download concluído"
           }
         }
       }
@@ -1129,25 +1129,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Archivo entrante"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Fichier entrant"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "受信ファイル"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Arquivo recebido"
           }
         }
@@ -1177,26 +1177,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Subida fallida"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Téléchargement échoué"
+            "state": "translated",
+            "value": "Échec de l’envoi"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "アップロードに失敗しました"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Upload falhou"
+            "state": "translated",
+            "value": "Falha no upload"
           }
         }
       }
@@ -1225,25 +1225,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Subida completada"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Téléchargement terminé"
+            "state": "translated",
+            "value": "Envoi terminé"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "アップロード完了"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Upload concluído"
           }
         }
@@ -1273,26 +1273,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Destacar"
+            "state": "translated",
+            "value": "Mención"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "point culminant"
+            "state": "translated",
+            "value": "Mention"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "ハイライト"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ponto alto"
+            "state": "translated",
+            "value": "Destaque"
           }
         }
       }
@@ -1321,26 +1321,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Dudado"
+            "state": "translated",
+            "value": "Expulsado"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Fouetté"
+            "state": "translated",
+            "value": "Expulsé"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "蹴られた"
+            "state": "translated",
+            "value": "キックされました"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Chutado"
+            "state": "translated",
+            "value": "Expulso"
           }
         }
       }
@@ -1369,26 +1369,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Nuevo mensaje privado"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Nouveau message privé"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "新しいプライベートメッセージ"
+            "state": "translated",
+            "value": "新しいダイレクトメッセージ"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Nova Mensagem Privada"
+            "state": "translated",
+            "value": "Nova mensagem privada"
           }
         }
       }
@@ -1417,26 +1417,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Mensaje privado"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Message privé"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "プライベートメッセージ"
+            "state": "translated",
+            "value": "ダイレクトメッセージ"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Mensagem Privada"
+            "state": "translated",
+            "value": "Mensagem privada"
           }
         }
       }
@@ -1465,26 +1465,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Aviso privado"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Avis privé"
+            "state": "translated",
+            "value": "Notice privée"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "プライベートなお知らせ"
+            "state": "translated",
+            "value": "ダイレクトのお知らせ"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Aviso Privado"
+            "state": "translated",
+            "value": "Aviso privado"
           }
         }
       }
@@ -1513,25 +1513,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Usuario desconectado"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Utilisateur déconnecté"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ユーザーが接続解除されました"
+            "state": "translated",
+            "value": "ユーザが切断しました"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Usuário desconectado"
           }
         }
@@ -1561,26 +1561,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Usuario se unió"
+            "state": "translated",
+            "value": "Usuario unido"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Utilisateur inscrit"
+            "state": "translated",
+            "value": "Utilisateur arrivé"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ユーザーが参加しました"
+            "state": "translated",
+            "value": "ユーザが参加しました"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Usuário se juntou"
+            "state": "translated",
+            "value": "Usuário entrou"
           }
         }
       }
@@ -1609,26 +1609,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Usuario separado"
+            "state": "translated",
+            "value": "Usuario salido"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Utilisateur séparé"
+            "state": "translated",
+            "value": "Utilisateur parti"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ユーザーが分割された"
+            "state": "translated",
+            "value": "ユーザが退出しました"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Usuário Separado"
+            "state": "translated",
+            "value": "Usuário saiu"
           }
         }
       }

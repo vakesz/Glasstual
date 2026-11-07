@@ -121,26 +121,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Sistema"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "système"
+            "state": "translated",
+            "value": "Système"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "システム"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "sistema"
+            "state": "translated",
+            "value": "Sistema"
           }
         }
       }
@@ -169,25 +169,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Administrador del canal (+a)"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Administrateur de canal (+a)"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "チャンネル管理者（+a）"
+            "state": "translated",
+            "value": "チャンネル管理者(+a)"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Administrador do canal (+a)"
           }
         }
@@ -217,26 +217,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Mejor operador medio del canal (+h)"
+            "state": "translated",
+            "value": "Semioperador del canal (+h)"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Demi-opérateur de canal (+h)"
+            "state": "translated",
+            "value": "Semi-opérateur de canal (+h)"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "チャンネルハーフオペレーター（+h）"
+            "state": "translated",
+            "value": "チャンネルのハーフオペレーター(+h)"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Meio operador de canal (+h)"
+            "state": "translated",
+            "value": "Semioperador do canal (+h)"
           }
         }
       }
@@ -265,25 +265,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Operador del canal (+o)"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Opérateur de canal (+o)"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "チャンネルオペレーター（+o）"
+            "state": "translated",
+            "value": "チャンネルオペレーター(+o)"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Operador do canal (+o)"
           }
         }
@@ -313,25 +313,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Propietario del canal (+q)"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Propriétaire de la chaîne (+q)"
+            "state": "translated",
+            "value": "Propriétaire du canal (+q)"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "チャンネル所有者（+q）"
+            "state": "translated",
+            "value": "チャンネルオーナー(+q)"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Proprietário do canal (+q)"
           }
         }
@@ -361,26 +361,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Empleado del personal del servidor"
+            "state": "translated",
+            "value": "Miembro del personal del servidor"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Membre du personnel du serveur"
+            "state": "translated",
+            "value": "Membre de l’équipe du serveur"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "サーバースタッフ"
+            "state": "translated",
+            "value": "サーバスタッフ"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Funcionário de servidor"
+            "state": "translated",
+            "value": "Equipe do servidor"
           }
         }
       }
@@ -409,25 +409,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Usuario con voz (+v)"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Utilisateur vocal (+v)"
+            "state": "translated",
+            "value": "Utilisateur avec voix (+v)"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "音声ユーザー（+v）"
+            "state": "translated",
+            "value": "ボイスのユーザ(+v)"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Usuário com voz (+v)"
           }
         }

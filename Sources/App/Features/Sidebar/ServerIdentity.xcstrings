@@ -25,26 +25,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Apariencia del panel lateral"
+            "state": "translated",
+            "value": "Aspecto de la barra lateral"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Apparence de la barre latérale"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "サイドバーの表示方法"
+            "state": "translated",
+            "value": "サイドバーの外観"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Aparência da barra lateral"
+            "state": "translated",
+            "value": "Aparência na barra lateral"
           }
         }
       }
@@ -73,26 +73,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Utilice un color e icono para reconocer este servidor en la barra lateral y en Favoritos."
+            "state": "translated",
+            "value": "Usa un color y un icono para reconocer este servidor en la barra lateral y en Favoritos."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Utilisez une couleur et une icône pour reconnaître ce serveur dans la barre latérale et les Favoris."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "サイドバーとお気に入りでこのサーバーを色とアイコンで認識します。"
+            "state": "translated",
+            "value": "サイドバーとお気に入りでこのサーバを見分けるための色とアイコンを設定します。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Use uma cor e um ícone para reconhecer este servidor na barra lateral e Favoritos."
+            "state": "translated",
+            "value": "Use uma cor e um ícone para reconhecer este servidor na barra lateral e nos Favoritos."
           }
         }
       }
@@ -121,26 +121,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Color"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Couleur"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "色"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "cor"
+            "state": "translated",
+            "value": "Cor"
           }
         }
       }
@@ -649,25 +649,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Rayo"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Foudre"
+            "state": "translated",
+            "value": "Éclair"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "稲妻"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Raio"
           }
         }
@@ -697,26 +697,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Burbujas de chat"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Bulles de discussion"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "チャットバブル"
+            "state": "translated",
+            "value": "吹き出し"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Bolhas de bate-papo"
+            "state": "translated",
+            "value": "Balões de bate-papo"
           }
         }
       }
@@ -793,26 +793,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Controlador de juego"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Contrôleur de jeu"
+            "state": "translated",
+            "value": "Manette de jeu"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ゲームコントローラー"
+            "state": "translated",
+            "value": "ゲームコントローラ"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Controle de jogo"
+            "state": "translated",
+            "value": "Controle de videogame"
           }
         }
       }
@@ -1081,26 +1081,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Armario de servidores"
+            "state": "translated",
+            "value": "Rack de servidores"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Étagère de serveurs"
+            "state": "translated",
+            "value": "Baie de serveurs"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "サーバーラック"
+            "state": "translated",
+            "value": "サーバラック"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Armário de servidores"
+            "state": "translated",
+            "value": "Rack de servidores"
           }
         }
       }
@@ -1273,25 +1273,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Restablecer apariencia"
+            "state": "translated",
+            "value": "Restablecer aspecto"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Réinitialiser l'apparence"
+            "state": "translated",
+            "value": "Réinitialiser l’apparence"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "外観をリセットする"
+            "state": "translated",
+            "value": "外観をリセット"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Redefinir aparência"
           }
         }

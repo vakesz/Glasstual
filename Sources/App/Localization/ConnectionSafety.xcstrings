@@ -25,25 +25,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "La contraseña de la cuenta no se envió: se esperaba que esta conexión estuviera encriptada, pero no lo está."
+            "state" : "translated",
+            "value" : "La contraseña de la cuenta no se envió: se esperaba que esta conexión estuviera cifrada, pero no lo está."
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Le mot de passe du compte n'a pas été envoyé : cette connexion devait être chiffrée mais ce n'est pas le cas."
+            "state" : "translated",
+            "value" : "Le mot de passe du compte n’a pas été envoyé : cette connexion devait être chiffrée, mais ne l’est pas."
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "アカウントのパスワードが送信されませんでした：この接続は暗号化されることが期待されていましたが、暗号化されていません。"
+            "state" : "translated",
+            "value" : "アカウントのパスワードは送信されませんでした。この接続は暗号化されている必要がありますが、暗号化されていません。"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "A senha da conta não foi enviada: esta conexão deveria estar criptografada, mas não está."
           }
         }
@@ -62,7 +62,7 @@
         "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "A fiók jelszava nem lesz elküldve ide: %1$@. Nem tartozik a hálózat beállított szerverei közé."
+            "value" : "A fiók jelszava nem lesz elküldve ide: %1$@. Nem tartozik a hálózat beállított kiszolgálói közé."
           }
         },
         "de" : {
@@ -73,26 +73,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "La contraseña de la cuenta no se enviará a %1$@: no es uno de los servidores configurados de esta red."
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Le mot de passe du compte ne sera pas envoyé à %1$@ : ce n'est pas l'un des serveurs configurés de ce réseau."
+            "state" : "translated",
+            "value" : "Le mot de passe du compte ne sera pas envoyé à %1$@ : ce n’est pas l’un des serveurs configurés pour ce réseau."
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "アカウントのパスワードは%1$@に送信されません：このネットワークに設定されたサーバーではありません。"
+            "state" : "translated",
+            "value" : "アカウントのパスワードは%1$@に送信されません。このネットワークに設定されたサーバではありません。"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "A senha da conta não será enviada para %1$@: este não é um dos servidores configurados desta rede."
+            "state" : "translated",
+            "value" : "A senha da conta não será enviada para %1$@: esse não é um dos servidores configurados desta rede."
           }
         }
       }
@@ -121,26 +121,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Se rechazó una solicitud de chat directo de %1$@: %2$@ no es una dirección a la que se conectará este cliente."
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "A refusé une demande de chat direct de %1$@ : %2$@ n'est pas une adresse à laquelle ce client se connectera."
+            "state" : "translated",
+            "value" : "Demande de discussion directe refusée de %1$@ : %2$@ n’est pas une adresse à laquelle ce client se connectera."
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "%1$@からのダイレクトチャットリクエストを拒否しました：%2$@は、このクライアントが接続するアドレスではありません。"
+            "state" : "translated",
+            "value" : "%1$@からのダイレクトチャットのリクエストを拒否しました。%2$@は、このクライアントが接続するアドレスではありません。"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Recusado um pedido de chat direto de %1$@: %2$@ não é um endereço a este cliente conectará."
+            "state" : "translated",
+            "value" : "Pedido de chat direto de %1$@ recusado: %2$@ não é um endereço ao qual este cliente se conectará."
           }
         }
       }
@@ -169,26 +169,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "%1$@ quiere iniciar un chat directo contigo desde %2$@. Un chat directo es una conexión entre los dos que no pasa por el servidor IRC, por lo que la otra persona conocerá tu dirección IP."
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "%1$@ souhaite commencer un chat direct avec vous depuis %2$@. Un chat direct est une connexion entre vous deux qui ne passe pas par le serveur IRC, de sorte que l'autre personne apprendra votre adresse IP."
+            "state" : "translated",
+            "value" : "%1$@ souhaite démarrer une discussion directe avec vous depuis %2$@. Une discussion directe est une connexion entre vous deux qui ne passe pas par le serveur IRC ; l’autre personne connaîtra donc votre adresse IP."
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "%1$@は、%2$@からあなたとダイレクトチャットを開始したいと考えています。ダイレクトチャットは、IRCサーバーを経由せず、あなた方二人の間の接続であり、相手はあなたのIPアドレスを知ることになります。"
+            "state" : "translated",
+            "value" : "%1$@が、%2$@からダイレクトチャットを開始しようとしています。ダイレクトチャットは、IRCサーバを経由せず、あなたと相手との間で直接行う接続のため、相手にあなたのIPアドレスが知られます。"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "%1$@ quer iniciar um chat direto com você de %2$@. Um chat direto é uma conexão entre vocês dois que não passa pelo servidor IRC, portanto a outra pessoa aprenderá seu endereço IP."
+            "state" : "translated",
+            "value" : "%1$@ quer iniciar um chat direto com você a partir de %2$@. Um chat direto é uma conexão entre vocês dois que não passa pelo servidor IRC, portanto a outra pessoa saberá seu endereço IP."
           }
         }
       }
@@ -217,26 +217,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Se ignoró una oferta de transferencia de archivos de %@: ya se han enumerado demasiadas descargas. Elimine las terminadas y pídales que la envíen de nuevo."
+            "state" : "translated",
+            "value" : "Se ignoró una oferta de transferencia de archivos de %@: ya hay demasiadas descargas en la lista. Borra las finalizadas y pídele que la envíe de nuevo."
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Offre de transfert de fichier ignorée de %@ : trop de téléchargements sont déjà listés. Supprimez ceux qui sont terminés et demandez-leur de le renvoyer."
+            "state" : "translated",
+            "value" : "Offre de transfert de fichier ignorée de %@ : trop de téléchargements sont déjà listés. Effacez ceux qui sont terminés et demandez à la personne de le renvoyer."
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "%@からのファイル転送オファーを無視しました：すでにダウンロード数が多すぎます。完了したものは削除し、再度送信するように依頼してください。"
+            "state" : "translated",
+            "value" : "%@からのファイル転送の申し出を無視しました。ダウンロードの一覧に項目が多すぎます。完了したものを消去してから、もう一度送信してもらってください。"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Ignorado uma oferta de transferência de arquivo de %@: há downloads listados demais já. Apague os concluídos e peça para eles enviá-lo novamente."
+            "state" : "translated",
+            "value" : "Oferta de transferência de arquivo de %@ ignorada: já há downloads demais na lista. Limpe os concluídos e peça para a pessoa enviar novamente."
           }
         }
       }
@@ -265,26 +265,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Una línea saliente de bytes %1$ld se recortó hasta %2$ld que este servidor acepta; el resto no se envió."
+            "state" : "translated",
+            "value" : "Una línea saliente de %1$ld bytes se recortó a %2$ld, el máximo que acepta este servidor; el resto no se envió."
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Une ligne sortante de octets %1$ld a été tronquée à %2$ld que ce serveur accepte ; le reste n'a pas été envoyé."
+            "state" : "translated",
+            "value" : "Une ligne sortante de %1$ld octets a été tronquée à %2$ld octets, la limite acceptée par ce serveur ; le reste n’a pas été envoyé."
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "%1$ldバイトの送信ラインが、このサーバーが受け入れる%2$ldに切り詰められ、残りは送信されませんでした。"
+            "state" : "translated",
+            "value" : "送信行(%1$ldバイト)を、このサーバが受け付ける%2$ldバイトに切り詰めました。残りは送信されませんでした。"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Uma linha de saída de bytes %1$ld foi recortada para o %2$ld que este servidor aceita; o resto não foi enviado."
+            "state" : "translated",
+            "value" : "Uma linha de saída de %1$ld bytes foi reduzida para os %2$ld que este servidor aceita; o restante não foi enviado."
           }
         }
       }
@@ -313,25 +313,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "El servidor no respondió a la solicitud de autenticación SASL a tiempo."
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Le serveur n'a pas répondu à la demande d'authentification SASL dans les délais."
+            "state" : "translated",
+            "value" : "Le serveur n’a pas répondu à la demande d’authentification SASL dans les délais."
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "サーバーはSASL認証リクエストに時間内に応答しませんでした。"
+            "state" : "translated",
+            "value" : "サーバがSASL認証リクエストに時間内に応答しませんでした。"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "O servidor não respondeu ao pedido de autenticação SASL a tempo."
           }
         }
@@ -361,26 +361,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "El nombre de usuario o contraseña SASL contiene un carácter nulo, que no se puede enviar."
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Le nom d'utilisateur ou le mot de passe SASL contient un caractère nul, qui ne peut pas être envoyé."
+            "state" : "translated",
+            "value" : "Le nom d’utilisateur ou le mot de passe SASL contient un caractère nul, qui ne peut pas être envoyé."
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "SASLのユーザー名またはパスワードには、送信できないヌル文字が含まれています。"
+            "state" : "translated",
+            "value" : "SASLのユーザ名またはパスワードにヌル文字が含まれているため、送信できません。"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "O nome de usuário ou senha SASL contém um caractere nulo, que não pode ser enviado."
+            "state" : "translated",
+            "value" : "O nome de usuário ou a senha SASL contém um caractere nulo, que não pode ser enviado."
           }
         }
       }
@@ -409,26 +409,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "La autenticación SASL ECDSA falló porque el servidor envió un desafío inutilizable."
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "L'authentification SASL ECDSA a échoué : le serveur a envoyé un défi inutilisable."
+            "state" : "translated",
+            "value" : "L’authentification SASL ECDSA a échoué : le serveur a envoyé un défi inutilisable."
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "サーバーが使用できないチャレンジを送信したため、SASL ECDSA認証に失敗しました。"
+            "state" : "translated",
+            "value" : "サーバが使用できないチャレンジを送信したため、SASL ECDSA認証に失敗しました。"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "A autenticação SASL ECDSA falhou porque o servidor enviou um desafio inutilizável."
+            "state" : "translated",
+            "value" : "A autenticação SASL ECDSA falhou porque o servidor enviou um desafio inválido."
           }
         }
       }
@@ -457,26 +457,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "La autenticación SASL ECDSA falló porque no se pudo leer la clave de firma del llavero."
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "L'authentification SASL ECDSA a échoué : la clé de signature est illisible dans le trousseau."
+            "state" : "translated",
+            "value" : "L’authentification SASL ECDSA a échoué : la clé de signature n’a pas pu être lue dans le trousseau."
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "署名鍵をキーチェーンから読み取れなかったため、SASL ECDSA認証に失敗しました。"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "A autenticação SASL ECDSA falhou porque não foi possível ler a chave de assinatura do Chaveiro."
+            "state" : "translated",
+            "value" : "A autenticação SASL ECDSA falhou porque não foi possível ler a chave de assinatura do chaveiro."
           }
         }
       }

@@ -20,30 +20,30 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Glasstual-Mitteilungen und Status"
+            "value": "Glasstual-Benachrichtigungen und Status"
           }
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Notificaciones y estado de Glasstual"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Notifications et statut de Glasstual"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Glasstualの通知とステータス"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Notificações e status do Glasstual"
           }
         }
@@ -62,37 +62,37 @@
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Glasstual értesítések némítása vagy távolléti állapot beállítása, amíg ez a fókusz be van kapcsolva."
+            "value": "Glasstual értesítések némítása vagy távol állapot beállítása, amíg ez a Fókusz be van kapcsolva."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Glasstual-Mitteilungen stummschalten oder den Abwesenheitsstatus setzen, solange dieser Fokus aktiv ist."
+            "value": "Benachrichtigungen von Glasstual stummschalten oder den Abwesenheitsstatus setzen, solange dieser Fokus aktiv ist."
           }
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Silencia las notificaciones de Glasstual o establece tu estado de ausencia mientras este modo de concentración está activo."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Coupez les notifications de Glasstual ou définissez votre statut d’absence tant que ce mode de concentration est activé."
+            "state": "translated",
+            "value": "Coupez les notifications de Glasstual ou définissez votre statut d’absence tant que cette Concentration est activée."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "このフォーカスがオンの間、Glasstualの通知を消音するか、不在ステータスにします。"
+            "state": "translated",
+            "value": "この集中モードがオンの間、Glasstualの通知を消音するか、不在ステータスを設定します。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Silencie as notificações do Glasstual ou defina seu status de ausente enquanto este Foco estiver ativo."
+            "state": "translated",
+            "value": "Silencie as notificações do Glasstual ou defina seu status como ausente enquanto este Foco estiver ativo."
           }
         }
       }
@@ -121,25 +121,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Acción"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Action"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "動作"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Ação"
           }
         }
@@ -164,30 +164,30 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mitteilungen stummschalten"
+            "value": "Benachrichtigungen stummschalten"
           }
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Silenciar notificaciones"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Couper les notifications"
+            "state": "translated",
+            "value": "Désactiver les notifications"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "通知を消音"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Silenciar notificações"
           }
         }
@@ -206,7 +206,7 @@
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Távolléti állapot beállítása"
+            "value": "Távol állapot beállítása"
           }
         },
         "de": {
@@ -217,26 +217,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Establecer estado de ausencia"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Définir le statut d’absence"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "不在ステータスにする"
+            "state": "translated",
+            "value": "不在ステータスを設定"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Definir status de ausente"
+            "state": "translated",
+            "value": "Definir status como ausente"
           }
         }
       }
@@ -254,37 +254,37 @@
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Értesítések némítása és távolléti állapot"
+            "value": "Értesítések némítása és távol állapot beállítása"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mitteilungen stummschalten und abwesend setzen"
+            "value": "Benachrichtigungen stummschalten und als abwesend markieren"
           }
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Silenciar notificaciones y establecer ausencia"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Couper les notifications et définir l’absence"
+            "state": "translated",
+            "value": "Désactiver les notifications et définir le statut d’absence"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "通知を消音して不在にする"
+            "state": "translated",
+            "value": "通知を消音して不在に設定"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Silenciar notificações e definir ausente"
+            "state": "translated",
+            "value": "Silenciar notificações e definir como ausente"
           }
         }
       }
@@ -302,7 +302,7 @@
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hálózatok (üresen mind)"
+            "value": "Hálózatok (ha üres, mind)"
           }
         },
         "de": {
@@ -313,26 +313,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Redes (todas si está vacío)"
+            "state": "translated",
+            "value": "Redes (todas si se deja en blanco)"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Réseaux (tous si vide)"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ネットワーク(空欄ですべて)"
+            "state": "translated",
+            "value": "ネットワーク(空の場合はすべて)"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Redes (todas se vazio)"
+            "state": "translated",
+            "value": "Redes (todas, se vazio)"
           }
         }
       }
@@ -361,25 +361,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Red"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Réseau"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "ネットワーク"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Rede"
           }
         }
@@ -409,25 +409,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Conversaciones"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Conversations"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "会話"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Conversas"
           }
         }
@@ -457,25 +457,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Canales y mensajes directos"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Salons et messages directs"
+            "state": "translated",
+            "value": "Canaux et messages directs"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "チャンネルとダイレクトメッセージ"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Canais e mensagens diretas"
           }
         }
@@ -505,25 +505,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Solo canales"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Salons uniquement"
+            "state": "translated",
+            "value": "Canaux uniquement"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "チャンネルのみ"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Somente canais"
           }
         }
@@ -553,25 +553,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Solo mensajes directos"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Messages directs uniquement"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "ダイレクトメッセージのみ"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Somente mensagens diretas"
           }
         }
@@ -590,7 +590,7 @@
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kiemelések és közvetlen üzenetek esetén továbbra is értesít"
+            "value": "Említések és közvetlen üzenetek esetén továbbra is értesít"
           }
         },
         "de": {
@@ -601,26 +601,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Seguir notificando menciones y mensajes directos"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Continuer de notifier pour les mentions et messages directs"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "ハイライトとダイレクトメッセージは通知する"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Continuar notificando menções e mensagens diretas"
+            "state": "translated",
+            "value": "Continuar notificando destaques e mensagens diretas"
           }
         }
       }
@@ -649,26 +649,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Mensaje de ausencia (vacío para el predeterminado)"
+            "state": "translated",
+            "value": "Mensaje de ausencia (en blanco para el predeterminado)"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Message d’absence (vide pour le message par défaut)"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "不在メッセージ(空欄で既定)"
+            "state": "translated",
+            "value": "不在メッセージ(空の場合は既定)"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Mensagem de ausente (vazio para o padrão)"
+            "state": "translated",
+            "value": "Mensagem de ausência (vazio para usar a padrão)"
           }
         }
       }

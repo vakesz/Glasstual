@@ -73,25 +73,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Nueva actividad"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Nouvelle activité"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "新しいアクティビティ"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Nova atividade"
           }
         }
@@ -121,25 +121,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Transferencia de archivos"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Transfert de fichier"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "ファイル転送"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Transferência de arquivo"
           }
         }
@@ -169,25 +169,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Mensaje privado"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Message privé"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "プライベートメッセージ"
+            "state": "translated",
+            "value": "ダイレクトメッセージ"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Mensagem privada"
           }
         }
@@ -217,26 +217,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Responder"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "réponse"
+            "state": "translated",
+            "value": "Répondre"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "返信"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "resposta"
+            "state": "translated",
+            "value": "Responder"
           }
         }
       }
@@ -265,26 +265,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Responder"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "réponse"
+            "state": "translated",
+            "value": "Répondre"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "返信"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "resposta"
+            "state": "translated",
+            "value": "Responder"
           }
         }
       }
@@ -361,26 +361,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Notificaciones %@"
+            "state": "translated",
+            "value": "Notificaciones de %@"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Notifications %@"
+            "state": "translated",
+            "value": "%@ notifications"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@通知"
+            "state": "translated",
+            "value": "%@件の通知"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Notificações %@"
+            "state": "translated",
+            "value": "%@ notificações"
           }
         }
       }
@@ -409,26 +409,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Transferencias de archivos %@"
+            "state": "translated",
+            "value": "Transferencias de archivos de %@"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Transferts de fichiers %@"
+            "state": "translated",
+            "value": "%@ transferts de fichiers"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@ファイル転送"
+            "state": "translated",
+            "value": "%@件のファイル転送"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Transferências de arquivos %@"
+            "state": "translated",
+            "value": "%@ transferências de arquivo"
           }
         }
       }
@@ -457,26 +457,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Mensajes privados %@"
+            "state": "translated",
+            "value": "Mensajes privados de %@"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%@ messages privés"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@プライベートメッセージ"
+            "state": "translated",
+            "value": "%@件のダイレクトメッセージ"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Mensagens privadas %@"
+            "state": "translated",
+            "value": "%@ mensagens privadas"
           }
         }
       }
@@ -505,25 +505,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Marcar como leído"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Marquer comme lu"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "既読にする"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Marcar como lido"
           }
         }

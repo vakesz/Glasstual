@@ -14,7 +14,7 @@
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Szerver"
+            "value": "Kiszolgáló"
           }
         },
         "de": {
@@ -25,25 +25,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Servidor"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Serveur"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "サーバ"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Servidor"
           }
         }
@@ -73,25 +73,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Conversación"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Conversation"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "会話"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Conversa"
           }
         }
@@ -110,7 +110,7 @@
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "IRC-szerver"
+            "value": "IRC-kiszolgáló"
           }
         },
         "de": {
@@ -121,25 +121,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Servidor IRC"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Serveur IRC"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "IRCサーバ"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Servidor IRC"
           }
         }
@@ -169,25 +169,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Canal en %@"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Salon sur %@"
+            "state": "translated",
+            "value": "Canal sur %@"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%@のチャンネル"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Canal em %@"
           }
         }
@@ -217,25 +217,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Mensajes directos en %@"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Messages directs sur %@"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%@のダイレクトメッセージ"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Mensagens diretas em %@"
           }
         }
@@ -254,7 +254,7 @@
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Szerver"
+            "value": "Kiszolgáló"
           }
         },
         "de": {
@@ -265,25 +265,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Servidor"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Serveur"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "サーバ"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Servidor"
           }
         }
@@ -313,25 +313,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Conversación"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Conversation"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "会話"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Conversa"
           }
         }
@@ -361,25 +361,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Canal"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Salon"
+            "state": "translated",
+            "value": "Canal"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "チャンネル"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Canal"
           }
         }
@@ -409,25 +409,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Mensaje"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Message"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "メッセージ"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Mensagem"
           }
         }
@@ -457,25 +457,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Enviar mensaje IRC"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Envoyer un message IRC"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "IRCメッセージを送信"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Enviar mensagem IRC"
           }
         }
@@ -494,7 +494,7 @@
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Üzenetet küld egy csatornának vagy személynek. Küldés előtt megerősíted a szöveget. A perjellel kezdődő szöveg változtatás nélkül megy el, parancsként soha nem fut le."
+            "value": "Üzenetet küld egy csatornának vagy személynek. Küldés előtt megerősíted a szöveget. A perjellel kezdődő szöveget a rendszer változtatás nélkül elküldi, parancsként soha nem futtatja le."
           }
         },
         "de": {
@@ -505,25 +505,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Envía un mensaje a un canal o a una persona. Confirmas el texto antes de enviarlo. El texto que empieza con una barra se envía tal cual y nunca se ejecuta como comando."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Envoie un message à un salon ou à une personne. Vous confirmez le texte avant l’envoi. Le texte commençant par une barre oblique est envoyé tel quel, jamais exécuté comme commande."
+            "state": "translated",
+            "value": "Envoie un message à un canal ou à une personne. Vous confirmez le texte avant l’envoi. Le texte commençant par une barre oblique est envoyé tel quel, jamais exécuté comme commande."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "チャンネルまたは相手にメッセージを送信します。送信前にテキストを確認します。スラッシュで始まるテキストはそのまま送信され、コマンドとして実行されることはありません。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Envia uma mensagem a um canal ou pessoa. Você confirma o texto antes do envio. Texto que começa com uma barra é enviado como está, nunca executado como comando."
           }
         }
@@ -553,25 +553,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "¿Enviar «%@» a %@ en %@?"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Envoyer « %@ » à %@ sur %@ ?"
+            "state": "translated",
+            "value": "Envoyer « %@ » à %@ sur %@ ?"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "「%@」を%@(%@)に送信しますか?"
+            "state": "translated",
+            "value": "「%@」を%@(%@)に送信しますか？"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Enviar “%@” para %@ em %@?"
           }
         }
@@ -601,25 +601,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Mensaje enviado a %@."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Message envoyé à %@."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%@にメッセージを送信しました。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Mensagem enviada para %@."
           }
         }
@@ -649,25 +649,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Unirse a un canal IRC"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Rejoindre un salon IRC"
+            "state": "translated",
+            "value": "Rejoindre un canal IRC"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "IRCチャンネルに参加"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Entrar em um canal IRC"
           }
         }
@@ -686,37 +686,37 @@
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Csatlakozik egy csatornához egy szerveren. A szervernek csatlakoztatva kell lennie, vagy a csatlakozás folyamatban kell legyen."
+            "value": "Csatlakozik egy csatornához egy kiszolgálón. A kiszolgálónak kapcsolódva kell lennie, vagy a kapcsolódásnak folyamatban kell lennie."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Betritt einem Kanal auf einem Server. Der Server muss verbunden sein oder gerade eine Verbindung aufbauen."
+            "value": "Betritt einen Kanal auf einem Server. Der Server muss verbunden sein oder gerade eine Verbindung aufbauen."
           }
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Se une a un canal en un servidor. El servidor debe estar conectado o conectándose."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Rejoint un salon sur un serveur. Le serveur doit être connecté ou en cours de connexion."
+            "state": "translated",
+            "value": "Rejoint un canal sur un serveur. Le serveur doit être connecté ou en cours de connexion."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "サーバ上のチャンネルに参加します。サーバが接続済みまたは接続中である必要があります。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Entra em um canal em um servidor. O servidor deve estar conectado ou conectando."
+            "state": "translated",
+            "value": "Entra em um canal de um servidor. O servidor precisa estar conectado ou em conexão."
           }
         }
       }
@@ -740,30 +740,30 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Betrete %@ auf %@."
+            "value": "%@ auf %@ wird betreten."
           }
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Uniéndose a %@ en %@."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Connexion à %@ sur %@."
+            "state": "translated",
+            "value": "Arrivée dans %@ sur %@."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%@(%@)に参加しています。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Entrando em %@ em %@."
           }
         }
@@ -782,7 +782,7 @@
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Csatlakozás IRC-szerverhez"
+            "value": "Csatlakozás IRC-kiszolgálóhoz"
           }
         },
         "de": {
@@ -793,25 +793,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Conectar a un servidor IRC"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Se connecter à un serveur IRC"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "IRCサーバに接続"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Conectar a um servidor IRC"
           }
         }
@@ -830,36 +830,36 @@
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Csatlakozik egy beállított szerverhez."
+            "value": "Csatlakozik egy beállított kiszolgálóhoz."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Verbindet mit einem konfigurierten Server."
+            "value": "Stellt eine Verbindung zu einem konfigurierten Server her."
           }
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Se conecta a un servidor configurado."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Se connecte à un serveur configuré."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "設定済みのサーバに接続します。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Conecta a um servidor configurado."
           }
         }
@@ -878,37 +878,37 @@
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Csatlakozás ehhez: %@."
+            "value": "Kapcsolódás: %@."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Verbinde mit %@."
+            "value": "Verbindung zu %@ wird hergestellt."
           }
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Conectando a %@."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Connexion à %@."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%@に接続しています。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Conectando a %@."
+            "state": "translated",
+            "value": "Conectando-se a %@."
           }
         }
       }
@@ -926,7 +926,7 @@
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Leválasztás az IRC-szerverről"
+            "value": "Leválasztás az IRC-kiszolgálóról"
           }
         },
         "de": {
@@ -937,25 +937,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Desconectar de un servidor IRC"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Se déconnecter d’un serveur IRC"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "IRCサーバから切断"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Desconectar de um servidor IRC"
           }
         }
@@ -974,7 +974,7 @@
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Leválaszt egy szerverről."
+            "value": "Leválaszt egy kiszolgálóról."
           }
         },
         "de": {
@@ -985,25 +985,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Se desconecta de un servidor."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Se déconnecte d’un serveur."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "サーバから切断します。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Desconecta de um servidor."
           }
         }
@@ -1022,37 +1022,37 @@
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Leválasztás a következőről: %@."
+            "value": "Leválasztás erről: %@."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Trenne die Verbindung zu %@."
+            "value": "Verbindung zu %@ wird getrennt."
           }
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Desconectando de %@."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Déconnexion de %@."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%@から切断しています。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Desconectando de %@."
+            "state": "translated",
+            "value": "Desconectando-se de %@."
           }
         }
       }
@@ -1081,25 +1081,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Abrir conversación IRC"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Ouvrir une conversation IRC"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "IRCの会話を開く"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Abrir conversa IRC"
           }
         }
@@ -1129,25 +1129,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Abre un canal o una conversación directa en Glasstual."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Ouvre un salon ou une conversation directe dans Glasstual."
+            "state": "translated",
+            "value": "Ouvre un canal ou une conversation directe dans Glasstual."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Glasstualでチャンネルまたはダイレクトの会話を開きます。"
+            "state": "translated",
+            "value": "Glasstualでチャンネルまたはダイレクトメッセージの会話を開きます。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Abre um canal ou conversa direta no Glasstual."
           }
         }
@@ -1177,25 +1177,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Glasstual aún no ha terminado de iniciarse. Inténtalo de nuevo en un momento."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Glasstual n’a pas fini de démarrer. Réessayez dans un instant."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Glasstualの起動が完了していません。しばらくしてからもう一度お試しください。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "O Glasstual ainda não terminou de iniciar. Tente novamente em instantes."
           }
         }
@@ -1214,7 +1214,7 @@
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ez a szerver már nem létezik."
+            "value": "Ez a kiszolgáló már nem létezik."
           }
         },
         "de": {
@@ -1225,25 +1225,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Ese servidor ya no existe."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Ce serveur n’existe plus."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "そのサーバはもう存在しません。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Esse servidor não existe mais."
           }
         }
@@ -1273,25 +1273,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Esa conversación ya no está abierta."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Cette conversation n’est plus ouverte."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "その会話はもう開かれていません。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Essa conversa não está mais aberta."
           }
         }
@@ -1310,7 +1310,7 @@
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "A szerver nincs csatlakoztatva."
+            "value": "Nincs kapcsolat a kiszolgálóval."
           }
         },
         "de": {
@@ -1321,25 +1321,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "El servidor no está conectado."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Le serveur n’est pas connecté."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "サーバに接続されていません。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "O servidor não está conectado."
           }
         }
@@ -1369,25 +1369,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Ese no es un nombre de canal válido."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Ce nom de salon n’est pas valide."
+            "state": "translated",
+            "value": "Ce nom de canal n’est pas valide."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "有効なチャンネル名ではありません。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Esse não é um nome de canal válido."
           }
         }
@@ -1417,25 +1417,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "El mensaje está vacío."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Le message est vide."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "メッセージが空です。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "A mensagem está vazia."
           }
         }
@@ -1465,25 +1465,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "El mensaje es demasiado largo. Debe tener menos de 2040 caracteres y cuatro líneas."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Le message est trop long. Il doit faire moins de 2 040 caractères et quatre lignes."
+            "state": "translated",
+            "value": "Le message est trop long. Limitez-le à moins de 2 040 caractères et à quatre lignes."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "メッセージが長すぎます。2,040文字、4行以内にしてください。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "A mensagem é muito longa. Mantenha abaixo de 2.040 caracteres e quatro linhas."
           }
         }

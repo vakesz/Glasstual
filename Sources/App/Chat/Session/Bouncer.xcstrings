@@ -25,25 +25,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Se ha producido un error al convertir la información del certificado a un formato más amigable."
+            "state": "translated",
+            "value": "Se ha producido un error al convertir la información del certificado a un formato más legible"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Une erreur s'est produite lors de la conversion des informations du certificat vers un format plus convivial."
+            "state": "translated",
+            "value": "Une erreur s’est produite lors de la conversion des informations du certificat dans un format plus lisible"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "証明書情報をより使いやすい形式に変換する際にエラーが発生しました。"
+            "state": "translated",
+            "value": "証明書情報を、より読みやすい形式に変換する際にエラーが発生しました"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Ocorreu um erro ao converter as informações do certificado para um formato mais amigável"
           }
         }
@@ -116,31 +116,31 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dadurch werden auch die zugehörigen Netzwerke gelöscht: %@. Ihre Unterhaltungen bleiben im Verlauf erhalten, nur lesbar."
+            "value": "Dadurch werden auch die zugehörigen Netzwerke gelöscht: %@. Ihre Unterhaltungen bleiben im Verlauf erhalten, sind aber schreibgeschützt."
           }
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Esto también elimina sus redes: %@. Sus conversaciones permanecen en el historial, solo de lectura."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Cela supprime aussi ses réseaux : %@. Leurs conversations restent dans l’historique, en lecture seule."
+            "state": "translated",
+            "value": "Cela supprime aussi ses réseaux : %@. Leurs conversations restent dans l’historique, en lecture seule."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "このアカウントのネットワークも削除されます: %@。会話は履歴に読み取り専用で残ります。"
+            "state": "translated",
+            "value": "これにより、このアカウントのネットワークも削除されます: %@。それらの会話は履歴に読み取り専用で残ります。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Isso também exclui as redes dela: %@. As conversas ficam no histórico, somente leitura."
+            "state": "translated",
+            "value": "Isso também apaga as redes da conta: %@. As conversas permanecem no histórico, somente para leitura."
           }
         }
       }
@@ -169,26 +169,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "El \u0002Desatacar\u0002 Se ha enviado el comando para el canal \u0002%@\u0002. La conexión automática al conectarse a este canal también ha sido desactivada. Use el comando \u0002Adjuntar\u0002 en cualquier momento para ser devuelto a este canal y tener la incorporación automática desactivada nuevamente."
+            "state": "translated",
+            "value": "El comando \u0002detach\u0002 se ha enviado para el canal \u0002%@\u0002. La unión automática al conectar a este canal también se ha desactivado. Usa el comando \u0002attach\u0002 en cualquier momento para volver a este canal y reactivar la unión automática."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Le \u0002détacher\u0002 La commande a été envoyée pour le canal \u0002%@\u0002.  L'adhésion automatique lors de la connexion à cette chaîne a également été désactivée. Utilisez la commande \u0002attacher\u0002 à tout moment pour être retourné sur cette chaîne et avoir le rattachement automatique réactivé."
+            "state": "translated",
+            "value": "La commande \u0002detach\u0002 a été envoyée pour le canal \u0002%@\u0002. La connexion automatique à ce canal au démarrage a également été désactivée. Utilisez la commande \u0002attach\u0002 à tout moment pour revenir dans ce canal et réactiver la connexion automatique."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "それ \u0002取り外す\u0002 チャンネルに対してコマンドが送信されました。 \u0002%@\u0002このチャンネルの接続時の自動参加も無効になっています。コマンドを使用してください。 \u0002添付する\u0002 いつでもこのチャンネルに戻し、自動参加を再度有効にすることができます。"
+            "state": "translated",
+            "value": "チャンネル\u0002%@\u0002に対して\u0002detach\u0002コマンドを送信しました。このチャンネルの接続時の自動参加も無効になりました。このチャンネルに戻って自動参加を再び有効にするには、いつでも\u0002attach\u0002コマンドを使用してください。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "O \u0002separar\u0002 comando foi enviado para o canal \u0002%@\u0002. A adesão automática ao conectar para este canal também foi desativada. Use o comando \u0002anexar\u0002 a qualquer momento para ser devolvido a este canal e ter a inscrição automática reativada."
+            "state": "translated",
+            "value": "O comando \u0002detach\u0002 foi enviado para o canal \u0002%@\u0002. A entrada automática ao conectar também foi desativada para este canal. Use o comando \u0002attach\u0002 a qualquer momento para voltar a este canal e reativar a entrada automática."
           }
         }
       }
@@ -206,7 +206,7 @@
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ez a hálózat el lett távolítva a bouncerből. A beszélgetései megmaradnak, de már nem tud csatlakozni."
+            "value": "Ezt a hálózatot eltávolították a közvetítőből. A beszélgetései megmaradnak, de már nem tud csatlakozni."
           }
         },
         "de": {
@@ -217,25 +217,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Esta red se ha eliminado del bouncer. Se conservan sus conversaciones, pero ya no puede conectarse."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Ce réseau a été supprimé du bouncer. Ses conversations sont conservées, mais il ne peut plus se connecter."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "このネットワークはバウンサーから削除されました。会話は保持されますが、接続できなくなりました。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Esta rede foi removida do bouncer. As conversas são mantidas, mas ela não pode mais se conectar."
           }
         }
@@ -265,25 +265,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "No hay información disponible"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Aucune information n'est disponible"
+            "state": "translated",
+            "value": "Aucune information n’est disponible"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "情報は利用できません。"
+            "state": "translated",
+            "value": "利用できる情報はありません"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Nenhuma informação está disponível"
           }
         }
@@ -313,25 +313,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Este comando no está disponible porque no estás conectado a ZNC"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Cette commande n'est pas disponible parce que vous n'êtes pas connecté à ZNC."
+            "state": "translated",
+            "value": "Cette commande n’est pas disponible, car vous n’êtes pas connecté à ZNC"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "このコマンドはZNCに接続していないため利用できません。"
+            "state": "translated",
+            "value": "ZNCに接続していないため、このコマンドは利用できません"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Este comando não está disponível porque você não está conectado ao ZNC"
           }
         }

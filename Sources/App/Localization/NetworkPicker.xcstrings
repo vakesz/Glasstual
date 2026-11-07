@@ -25,26 +25,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Todas las redes"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Toutes les réseaux"
+            "state": "translated",
+            "value": "Tous les réseaux"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "すべてのネットワーク"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Todas as Redes"
+            "state": "translated",
+            "value": "Todas as redes"
           }
         }
       }
@@ -73,26 +73,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Conéctate a cualquier servidor IRC por dirección"
+            "state": "translated",
+            "value": "Conectar a cualquier servidor IRC por dirección"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Connectez-vous à n'importe quel serveur IRC par adresse"
+            "state": "translated",
+            "value": "Se connecter à n’importe quel serveur IRC par son adresse"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "アドレスで任意のIRCサーバーに接続する"
+            "state": "translated",
+            "value": "アドレスを指定して任意のIRCサーバに接続"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Conecte-se a qualquer servidor IRC por endereço"
+            "state": "translated",
+            "value": "Conectar a qualquer servidor IRC pelo endereço"
           }
         }
       }
@@ -121,25 +121,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Servidor personalizado"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Serveur personnalisé"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "カスタムサーバー"
+            "state": "translated",
+            "value": "カスタムサーバ"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Servidor personalizado"
           }
         }
@@ -169,25 +169,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Redes"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Réseaux"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "ネットワーク"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Redes"
           }
         }
@@ -265,26 +265,26 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Redes de búsqueda"
+            "state": "translated",
+            "value": "Buscar redes"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Réseaux de recherche"
+            "state": "translated",
+            "value": "Rechercher des réseaux"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "検索ネットワーク"
+            "state": "translated",
+            "value": "ネットワークを検索"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Redes de pesquisa"
+            "state": "translated",
+            "value": "Pesquisar redes"
           }
         }
       }
@@ -313,25 +313,25 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Conexión segura"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Connexion sécurisée"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "安全な接続"
+            "state": "translated",
+            "value": "セキュアな接続"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Conexão segura"
           }
         }

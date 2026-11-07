@@ -25,25 +25,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Conversaciones"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Conversations"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "会話"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Conversas"
           }
         }
@@ -73,25 +73,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Días"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Jours"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "日付"
+            "state" : "translated",
+            "value" : "日"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Dias"
           }
         }
@@ -121,25 +121,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Este registro está vacío"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Ce journal est vide"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "このログは空です"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Este registro está vazio"
           }
         }
@@ -164,30 +164,30 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Channel"
+            "value" : "Kanal"
           }
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Canal"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Salon"
+            "state" : "translated",
+            "value" : "Canal"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "チャンネル"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Canal"
           }
         }
@@ -217,25 +217,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Consola"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Console"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "コンソール"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Console"
           }
         }
@@ -260,31 +260,31 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Privatunterhaltung"
+            "value" : "Private Unterhaltung"
           }
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Conversación privada"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Conversation privée"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "プライベート会話"
+            "state" : "translated",
+            "value" : "ダイレクトの会話"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Conversa privada"
+            "state" : "translated",
+            "value" : "Conversa direta"
           }
         }
       }
@@ -313,25 +313,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Cargar líneas anteriores"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Charger les lignes précédentes"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "以前の行を読み込む"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Carregar linhas anteriores"
           }
         }
@@ -361,25 +361,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Cargando registros"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Chargement des journaux"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "ログを読み込み中"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Carregando registros"
           }
         }
@@ -409,25 +409,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "%1$ld de %2$ld"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "%1$ld sur %2$ld"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "%1$ld / %2$ld"
+            "state" : "translated",
+            "value" : "%1$ld/%2$ld"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "%1$ld de %2$ld"
           }
         }
@@ -457,25 +457,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "%1$ld de al menos %2$ld"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "%1$ld sur au moins %2$ld"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "%1$ld / %2$ld 以上"
+            "state" : "translated",
+            "value" : "%1$ld/%2$ld以上"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "%1$ld de pelo menos %2$ld"
           }
         }
@@ -494,37 +494,37 @@
         "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Naplók"
+            "value" : "Beszélgetésnaplók"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Chat-Protokolle"
+            "value" : "Gesprächsprotokolle"
           }
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Registros de conversación"
+            "state" : "translated",
+            "value" : "Registros de transcripciones"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Journaux de conversation"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "トランスクリプトログ"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Registros de conversa"
+            "state" : "translated",
+            "value" : "Registros de conversas"
           }
         }
       }
@@ -553,25 +553,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Coincidencia siguiente"
+            "state" : "translated",
+            "value" : "Siguiente coincidencia"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Résultat suivant"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "次の一致"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Próxima correspondência"
           }
         }
@@ -590,37 +590,37 @@
         "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Válassz átiratmappát a Beállításokban a naplók mentéséhez és böngészéséhez."
+            "value" : "Válaszd ki a Beállításokban a beszélgetésnaplók mappáját a naplók mentéséhez és böngészéséhez."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wähle in den Einstellungen einen Ordner für Protokolle, um sie zu speichern und zu durchsuchen."
+            "value" : "Wähle in den Einstellungen einen Ordner für Gesprächsprotokolle, um sie zu speichern und zu durchsuchen."
           }
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Elige una carpeta de transcripciones en Ajustes para guardar y explorar registros."
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Choisissez un dossier de transcriptions dans les Réglages pour conserver et parcourir les journaux."
+            "state" : "translated",
+            "value" : "Choisissez un dossier de transcriptions dans les réglages pour conserver et parcourir les journaux."
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ログを保存して閲覧するには、設定でトランスクリプトのフォルダを選んでください。"
+            "state" : "translated",
+            "value" : "設定でトランスクリプトフォルダを選択すると、ログを保存して閲覧できます。"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Escolha uma pasta de transcrições nos Ajustes para guardar e explorar registros."
+            "state" : "translated",
+            "value" : "Escolha uma pasta de transcrições nos Ajustes para guardar e consultar os registros."
           }
         }
       }
@@ -649,25 +649,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Sin carpeta de registros"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Aucun dossier de journaux"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ログフォルダがありません"
+            "state" : "translated",
+            "value" : "ログフォルダなし"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Nenhuma pasta de registros"
           }
         }
@@ -697,26 +697,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Los registros aparecerán aquí cuando las conversaciones se guarden en el disco."
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Les journaux apparaîtront ici dès que les conversations seront écrites sur le disque."
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "会話がディスクに書き込まれると、ログがここに表示されます。"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Os registros aparecem aqui quando as conversas forem gravadas no disco."
+            "state" : "translated",
+            "value" : "Os registros aparecem aqui depois que as conversas forem gravadas no disco."
           }
         }
       }
@@ -745,26 +745,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Aún no hay registros"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Aucun journal pour l'instant"
+            "state" : "translated",
+            "value" : "Aucun journal pour l’instant"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ログはまだありません"
+            "state" : "translated",
+            "value" : "ログなし"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Ainda não há registros"
+            "state" : "translated",
+            "value" : "Nenhum registro ainda"
           }
         }
       }
@@ -793,25 +793,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Sin coincidencias"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Aucun résultat"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "一致なし"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Nenhuma correspondência"
           }
         }
@@ -841,25 +841,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Abrir Ajustes"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Ouvrir les Réglages"
+            "state" : "translated",
+            "value" : "Ouvrir les réglages"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "設定を開く"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Abrir Ajustes"
           }
         }
@@ -889,25 +889,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Coincidencia anterior"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Résultat précédent"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "前の一致"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Correspondência anterior"
           }
         }
@@ -937,25 +937,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Actualizar"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Actualiser"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "更新"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Atualizar"
           }
         }
@@ -985,25 +985,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Buscar en este registro"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Rechercher dans ce journal"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "このログを検索"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Pesquisar neste registro"
           }
         }
@@ -1033,25 +1033,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Selecciona una conversación"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Choisissez une conversation"
+            "state" : "translated",
+            "value" : "Sélectionner une conversation"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "会話を選択"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Selecione uma conversa"
           }
         }
@@ -1081,25 +1081,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Elige una conversación y un día para leerlo."
+            "state" : "translated",
+            "value" : "Elige una conversación y un día para leerla."
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Choisissez une conversation et un jour pour le lire."
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "読む会話と日付を選んでください。"
+            "state" : "translated",
+            "value" : "ログを表示する会話と日付を選択してください。"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Escolha uma conversa e um dia para ler."
           }
         }
@@ -1129,25 +1129,25 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Selecciona un registro"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Choisissez un journal"
+            "state" : "translated",
+            "value" : "Sélectionner un journal"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "ログを選択"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Selecione um registro"
           }
         }
@@ -1172,30 +1172,30 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Im Finder zeigen"
+            "value" : "Im Finder anzeigen"
           }
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Mostrar en el Finder"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Afficher dans le Finder"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Finderで表示"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Mostrar no Finder"
           }
         }
@@ -1225,26 +1225,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Puede que el archivo se haya movido o eliminado. Actualiza para volver a leer la carpeta."
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Le fichier a peut-être été déplacé ou supprimé. Actualisez pour relire le dossier."
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ファイルが移動または削除された可能性があります。更新してフォルダを再読み込みしてください。"
+            "state" : "translated",
+            "value" : "ファイルが移動または削除された可能性があります。更新して、フォルダを再読み込みしてください。"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "O arquivo pode ter sido movido ou excluído. Atualize para ler a pasta novamente."
+            "state" : "translated",
+            "value" : "O arquivo pode ter sido movido ou apagado. Atualize para ler a pasta novamente."
           }
         }
       }
@@ -1273,26 +1273,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "No se puede leer este registro"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Impossible de lire ce journal"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "このログを読み取れません"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Não foi possível ler este registro"
+            "state" : "translated",
+            "value" : "Não é possível ler este registro"
           }
         }
       }
@@ -1310,37 +1310,37 @@
         "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Naplók"
+            "value" : "Beszélgetésnaplók"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Chat-Protokolle"
+            "value" : "Gesprächsprotokolle"
           }
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Registros de conversación"
+            "state" : "translated",
+            "value" : "Registros de transcripciones"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Journaux de conversation"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "トランスクリプトログ"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Registros de conversa"
+            "state" : "translated",
+            "value" : "Registros de conversas"
           }
         }
       }
