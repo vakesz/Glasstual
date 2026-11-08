@@ -103,9 +103,10 @@ struct GlasstualFocusFilter: SetFocusFilterIntent {
 @MainActor
 extension GlasstualFocusFilter {
 	/// Re-reads the filter the active Focus carries, which the system does not
-	/// deliver again to a launching app. No active filter clears the state.
+	/// deliver again to a launching app. An empty read changes nothing, so it
+	/// cannot undo a filter the system delivered while this one was pending.
 	static func restoreActiveFilter() async {
-		let filter = try? await GlasstualFocusFilter.current
-		AppServices.chatSession?.setFocusFilter(filter?.state)
+		guard let state = try? await GlasstualFocusFilter.current.state else { return }
+		AppServices.chatSession?.setFocusFilter(state)
 	}
 }

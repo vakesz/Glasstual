@@ -8,7 +8,7 @@ import Testing
 @MainActor
 struct MenuCommandValidationResponderTests {
 	/** Paste used to validate against the chat input whenever the main window
-	 was key, so it read as enabled while the caret was in the toolbar's search
+	 was key, so it read as enabled while the caret was in the sidebar's search
 	 field or a sheet's field -- and then pasted into the wrong one. The
 	 responder is the only thing the answer may depend on. */
 	@Test("Paste follows the first responder, not the window")
@@ -81,7 +81,7 @@ struct MenuCommandValidationResponderTests {
 
 	/** The action side of the same rule. Pasting used to focus the chat input
 	 whenever the main window was key, so the text landed in the conversation
-	 while the caret was in the toolbar's search field. */
+	 while the caret was in the sidebar's search field. */
 	@Test("Paste is delivered to the responder that holds the keyboard")
 	func pasteTargetsTheResponder() {
 		#expect(MenuResponderCommandPolicy.pasteTarget(

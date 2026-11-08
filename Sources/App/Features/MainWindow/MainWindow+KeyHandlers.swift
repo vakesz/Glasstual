@@ -40,7 +40,7 @@ extension MainWindow {
 
 	 `NSApplication` offers the window every key event before the responder
 	 chain sees it, so a shortcut registered on the window otherwise fires
-	 wherever the keyboard is: typing a filter in the toolbar's search field and
+	 wherever the keyboard is: typing a filter in the sidebar's search field and
 	 pressing Tab completed a nickname into the chat input and moved the
 	 keyboard there with it. The container is what is asked about, so the field,
 	 its scroll view's clip view and any field editor inside it all count. */
@@ -112,7 +112,7 @@ extension MainWindow {
 		/* In the message field, Escape dismisses a spelling suggestion, cancels
 		 a reply and closes the completion popup. Anywhere else the window
 		 leaves Escape to whatever holds the keyboard. It used to leave full
-		 screen instead, so the toolbar's search field and the find bar never
+		 screen instead, so the sidebar's search field and the find bar never
 		 got the Escape that clears or closes them. The green button and
 		 Control-Command-F leave full screen. */
 		registerForInputBar(key: .escape) { $0.inputTextField.keyDown(with: $1) }
@@ -133,7 +133,7 @@ extension MainWindow {
 		 Format menu items with key equivalents of their own; registering them
 		 here as well gave the window a second, unvalidated copy of each.
 		 Registered unconditionally, ⌘B also swallowed the key wherever the
-		 reader was -- in the toolbar's search field, in a sheet's field, in the
+		 reader was -- in the sidebar's search field, in a sheet's field, in the
 		 transcript -- and gave nothing back, which is why what is left is
 		 scoped to the input bar. */
 		registerForInputBar(character: "c", modifiers: [.control, .shift]) { $0.textFormattingForegroundColor($1) }

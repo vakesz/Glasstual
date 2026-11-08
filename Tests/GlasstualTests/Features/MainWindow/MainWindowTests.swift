@@ -40,7 +40,7 @@ struct MainWindowTests {
 		)
 	}
 
-	/** Escape from the toolbar's search field or the find bar left full screen
+	/** Escape from the sidebar's search field or the find bar left full screen
 	 before the field could clear or close itself. */
 	@Test("Escape outside the message field is left to the view that has the keyboard")
 	func escapeOutsideTheInputBarIsDeclined() throws {

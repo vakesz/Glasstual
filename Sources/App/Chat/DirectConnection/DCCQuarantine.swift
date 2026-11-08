@@ -59,8 +59,10 @@ enum DCCQuarantine {
 			try target.setResourceValues(values)
 			return true
 		} catch {
-			let reason = error.localizedDescription
-			fileTransferLogger.error("Could not quarantine a received file: \(reason, privacy: .public)")
+			let failure = error as NSError
+			fileTransferLogger.error(
+				"Could not quarantine a received file: \(failure.domain, privacy: .public) \(failure.code, privacy: .public): \(failure.localizedDescription, privacy: .private)"
+			)
 			return false
 		}
 	}

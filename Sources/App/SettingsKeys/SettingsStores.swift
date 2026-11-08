@@ -34,13 +34,7 @@ struct SettingsStores {
 	}
 
 	/** Everything a domain has persisted, read from the current-user, any-host
-	 source a suite writes to.
-
-	 `persistentDomain(forName:)` answers the same question, but it also opens
-	 the any-user, by-host source, which cfprefsd refuses for an application
-	 group container: it detaches from the domain and logs "Using
-	 kCFPreferencesAnyUser with a container is only allowed for System
-	 Containers" every time it is asked. */
+	 source a suite writes to. */
 	func persistentDomain(for storage: SettingStorage) -> [String: Any] {
 		let domain = (storage == .standard ? standardDomain : containerDomain) as CFString
 		guard let names = CFPreferencesCopyKeyList(

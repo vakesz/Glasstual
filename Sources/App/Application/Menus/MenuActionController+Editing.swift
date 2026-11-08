@@ -33,7 +33,7 @@ extension MenuActionController {
 	/** Paste goes wherever the keyboard is.
 
 	 It used to focus the chat input whenever the main window was key, so pasting
-	 while the caret sat in the toolbar's search field or a sheet's field pulled
+	 while the caret sat in the sidebar's search field or a sheet's field pulled
 	 the focus out of that field and dropped the text into the conversation. The
 	 field is still the fallback the main window wants -- a paste with nothing
 	 editable focused belongs in the message being written -- and

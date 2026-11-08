@@ -278,9 +278,8 @@ extension MenuGraph {
 			whenever the sidebar changes. */
 		.item(String(localized: .MainWindow.menuNavigationChannelList), .navigationChannelList, children: [.item("")]),
 		.separator(),
-		/* The sidebar filter moved into the window toolbar, so this focuses that
-			field. Conversation Search keeps its own item below rather than being
-			left with no way in. */
+		/* This focuses the sidebar filter field. Conversation Search keeps its
+			own item below rather than being left with no way in. */
 		.item(
 			String(localized: .MainWindow.menuNavigationSearchChannels),
 			.searchChannels,

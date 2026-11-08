@@ -94,6 +94,7 @@ extension ServerSession {
 		cancelDelayedDisconnect()
 		cancelPendingSessionTasks()
 
+		reconnect.clearBackoffIfRegistrationHeld(until: ProcessInfo.processInfo.systemUptime)
 		if !terminating, reconnect.isEnabled {
 			startReconnectTimer()
 			reconnect.isEnabled = reconnect.timer.isActive

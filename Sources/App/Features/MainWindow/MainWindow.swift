@@ -403,7 +403,7 @@ private extension MainWindow {
 	/** The formatter submenu joins the input field's own context menu here,
 	 once, and not from `windowWillReturnFieldEditor`: answering that hands the
 	 input field to every control in the window as its field editor, and the
-	 toolbar's search field then edits through the chat input. */
+	 sidebar's search field then edits through the chat input. */
 	func installInputFieldMenu() {
 		let editorMenu = inputTextField.menu ?? NSMenu()
 		let formatterMenu = formattingMenu.formatterMenu

@@ -54,7 +54,7 @@ extension TranscriptController {
 			case let .failure(error):
 				let reason = (error as? InlineImageError)?.logDescription ?? error.localizedDescription
 				inlineMediaLogger.error(
-					"Inline image request failed for '\(address, privacy: .public)': \(reason, privacy: .public)"
+					"Inline image request failed for '\(address, privacy: .private(mask: .hash))':\(reason, privacy: .public)"
 				)
 			}
 		}

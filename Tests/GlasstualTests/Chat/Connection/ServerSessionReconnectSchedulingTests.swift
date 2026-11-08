@@ -96,26 +96,43 @@ struct ServerSessionReconnectSchedulingTests {
 		#expect(session.reconnect.attemptCount == 2)
 	}
 
-	/// Registration is the only evidence the endpoint is usable, so it is what
-	/// clears the backoff — not a socket that connected and then dropped.
-	@Test("Registering clears the backoff")
-	func registrationClearsTheBackoff() {
+	/// A server that sends 001 and then drops the connection has not shown the
+	/// endpoint is usable, so the next attempt keeps backing off.
+	@Test("A registration that drops quickly keeps the backoff")
+	func shortLivedRegistrationKeepsTheBackoff() {
 		let session = session(autoReconnect: true)
-		defer { session.stopReconnectTimer() }
-		session.startReconnectTimer()
-		session.stopReconnectTimer()
-		session.startReconnectTimer()
-		session.stopReconnectTimer()
-
+		defer { session.cancelReconnect() }
+		session.setConnectionTransportForTesting(.connected)
+		session.reconnect.isEnabled = true
+		session.reconnect.attemptCount = 3
 		session.markAsLoggedIn()
 
-		#expect(session.reconnect.attemptCount == 0)
+		session.changeStateOff()
 
-		session.startReconnectTimer()
+		let expected = ConnectionTimerPolicy.reconnectDelay(attempt: 3, jitter: 0)
+
+		#expect(session.reconnect.attemptCount == 4)
+		// The jitter is drawn at random, so the delay is a range, not a number.
+		#expect(session.reconnect.timer.interval <= expected)
+		#expect(session.reconnect.timer.interval >= expected * 0.75)
+	}
+
+	@Test("A registration that holds clears the backoff")
+	func stableRegistrationClearsTheBackoff() {
+		let session = session(autoReconnect: true)
+		defer { session.cancelReconnect() }
+		session.setConnectionTransportForTesting(.connected)
+		session.reconnect.isEnabled = true
+		session.reconnect.attemptCount = 3
+		session.markAsLoggedIn()
+		session.reconnect.registeredAt = ProcessInfo.processInfo.systemUptime
+			- ConnectionTimerPolicy.stableRegistrationInterval
+
+		session.changeStateOff()
 
 		let first = ConnectionTimerPolicy.reconnectInterval
 
-		// The jitter is drawn at random, so the delay is a range, not a number.
+		#expect(session.reconnect.attemptCount == 1)
 		#expect(session.reconnect.timer.interval <= first)
 		#expect(session.reconnect.timer.interval >= first * 0.75)
 	}

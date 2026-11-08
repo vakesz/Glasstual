@@ -83,8 +83,8 @@ final nonisolated class GlasstualUserDefaults: UserDefaults { // nonisolated: gu
 		return GlasstualUserDefaults(storageSuiteName: storageSuiteName)
 	}
 
-	/// Reads persisted data without registration defaults. The current-user,
-	/// any-host source avoids the unsupported app-group lookup performed by `persistentDomain(forName:)`.
+	/// Reads persisted data without registration defaults, from the current-user,
+	/// any-host source a suite writes to.
 	func persistedObject(forKey defaultName: String) -> Any? {
 		CFPreferencesCopyValue(
 			defaultName as CFString,

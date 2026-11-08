@@ -107,6 +107,18 @@ struct MenuContentViewTests {
 		}
 	}
 
+	@Test("Filter Sidebar opens a hidden sidebar and requests the field's focus")
+	func filterSidebarRevealsTheSidebar() async throws {
+		try await withChannelMenu { controller, window, _, _ in
+			window.columnModel.isSidebarVisible = false
+
+			controller.focusSearchField(nil)
+
+			#expect(window.columnModel.isSidebarVisible)
+			#expect(window.chrome.isSearchFieldFocused)
+		}
+	}
+
 	@Test("Server and empty contexts never inherit the main window channel")
 	func contextWithoutChannelDoesNotFallBack() async throws {
 		try await withChannelMenu { controller, window, session, other in

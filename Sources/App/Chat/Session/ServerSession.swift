@@ -106,13 +106,11 @@ class ServerSession: ChatItem {
 	/// to end a listing when the connection drops.
 	@objc dynamic var isLoggedIn = false {
 		didSet {
-			/* Registration is the only evidence the endpoint is actually usable,
-			 so it is what clears the reconnect backoff. Clearing it on a
-			 successful socket connection would let a server that drops the
-			 connection during registration be retried every twenty seconds. */
-			if isLoggedIn {
-				reconnect.attemptCount = 0
-			}
+			/* A registration that holds is the only evidence the endpoint is
+			 usable, so teardown clears the reconnect backoff from this time.
+			 Clearing it on connecting or on 001 would let a server that drops
+			 the connection around registration be retried every twenty seconds. */
+			reconnect.registeredAt = isLoggedIn ? ProcessInfo.processInfo.systemUptime : nil
 			output?.updateMemberListVisibilityForSelection()
 			chatSession?.noteLoginStateChanged()
 		}

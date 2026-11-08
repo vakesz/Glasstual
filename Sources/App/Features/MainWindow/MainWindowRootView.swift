@@ -87,10 +87,10 @@ struct MainWindowRootView: View {
 			} action: { width in
 				contentWidth = width
 			}
-			// Attach search to the split view to place it in the window toolbar.
+			// The field filters the sidebar, so it stays on that column's background.
 			.searchable(
 				text: $sidebar.filterText,
-				placement: .toolbar,
+				placement: .sidebar,
 				prompt: Text(String(localized: .MainWindow.filterSidebar))
 			)
 			.searchFocused($isSearchFieldFocused)
@@ -119,12 +119,6 @@ struct MainWindowRootView: View {
 				.disabled(columns.isMemberListAvailable == false)
 				.help(MenuCommand.memberListTitle(isVisible: columns.isMemberListVisible))
 			}
-			/* Left to itself the field is laid out across the sidebar divider,
-			 which draws a second material over the sidebar's own. The trailing
-			 group is where the rest of the system keeps a search field. A fixed
-			 spacer keeps it out of the member-list button's glass group. */
-			ToolbarSpacer(.fixed, placement: .primaryAction)
-			DefaultToolbarItem(kind: .search, placement: .primaryAction)
 		}
 		// Synchronize menu requests and user-driven search focus.
 		.onChange(of: chrome.isSearchFieldFocused, adoptRequestedSearchFocus)

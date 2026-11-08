@@ -17,7 +17,7 @@ nonisolated enum MenuPasteTarget: Sendable {
 /** The menu rule that was asking the wrong thing.
 
  Paste asked whether the main window was key and then validated against the
- chat input, so it read as enabled while the caret was in the toolbar's search
+ chat input, so it read as enabled while the caret was in the sidebar's search
  field or a sheet's field. */
 nonisolated enum MenuResponderCommandPolicy { // nonisolated: pure
 	/** Paste is a property of the responder that will receive it.
@@ -46,7 +46,7 @@ nonisolated enum MenuResponderCommandPolicy { // nonisolated: pure
 	 The same question ``canPaste(pasteboardHasText:responderIsEditableText:responderIsInInputBar:hasInputField:)``
 	 answers, asked for the action rather than the menu item: the responder holding
 	 the keyboard is the destination, and the chat input is only a fallback. Sending
-	 every paste to the input field pulled the focus out of the toolbar's search
+	 every paste to the input field pulled the focus out of the sidebar's search
 	 field or a sheet's field and dropped the text into the conversation
 	 instead, so the field is chosen only when the responder belongs to the
 	 input bar already, or when nothing editable has the keyboard at all. */

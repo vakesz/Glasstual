@@ -96,11 +96,10 @@ struct MenuGraphTests {
 		}
 	}
 
-	/** Search moved out of the sidebar and into the window toolbar, so the
-	 command that used to open Channel Spotlight focuses that field instead.
-	 Spotlight is a scene of its own and keeps an item of its own rather than
-	 being left with no way in. */
-	@Test("Search focuses the toolbar field while Channel Spotlight keeps its own item")
+	/** The Search Channels command focuses the sidebar filter field. Spotlight
+	 is a scene of its own and keeps an item of its own rather than being left
+	 with no way in. */
+	@Test("Search focuses the sidebar field while Channel Spotlight keeps its own item")
 	func searchAndChannelSpotlightAreSeparateCommands() throws {
 		let controller = MenuActionController()
 		let mainMenu = try #require(NSApp.mainMenu)

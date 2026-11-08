@@ -321,7 +321,7 @@ struct MenuItemValidator {
 	/** Paste applies to whatever holds the keyboard.
 
 	 It used to validate against the chat input whenever the main window was
-	 key, so Paste read as enabled while the caret sat in the toolbar's search
+	 key, so Paste read as enabled while the caret sat in the sidebar's search
 	 field or a sheet's field -- and then pasted into the wrong one. The
 	 responder is the answer in both branches, and the branches are the same
 	 ones ``MenuActionController/paste(_:)`` takes: the item has to be enabled

@@ -70,6 +70,10 @@ extension MenuActionController {
 	}
 
 	@objc func focusSearchField(_: Any?) {
+		// The field exists only while its column does.
+		if !mainWindow.columnModel.isSidebarVisible {
+			mainWindow.toggleSidebarVisibility()
+		}
 		mainWindow.chrome.focusSearchField()
 	}
 

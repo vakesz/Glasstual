@@ -32,7 +32,7 @@ struct MainWindowShortcutPolicyTests {
 		#expect(window.inputBarHoldsKeyboardFocus)
 	}
 
-	/** The regression: typing a filter in the toolbar's search field and
+	/** The regression: typing a filter in the sidebar's search field and
 	 pressing Tab completed a nickname into the chat input and moved the
 	 keyboard there with it. */
 	@Test("A responder outside the input bar does not")

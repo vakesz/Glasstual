@@ -129,7 +129,7 @@ extension ServerSession {
 		if !offer.isPassive, offer.token != nil {
 			guard directChatConversation(forNickname: sender)?.directChatConnection?.state == .listening else {
 				DirectConnectionLog.chat.error(
-					"Received a passive DCC CHAT reply from \(sender, privacy: .public) without a matching request"
+					"Received a passive DCC CHAT reply from \(sender, privacy: .private(mask: .hash)) without a matching request"
 				)
 				return
 			}

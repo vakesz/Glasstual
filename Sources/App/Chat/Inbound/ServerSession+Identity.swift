@@ -4,7 +4,6 @@
 
 import CocoaExtensions
 import Foundation
-import os
 
 enum IdentityPolicy {
 	static func account(fromWireValue value: String?) -> String? {
@@ -19,11 +18,6 @@ enum IdentityPolicy {
 		})
 	}
 }
-
-private let inboundIdentityLogger = Logger(
-	subsystem: LogSubsystem.current,
-	category: "Identity"
-)
 
 extension ServerSession {
 	/// IRCv3 `account-notify`. A server only sends this once the capability is
@@ -76,7 +70,6 @@ extension ServerSession {
 			clearTyping(for: message)
 		}
 		guard !clientTags.isEmpty else { return }
-		inboundIdentityLogger.debug("TAGMSG from \(sender, privacy: .public) to \(target, privacy: .public)")
 
 		if let ignore = message.senderHostmask.flatMap(findAddressBookEntry(forHostmask:)) {
 			if stringIsChannelName(target), ignore.ignorePublicMessages {

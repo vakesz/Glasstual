@@ -167,7 +167,10 @@ actor FileLogSink {
 	}
 
 	private func record(_ error: Error, result: inout FileLogResult) {
-		logger.error("Transcript file operation failed: \(error.localizedDescription, privacy: .public)")
+		let failure = error as NSError
+		logger.error(
+			"Transcript file operation failed: \(failure.domain, privacy: .public) \(failure.code, privacy: .public): \(failure.localizedDescription, privacy: .private)"
+		)
 		result.succeeded = false
 		result.outOfSpace = result.outOfSpace || FileLogResult.failure(error).outOfSpace
 	}

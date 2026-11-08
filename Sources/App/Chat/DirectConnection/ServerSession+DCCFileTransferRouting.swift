@@ -233,7 +233,7 @@ extension ServerSession {
 	}
 
 	private func printInvalidDCCRequest(from sender: String) {
-		DirectConnectionLog.transfer.error("Rejected an invalid DCC file-transfer request from \(sender, privacy: .public)")
+		DirectConnectionLog.transfer.error("Rejected an invalid DCC file-transfer request from \(sender, privacy: .private(mask: .hash))")
 		print(String(localized: .IRC.glasstualHasReceivedADccRequest(sender)), by: nil, in: nil,
 		      as: .dccFileTransfer, command: ChatLineFormat.defaultCommand)
 	}

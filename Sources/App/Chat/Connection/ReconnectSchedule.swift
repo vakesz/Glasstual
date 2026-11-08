@@ -15,15 +15,25 @@ struct ReconnectSchedule {
 	/// Whether ``isEnabled`` was set by going to sleep rather than by the
 	/// user, which is what tells waking up to reconnect.
 	var isEnabledForSleepMode = false
-	/// How many attempts have been scheduled since the last successful
-	/// registration, which is what the backoff is computed from.
+	/// How many attempts have been scheduled since a registration last held,
+	/// which is what the backoff is computed from.
 	var attemptCount: UInt = 0
+	/// System uptime when this connection registered, or nil while it has not.
+	var registeredAt: TimeInterval?
 	/// Seconds to wait before the connection this schedule is holding back.
 	var connectDelay: UInt = 0
 	/// Whether the user has already been told this connection went quiet, so
 	/// that the warning is printed once rather than every timeout.
 	var timeoutWarningShown = false
 	let timer: SessionTimer
+
+	/// Clears the backoff when the ending connection stayed registered long
+	/// enough to show the endpoint is usable.
+	mutating func clearBackoffIfRegistrationHeld(until uptime: TimeInterval) {
+		guard let registeredAt,
+		      uptime - registeredAt >= ConnectionTimerPolicy.stableRegistrationInterval else { return }
+		attemptCount = 0
+	}
 }
 
 enum ConnectionTimerPolicy {
@@ -31,6 +41,7 @@ enum ConnectionTimerPolicy {
 	static let pongCheckInterval: TimeInterval = 30
 	static let reconnectInterval: TimeInterval = 20
 	static let maximumReconnectInterval: TimeInterval = 300
+	static let stableRegistrationInterval: TimeInterval = 60
 	static let retryInterval: TimeInterval = 240
 	static let timeoutInterval: TimeInterval = 360
 
