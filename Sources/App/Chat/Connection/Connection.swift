@@ -76,6 +76,8 @@ final class Connection {
 	private let diagnostics: ConnectionDiagnostics
 	private let recordTermination: (ConnectionTermination) -> Void
 	private let makeService: () -> NSXPCConnection
+	/// The read being handed to the session, while one is.
+	private var receiveTask: Task<Void, Never>?
 	private var closeDeadlineTask: Task<Void, Never>?
 	private var localCloseRequested = false
 	/// Whether the disconnect has already been reported. Read by the files
@@ -135,7 +137,14 @@ final class Connection {
 					continue
 				}
 				if case let .didReceive(lines, acknowledge) = event {
-					await receive(lines)
+					/* A task of its own, so that terminating the connection can
+					 cancel a read parked behind the renderer. The loop still waits
+					 for it, which keeps what follows in order, and awaiting a task's
+					 value does not cancel it. */
+					let reading = Task { await receive(lines) }
+					receiveTask = reading
+					await reading.value
+					receiveTask = nil
 					/* Answered once the lines are handled, whatever became of
 					 the connection meanwhile: the host is waiting on this reply
 					 before it reads again. */
@@ -457,6 +466,10 @@ final class Connection {
 		if session?.socket === self {
 			session?.connectionDidDisconnect(error: error)
 		}
+		/* A read waiting on the renderer would keep this connection alive until
+		 the backlog drained. It returns at its next check and is acknowledged
+		 like any other. */
+		receiveTask?.cancel()
 		/* Finished rather than cancelled: cancelling ends the loop at once and
 		 drops what is still buffered, and the host is waiting on the reply a
 		 `didReceive` carries while the trust prompt waits on its answer. What

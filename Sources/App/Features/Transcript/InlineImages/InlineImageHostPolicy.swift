@@ -11,22 +11,40 @@ import Foundation
  nothing: the download that follows fails on its own account. */
 nonisolated struct InlineImageHostResolver: Sendable {
 	let addresses: @Sendable (String) async -> [String]
+	private let lookups: InlineImageLookups
+
+	/// `maximumInFlight` bounds the distinct names being looked up at once; a
+	/// name past it is refused rather than queued. Each resolver shares lookups
+	/// among its own callers only.
+	init(
+		addresses: @escaping @Sendable (String) async -> [String],
+		maximumInFlight: Int = InlineImageLookups.defaultMaximumInFlight
+	) {
+		self.addresses = addresses
+		lookups = InlineImageLookups(maximumInFlight: maximumInFlight)
+	}
 
 	/// How long a lookup may take before the caller stops waiting for it.
 	static let deadline = Duration.seconds(5)
 
-	/** The addresses for `host`, or `nil` when the lookup outlived `limit` or
-	 the caller was cancelled.
+	/** The addresses for `host`, or `nil` when the lookup outlived `limit`, the
+	 caller was cancelled, or too many other names are being looked up.
 
 	 `getaddrinfo` cannot be cancelled, so a lookup that overruns is abandoned
 	 rather than stopped: its answer is discarded when it finally arrives. The
 	 first of the answer, the deadline and the cancellation is what the caller
-	 gets, through a stream that keeps only that first value. */
+	 gets, through a stream that keeps only that first value.
+
+	 Callers asking for the same name wait on one lookup, and awaiting its value
+	 does not cancel it, so one caller giving up leaves the others waiting. */
 	func resolve(_ host: String, within limit: Duration = InlineImageHostResolver.deadline) async -> [String]? {
+		guard Task.isCancelled == false,
+		      let shared = await lookups.lookup(host, using: addresses)
+		else { return nil }
+
 		let (outcomes, report) = AsyncStream<[String]?>.makeStream(bufferingPolicy: .bufferingOldest(1))
-		let lookup = addresses
 		let lookupTask = Task {
-			await report.yield(lookup(host))
+			await report.yield(shared.value)
 		}
 		let timer = Task {
 			try? await Task.sleep(for: limit)

@@ -424,6 +424,46 @@ struct ConnectionInboundDeliveryTests {
 		#expect(received.sorted() == ["acknowledged", "declined"])
 	}
 
+	@Test("Ending the connection releases a read parked behind the renderer and still answers what is queued")
+	func terminationCancelsParkedReadAndAnswersTheQueue() async throws {
+		let session: TestServerSession
+		var connection: Connection?
+		do {
+			let made = connectedSession()
+			session = made.0
+			connection = made.1
+		}
+		weak let weakConnection = connection
+		let admission = RenderAdmission(capacity: 1)
+		session.renderAdmission = admission
+		let ticket = admission.submit(for: "view")
+		defer { admission.finish(ticket) }
+		let receiver = try #require(connection).callbackReceiver
+		let (answers, answer) = AsyncStream<String>.makeStream()
+		receiver.didReceive([Data("PING :parked".utf8)]) { answer.yield("first") }
+		try await Eventually.until("a read parked behind the renderer") { admission.waitingProducerCount == 1 }
+		/* Queued behind the parked read, in this order. */
+		receiver.didReceive([Data("PING :queued".utf8)]) { answer.yield("second") }
+		receiver.requestInsecureCertificateTrust { trusted in
+			answer.yield(trusted ? "trusted" : "declined")
+			answer.finish()
+		}
+		connection?.close()
+		await Eventually.withDeadline(onExpiry: { answer.finish() }, perform: {
+			var received: [String] = []
+			for await value in answers {
+				received.append(value)
+			}
+			#expect(received == ["first", "second", "declined"])
+		})
+		#expect(admission.waitingProducerCount == 0)
+		// The ticket was never finished: the read woke because it was cancelled.
+		#expect(admission.pendingCount == 1)
+		connection = nil
+		session.socket = nil
+		try await Eventually.until("the connection to be released") { weakConnection == nil }
+	}
+
 	private func connectedSession() -> (TestServerSession, Connection) {
 		let session = TestServerSession()
 		session.forwardsProcessedMessages = true
