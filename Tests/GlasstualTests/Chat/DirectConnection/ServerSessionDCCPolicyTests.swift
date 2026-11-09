@@ -57,6 +57,18 @@ struct ServerSessionDCCPolicyTests {
 		#expect(DirectChatPolicy.parseOffer("CHAT chat 3232235777 0") == nil)
 	}
 
+	/// A lone "T" is the token prefix with nothing after it, so it names no token:
+	/// a passive offer then has nothing to be matched by and is refused, and an
+	/// active one is just an active offer.
+	@Test("A bare T token names no token")
+	func bareTokenPrefixIsNoToken() {
+		#expect(DirectChatPolicy.parseOffer("CHAT chat 0 0 T") == nil)
+		#expect(
+			DirectChatPolicy.parseOffer("CHAT chat 1568397154 5000 T")
+				== DirectChatOffer(address: "93.123.215.98", port: 5000, token: nil)
+		)
+	}
+
 	/** An active chat offer decides which host the session dials, exactly as a
 	 DCC SEND offer does. The parser understands a private address — it is a
 	 well-formed offer — but the session refuses to act on it. */

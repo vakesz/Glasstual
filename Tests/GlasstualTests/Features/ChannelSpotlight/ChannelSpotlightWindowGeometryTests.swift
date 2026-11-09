@@ -22,7 +22,7 @@ struct ChannelSpotlightWindowGeometryTests {
 		#expect(insets.isEmpty, "Publishing must wait until the layout/update call has returned")
 		let nativeInset = window.frame.height - window.contentLayoutRect.height
 		try #require(nativeInset > 0)
-		try await waitUntil { !insets.isEmpty }
+		try await Eventually.until(timeout: .seconds(2), "the geometry probe to report its insets") { !insets.isEmpty }
 		#expect(insets == [nativeInset])
 
 		for height in [CGFloat(200), 400, 76] {
@@ -32,7 +32,7 @@ struct ChannelSpotlightWindowGeometryTests {
 			#expect(window.frame.height - window.contentLayoutRect.height == nativeInset)
 		}
 		probe.removeFromSuperview()
-		try await waitUntil { insets.last == 0 }
+		try await Eventually.until(timeout: .seconds(2), "the geometry probe to report its insets") { insets.last == 0 }
 		#expect(insets == [nativeInset, 0])
 	}
 
@@ -47,7 +47,7 @@ struct ChannelSpotlightWindowGeometryTests {
 		container.addSubview(probe)
 		probe.removeFromSuperview()
 		#expect(insets.isEmpty)
-		try await waitUntil { !insets.isEmpty }
+		try await Eventually.until(timeout: .seconds(2), "the geometry probe to report its insets") { !insets.isEmpty }
 		#expect(insets == [0])
 	}
 
@@ -63,7 +63,7 @@ struct ChannelSpotlightWindowGeometryTests {
 		probe.configure { insets.append($0) }
 		container.addSubview(probe)
 		probe.layout()
-		try await waitUntil { !insets.isEmpty }
+		try await Eventually.until(timeout: .seconds(2), "the geometry probe to report its insets") { !insets.isEmpty }
 		#expect(insets == [0])
 		#expect(window.frame == frame)
 		#expect(window.styleMask == style)
@@ -77,14 +77,5 @@ struct ChannelSpotlightWindowGeometryTests {
 		)
 		window.isReleasedWhenClosed = false
 		return window
-	}
-
-	private func waitUntil(_ condition: () -> Bool) async throws {
-		let clock = ContinuousClock()
-		let deadline = clock.now.advanced(by: .seconds(2))
-		while !condition(), clock.now < deadline {
-			try await Task.sleep(for: .milliseconds(1))
-		}
-		try #require(condition())
 	}
 }

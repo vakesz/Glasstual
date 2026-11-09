@@ -134,6 +134,7 @@ private enum LegacyListenerError: Error {
 	case identityMissing
 	case identityUnreadable(OSStatus)
 	case listenerNeverBecameReady
+	case barrierNeverArrived
 }
 
 /** A checked cast that stays checked; `value as? SecIdentity` is rejected
@@ -149,15 +150,24 @@ private nonisolated func dynamicCast<Value>(_ value: Any) -> Value? { // nonisol
  The count is what the retry is measured by: the application is told nothing
  about the first dial, by design, so the listener is the only place the two are
  distinguishable. A connection reaches `newConnectionHandler` before its
- handshake runs, so a handshake the listener refuses is counted too. */
+ handshake runs, so a handshake the listener refuses is counted too.
+
+ Connections are taken in the order the listener delivers them: the handler only
+ yields into a stream, and one task counts. That order is what lets
+ ``dialsArrived()`` say that nothing was still on its way. */
 private actor LegacyCipherSuiteListener {
 	/// Swift Testing suites are structs, so there is no test class to hand to
 	/// `Bundle(for:)`.
 	private final class Anchor {}
 
 	private let listener: NWListener
+	private let arrivals: AsyncStream<NWConnection>
+	private let arrivalContinuation: AsyncStream<NWConnection>.Continuation
+	private var counting: Task<Void, Never>?
+	private var port: UInt16 = 0
 	private var peers: [NWConnection] = []
-	private(set) var dialCount = 0
+	/// The remote port of each connection, in the order they arrived.
+	private var arrivedFromPorts: [UInt16] = []
 
 	init(offering suites: [UInt16]) throws {
 		let identity = try Self.identity()
@@ -176,17 +186,25 @@ private actor LegacyCipherSuiteListener {
 		}
 
 		listener = try NWListener(using: NWParameters(tls: options))
+		(arrivals, arrivalContinuation) = AsyncStream<NWConnection>.makeStream()
 	}
 
 	func start() async throws -> UInt16 {
-		listener.newConnectionHandler = { [weak self] connection in
-			Task { await self?.accept(connection) }
+		let arrivalContinuation = arrivalContinuation
+		listener.newConnectionHandler = { connection in
+			arrivalContinuation.yield(connection)
+		}
+		counting = Task { [arrivals] in
+			for await connection in arrivals {
+				self.accept(connection)
+			}
 		}
 
 		listener.start(queue: .global())
 
 		for _ in 0 ..< 200 {
 			if let port = listener.port?.rawValue, listener.state == .ready {
+				self.port = port
 				return port
 			}
 
@@ -197,6 +215,8 @@ private actor LegacyCipherSuiteListener {
 	}
 
 	func stop() {
+		arrivalContinuation.finish()
+		counting?.cancel()
 		peers.forEach { $0.cancel() }
 		peers.removeAll()
 		listener.cancel()
@@ -216,8 +236,51 @@ private actor LegacyCipherSuiteListener {
 		}
 	}
 
+	/** How many connections reached the listener before one the test makes itself.
+
+	 The barrier is made after the host has reported its last event, and the
+	 listener takes connections in arrival order, so once the barrier has been
+	 counted everything the host dialled before it has been counted too. A dial
+	 that reached the listener late is therefore in the answer, and a count
+	 taken the moment the host finished is no longer needed to be early or late
+	 by luck. */
+	func dialsArrived() async throws -> Int {
+		guard let barrierEndpoint = NWEndpoint.Port(rawValue: port) else {
+			throw LegacyListenerError.barrierNeverArrived
+		}
+		let barrier = NWConnection(host: "127.0.0.1", port: barrierEndpoint, using: .tcp)
+		defer { barrier.cancel() }
+
+		let (ready, readiness) = AsyncStream<UInt16>.makeStream()
+		barrier.stateUpdateHandler = { state in
+			if case .ready = state, case let .hostPort(_, localPort)? = barrier.currentPath?.localEndpoint {
+				readiness.yield(localPort.rawValue)
+			}
+		}
+		barrier.start(queue: .global())
+
+		var readyPorts = ready.makeAsyncIterator()
+		guard let barrierPort = await readyPorts.next() else {
+			throw LegacyListenerError.barrierNeverArrived
+		}
+
+		for _ in 0 ..< 500 {
+			if let index = arrivedFromPorts.firstIndex(of: barrierPort) {
+				return index
+			}
+
+			try await Task.sleep(for: .milliseconds(10), clock: .continuous)
+		}
+
+		throw LegacyListenerError.barrierNeverArrived
+	}
+
 	private func accept(_ connection: NWConnection) {
-		dialCount += 1
+		if case let .hostPort(_, remotePort) = connection.endpoint {
+			arrivedFromPorts.append(remotePort.rawValue)
+		} else {
+			arrivedFromPorts.append(0)
+		}
 		peers.append(connection)
 		connection.start(queue: .global())
 		drain(connection)
@@ -520,11 +583,11 @@ nonisolated struct LegacyCipherSuiteFallbackLoopbackTests {
 
 		host.close()
 
-		/* Read after the stream ends, and after a beat: a dial the transport gave
-		 up on can reach the listener's handler a moment later, and a count taken
-		 too early would hide it. */
-		try? await Task.sleep(for: .milliseconds(250), clock: .continuous)
-		outcome.dialCount = await server.dialCount
+		/* A dial the transport gave up on can reach the listener's handler a
+		 moment later, and a count taken too early would hide it. A dial made by
+		 the test, after the host has finished, is counted behind any such dial,
+		 so the count it reports is final. */
+		outcome.dialCount = try await server.dialsArrived()
 
 		return outcome
 	}

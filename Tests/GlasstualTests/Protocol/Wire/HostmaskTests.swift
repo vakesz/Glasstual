@@ -49,6 +49,54 @@ struct HostmaskTests {
 		#expect(Hostmask(parsing: "long-nickname!user@example.test", maximumNicknameLength: 4) == nil)
 	}
 
+	@Test("A nickname of exactly the default limit is accepted and one byte more is not")
+	func nicknameLengthBoundary() {
+		let atLimit = String(repeating: "a", count: 50)
+		let pastLimit = String(repeating: "a", count: 51)
+
+		#expect(Hostmask(parsing: "\(atLimit)!user@example.test")?.nickname == atLimit)
+		#expect(Hostmask(parsing: "\(pastLimit)!user@example.test") == nil)
+		#expect(Hostmask.isValidNickname(atLimit))
+		#expect(Hostmask.isValidNickname(pastLimit) == false)
+	}
+
+	@Test("The nickname limit counts UTF-8 bytes, not characters")
+	func nicknameLimitCountsBytes() {
+		let atLimit = String(repeating: "\u{00E9}", count: 25)
+		let pastLimit = String(repeating: "\u{00E9}", count: 26)
+
+		#expect(Hostmask.isValidNickname(atLimit))
+		#expect(Hostmask.isValidNickname(pastLimit) == false)
+	}
+
+	@Test("The username limit is 40 UTF-16 units")
+	func usernameLengthBoundary() {
+		#expect(Hostmask.isValidUsername(String(repeating: "u", count: 40)))
+		#expect(Hostmask.isValidUsername(String(repeating: "u", count: 41)) == false)
+	}
+
+	/// The first "!" and then the first "@" delimit, so a username can never
+	/// carry an "@" through parsing: it moves into the address, which refuses
+	/// it. A "!" is not a delimiter after the first, and the username check does
+	/// not forbid it, so it is accepted. `isValidUsername` itself allows both.
+	@Test("Separators inside a username are decided by where they delimit")
+	func separatorsInTheUsername() throws {
+		#expect(Hostmask(parsing: "nick!us@er@host.test") == nil)
+
+		let hostmask = try #require(Hostmask(parsing: "nick!us!er@host.test"))
+
+		#expect(hostmask.username == "us!er")
+		#expect(hostmask.address == "host.test")
+		#expect(Hostmask.isValidUsername("us!er"))
+		#expect(Hostmask.isValidUsername("us@er"))
+	}
+
+	@Test("An address cannot carry a separator")
+	func addressRejectsSeparators() {
+		#expect(Hostmask.isValidAddress("host@evil") == false)
+		#expect(Hostmask.isValidAddress("host!evil") == false)
+	}
+
 	@Test
 	func missingSeparatorsAndEmptyPartsAreRejected() {
 		#expect(Hostmask(parsing: "") == nil)

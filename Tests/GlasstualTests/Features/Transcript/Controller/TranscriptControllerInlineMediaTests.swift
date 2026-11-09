@@ -39,12 +39,9 @@ private final class TranscriptMediaFixture {
 	}
 
 	func waitForWorker() async throws {
-		let clock = ContinuousClock()
-		let deadline = clock.now.advanced(by: .seconds(5))
-		while budget.activeCount > 0, clock.now < deadline {
-			try await Task.sleep(for: .milliseconds(1))
+		try await Eventually.until(timeout: .seconds(5), "the inline media worker to go idle") {
+			budget.activeCount == 0
 		}
-		try #require(budget.activeCount == 0)
 	}
 }
 

@@ -12,6 +12,7 @@ import Testing
 private enum LoopbackTCPServerError: Error {
 	case listenerNeverBecameReady
 	case peerNeverArrived
+	case sentinelNeverArrived
 }
 
 /// A plain TCP listener on loopback that keeps everything the session wrote, in
@@ -89,9 +90,8 @@ private actor LoopbackTCPServer {
 		return Array(components.dropLast())
 	}
 
-	/// Waits for `count` lines, then returns everything that arrived. A short
-	/// settling read follows so an extra line — one that arrived out of order,
-	/// or twice — is part of what the test sees rather than being cut off.
+	/// Waits for `count` lines and returns what has arrived by then. It cannot
+	/// say nothing else is on its way; ``lines(through:)`` can.
 	func lines(waitingFor count: Int) async throws -> [String] {
 		for _ in 0 ..< 400 {
 			if lines.count >= count {
@@ -101,9 +101,22 @@ private actor LoopbackTCPServer {
 			try await Task.sleep(for: .milliseconds(25), clock: .continuous)
 		}
 
-		try await Task.sleep(for: .milliseconds(250), clock: .continuous)
-
 		return lines
+	}
+
+	/// Waits for the sentinel line and returns every line before it. The wire
+	/// keeps order, so a line that arrived twice, or out of place, is in what
+	/// comes back; nothing has to be waited out to see it.
+	func lines(through sentinel: String) async throws -> [String] {
+		for _ in 0 ..< 1200 {
+			if let index = lines.firstIndex(of: sentinel) {
+				return Array(lines[..<index])
+			}
+
+			try await Task.sleep(for: .milliseconds(25), clock: .continuous)
+		}
+
+		throw LoopbackTCPServerError.sentinelNeverArrived
 	}
 
 	private func accept(_ connection: NWConnection) {
@@ -252,7 +265,7 @@ nonisolated struct ConnectionHostSendOrderingTests {
 	@Test("Registration traffic cannot consume the post-registration flood allowance")
 	@concurrent
 	func registrationHasSeparateFloodBudget() async throws {
-		let received = try await Self.driveConnection(waitingFor: 3) { host, server in
+		let received = try await Self.driveConnection(sentinel: .bypassingFloodControl) { host, server in
 			host.send(Data("CAP LS 302\r\n".utf8))
 			host.send(Data("NICK tester\r\n".utf8))
 			let registration = try await server.lines(waitingFor: 2)
@@ -310,7 +323,7 @@ nonisolated struct ConnectionHostSendOrderingTests {
 	@concurrent
 	func queuedPongsBypassFloodControl() async throws {
 		let primingLine = "PRIVMSG #order :consume flood allowance"
-		let received = try await Self.driveConnection(waitingFor: 3) { host, server in
+		let received = try await Self.driveConnection(sentinel: .bypassingFloodControl) { host, server in
 			host.enforceFloodControl()
 			host.send(Data((primingLine + "\r\n").utf8))
 			// Confirm the valid one-message allowance is exhausted before testing bypass writes.
@@ -340,12 +353,7 @@ nonisolated struct ConnectionHostSendOrderingTests {
 		service.exportedInterface = RemoteConnectionInterface.client()
 		service.exportedObject = SendOrderingSessionShim(events: continuation)
 		service.resume()
-		let deadline = Task {
-			try? await Task.sleep(for: .seconds(5))
-			continuation.finish()
-		}
 		defer {
-			deadline.cancel()
 			service.invalidate()
 			Task { await server.stop() }
 		}
@@ -355,17 +363,19 @@ nonisolated struct ConnectionHostSendOrderingTests {
 		host.send(Data("NICK tester\r\n".utf8))
 		host.exportSecureConnectionInformation { _ in host.close() }
 		var disconnected = false
-		for await event in events {
-			switch event {
-			case .didConnect:
-				Issue.record("A stalled TLS handshake was reported connected")
-			case .didDisconnect:
-				disconnected = true
-				continuation.finish()
-			case .received, .withheldRead, .closedReadStream:
-				break
+		await Eventually.withUnisolatedDeadline(.seconds(30), onExpiry: { continuation.finish() }, perform: {
+			for await event in events {
+				switch event {
+				case .didConnect:
+					Issue.record("A stalled TLS handshake was reported connected")
+				case .didDisconnect:
+					disconnected = true
+					continuation.finish()
+				case .received, .withheldRead, .closedReadStream:
+					break
+				}
 			}
-		}
+		})
 		#expect(disconnected, "queued sends blocked certificate export or close")
 	}
 
@@ -384,12 +394,7 @@ nonisolated struct ConnectionHostSendOrderingTests {
 		service.exportedInterface = RemoteConnectionInterface.client()
 		service.exportedObject = SendOrderingSessionShim(events: continuation)
 		service.resume()
-		let deadline = Task {
-			try? await Task.sleep(for: .seconds(5))
-			continuation.finish()
-		}
 		defer {
-			deadline.cancel()
 			service.invalidate()
 			Task { await server.stop() }
 		}
@@ -397,21 +402,23 @@ nonisolated struct ConnectionHostSendOrderingTests {
 		host.open(with: ConnectionConfigEnvelope(config: config))
 		var connected = false
 		var disconnected = false
-		for await event in events {
-			switch event {
-			case .didConnect:
-				connected = true
-				// More than the TCP window can hold while the peer never reads.
-				host.send(Data(repeating: 0x78, count: 32 * 1024 * 1024))
-				host.send(Data("NICK tester\r\n".utf8))
-				host.exportSecureConnectionInformation { _ in host.close() }
-			case .didDisconnect:
-				disconnected = true
-				continuation.finish()
-			case .received, .withheldRead, .closedReadStream:
-				break
+		await Eventually.withUnisolatedDeadline(.seconds(30), onExpiry: { continuation.finish() }, perform: {
+			for await event in events {
+				switch event {
+				case .didConnect:
+					connected = true
+					// More than the TCP window can hold while the peer never reads.
+					host.send(Data(repeating: 0x78, count: 32 * 1024 * 1024))
+					host.send(Data("NICK tester\r\n".utf8))
+					host.exportSecureConnectionInformation { _ in host.close() }
+				case .didDisconnect:
+					disconnected = true
+					continuation.finish()
+				case .received, .withheldRead, .closedReadStream:
+					break
+				}
 			}
-		}
+		})
 		#expect(connected)
 		#expect(disconnected, "the writer held the command drain behind a network completion")
 	}
@@ -659,10 +666,23 @@ nonisolated struct ConnectionHostSendOrderingTests {
 		(0 ..< lineCount).map { "PRIVMSG #order :line \($0)" }
 	}
 
+	/** The line sent after everything `send` hands over, so the listener can tell
+	 when the last of it has arrived. It queues like any other line, which is
+	 right while nothing holds ordinary lines back; once flood control has
+	 spent its allowance an ordinary line would wait behind the rest, so the
+	 test says to send it past the queue. */
+	enum Sentinel {
+		case ordinary
+		case bypassingFloodControl
+	}
+
+	private static let sentinelLine = "PONG :sentinel"
+
 	/** Connects the real service to a loopback listener, runs `send` once the
-	 host reports the connection up, and returns the lines the listener read. */
+	 host reports the connection up, and returns the lines the listener read
+	 before the sentinel that follows them. */
 	private static func driveConnection(
-		waitingFor count: Int = lineCount,
+		sentinel: Sentinel = .ordinary,
 		_ send: @Sendable (any RemoteConnectionServerProtocol, LoopbackTCPServer) async throws -> Void
 	) async throws -> [String] {
 		let server = try LoopbackTCPServer()
@@ -728,7 +748,11 @@ nonisolated struct ConnectionHostSendOrderingTests {
 
 		try await send(host, server)
 
-		let received = try await server.lines(waitingFor: count)
+		host.send(
+			Data((sentinelLine + "\r\n").utf8),
+			bypassQueue: sentinel == .bypassingFloodControl
+		)
+		let received = try await server.lines(through: sentinelLine)
 
 		host.close()
 

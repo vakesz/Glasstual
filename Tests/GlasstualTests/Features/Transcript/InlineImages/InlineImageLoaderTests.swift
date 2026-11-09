@@ -289,7 +289,7 @@ struct InlineImageLoaderTests {
 		first.cancelAll()
 		second.cancelAll()
 		#expect(budget.activeCount == 2) // Cancellation has not released workers' memory yet.
-		try await waitUntil { budget.entryCount == 0 }
+		try await Eventually.until(timeout: .seconds(3), "the inline image loader to reach the expected state") { budget.entryCount == 0 }
 		#expect(callbacks == 2)
 	}
 
@@ -301,7 +301,7 @@ struct InlineImageLoaderTests {
 		let loader = InlineImageLoader(budget: budget, protocolClasses: [InlineImageTestProtocol.self])
 		var result: Result<TranscriptInlineImage, Error>?
 		loader.load(url: url, viewIdentifier: "view", lineNumber: "line", linkIdentifier: "link") { result = $0 }
-		try await waitUntil { result != nil }
+		try await Eventually.until(timeout: .seconds(3), "the inline image loader to reach the expected state") { result != nil }
 		let image = try #require(result).get()
 		#expect(image.imageData == Self.gif(frames: 2))
 		#expect(budget.activeCount == 0)
@@ -354,7 +354,7 @@ struct InlineImageLoaderTests {
 			}
 			#expect(budget.entryCount == 0)
 		}
-		try await waitUntil { delivered }
+		try await Eventually.until(timeout: .seconds(3), "the inline image loader to reach the expected state") { delivered }
 		#expect(budget.reservedByteCount == 0)
 	}
 
@@ -372,14 +372,18 @@ struct InlineImageLoaderTests {
 		var delivered = 0
 		loader
 			.load(url: pending, viewIdentifier: "view", lineNumber: "line", linkIdentifier: "link") { _ in stale += 1 }
-		try await waitUntil { InlineImageTestProtocol.started(pending) }
+		try await Eventually
+			.until(timeout: .seconds(3), "the inline image loader to reach the expected state") { InlineImageTestProtocol.started(pending) }
 		loader.cancelLoads(forView: "view", lineNumber: "line")
 		#expect(loader.load(url: ready, viewIdentifier: "view", lineNumber: "line", linkIdentifier: "link") {
 			if case .success = $0 {
 				delivered += 1
 			}
 		} != nil)
-		try await waitUntil { delivered == 1 && budget.activeCount == 0 && InlineImageTestProtocol.stopped(pending) }
+		try await Eventually
+			.until(timeout: .seconds(3), "the inline image loader to reach the expected state") {
+				delivered == 1 && budget.activeCount == 0 && InlineImageTestProtocol.stopped(pending)
+			}
 		#expect(stale == 0)
 		#expect(budget.entryCount == 1)
 		loader.cancelAll()
@@ -399,10 +403,14 @@ struct InlineImageLoaderTests {
 		var callbacks = 0
 		loader?
 			.load(url: url, viewIdentifier: "view", lineNumber: "line", linkIdentifier: "link") { _ in callbacks += 1 }
-		try await waitUntil { InlineImageTestProtocol.started(url) }
+		try await Eventually
+			.until(timeout: .seconds(3), "the inline image loader to reach the expected state") { InlineImageTestProtocol.started(url) }
 		loader = nil
 		#expect(isReleased())
-		try await waitUntil { budget.entryCount == 0 && InlineImageTestProtocol.stopped(url) }
+		try await Eventually
+			.until(timeout: .seconds(3), "the inline image loader to reach the expected state") {
+				budget.entryCount == 0 && InlineImageTestProtocol.stopped(url)
+			}
 		#expect(callbacks == 0)
 	}
 
@@ -420,17 +428,9 @@ struct InlineImageLoaderTests {
 				}
 				#expect(budget.entryCount == 0)
 			}
-			try await waitUntil { failed }
+			try await Eventually.until(timeout: .seconds(3), "the inline image loader to reach the expected state") { failed }
 			#expect(budget.reservedByteCount == 0)
 		}
-	}
-
-	private func waitUntil(_ condition: @MainActor () -> Bool) async throws {
-		let deadline = ContinuousClock.now + .seconds(3)
-		while !condition(), ContinuousClock.now < deadline {
-			try await Task.sleep(for: .milliseconds(5))
-		}
-		try #require(condition())
 	}
 
 	private static func stillImage(width: Int, height: Int, orientation: Int = 1) throws -> Data {
