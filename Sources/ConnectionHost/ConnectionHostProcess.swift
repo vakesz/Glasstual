@@ -21,7 +21,6 @@ private typealias HostCommand = @Sendable (ConnectionHost) async -> Void
 /// places on the wire.
 final class ConnectionHostProcess: NSObject, RemoteConnectionServerProtocol {
 	private let commands: AsyncStream<HostCommand>.Continuation
-	private let commandTask: Task<Void, Never>
 
 	init(host: ConnectionHost) {
 		let (commands, continuation) = AsyncStream<HostCommand>.makeStream(
@@ -32,9 +31,8 @@ final class ConnectionHostProcess: NSObject, RemoteConnectionServerProtocol {
 		)
 
 		self.commands = continuation
-		commandTask = Task {
+		Task {
 			for await command in commands {
-				guard Task.isCancelled == false else { return }
 				await command(host)
 			}
 		}
@@ -42,8 +40,12 @@ final class ConnectionHostProcess: NSObject, RemoteConnectionServerProtocol {
 		super.init()
 	}
 
+	/** Finishing, rather than cancelling, lets the task run what is already
+	 queued before it ends. A command that carries a reply block (the secure
+	 connection information) has to be answered whatever became of the object
+	 that took it, and the rest are safe to run late: `close` is idempotent, and
+	 `send` is refused once `detach()` has dropped the client. */
 	deinit {
-		commandTask.cancel()
 		commands.finish()
 	}
 

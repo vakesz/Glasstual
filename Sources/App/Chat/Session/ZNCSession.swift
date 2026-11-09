@@ -304,7 +304,7 @@ extension ServerSession {
 	 where the server negotiated `batch`, and by the replay flag where it did
 	 not. */
 	func isSafeToPostNotification(for message: Message, in conversation: Conversation?) -> Bool {
-		guard batchMessage(ofType: ServerQuirks.chatHistoryBatchType, containing: message) == nil else {
+		guard batchMessage(ofKind: .chatHistory, containing: message) == nil else {
 			return false
 		}
 
@@ -317,7 +317,7 @@ extension ServerSession {
 		guard config.zncIgnorePlaybackNotifications else { return true }
 
 		if isCapabilityEnabled(.batch) {
-			return message.parentBatchMessage?.batchType != ServerQuirks.ZNC.playbackBatchType
+			return message.parentBatchMessage?.kind != .zncPlayback
 		}
 
 		return message.isReplayed == false

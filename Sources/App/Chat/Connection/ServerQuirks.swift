@@ -24,9 +24,6 @@ nonisolated enum ServerQuirks {
 		static let playbackModule = "playback"
 		static let certificateInfoModule = "tlsinfo"
 
-		static let playbackBatchType = "znc.in/playback"
-		static let certificateInfoBatchType = "znc.in/tlsinfo"
-
 		/// The command that asks the `tlsinfo` module for the peer chain.
 		static let sendCertificateChainCommand = "send-data"
 
@@ -34,10 +31,6 @@ nonisolated enum ServerQuirks {
 			"\(modulePrefix)\(module)"
 		}
 	}
-
-	/// The IRCv3 `chathistory` batch, which is not vendor-specific but is
-	/// matched by name in the same places the ZNC batches are.
-	static let chatHistoryBatchType = "chathistory"
 
 	/// Twitch speaks a dialect of IRC that omits much of what the session
 	/// expects, and the only way to know is the address.

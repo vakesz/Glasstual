@@ -3,12 +3,6 @@
 
 import CocoaExtensions
 import Foundation
-import os
-
-private nonisolated let connectionConfigLogger = Logger(
-	subsystem: LogSubsystem.current,
-	category: "ConnectionConfig"
-)
 
 /// Raw values are persisted. Values 4 and 7 are retired and must not be reused.
 nonisolated enum ConnectionProxyKind: UInt, Codable, Sendable {
@@ -228,9 +222,7 @@ nonisolated struct ConnectionConfig: Codable, Sendable, Equatable {
 	 than guessing at one. */
 	private static func sanitizedProxyType(_ rawValue: UInt) -> ConnectionProxyKind {
 		guard let value = ConnectionProxyKind(rawValue: rawValue) else {
-			connectionConfigLogger.error(
-				"Unsupported proxy type \(rawValue, privacy: .public) in stored configuration; using no proxy"
-			)
+			ConnectionConfigurationLog.unsupportedProxyType(rawValue)
 
 			return .none
 		}
@@ -289,7 +281,7 @@ final nonisolated class ConnectionConfigEnvelope: NSObject, NSSecureCoding { // 
 		guard let data = coder.decodeObject(of: NSData.self, forKey: Self.configurationCodingKey) as Data?,
 		      let config = try? PropertyListDecoder().decode(ConnectionConfig.self, from: data)
 		else {
-			connectionConfigLogger.error("Received a connection configuration that could not be read")
+			ConnectionConfigurationLog.unreadableConfiguration()
 
 			return nil
 		}
@@ -304,7 +296,7 @@ final nonisolated class ConnectionConfigEnvelope: NSObject, NSSecureCoding { // 
 		encoder.outputFormat = .binary
 
 		guard let data = try? encoder.encode(config) else {
-			connectionConfigLogger.error("Could not write a connection configuration for the connection host")
+			ConnectionConfigurationLog.unwritableConfiguration()
 
 			return
 		}

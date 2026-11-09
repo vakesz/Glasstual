@@ -8,6 +8,16 @@ import Testing
 @Suite("Date display formatting")
 @MainActor
 struct DateFormattingDisplayTests {
+	@Test("A relative time follows the reference moment it is given")
+	func relativeTimeUsesTheReferenceMoment() {
+		let moment = Date(timeIntervalSince1970: 1_700_000_000)
+		let soon = DateFormatting.relativeTime(of: moment, relativeTo: moment.addingTimeInterval(120))
+		let later = DateFormatting.relativeTime(of: moment, relativeTo: moment.addingTimeInterval(3600))
+
+		#expect(soon.isEmpty == false)
+		#expect(soon != later)
+	}
+
 	@Test("A Date is formatted")
 	func formatsDate() {
 		let formatted = DateFormatting.formatted(Date(timeIntervalSince1970: 0), dateStyle: .long, timeStyle: .long, relative: false)

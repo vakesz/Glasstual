@@ -50,6 +50,9 @@ actor ScrollbackSession {
 	 draws every other storage failure and is the only place the retry is
 	 offered, so an open failure is recorded there too. */
 	private let reportFailure: @MainActor @Sendable (String) -> Void
+	/// The upgrade's progress as the store reports it, when this session owns a
+	/// stream for it. Finished with the session.
+	private nonisolated let migrationProgress: AsyncStream<Double>.Continuation?
 	private var loadState = LoadState.unloaded
 	private var isTerminating = false
 
@@ -73,27 +76,37 @@ actor ScrollbackSession {
 		databaseDirectory: String? = ApplicationPaths.groupContainerApplicationCaches,
 		filenameSetting: ScrollbackFilenameSetting = .stored
 	) {
+		/* One stream, drained by one task: a task per report would reach the main
+		 actor in no particular order, and a late fraction would then replace
+		 the final one. */
+		let (progress, reportProgress) = AsyncStream<Double>.makeStream()
+		Task { @MainActor in
+			await Scrollback.shared.recovery.consume(progress)
+		}
 		self.init(
 			store: ScrollbackStore(
 				filenameSetting: filenameSetting,
 				migrationProgress: { fraction in
-					Task { @MainActor in Scrollback.shared.recovery.noteMigrationProgress(fraction) }
+					reportProgress.yield(fraction)
 				},
 				deletionHandler: { identifiers, viewIdentifier in
 					await Scrollback.noteWillDeleteLines(identifiers, inView: viewIdentifier)
 				}
 			),
 			databaseDirectory: { databaseDirectory },
-			reportFailure: { Scrollback.shared.recovery.storageFailure = $0 }
+			reportFailure: { Scrollback.shared.recovery.storageFailure = $0 },
+			migrationProgress: reportProgress
 		)
 	}
 
 	init(
 		store: ScrollbackStore,
 		databaseDirectory: @escaping @Sendable () async -> String?,
-		reportFailure: @escaping @MainActor @Sendable (String) -> Void
+		reportFailure: @escaping @MainActor @Sendable (String) -> Void,
+		migrationProgress: AsyncStream<Double>.Continuation? = nil
 	) {
 		self.store = store
+		self.migrationProgress = migrationProgress
 		self.databaseDirectory = databaseDirectory
 		self.reportFailure = reportFailure
 		let (queued, continuation) = AsyncStream<Change>.makeStream()
@@ -109,6 +122,7 @@ actor ScrollbackSession {
 
 	deinit {
 		changes.finish()
+		migrationProgress?.finish()
 	}
 
 	// MARK: - Decoding

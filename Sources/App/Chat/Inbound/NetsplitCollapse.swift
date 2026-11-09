@@ -73,7 +73,7 @@ extension ServerSession {
 
 		let recordedNicknames = netsplitCollapse.finish()
 
-		let isNetsplit = batchMessage.batchType == "netsplit"
+		let isNetsplit = batchMessage.kind == .netsplit
 		let (firstServer, secondServer) = NetsplitSummaryPolicy.servers(from: batchMessage.batchParameters)
 		for conversation in conversationList {
 			guard let nicknames = recordedNicknames[conversation.uniqueIdentifier],
@@ -102,8 +102,9 @@ extension ServerSession {
 
 	func collapseNetsplitMessage(_ message: Message, in conversation: Conversation) -> Bool {
 		guard let collapsedBatch = netsplitCollapse.batch,
+		      let collapsedKind = collapsedBatch.kind,
 		      NetsplitSummaryPolicy.accepts(command: message.remoteCommand),
-		      batchMessage(ofType: collapsedBatch.batchType ?? "", containing: message) != nil,
+		      batchMessage(ofKind: collapsedKind, containing: message) != nil,
 		      let nickname = message.senderNickname,
 		      !nickname.isEmpty
 		else { return false }

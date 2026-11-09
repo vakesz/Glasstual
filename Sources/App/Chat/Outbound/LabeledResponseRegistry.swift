@@ -46,21 +46,14 @@ enum LabeledResponsePolicy {
 	}
 }
 
-/** What a labelled command's answers have said so far, kept on the batch that
- carries the label.
-
- A batch is the wire's unit of "these lines belong together"; the label, the
- state and the identifier are this subsystem's reading of it, which is why they
- travel as one value it declares rather than as four fields the batch model
- happens to hold. */
-struct BatchDeliveryState {
-	/// The label this batch answers, or `nil` when it carries none. It is
-	/// cleared once the delivery has been resolved.
-	var label: String?
-	var state: ChatLineDeliveryState = .delivered
-	var messageIdentifier: String?
-	var failureReason: String?
-	var echoedMessage: Message?
+extension ChatLineDeliveryState {
+	/// How a labelled batch's answers read once the chat layer shows them.
+	init(_ outcome: BatchDeliveryState.Outcome) {
+		self = switch outcome {
+		case .delivered: .delivered
+		case .failed: .failed
+		}
+	}
 }
 
 final class LabeledDelivery {

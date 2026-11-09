@@ -11,7 +11,7 @@ import Foundation
 
  Every key is namespaced, because the storage is an `NSTextStorage` the system's
  own machinery also reads. */
-nonisolated extension NSAttributedString.Key { // nonisolated: constants
+nonisolated extension NSAttributedString.Key {
 	static let transcriptLineNumber = NSAttributedString.Key("GlasstualTranscriptLineNumber")
 	/// The name the run itself spells: the author's, on the name that heads the
 	/// line, and the mentioned member's, on a mention inside a message.
@@ -45,8 +45,8 @@ nonisolated extension NSAttributedString.Key { // nonisolated: constants
 	 `NSTextBlock` border: text blocks are TextKit 1 features, and a view whose
 	 storage holds one is silently moved back to TextKit 1, where the
 	 transcript's bottom alignment does not exist. */
-	nonisolated static let transcriptRuleColor =
+	static let transcriptRuleColor =
 		NSAttributedString.Key("GlasstualTranscriptRuleColor")
-	nonisolated static let transcriptRuleInset =
+	static let transcriptRuleInset =
 		NSAttributedString.Key("GlasstualTranscriptRuleInset")
 }

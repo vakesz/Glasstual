@@ -55,7 +55,7 @@ extension ServerSession {
 	}
 
 	func chatHistoryIsAvailable(for conversation: Conversation) -> Bool {
-		let target = casefoldedTarget(conversation.name)
+		let target = supportInfo.casefoldString(conversation.name)
 		return ChatHistoryPolicy.canUseServerHistory(
 			isLoggedIn: isLoggedIn,
 			capabilityEnabled: environment.settings.requestChatHistory
@@ -65,10 +65,6 @@ extension ServerSession {
 			isZNCDirectConversation: conversation.isDirect && conversation.isDirectForZNCUser,
 			targetFailed: chatHistory.failedTargets.contains(target)
 		)
-	}
-
-	func casefoldedTarget(_ target: String) -> String {
-		supportInfo.casefoldString(target)
 	}
 
 	func chatHistoryTimestamp(for date: Date) -> String {
@@ -173,7 +169,7 @@ extension ServerSession {
 			return true
 		}
 		guard label == nil else { return true }
-		let foldedTarget = casefoldedTarget(target)
+		let foldedTarget = supportInfo.casefoldString(target)
 		guard !chatHistory.failedTargets.contains(foldedTarget) else { return false }
 		chatHistory.failedTargets.insert(foldedTarget)
 		return true

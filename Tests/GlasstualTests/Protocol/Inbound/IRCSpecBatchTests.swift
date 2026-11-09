@@ -206,12 +206,12 @@ struct IRCSpecBatchTests {
 	/// write them, including the `draft/` form chathistory shipped under.
 	@Test("batch: the types the session treats specially")
 	func specialBatchTypesAreRecognised() {
-		#expect(BatchPolicy.isChatHistory("chathistory"))
-		#expect(BatchPolicy.isChatHistory("draft/chathistory"))
-		#expect(BatchPolicy.isChatHistory("netsplit") == false)
-		#expect(BatchPolicy.isNetsplit("netsplit"))
-		#expect(BatchPolicy.isNetsplit("netjoin"))
-		#expect(BatchPolicy.isNetsplit(nil) == false)
+		#expect(BatchKind(wireType: "chathistory") == .chatHistory)
+		#expect(BatchKind(wireType: "draft/chathistory") == .chatHistory)
+		#expect(BatchKind(wireType: "netsplit") != .chatHistory)
+		#expect(BatchKind(wireType: "netsplit") == .netsplit)
+		#expect(BatchKind(wireType: "netjoin") == .netjoin)
+		#expect(MessageBatch().kind == nil)
 	}
 
 	// MARK: - labeled-response

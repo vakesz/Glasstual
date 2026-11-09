@@ -52,10 +52,11 @@ struct PrivacyManifestTests {
 
 	 The source list mirrors the target's `sources:` in `project.yml`, which
 	 globs all of `Sources/Shared` because the folder holds only what both
-	 targets compile. */
+	 targets compile. A single file names code the service reaches through a
+	 linked framework. */
 	nonisolated struct Service: Sendable, CustomStringConvertible {
 		let bundleName: String
-		let sourceDirectories: [String]
+		let sourcePaths: [String]
 
 		var description: String {
 			bundleName
@@ -64,9 +65,10 @@ struct PrivacyManifestTests {
 		static let all: [Service] = [
 			Service(
 				bundleName: "IRC Connection Host.xpc",
-				sourceDirectories: [
+				sourcePaths: [
 					"Sources/ConnectionHost",
 					"Sources/Shared",
+					"Sources/CocoaExtensions/ConnectionDiagnostics.swift",
 				]
 			),
 		]
@@ -119,7 +121,7 @@ struct PrivacyManifestTests {
 	)
 	func declaredCategoriesMatchTheSources(service: Service) throws {
 		let declared = try Set(Self.accessedAPITypes(forServiceNamed: service.bundleName).keys)
-		let sources = try Self.swiftSources(in: service.sourceDirectories)
+		let sources = try Self.swiftSources(in: service.sourcePaths)
 
 		#expect(sources.isEmpty == false, "\(service) has no sources to audit")
 
@@ -191,16 +193,21 @@ struct PrivacyManifestTests {
 		return result
 	}
 
-	/// The Swift under each directory, with line comments removed so that prose
-	/// about an API is not read as a call to it.
-	private static func swiftSources(in directories: [String]) throws -> [String] {
+	/// The Swift at each path, a file or everything under a directory, with line
+	/// comments removed so that prose about an API is not read as a call to it.
+	private static func swiftSources(in paths: [String]) throws -> [String] {
 		var sources: [String] = []
 
-		for directory in directories {
-			let url = RepositoryPaths.root.appending(path: directory)
+		for path in paths {
+			let url = RepositoryPaths.root.appending(path: path)
+
+			if url.pathExtension == "swift" {
+				try sources.append(strippingComments(String(contentsOf: url, encoding: .utf8)))
+				continue
+			}
 
 			guard let walker = FileManager.default.enumerator(at: url, includingPropertiesForKeys: nil) else {
-				Issue.record("\(directory) could not be walked")
+				Issue.record("\(path) could not be walked")
 				continue
 			}
 

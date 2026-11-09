@@ -77,6 +77,30 @@ struct InlineImageHostPolicyTests {
 		#expect(await InlineImageHostPolicy.permits(url, resolver: resolver))
 	}
 
+	@Test("A lookup that outlives the deadline is refused, not waited for", .timeLimit(.minutes(1)))
+	func slowLookupIsRefused() async throws {
+		let url = try #require(URL(string: "https://slow.example.org/a.png"))
+		let resolver = InlineImageHostResolver { _ in
+			try? await Task.sleep(for: .seconds(60))
+			return ["8.8.8.8"]
+		}
+
+		#expect(await InlineImageHostPolicy.permits(url, resolver: resolver, deadline: .milliseconds(50)) == false)
+	}
+
+	@Test("A cancelled caller stops waiting for its lookup", .timeLimit(.minutes(1)))
+	func cancelledLookupReturnsPromptly() async throws {
+		let url = try #require(URL(string: "https://slow.example.org/a.png"))
+		let resolver = InlineImageHostResolver { _ in
+			try? await Task.sleep(for: .seconds(60))
+			return ["8.8.8.8"]
+		}
+		let task = Task { await InlineImageHostPolicy.permits(url, resolver: resolver) }
+		task.cancel()
+
+		#expect(await task.value == false)
+	}
+
 	@Test("A download from a private host is refused before any request", .timeLimit(.minutes(1)))
 	func downloadRefusesPrivateHost() async throws {
 		let url = try #require(URL(string: "http://127.0.0.1:8080/a.png"))

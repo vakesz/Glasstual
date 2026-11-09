@@ -330,7 +330,7 @@ extension ServerSession {
 			let components = LineParser.wireTokens(in: arguments.rest)
 			guard let target = components.first else { return }
 			createHiddenCommandResponses()
-			requestedCommands.recordWhoRequestOpenedAsVisible(for: casefoldedTarget(target))
+			requestedCommands.recordWhoRequestOpenedAsVisible(for: supportInfo.casefoldString(target))
 			/* `WHO #chan o` is a target and a flag. Joined into one parameter the
 			 server matched a mask with a space in it and answered nothing. */
 			send(.who, arguments: components)

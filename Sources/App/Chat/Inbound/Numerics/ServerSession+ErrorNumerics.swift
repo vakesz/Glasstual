@@ -110,7 +110,7 @@ extension ServerSession {
 			let requestWasHidden: Bool? = if message.commandNumeric != ServerNumeric.tryagain.rawValue,
 			                                 message.params.count > 3
 			{
-				requestedCommands.recordWhoRequestClosed(for: casefoldedTarget(message.param(at: 2)))
+				requestedCommands.recordWhoRequestClosed(for: supportInfo.casefoldString(message.param(at: 2)))
 			} else {
 				requestedCommands.recordWhoRequestClosed()
 			}
