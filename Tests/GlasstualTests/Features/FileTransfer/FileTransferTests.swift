@@ -596,6 +596,23 @@ struct FileTransferTests {
 		#expect(lines == ["PRIVMSG \(nickname) :\u{1}DCC SEND source 2130706433 5000 1\u{1}"])
 	}
 
+	/// The transfer has succeeded and stays so; the session's console is where
+	/// the missing mark is said.
+	@Test("A received file that cannot be quarantined is reported, not failed")
+	func unquarantinedFileIsReported() throws {
+		let session = TestServerSession()
+		let controller = try receiver(on: session)
+		controller.path = FileManager.default.temporaryDirectory
+			.appendingPathComponent(UUID().uuidString, isDirectory: true).path
+		controller.transferStatus = .complete
+
+		controller.quarantineReceivedFile()
+
+		let bodies = (session.printedLines as NSArray).compactMap { ($0 as? [String: Any])?["messageBody"] as? String }
+		#expect(bodies.contains(String(localized: .FileTransfer.quarantineFailed("file.bin"))))
+		#expect(controller.transferStatus == .complete)
+	}
+
 	private func receiver(on session: ServerSession, in center: FileTransferStore? = nil, port: UInt16 = 1234,
 	                      size: UInt64 = 2048, token: String? = nil) throws -> FileTransfer
 	{

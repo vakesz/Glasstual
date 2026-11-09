@@ -385,24 +385,15 @@ final class TranscriptCommands: NSObject {
 			openInBackground.toggle()
 		}
 
-		if LinkSchemeRules.opensDirectly(url) {
+		if LinkSchemeRules.opensDirectly(url)
+			|| (LinkSchemeRules.appSchemes.contains(url.scheme?.lowercased() ?? "")
+				&& ApplicationLink.requiresConfirmation(url) == false)
+		{
 			OpenLink.open(url: url, inBackground: openInBackground)
 			return
 		}
 
-		/* Handing an address to another application is the risky answer, so
-		 Cancel is the one Return presses. The buttons name what they do, and
-		 the address itself is the message: it is the one fact that decides
-		 whether the reader wants this at all. */
-		let request = AlertRequest(
-			title: Self.openLinkTitle(
-				applicationName: NSWorkspace.shared.nameOfApplication(opening: url) ?? ""
-			),
-			body: url.absoluteString,
-			defaultButton: PromptStrings.Action.cancel,
-			alternateButton: PromptStrings.Action.open,
-			suppressionKey: TranscriptContextMenuSuppressionKey.openExternalURL(scheme: url.scheme)
-		)
+		let request = Self.openLinkRequest(for: url)
 		openingLinkTask?.cancel()
 		openingLinkTask = Task {
 			let outcome = await Alerts.run(request, on: .mainWindow)
@@ -435,6 +426,24 @@ enum TranscriptImageExport {
 }
 
 extension TranscriptCommands {
+	static func openLinkRequest(for url: URL) -> AlertRequest {
+		/* Handing an address to another application is the risky answer, so
+		 Cancel is the one Return presses. The buttons name what they do, and
+		 the address itself is the message: it is the one fact that decides
+		 whether the reader wants this at all. A link into this application is
+		 asked about every time: one answer for the scheme would also answer for
+		 the links that open folders and connect. */
+		AlertRequest(
+			title: openLinkTitle(applicationName: NSWorkspace.shared.nameOfApplication(opening: url) ?? ""),
+			body: url.absoluteString,
+			defaultButton: PromptStrings.Action.cancel,
+			alternateButton: PromptStrings.Action.open,
+			suppressionKey: LinkSchemeRules.appSchemes.contains(url.scheme?.lowercased() ?? "")
+				? nil
+				: TranscriptContextMenuSuppressionKey.openExternalURL(scheme: url.scheme)
+		)
+	}
+
 	/** The question asked before a link is handed to another application.
 
 	 macOS does not always name the application that would open an address, and

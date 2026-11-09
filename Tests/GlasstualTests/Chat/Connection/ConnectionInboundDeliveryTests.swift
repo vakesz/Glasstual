@@ -402,6 +402,28 @@ struct ConnectionInboundDeliveryTests {
 		#expect(session.connectCommandEndpoint(host: "other.invalid").secured == secured)
 	}
 
+	@Test("Replies still buffered when the connection ends are answered, not dropped")
+	func repliesBufferedAtTerminationAreAnswered() async {
+		let (_, connection) = connectedSession()
+		let receiver = connection.callbackReceiver
+		let (answers, answer) = AsyncStream<String>.makeStream()
+		/* Delivered back to back on the main actor, so all three are buffered
+		 before the event loop runs the first. */
+		receiver.didDisconnect(withError: nil)
+		receiver.didReceive([Data("PING :late".utf8)]) {
+			answer.yield("acknowledged")
+		}
+		receiver.requestInsecureCertificateTrust { trusted in
+			answer.yield(trusted ? "trusted" : "declined")
+			answer.finish()
+		}
+		var received: [String] = []
+		for await value in answers {
+			received.append(value)
+		}
+		#expect(received.sorted() == ["acknowledged", "declined"])
+	}
+
 	private func connectedSession() -> (TestServerSession, Connection) {
 		let session = TestServerSession()
 		session.forwardsProcessedMessages = true

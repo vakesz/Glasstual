@@ -52,6 +52,31 @@ struct MessageRuleMatcherTests {
 		#expect(commands == ["msg #ops /quit"])
 	}
 
+	/// A token in the command word would let whoever wrote the message, or named
+	/// the network, choose which command runs; in an argument it is only a value.
+	@Test(
+		"A token in the command word runs nothing",
+		arguments: ["/%_Parameter_1_% #ops", "/ %_originalMessage_%", "/msg%_Parameter_1_% hi", "/%_originalMessage_%"]
+	)
+	func commandWordMustBeLiteral(template: String) {
+		let commands = MessageRuleMatcher.actionCommands(
+			in: template,
+			replacing: ["%_Parameter_1_%": "quit", "%_originalMessage_%": "quit now"]
+		)
+
+		#expect(commands.isEmpty)
+	}
+
+	@Test("A literal command word still takes tokens as arguments, line by line")
+	func literalCommandWordKeepsItsArguments() {
+		let commands = MessageRuleMatcher.actionCommands(
+			in: "/msg %_Parameter_1_% hi\n/%_Parameter_1_%\n/quote PRIVMSG %_Parameter_1_% :%_originalMessage_%",
+			replacing: ["%_Parameter_1_%": "#room", "%_originalMessage_%": "hello"]
+		)
+
+		#expect(commands == ["msg #room hi", "quote PRIVMSG #room :hello"])
+	}
+
 	@Test("The template's own lines are what become commands")
 	func templateLinesBecomeCommands() {
 		let commands = MessageRuleMatcher.actionCommands(

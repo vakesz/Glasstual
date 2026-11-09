@@ -37,6 +37,25 @@ final class Connection {
 			&& config.connectionShouldValidateCertificateChain
 	}
 
+	/// What stands behind the certificate of an established TLS connection.
+	enum CertificateAssurance: Equatable {
+		/// The system accepted the server's chain.
+		case validated
+		/// The chain failed, and the user was shown why and chose to continue.
+		case acceptedByUser
+		/// The connection is set not to check the chain, so nothing says it is the server it claims.
+		case unverified
+	}
+
+	/// How far the server's certificate can be relied on, or nil before TLS is up.
+	var certificateAssurance: CertificateAssurance? {
+		guard isSecured else { return nil }
+		if certificateTrustWasOverridden {
+			return .acceptedByUser
+		}
+		return config.connectionShouldValidateCertificateChain ? .validated : .unverified
+	}
+
 	private(set) var EOFReceived = false
 	private(set) var connectedAddress: String?
 	private(set) var uniqueIdentifier: String
@@ -53,7 +72,6 @@ final class Connection {
 	private nonisolated let events: AsyncStream<ConnectionEvent>
 	private nonisolated let eventContinuation: AsyncStream<ConnectionEvent>.Continuation
 	private nonisolated let clientShim: ConnectionClientShim
-	private var eventTask: Task<Void, Never>?
 	private let closeClock: TimerClock
 	private let diagnostics: ConnectionDiagnostics
 	private let recordTermination: (ConnectionTermination) -> Void
@@ -106,14 +124,16 @@ final class Connection {
 		closeDeadlineTask?.cancel()
 		serviceConnection?.invalidate()
 		eventContinuation.finish()
-		eventTask?.cancel()
 	}
 
 	/// Drains the host's callbacks on the main actor in the order they arrived.
 	private func startDeliveringEvents() {
-		eventTask = Task { [weak self, events] in
+		Task { [weak self, events] in
 			for await event in events {
-				guard let self else { return }
+				guard let self else {
+					Self.answerUnhandled(event)
+					continue
+				}
 				if case let .didReceive(lines, acknowledge) = event {
 					await receive(lines)
 					/* Answered once the lines are handled, whatever became of
@@ -124,6 +144,19 @@ final class Connection {
 					handle(event)
 				}
 			}
+		}
+	}
+
+	/// Answers an event the connection is gone to handle, so the reply it
+	/// carries is not left unsent.
+	private static func answerUnhandled(_ event: ConnectionEvent) {
+		switch event {
+		case let .didReceive(_, acknowledge):
+			acknowledge()
+		case let .requestInsecureCertificateTrust(response):
+			response(false)
+		default:
+			break
 		}
 	}
 
@@ -424,8 +457,11 @@ final class Connection {
 		if session?.socket === self {
 			session?.connectionDidDisconnect(error: error)
 		}
+		/* Finished rather than cancelled: cancelling ends the loop at once and
+		 drops what is still buffered, and the host is waiting on the reply a
+		 `didReceive` carries while the trust prompt waits on its answer. What
+		 is left is handled as terminal events, which answer and do nothing else. */
 		eventContinuation.finish()
-		eventTask?.cancel()
 	}
 
 	private var terminationPhase: ConnectionTermination.Phase {

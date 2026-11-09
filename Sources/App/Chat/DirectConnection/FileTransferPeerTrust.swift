@@ -13,7 +13,7 @@ nonisolated enum FileTransferPeerTrust {
 	 the sender's real hostmask matches.
 
 	 An entry written as a bare nickname pins no host, so for it only the
-	 account can vouch. A wildcard `user@host` pins nothing either. */
+	 account can vouch. A host with a wildcard in it pins nothing either. */
 	static func isTrusted(
 		senderHostmask: String?,
 		senderAccount: String?,
@@ -22,13 +22,13 @@ nonisolated enum FileTransferPeerTrust {
 		caseMapping: ISupportCaseMapping
 	) -> Bool {
 		if let senderAccount, senderAccount.isEmpty == false, senderAccount != "*",
-		   HostmaskGlob.casefold(senderAccount, caseMapping: caseMapping)
-		   == HostmaskGlob.casefold(trackedNickname, caseMapping: caseMapping)
+		   IRCCaseFolding.fold(senderAccount, using: caseMapping)
+		   == IRCCaseFolding.fold(trackedNickname, using: caseMapping)
 		{
 			return true
 		}
 
-		guard let senderHostmask, hasPinnedUserAndHost(entryHostmask) else {
+		guard let senderHostmask, hasLiteralHost(entryHostmask) else {
 			return false
 		}
 
@@ -36,15 +36,27 @@ nonisolated enum FileTransferPeerTrust {
 			.matches(hostmask: senderHostmask)
 	}
 
-	/// Whether a hostmask names a `user@host`: a bare nickname or a pair of
-	/// wildcards names nobody in particular.
-	private static func hasPinnedUserAndHost(_ hostmask: String) -> Bool {
-		guard let separator = hostmask.firstIndex(of: "!") else {
+	/** Whether a hostmask pins the host: it names a `nick!user@host` whose host
+	 is written out. `*` and `?` in the host leave it open to anyone the pattern
+	 reaches, and an escaped `\*` is an ordinary character. The user part may
+	 be a wildcard; the host is what the sender does not choose. */
+	private static func hasLiteralHost(_ hostmask: String) -> Bool {
+		let tokens = HostmaskGlob.compile(hostmask)
+
+		guard let bang = tokens.firstIndex(of: .literal("!")),
+		      let at = tokens[bang...].lastIndex(of: .literal("@"))
+		else {
 			return false
 		}
 
-		let fragment = hostmask[hostmask.index(after: separator)...]
+		let host = tokens[tokens.index(after: at)...]
 
-		return fragment.isEmpty == false && fragment.allSatisfy { $0 == "*" || $0 == "@" } == false
+		return host.isEmpty == false && host.allSatisfy {
+			if case .literal = $0 {
+				true
+			} else {
+				false
+			}
+		}
 	}
 }

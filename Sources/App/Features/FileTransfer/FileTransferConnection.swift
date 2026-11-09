@@ -188,11 +188,14 @@ extension FileTransfer {
 	}
 
 	/// Marks the download as coming from the peer, inside the access the user
-	/// granted to the folder it landed in.
-	private func quarantineReceivedFile() {
+	/// granted to the folder it landed in. The transfer has succeeded and stays
+	/// so when the mark cannot be written, but the session's console says that
+	/// macOS will not check the file when it is opened.
+	func quarantineReceivedFile() {
 		guard let localFile else { return }
 		let origin = DCCQuarantine.Origin(peerNickname: peerNickname, hostAddress: hostAddress)
-		_ = localFile.withAccess { DCCQuarantine.apply(to: $0, origin: origin) }
+		guard localFile.withAccess({ DCCQuarantine.apply(to: $0, origin: origin) }) == false else { return }
+		session?.printDebugInformation(toConsole: String(localized: .FileTransfer.quarantineFailed(filename)))
 	}
 
 	private func transferDidProgress(to processedBytes: UInt64) {

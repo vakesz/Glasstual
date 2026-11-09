@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 import CocoaExtensions
+import CryptoKit
 import Foundation
 
 nonisolated enum ServerConfigDefaults {
@@ -254,5 +255,62 @@ nonisolated extension ServerConfig {
 		copy.uniqueIdentifier = UUID().uuidString
 
 		return copy
+	}
+}
+
+// MARK: - Re-identification
+
+nonisolated extension ServerConfig {
+	/** The same configuration under identities no keychain item is filed under.
+
+	 Every secret is keyed on the identifier of the model that owns it, so a
+	 configuration that must not inherit the secrets of another one with the
+	 same endpoint needs fresh identifiers all the way down. Unlike
+	 ``uniqueCopy()`` this carries no secret across, and the identifiers are
+	 derived rather than random: the same configuration and `context` always
+	 name the same identities, so importing one file twice finds what the first
+	 import made instead of adding another network. */
+	func reidentified(derivedFrom context: String) -> ServerConfig {
+		func derived(_ identifier: String) -> String {
+			Self.derivedIdentifier(from: identifier, context: context)
+		}
+		var copy = self
+		copy.uniqueIdentifier = derived(uniqueIdentifier)
+		copy.pendingNicknamePassword = .unchanged
+		copy.pendingProxyPassword = .unchanged
+		copy.pendingSASLSigningKey = .unchanged
+		copy.serverList = serverList.map {
+			var server = $0
+			server.uniqueIdentifier = derived(server.uniqueIdentifier)
+			server.pendingServerPassword = .unchanged
+			return server
+		}
+		copy.conversationList = conversationList.map {
+			var conversation = $0
+			conversation.uniqueIdentifier = derived(conversation.uniqueIdentifier)
+			conversation.pendingSecretKey = .unchanged
+			return conversation
+		}
+		copy.highlightList = highlightList.map {
+			var highlight = $0
+			highlight.uniqueIdentifier = derived(highlight.uniqueIdentifier)
+			return highlight
+		}
+		copy.ignoreList = ignoreList.map {
+			var entry = $0
+			entry.uniqueIdentifier = derived(entry.uniqueIdentifier)
+			return entry
+		}
+
+		return copy
+	}
+
+	/// A version 5 style UUID over the identifier and the context it is derived in.
+	static func derivedIdentifier(from identifier: String, context: String) -> String {
+		var bytes = Array(SHA256.hash(data: Data("glasstual.reidentified/\(context)/\(identifier)".utf8)).prefix(16))
+		bytes[6] = (bytes[6] & 0x0F) | 0x50
+		bytes[8] = (bytes[8] & 0x3F) | 0x80
+
+		return bytes.withUnsafeBytes { UUID(uuid: $0.loadUnaligned(as: uuid_t.self)) }.uuidString
 	}
 }

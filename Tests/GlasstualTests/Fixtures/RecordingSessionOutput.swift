@@ -36,6 +36,10 @@ final class RecordingSessionOutput: ServerSessionPresenting {
 	/// Tests can suspend the answer to exercise stale-session handling.
 	var confirmation: (@MainActor (AlertRequest) async -> Bool)?
 	var confirmationAnswer = true
+	/// Every question asked through ``respond(to:)``, in order.
+	private(set) var responseRequests: [AlertRequest] = []
+	/// The button ``respond(to:)`` answers with. The default button is the safe one.
+	var responseAnswer = AlertResponse.default
 	var showsMaskListSheet = false
 	/// The channels whose sheets the protocol layer asked to have closed.
 	private(set) var closedSheetChannelIds: [String] = []
@@ -59,6 +63,11 @@ final class RecordingSessionOutput: ServerSessionPresenting {
 			return await confirmation(request)
 		}
 		return confirmationAnswer
+	}
+
+	func respond(to request: AlertRequest) async -> AlertResponse {
+		responseRequests.append(request)
+		return responseAnswer
 	}
 
 	func closeSheets(for session: ServerSession) {

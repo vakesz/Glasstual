@@ -72,4 +72,25 @@ struct ApplicationLinkParsingTests {
 		#expect(request.connectSecurely)
 		#expect(request.channels == ["#chat"])
 	}
+
+	/// A link a conversation shows may be written by anyone, so the ones that
+	/// reveal a folder or connect are asked about, and the ones that only
+	/// navigate inside the app are not.
+	@Test("Only application links that reveal or connect need confirming", arguments: [
+		("glasstual://application-support-folder", true),
+		("glasstual://custom-scripts-folder", true),
+		("glasstual://diagnostic-reports-folder", true),
+		("glasstual://support-channel", true),
+		("glasstual://testing-channel", true),
+		("glasstual://acknowledgements", false),
+		("glasstual://goto/ABC", false),
+		("glasstual://nothing-by-this-name", false),
+		("https://example.test/", false),
+		("glasstual:malformed", false),
+	] as [(String, Bool)])
+	func confirmationIsForRevealAndConnect(location: String, expected: Bool) throws {
+		let url = try #require(URL(string: location))
+
+		#expect(ApplicationLink.requiresConfirmation(url) == expected)
+	}
 }

@@ -42,6 +42,26 @@ nonisolated enum ConnectionSafetyStrings {
 		static func withheldFromUnconfiguredHost(_ host: String) -> String {
 			String(localized: .ConnectionSafety.credentialsWithheldUnconfiguredHost(host))
 		}
+
+		static var withheldUnverifiedCertificate: String {
+			String(localized: .ConnectionSafety.credentialsWithheldUnverifiedCertificate)
+		}
+
+		static var unverifiedCertificateTitle: String {
+			String(localized: .ConnectionSafety.credentialsUnverifiedCertificateTitle)
+		}
+
+		static func unverifiedCertificateBody(host: String) -> String {
+			String(localized: .ConnectionSafety.credentialsUnverifiedCertificateBody(host))
+		}
+
+		static var send: String {
+			String(localized: .ConnectionSafety.credentialsUnverifiedCertificateSend)
+		}
+
+		static var dontSend: String {
+			String(localized: .ConnectionSafety.credentialsUnverifiedCertificateDontSend)
+		}
 	}
 
 	enum SASL {

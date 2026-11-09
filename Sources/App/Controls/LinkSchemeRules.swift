@@ -51,10 +51,11 @@ nonisolated struct LinkSchemeRules: Sendable {
 	}
 
 	/// Whether the app hands `url` straight to the system rather than offering
-	/// it to a channel- or nickname-specific action first.
+	/// it to a channel- or nickname-specific action first. Only web links: the
+	/// app's own scheme has actions that reveal files or connect, so whether one
+	/// needs asking about is the application's to say.
 	static func opensDirectly(_ url: URL) -> Bool {
-		let scheme = url.scheme?.lowercased() ?? ""
-		return webSchemes.contains(scheme) || appSchemes.contains(scheme)
+		webSchemes.contains(url.scheme?.lowercased() ?? "")
 	}
 
 	/// Whether a scheme may be linked, and may be handed to `NSWorkspace`.

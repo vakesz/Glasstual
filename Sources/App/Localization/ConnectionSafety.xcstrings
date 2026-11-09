@@ -1,6 +1,198 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "credentials-unverified-certificate-body" : {
+      "comment" : "Body of the alert asking whether to send the account password (SASL PLAIN or a NickServ IDENTIFY) to a server whose certificate was not checked because certificate checking is turned off for the network. %1$@ is the server's host name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The certificate of %1$@ was not checked, because certificate checking is turned off for this network. Your account password would be sent to the server without proof that it is the real %1$@."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A(z) %1$@ tanúsítványa nem lett ellenőrizve, mert a tanúsítványellenőrzés ki van kapcsolva ennél a hálózatnál. A fiók jelszava úgy kerülne elküldésre, hogy nincs bizonyíték arra, hogy a kiszolgáló valóban a(z) %1$@."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Zertifikat von %1$@ wurde nicht geprüft, weil die Zertifikatsprüfung für dieses Netzwerk ausgeschaltet ist. Ihr Kontopasswort würde gesendet, ohne dass belegt ist, dass der Server wirklich %1$@ ist."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El certificado de %1$@ no se comprobó porque la comprobación de certificados está desactivada para esta red. Su contraseña de cuenta se enviaría al servidor sin garantía de que sea realmente %1$@."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le certificat de %1$@ n’a pas été vérifié, car la vérification des certificats est désactivée pour ce réseau. Le mot de passe de votre compte serait envoyé au serveur sans preuve qu’il s’agit bien de %1$@."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このネットワークでは証明書の検証がオフになっているため、%1$@の証明書は検証されていません。このサーバが本物の%1$@であるという証明がないまま、アカウントのパスワードが送信されます。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O certificado de %1$@ não foi verificado, porque a verificação de certificados está desativada para esta rede. A senha da sua conta seria enviada ao servidor sem prova de que ele é mesmo %1$@."
+          }
+        }
+      }
+    },
+    "credentials-unverified-certificate-dont-send" : {
+      "comment" : "Default button of the alert about an unverified server certificate. Keeps the account password from being sent.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Don’t Send"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ne küldje"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht senden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No enviar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ne pas envoyer"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "送信しない"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não enviar"
+          }
+        }
+      }
+    },
+    "credentials-unverified-certificate-send" : {
+      "comment" : "Button of the alert about an unverified server certificate. Sends the account password anyway.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send Password"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jelszó küldése"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passwort senden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enviar contraseña"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envoyer le mot de passe"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "パスワードを送信"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enviar senha"
+          }
+        }
+      }
+    },
+    "credentials-unverified-certificate-title" : {
+      "comment" : "Title of the alert asking whether to send the account password to a server whose certificate was not checked because certificate checking is turned off for the network.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send your password to an unverified server?"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elküldi a jelszavát egy nem ellenőrzött kiszolgálónak?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passwort an einen ungeprüften Server senden?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Enviar la contraseña a un servidor sin verificar?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envoyer votre mot de passe à un serveur non vérifié ?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "検証されていないサーバにパスワードを送信しますか?"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enviar sua senha a um servidor não verificado?"
+          }
+        }
+      }
+    },
     "credentials-withheld-over-plaintext" : {
       "comment" : "Console notice, printed at most once per connection, when the client refuses to send the account password (SASL PLAIN or a NickServ IDENTIFY) because a connection that was meant to be encrypted is not.",
       "extractionState" : "manual",
@@ -93,6 +285,54 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "A senha da conta não será enviada para %1$@: esse não é um dos servidores configurados desta rede."
+          }
+        }
+      }
+    },
+    "credentials-withheld-unverified-certificate" : {
+      "comment" : "Console notice, printed at most once per connection, when the client does not send the account password (SASL PLAIN or a NickServ IDENTIFY) because the server's certificate was not verified and the user did not allow it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The account password was not sent: this server’s certificate was not verified."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A fiók jelszava nem lett elküldve: a kiszolgáló tanúsítványa nem lett ellenőrizve."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Kontopasswort wurde nicht gesendet: Das Zertifikat dieses Servers wurde nicht geprüft."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La contraseña de la cuenta no se envió: no se verificó el certificado de este servidor."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le mot de passe du compte n’a pas été envoyé : le certificat de ce serveur n’a pas été vérifié."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アカウントのパスワードは送信されませんでした。このサーバの証明書は検証されていません。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A senha da conta não foi enviada: o certificado deste servidor não foi verificado."
           }
         }
       }

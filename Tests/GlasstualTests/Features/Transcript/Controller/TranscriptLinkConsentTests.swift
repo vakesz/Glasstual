@@ -47,4 +47,18 @@ struct TranscriptLinkConsentTests {
 	func riskySchemesAreNotDefaults(scheme: String) {
 		#expect(SettingsKeys.LinkSchemes.permittedDefault.defaultValue.contains(scheme) == false)
 	}
+
+	@Test("A link into the app is asked about every time, and Cancel is what Return presses")
+	func appLinksOfferNoSuppression() throws {
+		let appLink = try #require(URL(string: "glasstual://support-channel"))
+		let otherLink = try #require(URL(string: "ftp://example.test/file"))
+
+		let appRequest = TranscriptCommands.openLinkRequest(for: appLink)
+		let otherRequest = TranscriptCommands.openLinkRequest(for: otherLink)
+
+		#expect(appRequest.suppressionKey == nil)
+		#expect(appRequest.body == appLink.absoluteString)
+		#expect(appRequest.defaultButton == PromptStrings.Action.cancel)
+		#expect(otherRequest.suppressionKey == TranscriptContextMenuSuppressionKey.openExternalURL(scheme: "ftp"))
+	}
 }

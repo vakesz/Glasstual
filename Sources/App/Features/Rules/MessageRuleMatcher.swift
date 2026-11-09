@@ -377,6 +377,11 @@ final class MessageRuleMatcher {
 	   it after expansion let a line that is only a token — `%_originalMessage_%`,
 	   `%_Parameter_1_%`, or `%_networkName_%`, which the server names — run
 	   whatever command a peer or server put in that value.
+	 - The command word is literal in the template too. The word after the
+	   `/`, up to the first whitespace, must be written out and hold no token:
+	   `/%_Parameter_1_%`, `/ %_originalMessage_%` and `/msg%_x_%` run nothing.
+	   A token in the arguments is a value; a token in the command would let
+	   the sender of the message choose which command runs.
 	 - Every substituted value has its own line and paragraph separators
 	   stripped. `\u{2028}`, `\u{2029}`, `\u{0085}`, `\u{000B}` and `\u{000C}`
 	   are all legal in an IRC message body and all count as line breaks to
@@ -394,9 +399,12 @@ final class MessageRuleMatcher {
 
 		return templateLines(of: template).compactMap { line -> String? in
 			guard line.hasPrefix("/"), !line.hasPrefix("//") else { return nil }
-			let command = expanding(String(line.dropFirst()), tokens: tokens, values: sanitized)
-			guard command.isEmpty == false, !command.hasPrefix("/") else { return nil }
-			return command
+			let template = line.dropFirst()
+			let commandWord = template.prefix { $0.isWhitespace == false }
+			guard commandWord.isEmpty == false, tokens.contains(where: { commandWord.contains($0) }) == false else {
+				return nil
+			}
+			return expanding(String(template), tokens: tokens, values: sanitized)
 		}
 	}
 

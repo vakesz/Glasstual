@@ -40,6 +40,10 @@ protocol ServerSessionPresenting: AnyObject {
 	/// ``ServerSession/requestConfirmation(_:isCurrent:perform:)`` at the end of this
 	/// file is what every caller actually asks through.
 	func confirm(_ request: AlertRequest) async -> Bool
+	/// Suspends until the sheet answers, and says which button did. For a
+	/// question whose safe answer is the button Return presses, which
+	/// ``confirm(_:)`` cannot express: it reports only whether that one was chosen.
+	func respond(to request: AlertRequest) async -> AlertResponse
 	/// Closes every sheet the window is showing on this session's behalf.
 	func closeSheets(for session: ServerSession)
 
@@ -110,6 +114,11 @@ protocol ServerSessionPresenting: AnyObject {
 }
 
 extension ServerSessionPresenting {
+	/// A presenter that only confirms answers the way ``confirm(_:)`` does.
+	func respond(to request: AlertRequest) async -> AlertResponse {
+		await confirm(request) ? .default : .alternate
+	}
+
 	/// A presenter with no access-list window has nothing to take a refusal.
 	func maskListChangeRefused(
 		for _: ServerSession,
