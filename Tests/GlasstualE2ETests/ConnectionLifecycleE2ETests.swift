@@ -15,6 +15,8 @@ struct ConnectionLifecycleE2ETests {
 		"tlsAccept",
 		"tlsRejectRetry",
 		"tlsStall",
+		"credentialConsentDecline",
+		"credentialConsentSend",
 	]
 
 	/// The scenarios `ScenarioKind.hasFixtureTest` excludes. This bundle cannot

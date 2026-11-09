@@ -209,6 +209,20 @@ extension AccessibilityDriver {
 		try key(48)
 	}
 
+	/** `fill` for a secure field. The field's value is not readable back through
+	 accessibility, so there is nothing to compare with: the typing is checked by
+	 what the client does with the password afterwards. */
+	func fillSecure(_ identifier: String, with content: String, from parent: AXUIElement) async throws {
+		try await wait("focus identified secure input \(identifier)") { deadline in
+			guard let field = try identified(identifier, from: parent, deadline: deadline) else { return false }
+			try set(field, attribute: kAXFocusedAttribute, value: kCFBooleanTrue, deadline: deadline)
+			return try value(field, kAXFocusedAttribute, deadline: deadline) as? Bool == true
+		}
+		try key(0, flags: .maskCommand)
+		try type(content)
+		try key(48)
+	}
+
 	func type(_ content: String) throws {
 		guard content.utf8.allSatisfy({ $0 < 128 })
 		else { throw HarnessFailure.assertion("Expected ASCII fixture input") }

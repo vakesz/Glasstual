@@ -144,7 +144,16 @@ enum Scenario {
 			try HarnessFiles.write("disconnected", to: "recovery-complete-\(rejection + 1)")
 			try HarnessFiles.remove("recovery-deadline")
 		}
+		if kind.saslConsent != nil {
+			// The password has to be in the application's keychain item before it connects.
+			try await CredentialConsentScenario.storePassword(driver: driver)
+		}
 		try await driver.menu("Connect", in: "Server")
+		if let answer = kind.saslConsent {
+			// Certificate checking is off for this network, so there is no trust
+			// prompt: the consent alert is the only question the user is asked.
+			try await CredentialConsentScenario.answer(answer, driver: driver)
+		}
 		if kind == .tlsRejectRetry {
 			try await driver.certificate(answer: nil)
 			try await Task.sleep(for: .seconds(3))
@@ -153,7 +162,7 @@ enum Scenario {
 			try await driver.wait("TLS rejected without IRC") { _ in try HarnessFiles.exists("tls-rejected") }
 			try await driver.menu("Connect", in: "Server")
 		}
-		if kind.secured, kind != .tlsStall {
+		if kind.secured, kind != .tlsStall, kind.saslConsent == nil {
 			try await driver.certificate(answer: nil)
 			try await Task.sleep(for: .seconds(3))
 			try await driver.certificate(answer: true)
@@ -165,6 +174,9 @@ enum Scenario {
 			try await driver.waitForTranscript("E2E_TRANSCRIPT_READY")
 			try await driver.waitForConnectionStatus(connected: true)
 			try await driver.wait("peer observed fixture PONG") { _ in try HarnessFiles.exists("pong-wire") }
+			if let answer = kind.saslConsent {
+				try CredentialConsentScenario.verifyEvidence(answer)
+			}
 		}
 		// A fresh lookup, not the launch-time handle: a relaunched or second
 		// instance would show up here under a different PID.
@@ -275,6 +287,11 @@ enum Scenario {
 		      var clients = fixture[Self.serverSessionsKey] as? [[String: Any]], clients.count == 1
 		else { throw HarnessFailure.setup("Malformed synthetic startup fixture") }
 		clients[0]["uniqueIdentifier"] = UUID().uuidString
+		if kind.saslConsent != nil {
+			// The network is set not to check the chain: that is what makes the
+			// connection unverified, and the consent prompt the way to send a password.
+			clients[0]["validateServerCertificateChain"] = false
+		}
 		clients[0]["serverList"] = [[
 			"uniqueIdentifier": UUID().uuidString,
 			"serverAddress": "127.0.0.1", "serverPort": port, "prefersSecuredConnection": kind.secured,

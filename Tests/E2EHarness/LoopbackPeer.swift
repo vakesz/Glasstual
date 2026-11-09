@@ -24,7 +24,8 @@ final class LoopbackPeer {
 		state = FixtureProtocol(
 			reject: false,
 			messaging: kind.messaging,
-			acceptsOnboardingQuit: kind == .onboardingFinish
+			acceptsOnboardingQuit: kind == .onboardingFinish,
+			consent: kind.saslConsent.map(SASLConsentFixture.init(answer:))
 		)
 		let tls: NWProtocolTLS.Options?
 		if kind.secured, kind != .tlsStall {
@@ -111,7 +112,8 @@ final class LoopbackPeer {
 		state = FixtureProtocol(reject: attempt <= kind.rejectionCount, messaging: kind.messaging,
 		                        deniedJoin: kind == .channelDenied ? DeniedJoinFixture() : nil,
 		                        interaction: interaction,
-		                        acceptsOnboardingQuit: kind == .onboardingFinish)
+		                        acceptsOnboardingQuit: kind == .onboardingFinish,
+		                        consent: kind.saslConsent.map(SASLConsentFixture.init(answer:)))
 		do {
 			try HarnessFiles.write(String(attempt), to: "connection-count")
 		} catch { failure = error }
@@ -194,6 +196,9 @@ final class LoopbackPeer {
 				(state.replySeen, "PRIVMSG #e2e :fixture: E2E_TYPED_REPLY", "reply-wire"),
 			] where observed {
 				try HarnessFiles.write(text, to: file)
+			}
+			if let consent = state.consent {
+				try HarnessFiles.write(consent.evidence, to: "sasl-evidence")
 			}
 			if let phase = state.deniedJoin?.phase {
 				try HarnessFiles.write(String(describing: phase), to: "denied-join-phase")
