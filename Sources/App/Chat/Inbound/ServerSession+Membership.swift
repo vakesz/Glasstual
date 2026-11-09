@@ -113,7 +113,7 @@ extension ServerSession {
 
 		let ignore = isLocalUser ? nil : message.senderHostmask.flatMap(findAddressBookEntry(forHostmask:))
 		if let ignore, !printOnly {
-			updateTrackingStatus(for: ignore, message: message)
+			updateUserTrackingStatus(for: ignore, message: message)
 		}
 		if shouldPrintReceivedMessage(message, withText: nil, destinedFor: channel),
 		   printsGeneralEvent(isLocalUser: isLocalUser, in: channel, ignoring: ignore)
@@ -230,7 +230,7 @@ extension ServerSession {
 		}
 		let ignore = isLocalUser ? nil : message.senderHostmask.flatMap(findAddressBookEntry(forHostmask:))
 		if let ignore, !printOnly {
-			updateTrackingStatus(for: ignore, message: message)
+			updateUserTrackingStatus(for: ignore, message: message)
 		}
 
 		var quitText = String(localized: .IRC.leftIrc(
@@ -266,11 +266,18 @@ extension ServerSession {
 		if printOnly {
 			guard let conversationName, let conversation = findConversation(conversationName) else { return }
 			process(conversation)
-		} else {
+		} else if isLocalUser {
+			/* The local user's own quit is printed everywhere, related or not. */
 			conversationList.forEach(process)
-			if !isLocalUser {
-				output?.updateTitle(for: self)
+		} else if let user {
+			/* Only the channels the person is in and their query have anything
+			 to show or change; every other conversation returned without
+			 printing. */
+			relatedChannels(of: user).forEach(process)
+			if let direct = directConversation(named: sender) {
+				process(direct)
 			}
+			output?.updateTitle(for: self)
 		}
 	}
 
@@ -279,9 +286,17 @@ extension ServerSession {
 		if !message.isPrintOnlyMessage, !message.isReplayed {
 			typingTracker.removeNickname(nickname)
 		}
-		for conversation in conversationList {
-			conversation.removeMember(withNickname: nickname)
+		guard let user = findUser(nickname) else { return }
+		for channel in relatedChannels(of: user, ordered: false) {
+			channel.removeMember(withNickname: nickname)
 		}
+	}
+
+	/// The query with `nickname`, if one is open. A channel never matches: its
+	/// name cannot be a nickname.
+	private func directConversation(named nickname: String) -> Conversation? {
+		guard let conversation = findConversation(nickname), conversation.isDirect else { return nil }
+		return conversation
 	}
 
 	func receiveNick(_ message: Message) {
@@ -311,10 +326,10 @@ extension ServerSession {
 				output?.updateTitle(for: self)
 			} else {
 				if let oldIgnore {
-					updateTrackingStatus(for: oldIgnore, message: message)
+					updateUserTrackingStatus(for: oldIgnore, message: message)
 				}
 				if let newEntry = findUserTrackingAddressBookEntry(forNickname: newNickname) {
-					updateTrackingStatus(for: newEntry, message: message)
+					updateUserTrackingStatus(for: newEntry, message: message)
 				}
 			}
 		}
@@ -353,8 +368,13 @@ extension ServerSession {
 			guard let conversationName, let conversation = findConversation(conversationName) else { return }
 			process(conversation)
 		} else if let user {
+			/* Resolved before the walk: renaming the query changes the name index. */
+			let direct = directConversation(named: oldNickname)
 			rename(user, to: newNickname)
-			conversationList.forEach(process)
+			relatedChannels(of: user).forEach(process)
+			if let direct {
+				process(direct)
+			}
 		}
 	}
 
@@ -432,10 +452,6 @@ extension ServerSession {
 		}
 
 		send(.names, arguments: [channel.name])
-	}
-
-	private func updateTrackingStatus(for entry: AddressBookEntry, message: Message) {
-		updateUserTrackingStatus(for: entry, message: message)
 	}
 }
 

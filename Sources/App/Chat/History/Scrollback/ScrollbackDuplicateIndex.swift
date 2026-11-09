@@ -2,7 +2,42 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 import CocoaExtensions
+import CryptoKit
 import Foundation
+
+/** A fixed-width stand-in for a line's timestamp, nickname and body.
+
+ The index only asks whether an equal line is already held, so a 128-bit
+ SHA-256 prefix replaces the body it would otherwise keep a second copy of.
+ The nickname is length-prefixed, so no nickname and body can be split a
+ different way to produce the same input. */
+private nonisolated struct FallbackKey: Hashable, Sendable {
+	private let high: UInt64
+	private let low: UInt64
+
+	init(milliseconds: Int64, nickname: String, messageBody: String) {
+		var hasher = SHA256()
+		withUnsafeBytes(of: milliseconds.littleEndian) { hasher.update(bufferPointer: $0) }
+		var nickname = nickname
+		nickname.withUTF8 { bytes in
+			withUnsafeBytes(of: UInt64(bytes.count).littleEndian) { hasher.update(bufferPointer: $0) }
+			hasher.update(bufferPointer: UnsafeRawBufferPointer(bytes))
+		}
+		var messageBody = messageBody
+		messageBody.withUTF8 { hasher.update(bufferPointer: UnsafeRawBufferPointer($0)) }
+		var high: UInt64 = 0
+		var low: UInt64 = 0
+		for (index, byte) in hasher.finalize().prefix(16).enumerated() {
+			if index < 8 {
+				high = high << 8 | UInt64(byte)
+			} else {
+				low = low << 8 | UInt64(byte)
+			}
+		}
+		self.high = high
+		self.low = low
+	}
+}
 
 /** What the app knows about the lines of one view, kept in memory so that chat
  history replayed by the server can be checked against the local scrollback.
@@ -21,7 +56,7 @@ private nonisolated struct ScrollbackViewIndex: Sendable {
 	/// when the line goes. `nil` where the line carried no such value.
 	struct Contribution: Sendable {
 		var messageIdentifier: MessageIdentifierKey?
-		var fallbackKey: String?
+		var fallbackKey: FallbackKey?
 		var receivedAt: Date
 		var isConversation: Bool
 		var readMarkerTimestamp: Date?
@@ -33,7 +68,7 @@ private nonisolated struct ScrollbackViewIndex: Sendable {
 	}
 
 	private(set) var messageIdentifiers: [MessageIdentifierKey: Int] = [:]
-	private(set) var fallbackKeys: [String: Int] = [:]
+	private(set) var fallbackKeys: [FallbackKey: Int] = [:]
 	private var contributions: [String: Entry] = [:]
 	private var generation = UUID()
 	private(set) var newestDate: Date?
@@ -148,7 +183,7 @@ final class ScrollbackDuplicateIndex {
 		for date: Date?,
 		nickname: String?,
 		messageBody: String?
-	) -> String? {
+	) -> FallbackKey? {
 		guard let date, let messageBody else {
 			return nil
 		}
@@ -162,7 +197,7 @@ final class ScrollbackDuplicateIndex {
 		guard let milliseconds = Int64(exactly: (date.timeIntervalSince1970 * 1000.0).rounded()) else {
 			return nil
 		}
-		return "\(milliseconds)\u{001f}\(nickname ?? "")\u{001f}\(messageBody)"
+		return FallbackKey(milliseconds: milliseconds, nickname: nickname ?? "", messageBody: messageBody)
 	}
 
 	/// Indexes `chatLine` for the duplicate checks, and reports whether this call

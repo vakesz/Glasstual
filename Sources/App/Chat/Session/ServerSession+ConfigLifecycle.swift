@@ -240,6 +240,8 @@ extension ServerSession {
 	/// session holds for it is dropped while the conversation is still whole.
 	func willDestroyConversation(_ conversation: Conversation) {
 		guard conversation.associatedSession === self else { return }
+		readMarkers.sentDates.removeValue(forKey: conversation.uniqueIdentifier)
+		readMarkers.pendingConversations.removeValue(forKey: conversation.uniqueIdentifier)
 		if conversation.isDirect {
 			stopTrackingDirectPeer(conversation.name)
 		}

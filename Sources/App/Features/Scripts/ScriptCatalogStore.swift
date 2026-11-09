@@ -19,7 +19,23 @@ private nonisolated let scriptCatalogLogger = Logger(
  controller is too, and a scan is an `await` rather than a lock. */
 @MainActor
 final class ScriptCatalogStore {
-	private var catalog = ScriptCatalog()
+	private var catalog: ScriptCatalog {
+		didSet { commandNames = Self.sortedCommandNames(of: catalog) }
+	}
+
+	/// The catalog's command names in order, kept for the completion and
+	/// dispatch paths that ask on every keystroke and recomputed only when a
+	/// scan publishes a catalog.
+	private(set) var commandNames: [String]
+
+	init(catalog: ScriptCatalog = ScriptCatalog()) {
+		self.catalog = catalog
+		commandNames = Self.sortedCommandNames(of: catalog)
+	}
+
+	private static func sortedCommandNames(of catalog: ScriptCatalog) -> [String] {
+		catalog.commandsByName.keys.sorted()
+	}
 
 	/** Which scan the published catalog came from.
 
@@ -41,13 +57,9 @@ final class ScriptCatalogStore {
 		}
 	}
 
-	private func publish(_ catalog: ScriptCatalog, generation: Int) {
+	func publish(_ catalog: ScriptCatalog, generation: Int) {
 		guard generation == self.generation else { return }
 		self.catalog = catalog
-	}
-
-	var commandNames: [String] {
-		catalog.commandsByName.keys.sorted()
 	}
 
 	var customScriptsURL: URL? {
