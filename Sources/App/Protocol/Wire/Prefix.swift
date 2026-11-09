@@ -89,34 +89,54 @@ nonisolated enum Prefix: Hashable, Sendable {
 			))
 		}
 
+		if let bang = prefix.firstIndex(of: "!"), prefix[bang...].contains("@") {
+			return namedUser(in: prefix, endingNicknameAt: bang, maximumNicknameLength: maximumNicknameLength)
+		}
+
 		guard let separator = prefix.firstIndex(of: "@") else {
 			return bareNickname(parsing: prefix, maximumNicknameLength: maximumNicknameLength)
 		}
 
-		let userSection = String(prefix[..<separator])
+		let nickname = String(prefix[..<separator])
 		let address = String(prefix[prefix.index(after: separator)...])
-		let nickname: String
-
-		if let usernameSeparator = userSection.firstIndex(of: "!") {
-			/* `nick!@host`: the username half is empty, which `Hostmask`
-			 refuses. The person is still named, and reading the whole string as
-			 a server name sent their message to the console instead of to
-			 the direct conversation with them. A "!" followed by anything
-			 else is the fully qualified form `Hostmask` has already rejected,
-			 so its username half is unusable and the prefix stays unparsed. */
-			guard userSection.index(after: usernameSeparator) == userSection.endIndex else {
-				return nil
-			}
-
-			nickname = String(userSection[..<usernameSeparator])
-		} else {
-			nickname = userSection
-		}
 
 		guard Hostmask.isValidNickname(nickname, maximumLength: maximumNicknameLength),
 		      Hostmask.isValidAddress(address)
 		else {
 			return nil
+		}
+
+		return .user(User(nickname: nickname, address: address, hostmask: prefix))
+	}
+
+	/** A prefix with a "!" and then an "@", which only a user can have: a server
+	 name has no such character, so it is never read as one. With no "@" there is
+	 no host, and the IRCv3 parser tests keep `coolguy!ag` a server name.
+
+	 `Hostmask` refused it, so its username half is unusable: empty
+	 (`nick!@host`), too long, or carrying a "!" or "@" of its own. Real servers
+	 and bouncers pass odd identd values, and filing the sender as the server
+	 sent their messages to the console and let a NOTICE pass as the server's.
+	 The person is still named by what precedes the first "!", and the address is
+	 kept when the first "@" after it leaves a valid one. The username is dropped
+	 and `hostmask` keeps the wire spelling. */
+	private static func namedUser(
+		in prefix: String,
+		endingNicknameAt bang: String.Index,
+		maximumNicknameLength: Int
+	) -> Prefix? {
+		let nickname = String(prefix[..<bang])
+		guard Hostmask.isValidNickname(nickname, maximumLength: maximumNicknameLength) else {
+			return nil
+		}
+
+		let afterBang = prefix[prefix.index(after: bang)...]
+		var address: String?
+		if let at = afterBang.firstIndex(of: "@") {
+			let candidate = String(afterBang[afterBang.index(after: at)...])
+			if Hostmask.isValidAddress(candidate) {
+				address = candidate
+			}
 		}
 
 		return .user(User(nickname: nickname, address: address, hostmask: prefix))

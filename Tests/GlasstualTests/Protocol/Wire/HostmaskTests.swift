@@ -71,24 +71,33 @@ struct HostmaskTests {
 
 	@Test("The username limit is 40 UTF-16 units")
 	func usernameLengthBoundary() {
+		#expect(Hostmask.isValidWireUsername(String(repeating: "u", count: 40)))
+		#expect(Hostmask.isValidWireUsername(String(repeating: "u", count: 41)) == false)
 		#expect(Hostmask.isValidUsername(String(repeating: "u", count: 40)))
 		#expect(Hostmask.isValidUsername(String(repeating: "u", count: 41)) == false)
 	}
 
-	/// The first "!" and then the first "@" delimit, so a username can never
-	/// carry an "@" through parsing: it moves into the address, which refuses
-	/// it. A "!" is not a delimiter after the first, and the username check does
-	/// not forbid it, so it is accepted. `isValidUsername` itself allows both.
-	@Test("Separators inside a username are decided by where they delimit")
-	func separatorsInTheUsername() throws {
+	/// A "!" or "@" in a username moves where the hostmask delimits, so the wire
+	/// form refuses both. A person typing a username may use either: bouncer
+	/// logins such as `user@client/network` are legitimate there.
+	@Test("Separators inside a username are refused on the wire and allowed when typed")
+	func separatorsInTheUsername() {
 		#expect(Hostmask(parsing: "nick!us@er@host.test") == nil)
+		#expect(Hostmask(parsing: "nick!us!er@host.test") == nil)
+		#expect(Hostmask.isValidWireUsername("us!er") == false)
+		#expect(Hostmask.isValidWireUsername("us@er") == false)
 
-		let hostmask = try #require(Hostmask(parsing: "nick!us!er@host.test"))
-
-		#expect(hostmask.username == "us!er")
-		#expect(hostmask.address == "host.test")
 		#expect(Hostmask.isValidUsername("us!er"))
 		#expect(Hostmask.isValidUsername("us@er"))
+		#expect(Hostmask.isValidUsername("user@client/network"))
+	}
+
+	@Test("Ordinary identd values are still accepted on the wire", arguments: ["~user", "user-1", "[user]", "u_ser.x"])
+	func ordinaryWireUsernames(username: String) throws {
+		#expect(Hostmask.isValidWireUsername(username))
+		let hostmask = try #require(Hostmask(parsing: "nick!\(username)@host.test"))
+
+		#expect(hostmask.username == username)
 	}
 
 	@Test("An address cannot carry a separator")
