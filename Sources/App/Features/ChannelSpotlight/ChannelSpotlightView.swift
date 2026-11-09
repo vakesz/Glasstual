@@ -123,6 +123,7 @@ struct ChannelSpotlightView: View {
 				Image(systemName: "magnifyingglass")
 					.imageScale(.small)
 					.foregroundStyle(.secondary)
+					.accessibilityHidden(true)
 				TextField(.ChannelSpotlight.searchPlaceholder, text: $model.searchText)
 					.textFieldStyle(.plain)
 					.accessibilityIdentifier("channel-search-field")

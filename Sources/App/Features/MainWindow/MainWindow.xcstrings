@@ -1302,20 +1302,20 @@
                 "plural": {
                   "many": {
                     "stringUnit": {
-                      "state": "needs_review",
-                      "value": "Miembros"
+                      "state": "translated",
+                      "value": "miembros"
                     }
                   },
                   "one": {
                     "stringUnit": {
-                      "state": "needs_review",
-                      "value": "Miembro"
+                      "state": "translated",
+                      "value": "miembro"
                     }
                   },
                   "other": {
                     "stringUnit": {
-                      "state": "needs_review",
-                      "value": "Miembros"
+                      "state": "translated",
+                      "value": "miembros"
                     }
                   }
                 }
@@ -1507,54 +1507,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Largura da Lista de Membros"
-          }
-        }
-      }
-    },
-    "member-list-width-hint": {
-      "comment": "Accessibility hint for the draggable edge between the conversation and the member list.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Double-click to reset the member list to its default width."
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dupla kattintással visszaállíthatod a taglista alapértelmezett szélességét."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mit einem Doppelklick setzt du die Mitgliederliste auf die Standardbreite zurück."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Haz doble clic para restablecer la anchura predeterminada de la lista de miembros."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Double-cliquez pour réinitialiser la liste des membres à sa largeur par défaut."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "メンバーリストをデフォルトの幅に戻すには、ダブルクリックします。"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Clique duas vezes para restaurar a largura padrão da lista de membros."
           }
         }
       }
@@ -11059,6 +11011,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cancelar Reconexão"
+          }
+        }
+      }
+    },
+    "input-bar-reply-banner-excerpt": {
+      "comment": "Input bar reply banner. Appended after the bold reply target: punctuation, then the quoted message text flattened to one line. Keep or adapt the leading punctuation for the language.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": ": %@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": ": %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": ": %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": ": %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " : %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "：%@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": ": %@"
           }
         }
       }

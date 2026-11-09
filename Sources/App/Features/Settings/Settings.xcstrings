@@ -3889,54 +3889,6 @@
         }
       }
     },
-    "fallback-title-add": {
-      "comment": "Fallback title for an add-on supplied Settings pane. Legacy key: sb-plugin.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add-on"
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kiegészítő"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add-on"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Complemento"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Extension"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "アドオン"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Complemento"
-          }
-        }
-      }
-    },
     "file-transfers": {
       "comment": "Title of the File Transfers pane in the Settings sidebar. Legacy key: sb-fileTransfers.",
       "extractionState": "manual",

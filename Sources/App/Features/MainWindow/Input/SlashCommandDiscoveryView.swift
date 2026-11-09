@@ -98,7 +98,7 @@ struct SlashCommandDiscoveryView: View {
 		}
 		.buttonStyle(.plain)
 		.focusable(false)
-		.help(suggestion.syntax + "\n" + suggestion.argumentHint)
+		.help(String(localized: .SlashCommands.suggestionTooltip(suggestion.syntax, suggestion.argumentHint)))
 		.accessibilityAddTraits(selected ? .isSelected : [])
 		.accessibilityIdentifier("slash-command-" + suggestion.name)
 	}
@@ -111,11 +111,13 @@ struct SlashCommandDiscoveryView: View {
 					.fixedSize()
 			}
 			.scrollIndicators(.hidden)
-			Text(model.isEditingCommand ? suggestion.argumentHint : suggestion.description + " " + suggestion.argumentHint)
+			Text(model.isEditingCommand
+				? suggestion.argumentHint
+				: String(localized: .SlashCommands.suggestionDescriptionAndHint(suggestion.description, suggestion.argumentHint)))
 				.font(.caption)
 				.foregroundStyle(.secondary)
 				.lineLimit(3)
-				.help(suggestion.description + "\n" + suggestion.argumentHint)
+				.help(String(localized: .SlashCommands.suggestionTooltip(suggestion.description, suggestion.argumentHint)))
 		}
 		.frame(maxWidth: .infinity, alignment: .leading)
 		.frame(height: Self.detailHeight, alignment: .center)

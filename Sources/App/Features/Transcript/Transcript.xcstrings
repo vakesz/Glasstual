@@ -1663,20 +1663,20 @@
                 "plural" : {
                   "many" : {
                     "stringUnit" : {
-                      "state" : "needs_review",
-                      "value" : "Reacciones %arg"
+                      "state" : "translated",
+                      "value" : "%arg reacciones"
                     }
                   },
                   "one" : {
                     "stringUnit" : {
-                      "state" : "needs_review",
-                      "value" : "Reacción %arg"
+                      "state" : "translated",
+                      "value" : "%arg reacción"
                     }
                   },
                   "other" : {
                     "stringUnit" : {
-                      "state" : "needs_review",
-                      "value" : "Reacciones %arg"
+                      "state" : "translated",
+                      "value" : "%arg reacciones"
                     }
                   }
                 }

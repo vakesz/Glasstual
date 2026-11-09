@@ -148,55 +148,6 @@
         }
       }
     },
-    "script-unavailable": {
-      "comment": "The requested script is no longer in the current script command catalog.",
-      "extractionState": "manual",
-      "generatesSymbol": true,
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This script is no longer available. Refresh the script list and try again."
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ez a szkript már nem érhető el. Frissítsd a szkriptlistát, majd próbáld újra."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dieses Skript ist nicht mehr verfügbar. Aktualisiere die Skriptliste und versuche es erneut."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Este script ya no está disponible. Actualiza la lista de scripts e inténtalo de nuevo."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ce script n’est plus disponible. Actualisez la liste des scripts et réessayez."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "このスクリプトは利用できなくなりました。スクリプトリストを更新して、もう一度お試しください。"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Este script não está mais disponível. Atualize a lista de scripts e tente novamente."
-          }
-        }
-      }
-    },
     "import-failed-title": {
       "comment": "Title of an add-on installation failure alert.",
       "extractionState": "manual",

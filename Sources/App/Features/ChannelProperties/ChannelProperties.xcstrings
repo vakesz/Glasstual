@@ -390,20 +390,20 @@
                 "plural": {
                   "many": {
                     "stringUnit": {
-                      "state": "needs_review",
-                      "value": "%arg demasiados bytes"
+                      "state": "translated",
+                      "value": "%arg bytes de más"
                     }
                   },
                   "one": {
                     "stringUnit": {
-                      "state": "needs_review",
-                      "value": "%arg demasiados bytes"
+                      "state": "translated",
+                      "value": "%arg byte de más"
                     }
                   },
                   "other": {
                     "stringUnit": {
-                      "state": "needs_review",
-                      "value": "%arg demasiados bytes"
+                      "state": "translated",
+                      "value": "%arg bytes de más"
                     }
                   }
                 }
@@ -883,54 +883,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Aplicado quando você é a primeira pessoa a entrar no canal."
-          }
-        }
-      }
-    },
-    "disable-general-event-messages": {
-      "comment": "Channel option to suppress general event messages.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Disable general event messages"
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Általános eseményüzenetek letiltása"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Allgemeine Ereignismeldungen deaktivieren"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Desactivar los mensajes generales de eventos"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Désactiver les messages d’événements généraux"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "一般的なイベントメッセージを無効にする"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Desativar mensagens de evento gerais"
           }
         }
       }
@@ -2423,54 +2375,6 @@
         }
       }
     },
-    "show-notifications-for-channel": {
-      "comment": "Channel option to enable channel notifications.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show notifications for channel"
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Csatornaértesítések megjelenítése"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Benachrichtigungen für diesen Kanal anzeigen"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mostrar notificaciones para el canal"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Afficher les notifications pour le canal"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "チャンネルの通知を表示"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mostrar notificações do canal"
-          }
-        }
-      }
-    },
     "show-unread-count-in-channel-list": {
       "comment": "Channel option to show its unread count in the channel list.",
       "extractionState": "manual",
@@ -3100,19 +3004,19 @@
                 "plural": {
                   "many": {
                     "stringUnit": {
-                      "state": "needs_review",
+                      "state": "translated",
                       "value": "%arg bytes restantes"
                     }
                   },
                   "one": {
                     "stringUnit": {
-                      "state": "needs_review",
-                      "value": "%arg bytes restantes"
+                      "state": "translated",
+                      "value": "%arg byte restante"
                     }
                   },
                   "other": {
                     "stringUnit": {
-                      "state": "needs_review",
+                      "state": "translated",
                       "value": "%arg bytes restantes"
                     }
                   }
@@ -3314,20 +3218,20 @@
                 "plural": {
                   "many": {
                     "stringUnit": {
-                      "state": "needs_review",
-                      "value": "%arg demasiados bytes"
+                      "state": "translated",
+                      "value": "%arg bytes de más"
                     }
                   },
                   "one": {
                     "stringUnit": {
-                      "state": "needs_review",
-                      "value": "%arg demasiados bytes"
+                      "state": "translated",
+                      "value": "%arg byte de más"
                     }
                   },
                   "other": {
                     "stringUnit": {
-                      "state": "needs_review",
-                      "value": "%arg demasiados bytes"
+                      "state": "translated",
+                      "value": "%arg bytes de más"
                     }
                   }
                 }
