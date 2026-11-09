@@ -20,6 +20,14 @@ nonisolated enum SettingsRiskyChange: Hashable, Sendable {
 	case serverEndpoint(server: String, from: Endpoint, to: Endpoint, outcome: EndpointOutcome)
 	/// A server that connects without checking the certificate chain it is shown.
 	case certificateValidationDisabled(server: String)
+	/// A place the file would send a known server's credentials that this Mac's copy never does.
+	case newDestination(server: String, destination: Destination, mode: SettingsTransferMode)
+
+	/// Somewhere credentials would go: another server, or the proxy that carries the connection.
+	enum Destination: Hashable, Sendable {
+		case server(Endpoint)
+		case proxy(host: String, port: UInt16)
+	}
 
 	/// Where a server connects, as the preview names it.
 	struct Endpoint: Hashable, Sendable {
@@ -151,9 +159,38 @@ nonisolated struct SettingsTransferPlan: Sendable {
 	/** The places a session sends its credentials: every server it can connect
 	 to, and the proxy that carries the connection when one is configured. */
 	private static func credentialDestinations(of session: ServerConfig) -> Set<String> {
-		var destinations = Set(session.serverList.map { "\($0.serverAddress.lowercased()):\($0.serverPort)" })
-		if session.proxyType == .socks5 || session.proxyType == .HTTP, let address = session.proxyAddress {
-			destinations.insert("proxy-\(session.proxyType.rawValue):\(address.lowercased()):\(session.proxyPort)")
+		var destinations = Set(session.serverList.map(serverKey))
+		if let proxy = proxyKey(of: session) {
+			destinations.insert(proxy)
+		}
+		return destinations
+	}
+
+	private static func serverKey(_ server: ServerEndpoint) -> String {
+		"\(server.serverAddress.lowercased()):\(server.serverPort)"
+	}
+
+	private static func proxyKey(of session: ServerConfig) -> String? {
+		guard session.proxyType == .socks5 || session.proxyType == .HTTP, let address = session.proxyAddress else {
+			return nil
+		}
+		return "proxy-\(session.proxyType.rawValue):\(address.lowercased()):\(session.proxyPort)"
+	}
+
+	/// What `imported` reaches that `existing` does not: its servers in file
+	/// order, then its proxy.
+	private static func newDestinations(
+		existing: ServerConfig, imported: ServerConfig
+	) -> [(key: String, destination: SettingsRiskyChange.Destination)] {
+		var known = credentialDestinations(of: existing)
+		var destinations: [(key: String, destination: SettingsRiskyChange.Destination)] = []
+		for server in imported.serverList where known.insert(serverKey(server)).inserted {
+			destinations.append((serverKey(server), .server(
+				.init(host: server.serverAddress, port: server.serverPort, isEncrypted: server.prefersSecuredConnection)
+			)))
+		}
+		if let key = proxyKey(of: imported), known.insert(key).inserted, let host = imported.proxyAddress {
+			destinations.append((key, .proxy(host: host, port: imported.proxyPort)))
 		}
 		return destinations
 	}
@@ -181,6 +218,7 @@ nonisolated struct SettingsTransferPlan: Sendable {
 		existing: ServerConfig?, imported: ServerConfig, reidentifiedAs mode: SettingsTransferMode?
 	) -> [SettingsRiskyChange] {
 		var risks: [SettingsRiskyChange] = []
+		var shownKey: String?
 		if let existing, let from = endpoint(of: existing), let to = endpoint(of: imported),
 		   from.host.caseInsensitiveCompare(to.host) != .orderedSame || from.port != to.port
 		   || from.isEncrypted != to.isEncrypted
@@ -191,6 +229,14 @@ nonisolated struct SettingsTransferPlan: Sendable {
 			case nil: .sameServer
 			}
 			risks.append(.serverEndpoint(server: imported.connectionName, from: from, to: to, outcome: outcome))
+			shownKey = "\(to.host.lowercased()):\(to.port)"
+		}
+		/* The line above already names the first server's new address; every
+		 other place the file adds gets a line of its own. */
+		if let existing, let mode {
+			for (key, destination) in newDestinations(existing: existing, imported: imported) where key != shownKey {
+				risks.append(.newDestination(server: imported.connectionName, destination: destination, mode: mode))
+			}
 		}
 		if imported.validateServerCertificateChain == false,
 		   existing?.validateServerCertificateChain ?? true

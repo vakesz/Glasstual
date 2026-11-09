@@ -216,6 +216,22 @@ struct SettingsTransferPreviewView: View {
 			}
 		case let .certificateValidationDisabled(server):
 			String(localized: .SettingsTransfer.riskyCertificateValidation(server))
+		case let .newDestination(server, destination, mode):
+			switch mode {
+			case .merge:
+				String(localized: .SettingsTransfer.riskyNewDestinationKept(server, description(of: destination)))
+			case .restore:
+				String(localized: .SettingsTransfer.riskyNewDestinationRemoved(server, description(of: destination)))
+			}
+		}
+	}
+
+	private static func description(of destination: SettingsRiskyChange.Destination) -> String {
+		switch destination {
+		case let .server(endpoint):
+			description(of: endpoint)
+		case let .proxy(host, port):
+			String(localized: .SettingsTransfer.destinationProxy(host, String(port)))
 		}
 	}
 

@@ -105,6 +105,13 @@ struct SettingsTransferPlanTests {
 			to: .init(host: "irc.other.test", port: 6697, isEncrypted: true),
 			outcome: .newServerExistingKept
 		)))
+		#expect(plan.riskyChanges.contains {
+			if case .newDestination = $0 {
+				true
+			} else {
+				false
+			}
+		} == false)
 	}
 
 	@Test("Restore replaces the session, whose history is not carried over")
@@ -223,5 +230,129 @@ struct SettingsTransferPlanTests {
 
 		#expect(plan.result.sessions?.map(\.uniqueIdentifier) == [existing.uniqueIdentifier])
 		#expect(plan.riskyChanges.isEmpty)
+	}
+
+	private func newDestinations(in plan: SettingsTransferPlan) -> [SettingsRiskyChange] {
+		plan.riskyChanges.filter {
+			if case .newDestination = $0 {
+				true
+			} else {
+				false
+			}
+		}
+	}
+
+	private func hasEndpointLine(_ plan: SettingsTransferPlan) -> Bool {
+		plan.riskyChanges.contains {
+			if case .serverEndpoint = $0 {
+				true
+			} else {
+				false
+			}
+		}
+	}
+
+	@Test("A second server the file adds is named, and the unchanged first one is not")
+	func addedServerIsNamed() throws {
+		let existing = existingSession()
+		var imported = existing
+		imported.serverList.append(ServerEndpoint(serverAddress: "Backup.example.test", serverPort: 6667))
+
+		let plan = try makePlan(importing: imported, over: [existing])
+
+		#expect(plan.result.sessions?.count == 2)
+		#expect(hasEndpointLine(plan) == false)
+		#expect(newDestinations(in: plan) == [.newDestination(
+			server: "Example",
+			destination: .server(.init(host: "Backup.example.test", port: 6667, isEncrypted: false)),
+			mode: .merge
+		)])
+	}
+
+	@Test("A moved first server is named once, and only the other additions get their own line")
+	func movedFirstServerIsNotRepeated() throws {
+		let existing = existingSession()
+		var imported = moved(existing, to: "irc.other.test")
+		imported.serverList.append(ServerEndpoint(serverAddress: "backup.example.test", serverPort: 6697))
+
+		let plan = try makePlan(importing: imported, over: [existing])
+
+		#expect(plan.riskyChanges.filter {
+			if case .serverEndpoint = $0 {
+				true
+			} else {
+				false
+			}
+		}.count == 1)
+		#expect(newDestinations(in: plan) == [.newDestination(
+			server: "Example",
+			destination: .server(.init(host: "backup.example.test", port: 6697, isEncrypted: false)),
+			mode: .merge
+		)])
+	}
+
+	@Test("A proxy the file adds is named")
+	func newProxyIsNamed() throws {
+		var existing = existingSession()
+		existing.proxyType = .socks5
+		existing.proxyAddress = "proxy.example.test"
+		var imported = existing
+		imported.proxyAddress = "proxy.other.test"
+
+		let plan = try makePlan(importing: imported, over: [existing])
+
+		#expect(newDestinations(in: plan) == [.newDestination(
+			server: "Example", destination: .proxy(host: "proxy.other.test", port: imported.proxyPort), mode: .merge
+		)])
+	}
+
+	@Test("Restore says the same thing in its own words")
+	func restoreCarriesItsMode() throws {
+		let existing = existingSession()
+		var imported = existing
+		imported.serverList.append(ServerEndpoint(serverAddress: "backup.example.test", serverPort: 6697))
+
+		let plan = try makePlan(importing: imported, over: [existing], mode: .restore)
+
+		#expect(newDestinations(in: plan).count == 1)
+		#expect(newDestinations(in: plan).allSatisfy {
+			if case .newDestination(_, _, .restore) = $0 {
+				true
+			} else {
+				false
+			}
+		})
+	}
+
+	@Test("An import that already made the network names nothing again")
+	func importedNetworkIsNotShownTwice() throws {
+		let existing = existingSession()
+		var imported = existing
+		imported.serverList.append(ServerEndpoint(serverAddress: "backup.example.test", serverPort: 6697))
+		let fixture = try SettingsTransferFixture()
+		defer { fixture.cleanUp() }
+		let first = try makePlan(importing: imported, over: [existing])
+
+		let second = try SettingsTransferPlan(
+			archive: SettingsArchive(values: [:], unset: [], sessions: [imported]),
+			current: SettingsArchive.snapshot(from: fixture.stores, sessions: first.result.sessions ?? []),
+			mode: .merge
+		)
+
+		#expect(newDestinations(in: first).count == 1)
+		#expect(newDestinations(in: second).isEmpty)
+	}
+
+	@Test("Dropping a server or restoring a backup names no destination")
+	func nothingNewNamesNothing() throws {
+		var existing = existingSession()
+		existing.serverList.append(ServerEndpoint(serverAddress: "backup.example.test", serverPort: 6697))
+		var narrowed = existing
+		narrowed.serverList.removeLast()
+		var widened = existing
+		widened.serverList.append(ServerEndpoint(serverAddress: "third.example.test", serverPort: 6697))
+
+		#expect(try newDestinations(in: makePlan(importing: narrowed, over: [existing])).isEmpty)
+		#expect(try newDestinations(in: makePlan(importing: widened, over: [existing], source: .localRecovery)).isEmpty)
 	}
 }
