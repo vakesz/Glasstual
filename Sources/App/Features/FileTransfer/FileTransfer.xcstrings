@@ -637,37 +637,37 @@
         },
         "hu": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "A(z) „%1$@” megérkezett, de nem sikerült internetről letöltöttként megjelölni. A macOS nem fogja ellenőrizni megnyitáskor."
           }
         },
         "de": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "„%1$@“ wurde empfangen, konnte aber nicht als aus dem Internet geladen markiert werden. macOS prüft die Datei beim Öffnen nicht."
           }
         },
         "es": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "Se recibió «%1$@», pero no se pudo marcar como descargado de internet. macOS no lo comprobará al abrirlo."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "« %1$@ » a été reçu, mais n’a pas pu être marqué comme téléchargé depuis Internet. macOS ne le vérifiera pas à son ouverture."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "「%1$@」を受信しましたが、インターネットからダウンロードされたものとして印を付けられませんでした。開くときにmacOSによる確認は行われません。"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "“%1$@” foi recebido, mas não pôde ser marcado como baixado da internet. O macOS não o verificará ao abri-lo."
           }
         }

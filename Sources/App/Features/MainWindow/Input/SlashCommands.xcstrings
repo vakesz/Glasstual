@@ -8173,37 +8173,37 @@
         },
         "hu": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "%1$@. %2$@"
           }
         },
         "de": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "%1$@. %2$@"
           }
         },
         "es": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "%1$@. %2$@"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "%1$@. %2$@"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "%1$@。%2$@"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "%1$@. %2$@"
           }
         }
@@ -8221,37 +8221,37 @@
         },
         "hu": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "%1$@. %2$@"
           }
         },
         "de": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "%1$@. %2$@"
           }
         },
         "es": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "%1$@. %2$@"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "%1$@. %2$@"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "%1$@。%2$@"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "%1$@. %2$@"
           }
         }
@@ -8269,37 +8269,37 @@
         },
         "hu": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "%1$@ %2$@"
           }
         },
         "de": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "%1$@ %2$@"
           }
         },
         "es": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "%1$@ %2$@"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "%1$@ %2$@"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "%1$@ %2$@"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "%1$@ %2$@"
           }
         }
@@ -8317,44 +8317,44 @@
         },
         "hu": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "%1$@\n%2$@"
           }
         },
         "de": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "%1$@\n%2$@"
           }
         },
         "es": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "%1$@\n%2$@"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "%1$@\n%2$@"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "%1$@\n%2$@"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "%1$@\n%2$@"
           }
         }
       }
     },
-    "syntax-script": {
-      "comment": "Slash-command discovery. Syntax of an installed script command. %1$@ is the script's name and %2$@ the translated arguments placeholder. Keep the leading slash.",
+    "syntax-with-arguments": {
+      "comment": "Slash-command discovery. Syntax of a command or installed script that takes arguments. %1$@ is the command name and %2$@ the translated arguments placeholder, for example [arguments]. Keep the leading slash.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -8365,37 +8365,37 @@
         },
         "hu": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "/%1$@ %2$@"
           }
         },
         "de": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "/%1$@ %2$@"
           }
         },
         "es": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "/%1$@ %2$@"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "/%1$@ %2$@"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "/%1$@ %2$@"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "/%1$@ %2$@"
           }
         }

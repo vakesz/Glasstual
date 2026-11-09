@@ -53,7 +53,7 @@ enum SlashCommandCatalog {
 		SlashCommandSuggestion(
 			name: name,
 			description: String(localized: .SlashCommands.descriptionScript),
-			syntax: String(localized: .SlashCommands.syntaxScript(name, String(localized: .SlashCommands.syntaxArguments))),
+			syntax: String(localized: .SlashCommands.syntaxWithArguments(name, String(localized: .SlashCommands.syntaxArguments))),
 			argumentHint: String(localized: .SlashCommands.hintScript),
 			isScript: true
 		)

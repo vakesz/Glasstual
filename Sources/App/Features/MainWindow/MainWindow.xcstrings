@@ -11027,37 +11027,37 @@
         },
         "hu": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": ": %@"
           }
         },
         "de": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": ": %@"
           }
         },
         "es": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": ": %@"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": " : %@"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "：%@"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": ": %@"
           }
         }

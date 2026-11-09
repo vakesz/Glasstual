@@ -20,10 +20,10 @@ struct HungarianGermanLocalizationTests {
 			for (key, entry) in strings {
 				let locales = try #require(entry["localizations"] as? [String: [String: Any]])
 				let english = try #require(locales["en"])
-				let originals = units(in: english)
+				let originals = units(in: english, language: "en")
 				for language in ["hu", "de"] {
 					let translation = try #require(locales[language], "\(url.lastPathComponent): \(key), \(language)")
-					let translated = units(in: translation)
+					let translated = units(in: translation, language: language)
 					#expect(Set(originals.keys) == Set(translated.keys), "Missing variant: \(key), \(language)")
 					for (path, source) in originals {
 						let target = try #require(translated[path])
@@ -50,15 +50,20 @@ struct HungarianGermanLocalizationTests {
 		}
 	}
 
-	private func units(in object: [String: Any], path: String = "") -> [String: String] {
+	/** English is the source and must always be final. A model-translated unit
+	 stays `needs_review` in Hungarian or German until a native speaker has
+	 checked it, so those two accept either state. */
+	private func units(in object: [String: Any], language: String, path: String = "") -> [String: String] {
 		var result: [String: String] = [:]
 		if let unit = object["stringUnit"] as? [String: String] {
-			#expect(unit["state"] == "translated")
+			let state = unit["state"] ?? "missing"
+			let allowed = language == "en" ? ["translated"] : ["translated", "needs_review"]
+			#expect(allowed.contains(state), "Unexpected state \(state) for \(language)")
 			result[path] = unit["value"]
 		}
 		for (key, value) in object where key != "stringUnit" {
 			if let child = value as? [String: Any] {
-				result.merge(units(in: child, path: path + "/" + key)) { first, _ in first }
+				result.merge(units(in: child, language: language, path: path + "/" + key)) { first, _ in first }
 			}
 		}
 		return result
