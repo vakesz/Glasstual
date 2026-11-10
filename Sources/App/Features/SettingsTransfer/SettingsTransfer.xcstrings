@@ -932,55 +932,6 @@
         }
       }
     },
-    "legacy-notice": {
-      "comment": "Import preview. Note shown for an older, partial configuration file, which can only be merged.",
-      "extractionState": "manual",
-      "generatesSymbol": true,
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This legacy file contains only selected settings. It can be merged, but cannot be used to restore a complete configuration."
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ez a régi fájl csak néhány beállítást tartalmaz. Összevonható a jelenlegi beállításokkal, de teljes konfiguráció visszaállítására nem használható."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Diese ältere Datei enthält nur ausgewählte Einstellungen. Sie kann zusammengeführt werden, aber keine vollständige Konfiguration wiederherstellen."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Este archivo heredado contiene solo algunos ajustes. Se puede combinar, pero no sirve para restaurar una configuración completa."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ce fichier hérité ne contient que certains réglages. Il peut être fusionné, mais ne peut pas servir à restaurer une configuration complète."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "この旧形式のファイルには、一部の設定のみが含まれています。マージはできますが、完全な構成の復元には使用できません。"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Este arquivo antigo contém apenas alguns ajustes. Ele pode ser mesclado, mas não pode ser usado para restaurar uma configuração completa."
-          }
-        }
-      }
-    },
     "local-recovery-notice": {
       "comment": "Import preview. What a protected local backup restores that a portable file cannot.",
       "extractionState": "manual",
@@ -1618,6 +1569,447 @@
         }
       }
     },
+    "risky-server-endpoint-same-server": {
+      "comment": "Import preview. A server in the file connects to a different address than this Mac's copy, which keeps its saved passwords. The first argument is the server's name, the second is where it connects now, the third is where the file sends it.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server “%1$@” would connect to %3$@ instead of %2$@. It keeps its saved passwords, so they would be sent to the new address."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "A(z) \"%1$@\" kiszolgáló ide csatlakozna: %3$@ (eddig: %2$@). Megtartja a mentett jelszavait, így azok az új címre kerülnének elküldésre."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Der Server \"%1$@\" würde sich mit %3$@ statt mit %2$@ verbinden. Er behält seine gespeicherten Passwörter, sie würden also an die neue Adresse gesendet."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "El servidor «%1$@» se conectaría a %3$@ en lugar de a %2$@. Conserva sus contraseñas guardadas, por lo que se enviarían a la nueva dirección."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Le serveur « %1$@ » se connecterait à %3$@ au lieu de %2$@. Il conserve ses mots de passe enregistrés, qui seraient donc envoyés à la nouvelle adresse."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "サーバ「%1$@」は%2$@ではなく%3$@に接続するようになります。保存済みのパスワードは引き継がれるため、新しいアドレスに送信されます。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "O servidor “%1$@” se conectaria a %3$@ em vez de %2$@. Ele mantém as senhas salvas, que seriam enviadas ao novo endereço."
+          }
+        }
+      }
+    },
+    "risky-server-endpoint-new-kept": {
+      "comment": "Import preview, Merge. A server in the file connects to a different address than this Mac's server with the same identity, so it is imported as a new server without secrets or history and this Mac's server is left alone. Arguments: the server's name, where this Mac's server connects, where the file's server connects.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server “%1$@” connects to %3$@ in this file. It is imported as a new server, without saved passwords, certificate, connect commands or history. This Mac’s server connecting to %2$@ stays as it is."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "A(z) \"%1$@\" kiszolgáló ebben a fájlban ide csatlakozik: %3$@. Új kiszolgálóként lesz importálva, mentett jelszavak, tanúsítvány, csatlakozási parancsok és előzmények nélkül. A Mac-en lévő, ide csatlakozó kiszolgáló (%2$@) változatlan marad."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Der Server \"%1$@\" verbindet sich in dieser Datei mit %3$@. Er wird als neuer Server importiert, ohne gespeicherte Passwörter, Zertifikat, Verbindungsbefehle oder Verlauf. Der Server dieses Macs, der sich mit %2$@ verbindet, bleibt unverändert."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "El servidor «%1$@» se conecta a %3$@ en este archivo. Se importa como un servidor nuevo, sin contraseñas guardadas, certificado, comandos de conexión ni historial. El servidor de este Mac que se conecta a %2$@ no cambia."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Dans ce fichier, le serveur « %1$@ » se connecte à %3$@. Il est importé comme un nouveau serveur, sans mots de passe enregistrés, certificat, commandes de connexion ni historique. Le serveur de ce Mac qui se connecte à %2$@ reste inchangé."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "このファイルでは、サーバ「%1$@」は%3$@に接続します。保存済みのパスワード、証明書、接続時コマンド、履歴を含まない新しいサーバとして読み込まれます。%2$@に接続するこのMacのサーバは変更されません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Neste arquivo, o servidor “%1$@” se conecta a %3$@. Ele é importado como um novo servidor, sem senhas salvas, certificado, comandos de conexão ou histórico. O servidor deste Mac que se conecta a %2$@ permanece como está."
+          }
+        }
+      }
+    },
+    "risky-server-endpoint-new-removed": {
+      "comment": "Import preview, Restore. A server in the file connects to a different address than this Mac's server with the same identity, so it replaces that server as a new one without secrets or history, and the replaced server's history is not carried over. Arguments: the server's name, where this Mac's server connects, where the file's server connects.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server “%1$@” connects to %3$@ in this file and replaces this Mac’s server for %2$@. It starts as a new server, without saved passwords, certificate, connect commands or history. The replaced server is removed and its history is not carried over."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "A(z) \"%1$@\" kiszolgáló ebben a fájlban ide csatlakozik: %3$@, és leváltja a Mac-en lévő, %2$@ címhez tartozó kiszolgálót. Új kiszolgálóként indul, mentett jelszavak, tanúsítvány, csatlakozási parancsok és előzmények nélkül. A leváltott kiszolgáló el lesz távolítva, az előzményei nem kerülnek át."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Der Server \"%1$@\" verbindet sich in dieser Datei mit %3$@ und ersetzt den Server dieses Macs für %2$@. Er startet als neuer Server, ohne gespeicherte Passwörter, Zertifikat, Verbindungsbefehle oder Verlauf. Der ersetzte Server wird entfernt, sein Verlauf wird nicht übernommen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "El servidor «%1$@» se conecta a %3$@ en este archivo y sustituye al servidor de este Mac para %2$@. Empieza como un servidor nuevo, sin contraseñas guardadas, certificado, comandos de conexión ni historial. El servidor sustituido se elimina y su historial no se traslada."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Dans ce fichier, le serveur « %1$@ » se connecte à %3$@ et remplace le serveur de ce Mac pour %2$@. Il démarre comme un nouveau serveur, sans mots de passe enregistrés, certificat, commandes de connexion ni historique. Le serveur remplacé est supprimé et son historique n’est pas repris."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "このファイルでは、サーバ「%1$@」は%3$@に接続し、%2$@用のこのMacのサーバを置き換えます。保存済みのパスワード、証明書、接続時コマンド、履歴を含まない新しいサーバとして開始されます。置き換えられるサーバは削除され、その履歴は引き継がれません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Neste arquivo, o servidor “%1$@” se conecta a %3$@ e substitui o servidor deste Mac para %2$@. Ele começa como um novo servidor, sem senhas salvas, certificado, comandos de conexão ou histórico. O servidor substituído é removido e o histórico dele não é transferido."
+          }
+        }
+      }
+    },
+    "risky-new-destination-kept": {
+      "comment": "Import preview, Merge. The file adds a new destination, a server or a proxy, to a server this Mac already has, so the file's server is imported as a new server without secrets or history and this Mac's server is left alone. Arguments: the server's name, the new destination.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The file adds %2$@ to server “%1$@”. It is imported as a new server, without saved passwords, certificate, connect commands or history. This Mac’s server stays as it is."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "A fájl hozzáadja ezt: %2$@ a(z) \"%1$@\" kiszolgálóhoz. Új kiszolgálóként lesz importálva, mentett jelszavak, tanúsítvány, csatlakozási parancsok és előzmények nélkül. A Mac-en lévő kiszolgáló változatlan marad."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Die Datei fügt dem Server \"%1$@\" %2$@ hinzu. Er wird als neuer Server importiert, ohne gespeicherte Passwörter, Zertifikat, Verbindungsbefehle oder Verlauf. Der Server dieses Macs bleibt unverändert."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "El archivo añade %2$@ al servidor «%1$@». Se importa como un servidor nuevo, sin contraseñas guardadas, certificado, comandos de conexión ni historial. El servidor de este Mac no cambia."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Le fichier ajoute %2$@ au serveur « %1$@ ». Il est importé comme un nouveau serveur, sans mots de passe enregistrés, certificat, commandes de connexion ni historique. Le serveur de ce Mac reste inchangé."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "このファイルはサーバ「%1$@」に%2$@を追加します。保存済みのパスワード、証明書、接続時コマンド、履歴を含まない新しいサーバとして読み込まれます。このMacのサーバは変更されません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "O arquivo adiciona %2$@ ao servidor “%1$@”. Ele é importado como um novo servidor, sem senhas salvas, certificado, comandos de conexão ou histórico. O servidor deste Mac permanece como está."
+          }
+        }
+      }
+    },
+    "risky-new-destination-removed": {
+      "comment": "Import preview, Restore. The file adds a new destination, a server or a proxy, to a server this Mac already has, so it replaces that server as a new one without secrets or history, and the replaced server's history is not carried over. Arguments: the server's name, the new destination.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The file adds %2$@ to server “%1$@” and replaces this Mac’s server. It starts as a new server, without saved passwords, certificate, connect commands or history. The replaced server is removed and its history is not carried over."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "A fájl hozzáadja ezt: %2$@ a(z) \"%1$@\" kiszolgálóhoz, és leváltja a Mac-en lévő kiszolgálót. Új kiszolgálóként indul, mentett jelszavak, tanúsítvány, csatlakozási parancsok és előzmények nélkül. A leváltott kiszolgáló el lesz távolítva, az előzményei nem kerülnek át."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Die Datei fügt dem Server \"%1$@\" %2$@ hinzu und ersetzt den Server dieses Macs. Er startet als neuer Server, ohne gespeicherte Passwörter, Zertifikat, Verbindungsbefehle oder Verlauf. Der ersetzte Server wird entfernt, sein Verlauf wird nicht übernommen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "El archivo añade %2$@ al servidor «%1$@» y sustituye al servidor de este Mac. Empieza como un servidor nuevo, sin contraseñas guardadas, certificado, comandos de conexión ni historial. El servidor sustituido se elimina y su historial no se traslada."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Le fichier ajoute %2$@ au serveur « %1$@ » et remplace le serveur de ce Mac. Il démarre comme un nouveau serveur, sans mots de passe enregistrés, certificat, commandes de connexion ni historique. Le serveur remplacé est supprimé et son historique n’est pas repris."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "このファイルはサーバ「%1$@」に%2$@を追加し、このMacのサーバを置き換えます。保存済みのパスワード、証明書、接続時コマンド、履歴を含まない新しいサーバとして開始されます。置き換えられるサーバは削除され、その履歴は引き継がれません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "O arquivo adiciona %2$@ ao servidor “%1$@” e substitui o servidor deste Mac. Ele começa como um novo servidor, sem senhas salvas, certificado, comandos de conexão ou histórico. O servidor substituído é removido e o histórico dele não é transferido."
+          }
+        }
+      }
+    },
+    "destination-proxy": {
+      "comment": "Import preview. A proxy server a connection would be routed through, named as a destination. The first argument is the proxy's host name, the second is its port number.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "proxy %1$@ port %2$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "proxy: %1$@, %2$@ port"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Proxy %1$@ Port %2$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "proxy %1$@ puerto %2$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "proxy %1$@ port %2$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "プロキシ %1$@、ポート%2$@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "proxy %1$@ porta %2$@"
+          }
+        }
+      }
+    },
+    "risky-certificate-validation": {
+      "comment": "Import preview. The file makes a server connect without checking the certificate chain it is shown, so a different server could pass for the real one. The argument is the server's name.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server “%1$@” does not check the certificate chain of the server it connects to."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "A(z) \"%1$@\" kiszolgáló nem ellenőrzi annak a kiszolgálónak a tanúsítványláncát, amelyhez csatlakozik."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Der Server \"%1$@\" prüft die Zertifikatskette des Servers, mit dem er sich verbindet, nicht."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "El servidor «%1$@» no comprueba la cadena de certificados del servidor al que se conecta."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Le serveur « %1$@ » ne vérifie pas la chaîne de certificats du serveur auquel il se connecte."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "サーバ「%1$@」は、接続先サーバの証明書チェーンを検証しません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "O servidor “%1$@” não verifica a cadeia de certificados do servidor ao qual se conecta."
+          }
+        }
+      }
+    },
+    "endpoint-encrypted": {
+      "comment": "Import preview. Where a server connects, over an encrypted connection. The first argument is the host name, the second is the port number.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ port %2$@, encrypted"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@, %2$@ port, titkosítva"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@ Port %2$@, verschlüsselt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@ puerto %2$@, cifrado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@ port %2$@, chiffré"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@、ポート%2$@、暗号化あり"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@ porta %2$@, criptografado"
+          }
+        }
+      }
+    },
+    "endpoint-plain": {
+      "comment": "Import preview. Where a server connects, as a plain connection without encryption. The first argument is the host name, the second is the port number.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ port %2$@, not encrypted"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@, %2$@ port, titkosítás nélkül"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@ Port %2$@, unverschlüsselt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@ puerto %2$@, sin cifrar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@ port %2$@, non chiffré"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@、ポート%2$@、暗号化なし"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@ porta %2$@, sem criptografia"
+          }
+        }
+      }
+    },
     "risky-ctcp-version-reply": {
       "comment": "Import preview. The file changes the reply sent to CTCP VERSION requests. The argument is that reply.",
       "extractionState": "manual",
@@ -2055,6 +2447,102 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mostrar no Finder"
+          }
+        }
+      }
+    },
+    "setting-will-change": {
+      "comment": "Import preview. VoiceOver label of a row in the list of settings the import would change. %@ is the setting's name. The row's icon is a pencil.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ will change"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ módosulni fog"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ wird geändert"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ cambiará"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ sera modifié"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@が変更されます"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ será alterado"
+          }
+        }
+      }
+    },
+    "setting-will-be-removed": {
+      "comment": "Import preview. VoiceOver label of a row in the list of settings the import would remove. %@ is the setting's name. The row's icon is a minus sign.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ will be removed"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ el lesz távolítva"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ wird entfernt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ se eliminará"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ sera supprimé"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@が削除されます"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ será removido"
           }
         }
       }

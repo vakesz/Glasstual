@@ -115,6 +115,9 @@ extension ServerSession {
 			String(socketConfig.serverPort)
 		)))
 		sessionCredentials.forget()
+		if credentialConsent?.covers(host: socketConfig.serverAddress, port: socketConfig.serverPort) != true {
+			credentialConsent = nil
+		}
 		ServerSessionWillConnect(subject: self).post()
 
 		socketConfig.addressType = config.addressType

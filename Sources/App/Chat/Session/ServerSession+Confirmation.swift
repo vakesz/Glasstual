@@ -37,4 +37,38 @@ extension ServerSession {
 			action(self)
 		}
 	}
+
+	/** Asks a question whose answer is the button, not a yes or a no, and keeps
+	 the pending answer in this session as ``requestConfirmation(_:isCurrent:perform:)``
+	 does. `answer` is called with ``AlertResponse/default`` when there is no
+	 window to ask in, so a question whose safe answer is the default button is
+	 never answered by the absence of someone to ask. */
+	func requestResponse(
+		_ request: AlertRequest,
+		isCurrent: @escaping @MainActor (ServerSession) -> Bool = { _ in true },
+		answer: @escaping @MainActor (ServerSession, AlertResponse) -> Void
+	) {
+		guard let output else {
+			if !isTerminating, isCurrent(self) {
+				answer(self, .default)
+			}
+			return
+		}
+		let identifier = UUID()
+		let startupIdentifier = startup.identifier
+		let connection = socket?.uniqueIdentifier
+		pendingConfirmationTasks[identifier] = Task { [weak self, weak output] in
+			guard let output else {
+				self?.pendingConfirmationTasks.removeValue(forKey: identifier)
+				return
+			}
+			let response = await output.respond(to: request)
+			guard let self else { return }
+			defer { pendingConfirmationTasks.removeValue(forKey: identifier) }
+			guard !Task.isCancelled, !isTerminating,
+			      startup.identifier == startupIdentifier, socket?.uniqueIdentifier == connection,
+			      isCurrent(self) else { return }
+			answer(self, response)
+		}
+	}
 }

@@ -32,6 +32,7 @@ nonisolated struct SettingsReloadAction: OptionSet, Sendable {
 	static let style = Self(rawValue: 1 << 14)
 	static let textDirection = Self(rawValue: 1 << 15)
 	static let textFieldFontSize = Self(rawValue: 1 << 16)
+	static let transcriptSettings = Self(rawValue: 1 << 17)
 
 	/** What one write does not ask for.
 
@@ -108,6 +109,10 @@ enum SettingsReload {
 			// so the direction is a style change as well as an input one.
 			SettingsKeys.Messages.rightToLeftFormatting,
 		])
+		/* What a line is rendered against is kept in one snapshot rather than read
+		 from the store for every line. It changes what is printed next, not what
+		 is already on screen, so the keys that also redraw carry `.style` above. */
+		reload(.transcriptSettings, on: TranscriptSettings.keys)
 		reload(.highlightKeywords, on: [
 			SettingsKeys.Highlights.matchKeywords,
 			SettingsKeys.Highlights.excludeKeywords,
@@ -161,6 +166,13 @@ enum SettingsReload {
 	 owner does with the announcement is that owner's own business. */
 	static func perform(_ reloadAction: SettingsReloadAction) {
 		guard reloadAction.isEmpty == false else { return }
+
+		/* First, and not by an observer of the request below: the `.style`
+		 redraw runs in whichever order the observers are called, and it reads
+		 this snapshot to render. */
+		if reloadAction.contains(.transcriptSettings) {
+			AppServices.transcriptSettings.refresh()
+		}
 
 		if reloadAction.contains(.appearance) {
 			AppServices.appearance.updateAppearance()

@@ -212,12 +212,8 @@ final class AddressBookUserTrackingContainer {
 	 `nick[home]` and `nick{home}` are one person, and the tracker used to hold
 	 two entries for them and report each other's presence changes. */
 	private func canonicalNickname(matching nickname: String) -> String? {
-		let folded = casefolded(nickname)
+		let folded = IRCCaseFolding.fold(nickname, using: caseMapping)
 
-		return availabilityByNickname.keys.first { casefolded($0) == folded }
-	}
-
-	private func casefolded(_ nickname: String) -> String {
-		IRCCaseFolding.fold(nickname, using: caseMapping)
+		return availabilityByNickname.keys.first { IRCCaseFolding.fold($0, using: caseMapping) == folded }
 	}
 }

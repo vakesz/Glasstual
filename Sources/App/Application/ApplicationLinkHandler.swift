@@ -24,6 +24,18 @@ nonisolated enum ApplicationLink: Equatable {
 		case testingChannel
 		case unknown(String)
 
+		/// Whether following the link reveals something on disk or connects to a
+		/// server, which a link written by someone else must not do unasked.
+		var requiresConfirmation: Bool {
+			switch self {
+			case .applicationSupportFolder, .customScriptsFolder, .diagnosticReportsFolder,
+			     .supportChannel, .testingChannel:
+				true
+			case .acknowledgements, .goto, .unknown:
+				false
+			}
+		}
+
 		init(name: String) {
 			switch name.lowercased() {
 			case "acknowledgements", "contributors": self = .acknowledgements
@@ -46,6 +58,14 @@ nonisolated enum ApplicationLink: Equatable {
 		      encoded.isEmpty == false, encoded.contains("/") == false
 		else { return nil }
 		return "glasstual://goto/" + encoded
+	}
+
+	/// Whether a `glasstual:` link a conversation shows has to be confirmed
+	/// before it is followed. A link that does not parse only logs, so it opens
+	/// as any other would.
+	static func requiresConfirmation(_ url: URL) -> Bool { // nonisolated: pure
+		guard case let .applicationAction(action, _) = parse(url.absoluteString) else { return false }
+		return action.requiresConfirmation
 	}
 
 	/// Parses the application-owned `glasstual:`, `irc:` and `ircs:` schemes.

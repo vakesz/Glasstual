@@ -1,3 +1,4 @@
+import Foundation
 @testable import Glasstual
 import Testing
 
@@ -40,5 +41,13 @@ struct LinkSchemeRulesTests {
 	@Test("A scheme nobody registered is refused")
 	func unknownSchemeIsRefused() {
 		#expect(LinkSchemeRules().permits(scheme: "com.example.some-app") == false)
+	}
+
+	@Test("Only web links open without being offered to an action first")
+	func onlyWebLinksOpenDirectly() throws {
+		#expect(try LinkSchemeRules.opensDirectly(#require(URL(string: "https://example.test/"))))
+		#expect(try LinkSchemeRules.opensDirectly(#require(URL(string: "HTTP://example.test/"))))
+		#expect(try LinkSchemeRules.opensDirectly(#require(URL(string: "glasstual://support-channel"))) == false)
+		#expect(try LinkSchemeRules.opensDirectly(#require(URL(string: "irc://irc.example.test/"))) == false)
 	}
 }

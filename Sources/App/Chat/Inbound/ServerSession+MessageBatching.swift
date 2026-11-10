@@ -6,45 +6,6 @@ import CocoaExtensions
 import Foundation
 import os
 
-enum BatchPolicy {
-	static let maximumParentDepth = 16
-
-	static func normalizedToken(_ reference: String) -> (token: String, opens: Bool)? {
-		guard reference.count > 1, let modifier = reference.first, modifier == "+" || modifier == "-" else {
-			return nil
-		}
-		let token = String(reference.dropFirst())
-		let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_-"))
-		guard token.unicodeScalars.allSatisfy(allowed.contains) else { return nil }
-		return (token, modifier == "+")
-	}
-
-	static func isChatHistory(_ type: String?) -> Bool {
-		type == "chathistory" || type == "draft/chathistory"
-	}
-
-	/// A batch whose lines are one message: `draft/multiline`, or the name it
-	/// will have once final.
-	static func isMultiline(_ type: String?) -> Bool {
-		type == MultilineLimits.batchType || type == "multiline"
-	}
-
-	/// soju's answer to `BOUNCER LISTNETWORKS`.
-	static func isBouncerNetworks(_ type: String?) -> Bool {
-		type == "soju.im/bouncer-networks"
-	}
-
-	static func isNetsplit(_ type: String?) -> Bool {
-		type == "netsplit" || type == "netjoin"
-	}
-
-	/// A batch whose contents were said before the session asked for them:
-	/// `chathistory` (IRCv3) or a bouncer's `playback` batch (ZNC).
-	static func isReplay(_ type: String?) -> Bool {
-		isChatHistory(type) || type == "playback" || type == "znc.in/playback"
-	}
-}
-
 private let batchProcessingLogger = Logger(
 	subsystem: LogSubsystem.current,
 	category: "MessageBatching"
@@ -93,7 +54,7 @@ extension ServerSession {
 		 the rest of the batch as it arrives: the batch loses its replay treatment,
 		 but no line. Its labelled response, if any, can no longer be trusted. */
 		rootBatch.hasOverflowed = true
-		rootBatch.labeledDelivery.state = .failed
+		rootBatch.labeledDelivery.outcome = .failed
 		batchProcessingLogger.error("A batch exceeded its queue limit; processing the rest of it as it arrives")
 
 		let queued = rootBatch.queuedMessages
@@ -130,11 +91,11 @@ extension ServerSession {
 		batchMessages.dequeueEntry(batchMessage)
 	}
 
-	func batchMessage(ofType batchType: String, containing message: Message) -> MessageBatch? {
+	func batchMessage(ofKind kind: BatchKind, containing message: Message) -> MessageBatch? {
 		var batch = message.parentBatchMessage
 		var depth = 0
 		while let current = batch, depth < BatchPolicy.maximumParentDepth {
-			if current.batchType == batchType || current.batchType == "draft/\(batchType)" {
+			if current.kind == kind {
 				return current
 			}
 			batch = current.parentBatchMessage
@@ -170,9 +131,9 @@ private extension ServerSession {
 			return
 		}
 
-		if batch.batchType == ServerQuirks.ZNC.playbackBatchType {
+		if batch.kind == .zncPlayback {
 			znc.isPlayingBackHistory = znc.isConnected
-		} else if batch.batchType == ServerQuirks.ZNC.certificateInfoBatchType {
+		} else if batch.kind == .zncTLSInfo {
 			znc.isSendingCertificateInfo = znc.isConnected
 			if message.batchToken == nil {
 				znc.certificateChainText = ""
@@ -197,7 +158,7 @@ private extension ServerSession {
 		}
 
 		let family = batchMessages.queuedEntries.values.filter { $0.rootBatch === batch }
-		let incomplete = batch.labeledDelivery.state == .failed || family.contains { $0.batchIsOpen }
+		let incomplete = batch.labeledDelivery.outcome == .failed || family.contains { $0.batchIsOpen }
 
 		coalesceMultilineMessages(in: batch)
 		replay(batch, family: family)
@@ -209,19 +170,22 @@ private extension ServerSession {
 	/// response wrapping exactly one chat-history batch is that history page,
 	/// so the wrapper's contents are what gets replayed.
 	private func replay(_ batch: MessageBatch, family: [MessageBatch]) {
-		let historyBatches = family.filter { BatchPolicy.isChatHistory($0.batchType) }
+		let historyBatches = family.filter { $0.kind == .chatHistory }
 		let nestedHistory = historyBatches.first { $0.parentBatchMessage != nil }
 
 		if let nestedHistory, historyBatches.count == 1 {
 			replayChatHistoryBatch(nestedHistory, contents: batch)
-		} else if BatchPolicy.isChatHistory(batch.batchType) {
-			replayChatHistoryBatch(batch)
-		} else if BatchPolicy.isNetsplit(batch.batchType) {
-			replayNetsplitBatch(batch)
-		} else if BatchPolicy.isBouncerNetworks(batch.batchType) {
-			receiveBouncerNetworkBatch(batch)
 		} else {
-			processQueuedMessages(of: batch)
+			switch batch.kind {
+			case .chatHistory:
+				replayChatHistoryBatch(batch)
+			case .netsplit, .netjoin:
+				replayNetsplitBatch(batch)
+			case .bouncerNetworks:
+				receiveBouncerNetworkBatch(batch)
+			default:
+				processQueuedMessages(of: batch)
+			}
 		}
 	}
 
@@ -234,15 +198,15 @@ private extension ServerSession {
 	 the family came out of has no order of its own. */
 	private func resolveDeliveries(in family: [MessageBatch], incomplete: Bool) {
 		let failuresFirst = family.sorted { first, second in
-			first.labeledDelivery.state == .failed && second.labeledDelivery.state != .failed
+			first.labeledDelivery.outcome == .failed && second.labeledDelivery.outcome != .failed
 		}
 
 		for member in failuresFirst {
 			if let label = member.labeledDelivery.label {
-				let memberFailed = incomplete || member.labeledDelivery.state == .failed
+				let memberFailed = incomplete || member.labeledDelivery.outcome == .failed
 				resolveDelivery(
 					withLabel: label,
-					state: incomplete ? .failed : member.labeledDelivery.state,
+					state: incomplete ? .failed : ChatLineDeliveryState(member.labeledDelivery.outcome),
 					messageIdentifier: memberFailed ? nil : member.labeledDelivery.messageIdentifier,
 					reason: member.labeledDelivery.failureReason,
 					echoedMessage: memberFailed ? nil : member.labeledDelivery.echoedMessage
@@ -253,9 +217,9 @@ private extension ServerSession {
 	}
 
 	private func endZNCPlaybackState(for batch: MessageBatch) {
-		if batch.batchType == ServerQuirks.ZNC.playbackBatchType {
+		if batch.kind == .zncPlayback {
 			znc.isPlayingBackHistory = false
-		} else if batch.batchType == ServerQuirks.ZNC.certificateInfoBatchType {
+		} else if batch.kind == .zncTLSInfo {
 			znc.isSendingCertificateInfo = false
 		}
 	}
@@ -267,7 +231,7 @@ extension ServerSession {
 	func coalesceMultilineMessages(in root: MessageBatch) {
 		let queued = root.queuedMessages
 
-		guard queued.contains(where: { BatchPolicy.isMultiline($0.parentBatchMessage?.batchType) }) else { return }
+		guard queued.contains(where: { $0.parentBatchMessage?.kind == .multiline }) else { return }
 
 		root.dequeueMessages()
 

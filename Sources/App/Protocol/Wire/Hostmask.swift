@@ -33,7 +33,7 @@ nonisolated struct Hostmask: Equatable, Sendable {
 		let address = String(scalars[scalars.index(after: addressSeparator)...])
 
 		guard Self.isValidNickname(nickname, maximumLength: maximumNicknameLength),
-		      Self.isValidUsername(username),
+		      Self.isValidWireUsername(username),
 		      Self.isValidAddress(address)
 		else {
 			return nil
@@ -53,6 +53,21 @@ nonisolated struct Hostmask: Equatable, Sendable {
 		return source.containsHostmaskForbiddenCharacters(includingSeparators: true) == false
 	}
 
+	/** Whether `value` can be the username half of a hostmask read off the wire.
+
+	 A "!" or "@" inside one would move where the hostmask delimits, so the two
+	 readers of the same prefix could disagree about the address an address book
+	 rule is matched against. Use ``isValidUsername(_:)`` for a name a person
+	 typed: bouncer logins such as `user@client/network` are legitimate there. */
+	static func isValidWireUsername(_ value: String) -> Bool {
+		let source = value as NSString
+		return source.length > 0
+			&& source.length <= 40
+			&& source.containsHostmaskForbiddenCharacters(includingSeparators: true) == false
+	}
+
+	/// Whether `value` is acceptable as a username a person typed into a
+	/// configuration field. See ``isValidWireUsername(_:)`` for the wire form.
 	static func isValidUsername(_ value: String) -> Bool {
 		let source = value as NSString
 		return source.length > 0

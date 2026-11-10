@@ -39,7 +39,7 @@ enum MultilineAssembler {
 		var order: [ObjectIdentifier] = []
 
 		for message in messages {
-			guard let batch = message.parentBatchMessage, BatchPolicy.isMultiline(batch.batchType),
+			guard let batch = message.parentBatchMessage, batch.kind == .multiline,
 			      message.remoteCommand == .privmsg || message.remoteCommand == .notice,
 			      message.params.count >= 2
 			else {

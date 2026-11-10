@@ -63,7 +63,7 @@ extension InputField {
 		updateSlashCommandAccessibilityHelp()
 		if moved, NSWorkspace.shared.isVoiceOverEnabled, let suggestion = commandDiscovery.selectedSuggestion {
 			NSAccessibility.post(element: NSApplication.shared, notification: .announcementRequested, userInfo: [
-				.announcement: suggestion.syntax + ". " + suggestion.description,
+				.announcement: String(localized: .SlashCommands.suggestionAnnouncement(suggestion.syntax, suggestion.description)),
 				.priority: NSAccessibilityPriorityLevel.low.rawValue,
 			])
 		}
@@ -78,7 +78,9 @@ extension InputField {
 	}
 
 	private func updateSlashCommandAccessibilityHelp() {
-		let help = commandDiscovery.selectedSuggestion.map { $0.syntax + ". " + $0.argumentHint }
+		let help = commandDiscovery.selectedSuggestion.map {
+			String(localized: .SlashCommands.suggestionAccessibilityHelp($0.syntax, $0.argumentHint))
+		}
 		setAccessibilityHelp(help)
 	}
 }

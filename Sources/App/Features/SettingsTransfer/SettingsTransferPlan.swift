@@ -16,6 +16,35 @@ nonisolated enum SettingsRiskyChange: Hashable, Sendable {
 	case ctcpVersionReply(String)
 	/// Commands a server would send each time it connects.
 	case connectCommands(server: String, commands: [String])
+	/// A server the file points somewhere other than where this Mac's copy goes.
+	case serverEndpoint(server: String, from: Endpoint, to: Endpoint, outcome: EndpointOutcome)
+	/// A server that connects without checking the certificate chain it is shown.
+	case certificateValidationDisabled(server: String)
+	/// A place the file would send a known server's credentials that this Mac's copy never does.
+	case newDestination(server: String, destination: Destination, mode: SettingsTransferMode)
+
+	/// Somewhere credentials would go: another server, or the proxy that carries the connection.
+	enum Destination: Hashable, Sendable {
+		case server(Endpoint)
+		case proxy(host: String, port: UInt16)
+	}
+
+	/// Where a server connects, as the preview names it.
+	struct Endpoint: Hashable, Sendable {
+		let host: String
+		let port: UInt16
+		let isEncrypted: Bool
+	}
+
+	/// What the import does with the server whose endpoint moved.
+	enum EndpointOutcome: Hashable, Sendable {
+		/// The server is updated in place and keeps its saved passwords.
+		case sameServer
+		/// The file's server is added beside this Mac's, which keeps its secrets and history.
+		case newServerExistingKept
+		/// The file's server replaces this Mac's, whose secrets and history stay behind.
+		case newServerExistingRemoved
+	}
 }
 
 nonisolated struct SettingsTransferPlan: Sendable {
@@ -60,17 +89,38 @@ nonisolated struct SettingsTransferPlan: Sendable {
 			}
 		}
 		let currentSessions = current.sessions ?? []
-		let importedSessions = (archive.sessions ?? []).map {
-			var session = $0
-			let existing = currentSessions.first { $0.uniqueIdentifier == session.uniqueIdentifier }
-			if archive.omittedConnectCommands.contains(session.uniqueIdentifier) {
-				session.loginCommands = existing?.loginCommands ?? []
+		var sessionRisks: [SettingsRiskyChange] = []
+		var importedSessions: [ServerConfig] = []
+		for imported in archive.sessions ?? [] {
+			let identifier = imported.uniqueIdentifier
+			let existing = currentSessions.first { $0.uniqueIdentifier == identifier }
+			var session = imported
+			/* Secrets are filed under the identifiers of the session that owns
+			 them, so a file that sends a known session somewhere new would carry
+			 its passwords there. That one becomes a different network, with
+			 identities nothing is stored under. A backup this app wrote itself
+			 is restoring its own history and is left alone. */
+			let reidentified = archive.source == .portable
+				&& existing.map { Self.widensCredentialDestinations(from: $0, to: imported) } == true
+			if reidentified {
+				session = imported.reidentified(derivedFrom: Self.destinationFingerprint(of: imported))
+			}
+			if archive.omittedConnectCommands.contains(identifier) {
+				session.loginCommands = reidentified ? [] : existing?.loginCommands ?? []
 			}
 			if archive.source == .portable {
-				session.identityClientSideCertificate = existing?.identityClientSideCertificate
+				session.identityClientSideCertificate = reidentified ? nil : existing?.identityClientSideCertificate
+				// An earlier import already made this network, and already showed this.
+				let isAlreadyImported = reidentified
+					&& currentSessions.contains { $0.uniqueIdentifier == session.uniqueIdentifier }
+				if isAlreadyImported == false {
+					sessionRisks.append(contentsOf: Self.endpointRisks(
+						existing: existing, imported: imported, reidentifiedAs: reidentified ? mode : nil
+					))
+				}
 			}
 			session.autoConnect = false
-			return session
+			importedSessions.append(session)
 		}
 		var sessions = mode == .restore ? [] : currentSessions
 		for session in importedSessions {
@@ -101,7 +151,99 @@ nonisolated struct SettingsTransferPlan: Sendable {
 		removedSessions = currentSessions
 			.filter { session in !sessions.contains { $0.uniqueIdentifier == session.uniqueIdentifier } }
 			.map(\.connectionName)
-		riskyChanges = Self.riskyChanges(from: current, to: result)
+		riskyChanges = sessionRisks + Self.riskyChanges(from: current, to: result)
+	}
+
+	// MARK: - Where a session's credentials would go
+
+	/** The places a session sends its credentials: every server it can connect
+	 to, and the proxy that carries the connection when one is configured. */
+	private static func credentialDestinations(of session: ServerConfig) -> Set<String> {
+		var destinations = Set(session.serverList.map(serverKey))
+		if let proxy = proxyKey(of: session) {
+			destinations.insert(proxy)
+		}
+		return destinations
+	}
+
+	private static func serverKey(_ server: ServerEndpoint) -> String {
+		"\(server.serverAddress.lowercased()):\(server.serverPort)"
+	}
+
+	private static func proxyKey(of session: ServerConfig) -> String? {
+		guard session.proxyType == .socks5 || session.proxyType == .HTTP, let address = session.proxyAddress else {
+			return nil
+		}
+		return "proxy-\(session.proxyType.rawValue):\(address.lowercased()):\(session.proxyPort)"
+	}
+
+	/// What `imported` reaches that `existing` does not: its servers in file
+	/// order, then its proxy.
+	private static func newDestinations(
+		existing: ServerConfig, imported: ServerConfig
+	) -> [(key: String, destination: SettingsRiskyChange.Destination)] {
+		var known = credentialDestinations(of: existing)
+		var destinations: [(key: String, destination: SettingsRiskyChange.Destination)] = []
+		for server in imported.serverList where known.insert(serverKey(server)).inserted {
+			destinations.append((serverKey(server), .server(
+				.init(host: server.serverAddress, port: server.serverPort, isEncrypted: server.prefersSecuredConnection)
+			)))
+		}
+		if let key = proxyKey(of: imported), known.insert(key).inserted, let host = imported.proxyAddress {
+			destinations.append((key, .proxy(host: host, port: imported.proxyPort)))
+		}
+		return destinations
+	}
+
+	/// Whether `imported` reaches a destination `existing` does not. Dropping or
+	/// reordering servers sends nothing anywhere new.
+	private static func widensCredentialDestinations(from existing: ServerConfig, to imported: ServerConfig) -> Bool {
+		credentialDestinations(of: imported).isSubset(of: credentialDestinations(of: existing)) == false
+	}
+
+	private static func destinationFingerprint(of session: ServerConfig) -> String {
+		credentialDestinations(of: session).sorted().joined(separator: "|")
+	}
+
+	private static func endpoint(of session: ServerConfig) -> SettingsRiskyChange.Endpoint? {
+		session.serverList.first.map {
+			.init(host: $0.serverAddress, port: $0.serverPort, isEncrypted: $0.prefersSecuredConnection)
+		}
+	}
+
+	/** What the preview says about the endpoint and certificate checking of one
+	 imported session. `reidentifiedAs` is the mode when the session became a new
+	 network, and nil when it did not. */
+	private static func endpointRisks(
+		existing: ServerConfig?, imported: ServerConfig, reidentifiedAs mode: SettingsTransferMode?
+	) -> [SettingsRiskyChange] {
+		var risks: [SettingsRiskyChange] = []
+		var shownKey: String?
+		if let existing, let from = endpoint(of: existing), let to = endpoint(of: imported),
+		   from.host.caseInsensitiveCompare(to.host) != .orderedSame || from.port != to.port
+		   || from.isEncrypted != to.isEncrypted
+		{
+			let outcome: SettingsRiskyChange.EndpointOutcome = switch mode {
+			case .merge?: .newServerExistingKept
+			case .restore?: .newServerExistingRemoved
+			case nil: .sameServer
+			}
+			risks.append(.serverEndpoint(server: imported.connectionName, from: from, to: to, outcome: outcome))
+			shownKey = "\(to.host.lowercased()):\(to.port)"
+		}
+		/* The line above already names the first server's new address; every
+		 other place the file adds gets a line of its own. */
+		if let existing, let mode {
+			for (key, destination) in newDestinations(existing: existing, imported: imported) where key != shownKey {
+				risks.append(.newDestination(server: imported.connectionName, destination: destination, mode: mode))
+			}
+		}
+		if imported.validateServerCertificateChain == false,
+		   existing?.validateServerCertificateChain ?? true
+		{
+			risks.append(.certificateValidationDisabled(server: imported.connectionName))
+		}
+		return risks
 	}
 
 	/** Everything the plan changes that the preview has to show in full.

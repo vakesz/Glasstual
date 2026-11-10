@@ -128,6 +128,22 @@ nonisolated enum DateFormatting {
 		).format(dateRange)
 	}
 
+	// MARK: - Relative
+
+	/** How long before `now` the moment `date` was, in the reader's locale
+	 ("5 minutes ago"), or how long after it.
+
+	 A `RelativeDateTimeFormatter` is not `Sendable`, so each call builds its
+	 own, as the relative date path below does. `Date.RelativeFormatStyle`
+	 measures from the current time and takes no reference, which a table that
+	 redraws against its own clock needs. */
+	static func relativeTime(of date: Date, relativeTo now: Date) -> String {
+		let formatter = RelativeDateTimeFormatter()
+		formatter.dateTimeStyle = .numeric
+
+		return formatter.localizedString(for: date, relativeTo: now)
+	}
+
 	// MARK: - Display
 
 	/// `date` in the reader's locale. `relative` names today and yesterday by

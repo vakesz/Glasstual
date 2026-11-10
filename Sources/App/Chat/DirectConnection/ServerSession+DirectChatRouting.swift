@@ -244,7 +244,7 @@ extension ServerSession {
 			if isAction {
 				connection.sendAction(message)
 			} else {
-				connection.sendMessage(message)
+				connection.sendLine(message)
 			}
 			session.print(message, by: session.userNickname, in: conversation, as: lineType, command: "PRIVMSG",
 			              receivedAt: Date(), isEncrypted: false)

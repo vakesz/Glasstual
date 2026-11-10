@@ -133,6 +133,19 @@ struct ServerSessionZNCTests {
 		#expect(rewritten.sender.isServer)
 	}
 
+	/// A "!" only a person's hostmask has, so an identd value the hostmask grammar
+	/// refuses still names the person and never the server.
+	@Test("A replay from a hostmask with an unusable username is attributed to the person")
+	func replayWithUnusableUsernameNamesThePerson() throws {
+		let session = session()
+		let rewritten = try #require(try replay("alice!us!er@host joined", on: session))
+
+		#expect(rewritten.command == "JOIN")
+		#expect(rewritten.sender.nickname == "alice")
+		#expect(rewritten.sender.username == nil)
+		#expect(rewritten.sender.isServer == false)
+	}
+
 	/// The module's own text is not an event, so it is shown as it arrived,
 	/// attributed to whoever the replay names.
 	@Test("Replayed text that describes no event is printed as it arrived")

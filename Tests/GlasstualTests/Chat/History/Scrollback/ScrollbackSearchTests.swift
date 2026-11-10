@@ -440,18 +440,30 @@ private extension Array {
 @MainActor
 @Suite("Scrollback upgrade progress")
 struct ScrollbackMigrationProgressTests {
-	@Test("Progress rises, never falls back, and clears when the upgrade finishes")
-	func progressIsMonotonic() {
+	@Test("Progress follows the reports in order and clears when the upgrade finishes")
+	func progressFollowsReportsInOrder() async {
 		let recovery = ScrollbackStorageRecovery()
 		#expect(recovery.migrationFraction == nil)
 
-		recovery.noteMigrationProgress(0)
-		recovery.noteMigrationProgress(0.5)
-		// An earlier fraction that lands late is a stale one.
-		recovery.noteMigrationProgress(0.25)
+		let (progress, report) = AsyncStream<Double>.makeStream()
+		report.yield(0)
+		report.yield(0.5)
+		report.finish()
+		await recovery.consume(progress)
 		#expect(recovery.migrationFraction == 0.5)
 
 		recovery.noteMigrationProgress(1)
 		#expect(recovery.migrationFraction == nil)
+	}
+
+	@Test("An upgrade that starts again is not held at the fraction the last one reached")
+	func aRestartedUpgradeStartsOver() async {
+		let recovery = ScrollbackStorageRecovery()
+		let (progress, report) = AsyncStream<Double>.makeStream()
+		report.yield(0.7)
+		report.yield(0.1)
+		report.finish()
+		await recovery.consume(progress)
+		#expect(recovery.migrationFraction == 0.1)
 	}
 }

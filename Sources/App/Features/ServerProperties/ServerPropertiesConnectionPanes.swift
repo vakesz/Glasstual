@@ -91,6 +91,7 @@ struct ServerPropertiesIdentityPane: View {
 					.ServerProperties.nickservOrSaslPassword,
 					text: model.secretBinding(.nicknamePassword)
 				)
+				.accessibilityIdentifier("server-nickserv-password")
 				/* The onboarding network picker was the only place this
 				 could be chosen, so a connection made any other way was
 				 stuck with the default until someone hand-edited the

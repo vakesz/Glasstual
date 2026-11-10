@@ -62,6 +62,12 @@ final class Scrollback {
 		shared.duplicates.forgetLines(uniqueIdentifiers, inView: viewIdentifier)
 	}
 
+	/// A save the store made on its own did not land. Reported as a failed write
+	/// is: the reason is what the recovery banner shows.
+	static func noteSaveFailure(_ reason: String) {
+		shared.recovery.storageFailure = reason
+	}
+
 	// MARK: - Writing
 
 	/** Queues an archived line for storage.

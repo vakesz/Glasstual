@@ -154,21 +154,12 @@ struct UserScriptRunnerTests {
 		#expect(data == expected)
 	}
 
-	/// Silent pipes must not delay another reader. Cleanup has its own task so
-	/// a regression reports an assertion instead of hanging behind the read.
+	/// Silent pipes must not delay another reader. A regression leaves the
+	/// completed reader waiting on them, and the time limit ends the test.
 	@Test("Silent script readers do not block independent output", .timeLimit(.minutes(1)))
 	func idleReadersLeaveThePoolFree() async throws {
 		let idlePipes = (0 ..< 64).map { _ in Pipe() }
-		var requiredCleanup = false
-		let cleanup = Task {
-			do { try await Task.sleep(for: .seconds(10)) } catch { return }
-			requiredCleanup = true
-			for idle in idlePipes {
-				try? idle.fileHandleForWriting.close()
-			}
-		}
 		defer {
-			cleanup.cancel()
 			for idle in idlePipes {
 				try? idle.fileHandleForWriting.close()
 				try? idle.fileHandleForReading.close()
@@ -185,7 +176,6 @@ struct UserScriptRunnerTests {
 			try await Self.write(Data(repeating: 0x41, count: 16), to: pipe.fileHandleForWriting)
 
 			#expect(try await output.value.count == 16)
-			#expect(requiredCleanup == false, "The completed reader waited for silent pipes to close")
 			try? pipe.fileHandleForReading.close()
 
 			for idle in idlePipes {
@@ -200,14 +190,7 @@ struct UserScriptRunnerTests {
 	@Test("Cancelling an idle reader completes without waiting for its writer", .timeLimit(.minutes(1)))
 	func cancellationStopsIdleRead() async {
 		let pipe = Pipe()
-		var requiredWriterClosure = false
-		let cleanup = Task {
-			do { try await Task.sleep(for: .seconds(10)) } catch { return }
-			requiredWriterClosure = true
-			try? pipe.fileHandleForWriting.close()
-		}
 		defer {
-			cleanup.cancel()
 			try? pipe.fileHandleForReading.close()
 			try? pipe.fileHandleForWriting.close()
 		}
@@ -224,7 +207,6 @@ struct UserScriptRunnerTests {
 		#expect(pipe.fileHandleForReading.readabilityHandler != nil)
 		output.cancel()
 		await #expect(throws: CancellationError.self) { try await output.value }
-		#expect(requiredWriterClosure == false, "Cancellation waited for the writer to close")
 		#expect(pipe.fileHandleForReading.readabilityHandler == nil)
 	}
 

@@ -64,7 +64,7 @@ extension ServerSession {
 	}
 
 	func associateServerHistoryRequest(with batch: MessageBatch) {
-		guard BatchPolicy.isChatHistory(batch.batchType), let target = batch.batchParameters?.first,
+		guard batch.kind == .chatHistory, let target = batch.batchParameters?.first,
 		      let conversation = findConversation(target), let pending = chatHistory.serverRequests[conversation.uniqueIdentifier],
 		      pending.connectionIdentifier == socket?.uniqueIdentifier,
 		      pending.label == batch.labeledResponseBatch?.labeledDelivery.label else { return }
@@ -97,7 +97,7 @@ extension ServerSession {
 		      let conversation = pending.conversation,
 		      pending.connectionIdentifier == socket?.uniqueIdentifier,
 		      findConversation(conversation.name) === conversation,
-		      casefoldedTarget(batch.batchParameters?.first ?? "") == casefoldedTarget(conversation.name)
+		      supportInfo.casefoldString(batch.batchParameters?.first ?? "") == supportInfo.casefoldString(conversation.name)
 		else {
 			return false
 		}
@@ -143,13 +143,13 @@ extension ServerSession {
 		}
 
 		let conversation = pending?.conversation
-		let incomplete = contents.labeledDelivery.state == .failed || batchMessages.queuedEntries.values.contains {
+		let incomplete = contents.labeledDelivery.outcome == .failed || batchMessages.queuedEntries.values.contains {
 			$0.rootBatch === contents && $0.batchIsOpen
 		}
 		var pageMessageCount = 0
 		for queuedMessage in contents.queuedMessages {
 			var message = queuedMessage
-			let inPage = batch === contents || batchMessage(ofType: "chathistory", containing: message) === batch
+			let inPage = batch === contents || batchMessage(ofKind: .chatHistory, containing: message) === batch
 			if inPage {
 				pageMessageCount += 1
 				guard !chatHistoryMessageIsDuplicate(message) else { continue }

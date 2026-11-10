@@ -79,6 +79,26 @@ nonisolated enum LinkParser {
 	///   - string: The text to scan.
 	///   - policy: The reader's scheme customization, taken on the main actor.
 	static func locateLinks(in string: String, allowing policy: LinkSchemeRules) -> [LinkParserResult] {
+		guard string.utf16.count >= minimumLength, canContainLink(string) else {
+			return []
+		}
+
+		return scan(string, allowing: policy)
+	}
+
+	/** Whether `string` has a character every link needs.
+
+	 A scheme needs `:` (`http://`, `spotify:`, `magnet:`), a bare domain and a
+	 `.local` name need `.`, and `/r/` needs `/`. The data detector is created per
+	 call by Foundation and costs far more than this pass, and most lines have none
+	 of the three. `LinkParserPrefilterTests` scans every BMP scalar against the
+	 full scan and asserts that no other character can produce a link. */
+	static func canContainLink(_ string: String) -> Bool {
+		string.utf8.contains { $0 == UInt8(ascii: ".") || $0 == UInt8(ascii: ":") || $0 == UInt8(ascii: "/") }
+	}
+
+	/// The scan without the prefilter, which the prefilter is tested against.
+	static func scan(_ string: String, allowing policy: LinkSchemeRules) -> [LinkParserResult] {
 		let scanString = string as NSString
 
 		let fullRange = NSRange(location: 0, length: scanString.length)

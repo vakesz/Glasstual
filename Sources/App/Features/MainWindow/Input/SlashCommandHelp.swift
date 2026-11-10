@@ -24,11 +24,13 @@ struct SlashCommandHelp {
 	}
 
 	func suggestion(for command: LocalCommand) -> SlashCommandSuggestion {
-		let suffix = arguments.map { " " + String(localized: $0) } ?? ""
+		let syntax = arguments.map {
+			String(localized: .SlashCommands.syntaxWithArguments(command.rawValue, String(localized: $0)))
+		} ?? "/" + command.rawValue
 		return SlashCommandSuggestion(
 			name: command.rawValue,
 			description: String(localized: description),
-			syntax: "/" + command.rawValue + suffix,
+			syntax: syntax,
 			argumentHint: String(localized: hint),
 			isScript: false
 		)

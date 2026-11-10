@@ -121,10 +121,17 @@ extension ServerSession {
 			 and choosing here overwrote the mechanism of an exchange already in
 			 flight. The choice is made once, on the ACK. */
 			if capability.negotiation == .sasl {
-				if config.usesSASL, sessionNicknamePassword?.isEmpty == false, permitsCredentialsInClear == false {
+				let offered = offer[name] ?? []
+				let mechanism = nextSASLMechanism(from: offered)
+				/* Said only when `PLAIN` is what was left out and nothing else will
+				 log in: a password SCRAM never sends in clear was not withheld. */
+				if mechanism == nil, config.usesSASL, sessionNicknamePassword?.isEmpty == false,
+				   permitsCredentialsInClear == false,
+				   offered.isEmpty || offered.contains(where: { $0.caseInsensitiveCompare("PLAIN") == .orderedSame })
+				{
 					reportWithheldCredentials()
 				}
-				guard nextSASLMechanism(from: offer[name] ?? []) != nil else {
+				guard mechanism != nil else {
 					return nil
 				}
 			}
@@ -287,11 +294,13 @@ extension ServerSession {
 			return
 		}
 
+		let isSASL = CapabilityRegistry.defaultRegistry.capability(named: name)?.identifier == .saslGeneric
+
 		if enabled {
 			guard capabilityNegotiation.acknowledge(name) else { return }
 		} else {
 			capabilityNegotiation.revoke(name)
-			if name == "sasl", isCapabilityEnabled(.isInSASLNegotiation) {
+			if isSASL, isCapabilityEnabled(.isInSASLNegotiation) {
 				finishSASLNegotiation(failed: true)
 			}
 		}
@@ -299,7 +308,7 @@ extension ServerSession {
 		/* The ACK is where the mechanism is chosen, and only while nothing is
 		 mid-exchange: a `CAP NEW sasl` arriving during an in-flight SCRAM would
 		 otherwise replace the mechanism the exchange is already speaking. */
-		if enabled, name == "sasl", isCapabilityEnabled(.isInSASLNegotiation) == false,
+		if enabled, isSASL, isCapabilityEnabled(.isInSASLNegotiation) == false,
 		   selectSASLMechanism(fromOffered: capabilityNegotiation.offeredCapabilities[name] ?? []),
 		   sendSASLIdentificationRequest()
 		{

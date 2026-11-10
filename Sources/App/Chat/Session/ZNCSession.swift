@@ -189,15 +189,12 @@ extension ServerSession {
 		let sender: Prefix
 		/* The protocol maximum rather than the network's NICKLEN: a replayed
 		 line is about whoever the bouncer recorded, on whatever network it was
-		 connected to then, which is not necessarily this one. */
-		if let components = Hostmask(parsing: hostmask) {
-			guard components.nickname != userNickname else { return nil }
-			sender = .user(Prefix.User(
-				nickname: components.nickname,
-				username: components.username,
-				address: components.address,
-				hostmask: hostmask
-			))
+		 connected to then, which is not necessarily this one. It is read the way
+		 an inbound prefix is, so an odd username still names the person rather
+		 than the server; a server name has no "!". */
+		if let user = Prefix.user(parsing: hostmask, maximumNicknameLength: defaultHostmaskNicknameLength) {
+			guard user.nickname != userNickname else { return nil }
+			sender = user
 		} else {
 			sender = .server(name: hostmask)
 		}
@@ -304,7 +301,7 @@ extension ServerSession {
 	 where the server negotiated `batch`, and by the replay flag where it did
 	 not. */
 	func isSafeToPostNotification(for message: Message, in conversation: Conversation?) -> Bool {
-		guard batchMessage(ofType: ServerQuirks.chatHistoryBatchType, containing: message) == nil else {
+		guard batchMessage(ofKind: .chatHistory, containing: message) == nil else {
 			return false
 		}
 
@@ -317,7 +314,7 @@ extension ServerSession {
 		guard config.zncIgnorePlaybackNotifications else { return true }
 
 		if isCapabilityEnabled(.batch) {
-			return message.parentBatchMessage?.batchType != ServerQuirks.ZNC.playbackBatchType
+			return message.parentBatchMessage?.kind != .zncPlayback
 		}
 
 		return message.isReplayed == false

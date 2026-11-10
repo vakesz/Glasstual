@@ -17,7 +17,7 @@ extension ServerSession {
 		case .whoreply: handleWHONumeric(message, shouldPrint: shouldPrint)
 		case .whospcrpl: handleWHOXNumeric(message, shouldPrint: shouldPrint)
 		case .endofwho:
-			let requestWasHidden = requestedCommands.recordWhoRequestClosed(for: casefoldedTarget(message.param(at: 1)))
+			let requestWasHidden = requestedCommands.recordWhoRequestClosed(for: supportInfo.casefoldString(message.param(at: 1)))
 			if requestWasHidden == false, shouldPrint {
 				printReplyToHiddenCommandResponsesConsole(message)
 			}
@@ -139,7 +139,7 @@ extension ServerSession {
 
 	private func handleWHONumeric(_ message: Message, shouldPrint: Bool) {
 		guard message.params.count >= 8 else { return }
-		if requestedCommands.visibleWhoRequest(for: casefoldedTarget(message.params[1])) {
+		if requestedCommands.visibleWhoRequest(for: supportInfo.casefoldString(message.params[1])) {
 			if shouldPrint {
 				printReplyToHiddenCommandResponsesConsole(message)
 			}
@@ -158,7 +158,7 @@ extension ServerSession {
 	private func handleWHOXNumeric(_ message: Message, shouldPrint: Bool) {
 		guard message.params.count >= 9 else { return }
 		guard message.params[1] == ServerQuirks.whoxToken,
-		      !requestedCommands.visibleWhoRequest(for: casefoldedTarget(message.params[2]))
+		      !requestedCommands.visibleWhoRequest(for: supportInfo.casefoldString(message.params[2]))
 		else {
 			if shouldPrint {
 				printReplyToHiddenCommandResponsesConsole(message)

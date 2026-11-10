@@ -46,7 +46,7 @@ enum MemberListTableRow: Identifiable, Equatable {
 	func accessibilityDescription(style: MemberListPresentationStyle) -> String {
 		switch self {
 		case let .section(section, count):
-			return "\(section.title), \(count.formatted())"
+			return String(localized: .MemberList.sectionAccessibilityLabel(section.title, count.formatted()))
 		case let .member(member):
 			let user = member.user
 			let rank = style.displayRank(isIRCOperator: user.isIRCop, channelRank: member.rank)

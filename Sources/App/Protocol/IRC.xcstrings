@@ -2070,19 +2070,19 @@
                 "plural": {
                   "many": {
                     "stringUnit": {
-                      "state": "needs_review",
+                      "state": "translated",
                       "value": "%arg segundos"
                     }
                   },
                   "one": {
                     "stringUnit": {
-                      "state": "needs_review",
+                      "state": "translated",
                       "value": "%arg segundo"
                     }
                   },
                   "other": {
                     "stringUnit": {
-                      "state": "needs_review",
+                      "state": "translated",
                       "value": "%arg segundos"
                     }
                   }
@@ -4540,20 +4540,20 @@
                 "plural": {
                   "many": {
                     "stringUnit": {
-                      "state": "needs_review",
-                      "value": "Caracteres %arg"
+                      "state": "translated",
+                      "value": "%arg caracteres"
                     }
                   },
                   "one": {
                     "stringUnit": {
-                      "state": "needs_review",
-                      "value": "Caracter %arg"
+                      "state": "translated",
+                      "value": "%arg carácter"
                     }
                   },
                   "other": {
                     "stringUnit": {
-                      "state": "needs_review",
-                      "value": "Caracteres %arg"
+                      "state": "translated",
+                      "value": "%arg caracteres"
                     }
                   }
                 }
@@ -4754,20 +4754,20 @@
                 "plural": {
                   "many": {
                     "stringUnit": {
-                      "state": "needs_review",
-                      "value": "Canales %arg"
+                      "state": "translated",
+                      "value": "%arg canales"
                     }
                   },
                   "one": {
                     "stringUnit": {
-                      "state": "needs_review",
-                      "value": "Canal %arg"
+                      "state": "translated",
+                      "value": "%arg canal"
                     }
                   },
                   "other": {
                     "stringUnit": {
-                      "state": "needs_review",
-                      "value": "Canales %arg"
+                      "state": "translated",
+                      "value": "%arg canales"
                     }
                   }
                 }
@@ -6312,20 +6312,20 @@
                 "plural": {
                   "many": {
                     "stringUnit": {
-                      "state": "needs_review",
-                      "value": "Los usuarios de %arg se han vuelto a unir"
+                      "state": "translated",
+                      "value": "%arg usuarios se han vuelto a unir"
                     }
                   },
                   "one": {
                     "stringUnit": {
-                      "state": "needs_review",
-                      "value": "%arg el usuario se ha vuelto a unir"
+                      "state": "translated",
+                      "value": "%arg usuario se ha vuelto a unir"
                     }
                   },
                   "other": {
                     "stringUnit": {
-                      "state": "needs_review",
-                      "value": "Los usuarios de %arg se han vuelto a unir"
+                      "state": "translated",
+                      "value": "%arg usuarios se han vuelto a unir"
                     }
                   }
                 }
@@ -6526,19 +6526,19 @@
                 "plural": {
                   "many": {
                     "stringUnit": {
-                      "state": "needs_review",
+                      "state": "translated",
                       "value": "%arg más"
                     }
                   },
                   "one": {
                     "stringUnit": {
-                      "state": "needs_review",
+                      "state": "translated",
                       "value": "%arg más"
                     }
                   },
                   "other": {
                     "stringUnit": {
-                      "state": "needs_review",
+                      "state": "translated",
                       "value": "%arg más"
                     }
                   }
@@ -6740,20 +6740,20 @@
                 "plural": {
                   "many": {
                     "stringUnit": {
-                      "state": "needs_review",
-                      "value": "Usuarios %arg restantes"
+                      "state": "translated",
+                      "value": "%arg usuarios se han ido"
                     }
                   },
                   "one": {
                     "stringUnit": {
-                      "state": "needs_review",
+                      "state": "translated",
                       "value": "%arg usuario se ha ido"
                     }
                   },
                   "other": {
                     "stringUnit": {
-                      "state": "needs_review",
-                      "value": "Usuarios %arg restantes"
+                      "state": "translated",
+                      "value": "%arg usuarios se han ido"
                     }
                   }
                 }
@@ -7530,20 +7530,20 @@
                 "plural": {
                   "many": {
                     "stringUnit": {
-                      "state": "needs_review",
-                      "value": "Entradas de presencia %arg"
+                      "state": "translated",
+                      "value": "%arg entradas de presencia"
                     }
                   },
                   "one": {
                     "stringUnit": {
-                      "state": "needs_review",
+                      "state": "translated",
                       "value": "%arg entrada de presencia"
                     }
                   },
                   "other": {
                     "stringUnit": {
-                      "state": "needs_review",
-                      "value": "Entradas de presencia %arg"
+                      "state": "translated",
+                      "value": "%arg entradas de presencia"
                     }
                   }
                 }
@@ -12016,20 +12016,20 @@
                 "plural": {
                   "many": {
                     "stringUnit": {
-                      "state": "needs_review",
-                      "value": "Caracteres %arg"
+                      "state": "translated",
+                      "value": "%arg caracteres"
                     }
                   },
                   "one": {
                     "stringUnit": {
-                      "state": "needs_review",
-                      "value": "Caracter %arg"
+                      "state": "translated",
+                      "value": "%arg carácter"
                     }
                   },
                   "other": {
                     "stringUnit": {
-                      "state": "needs_review",
-                      "value": "Caracteres %arg"
+                      "state": "translated",
+                      "value": "%arg caracteres"
                     }
                   }
                 }
@@ -12230,20 +12230,20 @@
                 "plural": {
                   "many": {
                     "stringUnit": {
-                      "state": "needs_review",
-                      "value": "Caracteres %arg"
+                      "state": "translated",
+                      "value": "%arg caracteres"
                     }
                   },
                   "one": {
                     "stringUnit": {
-                      "state": "needs_review",
-                      "value": "Caracter %arg"
+                      "state": "translated",
+                      "value": "%arg carácter"
                     }
                   },
                   "other": {
                     "stringUnit": {
-                      "state": "needs_review",
-                      "value": "Caracteres %arg"
+                      "state": "translated",
+                      "value": "%arg caracteres"
                     }
                   }
                 }
@@ -12444,20 +12444,20 @@
                 "plural": {
                   "many": {
                     "stringUnit": {
-                      "state": "needs_review",
-                      "value": "Caracteres %arg"
+                      "state": "translated",
+                      "value": "%arg caracteres"
                     }
                   },
                   "one": {
                     "stringUnit": {
-                      "state": "needs_review",
-                      "value": "Caracter %arg"
+                      "state": "translated",
+                      "value": "%arg carácter"
                     }
                   },
                   "other": {
                     "stringUnit": {
-                      "state": "needs_review",
-                      "value": "Caracteres %arg"
+                      "state": "translated",
+                      "value": "%arg caracteres"
                     }
                   }
                 }

@@ -72,7 +72,9 @@ struct InputAccessoryView: View {
 		result.font = .subheadline.bold()
 
 		if let excerpt = model.replyExcerpt, excerpt.isEmpty == false {
-			var suffix = AttributedString(": \(excerpt.replacingOccurrences(of: "\n", with: " "))")
+			var suffix = AttributedString(localized: .MainWindow.inputBarReplyBannerExcerpt(
+				excerpt.replacingOccurrences(of: "\n", with: " ")
+			))
 			suffix.font = .subheadline
 			suffix.foregroundColor = .secondary
 			result.append(suffix)
@@ -101,7 +103,7 @@ struct InputAccessoryView: View {
 		.foregroundStyle(.secondary)
 		.padding(.horizontal, UISpacing.wide)
 		.frame(minHeight: InputBarLayout.typingRowHeight)
-		.help(model.typingNicknames.joined(separator: ", "))
+		.help(model.typingNicknames.formatted(.list(type: .and)))
 	}
 }
 

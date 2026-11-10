@@ -18,10 +18,26 @@ struct SettingsReloadActionMappingTests {
 			.highlightLogging, .inputHistoryScope, .logTranscripts,
 			.memberList, .memberListSortOrder, .memberListUserBadges, .settingsChanged,
 			.scrollbackSaveLimit, .scrollbackVisibleLimit, .sidebar, .sidebarUnreadBadges,
-			.style, .textDirection, .textFieldFontSize,
+			.style, .textDirection, .textFieldFontSize, .transcriptSettings,
 		]
 
 		#expect(Set(actions.map(\.rawValue)).count == actions.count)
+	}
+
+	@Test("Every key the transcript snapshot reads asks for it to be refreshed", arguments: TranscriptSettings.keys.map(\.name))
+	func transcriptSettingsKeysRefreshTheSnapshot(_ name: String) {
+		#expect(SettingsReload.action(forKeys: [name]).contains(.transcriptSettings))
+	}
+
+	@Test("The keys that also redraw keep their style reload")
+	func redrawingKeysKeepStyle() {
+		for key in [
+			SettingsKeys.Messages.filterUnicodeTextSpam,
+			SettingsKeys.Messages.showDateChanges,
+			SettingsKeys.Messages.showInlineMedia,
+		] {
+			#expect(SettingsReload.action(forKeys: [key.name]).contains(.style))
+		}
 	}
 
 	@Test("LogTranscript and the session list reach an action")

@@ -528,12 +528,17 @@ struct TranscriptControllerApplicationTests {
 				viewIdentifier: channel.uniqueIdentifier,
 				kind: .before(uniqueIdentifier: oldest, fetchLimit: 1, limitToDate: nil)
 			)
-			let clock = ContinuousClock()
-			let deadline = clock.now.advanced(by: .seconds(5))
 			var outcome = await ScrollbackSession.shared.fetchOutcome(fetch)
-			while case .failed(.missingCursor) = outcome, clock.now < deadline {
-				try await Task.sleep(for: .milliseconds(1))
+			// A timeout is recorded by `untilResolved`; the outcome below then
+			// still reports what the last fetch said.
+			try? await Eventually.untilResolved(
+				timeout: .seconds(5), "an accepted server row to become a valid local history cursor"
+			) {
 				outcome = await ScrollbackSession.shared.fetchOutcome(fetch)
+				if case .failed(.missingCursor) = outcome {
+					return false
+				}
+				return true
 			}
 			guard case let .page(entries) = outcome else {
 				Issue.record("An accepted server row never became a valid local history cursor")

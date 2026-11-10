@@ -16,7 +16,7 @@ struct ServerIdentityPicker: View {
 					.labelStyle(ServerIdentityPreviewStyle(tint: Color(nsColor: style.color.nsColor)))
 					.accessibilityElement(children: .ignore)
 					.accessibilityLabel(name)
-					.accessibilityValue(style.color.title + ", " + style.icon.title)
+					.accessibilityValue(Text(.ServerIdentity.previewAccessibilityValue(style.color.title, style.icon.title)))
 			} label: {
 				Text(.ServerIdentity.preview)
 			}

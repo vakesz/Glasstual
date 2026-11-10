@@ -297,15 +297,11 @@ final class DirectChatSession {
 
 	// MARK: - Sending
 
-	func sendMessage(_ message: String) {
-		sendLine(message)
-	}
-
 	func sendAction(_ message: String) {
 		sendLine(CTCPPayload.action(message))
 	}
 
-	private func sendLine(_ line: String) {
+	func sendLine(_ line: String) {
 		guard isConnected, let chat, let session else {
 			return
 		}

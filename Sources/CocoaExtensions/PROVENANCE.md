@@ -31,6 +31,8 @@ String Catalog attribution is in
 The following files are maintained by this project:
 
 - `LineFramer.swift` bounds byte-stream framing for IRC and DCC CHAT.
+- `ConnectionConfigurationLog.swift` logs unreadable connection configurations.
+- `ConnectionDiagnostics.swift` carries the connection-attempt trace both processes record into.
 - `LogSubsystem.swift` defines app and connection-host log identifiers.
 - `PropertyListModel.swift` defines property-list model conversion.
 - `PropertyListValue.swift` defines Codable property-list values and carries

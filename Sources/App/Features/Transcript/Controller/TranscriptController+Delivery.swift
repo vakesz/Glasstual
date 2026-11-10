@@ -59,7 +59,7 @@ extension TranscriptController {
 		let mark = line.nickname.flatMap { associatedConversation?.findMember($0)?.mark } ?? ""
 		let snapshot = ChatLineSnapshot(line, in: context, modeSymbol: mark)
 		let viewIdentifier = item.uniqueIdentifier
-		enqueueRenderJob {
+		enqueueRenderJob(cost: .cpu) {
 			PrintedLineRender(result: Self.renderJob(TranscriptRenderRequest(line: snapshot, context: context)),
 			                  scrollbackEntry: line.scrollbackEntry(forView: viewIdentifier))
 		} apply: { [weak self] rendered in

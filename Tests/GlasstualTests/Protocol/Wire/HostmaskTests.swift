@@ -49,6 +49,63 @@ struct HostmaskTests {
 		#expect(Hostmask(parsing: "long-nickname!user@example.test", maximumNicknameLength: 4) == nil)
 	}
 
+	@Test("A nickname of exactly the default limit is accepted and one byte more is not")
+	func nicknameLengthBoundary() {
+		let atLimit = String(repeating: "a", count: 50)
+		let pastLimit = String(repeating: "a", count: 51)
+
+		#expect(Hostmask(parsing: "\(atLimit)!user@example.test")?.nickname == atLimit)
+		#expect(Hostmask(parsing: "\(pastLimit)!user@example.test") == nil)
+		#expect(Hostmask.isValidNickname(atLimit))
+		#expect(Hostmask.isValidNickname(pastLimit) == false)
+	}
+
+	@Test("The nickname limit counts UTF-8 bytes, not characters")
+	func nicknameLimitCountsBytes() {
+		let atLimit = String(repeating: "\u{00E9}", count: 25)
+		let pastLimit = String(repeating: "\u{00E9}", count: 26)
+
+		#expect(Hostmask.isValidNickname(atLimit))
+		#expect(Hostmask.isValidNickname(pastLimit) == false)
+	}
+
+	@Test("The username limit is 40 UTF-16 units")
+	func usernameLengthBoundary() {
+		#expect(Hostmask.isValidWireUsername(String(repeating: "u", count: 40)))
+		#expect(Hostmask.isValidWireUsername(String(repeating: "u", count: 41)) == false)
+		#expect(Hostmask.isValidUsername(String(repeating: "u", count: 40)))
+		#expect(Hostmask.isValidUsername(String(repeating: "u", count: 41)) == false)
+	}
+
+	/// A "!" or "@" in a username moves where the hostmask delimits, so the wire
+	/// form refuses both. A person typing a username may use either: bouncer
+	/// logins such as `user@client/network` are legitimate there.
+	@Test("Separators inside a username are refused on the wire and allowed when typed")
+	func separatorsInTheUsername() {
+		#expect(Hostmask(parsing: "nick!us@er@host.test") == nil)
+		#expect(Hostmask(parsing: "nick!us!er@host.test") == nil)
+		#expect(Hostmask.isValidWireUsername("us!er") == false)
+		#expect(Hostmask.isValidWireUsername("us@er") == false)
+
+		#expect(Hostmask.isValidUsername("us!er"))
+		#expect(Hostmask.isValidUsername("us@er"))
+		#expect(Hostmask.isValidUsername("user@client/network"))
+	}
+
+	@Test("Ordinary identd values are still accepted on the wire", arguments: ["~user", "user-1", "[user]", "u_ser.x"])
+	func ordinaryWireUsernames(username: String) throws {
+		#expect(Hostmask.isValidWireUsername(username))
+		let hostmask = try #require(Hostmask(parsing: "nick!\(username)@host.test"))
+
+		#expect(hostmask.username == username)
+	}
+
+	@Test("An address cannot carry a separator")
+	func addressRejectsSeparators() {
+		#expect(Hostmask.isValidAddress("host@evil") == false)
+		#expect(Hostmask.isValidAddress("host!evil") == false)
+	}
+
 	@Test
 	func missingSeparatorsAndEmptyPartsAreRejected() {
 		#expect(Hostmask(parsing: "") == nil)

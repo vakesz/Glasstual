@@ -47,14 +47,8 @@ struct HighlightLogRow: Identifiable, Equatable {
 	/// How long ago the highlight arrived, as of `now`. The table redraws
 	/// this every minute.
 	func timeLabel(relativeTo now: Date) -> String {
-		Self.relativeTimeFormatter.localizedString(for: time, relativeTo: now)
+		DateFormatting.relativeTime(of: time, relativeTo: now)
 	}
-
-	private static let relativeTimeFormatter: RelativeDateTimeFormatter = {
-		let formatter = RelativeDateTimeFormatter()
-		formatter.dateTimeStyle = .numeric
-		return formatter
-	}()
 
 	/** The row as the pasteboard gets it.
 

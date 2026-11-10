@@ -22,14 +22,17 @@ final class ScrollbackStorageRecovery {
 	 until it finishes, so the window says why. */
 	private(set) var migrationFraction: Double?
 
-	/// Records the upgrade's progress. Progress arrives from the store's own
-	/// task as a series of hops to the main actor, which can land out of order,
-	/// so an earlier fraction never replaces a later one.
+	/// Records the upgrade's progress. Reports arrive in the order the store
+	/// made them, so the last one is the truth: a restarted upgrade starts over
+	/// from a low fraction, and `1` ends it.
 	func noteMigrationProgress(_ fraction: Double) {
-		if fraction >= 1 {
-			migrationFraction = nil
-		} else if fraction > (migrationFraction ?? -1) {
-			migrationFraction = fraction
+		migrationFraction = fraction >= 1 ? nil : fraction
+	}
+
+	/// Applies each report from `progress`, in order, until it finishes.
+	func consume(_ progress: AsyncStream<Double>) async {
+		for await fraction in progress {
+			noteMigrationProgress(fraction)
 		}
 	}
 

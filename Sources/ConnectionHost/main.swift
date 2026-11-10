@@ -26,22 +26,29 @@ final class ConnectionHostListenerDelegate: NSObject, NSXPCListenerDelegate {
 	}()
 
 	func listener(_: NSXPCListener, shouldAcceptNewConnection connection: NSXPCConnection) -> Bool {
-		if let peerRequirement {
+		#if DEBUG
+			let allowsUnverifiedPeer = true
+		#else
+			let allowsUnverifiedPeer = false
+		#endif
+
+		switch ConnectionPeerAdmission.decide(
+			requirement: peerRequirement, allowsUnverifiedPeer: allowsUnverifiedPeer
+		) {
+		case let .enforce(requirement):
 			/* Enforced by NSXPC on every message: a peer that does not satisfy
 			 it never reaches the exported object. */
-			connection.setCodeSigningRequirement(peerRequirement)
-		} else {
+			connection.setCodeSigningRequirement(requirement)
+		case .acceptUnverified:
 			/* Without a requirement there is nothing to check the peer against,
 			 and an unverified peer drives a host that dials arbitrary servers.
 			 Only a Debug build, which unsigned local builds and the test and
 			 E2E harnesses run, may go on; a Release build refuses. */
-			#if DEBUG
-				ConnectionHostLog.listener.error("The connection host is not signed; accepting its peer unverified")
-			#else
-				ConnectionHostLog.listener.fault("The connection host is not signed; refusing its peer")
+			ConnectionHostLog.listener.error("The connection host is not signed; accepting its peer unverified")
+		case .refuse:
+			ConnectionHostLog.listener.fault("The connection host is not signed; refusing its peer")
 
-				return false
-			#endif
+			return false
 		}
 
 		connection.exportedInterface = RemoteConnectionInterface.server()

@@ -86,12 +86,19 @@ final class MessageBatch {
 	var batchToken = ""
 	var batchType: String?
 	var batchParameters: [String]?
+
+	/// What `batchType` names, for the types the session treats specially.
+	/// `batchType` keeps the wire spelling; an unknown type is read as
+	/// ``BatchKind/other(_:)`` with its text intact.
+	var kind: BatchKind? {
+		batchType.map(BatchKind.init(wireType:))
+	}
+
 	/// The `BATCH +` line that opened it. A multi-line message takes its tags
 	/// from here, since that is where the server puts the message's own.
 	var openingMessage: Message?
 	weak var parentBatchMessage: MessageBatch?
-	/// What the labelled-response subsystem is waiting on this batch for. The
-	/// shape is ``BatchDeliveryState``, which that subsystem declares.
+	/// What the labelled-response subsystem is waiting on this batch for.
 	var labeledDelivery = BatchDeliveryState()
 
 	var labeledResponseBatch: MessageBatch? {
@@ -143,7 +150,7 @@ final class MessageBatch {
 		var depth = 0
 
 		while let current = batch, depth < BatchPolicy.maximumParentDepth {
-			if BatchPolicy.isReplay(current.batchType) {
+			if current.kind?.isReplay == true {
 				return true
 			}
 

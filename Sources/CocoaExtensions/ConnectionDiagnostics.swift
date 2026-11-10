@@ -1,22 +1,21 @@
 // Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
 // SPDX-License-Identifier: BSD-3-Clause
 
-import CocoaExtensions
 import Foundation
 import os
 
 /// A shared monotonic origin correlates app and XPC milestones without recording
 /// server names, account names, credentials, or IRC message contents.
-nonisolated struct ConnectionDiagnostics: Codable, Sendable, Equatable {
-	let identifier: UUID
-	let requestedAt: TimeInterval
+public nonisolated struct ConnectionDiagnostics: Codable, Sendable, Equatable {
+	public let identifier: UUID
+	public let requestedAt: TimeInterval
 
-	init() {
+	public init() {
 		identifier = UUID()
 		requestedAt = ProcessInfo.processInfo.systemUptime
 	}
 
-	enum Event: String, Codable, Sendable {
+	public enum Event: String, Codable, Sendable {
 		case requested, serviceRequested, hostStarted, transportStarted
 		case certificateEvaluationStarted, certificateEvaluationCompleted, certificateAccepted
 		case transportReady, transportFailed, capabilitiesCompleted, registered, identificationWritten, authenticated
@@ -38,7 +37,7 @@ nonisolated struct ConnectionDiagnostics: Codable, Sendable, Equatable {
 	 of milestones in one log stream whichever side emitted them. */
 	private static let logger = Logger(subsystem: LogSubsystem.application, category: "ConnectionDiagnostics")
 
-	func record(_ event: Event) {
+	public func record(_ event: Event) {
 		let elapsed = ProcessInfo.processInfo.systemUptime - requestedAt
 		Self.logger.debug(
 			"Attempt \(identifier.uuidString, privacy: .public) \(event.rawValue, privacy: .public) elapsed=\(elapsed, privacy: .public)s"

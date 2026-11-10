@@ -153,7 +153,15 @@ struct SettingsTransferPreviewView: View {
 				Image(systemName: setting.isRemoved ? "minus.circle" : "pencil")
 			}
 			.font(.caption)
+			.accessibilityLabel(Text(stateDescription(of: setting)))
 		}
+	}
+
+	/// What the import does to one setting, which its icon alone does not say to VoiceOver.
+	private func stateDescription(of setting: ChangedSetting) -> LocalizedStringResource {
+		setting.isRemoved
+			? .SettingsTransfer.settingWillBeRemoved(setting.title)
+			: .SettingsTransfer.settingWillChange(setting.title)
 	}
 
 	/** The changes that can send commands or widen what is trusted, each with
@@ -191,7 +199,46 @@ struct SettingsTransferPreviewView: View {
 			String(localized: .SettingsTransfer.riskyCtcpVersionReply(reply))
 		case let .connectCommands(server, commands):
 			String(localized: .SettingsTransfer.riskyConnectCommands(server, commands.joined(separator: "\n")))
+		case let .serverEndpoint(server, from, to, outcome):
+			switch outcome {
+			case .sameServer:
+				String(localized: .SettingsTransfer.riskyServerEndpointSameServer(
+					server, description(of: from), description(of: to)
+				))
+			case .newServerExistingKept:
+				String(localized: .SettingsTransfer.riskyServerEndpointNewKept(
+					server, description(of: from), description(of: to)
+				))
+			case .newServerExistingRemoved:
+				String(localized: .SettingsTransfer.riskyServerEndpointNewRemoved(
+					server, description(of: from), description(of: to)
+				))
+			}
+		case let .certificateValidationDisabled(server):
+			String(localized: .SettingsTransfer.riskyCertificateValidation(server))
+		case let .newDestination(server, destination, mode):
+			switch mode {
+			case .merge:
+				String(localized: .SettingsTransfer.riskyNewDestinationKept(server, description(of: destination)))
+			case .restore:
+				String(localized: .SettingsTransfer.riskyNewDestinationRemoved(server, description(of: destination)))
+			}
 		}
+	}
+
+	private static func description(of destination: SettingsRiskyChange.Destination) -> String {
+		switch destination {
+		case let .server(endpoint):
+			description(of: endpoint)
+		case let .proxy(host, port):
+			String(localized: .SettingsTransfer.destinationProxy(host, String(port)))
+		}
+	}
+
+	private static func description(of endpoint: SettingsRiskyChange.Endpoint) -> String {
+		endpoint.isEncrypted
+			? String(localized: .SettingsTransfer.endpointEncrypted(endpoint.host, String(endpoint.port)))
+			: String(localized: .SettingsTransfer.endpointPlain(endpoint.host, String(endpoint.port)))
 	}
 
 	@ViewBuilder

@@ -420,63 +420,60 @@ nonisolated struct AsyncCertificateValidationLoopbackTests {
 		)
 
 		/* A test that hangs tells nobody anything, so the stream ends on its own
-		 if the handshake never gets anywhere. */
-		let deadline = Task {
-			try? await Task.sleep(for: .seconds(8), clock: .continuous)
-			guard Task.isCancelled == false else { return }
-			continuation.finish()
-			await server.stop()
-		}
-
-		defer { deadline.cancel() }
-
+		 if the handshake never gets anywhere. The deadline is generous: it is only
+		 the way out of a hang, not a measure of how long a handshake takes. */
 		host.open(with: ConnectionConfigEnvelope(config: config))
 
 		var outcome = Outcome()
 		var trustAnswered = false
 
-		for await event in events {
-			switch event {
-			case let .requestInsecureCertificateTrust(answer):
-				outcome.trustRequested = true
-				host.exportSecureConnectionInformation { information in
-					continuation.yield(.exportedTrust(information, answer))
-				}
-			case let .exportedTrust(information, answer):
-				outcome.exportedCertificate = information.certificateChain.isEmpty == false
-				outcome.policyName = information.policyName
-				if closeDuringTrust {
-					host.close()
-					break
-				}
-				trustAnswered = true
-				answer(trusted)
+		try await Eventually.withUnisolatedDeadline(.seconds(30), onExpiry: {
+			continuation.finish()
+			Task { await server.stop() }
+		}, perform: {
+			for await event in events {
+				switch event {
+				case let .requestInsecureCertificateTrust(answer):
+					outcome.trustRequested = true
+					host.exportSecureConnectionInformation { information in
+						continuation.yield(.exportedTrust(information, answer))
+					}
+				case let .exportedTrust(information, answer):
+					outcome.exportedCertificate = information.certificateChain.isEmpty == false
+					outcome.policyName = information.policyName
+					if closeDuringTrust {
+						host.close()
+						break
+					}
+					trustAnswered = true
+					answer(trusted)
 
-				if trusted {
-					for line in testLines {
-						try await server.send(line)
+					if trusted {
+						for line in testLines {
+							try await server.send(line)
+						}
+					}
+				case let .didReceive(data):
+					outcome.received.append(data)
+
+					if trusted, outcome.received.count == testLines.count {
+						continuation.finish()
+					}
+				case let .didSecure(protocolVersion, cipherSuite):
+					outcome.secured = Secured(protocolVersion: protocolVersion, cipherSuite: cipherSuite)
+				case let .didDisconnect(error):
+					outcome.disconnected = true
+					outcome.disconnectError = error
+
+					continuation.finish()
+				case .didConnect:
+					outcome.connectedBeforeTrust = trustAnswered == false
+					for line in ["CAP LS 302", "NICK tester", "USER tester 0 * :Tester"] {
+						host.send(Data((line + "\r\n").utf8))
 					}
 				}
-			case let .didReceive(data):
-				outcome.received.append(data)
-
-				if trusted, outcome.received.count == testLines.count {
-					continuation.finish()
-				}
-			case let .didSecure(protocolVersion, cipherSuite):
-				outcome.secured = Secured(protocolVersion: protocolVersion, cipherSuite: cipherSuite)
-			case let .didDisconnect(error):
-				outcome.disconnected = true
-				outcome.disconnectError = error
-
-				continuation.finish()
-			case .didConnect:
-				outcome.connectedBeforeTrust = trustAnswered == false
-				for line in ["CAP LS 302", "NICK tester", "USER tester 0 * :Tester"] {
-					host.send(Data((line + "\r\n").utf8))
-				}
 			}
-		}
+		})
 
 		if trusted, outcome.secured != nil {
 			outcome.registration = try await server.registrationLines()

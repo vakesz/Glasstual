@@ -75,6 +75,12 @@ class ServerSession: ChatItem {
 
 	var sessionCredentials = SessionCredentials()
 
+	/// The server the user allowed to receive the account password although its
+	/// certificate was not checked. Kept beside the credentials rather than in
+	/// them, which every connect clears: the answer holds for as long as the
+	/// session talks to that host and port.
+	var credentialConsent: CredentialConsent?
+
 	lazy var supportInfo = ISupport()
 	/** The ISUPPORT prefix and case-mapping values as they stand now.
 

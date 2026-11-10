@@ -77,6 +77,96 @@ struct InlineImageHostPolicyTests {
 		#expect(await InlineImageHostPolicy.permits(url, resolver: resolver))
 	}
 
+	@Test("A lookup that outlives the deadline is refused, not waited for", .timeLimit(.minutes(1)))
+	func slowLookupIsRefused() async throws {
+		let url = try #require(URL(string: "https://slow.example.org/a.png"))
+		let resolver = InlineImageHostResolver { _ in
+			try? await Task.sleep(for: .seconds(60))
+			return ["8.8.8.8"]
+		}
+
+		#expect(await InlineImageHostPolicy.permits(url, resolver: resolver, deadline: .milliseconds(50)) == false)
+	}
+
+	@Test("A cancelled caller stops waiting for its lookup", .timeLimit(.minutes(1)))
+	func cancelledLookupReturnsPromptly() async throws {
+		let url = try #require(URL(string: "https://slow.example.org/a.png"))
+		let resolver = InlineImageHostResolver { _ in
+			try? await Task.sleep(for: .seconds(60))
+			return ["8.8.8.8"]
+		}
+		let task = Task { await InlineImageHostPolicy.permits(url, resolver: resolver) }
+		task.cancel()
+
+		#expect(await task.value == false)
+	}
+
+	@Test("Callers asking for one name share a single lookup", .timeLimit(.minutes(1)))
+	func callersShareOneLookup() async throws {
+		let probe = LookupProbe()
+		let resolver = InlineImageHostResolver { host in await probe.lookup(host) }
+		let url = try #require(URL(string: "https://shared.example.org/a.png"))
+		let callers = (0 ..< 5).map { _ in
+			Task { await InlineImageHostPolicy.permits(url, resolver: resolver) }
+		}
+		try await Eventually.untilResolved("the lookup to start") { await probe.callCount == 1 }
+		await probe.release()
+		for caller in callers {
+			#expect(await caller.value)
+		}
+		#expect(await probe.callCount == 1)
+	}
+
+	@Test("A lookup past its caller's deadline keeps its place, and the next caller joins it", .timeLimit(.minutes(1)))
+	func abandonedLookupIsJoinedNotRestarted() async throws {
+		let probe = LookupProbe()
+		let resolver = InlineImageHostResolver { host in await probe.lookup(host) }
+		let url = try #require(URL(string: "https://stuck.example.org/a.png"))
+
+		#expect(await InlineImageHostPolicy.permits(url, resolver: resolver, deadline: .milliseconds(30)) == false)
+		#expect(await InlineImageHostPolicy.permits(url, resolver: resolver, deadline: .milliseconds(30)) == false)
+		#expect(await probe.callCount == 1)
+		await probe.release()
+	}
+
+	@Test("One caller giving up leaves the others waiting on the same lookup", .timeLimit(.minutes(1)))
+	func cancellingOneWaiterSparesTheRest() async throws {
+		let probe = LookupProbe()
+		let resolver = InlineImageHostResolver { host in await probe.lookup(host) }
+		let url = try #require(URL(string: "https://shared.example.org/a.png"))
+		let leaving = Task { await InlineImageHostPolicy.permits(url, resolver: resolver) }
+		let staying = Task { await InlineImageHostPolicy.permits(url, resolver: resolver) }
+		try await Eventually.untilResolved("the lookup to start") { await probe.callCount == 1 }
+		leaving.cancel()
+
+		#expect(await leaving.value == false)
+		await probe.release()
+		#expect(await staying.value)
+	}
+
+	@Test("A name past the in-flight bound is refused at once without a lookup", .timeLimit(.minutes(1)))
+	func boundIsHitFailsClosed() async throws {
+		let probe = LookupProbe()
+		let resolver = InlineImageHostResolver(addresses: { host in await probe.lookup(host) }, maximumInFlight: 2)
+		let first = try #require(URL(string: "https://one.example.org/a.png"))
+		let second = try #require(URL(string: "https://two.example.org/a.png"))
+		let third = try #require(URL(string: "https://three.example.org/a.png"))
+		let held = [first, second].map { url in
+			Task { await InlineImageHostPolicy.permits(url, resolver: resolver) }
+		}
+		try await Eventually.untilResolved("both lookups to start") { await probe.callCount == 2 }
+
+		#expect(await InlineImageHostPolicy.permits(third, resolver: resolver, deadline: .seconds(30)) == false)
+		#expect(await probe.callCount == 2)
+
+		await probe.release()
+		for task in held {
+			#expect(await task.value)
+		}
+		// A finished lookup frees its place.
+		#expect(await InlineImageHostPolicy.permits(third, resolver: resolver))
+	}
+
 	@Test("A download from a private host is refused before any request", .timeLimit(.minutes(1)))
 	func downloadRefusesPrivateHost() async throws {
 		let url = try #require(URL(string: "http://127.0.0.1:8080/a.png"))
@@ -102,5 +192,30 @@ struct InlineImageHostPolicyTests {
 		#expect(token == nil)
 		#expect(failure == .hostNotAllowed)
 		#expect(budget.entryCount == 0)
+	}
+}
+
+/// A resolver stand-in that counts the lookups it is asked for and holds each
+/// one until released.
+private actor LookupProbe {
+	private(set) var callCount = 0
+	private var isReleased = false
+	private var waiting: [CheckedContinuation<Void, Never>] = []
+
+	func lookup(_: String) async -> [String] {
+		callCount += 1
+		if !isReleased {
+			await withCheckedContinuation { waiting.append($0) }
+		}
+		return ["8.8.8.8"]
+	}
+
+	func release() {
+		isReleased = true
+		let continuations = waiting
+		waiting = []
+		for continuation in continuations {
+			continuation.resume()
+		}
 	}
 }

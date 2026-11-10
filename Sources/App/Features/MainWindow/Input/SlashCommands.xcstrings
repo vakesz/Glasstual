@@ -8017,54 +8017,6 @@
         }
       }
     },
-    "syntax-watch-list-status-clear": {
-      "comment": "Syntax for MONITOR and WATCH list, status and clear subcommands. Keep the literal protocol letters L, S and C unchanged.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "L | S | C"
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "L | S | C"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "L | S | C"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "L | S | C"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "L | S | C"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "L | S | C"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "L | S | C"
-          }
-        }
-      }
-    },
     "description-redact": {
       "comment": "The /redact command. Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
       "extractionState": "manual",
@@ -8205,6 +8157,246 @@
           "stringUnit": {
             "state": "translated",
             "value": "O ID da mensagem é a tag msgid da mensagem. Sem o ID, sua mensagem mais recente na conversa é apagada. Requer suporte do servidor à remoção de mensagens."
+          }
+        }
+      }
+    },
+    "suggestion-announcement": {
+      "comment": "Slash-command discovery. VoiceOver announcement for the selected suggestion. %1$@ is the command syntax and %2$@ its description. Command names and literal subcommands stay unchanged.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@. %2$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@. %2$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@. %2$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@. %2$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@. %2$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@。%2$@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@. %2$@"
+          }
+        }
+      }
+    },
+    "suggestion-accessibility-help": {
+      "comment": "Slash-command discovery. VoiceOver help for the selected suggestion. %1$@ is the command syntax and %2$@ its argument hint. Command names and literal subcommands stay unchanged.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@. %2$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@. %2$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@. %2$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@. %2$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@. %2$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@。%2$@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@. %2$@"
+          }
+        }
+      }
+    },
+    "suggestion-description-and-hint": {
+      "comment": "Slash-command discovery. Caption under the suggestion list. %1$@ is the command description and %2$@ the argument hint.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ %2$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@ %2$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@ %2$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@ %2$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@ %2$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@ %2$@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@ %2$@"
+          }
+        }
+      }
+    },
+    "suggestion-tooltip": {
+      "comment": "Slash-command discovery. Two-line tooltip. The first line is a heading (syntax or description) and the second the argument hint. The line break is intentional.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@\n%2$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@\n%2$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@\n%2$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@\n%2$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@\n%2$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@\n%2$@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@\n%2$@"
+          }
+        }
+      }
+    },
+    "syntax-with-arguments": {
+      "comment": "Slash-command discovery. Syntax of a command or installed script that takes arguments. %1$@ is the command name and %2$@ the translated arguments placeholder, for example [arguments]. Keep the leading slash.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "/%1$@ %2$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "/%1$@ %2$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "/%1$@ %2$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "/%1$@ %2$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "/%1$@ %2$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "/%1$@ %2$@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "/%1$@ %2$@"
           }
         }
       }

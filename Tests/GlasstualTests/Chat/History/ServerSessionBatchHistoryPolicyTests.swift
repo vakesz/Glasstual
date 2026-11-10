@@ -19,11 +19,11 @@ struct ServerSessionBatchHistoryPolicyTests {
 
 	@Test("The draft spellings of a batch type are recognized alongside the ratified ones")
 	func batchTypeAliasesAreRecognized() {
-		#expect(BatchPolicy.isChatHistory("chathistory"))
-		#expect(BatchPolicy.isChatHistory("draft/chathistory"))
-		#expect(BatchPolicy.isNetsplit("netsplit"))
-		#expect(BatchPolicy.isNetsplit("netjoin"))
-		#expect(BatchPolicy.isNetsplit("znc.in/playback") == false)
+		#expect(BatchKind(wireType: "chathistory") == .chatHistory)
+		#expect(BatchKind(wireType: "draft/chathistory") == .chatHistory)
+		#expect(BatchKind(wireType: "netsplit") == .netsplit)
+		#expect(BatchKind(wireType: "netjoin") == .netjoin)
+		#expect(BatchKind(wireType: "znc.in/playback") != .netsplit)
 	}
 
 	@Test("The server maximum caps the request only when it is stricter than the local one")

@@ -167,7 +167,7 @@ extension ServerSession {
 		if let batch, batch.labeledDelivery.label == label {
 			switch kind {
 			case .failure:
-				batch.labeledDelivery.state = .failed
+				batch.labeledDelivery.outcome = .failed
 				batch.labeledDelivery.failureReason = message.params.last
 			case .echo:
 				batch.labeledDelivery.messageIdentifier = message.messageIdentifier

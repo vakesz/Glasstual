@@ -74,6 +74,8 @@ private struct OnboardingStylePreview: View {
 	let isSelected: Bool
 	let select: () -> Void
 
+	@Environment(\.colorSchemeContrast) private var contrast
+
 	/// The same short exchange under both styles, so the preview shows the
 	/// layout rather than a difference in what was said.
 	static let previewMessages: [OnboardingAppearancePreviewMessage] = [
@@ -112,7 +114,7 @@ private struct OnboardingStylePreview: View {
 					.overlay {
 						RoundedRectangle(cornerRadius: 10)
 							.stroke(
-								isSelected ? Color.accentColor : Color.secondary.opacity(0.3),
+								isSelected ? Color.accentColor : Color.secondary.opacity(contrast == .increased ? 1 : 0.3),
 								lineWidth: isSelected ? 2 : 1
 							)
 					}

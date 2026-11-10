@@ -17,6 +17,17 @@ import Foundation
  and serialise there, which is the executor this whole step exists to leave. */
 typealias TranscriptRenderJob = @Sendable @concurrent () async -> (@MainActor () -> Void)?
 
+/// What running a job costs, which decides whether it takes a slot from the
+/// shared render budget.
+enum RenderCost: Sendable {
+	/// Waits on storage, the main actor or nothing at all. Never takes a slot,
+	/// so a slow read cannot hold up the lines being printed.
+	case io
+	/// Renders text on the CPU: a printed line, a delivery replacement, a page
+	/// of history.
+	case cpu
+}
+
 /// A job together with the ordering it asked for.
 struct TranscriptRenderSubmission: Sendable {
 	/** A standalone job is applied after everything already submitted, but the
@@ -26,6 +37,7 @@ struct TranscriptRenderSubmission: Sendable {
 	 the document behind the line before it. */
 	var isStandalone: Bool
 	var waitsForAllSubmissions = false
+	var cost = RenderCost.io
 	var job: TranscriptRenderJob
 }
 
@@ -43,9 +55,15 @@ struct TranscriptRenderSubmission: Sendable {
  cancels the deliveries still in flight, plus the controller's own generation
  check for the one that has already reached the main actor. */
 actor TranscriptRenderPipeline {
-	/** How many lines render at once. The pipeline is per view, so this is a
-	 per-view width; rendering is CPU-bound string work with no shared state. */
-	private static let maximumConcurrentRenders = 4
+	/** How many jobs one pipeline renders at once. Alone, a view may use the
+	 whole width; with a shared ``RenderConcurrencyLimit`` the limit is what
+	 bounds the machine, and a narrower view keeps one busy conversation from
+	 queueing most of the budget's waiters. */
+	private static let unlimitedWidth = 4
+	private static let limitedWidth = 2
+
+	private let maximumConcurrentRenders: Int
+	private let limit: RenderConcurrencyLimit?
 
 	/** The controller's end of the pipeline. Yielding is synchronous and
 	 thread-safe, which is what makes submission order the render order. */
@@ -58,7 +76,11 @@ actor TranscriptRenderPipeline {
 	private var deliveries: [UUID: Task<Void, Never>] = [:]
 	private var drainWaiters: [UUID: CheckedContinuation<Void, Never>] = [:]
 
-	init() {
+	/// `limit` is the budget CPU-bound jobs draw their render slot from; nil
+	/// leaves the pipeline bounded by its own width alone.
+	init(limit: RenderConcurrencyLimit? = nil) {
+		self.limit = limit
+		maximumConcurrentRenders = limit == nil ? Self.unlimitedWidth : Self.limitedWidth
 		/* Submission preserves synchronous print order. The session's admission
 		 budget makes network producers suspend before another wire line, and
 		 counts this work through transcript application. A single wire event
@@ -83,7 +105,7 @@ actor TranscriptRenderPipeline {
 						break
 					}
 
-					while inFlight >= Self.maximumConcurrentRenders {
+					while inFlight >= maximumConcurrentRenders {
 						await group.next()
 						inFlight -= 1
 					}
@@ -116,9 +138,10 @@ actor TranscriptRenderPipeline {
 		after predecessors: [Task<Void, Never>]
 	) -> Task<Void, Never> {
 		let identifier = UUID()
+		let limit = limit
 
 		let delivery = Task { [weak self] in
-			let apply = await submission.job()
+			let apply = await Self.render(submission, limit: limit)
 
 			for predecessor in predecessors {
 				await predecessor.value
@@ -138,6 +161,22 @@ actor TranscriptRenderPipeline {
 		deliveries[identifier] = delivery
 
 		return delivery
+	}
+
+	/** Runs the job, holding a render slot for exactly as long as a CPU-bound job
+	 renders. A caller cancelled while waiting for the slot never runs the job. */
+	private nonisolated static func render( // nonisolated: pure
+		_ submission: TranscriptRenderSubmission,
+		limit: RenderConcurrencyLimit?
+	) async -> (@MainActor () -> Void)? {
+		guard submission.cost == .cpu, let limit else {
+			return await submission.job()
+		}
+		guard await limit.acquire() else {
+			return nil
+		}
+		defer { limit.release() }
+		return await submission.job()
 	}
 
 	private func finishDelivery(_ identifier: UUID) {

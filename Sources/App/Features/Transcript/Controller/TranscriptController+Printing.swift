@@ -31,7 +31,7 @@ extension TranscriptController {
 			: ""
 		let line = ChatLineSnapshot(chatLine, in: context, modeSymbol: senderMark)
 		let viewIdentifier = associatedItem?.uniqueIdentifier
-		let enqueued = enqueueRenderJob {
+		let enqueued = enqueueRenderJob(cost: .cpu) {
 			/* Archived here, beside the render, so the main actor that applies
 			 the line only hands the store a finished entry. */
 			PrintedLineRender(

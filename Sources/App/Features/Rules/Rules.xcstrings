@@ -3844,54 +3844,6 @@
         }
       }
     },
-    "regular-expression-nested-quantifier": {
-      "comment": "Validation message shown beside a rule match field whose pattern repeats a group that already repeats without bound, or repeats alternatives that match the same text. The rule cannot be saved until the pattern is rewritten.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This pattern repeats a group that can match the same text in more than one way, such as (a+)+ or (.|\\s)*. A pattern of that shape can take a very long time to match, so it cannot be saved. Rewrite it without the nested repetition or the overlapping alternatives."
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ez a minta olyan csoportot ismétel, amely ugyanarra a szövegre többféleképpen illeszkedhet, például (a+)+ vagy (.|\\s)*. Az ilyen minta illesztése túl sokáig tarthat, ezért nem menthető. Írd át egymásba ágyazott ismétlések és átfedő alternatívák nélkül."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dieses Muster wiederholt eine Gruppe, die auf mehrere Arten auf denselben Text passen kann, etwa (a+)+ oder (.|\\s)*. Die Auswertung kann sehr lange dauern, daher kann es nicht gesichert werden. Schreibe es ohne verschachtelte Wiederholungen oder überlappende Alternativen um."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Este patrón repite un grupo que puede coincidir con el mismo texto de más de una manera, como (a+)+ o (.|\\s)*. Un patrón con esa forma puede tardar mucho en coincidir, por lo que no se puede guardar. Reescríbelo sin la repetición anidada ni las alternativas superpuestas."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ce motif répète un groupe pouvant correspondre au même texte de plusieurs façons, comme (a+)+ ou (.|\\s)*. Un motif de cette forme peut prendre très longtemps à être évalué, il ne peut donc pas être enregistré. Réécrivez-le sans répétition imbriquée ni alternatives qui se chevauchent."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "このパターンは、(a+)+ や (.|\\s)* のように、同じテキストに複数の方法で一致しうるグループを繰り返しています。この形のパターンは照合に非常に長い時間がかかるため、保存できません。入れ子の繰り返しや、重複する選択肢を使わないように書き直してください。"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Este padrão repete um grupo que pode corresponder ao mesmo texto de mais de uma maneira, como (a+)+ ou (.|\\s)*. Um padrão com esse formato pode levar muito tempo para ser comparado, portanto não pode ser salvo. Reescreva-o sem a repetição aninhada ou as alternativas sobrepostas."
-          }
-        }
-      }
-    },
     "token-channel-name": {
       "comment": "Title of the action token representing a channel name. Migrated from legacy key 90e-tj.",
       "extractionState": "manual",

@@ -31,7 +31,7 @@ extension ServerSession {
 			externalMechanismDisabled: config.saslAuthenticationDisableExternalMechanism,
 			hasPassword: sessionNicknamePassword?.isEmpty == false,
 			hasSigningKey: saslSigningKey != nil,
-			sendsPasswordInClear: permitsCredentialsInClear,
+			sendsPasswordInClear: permitsCredentialsInClear || mayAskToSendCredentials,
 			preferredMechanism: config.saslMechanismPreference
 		)
 	}
@@ -89,6 +89,10 @@ extension ServerSession {
 	private func sendSASLIdentificationInformation(forServerData serverData: String) {
 		switch sasl.mechanism {
 		case "PLAIN":
+			guard permitsCredentialsInClear else {
+				holdSASLPlainForConsent(serverData: serverData)
+				return
+			}
 			let username = config.username.nonEmpty ?? config.nickname
 			let password = sessionNicknamePassword ?? ""
 			/* PLAIN is three fields separated by U+0000. A field that contains
@@ -109,6 +113,26 @@ extension ServerSession {
 		default:
 			break
 		}
+	}
+
+	/** `PLAIN` is the one mechanism that puts the password itself on the wire,
+	 so when the connection cannot vouch for the server it waits for the user.
+	 The server has asked for the payload and the exchange's own timer bounds
+	 the wait; an answer that comes after SASL has ended sends nothing. */
+	private func holdSASLPlainForConsent(serverData: String) {
+		guard mayAskToSendCredentials else {
+			abortSASLNegotiation(reason: isSecured
+				? ConnectionSafetyStrings.Credentials.withheldUnverifiedCertificate
+				: ConnectionSafetyStrings.Credentials.withheldOverPlaintext)
+			return
+		}
+		sessionCredentials.reportedWithheldCredentials = true
+		askToSendCredentials(sent: { session in
+			guard session.isCapabilityEnabled(.isInSASLNegotiation), session.sasl.mechanism == "PLAIN" else { return }
+			session.sendSASLIdentificationInformation(forServerData: serverData)
+		}, declined: { session in
+			session.abortSASLNegotiation(reason: ConnectionSafetyStrings.Credentials.withheldUnverifiedCertificate)
+		})
 	}
 
 	private func sendSASLECDSAInformation(forServerData serverData: String) {

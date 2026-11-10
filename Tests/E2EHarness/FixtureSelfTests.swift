@@ -46,10 +46,14 @@ enum FixtureSelfTests {
 			}
 			try await wait { client.connection.state == .ready }
 			// Exercise line framing across writes as well as several commands in one write.
-			try await client.send("CAP LS ")
-			try await client.send("302\r\n")
-			try await wait { client.contains(":e2e.local CAP * LS :\r\n") }
-			try await client.send("NICK e2euser\r\nUSER e2euser 0 * :Synthetic E2E User\r\nCAP END\r\n")
+			if let answer = kind.saslConsent {
+				try await consentRegistration(answer: answer, client: client)
+			} else {
+				try await client.send("CAP LS ")
+				try await client.send("302\r\n")
+				try await wait { client.contains(":e2e.local CAP * LS :\r\n") }
+				try await client.send("NICK e2euser\r\nUSER e2euser 0 * :Synthetic E2E User\r\nCAP END\r\n")
+			}
 			if attempt <= kind.rejectionCount {
 				try await wait { client.contains("ERROR :E2E_REGISTRATION_REJECTED\r\n") && client.ended }
 				continue
@@ -84,6 +88,11 @@ enum FixtureSelfTests {
 			}
 			try await client.send("QUIT E2E_QUIT\r\n", final: true)
 			try await wait { try HarnessFiles.exists("quit-wire") }
+			if let answer = kind.saslConsent {
+				let expected = SASLConsentFixture(answer: answer).expectedEvidence
+				guard try HarnessFiles.read("sasl-evidence") == expected
+				else { throw HarnessFailure.assertion("SASL consent evidence did not match the answer") }
+			}
 			client.connection.cancel()
 		}
 		// Every path out of the loop ends here, including the TLS stall break and
@@ -93,7 +102,70 @@ enum FixtureSelfTests {
 		try HarnessFiles.write("protocol and local network assertions passed", to: "fixture-selftests-passed")
 	}
 
+	/// A synthetic client doing what the app does when it is offered PLAIN and its
+	/// user answers: the answer is what the peer then has to have seen on the wire.
+	private static func consentRegistration(answer: SASLConsentFixture.Answer, client: Client) async throws {
+		try await client.send("CAP LS 302\r\n")
+		try await wait { client.contains(":e2e.local CAP * LS :sasl=PLAIN\r\n") }
+		try await client.send("NICK e2euser\r\nUSER e2euser 0 * :Synthetic E2E User\r\n")
+		try await client.send("CAP REQ :sasl\r\n")
+		try await wait { client.contains(":e2e.local CAP * ACK :sasl\r\n") }
+		try await client.send("AUTHENTICATE PLAIN\r\n")
+		try await wait { client.contains("AUTHENTICATE +\r\n") }
+		switch answer {
+		case .decline:
+			try await client.send("AUTHENTICATE *\r\n")
+			try await wait { client.contains(" 906 e2euser ") }
+		case .send:
+			try await client.send("AUTHENTICATE \(SASLConsentFixture.expectedPayload)\r\n")
+			try await wait { client.contains(" 903 e2euser ") }
+		}
+		try await client.send("CAP END\r\n")
+	}
+
+	private static func consentChecks() throws {
+		func registered(_ answer: SASLConsentFixture.Answer) throws -> SASLConsentFixture {
+			var fixture = SASLConsentFixture(answer: answer)
+			for line in ["CAP LS 302", "NICK e2euser", "USER e2euser 0 * :Synthetic E2E User", "CAP REQ :sasl",
+			             "AUTHENTICATE PLAIN"]
+			{
+				_ = try fixture.receive(line)
+			}
+			return fixture
+		}
+		let payload = "AUTHENTICATE " + SASLConsentFixture.expectedPayload
+
+		var declined = try registered(.decline)
+		_ = try declined.receive("AUTHENTICATE *")
+		_ = try declined.receive("CAP END")
+		guard declined.isRegistered, declined.evidence == declined.expectedEvidence
+		else { throw HarnessFailure.assertion("Declined SASL consent self-test failed") }
+		var payloadAfterDecline = try registered(.decline)
+		try mustReject { _ = try payloadAfterDecline.receive(payload) }
+		var otherPayload = try registered(.decline)
+		try mustReject { _ = try otherPayload.receive("AUTHENTICATE aGVsbG8=") }
+		var secretOnAnotherCommand = try registered(.send)
+		try mustReject { _ = try secretOnAnotherCommand.receive("PRIVMSG x :" + SASLConsentFixture.secret) }
+
+		var sent = try registered(.send)
+		try mustReject { _ = try sent.receive("AUTHENTICATE *") }
+		var wrong = try registered(.send)
+		try mustReject { _ = try wrong.receive("AUTHENTICATE aGVsbG8=") }
+		_ = try sent.receive(payload)
+		try mustReject { _ = try sent.receive(payload) }
+		var early = SASLConsentFixture(answer: .send)
+		try mustReject { _ = try early.receive("AUTHENTICATE PLAIN") }
+		var endedTooSoon = try registered(.send)
+		try mustReject { _ = try endedTooSoon.receive("CAP END") }
+		var afterPayload = try registered(.send)
+		_ = try afterPayload.receive(payload)
+		_ = try afterPayload.receive("CAP END")
+		guard afterPayload.isRegistered, afterPayload.evidence == afterPayload.expectedEvidence
+		else { throw HarnessFailure.assertion("Sent SASL consent self-test failed") }
+	}
+
 	private static func protocolChecks() throws {
+		try consentChecks()
 		let sample = ProcessDiagnostics.summary(Data("""
 		Path: /Users/private/Glasstual
 		Thread_1 DispatchQueue_1: com.apple.main-thread

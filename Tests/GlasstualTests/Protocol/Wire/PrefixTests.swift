@@ -66,13 +66,40 @@ struct PrefixTests {
 		#expect(message.sender.address == "example.org")
 	}
 
-	/// A "!" with an unusable username behind it is not recoverable: reading
-	/// the nickname out of it would accept a prefix the grammar rejects.
-	@Test("A hostmask whose username is unusable stays a server")
-	func unparsableUsernameStaysAServer() throws {
-		let message = try #require(
-			Message(line: ":alice!\(String(repeating: "u", count: 41))@example.org PRIVMSG #chan :hi")
-		)
+	/** A "!" can only be in a user's prefix, so a username the hostmask grammar
+	 refuses does not turn the sender into the server. The person is still named
+	 by what precedes the "!", with no username, and the wire spelling is kept. */
+	@Test("A hostmask whose username is unusable still names its user", arguments: [
+		("nick!us!er@host.test", "host.test"),
+		("nick!\(String(repeating: "u", count: 41))@host.test", "host.test"),
+		("nick!us@er@host.test", nil),
+	])
+	func unusableUsernameStillNamesItsUser(prefix: String, address: String?) throws {
+		let message = try #require(Message(line: ":\(prefix) PRIVMSG #chan :hi"))
+
+		#expect(message.sender.isServer == false)
+		#expect(message.sender.nickname == "nick")
+		#expect(message.sender.username == nil)
+		#expect(message.sender.address == address)
+		#expect(message.sender.hostmask == prefix)
+	}
+
+	/// The sender being the server is what makes a NOTICE count as services', so
+	/// a refused username must not make one.
+	@Test("A NOTICE from a refused-username prefix is not a services notice")
+	func refusedUsernameNoticeIsNotFromServices() throws {
+		let message = try #require(Message(line: ":NickServ!us!er@host.test NOTICE me :You are now identified"))
+
+		#expect(ServiceNoticePolicy.noticeIsFromServices(
+			senderIsServer: message.sender.isServer,
+			senderAddress: message.sender.address,
+			serverAddress: "irc.example.net"
+		) == false)
+	}
+
+	@Test("A nickname the grammar refuses before the bang is still unparsed")
+	func invalidNicknameBeforeTheBangStaysAServer() throws {
+		let message = try #require(Message(line: ":ni@ck!us!er@host.test PRIVMSG #chan :hi"))
 
 		#expect(message.sender.isServer)
 	}

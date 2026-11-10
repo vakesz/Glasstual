@@ -80,7 +80,11 @@ struct InternetAddressLookupTests {
 					// for the resource timeout instead of rejecting this body now.
 					try await Task.sleep(for: .seconds(60))
 					withExtendedLifetime(connection) {}
-				} catch {}
+				} catch is CancellationError {
+					// The test ended and cancelled the server.
+				} catch {
+					Issue.record(error, "The fixture server failed before sending its response")
+				}
 				return
 			}
 		}

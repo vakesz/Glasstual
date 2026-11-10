@@ -111,4 +111,23 @@ struct ServerConfigPersistenceTests {
 		#expect(unique.serverList.first?.uniqueIdentifier != serverCopy.uniqueIdentifier)
 		#expect(unique.conversationList.first?.uniqueIdentifier != channelCopy.uniqueIdentifier)
 	}
+
+	/// A configuration that must not inherit another one's secrets gets
+	/// identities derived from where it is going, and carries none of them.
+	@Test("A re-identified copy has fresh, stable identities and no secrets")
+	func reidentifiedCopyCarriesNoSecrets() {
+		var config = ServerConfig(connectionName: "SwiftNet")
+		config.nicknamePassword = "nick-password"
+		config.serverList = [ServerEndpoint(serverAddress: "irc.example.test")]
+		config.conversationList = [ConversationConfig(name: "#swift")]
+
+		let copy = config.reidentified(derivedFrom: "irc.other.test:6697")
+
+		#expect(copy.uniqueIdentifier != config.uniqueIdentifier)
+		#expect(copy.serverList.first?.uniqueIdentifier != config.serverList.first?.uniqueIdentifier)
+		#expect(copy.conversationList.first?.uniqueIdentifier != config.conversationList.first?.uniqueIdentifier)
+		#expect(copy.pendingNicknamePassword == .unchanged)
+		#expect(copy.uniqueIdentifier == config.reidentified(derivedFrom: "irc.other.test:6697").uniqueIdentifier)
+		#expect(copy.uniqueIdentifier != config.reidentified(derivedFrom: "irc.third.test:6697").uniqueIdentifier)
+	}
 }

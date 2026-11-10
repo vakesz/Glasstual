@@ -182,4 +182,64 @@ struct ScrollbackDuplicateIndexTests {
 		#expect(index.containsLine(receivedAt: date, nickname: "alice", messageBody: "same", forView: view) == false)
 		#expect(index.containsMessageIdentifier("newest", forView: view))
 	}
+
+	private func indexedView(_ line: ChatLine) -> (ScrollbackDuplicateIndex, String) {
+		let index = ScrollbackDuplicateIndex()
+		let view = "view-\(UUID().uuidString)"
+		index.indexChatLine(line, forView: view)
+		return (index, view)
+	}
+
+	@Test("The fallback match rounds to the millisecond and distinguishes nickname, body and time")
+	func fallbackMatchSemantics() {
+		let date = Date(timeIntervalSince1970: 1000.0004)
+		let (index, view) = indexedView(chatLine(body: "hello there", messageIdentifier: "", at: date))
+
+		#expect(index.containsLine(
+			receivedAt: Date(timeIntervalSince1970: 1000.0001),
+			nickname: "alice",
+			messageBody: "hello there",
+			forView: view
+		))
+		#expect(index.containsLine(receivedAt: date, nickname: "bob", messageBody: "hello there", forView: view) == false)
+		#expect(index.containsLine(receivedAt: date, nickname: "alice", messageBody: "hello there!", forView: view) == false)
+		#expect(index.containsLine(
+			receivedAt: date.addingTimeInterval(0.002),
+			nickname: "alice",
+			messageBody: "hello there",
+			forView: view
+		) == false)
+	}
+
+	@Test("A missing nickname matches an empty one")
+	func missingNicknameMatchesEmpty() {
+		let date = Date(timeIntervalSince1970: 1000)
+		var line = chatLine(body: "narrated", messageIdentifier: "", at: date)
+		line.nickname = nil
+		let (index, view) = indexedView(line)
+
+		#expect(index.containsLine(receivedAt: date, nickname: "", messageBody: "narrated", forView: view))
+		#expect(index.containsLine(receivedAt: date, nickname: nil, messageBody: "narrated", forView: view))
+	}
+
+	@Test("A nickname and body cannot be split a different way to match")
+	func nicknameAndBodyBoundaryIsUnambiguous() {
+		let date = Date(timeIntervalSince1970: 1000)
+		var line = chatLine(body: "b\u{1f}c", messageIdentifier: "", at: date)
+		line.nickname = "a"
+		let (index, view) = indexedView(line)
+
+		#expect(index.containsLine(receivedAt: date, nickname: "a", messageBody: "b\u{1f}c", forView: view))
+		#expect(index.containsLine(receivedAt: date, nickname: "a\u{1f}b", messageBody: "c", forView: view) == false)
+	}
+
+	@Test("Long bodies that differ only at the end are told apart")
+	func longBodiesDifferingAtTheEnd() {
+		let date = Date(timeIntervalSince1970: 1000)
+		let prefix = String(repeating: "x", count: 4096)
+		let (index, view) = indexedView(chatLine(body: prefix + "a", messageIdentifier: "", at: date))
+
+		#expect(index.containsLine(receivedAt: date, nickname: "alice", messageBody: prefix + "a", forView: view))
+		#expect(index.containsLine(receivedAt: date, nickname: "alice", messageBody: prefix + "b", forView: view) == false)
+	}
 }

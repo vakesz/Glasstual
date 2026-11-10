@@ -178,6 +178,34 @@ struct AccessibilityDriver {
 		}
 	}
 
+	/** Answers the question the app asks before it sends the account password to a
+	 server whose certificate it did not check. The alert is found by its title text
+	 and the button by its own title, as `certificate(answer:)` does; neither
+	 needs an accessibility identifier. `nil` only waits for the alert. */
+	func credentialConsent(send: Bool?) async throws {
+		// The title and buttons of `SessionCredentials.credentialConsentAlert`;
+		// the apostrophe is U+2019, as the catalog spells it.
+		let title = "Send your password to an unverified server?"
+		let button = send == true ? "Send Password" : "Don\u{2019}t Send"
+		try await wait("credential consent alert") { deadline in
+			let windows = try value(root, kAXWindowsAttribute, deadline: deadline) as? [AXUIElement] ?? []
+			for window in windows {
+				let prompt = try find(from: window, deadline: deadline) { node in
+					try text(node, kAXValueAttribute, deadline: deadline) == title
+						|| text(node, kAXTitleAttribute, deadline: deadline) == title
+				}
+				guard prompt != nil else { continue }
+				guard send != nil else { return true }
+				guard let target = try named(button, role: kAXButtonRole, from: window, deadline: deadline),
+				      try value(target, kAXEnabledAttribute, deadline: deadline) as? Bool == true
+				else { return false }
+				try press(target, deadline: deadline)
+				return true
+			}
+			return false
+		}
+	}
+
 	func press(_ element: AXUIElement, deadline: Double) throws {
 		try arm(element, deadline: deadline)
 		let status = AXUIElementPerformAction(element, kAXPressAction as CFString)

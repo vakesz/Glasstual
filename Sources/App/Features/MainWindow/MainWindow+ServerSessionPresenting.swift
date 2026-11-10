@@ -17,6 +17,10 @@ extension MainWindow: ServerSessionPresenting {
 		await Alerts.run(request, on: .mainWindow).response == .default
 	}
 
+	func respond(to request: AlertRequest) async -> AlertResponse {
+		await Alerts.run(request, on: .mainWindow).response
+	}
+
 	func closeSheets(for session: ServerSession) {
 		let sessionIdentifier = session.uniqueIdentifier
 		sheetModel.closeSheets { owner in

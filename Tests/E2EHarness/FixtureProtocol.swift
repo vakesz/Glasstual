@@ -15,6 +15,8 @@ enum ScenarioKind: String, CaseIterable {
 	case tlsAccept
 	case tlsRejectRetry
 	case tlsStall
+	case credentialConsentDecline
+	case credentialConsentSend
 
 	var rejectionCount: Int {
 		switch self {
@@ -25,7 +27,7 @@ enum ScenarioKind: String, CaseIterable {
 	}
 
 	var secured: Bool {
-		[.tlsAccept, .tlsRejectRetry, .tlsStall].contains(self)
+		[.tlsAccept, .tlsRejectRetry, .tlsStall, .credentialConsentDecline, .credentialConsentSend].contains(self)
 	}
 
 	var connectedQuit: Bool {
@@ -48,6 +50,18 @@ enum ScenarioKind: String, CaseIterable {
 
 	var hasFixtureTest: Bool {
 		self != .settingsSnapshot && self != .onboardingSkip
+	}
+
+	/// What the user answers when the client asks whether to send its password
+	/// to a server whose certificate it did not check; `nil` for every other
+	/// scenario. These run over TLS with chain validation off and SASL PLAIN
+	/// offered.
+	var saslConsent: SASLConsentFixture.Answer? {
+		switch self {
+		case .credentialConsentDecline: .decline
+		case .credentialConsentSend: .send
+		default: nil
+		}
 	}
 
 	var onboarding: Bool {
@@ -89,6 +103,14 @@ struct FixtureProtocol {
 		"QUIT :Glasstual IRC Client: https://github.com/vakesz/Glasstual",
 	]
 
+	/// What the server says once registration completes, shared by every scenario.
+	static let welcome = [
+		":e2e.local 001 e2euser :Welcome to E2E",
+		":e2e.local 005 e2euser NETWORK=E2E CASEMAPPING=rfc1459 CHANTYPES=# :supported",
+		":e2e.local 422 e2euser :No MOTD", "PING :E2E_PING",
+		":e2e.local NOTICE e2euser :E2E_TRANSCRIPT_READY",
+	]
+
 	static let registration = [
 		["CAP LS 302", "CAP LS :302"], ["NICK e2euser", "NICK :e2euser"],
 		["USER e2euser 0 * :Synthetic E2E User"], ["CAP END", "CAP :END"],
@@ -104,23 +126,37 @@ struct FixtureProtocol {
 	var deniedJoin: DeniedJoinFixture?
 	var interaction: InteractiveFixture?
 	let acceptsOnboardingQuit: Bool
+	/// Owns registration until it completes, for the credential-consent scenarios.
+	var consent: SASLConsentFixture?
 
 	init(
 		reject: Bool,
 		messaging: Bool,
 		deniedJoin: DeniedJoinFixture? = nil,
 		interaction: InteractiveFixture? = nil,
-		acceptsOnboardingQuit: Bool = false
+		acceptsOnboardingQuit: Bool = false,
+		consent: SASLConsentFixture? = nil
 	) {
 		self.reject = reject
 		self.messaging = messaging
 		self.deniedJoin = deniedJoin
 		self.interaction = interaction
 		self.acceptsOnboardingQuit = acceptsOnboardingQuit
+		self.consent = consent
 	}
 
 	mutating func receive(_ line: String) throws -> [String] {
 		guard !quitSeen else { throw HarnessFailure.assertion("Command after QUIT; payload withheld") }
+		if var consent, !consent.isRegistered {
+			defer {
+				self.consent = consent
+				// The consent exchange stood in for the ordinary registration lines.
+				if consent.isRegistered {
+					registrationIndex = Self.registration.count
+				}
+			}
+			return try consent.receive(line)
+		}
 		if registrationIndex < Self.registration.count {
 			return try register(line)
 		}
@@ -139,12 +175,7 @@ struct FixtureProtocol {
 			if reject {
 				return ["ERROR :E2E_REGISTRATION_REJECTED"]
 			}
-			return [
-				":e2e.local 001 e2euser :Welcome to E2E",
-				":e2e.local 005 e2euser NETWORK=E2E CASEMAPPING=rfc1459 CHANTYPES=# :supported",
-				":e2e.local 422 e2euser :No MOTD", "PING :E2E_PING",
-				":e2e.local NOTICE e2euser :E2E_TRANSCRIPT_READY",
-			]
+			return Self.welcome
 		}
 		return []
 	}

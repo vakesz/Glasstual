@@ -55,12 +55,12 @@ extension ServerSession {
 		guard isLoggedIn, channelName.isEmpty == false else { return }
 		if hideResponse {
 			requestedCommands.recordWhoRequestOpened(
-				for: casefoldedTarget(channelName),
+				for: supportInfo.casefoldString(channelName),
 				sentAt: sentAt,
 				expiresWithNextSweep: expiresWithNextSweep
 			)
 		} else {
-			requestedCommands.recordWhoRequestOpenedAsVisible(for: casefoldedTarget(channelName))
+			requestedCommands.recordWhoRequestOpenedAsVisible(for: supportInfo.casefoldString(channelName))
 		}
 		if supportInfo.whoxSupported {
 			send(.who, arguments: [channelName, "%tcuhnfar,\(ServerQuirks.whoxToken)"])

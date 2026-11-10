@@ -197,7 +197,7 @@ extension TranscriptController {
 			)
 		}
 		let snapshots = lines
-		enqueueRenderJob {
+		enqueueRenderJob(cost: .cpu) {
 			(
 				results: Self.renderJob(snapshots, context: context),
 				entries: archivesForStorage ? chatLines.map { $0.scrollbackEntry(forView: viewIdentifier) } : []

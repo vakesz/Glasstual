@@ -174,6 +174,21 @@ extension ServerSession {
 		}
 	}
 
+	/** A snapshot of the channels `user` is in, safe to walk while members leave.
+
+	 The store keeps them as a set, whose order is random, so `ordered` puts them
+	 in conversation-list order for callers that print into each one. Only
+	 channels this session still lists and that still hold members are returned. */
+	func relatedChannels(of user: User, ordered: Bool = true) -> [Conversation] {
+		let related = persistentStore(for: user).relatedChannels
+		guard related.isEmpty == false else { return [] }
+		guard ordered, related.count > 1 else {
+			return Array(related).filter { $0.associatedSession === self && $0.memberInfo != nil }
+		}
+
+		return conversationList.filter { related.contains($0) && $0.memberInfo != nil }
+	}
+
 	/// `user`'s member in `channel`, if they are in it.
 	func userAssociated(_ user: User, with channel: Conversation) -> Member? {
 		guard persistentStore(for: user).relatedChannels.contains(channel) else {

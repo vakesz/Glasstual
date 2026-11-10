@@ -11,6 +11,59 @@ import Foundation
  nothing: the download that follows fails on its own account. */
 nonisolated struct InlineImageHostResolver: Sendable {
 	let addresses: @Sendable (String) async -> [String]
+	private let lookups: InlineImageLookups
+
+	/// `maximumInFlight` bounds the distinct names being looked up at once; a
+	/// name past it is refused rather than queued. Each resolver shares lookups
+	/// among its own callers only.
+	init(
+		addresses: @escaping @Sendable (String) async -> [String],
+		maximumInFlight: Int = InlineImageLookups.defaultMaximumInFlight
+	) {
+		self.addresses = addresses
+		lookups = InlineImageLookups(maximumInFlight: maximumInFlight)
+	}
+
+	/// How long a lookup may take before the caller stops waiting for it.
+	static let deadline = Duration.seconds(5)
+
+	/** The addresses for `host`, or `nil` when the lookup outlived `limit`, the
+	 caller was cancelled, or too many other names are being looked up.
+
+	 `getaddrinfo` cannot be cancelled, so a lookup that overruns is abandoned
+	 rather than stopped: its answer is discarded when it finally arrives. The
+	 first of the answer, the deadline and the cancellation is what the caller
+	 gets, through a stream that keeps only that first value.
+
+	 Callers asking for the same name wait on one lookup, and awaiting its value
+	 does not cancel it, so one caller giving up leaves the others waiting. */
+	func resolve(_ host: String, within limit: Duration = InlineImageHostResolver.deadline) async -> [String]? {
+		guard Task.isCancelled == false,
+		      let shared = await lookups.lookup(host, using: addresses)
+		else { return nil }
+
+		let (outcomes, report) = AsyncStream<[String]?>.makeStream(bufferingPolicy: .bufferingOldest(1))
+		let lookupTask = Task {
+			await report.yield(shared.value)
+		}
+		let timer = Task {
+			try? await Task.sleep(for: limit)
+			report.yield(nil)
+		}
+		defer {
+			lookupTask.cancel()
+			timer.cancel()
+		}
+
+		return await withTaskCancellationHandler {
+			for await outcome in outcomes {
+				return outcome
+			}
+			return nil
+		} onCancel: {
+			report.yield(nil)
+		}
+	}
 
 	static let system = InlineImageHostResolver { host in
 		await systemAddresses(for: host)
@@ -142,7 +195,11 @@ nonisolated enum InlineImageHostPolicy {
 
 	/// Whether `url` may be fetched, resolving its host when the spelling is
 	/// not enough.
-	static func permits(_ url: URL, resolver: InlineImageHostResolver) async -> Bool {
+	static func permits(
+		_ url: URL,
+		resolver: InlineImageHostResolver,
+		deadline: Duration = InlineImageHostResolver.deadline
+	) async -> Bool {
 		switch verdict(forHost: url.host(percentEncoded: false)) {
 		case .refused:
 			return false
@@ -151,7 +208,13 @@ nonisolated enum InlineImageHostPolicy {
 		case .needsResolution:
 			guard let host = url.host(percentEncoded: false) else { return false }
 
-			for address in await resolver.addresses(host) {
+			/* A lookup that does not finish in time, or a caller that has gone
+			 away, is refused: the check cannot say the name is public. */
+			guard let addresses = await resolver.resolve(host, within: deadline) else {
+				return false
+			}
+
+			for address in addresses {
 				let numeric = address.split(separator: "%", maxSplits: 1).first.map(String.init) ?? address
 
 				guard DCCWireFormat.isDialableAddress(numeric) else {

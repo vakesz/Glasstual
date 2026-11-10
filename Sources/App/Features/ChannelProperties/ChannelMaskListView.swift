@@ -171,19 +171,26 @@ struct ChannelMaskListView: View {
 	private func editor(canEdit: Bool) -> some View {
 		@Bindable var model = session.model
 
+		/* The tooltip is applied only when the field is read-only:
+		 `help("")` installs an empty tooltip that AppKit draws as an empty box. */
+		let field = TextField(text: $model.draft, prompt: Text(.ChannelProperties.addPlaceholder)) {
+			Text(.ChannelProperties.addFieldLabel)
+		}
+		.focused($fieldIsFocused)
+		.onExitCommand {
+			if model.editingMask != nil {
+				session.cancelEditing()
+			}
+		}
+		.disabled(canEdit == false)
+
 		VStack(alignment: .leading, spacing: UISpacing.tight) {
 			HStack(spacing: UISpacing.regular) {
-				TextField(text: $model.draft, prompt: Text(.ChannelProperties.addPlaceholder)) {
-					Text(.ChannelProperties.addFieldLabel)
+				if canEdit {
+					field
+				} else {
+					field.help(String(localized: .ChannelProperties.noPermissionHint))
 				}
-				.focused($fieldIsFocused)
-				.onExitCommand {
-					if model.editingMask != nil {
-						session.cancelEditing()
-					}
-				}
-				.disabled(canEdit == false)
-				.help(canEdit ? "" : String(localized: .ChannelProperties.noPermissionHint))
 
 				if model.editingMask != nil {
 					Button(.ChannelProperties.cancelEdit, action: session.cancelEditing)

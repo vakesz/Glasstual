@@ -52,18 +52,13 @@ nonisolated enum HostmaskGlob {
 		return tokens
 	}
 
-	/// Folds a hostmask for matching.
+	/// The compiled mask with every literal folded.
 	///
 	/// A nickname is a byte string with its own case rules: RFC 1459 §2.2
 	/// makes `[`, `]`, `\` and `~` the upper-case forms of `{`, `}`, `|` and
 	/// `^`, so an ignore on `nick[home]` has to match `nick{home}`. Swift's
-	/// `lowercased()` knows neither that nor where to stop — it folds
-	/// non-ASCII letters too, which no server does.
-	static func casefold(_ value: String, caseMapping: ISupportCaseMapping) -> String {
-		IRCCaseFolding.fold(value, using: caseMapping)
-	}
-
-	/// The compiled mask with every literal folded.
+	/// `lowercased()` knows neither that nor where to stop, and `IRCCaseFolding`
+	/// does.
 	///
 	/// Folding the mask *before* compiling would eat its syntax: `\` is both
 	/// the escape character and the upper-case form of `|`, so `a\*b` would
@@ -75,23 +70,23 @@ nonisolated enum HostmaskGlob {
 			if case let .literal(scalar) = token {
 				literal.unicodeScalars.append(scalar)
 			} else {
-				result.append(contentsOf: casefold(literal, caseMapping: caseMapping).unicodeScalars.map(HostmaskGlobToken.literal))
+				result.append(contentsOf: IRCCaseFolding.fold(literal, using: caseMapping).unicodeScalars.map(HostmaskGlobToken.literal))
 				literal = ""
 				result.append(token)
 			}
 		}
-		result.append(contentsOf: casefold(literal, caseMapping: caseMapping).unicodeScalars.map(HostmaskGlobToken.literal))
+		result.append(contentsOf: IRCCaseFolding.fold(literal, using: caseMapping).unicodeScalars.map(HostmaskGlobToken.literal))
 		return result
 	}
 
-	/// `tokens` must already be folded by `casefold(_:caseMapping:)` under the
+	/// `tokens` must already be folded by `IRCCaseFolding.fold(_:using:)` under the
 	/// same mapping; the subject is folded here.
 	static func matches(
 		tokens: [HostmaskGlobToken],
 		subject: String,
 		caseMapping: ISupportCaseMapping
 	) -> Bool {
-		let subject = Array(casefold(subject, caseMapping: caseMapping).unicodeScalars)
+		let subject = Array(IRCCaseFolding.fold(subject, using: caseMapping).unicodeScalars)
 
 		var tokenIndex = 0
 		var subjectIndex = 0
