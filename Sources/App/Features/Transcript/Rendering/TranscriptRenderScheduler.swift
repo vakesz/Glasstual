@@ -28,7 +28,7 @@ final class TranscriptRenderScheduler {
 
 	/** The pipeline and the task that drains it. Replaced wholesale on
 	 ``restart()``: dropping the stream is how queued work is cancelled. */
-	private var pipeline = TranscriptRenderPipeline()
+	private var pipeline = TranscriptRenderPipeline(limit: .shared)
 	private var pipelineTask: Task<Void, Never>?
 
 	/// A slice, so that running a batch advances the start rather than moving
@@ -56,8 +56,8 @@ final class TranscriptRenderScheduler {
 
 	/// Hands a job to the pipeline. Submission order is render-application
 	/// order, except that the jobs after a standalone one do not wait for it.
-	func submit(isStandalone: Bool, _ job: @escaping TranscriptRenderJob) {
-		pipeline.submissions.yield(TranscriptRenderSubmission(isStandalone: isStandalone, job: job))
+	func submit(isStandalone: Bool, cost: RenderCost = .io, _ job: @escaping TranscriptRenderJob) {
+		pipeline.submissions.yield(TranscriptRenderSubmission(isStandalone: isStandalone, cost: cost, job: job))
 	}
 
 	/// Queues one finished render for application, and starts the drain if it
@@ -106,7 +106,7 @@ final class TranscriptRenderScheduler {
 	/// Drops what is queued and starts over with a fresh pipeline.
 	func restart() {
 		stop()
-		pipeline = TranscriptRenderPipeline()
+		pipeline = TranscriptRenderPipeline(limit: .shared)
 		startPipeline()
 	}
 

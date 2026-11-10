@@ -417,7 +417,7 @@ extension TranscriptRenderer {
  Reading them from inside the renderer made a render a function of hidden global
  state: the same body and the same options could produce two different results
  and nothing in the signature said so. */
-nonisolated struct TranscriptTextRules: Sendable {
+nonisolated struct TranscriptTextRules: Sendable, Equatable {
 	var filtersUnicodeTextSpam = false
 	var highlightMatchingMethod = NicknameHighlightMatchMode.exact
 	var detectsHighlightSpam = true

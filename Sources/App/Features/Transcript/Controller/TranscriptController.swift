@@ -70,6 +70,8 @@ final class TranscriptController: ChatItemPresenting, ServerHistoryPresenting {
 	private let memberRenderCache = TranscriptMemberDirectoryCache()
 	let inlineImageLoader: InlineImageLoader
 	let highlightExpressions: TranscriptHighlightExpressions
+	/// What a line is rendered against; one copy shared by every transcript.
+	let settings: TranscriptSettingsStore
 	let scrollback: Scrollback
 	private(set) var scrollbackMutationTask: Task<Void, Never>?
 
@@ -147,8 +149,7 @@ final class TranscriptController: ChatItemPresenting, ServerHistoryPresenting {
 			return false
 		}
 		let config = conversation.config
-		return SettingsKeys.Messages.showInlineMedia.detachedValue ? !config.inlineMediaDisabled : config
-			.inlineMediaEnabled
+		return settings.current.showsInlineMedia ? !config.inlineMediaDisabled : config.inlineMediaEnabled
 	}
 
 	var viewIsVisible: Bool {
@@ -171,10 +172,12 @@ final class TranscriptController: ChatItemPresenting, ServerHistoryPresenting {
 	init(
 		session: ServerSession, in window: MainWindow, inlineImageLoader: InlineImageLoader,
 		highlightExpressions: TranscriptHighlightExpressions = .shared,
+		settings: TranscriptSettingsStore = AppServices.transcriptSettings,
 		scrollback: Scrollback = .shared, commands: TranscriptCommandSink = .menuController()
 	) {
 		self.inlineImageLoader = inlineImageLoader
 		self.highlightExpressions = highlightExpressions
+		self.settings = settings
 		self.scrollback = scrollback
 		commandSink = commands
 		historyPageFetcher = { await scrollback.fetchOutcome($0) }
@@ -186,10 +189,12 @@ final class TranscriptController: ChatItemPresenting, ServerHistoryPresenting {
 
 	init(conversation: Conversation, in window: MainWindow,
 	     highlightExpressions: TranscriptHighlightExpressions = .shared,
+	     settings: TranscriptSettingsStore = AppServices.transcriptSettings,
 	     scrollback: Scrollback = .shared, commands: TranscriptCommandSink = .menuController())
 	{
 		inlineImageLoader = .shared
 		self.highlightExpressions = highlightExpressions
+		self.settings = settings
 		self.scrollback = scrollback
 		commandSink = commands
 		let storage = scrollback
@@ -351,6 +356,7 @@ final class TranscriptController: ChatItemPresenting, ServerHistoryPresenting {
 	@discardableResult
 	func enqueueRenderJob<Output: Sendable>(
 		isStandalone: Bool = false,
+		cost: RenderCost = .io,
 		render: @escaping @Sendable @concurrent () async -> Output?,
 		apply: @escaping @MainActor (Output) -> Void
 	) -> Bool {
@@ -360,7 +366,7 @@ final class TranscriptController: ChatItemPresenting, ServerHistoryPresenting {
 		let generation = renderScheduler.generation
 		let admission = associatedSession?.renderAdmission
 		let ticket = admission?.submit(for: uniqueIdentifier)
-		renderScheduler.submit(isStandalone: isStandalone) { [weak self] in
+		renderScheduler.submit(isStandalone: isStandalone, cost: cost) { [weak self] in
 			let output = await render()
 			return {
 				guard let self, let output, self.acceptsRenderGeneration(generation) else {
@@ -413,8 +419,8 @@ final class TranscriptController: ChatItemPresenting, ServerHistoryPresenting {
 		return TranscriptRenderContext(
 			inlineMediaEnabled: inlineMediaEnabledForView,
 			isChannel: conversation?.isChannel == true,
-			showsDateChanges: SettingsKeys.Messages.showDateChanges.value,
-			textPolicy: .current(),
+			showsDateChanges: settings.current.showsDateChanges,
+			textPolicy: settings.current.textRules,
 			members: includingMembers ? memberRenderCache.members(in: conversation) : [],
 			caseMapping: associatedSession?.supportInfo.caseMapping ?? .rfc1459,
 			sessionReactions: reactions.all,

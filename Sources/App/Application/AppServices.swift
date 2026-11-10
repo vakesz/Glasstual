@@ -39,6 +39,10 @@ enum AppServices {
 	static let scripts = ScriptCatalogStore()
 	static let messageRules = MessageRules()
 
+	/// What every transcript renders a printed line against, kept so a line does
+	/// not read the defaults store.
+	static let transcriptSettings = TranscriptSettingsStore()
+
 	private weak static var delegateStorage: ApplicationDelegate?
 
 	static var delegate: ApplicationDelegate! {

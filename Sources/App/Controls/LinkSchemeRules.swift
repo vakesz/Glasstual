@@ -7,7 +7,7 @@ import Foundation
 
  The declarations keep the key names the AutoHyperlinks framework that preceded
  this parser used, so a user customization carries over. */
-nonisolated struct LinkSchemeRules: Sendable {
+nonisolated struct LinkSchemeRules: Sendable, Equatable {
 	var permitsAnyScheme = false
 	var permittedSchemes: Set<String> = []
 
