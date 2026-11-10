@@ -272,6 +272,8 @@ nonisolated struct ConnectionHostSendOrderingTests {
 			try #require(registration.count == 2)
 			host.enforceFloodControl()
 			host.send(Data("PRIVMSG NickServ :IDENTIFY test-only\r\n".utf8))
+			// A bypassing sentinel could overtake the line still being queued, so wait for it.
+			_ = try await server.lines(waitingFor: 3)
 		}
 		#expect(received == ["CAP LS 302", "NICK tester", "PRIVMSG NickServ :IDENTIFY test-only"])
 	}
