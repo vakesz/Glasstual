@@ -89,6 +89,9 @@ actor ScrollbackSession {
 				migrationProgress: { fraction in
 					reportProgress.yield(fraction)
 				},
+				saveFailureHandler: { reason in
+					await Scrollback.noteSaveFailure(reason)
+				},
 				deletionHandler: { identifiers, viewIdentifier in
 					await Scrollback.noteWillDeleteLines(identifiers, inView: viewIdentifier)
 				}
