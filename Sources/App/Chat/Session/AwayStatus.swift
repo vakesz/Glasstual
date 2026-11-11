@@ -26,6 +26,13 @@ struct AwayStatus {
 	 away the user asked for survives the display sleeping, the Mac coming
 	 back from idle and a Focus ending. */
 	var autoReason: AutoAwayReason?
+
+	/// Teardown: the connection that was away has ended. The comment is kept,
+	/// for the next connection to send again.
+	mutating func resetForTeardown() {
+		isAway = false
+		previousNickname = nil
+	}
 }
 
 extension ServerSession {

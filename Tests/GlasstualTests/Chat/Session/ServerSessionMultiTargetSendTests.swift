@@ -130,7 +130,7 @@ struct ServerSessionMultiTargetSendTests {
 
 	private func session() -> TestServerSession {
 		let session = TestServerSession(configDictionary: ["nickname": "me", "username": "me"])
-		session.userHostmask = "me!user@example.org"
+		session.identity.hostmask = "me!user@example.org"
 
 		return session
 	}

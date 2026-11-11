@@ -73,7 +73,7 @@ extension ServerSession {
 		}
 
 		if nicknameIsMyself(reply.nickname) {
-			userHostmask = "\(reply.nickname)!\(reply.username)@\(reply.address)"
+			identity.hostmask = "\(reply.nickname)!\(reply.username)@\(reply.address)"
 		}
 	}
 

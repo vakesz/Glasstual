@@ -13,7 +13,7 @@ struct ServerSessionMultilineSendingTests {
 	private func session(limits: [String] = ["max-bytes=4096", "max-lines=10"], negotiated: Bool = true) -> TestServerSession {
 		let session = TestServerSession(configDictionary: ["nickname": "me", "username": "me"])
 		session.userNickname = "me"
-		session.userHostmask = "me!user@example.org"
+		session.identity.hostmask = "me!user@example.org"
 		session.markAsLoggedIn()
 		if negotiated {
 			session.enableCapability(.batch)

@@ -107,7 +107,7 @@ struct LineSplittingProgressTests {
 	@Test(.timeLimit(.minutes(1)))
 	func splittingMakesProgressWhenTheBudgetIsAlreadyExhausted() {
 		let session = TestServerSession()
-		session.userHostmask = String(repeating: "h", count: 400)
+		session.identity.hostmask = String(repeating: "h", count: 400)
 
 		let channelName = "#" + String(repeating: "c", count: 300)
 		var cursor = LineCursor(NSAttributedString(string: "hello world"))
@@ -126,7 +126,7 @@ struct LineSplittingProgressTests {
 	@Test
 	func splittingStillConsumesTheWholeLineWithAnOrdinaryBudget() {
 		let session = TestServerSession()
-		session.userHostmask = "nick!user@host"
+		session.identity.hostmask = "nick!user@host"
 
 		var cursor = LineCursor(NSAttributedString(string: "hello world"))
 		let message = cursor.nextLine(forTarget: "#channel", on: session, with: .privateMessage)

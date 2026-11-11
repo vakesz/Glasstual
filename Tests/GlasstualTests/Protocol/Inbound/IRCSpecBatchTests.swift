@@ -353,7 +353,7 @@ struct IRCSpecBatchTests {
 		let session = TestServerSession(configDictionary: ["nickname": "me", "username": "me"])
 
 		session.enableCapability([.batch, .labeledResponse])
-		session.userHostmask = "me!user@example.org"
+		session.identity.hostmask = "me!user@example.org"
 		session.supportInfo.processConfigurationData("TARGMAX=PRIVMSG:4")
 
 		let first = try #require(session.findConversationOrCreate("#one"))
@@ -389,7 +389,7 @@ struct IRCSpecBatchTests {
 	func groupedMessagesAreUntaggedWithoutTheCapabilities() throws {
 		let session = TestServerSession(configDictionary: ["nickname": "me", "username": "me"])
 
-		session.userHostmask = "me!user@example.org"
+		session.identity.hostmask = "me!user@example.org"
 		session.supportInfo.processConfigurationData("TARGMAX=PRIVMSG:4")
 
 		let first = try #require(session.findConversationOrCreate("#one"))

@@ -21,7 +21,7 @@ struct IRCSpecOutboundLimitsTests {
 	private func session(lineLength: UInt = 0) -> TestServerSession {
 		let session = TestServerSession(configDictionary: ["nickname": "me", "username": "user"])
 
-		session.userHostmask = Self.hostmask
+		session.identity.hostmask = Self.hostmask
 
 		if lineLength > 0 {
 			session.supportInfo.processConfigurationData("LINELEN=\(lineLength)")
@@ -135,7 +135,7 @@ struct IRCSpecOutboundLimitsTests {
 		let shortHostmask = session()
 		let longHostmask = session()
 
-		longHostmask.userHostmask = "me!" + String(repeating: "u", count: 60) + "@example.org"
+		longHostmask.identity.hostmask = "me!" + String(repeating: "u", count: 60) + "@example.org"
 
 		let text = String(repeating: "c", count: 2000)
 		let shortPieces = split(text, target: "#channel", on: shortHostmask, as: .privateMessage)

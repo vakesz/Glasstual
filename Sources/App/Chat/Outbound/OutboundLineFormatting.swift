@@ -78,7 +78,7 @@ extension LineBudget {
 	) -> LineBudget {
 		var overhead = 1
 
-		if let userHostmask = session.userHostmask {
+		if let userHostmask = session.identity.hostmask {
 			overhead += wireByteCount(userHostmask, encoding: encoding)
 		} else {
 			overhead += truncationHostmaskConstant

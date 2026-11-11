@@ -100,7 +100,7 @@ struct MenuCommandContext {
 		let checks: [(MenuCommandRequirement, () -> Bool)] = [
 			(.session, { session != nil }),
 			(.loggedIn, { session?.isLoggedIn == true }),
-			(.ircOperator, { session?.userIsIRCop == true }),
+			(.ircOperator, { session?.identity.isIRCop == true }),
 			(.conversation, { conversation != nil }),
 			(.notConsole, { conversation?.isConsole == false }),
 			(.channel, { conversation?.isChannel == true }),

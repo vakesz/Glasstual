@@ -15,7 +15,7 @@ struct ServerSessionSelfEchoTests {
 	private func makeSession(nicknamePassword: String? = nil) -> TestServerSession {
 		let session = TestServerSession(configDictionary: ["nickname": "me"], nicknamePassword: nicknamePassword)
 		session.userNickname = "me"
-		session.userHostmask = "me!u@h"
+		session.identity.hostmask = "me!u@h"
 		session.setConnectionTransportForTesting(.connected)
 		session.markAsLoggedIn()
 		session.forwardsProcessedMessages = true

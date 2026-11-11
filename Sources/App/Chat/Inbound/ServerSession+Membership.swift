@@ -81,7 +81,7 @@ extension ServerSession {
 			 stamp, which would close the grace window before the burst behind it
 			 arrives; that one is measured from its arrival instead. */
 			channel.activate(at: message.isReplayed ? Date() : message.receivedAt)
-			userHostmask = message.senderHostmask
+			identity.hostmask = message.senderHostmask
 			output?.reloadChatItem(channel)
 			requestNamesAfterJoin(of: channel, isReplayed: message.isReplayed)
 		} else {

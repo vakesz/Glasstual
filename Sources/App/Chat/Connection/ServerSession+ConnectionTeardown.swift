@@ -45,12 +45,8 @@ extension ServerSession {
 		nickServ = NickServIdentification()
 		registrationGate = .notStarted
 		unprintedEchoes.removeAll()
-		away.isAway = false
-		userIsIRCop = false
-		znc.isConnected = false
-		znc.isSendingCertificateInfo = false
-		znc.certificateChainText = nil
-		znc.isPlayingBackHistory = false
+		away.resetForTeardown()
+		znc = ZNCSession()
 
 		resetChatHistoryState()
 		// Reconnect intent belongs to the pending schedule, which survives this reset.
@@ -58,11 +54,9 @@ extension ServerSession {
 		server = nil
 		KeychainPersistence.shared.persist(Dictionary(uniqueKeysWithValues: retiredServerKeychainItems.map { ($0, .cleared) }))
 		retiredServerKeychainItems.removeAll()
-		userHostmask = nil
-		forgetUserNickname()
+		identity = SessionIdentity()
 		nicknameRetry.attempt = 0
 		nicknameRetry.sentNickname = nil
-		away.previousNickname = nil
 		lastMessageReceived = 0
 
 		resetSASLNegotiation()

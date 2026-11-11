@@ -8,8 +8,8 @@ extension ServerSession {
 	func handlePresenceTrackingNumeric(_ numeric: ServerNumeric, message: Message, shouldPrint: Bool) {
 		switch numeric {
 		case .youreoper:
-			guard !userIsIRCop else { return }
-			userIsIRCop = true
+			guard !identity.isIRCop else { return }
+			identity.isIRCop = true
 			if shouldPrint {
 				print(
 					String(localized: .IRC.youAreNowAnIrcOperator(message.senderNickname ?? "")),

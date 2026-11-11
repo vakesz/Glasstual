@@ -130,7 +130,8 @@ class ServerSession: ChatItem {
 		connectionState.isDisconnecting
 	}
 
-	var userIsIRCop = false
+	/// Who the server says this connection is.
+	var identity = SessionIdentity()
 	/// Whether the user is present, and the nickname and message that stand in
 	/// for them while they are not.
 	var away = AwayStatus()
@@ -141,18 +142,10 @@ class ServerSession: ChatItem {
 		didSet { markConfigurationStaleIfChanged(from: oldValue, to: lastMessageServerTime) }
 	}
 
-	var userHostmask: String?
-	private var userNicknameStorage: String?
+	/// The nickname the server assigned, or the configured one before it has.
 	var userNickname: String {
-		get { userNicknameStorage ?? config.nickname }
-		set { userNicknameStorage = newValue }
-	}
-
-	/// Forgets the nickname the server assigned, so `userNickname` falls back
-	/// to the configured one. The property itself is not optional, so this
-	/// cannot be expressed as an assignment through it.
-	func forgetUserNickname() {
-		userNicknameStorage = nil
+		get { identity.assignedNickname ?? config.nickname }
+		set { identity.assignedNickname = newValue }
 	}
 
 	/** Several features install a post-disconnect action (reconnect, destroy-after-quit,

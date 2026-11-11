@@ -172,7 +172,7 @@ extension ServerSession {
 		let realName = String(message.params[5].drop(while: { $0 == ":" }))
 		whoisReply = numeric == .whoisuser ? .whois : numeric == .whowasuser ? .whowas : nil
 		if whoisReply != .whowas, nicknameIsMyself(nickname) {
-			userHostmask = "\(nickname)!\(username)@\(address)"
+			identity.hostmask = "\(nickname)!\(username)@\(address)"
 		}
 		guard shouldPrint else { return }
 		let text = whoisUserhostText(

@@ -64,7 +64,7 @@ struct MenuItemValidatorTests {
 			if scene != .disconnectedChannel {
 				session.markAsLoggedIn()
 			}
-			session.userIsIRCop = scene == .consoleIRCop || scene == .channelJoinedIRCop
+			session.identity.isIRCop = scene == .consoleIRCop || scene == .channelJoinedIRCop
 			other = session.findConversationOrCreate("#other")
 
 			let selected: Conversation? = switch scene {
