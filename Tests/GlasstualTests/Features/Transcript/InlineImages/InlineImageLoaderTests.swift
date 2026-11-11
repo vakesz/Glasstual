@@ -181,6 +181,36 @@ struct InlineImageLoaderTests {
 		}
 	}
 
+	nonisolated static let readerProxy = InlineImageRoute.proxy(.init(kind: .socks5, host: "127.0.0.1", port: 1080))
+
+	/** The reader clicked to load one host. A redirect to a name only the
+	 reader's proxy resolves, perhaps on its own network, is not followed;
+	 Tor and the system route keep following redirects their checks allow. */
+	@Test("On the reader's proxy a redirect to another host is not followed", arguments: [
+		(readerProxy, "elsewhere.invalid", false),
+		(readerProxy, "inline-image.invalid", true),
+		(InlineImageRoute.tor, "elsewhere.invalid", true),
+	])
+	func proxyRedirectStaysOnTheClickedHost(route: InlineImageRoute, targetHost: String, follows: Bool) async {
+		let chunk = Self.gif(frames: 1)
+		let target = InlineImageTestProtocol.register(.init(chunk: chunk), host: targetHost)
+		let link = InlineImageTestProtocol.register(.init(redirect: target))
+		defer {
+			InlineImageTestProtocol.remove(target)
+			InlineImageTestProtocol.remove(link)
+		}
+
+		let result = try? await InlineImageTransfer.download(
+			link,
+			limits: .init(),
+			route: route,
+			protocolClasses: [InlineImageTestProtocol.self]
+		)
+
+		#expect(InlineImageTestProtocol.startCount(target) == (follows ? 1 : 0))
+		#expect(result == (follows ? chunk : nil))
+	}
+
 	@Test("A body exactly at the streaming cap is accepted without trusting its length")
 	func exactStreamLimit() async throws {
 		let chunk = Self.gif(frames: 2)
@@ -499,6 +529,8 @@ final nonisolated class InlineImageTestProtocol: URLProtocol { // nonisolated: i
 		var chunk = Data()
 		var repetitions = 1
 		var hold = false
+		/// Answers with a 302 to this address instead of the fixture's body.
+		var redirect: URL?
 		var started = false
 		var startCount = 0
 		var stopped = false
@@ -506,8 +538,8 @@ final nonisolated class InlineImageTestProtocol: URLProtocol { // nonisolated: i
 
 	private static let fixtures = Mutex<[URL: Fixture]>([:])
 
-	static func register(_ fixture: Fixture) -> URL {
-		let url = URL(string: "https://inline-image.invalid/\(UUID().uuidString)")!
+	static func register(_ fixture: Fixture, host: String = "inline-image.invalid") -> URL {
+		let url = URL(string: "https://\(host)/\(UUID().uuidString)")!
 		fixtures.withLock { $0[url] = fixture }
 		return url
 	}
@@ -554,6 +586,14 @@ final nonisolated class InlineImageTestProtocol: URLProtocol { // nonisolated: i
 		      )
 		else {
 			client?.urlProtocol(self, didFailWithError: URLError(.badURL))
+			return
+		}
+		let location = fixture.redirect.map { ["Location": $0.absoluteString] }
+		if let redirect = fixture.redirect,
+		   let moved = HTTPURLResponse(url: url, statusCode: 302, httpVersion: "HTTP/1.1", headerFields: location)
+		{
+			client?.urlProtocol(self, wasRedirectedTo: URLRequest(url: redirect), redirectResponse: moved)
+			client?.urlProtocolDidFinishLoading(self)
 			return
 		}
 		client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)

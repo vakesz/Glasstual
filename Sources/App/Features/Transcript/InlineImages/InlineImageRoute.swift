@@ -128,6 +128,20 @@ nonisolated enum InlineImageRoute: Sendable, Hashable {
 		}
 	}
 
+	/** Whether a fetch may follow a redirect to a host other than the one the
+	 link named.
+
+	 On a reader's own SOCKS5 or HTTP proxy the reader asked for that one host,
+	 and a redirect could name one only that proxy's network resolves, which
+	 this Mac cannot check. Tor and the system route hold every hop to the
+	 same checks as the link. */
+	var followsRedirectsToOtherHosts: Bool {
+		switch self {
+		case .system, .tor, .unavailable: true
+		case .proxy: false
+		}
+	}
+
 	/// Whether a host name may be looked up on this Mac. Through a proxy it may
 	/// not: the lookup itself would tell the resolver what is being fetched.
 	var resolvesNamesLocally: Bool {

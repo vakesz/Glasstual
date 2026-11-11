@@ -23,17 +23,21 @@ final nonisolated class InlineImageTransfer: NSObject, Sendable { // nonisolated
 	private let maximumBytes: Int
 	/// `nil` when a proxy resolves names, so nothing is looked up on this Mac.
 	private let resolver: InlineImageHostResolver?
+	/// The only host a redirect may lead to, or nil when any permitted host may.
+	private let redirectHost: String?
 
-	private init(maximumBytes: Int, resolver: InlineImageHostResolver?) {
+	private init(maximumBytes: Int, resolver: InlineImageHostResolver?, redirectHost: String?) {
 		self.maximumBytes = maximumBytes
 		self.resolver = resolver
+		self.redirectHost = redirectHost
 	}
 
 	/** Fetches `url` over `route`.
 
 	 A proxied route sends the host name to the proxy: it is not looked up here,
 	 and the address the connection reached is the proxy's, so only the spelling
-	 of the host is checked. An unavailable route fails before any work. */
+	 of the host is checked, and on the reader's own proxy a redirect may not
+	 leave the host the link named. An unavailable route fails before any work. */
 	@concurrent
 	static func download(_ url: URL, limits: InlineImageLimits,
 	                     route: InlineImageRoute,
@@ -50,7 +54,11 @@ final nonisolated class InlineImageTransfer: NSObject, Sendable { // nonisolated
 		try Task.checkCancellation()
 		guard limits.workingByteCount != nil else { throw InlineImageError.resourceLimit }
 		let configuration = configuration(for: route, protocolClasses: protocolClasses)
-		let delegate = InlineImageTransfer(maximumBytes: limits.maximumEncodedBytes, resolver: localResolver)
+		let delegate = InlineImageTransfer(
+			maximumBytes: limits.maximumEncodedBytes,
+			resolver: localResolver,
+			redirectHost: route.followsRedirectsToOtherHosts ? nil : url.host()?.lowercased()
+		)
 		let session = URLSession(configuration: configuration, delegate: delegate, delegateQueue: nil)
 		defer { session.invalidateAndCancel() }
 		return try await withTaskCancellationHandler {
@@ -191,6 +199,11 @@ nonisolated extension InlineImageTransfer: URLSessionDataDelegate { // nonisolat
 		let withinLimit = state.withLock { state in
 			state.redirects += 1
 			return state.redirects <= 5 && request.url.map(LinkSchemeRules.isWebURL) == true
+		}
+		guard redirectHost.map({ $0 == request.url?.host()?.lowercased() }) ?? true else {
+			state.withLock { $0.failure = .hostNotAllowed }
+			completionHandler(nil)
+			return
 		}
 		guard withinLimit, let target = request.url else {
 			completionHandler(nil)
