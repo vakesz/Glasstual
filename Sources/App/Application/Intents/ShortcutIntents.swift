@@ -104,6 +104,7 @@ struct OpenConversationIntent: OpenIntent {
 	}
 }
 
+/// Each phrase is the English key of its translations in `AppShortcuts.xcstrings`.
 struct GlasstualShortcuts: AppShortcutsProvider {
 	static var appShortcuts: [AppShortcut] {
 		AppShortcut(

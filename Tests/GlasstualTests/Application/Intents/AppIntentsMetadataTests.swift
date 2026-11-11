@@ -52,6 +52,29 @@ struct AppIntentsMetadataTests {
 		}
 	}
 
+	/// Phrases are looked up by their English text in the `AppShortcuts`
+	/// table, and a translation without the application name is not offered.
+	@Test("Every App Shortcut phrase is translated for every shipped language")
+	func phrasesAreLocalized() throws {
+		let shortcuts = try #require(try metadata()["autoShortcuts"] as? [[String: Any]])
+		let phrases = shortcuts.flatMap { shortcut in
+			(shortcut["phraseTemplates"] as? [[String: Any]] ?? []).compactMap { $0["key"] as? String }
+		}
+		#expect(phrases.count == shortcuts.count)
+		let languages = Bundle.main.localizations.filter { $0 != "Base" }
+		#expect(languages.count > 1)
+		let missing = "\u{0}missing"
+		for language in languages {
+			let path = try #require(Bundle.main.path(forResource: language, ofType: "lproj"), "\(language)")
+			let bundle = try #require(Bundle(path: path), "\(language)")
+			for phrase in phrases {
+				let value = bundle.localizedString(forKey: phrase, value: missing, table: "AppShortcuts")
+				#expect(value != missing, "\(language): \(phrase)")
+				#expect(value.contains("${applicationName}"), "\(language): \(value)")
+			}
+		}
+	}
+
 	private func collectReferences(in value: Any, into references: inout [(key: String, table: String)]) {
 		if let dictionary = value as? [String: Any] {
 			if let key = dictionary["key"] as? String, let table = dictionary["table"] as? String {
