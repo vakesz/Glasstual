@@ -15485,102 +15485,6 @@
         }
       }
     },
-    "declined-secure-file-transfer-offer": {
-      "comment": "File transfer server console messages. Printed when someone offers a file over an encrypted (TLS) connection with DCC SSEND, which this version declines. %1$@ is the sender's nickname and %2$@ the offered file name.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ offered %2$@ over an encrypted connection, which Glasstual does not support yet. The offer was declined."
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ titkosított kapcsolaton ajánlotta fel ezt: %2$@, de ezt a Glasstual még nem támogatja. Az ajánlat elutasítva."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ hat %2$@ über eine verschlüsselte Verbindung angeboten, was Glasstual noch nicht unterstützt. Das Angebot wurde abgelehnt."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ ofreció %2$@ mediante una conexión cifrada, que Glasstual aún no admite. Se rechazó la oferta."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ a proposé %2$@ via une connexion chiffrée, ce que Glasstual ne prend pas encore en charge. L’offre a été refusée."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@が暗号化された接続で%2$@を送ろうとしましたが、Glasstualはまだこれに対応していません。オファーを拒否しました。"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ ofereceu %2$@ por uma conexão criptografada, que o Glasstual ainda não aceita. A oferta foi recusada."
-          }
-        }
-      }
-    },
-    "declined-secure-direct-chat-offer": {
-      "comment": "Direct chat (DCC CHAT) messages. Printed when someone asks for an encrypted (TLS) direct chat with DCC SCHAT, which this version declines. %@ is the sender's nickname.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ wants to start an encrypted direct chat, which Glasstual does not support yet. The request was declined."
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ titkosított közvetlen csevegést szeretne indítani, de ezt a Glasstual még nem támogatja. A kérés elutasítva."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ möchte einen verschlüsselten direkten Chat starten, was Glasstual noch nicht unterstützt. Die Anfrage wurde abgelehnt."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ quiere iniciar un chat directo cifrado, que Glasstual aún no admite. Se rechazó la solicitud."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ souhaite démarrer une discussion directe chiffrée, ce que Glasstual ne prend pas encore en charge. La demande a été refusée."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@が暗号化されたダイレクトチャットを開始しようとしましたが、Glasstualはまだこれに対応していません。リクエストを拒否しました。"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ quer iniciar um chat direto criptografado, que o Glasstual ainda não aceita. A solicitação foi recusada."
-          }
-        }
-      }
-    },
     "declined-unsupported-dcc-offer": {
       "comment": "File transfer server console messages. Printed when someone sends a kind of DCC offer Glasstual does not support, such as a turbo transfer. %1$@ is the sender's nickname and %2$@ the DCC command word they used, such as TSEND; it is not translated.",
       "extractionState": "manual",
@@ -16009,6 +15913,1302 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "O primeiro servidor se conecta via WebSocket: %@. As alterações valem a partir da próxima conexão."
+          }
+        }
+      }
+    },
+    "received-secure-file-transfer-request": {
+      "comment": "File transfer server console messages. Printed when someone offers a file over an encrypted (TLS) connection with DCC SSEND. %1$@ is the sender's nickname, %2$@ the file name and %3$@ the file size.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Received encrypted file transfer request from %1$@, %2$@ (%3$@)"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Titkosított fájlátviteli kérés érkezett tőle: %1$@, %2$@ (%3$@)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verschlüsselte Dateiübertragungsanfrage von %1$@ erhalten, %2$@ (%3$@)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se recibió una solicitud de transferencia cifrada de %1$@, %2$@ (%3$@)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Demande de transfert chiffré reçue de %1$@, %2$@ (%3$@)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@から暗号化されたファイル転送のリクエストを受信しました: %2$@（%3$@）"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pedido de transferência criptografada recebido de %1$@, %2$@ (%3$@)"
+          }
+        }
+      }
+    },
+    "trying-secure-file-transfer": {
+      "comment": "File transfer server console messages. Printed when this user offers a file over an encrypted (TLS) connection with DCC SSEND. %1$@ is the receiver's nickname, %2$@ the file name and %3$@ the file size.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trying encrypted file transfer to %1$@, %2$@ (%3$@)"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Titkosított fájlátvitel megkísérlése neki: %1$@, %2$@ (%3$@)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verschlüsselte Dateiübertragung an %1$@ wird versucht, %2$@ (%3$@)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Intentando transferencia cifrada a %1$@, %2$@ (%3$@)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tentative de transfert chiffré vers %1$@, %2$@ (%3$@)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@への暗号化されたファイル転送を試行しています: %2$@（%3$@）"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tentando transferência criptografada para %1$@, %2$@ (%3$@)"
+          }
+        }
+      }
+    },
+    "secure-file-offer-declined-by-setting": {
+      "comment": "File transfer server console messages. Printed when someone offers a file over an encrypted (TLS) connection while the setting that accepts secure offers is off. %1$@ is the sender's nickname and %2$@ the offered file name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ offered %2$@ over an encrypted connection, but secure offers are turned off in File Transfers settings. The offer was declined."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ titkosított kapcsolaton ajánlotta fel ezt: %2$@, de a biztonságos ajánlatok ki vannak kapcsolva a Fájlátvitel beállításaiban. Az ajánlat elutasítva."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ hat %2$@ über eine verschlüsselte Verbindung angeboten, aber sichere Angebote sind in den Dateiübertragungseinstellungen ausgeschaltet. Das Angebot wurde abgelehnt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ ofreció %2$@ mediante una conexión cifrada, pero las ofertas seguras están desactivadas en los ajustes de Transferencias. Se rechazó la oferta."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ a proposé %2$@ via une connexion chiffrée, mais les offres sécurisées sont désactivées dans les réglages Transferts de fichiers. L’offre a été refusée."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@が暗号化された接続で%2$@を送ろうとしましたが、ファイル転送設定で安全なオファーがオフになっています。オファーを拒否しました。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ ofereceu %2$@ por uma conexão criptografada, mas as ofertas seguras estão desativadas nos ajustes de Transferências. A oferta foi recusada."
+          }
+        }
+      }
+    },
+    "secure-chat-offer-declined-by-setting": {
+      "comment": "Direct chat (DCC CHAT) messages. Printed when someone asks for an encrypted (TLS) direct chat with DCC SCHAT while the setting that accepts secure offers is off. %@ is the sender's nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ wants to start an encrypted direct chat, but secure offers are turned off in File Transfers settings. The request was declined."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ titkosított közvetlen csevegést szeretne indítani, de a biztonságos ajánlatok ki vannak kapcsolva a Fájlátvitel beállításaiban. A kérés elutasítva."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ möchte einen verschlüsselten direkten Chat starten, aber sichere Angebote sind in den Dateiübertragungseinstellungen ausgeschaltet. Die Anfrage wurde abgelehnt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ quiere iniciar un chat directo cifrado, pero las ofertas seguras están desactivadas en los ajustes de Transferencias. Se rechazó la solicitud."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ souhaite démarrer une discussion directe chiffrée, mais les offres sécurisées sont désactivées dans les réglages Transferts de fichiers. La demande a été refusée."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@が暗号化されたダイレクトチャットを開始しようとしていますが、ファイル転送設定で安全なオファーがオフになっています。リクエストを拒否しました。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ quer iniciar um bate-papo direto criptografado, mas as ofertas seguras estão desativadas nos ajustes de Transferências. O pedido foi recusado."
+          }
+        }
+      }
+    },
+    "wants-to-start-a-secure-direct-chat": {
+      "comment": "Direct chat (DCC CHAT) messages. Printed when someone asks for an encrypted (TLS) direct chat with DCC SCHAT. %@ is the sender's nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ wants to start an encrypted direct chat"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ titkosított közvetlen csevegést szeretne indítani"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ möchte einen verschlüsselten direkten Chat starten"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ quiere iniciar un chat directo cifrado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ souhaite démarrer une discussion directe chiffrée"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@が暗号化されたダイレクトチャットを開始しようとしています"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ quer iniciar um bate-papo direto criptografado"
+          }
+        }
+      }
+    },
+    "offering-a-secure-direct-chat": {
+      "comment": "Direct chat (DCC CHAT) messages. Printed when this user offers an encrypted (TLS) direct chat with DCC SCHAT. %@ is the peer's nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Offering an encrypted direct chat to %@…"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Titkosított közvetlen csevegés felajánlása neki: %@…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verschlüsselter direkter Chat wird %@ angeboten …"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ofreciendo un chat directo cifrado a %@…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proposition d’une discussion directe chiffrée à %@…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@に暗号化されたダイレクトチャットを提案しています…"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oferecendo um bate-papo direto criptografado a %@…"
+          }
+        }
+      }
+    },
+    "secure-direct-chat-established-verified": {
+      "comment": "Direct chat (DCC CHAT) messages. Printed when an encrypted direct chat is connected and the peer's certificate was verified. %1$@ is the peer's nickname and %2$@ the TLS version, such as TLS 1.3.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encrypted direct chat with %1$@ established (%2$@, certificate verified)"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Titkosított közvetlen csevegés létrejött vele: %1$@ (%2$@, tanúsítvány ellenőrizve)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verschlüsselter direkter Chat mit %1$@ hergestellt (%2$@, Zertifikat überprüft)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chat directo cifrado con %1$@ establecido (%2$@, certificado verificado)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discussion directe chiffrée avec %1$@ établie (%2$@, certificat vérifié)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@との暗号化されたダイレクトチャットを確立しました（%2$@、証明書は検証済み）"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bate-papo direto criptografado com %1$@ estabelecido (%2$@, certificado verificado)"
+          }
+        }
+      }
+    },
+    "secure-direct-chat-established-unverified": {
+      "comment": "Direct chat (DCC CHAT) messages. Printed when an encrypted direct chat is connected but the peer presented no certificate, so nobody is verified. %1$@ is the peer's nickname and %2$@ the TLS version, such as TLS 1.3.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encrypted direct chat with %1$@ established (%2$@, certificate not verified)"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Titkosított közvetlen csevegés létrejött vele: %1$@ (%2$@, tanúsítvány nincs ellenőrizve)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verschlüsselter direkter Chat mit %1$@ hergestellt (%2$@, Zertifikat nicht überprüft)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chat directo cifrado con %1$@ establecido (%2$@, certificado sin verificar)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discussion directe chiffrée avec %1$@ établie (%2$@, certificat non vérifié)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@との暗号化されたダイレクトチャットを確立しました（%2$@、証明書は未検証）"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bate-papo direto criptografado com %1$@ estabelecido (%2$@, certificado não verificado)"
+          }
+        }
+      }
+    },
+    "dcc-chat-offer-answer-hint": {
+      "comment": "Direct chat (DCC CHAT) messages. Printed under a direct chat request so it can be answered by typing. %@ is the short identifier of the question, such as d1; keep the commands as written.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Answer with /dcc accept %1$@ or /dcc decline %1$@."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Válaszolj ezzel: /dcc accept %1$@ vagy /dcc decline %1$@."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Antworte mit /dcc accept %1$@ oder /dcc decline %1$@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Responde con /dcc accept %1$@ o /dcc decline %1$@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Répondez avec /dcc accept %1$@ ou /dcc decline %1$@."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "/dcc accept %1$@ または /dcc decline %1$@ で応答してください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Responda com /dcc accept %1$@ ou /dcc decline %1$@."
+          }
+        }
+      }
+    },
+    "dcc-trust-first-use-question": {
+      "comment": "Secure DCC messages. Printed when a peer presents a certificate for the first time, so the question can be answered by typing. %1$@ is the peer's nickname, %2$@ the SHA-256 fingerprint and %3$@ the short identifier of the question, such as d1; keep the commands and answer words as written.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Certificate from %1$@: SHA-256 %2$@. Answer with /dcc trust %3$@ remember, once or reject."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tanúsítvány tőle: %1$@: SHA-256 %2$@. Válaszolj ezzel: /dcc trust %3$@ remember, once vagy reject."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zertifikat von %1$@: SHA-256 %2$@. Antworte mit /dcc trust %3$@ remember, once oder reject."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Certificado de %1$@: SHA-256 %2$@. Responde con /dcc trust %3$@ remember, once o reject."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Certificat de %1$@ : SHA-256 %2$@. Répondez avec /dcc trust %3$@ remember, once ou reject."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@の証明書: SHA-256 %2$@。/dcc trust %3$@ remember、once、reject のいずれかで応答してください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Certificado de %1$@: SHA-256 %2$@. Responda com /dcc trust %3$@ remember, once ou reject."
+          }
+        }
+      }
+    },
+    "dcc-trust-changed-question": {
+      "comment": "Secure DCC messages. Printed when a peer presents a certificate that differs from the one the user trusted, so the question can be answered by typing. %1$@ is the peer's nickname, %2$@ the SHA-256 fingerprint presented now and %3$@ the short identifier of the question, such as d1; keep the commands and answer words as written.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@'s certificate has changed: it is now SHA-256 %2$@. Someone may be impersonating %1$@. Answer with /dcc trust %3$@ replace or reject."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ tanúsítványa megváltozott: most SHA-256 %2$@. Lehet, hogy valaki %1$@ nevében lép fel. Válaszolj ezzel: /dcc trust %3$@ replace vagy reject."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Zertifikat von %1$@ hat sich geändert: Es ist jetzt SHA-256 %2$@. Möglicherweise gibt sich jemand als %1$@ aus. Antworte mit /dcc trust %3$@ replace oder reject."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El certificado de %1$@ ha cambiado: ahora es SHA-256 %2$@. Puede que alguien se esté haciendo pasar por %1$@. Responde con /dcc trust %3$@ replace o reject."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le certificat de %1$@ a changé : il est désormais SHA-256 %2$@. Quelqu’un se fait peut-être passer pour %1$@. Répondez avec /dcc trust %3$@ replace ou reject."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@の証明書が変更されました。現在は SHA-256 %2$@ です。誰かが%1$@になりすましている可能性があります。/dcc trust %3$@ replace または reject で応答してください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O certificado de %1$@ mudou: agora é SHA-256 %2$@. Alguém pode estar se passando por %1$@. Responda com /dcc trust %3$@ replace ou reject."
+          }
+        }
+      }
+    },
+    "dcc-trust-remembered": {
+      "comment": "Secure DCC messages. Printed when the user trusts a peer's certificate and asks to remember it. %@ is the peer's nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trusted %@'s certificate and saved it for later connections."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ tanúsítványa megbízhatóként elmentve a későbbi kapcsolatokhoz."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dem Zertifikat von %@ wird vertraut; es wurde für spätere Verbindungen gesichert."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se confió en el certificado de %@ y se guardó para próximas conexiones."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le certificat de %@ est approuvé et enregistré pour les prochaines connexions."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@の証明書を信頼し、今後の接続のために保存しました。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O certificado de %@ foi considerado confiável e salvo para próximas conexões."
+          }
+        }
+      }
+    },
+    "dcc-trust-once": {
+      "comment": "Secure DCC messages. Printed when the user trusts a peer's certificate for one connection only. %@ is the peer's nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trusted %@'s certificate for this connection only."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ tanúsítványa csak erre a kapcsolatra megbízható."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dem Zertifikat von %@ wird nur für diese Verbindung vertraut."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se confió en el certificado de %@ solo para esta conexión."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le certificat de %@ est approuvé pour cette connexion uniquement."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@の証明書をこの接続に限り信頼しました。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O certificado de %@ foi considerado confiável apenas para esta conexão."
+          }
+        }
+      }
+    },
+    "dcc-trust-replaced": {
+      "comment": "Secure DCC messages. Printed when the user replaces the saved certificate of a peer with the one presented now. %@ is the peer's nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replaced the saved certificate for %@."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ mentett tanúsítványa lecserélve."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das gesicherte Zertifikat von %@ wurde ersetzt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se reemplazó el certificado guardado de %@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le certificat enregistré de %@ a été remplacé."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@の保存済み証明書を置き換えました。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O certificado salvo de %@ foi substituído."
+          }
+        }
+      }
+    },
+    "dcc-trust-rejected": {
+      "comment": "Secure DCC messages. Printed when the user does not trust a peer's certificate. %@ is the peer's nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Did not trust %@'s certificate. The connection was refused."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ tanúsítványa nem megbízható. A kapcsolat elutasítva."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dem Zertifikat von %@ wurde nicht vertraut. Die Verbindung wurde abgelehnt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se confió en el certificado de %@. Se rechazó la conexión."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le certificat de %@ n’a pas été approuvé. La connexion a été refusée."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@の証明書を信頼しませんでした。接続を拒否しました。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O certificado de %@ não foi considerado confiável. A conexão foi recusada."
+          }
+        }
+      }
+    },
+    "dcc-trust-save-failed": {
+      "comment": "Secure DCC messages. Printed when a trusted certificate could not be written to disk. %1$@ is the peer's nickname and %2$@ the reason the system gave.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The certificate for %1$@ could not be saved: %2$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ tanúsítványát nem sikerült menteni: %2$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Zertifikat von %1$@ konnte nicht gesichert werden: %2$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo guardar el certificado de %1$@: %2$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible d’enregistrer le certificat de %1$@ : %2$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@の証明書を保存できませんでした: %2$@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível salvar o certificado de %1$@: %2$@"
+          }
+        }
+      }
+    },
+    "dcc-question-no-longer-needed": {
+      "comment": "Secure DCC messages. Printed when a question about a connection is withdrawn because the connection ended first. %@ is the short identifier of the question, such as d1.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Question %@ is no longer needed: the connection it was about has ended."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A(z) %@ kérdésre már nincs szükség: a kapcsolat, amelyre vonatkozott, véget ért."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frage %@ ist nicht mehr nötig: Die Verbindung, um die es ging, wurde beendet."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La pregunta %@ ya no es necesaria: la conexión a la que se refería ha terminado."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La question %@ n’est plus nécessaire : la connexion concernée est terminée."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "質問%@は不要になりました。対象の接続が終了しました。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A pergunta %@ não é mais necessária: a conexão a que se referia terminou."
+          }
+        }
+      }
+    },
+    "dcc-question-unknown": {
+      "comment": "Secure DCC messages. Printed when /dcc accept, /dcc decline or /dcc trust names a question that is not waiting for an answer, because it never existed or was already answered. %@ is the identifier the user typed.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No question %@ is waiting for an answer."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincs válaszra váró %@ kérdés."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Frage %@ wartet auf eine Antwort."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay ninguna pregunta %@ esperando respuesta."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucune question %@ n’attend de réponse."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "応答を待っている質問%@はありません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nenhuma pergunta %@ está aguardando resposta."
+          }
+        }
+      }
+    },
+    "dcc-question-wrong-answer": {
+      "comment": "Secure DCC messages. Printed when the answer typed does not fit the question, such as /dcc accept for a certificate question or replace for a first-time certificate. %1$@ is the identifier of the question and %2$@ the answer the user typed.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Question %1$@ cannot be answered with %2$@."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A(z) %1$@ kérdésre nem lehet ezzel válaszolni: %2$@."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frage %1$@ kann nicht mit %2$@ beantwortet werden."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La pregunta %1$@ no se puede responder con %2$@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de répondre à la question %1$@ par %2$@."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "質問%1$@には%2$@で応答できません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A pergunta %1$@ não pode ser respondida com %2$@."
+          }
+        }
+      }
+    },
+    "dcc-too-many-questions": {
+      "comment": "Secure DCC messages. Printed when a secure connection is refused because too many questions about other connections are still waiting for an answer. %@ is the peer's nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refused a secure connection with %@: too many questions are waiting for an answer."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Biztonságos kapcsolat elutasítva vele: %@: túl sok kérdés vár válaszra."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sichere Verbindung mit %@ abgelehnt: Zu viele Fragen warten auf eine Antwort."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se rechazó una conexión segura con %@: hay demasiadas preguntas esperando respuesta."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connexion sécurisée avec %@ refusée : trop de questions attendent une réponse."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@との安全な接続を拒否しました。応答を待っている質問が多すぎます。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uma conexão segura com %@ foi recusada: há perguntas demais aguardando resposta."
+          }
+        }
+      }
+    },
+    "dcc-own-fingerprint": {
+      "comment": "Secure DCC messages. Printed by /dcc fingerprint. %@ is the SHA-256 fingerprint of the certificate this user presents on this network.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your certificate for encrypted connections on this network: SHA-256 %@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A tanúsítványod titkosított kapcsolatokhoz ezen a hálózaton: SHA-256 %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dein Zertifikat für verschlüsselte Verbindungen in diesem Netzwerk: SHA-256 %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu certificado para conexiones cifradas en esta red: SHA-256 %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre certificat pour les connexions chiffrées sur ce réseau : SHA-256 %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このネットワークでの暗号化接続用の証明書: SHA-256 %@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seu certificado para conexões criptografadas nesta rede: SHA-256 %@"
+          }
+        }
+      }
+    },
+    "dcc-own-fingerprint-unavailable": {
+      "comment": "Secure DCC messages. Printed by /dcc fingerprint when this user's certificate could not be loaded or created. %@ is the reason the system gave.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your certificate for encrypted connections could not be loaded: %@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A titkosított kapcsolatokhoz használt tanúsítványodat nem sikerült betölteni: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dein Zertifikat für verschlüsselte Verbindungen konnte nicht geladen werden: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo cargar tu certificado para conexiones cifradas: %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de charger votre certificat pour les connexions chiffrées : %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暗号化接続用の証明書を読み込めませんでした: %@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível carregar seu certificado para conexões criptografadas: %@"
+          }
+        }
+      }
+    },
+    "dcc-saved-certificates-none": {
+      "comment": "Secure DCC messages. Printed by /dcc certificates when no peer certificate is saved on this network.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No certificates are saved on this network."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ezen a hálózaton nincs mentett tanúsítvány."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In diesem Netzwerk sind keine Zertifikate gesichert."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay certificados guardados en esta red."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun certificat n’est enregistré sur ce réseau."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このネットワークには保存済みの証明書がありません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nenhum certificado está salvo nesta rede."
+          }
+        }
+      }
+    },
+    "dcc-saved-certificates-none-for-nickname": {
+      "comment": "Secure DCC messages. Printed by /dcc certificates <nickname> when no certificate is saved for that nickname on this network. %@ is the nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No certificates are saved for %@ on this network."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ezen a hálózaton nincs mentett tanúsítvány hozzá: %@."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In diesem Netzwerk sind keine Zertifikate für %@ gesichert."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay certificados guardados para %@ en esta red."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun certificat n’est enregistré pour %@ sur ce réseau."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このネットワークには%@の保存済み証明書がありません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nenhum certificado está salvo para %@ nesta rede."
+          }
+        }
+      }
+    },
+    "dcc-saved-certificate-row": {
+      "comment": "Secure DCC messages. One line of /dcc certificates. %1$@ is the nickname, %2$@ the SHA-256 fingerprint, %3$@ the date it was first trusted and %4$@ the date it was last seen.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: SHA-256 %2$@, first trusted %3$@, last seen %4$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: SHA-256 %2$@, először megbízhatónak jelölve: %3$@, utoljára látva: %4$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: SHA-256 %2$@, zuerst vertraut am %3$@, zuletzt gesehen am %4$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: SHA-256 %2$@, de confianza desde %3$@, visto por última vez %4$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ : SHA-256 %2$@, approuvé le %3$@, vu pour la dernière fois le %4$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: SHA-256 %2$@、最初に信頼: %3$@、最後に確認: %4$@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: SHA-256 %2$@, confiável desde %3$@, visto pela última vez em %4$@"
+          }
+        }
+      }
+    },
+    "dcc-saved-certificates-forgotten": {
+      "comment": "Secure DCC messages. Printed by /dcc forget <nickname> once the saved certificates are removed. %@ is the nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removed the saved certificates for %@ on this network."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ mentett tanúsítványai eltávolítva ezen a hálózaton."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die gesicherten Zertifikate von %@ in diesem Netzwerk wurden entfernt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se eliminaron los certificados guardados de %@ en esta red."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les certificats enregistrés de %@ sur ce réseau ont été supprimés."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このネットワークの%@の保存済み証明書を削除しました。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Os certificados salvos de %@ nesta rede foram removidos."
+          }
+        }
+      }
+    },
+    "dcc-saved-certificates-forget-failed": {
+      "comment": "Secure DCC messages. Printed by /dcc forget <nickname> when the saved certificates could not be removed. %1$@ is the nickname and %2$@ the reason the system gave.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The saved certificates for %1$@ could not be removed: %2$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ mentett tanúsítványait nem sikerült eltávolítani: %2$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die gesicherten Zertifikate von %1$@ konnten nicht entfernt werden: %2$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudieron eliminar los certificados guardados de %1$@: %2$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de supprimer les certificats enregistrés de %1$@ : %2$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@の保存済み証明書を削除できませんでした: %2$@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível remover os certificados salvos de %1$@: %2$@"
           }
         }
       }

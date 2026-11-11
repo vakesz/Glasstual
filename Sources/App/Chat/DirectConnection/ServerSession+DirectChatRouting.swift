@@ -63,6 +63,15 @@ enum DirectChatPolicy {
 		offer.isPassive || DCCWireFormat.isDialableAddress(offer.address)
 	}
 
+	/** Whether a passive reply answers the chat this session is listening for.
+
+	 Only a reply of the same kind does: an `SCHAT` offer is never answered by a
+	 plain `CHAT`, which would carry the conversation in plain, and a plain
+	 offer is never turned secure by its reply. */
+	static func reply(_ offer: DirectChatOffer, answersListeningChatThatIsSecure isSecure: Bool) -> Bool {
+		offer.isSecure == isSecure
+	}
+
 	static func listeningArguments(address: String, port: UInt16, token: String?) -> String {
 		let base = "chat \(address) \(port)"
 		return token.map { "\(base) \($0)" } ?? base
@@ -87,67 +96,19 @@ extension ServerSession {
 		return conversation?.isDirectChat == true ? conversation : nil
 	}
 
-	func handleDCCCommand(
-		_ input: CommandArguments,
-		command: String,
-		targetConversation: Conversation?
-	) {
-		var input = input
-		switch input.next().uppercased() {
-		case "CHAT":
-			guard isLoggedIn else {
-				printDebugInformation(toConsole: String(localized: .IRC.failedToSendDataToServer))
-				return
-			}
-			var nickname = input.next()
-			if nickname.isEmpty, let targetConversation {
-				if targetConversation.isDirect {
-					nickname = targetConversation.name
-				} else if targetConversation.isDirectChat {
-					nickname = targetConversation.directChatConnection?
-						.peerNickname ?? String(targetConversation.name.dropFirst())
-				}
-			}
-			guard !nickname.isEmpty, stringIsNickname(nickname) else {
-				printInvalidSyntaxMessage(for: command)
-				return
-			}
-			startDirectChat(withNickname: nickname)
-		case "SEND":
-			let nickname = input.next()
-			let path = (input.rest.trimmingCharacters(in: .whitespacesAndNewlines) as NSString).expandingTildeInPath
-			guard !nickname.isEmpty, stringIsNickname(nickname), !path.isEmpty else {
-				printInvalidSyntaxMessage(for: command)
-				return
-			}
-			fileTransfers?.offerSender(
-				for: self, nickname: nickname, path: path, autoOpen: true, accessURL: nil
-			) { [weak self] identifier in
-				if identifier == nil {
-					self?.printDebugInformation(String(localized: .IRC.fileAtCouldNotBeOffered(path)))
-				}
-			}
-		default:
-			printInvalidSyntaxMessage(for: command)
-		}
-	}
-
 	func receivedDCCChatQuery(_ sender: String, text: String) {
 		guard let offer = DirectChatPolicy.parseOffer(text) else {
 			printInvalidDCCChatRequest(from: sender)
 			return
 		}
-		/* Glasstual does not open secure chats yet. Every SCHAT is declined
-		 before anything else is read from it, which also keeps a passive SCHAT
-		 reply from answering a plain chat this session is listening for. */
-		if offer.isSecure {
-			guard admitsDCCOffer(from: sender) else { return }
-			print(String(localized: .IRC.declinedSecureDirectChatOffer(sender)), by: nil, in: nil,
-			      as: .dccFileTransfer, command: ChatLineFormat.defaultCommand)
-			return
-		}
 		if !offer.isPassive, offer.token != nil {
-			guard directChatConversation(forNickname: sender)?.directChatConnection?.state == .listening else {
+			/* A passive reply answers a chat this session offered, and only one
+			 of the same kind: a secure offer is never answered in plain, and a
+			 plain one never becomes secure. */
+			guard let listening = directChatConversation(forNickname: sender)?.directChatConnection,
+			      listening.state == .listening,
+			      DirectChatPolicy.reply(offer, answersListeningChatThatIsSecure: listening.isSecure)
+			else {
 				DirectConnectionLog.chat.error(
 					"Received a passive DCC CHAT reply from \(sender, privacy: .private(mask: .hash)) without a matching request"
 				)
@@ -156,6 +117,10 @@ extension ServerSession {
 		} else if admitsDCCOffer(from: sender) == false {
 			/* Each unsolicited offer puts a prompt in front of the user, so a
 			 flood of them is dropped here, before any prompt is made. */
+			return
+		} else if offer.isSecure, environment.settings.fileTransferAcceptsSecureOffers == false {
+			print(String(localized: .IRC.secureChatOfferDeclinedBySetting(sender)), by: nil, in: nil,
+			      as: .dccFileTransfer, command: ChatLineFormat.defaultCommand)
 			return
 		}
 
@@ -169,48 +134,81 @@ extension ServerSession {
 			return
 		}
 
-		print(String(localized: .IRC.wantsToStartADirectChat(sender)), by: nil, in: nil,
+		let announcement = offer.isSecure
+			? String(localized: .IRC.wantsToStartASecureDirectChat(sender))
+			: String(localized: .IRC.wantsToStartADirectChat(sender))
+		print(announcement, by: nil, in: nil, as: .dccFileTransfer, command: ChatLineFormat.defaultCommand)
+
+		/* The answer can come after the connection that carried the offer has
+		 gone, and a reconnect, perhaps to another server where somebody else
+		 holds the sender's nickname, must not act on it. The question records
+		 that connection; answering checks it. */
+		guard let id = dccDecisions.addChatOffer(
+			DCCChatOfferQuestion(sender: sender, offer: offer),
+			startupIdentifier: startup.identifier,
+			socketIdentifier: socket?.uniqueIdentifier
+		) else {
+			printDebugInformation(toConsole: String(localized: .IRC.dccTooManyQuestions(sender)))
+			return
+		}
+		print(String(localized: .IRC.dccChatOfferAnswerHint(id)), by: nil, in: nil,
 		      as: .dccFileTransfer, command: ChatLineFormat.defaultCommand)
-		/* The address is what the user is actually being asked to approve — the
-		 nickname alone says nothing about where the connection would go. */
-		let body = offer.isPassive
-			? PromptStrings.DirectChat.body(sender: sender)
-			: ConnectionSafetyStrings.DirectChat.requestBody(sender: sender, address: offer.address)
-		let request = AlertRequest(
-			title: PromptStrings.DirectChat.title(sender: sender),
+		output?.presentAlertSheet(directChatOfferRequest(offer, from: sender)) { [weak self] outcome in
+			self?.answerDCCChatOffer(id, accept: outcome.response == .default)
+		}
+	}
+
+	/// The alert a chat offer is put to the user with. The address is what the
+	/// user is actually being asked to approve: the nickname alone says nothing
+	/// about where the connection would go.
+	private func directChatOfferRequest(_ offer: DirectChatOffer, from sender: String) -> AlertRequest {
+		let body = switch (offer.isPassive, offer.isSecure) {
+		case (true, false): PromptStrings.DirectChat.body(sender: sender)
+		case (true, true): PromptStrings.DirectChat.secureBody(sender: sender)
+		case (false, false): ConnectionSafetyStrings.DirectChat.requestBody(sender: sender, address: offer.address)
+		case (false, true): ConnectionSafetyStrings.DirectChat.secureRequestBody(sender: sender, address: offer.address)
+		}
+		return AlertRequest(
+			title: offer.isSecure
+				? PromptStrings.DirectChat.secureTitle(sender: sender)
+				: PromptStrings.DirectChat.title(sender: sender),
 			body: body,
 			defaultButton: PromptStrings.Action.accept,
 			alternateButton: PromptStrings.Action.decline
 		)
-		/* The answer can come after the connection that carried the offer has
-		 gone, and a reconnect, perhaps to another server where somebody else
-		 holds the sender's nickname, must not act on it. */
-		let startupIdentifier = startup.identifier
-		let socketIdentifier = socket?.uniqueIdentifier
-		output?.presentAlertSheet(
-			request,
-			completion: { [weak self] outcome in
-				guard let self else { return }
-				guard outcome.response == .default else {
-					print(String(localized: .IRC.declinedDirectChatRequest(sender)), by: nil, in: nil,
-					      as: .dccFileTransfer, command: ChatLineFormat.defaultCommand)
-					return
-				}
-				guard isLoggedIn, !isTerminating, startup.identifier == startupIdentifier,
-				      socket?.uniqueIdentifier == socketIdentifier
-				else { return }
-				if offer.isPassive {
-					openDirectChat(withNickname: sender, listeningWithToken: offer.token, offeredAddress: offer.address)
-				} else {
-					openDirectChat(withNickname: sender, address: offer.address, port: offer.port)
-				}
-			}
-		)
 	}
 
-	func startDirectChat(withNickname nickname: String) {
+	/** Answers a chat offer, from its alert or from `/dcc accept` and
+	 `/dcc decline`. The first answer wins; one that arrives after the
+	 connection the offer came over has gone opens nothing. */
+	@discardableResult
+	func answerDCCChatOffer(_ id: String, accept: Bool) -> DCCQuestionAnswerResult {
+		guard let decision = dccDecisions.decision(withID: id) else { return .unknown }
+		guard case let .chatOffer(question) = decision.question else { return .wrongAnswer }
+		_ = dccDecisions.remove(id: id)
+		let sender = question.sender
+		let offer = question.offer
+		guard accept else {
+			print(String(localized: .IRC.declinedDirectChatRequest(sender)), by: nil, in: nil,
+			      as: .dccFileTransfer, command: ChatLineFormat.defaultCommand)
+			return .answered
+		}
+		guard isLoggedIn, !isTerminating, startup.identifier == decision.startupIdentifier,
+		      socket?.uniqueIdentifier == decision.socketIdentifier
+		else { return .answered }
+		if offer.isPassive {
+			openDirectChat(
+				withNickname: sender, listeningWithToken: offer.token, offeredAddress: offer.address, secure: offer.isSecure
+			)
+		} else {
+			openDirectChat(withNickname: sender, address: offer.address, port: offer.port, secure: offer.isSecure)
+		}
+		return .answered
+	}
+
+	func startDirectChat(withNickname nickname: String, secure: Bool = false) {
 		guard !nicknameIsMyself(nickname) else { return }
-		openDirectChat(withNickname: nickname, listeningWithToken: nil)
+		openDirectChat(withNickname: nickname, listeningWithToken: nil, secure: secure)
 	}
 
 	func prepareDirectChatConversation(forNickname nickname: String) -> Conversation? {
@@ -224,10 +222,10 @@ extension ServerSession {
 		return conversation
 	}
 
-	func openDirectChat(withNickname nickname: String, address: String, port: UInt16) {
+	func openDirectChat(withNickname nickname: String, address: String, port: UInt16, secure: Bool = false) {
 		guard let conversation = prepareDirectChatConversation(forNickname: nickname) else { return }
 		let connection = DirectChatSession.connection(
-			toPeer: nickname, address: address, port: port, onSession: self
+			toPeer: nickname, address: address, port: port, secure: secure, onSession: self
 		)
 		conversation.directChatConnection = connection
 		printDebugInformation(
@@ -241,14 +239,18 @@ extension ServerSession {
 	func openDirectChat(
 		withNickname nickname: String,
 		listeningWithToken token: String?,
-		offeredAddress: String? = nil
+		offeredAddress: String? = nil,
+		secure: Bool = false
 	) {
 		guard let conversation = prepareDirectChatConversation(forNickname: nickname) else { return }
 		let connection = DirectChatSession.listeningConnection(
-			forPeer: nickname, token: token, offeredAddress: offeredAddress, onSession: self
+			forPeer: nickname, token: token, offeredAddress: offeredAddress, secure: secure, onSession: self
 		)
 		conversation.directChatConnection = connection
-		printDebugInformation(String(localized: .IRC.offeringADirectChat(nickname)), in: conversation)
+		let offering = secure
+			? String(localized: .IRC.offeringASecureDirectChat(nickname))
+			: String(localized: .IRC.offeringADirectChat(nickname))
+		printDebugInformation(offering, in: conversation)
 		output?.select(conversation)
 		connection.open()
 	}
@@ -316,7 +318,8 @@ extension ServerSession {
 			let arguments = DirectChatPolicy.listeningArguments(
 				address: formattedAddress, port: port, token: transferToken
 			)
-			sendCTCPQuery(nickname, command: DCCCommand.chat.ctcpCommand, text: arguments)
+			let verb: DCCCommand = connection.isSecure ? .secureChat : .chat
+			sendCTCPQuery(nickname, command: verb.ctcpCommand, text: arguments)
 			printDebugInformation(
 				String(localized: .IRC.waitingForToConnectOnPort(nickname, String(port))),
 				in: conversation
@@ -332,7 +335,17 @@ extension ServerSession {
 		conversation.activate()
 		output?.reloadChatItem(conversation)
 		output?.updateTitle(for: conversation)
-		printDebugInformation(String(localized: .IRC.directChatWithEstablished(connection.peerNickname)), in: conversation)
+		printDebugInformation(directChatEstablishedNotice(for: connection), in: conversation)
+	}
+
+	private func directChatEstablishedNotice(for connection: DirectChatSession) -> String {
+		let nickname = connection.peerNickname
+		guard let secureSession = connection.secureSession else {
+			return String(localized: .IRC.directChatWithEstablished(nickname))
+		}
+		return secureSession.peer == nil
+			? String(localized: .IRC.secureDirectChatEstablishedUnverified(nickname, secureSession.protocolName))
+			: String(localized: .IRC.secureDirectChatEstablishedVerified(nickname, secureSession.protocolName))
 	}
 
 	func directChatConnection(
@@ -364,6 +377,11 @@ extension ServerSession {
 	private func directChatClosedNotice(for connection: DirectChatSession, error: Error?) -> String {
 		guard let error else {
 			return String(localized: .IRC.directChatDccChatWithClosed(connection.peerNickname))
+		}
+		if let error = error as? DCCTransferError,
+		   let message = ConnectionSafetyStrings.SecureDCC.message(for: error, peer: connection.peerNickname)
+		{
+			return message
 		}
 
 		return String(localized: .IRC.directChatWithClosed(connection.peerNickname, error.localizedDescription))

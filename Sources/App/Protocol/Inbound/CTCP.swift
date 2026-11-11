@@ -44,7 +44,7 @@ nonisolated enum CTCPVerb: String, Sendable, CaseIterable {
 		switch self {
 		case .action: "shows its text as an action, like /me"
 		case .clientInfo: "lists the supported verbs, or describes the one named"
-		case .dcc: "offers a file (SEND) or a direct chat (CHAT)"
+		case .dcc: "offers a file (SEND, or SSEND over TLS) or a direct chat (CHAT, or SCHAT over TLS)"
 		case .finger: "returns a short message"
 		case .lagCheck: "measures lag to the server"
 		case .ping: "returns its token unchanged"

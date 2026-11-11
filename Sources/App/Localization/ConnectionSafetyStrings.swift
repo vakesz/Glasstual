@@ -20,6 +20,46 @@ nonisolated enum ConnectionSafetyStrings {
 		static func requestBody(sender: String, address: String) -> String {
 			String(localized: .ConnectionSafety.directChatRequestWithAddress(sender, address))
 		}
+
+		static func secureRequestBody(sender: String, address: String) -> String {
+			String(localized: .ConnectionSafety.secureDirectChatRequestWithAddress(sender, address))
+		}
+	}
+
+	/// Why a secure DCC transfer or chat did not connect.
+	enum SecureDCC {
+		static func weakKey(peer: String) -> String {
+			String(localized: .ConnectionSafety.secureDccWeakKey(peer))
+		}
+
+		static func certificateRequired(peer: String) -> String {
+			String(localized: .ConnectionSafety.secureDccCertificateRequired(peer))
+		}
+
+		static func certificateRejected(peer: String) -> String {
+			String(localized: .ConnectionSafety.secureDccCertificateRejected(peer))
+		}
+
+		static func handshakeFailed(peer: String, reason: String) -> String {
+			String(localized: .ConnectionSafety.secureDccHandshakeFailed(peer, reason))
+		}
+
+		static func identityUnavailable(peer: String) -> String {
+			String(localized: .ConnectionSafety.secureDccIdentityUnavailable(peer))
+		}
+
+		/// The wording for a secure failure, or `nil` for one any connection
+		/// can have.
+		static func message(for error: DCCTransferError, peer: String) -> String? {
+			switch error {
+			case .weakPeerCertificate: weakKey(peer: peer)
+			case .peerCertificateRequired: certificateRequired(peer: peer)
+			case .peerCertificateRejected: certificateRejected(peer: peer)
+			case let .tlsHandshakeFailed(reason): handshakeFailed(peer: peer, reason: reason)
+			case .identityUnavailable: identityUnavailable(peer: peer)
+			default: nil
+			}
+		}
 	}
 
 	enum FileTransfer {

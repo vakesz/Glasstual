@@ -78,7 +78,7 @@ struct SlashCommandHelp {
 		.init(
 			[.dcc],
 			.SlashCommands.descriptionDirectChatFileTransfer,
-			.SlashCommands.syntaxChatSendNicknamePath,
+			.SlashCommands.syntaxDccChatSendAnswerCertificates,
 			.SlashCommands.hintDirectChatFilePath
 		),
 		.init(

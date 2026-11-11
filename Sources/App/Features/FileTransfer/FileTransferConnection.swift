@@ -133,6 +133,12 @@ extension FileTransfer {
 	/// status, the progress and the dialog all live, so nothing the actor
 	/// reports has to cross isolation a second time.
 	func startTransfer(with config: DCCTransfer.Config) {
+		secureSession = nil
+		guard security == .plain else {
+			startSecureTransfer(with: config)
+			return
+		}
+
 		let transfer = DCCTransfer(config: config)
 		negotiation.transfer = transfer
 
@@ -147,6 +153,74 @@ extension FileTransfer {
 				guard Task.isCancelled == false else { return }
 				self?.transferDidReport(event, from: transfer)
 			}
+		}
+	}
+
+	/** Starts a transfer over TLS once this network's identity is loaded.
+
+	 The identity comes out of the keychain, off the main actor; until it is
+	 here nothing is opened, and a transfer stopped meanwhile opens nothing. A
+	 secure transfer that cannot load it fails rather than falling back to
+	 plain. */
+	private func startSecureTransfer(with config: DCCTransfer.Config) {
+		guard let session else {
+			close(with: .notConnectedToIRC)
+			return
+		}
+		let run = negotiation.sessionID
+		let stopping = stopTask
+		let context = peerContext(for: run)
+
+		negotiation.transferEvents = Task { [weak self] in
+			await stopping?.value
+			let identity: DCCLocalIdentity
+			do {
+				identity = try await session.dccLocalIdentity()
+			} catch {
+				fileTransferLogger.error(
+					"Could not load the identity for a secure transfer: \(error.localizedDescription, privacy: .public)"
+				)
+				guard let self, isCurrent(run) else { return }
+				transferDidFail(with: .identityUnavailable)
+				return
+			}
+			guard let self, isCurrent(run) else { return }
+
+			var secured = config
+			secured.security = .tls(session.dccTLSConfiguration(identity: identity, context: context))
+			let transfer = DCCTransfer(config: secured)
+			negotiation.transfer = transfer
+			await transfer.start()
+
+			for await event in transfer.events {
+				guard Task.isCancelled == false else { return }
+				transferDidReport(event, from: transfer)
+			}
+		}
+	}
+
+	/// Who the verifier asks about, for as long as `run` is this transfer's.
+	private func peerContext(for run: UUID) -> DCCPeerContext {
+		DCCPeerContext(
+			nickname: { [weak self] in self?.peerNickname ?? "" },
+			isCurrent: { [weak self] in self?.negotiation.sessionID == run },
+			awaitingDecision: { [weak self] waiting in
+				guard let self, negotiation.sessionID == run else { return }
+				noteAwaitingCertificateDecision(waiting)
+			}
+		)
+	}
+
+	/// Shows that the handshake waits for the user, and what the row said
+	/// before once they have answered.
+	func noteAwaitingCertificateDecision(_ waiting: Bool) {
+		if waiting {
+			guard transferStatus.isNegotiating, transferStatus != .waitingForCertificateDecision else { return }
+			negotiation.statusBeforeCertificateDecision = transferStatus
+			transferStatus = .waitingForCertificateDecision
+		} else if transferStatus == .waitingForCertificateDecision {
+			transferStatus = negotiation.statusBeforeCertificateDecision ?? .connecting
+			negotiation.statusBeforeCertificateDecision = nil
 		}
 	}
 
@@ -169,7 +243,9 @@ extension FileTransfer {
 		switch event {
 		case let .listening(port):
 			listeningServerDidStart(on: port)
-		case .connected:
+		case let .connected(secureSession):
+			self.secureSession = secureSession
+			negotiation.statusBeforeCertificateDecision = nil
 			transferStatus = isSender ? .sending : .receiving
 			center?.updateMaintenanceTimer()
 		case let .progress(processedBytes):
@@ -208,7 +284,7 @@ extension FileTransfer {
 		processedFilesize = processedBytes
 	}
 
-	private func transferDidFail(with error: DCCTransferError) {
+	func transferDidFail(with error: DCCTransferError) {
 		guard transferStatus.isFinished == false else {
 			return
 		}

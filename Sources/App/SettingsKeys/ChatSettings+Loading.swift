@@ -78,6 +78,9 @@ extension ChatSettings {
 		snapshot.fileTransferPortRangeStart = stores[SettingsKeys.FileTransfers.portRangeStart]
 		snapshot.fileTransferPortRangeEnd = stores[SettingsKeys.FileTransfers.portRangeEnd]
 		snapshot.fileTransferIPAddressInterfaceName = stores[stored: SettingsKeys.FileTransfers.ipAddressInterfaceName]
+		snapshot.fileTransferAcceptsSecureOffers = stores[SettingsKeys.FileTransfers.acceptsSecureOffers]
+		snapshot.fileTransferOffersAreSecure = stores[SettingsKeys.FileTransfers.offersAreSecure]
+		snapshot.fileTransferRequiresPeerCertificate = stores[SettingsKeys.FileTransfers.requirePeerCertificate]
 
 		return snapshot
 	}

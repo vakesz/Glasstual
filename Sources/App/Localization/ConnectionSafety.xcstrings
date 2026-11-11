@@ -1056,6 +1056,294 @@
           }
         }
       }
+    },
+    "secure-direct-chat-request-with-address" : {
+      "comment" : "Body of the alert that asks whether to accept an encrypted direct chat (DCC SCHAT) offer that names the address the client would dial. %1$@ is the sender's nickname, %2$@ the address.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ wants to start an encrypted direct chat with you from %2$@. A direct chat is a connection between the two of you that does not go through the IRC server, so the other person will learn your IP address. You will be asked to verify their certificate."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ titkosított közvetlen csevegést szeretne indítani veled innen: %2$@. A közvetlen csevegés egy kettőtök közötti kapcsolat, amely nem az IRC-kiszolgálón keresztül halad, így a másik fél megtudja az IP-címedet. Meg kell majd erősítened a tanúsítványát."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ möchte von %2$@ aus einen verschlüsselten direkten Chat mit dir starten. Ein direkter Chat ist eine Verbindung zwischen euch beiden, die nicht über den IRC-Server läuft, sodass die andere Person deine IP-Adresse erfährt. Du wirst gebeten, das Zertifikat zu überprüfen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ quiere iniciar un chat directo cifrado contigo desde %2$@. Un chat directo es una conexión entre los dos que no pasa por el servidor IRC, así que la otra persona conocerá tu dirección IP. Se te pedirá que verifiques su certificado."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ souhaite démarrer une discussion directe chiffrée avec vous depuis %2$@. Une discussion directe est une connexion entre vous deux qui ne passe pas par le serveur IRC ; l’autre personne connaîtra donc votre adresse IP. Il vous sera demandé de vérifier son certificat."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@が、%2$@から暗号化されたダイレクトチャットを開始しようとしています。ダイレクトチャットは、IRCサーバを経由せず、あなたと相手との間で直接行う接続のため、相手にあなたのIPアドレスが知られます。相手の証明書の確認を求められます。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ quer iniciar um bate-papo direto criptografado com você a partir de %2$@. Um bate-papo direto é uma conexão entre vocês dois que não passa pelo servidor IRC, então a outra pessoa saberá seu endereço IP. Você precisará verificar o certificado dela."
+          }
+        }
+      }
+    },
+    "secure-dcc-weak-key" : {
+      "comment" : "Why a secure DCC transfer or chat failed: the peer's certificate has a key below the accepted strength (RSA under 2048 bits, elliptic curve under 256 bits). %@ is the peer's nickname.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@'s certificate uses a key that is too weak to be trusted. The connection was refused."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ tanúsítványa túl gyenge kulcsot használ ahhoz, hogy megbízható legyen. A kapcsolat elutasítva."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Zertifikat von %@ verwendet einen Schlüssel, der zu schwach ist, um ihm zu vertrauen. Die Verbindung wurde abgelehnt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El certificado de %@ usa una clave demasiado débil para ser de confianza. Se rechazó la conexión."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le certificat de %@ utilise une clé trop faible pour être approuvée. La connexion a été refusée."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@の証明書の鍵は弱すぎるため信頼できません。接続を拒否しました。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O certificado de %@ usa uma chave fraca demais para ser confiável. A conexão foi recusada."
+          }
+        }
+      }
+    },
+    "secure-dcc-certificate-required" : {
+      "comment" : "Why a secure DCC transfer or chat failed: the peer presented no certificate and the setting that requires one is on. %@ is the peer's nickname.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ presented no certificate, and secure connections are set to require one. The connection was refused."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ nem mutatott be tanúsítványt, a biztonságos kapcsolatokhoz viszont kötelező. A kapcsolat elutasítva."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ hat kein Zertifikat vorgelegt, und sichere Verbindungen erfordern eins. Die Verbindung wurde abgelehnt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ no presentó ningún certificado y las conexiones seguras están configuradas para exigir uno. Se rechazó la conexión."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ n’a présenté aucun certificat, alors que les connexions sécurisées en exigent un. La connexion a été refusée."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@は証明書を提示しませんでしたが、安全な接続では証明書が必須に設定されています。接続を拒否しました。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ não apresentou certificado, e as conexões seguras estão configuradas para exigir um. A conexão foi recusada."
+          }
+        }
+      }
+    },
+    "secure-dcc-certificate-rejected" : {
+      "comment" : "Why a secure DCC transfer or chat failed: the peer's certificate was not trusted, because the user said so or did not answer in time. %@ is the peer's nickname.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@'s certificate was not trusted. The connection was refused."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ tanúsítványa nem lett megbízhatónak jelölve. A kapcsolat elutasítva."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dem Zertifikat von %@ wurde nicht vertraut. Die Verbindung wurde abgelehnt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se confió en el certificado de %@. Se rechazó la conexión."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le certificat de %@ n’a pas été approuvé. La connexion a été refusée."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@の証明書は信頼されませんでした。接続を拒否しました。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O certificado de %@ não foi considerado confiável. A conexão foi recusada."
+          }
+        }
+      }
+    },
+    "secure-dcc-handshake-failed" : {
+      "comment" : "Why a secure DCC transfer or chat failed: TLS could not agree with the peer. %1$@ is the peer's nickname and %2$@ the reason the system gave.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An encrypted connection with %1$@ could not be set up: %2$@"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nem sikerült titkosított kapcsolatot létrehozni vele: %1$@: %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine verschlüsselte Verbindung mit %1$@ konnte nicht hergestellt werden: %2$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo establecer una conexión cifrada con %1$@: %2$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible d’établir une connexion chiffrée avec %1$@ : %2$@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@との暗号化接続を確立できませんでした: %2$@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não foi possível estabelecer uma conexão criptografada com %1$@: %2$@"
+          }
+        }
+      }
+    },
+    "secure-dcc-identity-unavailable" : {
+      "comment" : "Why a secure DCC transfer or chat failed before connecting: this user's own certificate for encrypted connections could not be loaded from or created in the keychain. %@ is the peer's nickname.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your certificate for encrypted connections couldn't be loaded, so nothing was sent to %@. Try again."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A titkosított kapcsolatokhoz használt tanúsítványodat nem sikerült betölteni, ezért semmi sem lett elküldve neki: %@. Próbáld újra."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dein Zertifikat für verschlüsselte Verbindungen konnte nicht geladen werden, daher wurde nichts an %@ gesendet. Versuche es erneut."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo cargar tu certificado para conexiones cifradas, así que no se envió nada a %@. Vuelve a intentarlo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de charger votre certificat pour les connexions chiffrées ; rien n’a été envoyé à %@. Réessayez."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暗号化接続用の証明書を読み込めなかったため、%@には何も送信されませんでした。もう一度お試しください。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não foi possível carregar seu certificado para conexões criptografadas, então nada foi enviado a %@. Tente novamente."
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

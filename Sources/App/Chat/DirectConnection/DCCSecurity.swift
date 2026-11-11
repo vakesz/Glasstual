@@ -1,6 +1,7 @@
 // Copyright (c) 2026 Codeux Software, LLC & respective contributors.
 // SPDX-License-Identifier: BSD-3-Clause
 
+import CocoaExtensions
 import Foundation
 import Network
 import Security
@@ -64,4 +65,18 @@ nonisolated struct DCCSecureSessionInfo: Equatable, Sendable {
 	let cipherSuite: tls_ciphersuite_t
 	/// `nil` when the peer, as a TLS client, presented no certificate.
 	let peer: DCCPeerCertificate?
+
+	/// The protocol as people write it, such as "TLS 1.3".
+	var protocolName: String {
+		switch protocolVersion {
+		case .TLSv13: "TLS 1.3"
+		case .TLSv12: "TLS 1.2"
+		default: "TLS"
+		}
+	}
+
+	/// The negotiated cipher suite's standard name.
+	var cipherSuiteName: String {
+		SecureTransportSupport.description(forCipherSuite: cipherSuite)
+	}
 }

@@ -26,11 +26,13 @@ extension FileTransferStore: FileTransferPresenting {
 		filename: String,
 		address: String,
 		port: UInt16,
-		filesize: UInt64
+		filesize: UInt64,
+		security: DCCOfferSecurity = .plain
 	) -> Bool {
 		guard let transfer = fileTransferSender(
 			matchingToken: token, session: session, peerNickname: peerNickname, filename: filename
 		),
+			transfer.security == security,
 			transfer.transferStatus == .waitingForReceiverToAccept,
 			transfer.totalFilesize == filesize
 		else {

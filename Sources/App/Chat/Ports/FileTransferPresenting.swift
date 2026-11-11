@@ -38,6 +38,7 @@ protocol FileTransferPresenting: AnyObject {
 		filename: String,
 		filesize: UInt64,
 		token: String?,
+		security: DCCOfferSecurity,
 		peerIsKnown: Bool
 	) -> String?
 
@@ -49,17 +50,20 @@ protocol FileTransferPresenting: AnyObject {
 		path: String,
 		autoOpen: Bool,
 		accessURL: URL?,
+		secure: Bool,
 		completion: @escaping (String?) -> Void
 	)
 
 	/// Whether an offer of this session's is already waiting on `token`.
 	func sentOfferExists(withToken token: String, on session: ServerSession, peerNickname: String, filename: String) -> Bool
 
-	/** `DCC SEND` answering a reverse offer of ours: the peer is listening at
-	 `address`, and the offer it names dials it.
+	/** `DCC SEND` or `SSEND` answering a reverse offer of ours: the peer is
+	 listening at `address`, and the offer it names dials it.
 
 	 `false` when no offer of ours is waiting on that token, or the one it names
-	 disagrees about the file, in which case the request is not one we sent for. */
+	 disagrees about the file or about whether it is secure, in which case the
+	 request is not one we sent for. A secure offer is never answered in plain,
+	 nor a plain one over TLS. */
 	func sentOfferAccepted(
 		withToken token: String,
 		on session: ServerSession,
@@ -67,7 +71,8 @@ protocol FileTransferPresenting: AnyObject {
 		filename: String,
 		address: String,
 		port: UInt16,
-		filesize: UInt64
+		filesize: UInt64,
+		security: DCCOfferSecurity
 	) -> Bool
 
 	/// `DCC RESUME`: the peer asks for the rest of a file we are sending, from

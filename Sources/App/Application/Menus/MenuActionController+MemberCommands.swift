@@ -429,7 +429,8 @@ private extension MenuActionController {
 						nickname: nickname,
 						path: url.path,
 						autoOpen: true,
-						accessURL: url
+						accessURL: url,
+						secure: session.environment.settings.fileTransferOffersAreSecure
 					)
 				}
 			}

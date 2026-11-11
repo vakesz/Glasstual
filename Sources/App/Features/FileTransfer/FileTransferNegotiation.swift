@@ -36,6 +36,9 @@ struct FileTransferNegotiation {
 	/// Set when resuming failed, so the next start begins the file again in a
 	/// new reservation instead of asking the peer to resume once more.
 	var restartsFromBeginning = false
+	/// What the row said before a secure handshake stopped to ask the user
+	/// about the peer's certificate, to go back to once they have answered.
+	var statusBeforeCertificateDecision: FileTransferStatus?
 	/// The actor moving the bytes, while there is one.
 	var transfer: DCCTransfer?
 	var portMapping: PortMapper?
@@ -366,7 +369,8 @@ extension FileTransfer {
 					port: 0,
 					filename: wireFilename,
 					filesize: totalFilesize,
-					token: transferToken
+					token: transferToken,
+					security: security
 				)
 			} else {
 				/* A plain `DCC SEND` has no token to carry: the receiver dials
@@ -378,7 +382,8 @@ extension FileTransfer {
 					port: hostPort,
 					filename: wireFilename,
 					filesize: totalFilesize,
-					token: nil
+					token: nil,
+					security: security
 				)
 			}
 		} else if isReversed {
@@ -387,7 +392,8 @@ extension FileTransfer {
 				port: hostPort,
 				filename: wireFilename,
 				filesize: totalFilesize,
-				token: transferToken
+				token: transferToken,
+				security: security
 			)
 		}
 	}

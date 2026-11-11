@@ -64,6 +64,9 @@ nonisolated enum DCCTransferError: Error, Equatable, Sendable {
 	case weakPeerCertificate
 	/// TLS could not agree with the peer, with the reason Security gave.
 	case tlsHandshakeFailed(String)
+	/// This side's own certificate could not be loaded or created, so a secure
+	/// connection was not attempted.
+	case identityUnavailable
 
 	/// How a failure reaches the feature driving a DCC connection: one of the
 	/// cases above passes through, and anything else the network raised is

@@ -6913,54 +6913,6 @@
         }
       }
     },
-    "syntax-chat-send-nickname-path": {
-      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "chat <nickname> | send <nickname> <path>"
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "chat <becenév> | send <becenév> <útvonal>"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "chat <Nickname> | send <Nickname> <Pfad>"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "chat <apodo> | send <apodo> <ruta>"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "chat <pseudo> | send <pseudo> <chemin>"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "chat <ニックネーム> | send <ニックネーム> <パス>"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "chat <apelido> | send <apelido> <caminho>"
-          }
-        }
-      }
-    },
     "syntax-comment": {
       "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
       "extractionState": "manual",
@@ -8877,6 +8829,54 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Sem argumentos, mostra o transporte atual. As alterações valem a partir da próxima conexão."
+          }
+        }
+      }
+    },
+    "syntax-dcc-chat-send-answer-certificates": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "chat|schat [nickname] | send|ssend <nickname> <path> | accept|decline <id> | trust <id> <answer> | fingerprint | certificates [nickname] | forget <nickname>"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "chat|schat [becenév] | send|ssend <becenév> <útvonal> | accept|decline <azonosító> | trust <azonosító> <válasz> | fingerprint | certificates [becenév] | forget <becenév>"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "chat|schat [Nickname] | send|ssend <Nickname> <Pfad> | accept|decline <ID> | trust <ID> <Antwort> | fingerprint | certificates [Nickname] | forget <Nickname>"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "chat|schat [apodo] | send|ssend <apodo> <ruta> | accept|decline <id> | trust <id> <respuesta> | fingerprint | certificates [apodo] | forget <apodo>"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "chat|schat [pseudo] | send|ssend <pseudo> <chemin> | accept|decline <id> | trust <id> <réponse> | fingerprint | certificates [pseudo] | forget <pseudo>"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "chat|schat [ニックネーム] | send|ssend <ニックネーム> <パス> | accept|decline <ID> | trust <ID> <応答> | fingerprint | certificates [ニックネーム] | forget <ニックネーム>"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "chat|schat [apelido] | send|ssend <apelido> <caminho> | accept|decline <id> | trust <id> <resposta> | fingerprint | certificates [apelido] | forget <apelido>"
           }
         }
       }

@@ -147,6 +147,55 @@ nonisolated enum PromptStrings {
 		static func title(sender: String) -> String {
 			String(localized: .Prompts.directChatRequest(sender))
 		}
+
+		static func secureBody(sender: String) -> String {
+			String(localized: .Prompts.secureDirectChatRequestBody(sender))
+		}
+
+		static func secureTitle(sender: String) -> String {
+			String(localized: .Prompts.secureDirectChatRequestTitle(sender))
+		}
+	}
+
+	/// Questions about the certificate a secure DCC peer presents.
+	enum DCC {
+		static func verifyTitle(peer: String) -> String {
+			String(localized: .Prompts.dccVerifyCertificateTitle(peer))
+		}
+
+		static func verifyBody(peer: String, network: String, fingerprint: DCCCertificateFingerprint) -> String {
+			String(localized: .Prompts.dccVerifyCertificateBody(peer, network, fingerprint.grouped.joined(separator: "\n")))
+		}
+
+		static var trustAndRemember: String {
+			String(localized: .Prompts.dccTrustAndRemember)
+		}
+
+		static var trustOnce: String {
+			String(localized: .Prompts.dccTrustOnce)
+		}
+
+		static func changedTitle(peer: String) -> String {
+			String(localized: .Prompts.dccCertificateChangedTitle(peer))
+		}
+
+		static func changedBody(
+			peer: String,
+			trustedOn date: Date,
+			saved: DCCCertificateFingerprint,
+			presented: DCCCertificateFingerprint
+		) -> String {
+			String(localized: .Prompts.dccCertificateChangedBody(
+				peer,
+				date.formatted(date: .long, time: .omitted),
+				saved.grouped.joined(separator: "\n"),
+				presented.grouped.joined(separator: "\n")
+			))
+		}
+
+		static var replaceSavedCertificate: String {
+			String(localized: .Prompts.dccReplaceSavedCertificate)
+		}
 	}
 
 	enum DocumentImport {

@@ -96,12 +96,17 @@ final class ChatEnvironmentFixture {
 	let chatSession: ChatSession
 	private(set) var environment: ChatEnvironment
 
+	/// Secure DCC pins, in memory so no test touches the user's file.
+	let dccPeerCertificates = DCCPeerCertificateStore(fileURL: nil)
+
 	init(settings: ChatSettings = .current()) {
 		let services = ChatServices(
 			output: output,
 			menu: menu,
 			applicationState: applicationState,
-			notifications: notifications
+			notifications: notifications,
+			dccIdentities: DCCLocalIdentityStore(storage: InMemoryDCCIdentityStorage()),
+			dccPeerCertificates: dccPeerCertificates
 		)
 		environment = ChatEnvironment(settings: settings, services: services)
 		/* The directory installs itself in the services it is given. */

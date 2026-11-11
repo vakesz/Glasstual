@@ -101,18 +101,27 @@ extension ServerSession {
 		address: String,
 		port: UInt16,
 		filesize totalFilesize: UInt64,
-		token transferToken: String?
+		token transferToken: String?,
+		security: DCCOfferSecurity = .plain
 	) {
 		guard admitsDCCOffer(from: nickname) else { return }
+		if security == .secure, environment.settings.fileTransferAcceptsSecureOffers == false {
+			print(String(localized: .IRC.secureFileOfferDeclinedBySetting(nickname, filename)), by: nil, in: nil,
+			      as: .dccFileTransfer, command: ChatLineFormat.defaultCommand)
+			return
+		}
+		let size = LocalizedByteCount.formatted(totalFilesize)
 		print(
-			String(localized: .IRC.receivedFileTransferRequest(nickname, filename, LocalizedByteCount.formatted(totalFilesize))),
+			security == .secure
+				? String(localized: .IRC.receivedSecureFileTransferRequest(nickname, filename, size))
+				: String(localized: .IRC.receivedFileTransferRequest(nickname, filename, size)),
 			by: nil,
 			in: nil,
 			as: .dccFileTransfer, command: ChatLineFormat.defaultCommand
 		)
 		guard environment.settings.fileTransferRequestReplyAction != .ignore, let fileTransfers, let identifier = fileTransfers.addReceiver(
 			for: self, nickname: nickname, address: address, port: port,
-			filename: filename, filesize: totalFilesize, token: transferToken,
+			filename: filename, filesize: totalFilesize, token: transferToken, security: security,
 			peerIsKnown: isKnownFileTransferPeer(nickname)
 		)
 		else { return }
@@ -149,16 +158,22 @@ extension ServerSession {
 		)
 	}
 
+	/// Offers a file, or answers a reverse offer, under the verb its security
+	/// calls for. A secure transfer never goes out as a plain `SEND`.
 	func sendFile(
-		_ nickname: String, port: UInt16, filename: String, filesize: UInt64, token: String?
+		_ nickname: String, port: UInt16, filename: String, filesize: UInt64, token: String?,
+		security: DCCOfferSecurity = .plain
 	) {
 		guard let address = DCCTransferAddress else { return }
 		let arguments = DCCFileTransferRequestParser.sendArguments(
 			filename: filename, address: address, port: port, filesize: filesize, token: token
 		)
-		sendCTCPQuery(nickname, command: DCCCommand.send.ctcpCommand, text: arguments)
+		sendCTCPQuery(nickname, command: DCCCommand.offer(for: security).ctcpCommand, text: arguments)
+		let size = LocalizedByteCount.formatted(filesize)
 		print(
-			String(localized: .IRC.tryingFileTransfer(nickname, filename, LocalizedByteCount.formatted(filesize))),
+			security == .secure
+				? String(localized: .IRC.tryingSecureFileTransfer(nickname, filename, size))
+				: String(localized: .IRC.tryingFileTransfer(nickname, filename, size)),
 			by: nil,
 			in: nil,
 			as: .dccFileTransfer, command: ChatLineFormat.defaultCommand
@@ -180,19 +195,13 @@ extension ServerSession {
 
 	private func processFileTransferRequest(_ request: DCCFileTransferRequest, sender: String) {
 		switch request {
-		case let .send(filename, _, _, _, _, .secure):
-			/* Glasstual does not open secure transfers yet. An SSEND is declined
-			 before anything else is read from it, so its token cannot answer a
-			 plain offer of ours either. Each decline is a line in front of the
-			 user, so a flood of them is throttled like any other offer. */
-			guard admitsDCCOffer(from: sender) else { return }
-			print(String(localized: .IRC.declinedSecureFileTransferOffer(sender, filename)), by: nil, in: nil,
-			      as: .dccFileTransfer, command: ChatLineFormat.defaultCommand)
 		case let .unsupported(verb):
+			/* Each decline is a line in front of the user, so a flood of them is
+			 throttled like any other offer. */
 			guard admitsDCCOffer(from: sender) else { return }
 			print(String(localized: .IRC.declinedUnsupportedDccOffer(sender, verb)), by: nil, in: nil,
 			      as: .dccFileTransfer, command: ChatLineFormat.defaultCommand)
-		case let .send(filename, address, port, filesize, token, .plain):
+		case let .send(filename, address, port, filesize, token, security):
 			/* An active offer decides which host the session dials, so a peer
 			 must not be able to point it at loopback or a private network. A
 			 passive one — port zero — is dialled by the peer instead, and a
@@ -203,7 +212,10 @@ extension ServerSession {
 				return
 			}
 			guard let token else {
-				receivedDCCSend(sender, filename: filename, address: address, port: port, filesize: filesize, token: nil)
+				receivedDCCSend(
+					sender, filename: filename, address: address, port: port, filesize: filesize,
+					token: nil, security: security
+				)
 				return
 			}
 			if port == 0 {
@@ -217,13 +229,15 @@ extension ServerSession {
 				}
 				receivedDCCSend(
 					sender, filename: filename, address: address, port: port,
-					filesize: filesize, token: token
+					filesize: filesize, token: token, security: security
 				)
 				return
 			}
+			/* A reply to a reverse offer of ours has to be of the same kind: an
+			 SSEND token answered by a SEND would carry the file in plain. */
 			guard fileTransfers?.sentOfferAccepted(
 				withToken: token, on: self, peerNickname: sender, filename: filename,
-				address: address, port: port, filesize: filesize
+				address: address, port: port, filesize: filesize, security: security
 			) == true else {
 				printInvalidDCCRequest(from: sender)
 				return

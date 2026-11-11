@@ -27,6 +27,9 @@ enum FileTransferStatus: UInt, Sendable {
 	case waitingForLocalIPAddress
 	case waitingForReceiverToAccept
 	case waitingForResumeAccept
+	/// A secure connection's handshake is waiting for the user to decide about
+	/// the peer's certificate.
+	case waitingForCertificateDecision
 }
 
 /** What each status means to the rest of the feature.
@@ -46,7 +49,7 @@ extension FileTransferStatus {
 		switch self {
 		case .connecting, .initializing, .isListeningAsReceiver, .isListeningAsSender,
 		     .mappingListeningPort, .waitingForLocalIPAddress, .waitingForReceiverToAccept,
-		     .waitingForResumeAccept:
+		     .waitingForResumeAccept, .waitingForCertificateDecision:
 			true
 		case .complete, .fatalError, .receiving, .recoverableError, .sending, .stopped:
 			false
@@ -122,6 +125,17 @@ nonisolated enum FileTransferFailure: Equatable, Sendable {
 	case sourceIPAddressUnknown
 	case storageFull
 	case stalled
+	/// The peer's certificate was refused, by the user or for lack of an
+	/// answer.
+	case peerCertificateRejected
+	/// The peer presented no certificate and one is required.
+	case peerCertificateRequired
+	/// The peer's certificate has a key below the accepted strength.
+	case weakPeerCertificate
+	/// TLS could not agree with the peer.
+	case secureHandshakeFailed(String)
+	/// This side's certificate for secure connections could not be loaded.
+	case identityUnavailable
 	/// A transport error that arrived with its own description. Only
 	/// ``DCCTransferError/network(_:)`` carries one; every other transport
 	/// failure maps to a case above, which is what gives it localized copy.
@@ -129,9 +143,18 @@ nonisolated enum FileTransferFailure: Equatable, Sendable {
 
 	init(_ error: DCCTransferError) {
 		switch error {
-		case .badParameter, .rejectedPeerAddress, .peerCertificateRejected, .peerCertificateRequired,
-		     .weakPeerCertificate, .tlsHandshakeFailed:
+		case .badParameter, .rejectedPeerAddress:
 			self = .connectionUnavailable
+		case .peerCertificateRejected:
+			self = .peerCertificateRejected
+		case .peerCertificateRequired:
+			self = .peerCertificateRequired
+		case .weakPeerCertificate:
+			self = .weakPeerCertificate
+		case let .tlsHandshakeFailed(reason):
+			self = .secureHandshakeFailed(reason)
+		case .identityUnavailable:
+			self = .identityUnavailable
 		case .closedByPeer:
 			self = .peerClosedConnection
 		case .connectTimeout:
@@ -155,35 +178,45 @@ nonisolated enum FileTransferFailure: Equatable, Sendable {
 
 	/// What the row says went wrong.
 	func message(peerNickname: String) -> String {
-		let resource = switch self {
+		let resource: LocalizedStringResource = switch self {
 		case .connectionUnavailable:
-			LocalizedStringResource.FileTransfer.transferWithFailedCouldNotEstablish(peerNickname)
+			.FileTransfer.transferWithFailedCouldNotEstablish(peerNickname)
 		case .connectTimeout:
-			LocalizedStringResource.FileTransfer.transferWithFailedNoAnswer(peerNickname)
+			.FileTransfer.transferWithFailedNoAnswer(peerNickname)
 		case .fileHandlerFailed:
-			LocalizedStringResource.FileTransfer.transferWithFailedFileHandlerThrew(peerNickname)
+			.FileTransfer.transferWithFailedFileHandlerThrew(peerNickname)
 		case .invalidResumePosition:
-			LocalizedStringResource.FileTransfer.transferWithFailedProposedResumePosition(peerNickname)
+			.FileTransfer.transferWithFailedProposedResumePosition(peerNickname)
 		case .noListeningPort:
-			LocalizedStringResource.FileTransfer.transferWithFailedThereIsNo(peerNickname)
+			.FileTransfer.transferWithFailedThereIsNo(peerNickname)
 		case .notConnectedToIRC:
-			LocalizedStringResource.FileTransfer.transferWithFailedYouAreNot(peerNickname)
+			.FileTransfer.transferWithFailedYouAreNot(peerNickname)
 		case .oversizedTransfer:
-			LocalizedStringResource.FileTransfer.transferFromFailedBecauseTheSender(peerNickname)
+			.FileTransfer.transferFromFailedBecauseTheSender(peerNickname)
 		case .peerClosedConnection:
-			LocalizedStringResource.FileTransfer.transferWithFailedPeerClosed(peerNickname)
+			.FileTransfer.transferWithFailedPeerClosed(peerNickname)
 		case .resumeNotAnswered:
-			LocalizedStringResource.FileTransfer.transferWithFailedResumeNotAnswered(peerNickname)
+			.FileTransfer.transferWithFailedResumeNotAnswered(peerNickname)
 		case .sourceFileUnreadable:
-			LocalizedStringResource.FileTransfer.transferWithFailedCouldNotRead(peerNickname)
+			.FileTransfer.transferWithFailedCouldNotRead(peerNickname)
 		case .sourceIPAddressUnknown:
-			LocalizedStringResource.FileTransfer.transferWithFailedUnknownSourceIp(peerNickname)
+			.FileTransfer.transferWithFailedUnknownSourceIp(peerNickname)
 		case .storageFull:
-			LocalizedStringResource.FileTransfer.transferWithFailedNoSpaceLeft(peerNickname)
+			.FileTransfer.transferWithFailedNoSpaceLeft(peerNickname)
 		case .stalled:
-			LocalizedStringResource.FileTransfer.transferWithFailedStalled(peerNickname)
+			.FileTransfer.transferWithFailedStalled(peerNickname)
 		case let .underlying(description):
-			LocalizedStringResource.FileTransfer.transferWithFailed(peerNickname, description)
+			.FileTransfer.transferWithFailed(peerNickname, description)
+		case .peerCertificateRejected:
+			.ConnectionSafety.secureDccCertificateRejected(peerNickname)
+		case .peerCertificateRequired:
+			.ConnectionSafety.secureDccCertificateRequired(peerNickname)
+		case .weakPeerCertificate:
+			.ConnectionSafety.secureDccWeakKey(peerNickname)
+		case let .secureHandshakeFailed(reason):
+			.ConnectionSafety.secureDccHandshakeFailed(peerNickname, reason)
+		case .identityUnavailable:
+			.ConnectionSafety.secureDccIdentityUnavailable(peerNickname)
 		}
 
 		return String(localized: resource)
@@ -216,6 +249,8 @@ nonisolated extension FileTransferStatus {
 			.FileTransfer.statusWhileConnecting(peerNickname)
 		case (.waitingForResumeAccept, _):
 			.FileTransfer.transferFromWaitingForResponse(peerNickname)
+		case (.waitingForCertificateDecision, _):
+			.FileTransfer.waitingForCertificateDecision(peerNickname)
 		case (.fatalError, _), (.recoverableError, _), (.receiving, _), (.sending, _):
 			nil
 		}

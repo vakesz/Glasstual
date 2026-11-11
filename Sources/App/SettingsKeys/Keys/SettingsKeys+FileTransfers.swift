@@ -80,10 +80,23 @@ nonisolated extension SettingsKeys {
 			default: true
 		)
 
+		/// Whether a peer's `DCC SSEND` or `SCHAT` is listed. Off declines every
+		/// secure offer with a line saying so.
+		static let acceptsSecureOffers = SettingsKey(group + "Accepts Secure Offers", default: true)
+
+		/// Whether `/dcc send`, `/dcc chat` and Send File offer over TLS. Few
+		/// clients take secure offers, so plain is the default.
+		static let offersAreSecure = SettingsKey(group + "Offers Are Secure", default: false)
+
+		/// Whether a secure peer that presents no certificate is refused rather
+		/// than let in encrypted but unverified.
+		static let requirePeerCertificate = SettingsKey(group + "Require Peer Certificate", default: false)
+
 		static let all: [any AnySettingsKey] = [
 			requestReplyAction, ipAddressDetectionMethod, portRangeStart, portRangeEnd,
 			requestsAreReversed, manuallyEnteredIPAddress, ipAddressInterfaceName,
 			downloadFolderBookmark, preventIdleSystemSleep,
+			acceptsSecureOffers, offersAreSecure, requirePeerCertificate,
 		]
 	}
 }

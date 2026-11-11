@@ -93,6 +93,11 @@ extension DCCPeerCertificateStore {
 	)
 }
 
+extension DCCLocalIdentityStore {
+	/// Each network's secure DCC identity, kept in the keychain.
+	static let shared = DCCLocalIdentityStore(storage: KeychainDCCIdentityStorage())
+}
+
 extension STSPolicyStore {
 	static let applicationStore = STSPolicyStore(userDefaults: GlasstualUserDefaults.container)
 }

@@ -3312,6 +3312,438 @@
           }
         }
       }
+    },
+    "dcc-verify-certificate-title": {
+      "comment": "Title of the alert asking whether to trust the certificate a secure DCC peer presents for the first time. %@ is the peer's nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verify %@'s certificate"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ tanúsítványának ellenőrzése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zertifikat von %@ überprüfen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verifica el certificado de %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vérifier le certificat de %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@の証明書を確認"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verifique o certificado de %@"
+          }
+        }
+      }
+    },
+    "dcc-verify-certificate-body": {
+      "comment": "Body of the alert asking whether to trust the certificate a secure DCC peer presents for the first time. %1$@ is the peer's nickname, %2$@ the network name and %3$@ the SHA-256 fingerprint on four lines.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is the first encrypted connection with %1$@ on %2$@. Compare this fingerprint with the one %1$@ sees before you trust it.\n\nSHA-256:\n%3$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ez az első titkosított kapcsolat vele: %1$@ ezen a hálózaton: %2$@. Mielőtt megbízol benne, vesd össze ezt az ujjlenyomatot azzal, amelyet %1$@ lát.\n\nSHA-256:\n%3$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dies ist die erste verschlüsselte Verbindung mit %1$@ in %2$@. Vergleiche diesen Fingerabdruck mit dem, den %1$@ sieht, bevor du ihm vertraust.\n\nSHA-256:\n%3$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es la primera conexión cifrada con %1$@ en %2$@. Compara esta huella con la que ve %1$@ antes de confiar en ella.\n\nSHA-256:\n%3$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "C’est la première connexion chiffrée avec %1$@ sur %2$@. Comparez cette empreinte avec celle que voit %1$@ avant de l’approuver.\n\nSHA-256 :\n%3$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@で%1$@と暗号化接続するのは初めてです。信頼する前に、このフィンガープリントを%1$@に表示されているものと比較してください。\n\nSHA-256:\n%3$@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta é a primeira conexão criptografada com %1$@ em %2$@. Compare esta impressão digital com a que %1$@ vê antes de confiar nela.\n\nSHA-256:\n%3$@"
+          }
+        }
+      }
+    },
+    "dcc-trust-and-remember": {
+      "comment": "Default button of the alert about a secure DCC peer's first certificate: trust it and save it for later connections.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trust and Remember"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Megbízható, megjegyzés"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vertrauen und merken"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confiar y recordar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approuver et mémoriser"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "信頼して記憶"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confiar e lembrar"
+          }
+        }
+      }
+    },
+    "dcc-trust-once": {
+      "comment": "Button of the alert about a secure DCC peer's first certificate: trust it for this connection only.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trust Once"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csak most"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einmal vertrauen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confiar una vez"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approuver une fois"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今回のみ信頼"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confiar uma vez"
+          }
+        }
+      }
+    },
+    "dcc-certificate-changed-title": {
+      "comment": "Title of the critical alert shown when a secure DCC peer presents a certificate other than the one the user trusted. %@ is the peer's nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@'s certificate has changed"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ tanúsítványa megváltozott"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Zertifikat von %@ hat sich geändert"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El certificado de %@ ha cambiado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le certificat de %@ a changé"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@の証明書が変更されました"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O certificado de %@ mudou"
+          }
+        }
+      }
+    },
+    "dcc-certificate-changed-body": {
+      "comment": "Body of the critical alert shown when a secure DCC peer presents a certificate other than the one the user trusted. %1$@ is the peer's nickname, %2$@ the date the saved certificate was first trusted, %3$@ the saved SHA-256 fingerprint and %4$@ the presented one, each on four lines.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The certificate %1$@ presented doesn't match the one you trusted on %2$@. Someone may be impersonating %1$@.\n\nSaved SHA-256:\n%3$@\n\nPresented SHA-256:\n%4$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A(z) %1$@ által bemutatott tanúsítvány nem egyezik azzal, amelyben ekkor megbíztál: %2$@. Lehet, hogy valaki %1$@ nevében lép fel.\n\nMentett SHA-256:\n%3$@\n\nBemutatott SHA-256:\n%4$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Zertifikat, das %1$@ vorgelegt hat, stimmt nicht mit dem überein, dem du am %2$@ vertraut hast. Möglicherweise gibt sich jemand als %1$@ aus.\n\nGesichertes SHA-256:\n%3$@\n\nVorgelegtes SHA-256:\n%4$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El certificado que presentó %1$@ no coincide con el que aceptaste el %2$@. Puede que alguien se esté haciendo pasar por %1$@.\n\nSHA-256 guardado:\n%3$@\n\nSHA-256 presentado:\n%4$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le certificat présenté par %1$@ ne correspond pas à celui que vous avez approuvé le %2$@. Quelqu’un se fait peut-être passer pour %1$@.\n\nSHA-256 enregistré :\n%3$@\n\nSHA-256 présenté :\n%4$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@が提示した証明書は、%2$@に信頼した証明書と一致しません。誰かが%1$@になりすましている可能性があります。\n\n保存済みの SHA-256:\n%3$@\n\n提示された SHA-256:\n%4$@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O certificado que %1$@ apresentou não corresponde ao que você considerou confiável em %2$@. Alguém pode estar se passando por %1$@.\n\nSHA-256 salvo:\n%3$@\n\nSHA-256 apresentado:\n%4$@"
+          }
+        }
+      }
+    },
+    "dcc-replace-saved-certificate": {
+      "comment": "Destructive button of the alert shown when a secure DCC peer's certificate has changed: forget the saved certificate and trust the presented one.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replace Saved Certificate"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mentett tanúsítvány cseréje"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gesichertes Zertifikat ersetzen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reemplazar certificado guardado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remplacer le certificat enregistré"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存済みの証明書を置き換える"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Substituir certificado salvo"
+          }
+        }
+      }
+    },
+    "secure-direct-chat-request-title": {
+      "comment": "Title of the alert asking whether to accept an encrypted direct chat (DCC SCHAT). %@ is the sender's nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encrypted direct chat request from %@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Titkosított közvetlen csevegési kérés tőle: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anfrage für einen verschlüsselten direkten Chat von %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solicitud de chat directo cifrado de %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Demande de discussion directe chiffrée de %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@からの暗号化されたダイレクトチャットのリクエスト"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pedido de bate-papo direto criptografado de %@"
+          }
+        }
+      }
+    },
+    "secure-direct-chat-request-body": {
+      "comment": "Body of the alert asking whether to accept an encrypted direct chat (DCC SCHAT) that the peer will connect to. %@ is the sender's nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ wants to start an encrypted direct chat with you. A direct chat is a connection between the two of you that does not go through the IRC server, so the other person will learn your IP address. You will be asked to verify their certificate."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ titkosított közvetlen csevegést szeretne indítani veled. A közvetlen csevegés egy kettőtök közötti kapcsolat, amely nem az IRC-kiszolgálón keresztül halad, így a másik fél megtudja az IP-címedet. Meg kell majd erősítened a tanúsítványát."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ möchte einen verschlüsselten direkten Chat mit dir starten. Ein direkter Chat ist eine Verbindung zwischen euch beiden, die nicht über den IRC-Server läuft, sodass die andere Person deine IP-Adresse erfährt. Du wirst gebeten, das Zertifikat zu überprüfen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ quiere iniciar un chat directo cifrado contigo. Un chat directo es una conexión entre los dos que no pasa por el servidor IRC, así que la otra persona conocerá tu dirección IP. Se te pedirá que verifiques su certificado."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ souhaite démarrer une discussion directe chiffrée avec vous. Une discussion directe est une connexion entre vous deux qui ne passe pas par le serveur IRC ; l’autre personne connaîtra donc votre adresse IP. Il vous sera demandé de vérifier son certificat."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@があなたと暗号化されたダイレクトチャットを開始しようとしています。ダイレクトチャットは、IRCサーバを経由せず、あなたと相手との間で直接行う接続のため、相手にあなたのIPアドレスが知られます。相手の証明書の確認を求められます。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ quer iniciar um bate-papo direto criptografado com você. Um bate-papo direto é uma conexão entre vocês dois que não passa pelo servidor IRC, então a outra pessoa saberá seu endereço IP. Você precisará verificar o certificado dela."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

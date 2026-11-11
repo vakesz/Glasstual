@@ -88,6 +88,9 @@ nonisolated struct ChatSettings: Sendable, Equatable {
 	var fileTransferPortRangeStart: UInt16 = 0
 	var fileTransferPortRangeEnd: UInt16 = 0
 	var fileTransferIPAddressInterfaceName: String?
+	var fileTransferAcceptsSecureOffers = true
+	var fileTransferOffersAreSecure = false
+	var fileTransferRequiresPeerCertificate = false
 
 	init() {}
 }

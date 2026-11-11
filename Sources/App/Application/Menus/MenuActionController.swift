@@ -130,7 +130,10 @@ extension MenuActionController {
 			guard FileManager.default.fileExists(atPath: file, isDirectory: &isDirectory),
 			      isDirectory.boolValue == false
 			else { continue }
-			AppServices.fileTransfers.offerSender(for: session, nickname: nickname, path: file, autoOpen: true)
+			AppServices.fileTransfers.offerSender(
+				for: session, nickname: nickname, path: file, autoOpen: true,
+				secure: session.environment.settings.fileTransferOffersAreSecure
+			)
 		}
 	}
 }

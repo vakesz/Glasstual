@@ -30,6 +30,11 @@ final class ChatServices {
 	/// Shared across sessions because STS policies apply to hosts.
 	let stsPolicies: STSPolicyStore
 
+	/// The key and certificate each network presents on secure DCC connections.
+	let dccIdentities: DCCLocalIdentityStore
+	/// The secure DCC peer certificates the user decided to trust.
+	let dccPeerCertificates: DCCPeerCertificateStore
+
 	init(
 		output: (any ServerSessionPresenting)? = nil,
 		menu: (any MenuPresenting)? = nil,
@@ -42,7 +47,9 @@ final class ChatServices {
 		chatSession: ChatSession? = nil,
 		certificates: (any CertificatePresenting)? = nil,
 		connectToServer: @escaping @MainActor (ServerConnectionRequest) -> Void = { _ in },
-		stsPolicies: STSPolicyStore = .applicationStore
+		stsPolicies: STSPolicyStore = .applicationStore,
+		dccIdentities: DCCLocalIdentityStore = .shared,
+		dccPeerCertificates: DCCPeerCertificateStore = .shared
 	) {
 		self.output = output
 		self.menu = menu
@@ -54,6 +61,8 @@ final class ChatServices {
 		self.scripts = scripts
 		self.chatSession = chatSession
 		self.stsPolicies = stsPolicies
+		self.dccIdentities = dccIdentities
+		self.dccPeerCertificates = dccPeerCertificates
 		self.certificates = certificates
 		self.connectToServer = connectToServer
 	}

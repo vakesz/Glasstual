@@ -60,6 +60,11 @@ final class FileTransfer: SessionScoped {
 	@ObservationIgnored var hostPort: UInt16 = 0
 
 	var speedRecords: [UInt64] = []
+	/// Offered or accepted as `DCC SSEND`. Fixed for the transfer's life, Try
+	/// Again and resume included: a secure transfer never falls back to plain.
+	private(set) var security: DCCOfferSecurity = .plain
+	/// What TLS negotiated on the current connection of a secure transfer.
+	var secureSession: DCCSecureSessionInfo?
 	var transferStatus: FileTransferStatus = .stopped
 	var completion: DCCTransfer.Completion?
 
@@ -134,11 +139,13 @@ final class FileTransfer: SessionScoped {
 		port hostPort: UInt16,
 		filename: String,
 		filesize totalFilesize: UInt64,
-		token transferToken: String?
+		token transferToken: String?,
+		security: DCCOfferSecurity = .plain
 	) -> FileTransfer? {
 		let wireFilename = filename.safeFilename
 		guard !wireFilename.isEmpty else { return nil }
 		let controller = FileTransfer(session: session, center: center)
+		controller.security = security
 
 		if let transferToken, !transferToken.isEmpty {
 			controller.transferToken = transferToken
@@ -159,10 +166,11 @@ final class FileTransfer: SessionScoped {
 		center: FileTransferStore,
 		nickname: String,
 		path: String,
-		accessURL: URL? = nil
+		accessURL: URL? = nil,
+		security: DCCOfferSecurity = .plain
 	) async -> FileTransfer? {
 		await sender(
-			for: session, center: center, nickname: nickname, path: path, accessURL: accessURL
+			for: session, center: center, nickname: nickname, path: path, accessURL: accessURL, security: security
 		) { url, receiving, accessURL in
 			try await DCCTransferFile.open(url: url, receiving: receiving, accessURL: accessURL)
 		}
@@ -174,9 +182,11 @@ final class FileTransfer: SessionScoped {
 		nickname: String,
 		path: String,
 		accessURL: URL? = nil,
+		security: DCCOfferSecurity = .plain,
 		fileFactory: @Sendable (URL, Bool, URL?) async throws -> DCCTransferFile
 	) async -> FileTransfer? {
 		let controller = FileTransfer(session: session, center: center)
+		controller.security = security
 		controller.isReversed = SettingsKeys.FileTransfers.requestsAreReversed.value
 		controller.isSender = true
 		controller.peerNickname = nickname

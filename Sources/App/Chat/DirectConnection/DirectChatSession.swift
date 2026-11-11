@@ -51,6 +51,11 @@ final class DirectChatSession {
 	private(set) var hostPort: UInt16 = 0
 	private(set) var transferToken: String?
 	private(set) var state: DirectChatSessionState = .idle
+	/// Offered or accepted as `DCC SCHAT`. Fixed for the session's life: a
+	/// secure chat is never carried on in plain, nor the reverse.
+	let isSecure: Bool
+	/// What TLS negotiated, once a secure chat is connected.
+	private(set) var secureSession: DCCSecureSessionInfo?
 
 	private let role: Role
 	private var chat: DirectChatSocket?
@@ -75,9 +80,10 @@ final class DirectChatSession {
 		session?.environment.settings ?? ChatSettings()
 	}
 
-	private init(peer nickname: String, role: Role, onSession session: ServerSession) {
+	private init(peer nickname: String, role: Role, secure: Bool, onSession session: ServerSession) {
 		peerNickname = nickname
 		self.role = role
+		isSecure = secure
 		self.session = session
 	}
 
@@ -89,6 +95,7 @@ final class DirectChatSession {
 		toPeer nickname: String,
 		address hostAddress: String,
 		port hostPort: UInt16,
+		secure: Bool = false,
 		onSession session: ServerSession
 	) -> DirectChatSession {
 		precondition(hostPort != 0)
@@ -96,6 +103,7 @@ final class DirectChatSession {
 		let object = DirectChatSession(
 			peer: nickname,
 			role: .connecting(address: hostAddress),
+			secure: secure,
 			onSession: session
 		)
 		object.hostPort = hostPort
@@ -114,12 +122,14 @@ final class DirectChatSession {
 		forPeer nickname: String,
 		token transferToken: String?,
 		offeredAddress: String? = nil,
+		secure: Bool = false,
 		onSession session: ServerSession
 	) -> DirectChatSession {
 		let expectedPeerAddress = offeredAddress.flatMap { DCCWireFormat.isDialableAddress($0) ? $0 : nil } ?? ""
 		let object = DirectChatSession(
 			peer: nickname,
 			role: .listening(expectedPeerAddress: expectedPeerAddress),
+			secure: secure,
 			onSession: session
 		)
 
@@ -177,12 +187,57 @@ final class DirectChatSession {
 		expectedPeerAddress: String = "",
 		acceptanceTimeout: Duration? = nil
 	) {
-		let chat = DirectChatSocket(config: DirectChatSocket.Config(
+		let config = DirectChatSocket.Config(
 			endpoint: endpoint,
 			sendTimeout: DirectChatSessionPolicy.writeTimeout,
 			expectedPeerAddress: expectedPeerAddress,
 			acceptanceTimeout: acceptanceTimeout
-		))
+		)
+		guard isSecure else {
+			start(config)
+			return
+		}
+
+		/* The identity comes out of the keychain, off the main actor. Nothing
+		 is opened before it arrives, and a chat closed meanwhile opens nothing:
+		 a secure chat never falls back to plain. */
+		startTask = Task { [weak self] in
+			guard let session = self?.session else { return }
+			let identity: DCCLocalIdentity
+			do {
+				identity = try await session.dccLocalIdentity()
+			} catch {
+				DirectConnectionLog.chat.error(
+					"Could not load the identity for a secure direct chat: \(error.localizedDescription, privacy: .public)"
+				)
+				self?.close(with: DCCTransferError.identityUnavailable)
+				return
+			}
+			guard let self, state == .listening || state == .connecting else { return }
+			var secured = config
+			secured.security = .tls(session.dccTLSConfiguration(identity: identity, context: peerContext))
+			start(secured)
+		}
+	}
+
+	/// Who the verifier asks about: whoever this chat's peer is called now,
+	/// for as long as this chat is the one being set up.
+	private var peerContext: DCCPeerContext {
+		DCCPeerContext(
+			nickname: { [weak self] in self?.peerNickname ?? "" },
+			isCurrent: { [weak self] in
+				guard let self, state == .listening || state == .connecting else { return false }
+				return session?.directChatConversation(for: self) != nil
+			},
+			conversation: { [weak self] in
+				guard let self else { return nil }
+				return session?.directChatConversation(for: self)
+			}
+		)
+	}
+
+	private func start(_ config: DirectChatSocket.Config) {
+		let chat = DirectChatSocket(config: config)
 		self.chat = chat
 
 		eventTask = Task { [weak self] in
@@ -336,9 +391,10 @@ final class DirectChatSession {
 
 			hostPort = port
 			mapListeningPort(port)
-		case .connected:
+		case let .connected(secureSession):
 			guard state == .listening || state == .connecting else { return }
 
+			self.secureSession = secureSession
 			state = .connected
 			session?.directChatConnectionDidConnect(self)
 		case let .lines(_, acknowledged):

@@ -2497,6 +2497,54 @@
           }
         }
       }
+    },
+    "waiting-for-certificate-decision": {
+      "comment": "Status of a secure file transfer while the user is asked whether to trust the peer's certificate. %@ is the peer's nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waiting for you to verify %@'s certificate"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Várakozás arra, hogy ellenőrizd %@ tanúsítványát"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wartet darauf, dass du das Zertifikat von %@ überprüfst"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esperando a que verifiques el certificado de %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En attente de la vérification du certificat de %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@の証明書の確認を待っています"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aguardando você verificar o certificado de %@"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

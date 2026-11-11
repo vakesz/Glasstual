@@ -248,7 +248,8 @@ extension LocalCommand {
 		.conn: "[server]",
 		.ctcp: "<nickname> <command> [extra]",
 		.ctcpreply: "<nickname> <command> [extra]",
-		.dcc: "chat <nickname> | send <nickname> <path>",
+		.dcc: "chat|schat [nickname] | send|ssend <nickname> <path> | accept|decline <id> | trust <id> <answer>"
+			+ " | fingerprint | certificates [nickname] | forget <nickname>",
 		.debug: "<message>",
 		.dehalfop: "[channel] <nickname>",
 		.detach: "[channel]",

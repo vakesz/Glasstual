@@ -126,6 +126,7 @@ extension FileTransferStore {
 		filename: String,
 		filesize totalFilesize: UInt64,
 		token transferToken: String?,
+		security: DCCOfferSecurity = .plain,
 		peerIsKnown: Bool
 	) -> String? {
 		guard model.receiverCount < FileTransferConstants.receiverHardLimit else {
@@ -149,7 +150,8 @@ extension FileTransferStore {
 			port: hostPort,
 			filename: filename,
 			filesize: totalFilesize,
-			token: transferToken
+			token: transferToken,
+			security: security
 		) else {
 			return nil
 		}
@@ -190,13 +192,13 @@ extension FileTransferStore {
 	/// Owns file preparation started by a synchronous menu or IRC command.
 	func offerSender(
 		for session: ServerSession, nickname: String, path: String, autoOpen: Bool,
-		accessURL: URL? = nil, completion: @escaping (String?) -> Void = { _ in }
+		accessURL: URL? = nil, secure: Bool = false, completion: @escaping (String?) -> Void = { _ in }
 	) {
 		let identifier = UUID()
 		senderPreparations[identifier] = Task { [weak self] in
 			guard let self else { return }
 			let result = await addSender(for: session, nickname: nickname, path: path,
-			                             autoOpen: autoOpen, accessURL: accessURL)
+			                             autoOpen: autoOpen, accessURL: accessURL, secure: secure)
 			senderPreparations[identifier] = nil
 			guard !Task.isCancelled else { return }
 			completion(result)
@@ -208,7 +210,8 @@ extension FileTransferStore {
 		nickname: String,
 		path: String,
 		autoOpen: Bool,
-		accessURL: URL? = nil
+		accessURL: URL? = nil,
+		secure: Bool = false
 	) async -> String? {
 		let startupIdentifier = session.startup.identifier
 		guard let controller = await FileTransfer.sender(
@@ -216,7 +219,8 @@ extension FileTransferStore {
 			center: self,
 			nickname: nickname,
 			path: path,
-			accessURL: accessURL
+			accessURL: accessURL,
+			security: secure ? .secure : .plain
 		) else {
 			return nil
 		}

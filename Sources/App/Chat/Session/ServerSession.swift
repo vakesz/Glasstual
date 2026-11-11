@@ -328,6 +328,8 @@ class ServerSession: ChatItem {
 	var ctcpReplyThrottle = CTCPReplyThrottle()
 	/// How many unsolicited DCC offers this connection has taken lately.
 	var dccOfferThrottle = DCCOfferThrottle()
+	/// The questions about DCC connections waiting on the user.
+	var dccDecisions = DCCPendingDecisions()
 	/// Messages sent without a local print, whose echo is dropped rather than shown.
 	var unprintedEchoes = UnprintedEchoRegistry()
 	/// How far this connection has got with registering.
