@@ -406,6 +406,8 @@ actor ConnectionHost {
 			startWriterIfNeeded()
 		case let .secured(protocolVersion, cipherSuite):
 			client?.didSecureConnection(withProtocolType: protocolVersion, cipherSuite: cipherSuite)
+		case let .negotiatedSubprotocol(subprotocol):
+			client?.didNegotiateWebSocketSubprotocol(subprotocol)
 		case let .received(lines, acknowledged):
 			/* The transport waits on the application's reply, not on this
 			 loop: the forwarding returns at once, so the events behind these

@@ -9,6 +9,12 @@ extension ConnectionSocket {
 	// MARK: - Read & Write
 
 	func read(from connection: TransportConnection, generation: Int) async throws {
+		if case let .webSocket(options) = config.transport {
+			try await readWebSocket(from: connection, options: options, generation: generation)
+
+			return
+		}
+
 		while connecting || connected, disconnecting == false {
 			let message = try await connection.receive(atMost: Self.maximumDataLength)
 			try Task.checkCancellation()
@@ -22,16 +28,7 @@ extension ConnectionSocket {
 			let lines = content.isEmpty ? [] : readIn(content)
 
 			if lines.isEmpty == false {
-				/* The end-to-end flow control: nothing more is read until the
-				 application has handled these lines and said so, so a server
-				 that outpaces it fills the TCP window instead of a queue between
-				 the processes. Ending the connection cancels this task, which
-				 ends the wait too. The wait never occupies the host's command or
-				 writer task. */
-				let (acknowledgement, acknowledged) = AsyncStream<Void>.makeStream()
-				events.yield(.received(lines, acknowledged: acknowledged))
-				for await _ in acknowledgement {}
-				try Task.checkCancellation()
+				try await deliver(lines)
 			}
 
 			if isComplete {
@@ -43,6 +40,20 @@ extension ConnectionSocket {
 				return
 			}
 		}
+	}
+
+	/** Hands `lines` to the application and waits until it has handled them.
+
+	 The end-to-end flow control: nothing more is read until the application
+	 has handled these lines and said so, so a server that outpaces it fills
+	 the TCP window instead of a queue between the processes. Ending the
+	 connection cancels this task, which ends the wait too. The wait never
+	 occupies the host's command or writer task. */
+	func deliver(_ lines: [Data]) async throws {
+		let (acknowledgement, acknowledged) = AsyncStream<Void>.makeStream()
+		events.yield(.received(lines, acknowledged: acknowledged))
+		for await _ in acknowledgement {}
+		try Task.checkCancellation()
 	}
 
 	/** Cuts `data` into lines and returns the ones it completes, in order.
@@ -81,11 +92,17 @@ extension ConnectionSocket {
 		return true
 	}
 
+	/** Sends one queued write. The application is told about `data` as it
+	 queued it, terminator and all, whatever framing carries it. */
 	func startWriting(_ data: Data, over connection: TransportConnection) async {
 		events.yield(.willSend(data))
 
+		let payload = webSocket.map { WebSocketSession.frames(for: data, framedBy: $0.lines) } ?? data
+
 		do {
-			try await connection.send(data)
+			if payload.isEmpty == false {
+				try await connection.send(payload)
+			}
 		} catch {
 			sending = false
 			fail(with: ConnectionError.translating(error))

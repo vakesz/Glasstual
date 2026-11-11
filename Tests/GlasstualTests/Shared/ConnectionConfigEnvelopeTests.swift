@@ -106,6 +106,109 @@ struct ConnectionConfigEnvelopeTests {
 		#expect(Int(exactly: config.floodControlMaximumMessages) != nil)
 	}
 
+	// MARK: - Transport
+
+	private func encodedSample(transport: Any?) throws -> Data {
+		let data = try PropertyListEncoder().encode(sampleConfig())
+		let plist = try PropertyListSerialization.propertyList(from: data, options: [], format: nil)
+		var encoded = try #require(plist as? [String: Any])
+		encoded["transport"] = transport
+
+		return try PropertyListSerialization.data(fromPropertyList: encoded, format: .binary, options: 0)
+	}
+
+	@Test("A WebSocket transport survives the envelope")
+	func webSocketTransportRoundTrips() throws {
+		var config = sampleConfig()
+		config.transport = .webSocket(WebSocketTransportOptions(path: "/irc?token=a%20b", subprotocols: [.binary, .text]))
+
+		#expect(try roundTrip(config) == config)
+	}
+
+	@Test("A configuration without a transport is a stream")
+	func absentTransportIsAStream() throws {
+		let config = try PropertyListDecoder().decode(ConnectionConfig.self, from: encodedSample(transport: nil))
+
+		#expect(config.transport == .stream)
+	}
+
+	@Test(
+		"A transport this build cannot read becomes a stream",
+		arguments: ["a bare string", "an unknown kind", "a WebSocket with no options"]
+	)
+	func unreadableTransportIsAStream(_ shape: String) throws {
+		let stored: Any = switch shape {
+		case "a bare string": "webSocket"
+		case "an unknown kind": ["kind": "carrierPigeon"]
+		default: ["kind": "webSocket"]
+		}
+		let config = try PropertyListDecoder().decode(ConnectionConfig.self, from: encodedSample(transport: stored))
+
+		#expect(config.transport == .stream)
+		#expect(config.serverAddress == sampleConfig().serverAddress)
+	}
+
+	@Test(
+		"A WebSocket path outside the rules is repaired to the root",
+		arguments: [
+			"",
+			"irc",
+			"/irc\r\nHost: evil",
+			"/irc\n",
+			"/irc\0",
+			"/irc path",
+			"/irc#fragment",
+			"/irc%2",
+			"/irc%zz",
+			"/caf\u{E9}",
+			"/" + String(repeating: "a", count: WebSocketTransportOptions.maximumPathLength),
+		]
+	)
+	func invalidPathsAreRepaired(path: String) throws {
+		let stored: [String: Any] = ["kind": "webSocket", "webSocket": ["path": path, "subprotocols": ["text.ircv3.net"]]]
+		let config = try PropertyListDecoder().decode(ConnectionConfig.self, from: encodedSample(transport: stored))
+
+		#expect(config.transport == .webSocket(WebSocketTransportOptions(path: "/", subprotocols: [.text])))
+	}
+
+	@Test(
+		"A valid WebSocket path is kept as written",
+		arguments: ["/", "/irc", "/irc?x=1", "/webirc/kiwiirc/?a=b&c=%20", "/" + String(repeating: "a", count: 1023)]
+	)
+	func validPathsAreKept(path: String) {
+		#expect(WebSocketTransportOptions.isValidPath(path))
+		#expect(WebSocketTransportOptions(path: path).repaired().path == path)
+	}
+
+	@Test("An empty or unknown subprotocol offer becomes both, text first, without duplicates")
+	func subprotocolOfferIsRepaired() throws {
+		for offer in [[], ["chat"], ["binary.ircv3.net", "binary.ircv3.net", "text.ircv3.net"]] {
+			let stored: [String: Any] = ["kind": "webSocket", "webSocket": ["path": "/", "subprotocols": offer]]
+			let config = try PropertyListDecoder().decode(ConnectionConfig.self, from: encodedSample(transport: stored))
+			let expected: [WebSocketSubprotocol] = offer.count == 3 ? [.binary, .text] : [.text, .binary]
+
+			#expect(config.transport == .webSocket(WebSocketTransportOptions(path: "/", subprotocols: expected)))
+		}
+	}
+
+	@Test(
+		"A zero port becomes the transport's default",
+		arguments: [
+			(ConnectionTransport.stream, false, ConnectionDefaults.serverPort),
+			(.webSocket(WebSocketTransportOptions()), false, ConnectionDefaults.webSocketPort),
+			(.webSocket(WebSocketTransportOptions()), true, ConnectionDefaults.webSocketPortSecure),
+		]
+	)
+	func zeroPortGetsTheTransportDefault(transport: ConnectionTransport, secure: Bool, expected: UInt16) throws {
+		var config = ConnectionConfig()
+		config.serverAddress = "irc.example.test"
+		config.serverPort = 0
+		config.connectionPrefersSecuredConnection = secure
+		config.transport = transport
+
+		#expect(try roundTrip(config).serverPort == expected)
+	}
+
 	@Test("A proxy type this build does not know becomes no proxy")
 	func unsupportedProxyTypeIsRefused() throws {
 		let data = try PropertyListEncoder().encode(sampleConfig())

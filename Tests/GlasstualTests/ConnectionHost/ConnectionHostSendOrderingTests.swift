@@ -190,6 +190,8 @@ private final class SendOrderingSessionShim: NSObject, RemoteConnectionClientPro
 	func willSend(_: Data) {}
 
 	func didSendData() {}
+
+	func didNegotiateWebSocketSubprotocol(_: String?) {}
 }
 
 /** What the application hands the connection host has to reach the wire, all of

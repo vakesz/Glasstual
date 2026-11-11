@@ -224,6 +224,8 @@ private final class HostSessionShim: NSObject, RemoteConnectionClientProtocol {
 	func willSend(_: Data) {}
 
 	func didSendData() {}
+
+	func didNegotiateWebSocketSubprotocol(_: String?) {}
 }
 
 /** Async certificate validation, driven end to end through the real XPC

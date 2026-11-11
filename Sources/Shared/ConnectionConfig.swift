@@ -23,6 +23,8 @@ nonisolated enum ConnectionAddressKind: UInt, Codable, Sendable {
 nonisolated enum ConnectionDefaults {
 	static let serverPort: UInt16 = 6667
 	static let serverPortSecure: UInt16 = 6697
+	static let webSocketPort: UInt16 = 80
+	static let webSocketPortSecure: UInt16 = 443
 	static let proxyPort: UInt16 = 1080
 	static let floodControlDelayInterval: UInt = 2
 	static let floodControlMaximumMessages: UInt = 6
@@ -39,6 +41,9 @@ nonisolated struct ConnectionConfig: Codable, Sendable, Equatable {
 	var serverAddress = ""
 	var serverPort = ConnectionDefaults.serverPort
 	var addressType = ConnectionAddressKind.default
+	/// How lines are framed. `connectionPrefersSecuredConnection` decides
+	/// between TCP and TLS underneath either one.
+	var transport = ConnectionTransport.stream
 
 	var connectionPrefersSecuredConnection = false
 	var connectionShouldValidateCertificateChain = false
@@ -77,6 +82,7 @@ nonisolated struct ConnectionConfig: Codable, Sendable, Equatable {
 		case serverAddress
 		case serverPort
 		case addressType
+		case transport
 		case connectionPrefersSecuredConnection
 		case connectionShouldValidateCertificateChain
 		case connectionRequiresTrustedCertificate
@@ -106,6 +112,7 @@ nonisolated struct ConnectionConfig: Codable, Sendable, Equatable {
 		addressType = ConnectionAddressKind(
 			rawValue: container.decode(UInt.self, forKey: .addressType, default: 0)
 		) ?? .default
+		transport = Self.decodedTransport(from: container)
 
 		decodeSecurity(from: container)
 		decodeProxy(from: container)
@@ -173,6 +180,7 @@ nonisolated struct ConnectionConfig: Codable, Sendable, Equatable {
 		try container.encode(serverAddress, forKey: .serverAddress)
 		try container.encode(serverPort, forKey: .serverPort)
 		try container.encode(addressType.rawValue, forKey: .addressType)
+		try container.encode(transport, forKey: .transport)
 		try container.encode(connectionPrefersSecuredConnection, forKey: .connectionPrefersSecuredConnection)
 		try container.encode(
 			connectionShouldValidateCertificateChain,
@@ -194,17 +202,19 @@ nonisolated struct ConnectionConfig: Codable, Sendable, Equatable {
 	 assumes it is in.
 
 	 A zero port means the sender left it out, not that it wanted a port of
-	 zero. The flood-control range is the larger point: decoding writes the two
-	 settings directly, so whatever the envelope carried survives — and the host
-	 narrows the message count to an `Int` on every write, which traps on a
-	 `UInt` above `Int.max`. The range is applied here for that reason. */
+	 zero, so it becomes the transport's default. (A WebSocket path and offer
+	 are repaired as ``WebSocketTransportOptions`` decodes.) The flood-control
+	 range is the larger point: decoding writes the two settings directly, so
+	 whatever the envelope carried survives — and the host narrows the message
+	 count to an `Int` on every write, which traps on a `UInt` above `Int.max`.
+	 The range is applied here for that reason. */
 	private mutating func repairDecodedValues() {
 		if proxyPort == 0 {
 			proxyPort = ConnectionDefaults.proxyPort
 		}
 
 		if serverPort == 0 {
-			serverPort = ConnectionDefaults.serverPort
+			serverPort = transport.defaultPort(secure: connectionPrefersSecuredConnection)
 		}
 
 		floodControlDelayInterval = Self.clampedFloodValue(
@@ -215,6 +225,23 @@ nonisolated struct ConnectionConfig: Codable, Sendable, Equatable {
 			floodControlMaximumMessages,
 			ConnectionDefaults.floodControlMaximumMessages
 		)
+	}
+
+	/** An absent transport is a configuration from before there was a choice,
+	 and that was a stream. One that cannot be read is treated the same way,
+	 and said so. */
+	private static func decodedTransport(from container: KeyedDecodingContainer<CodingKeys>) -> ConnectionTransport {
+		guard container.contains(.transport) else {
+			return .stream
+		}
+
+		guard let transport = try? container.decode(ConnectionTransport.self, forKey: .transport) else {
+			ConnectionConfigurationLog.unsupportedTransport()
+
+			return .stream
+		}
+
+		return transport
 	}
 
 	/** A value outside the supported set means a configuration written by a

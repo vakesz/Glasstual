@@ -75,6 +75,15 @@ actor ConnectionSocket {
 		stripsCarriageReturns: true,
 		dropsEmptyLines: true
 	)
+	/// The WebSocket layer above the transport, from the completed upgrade
+	/// until the connection ends. Nil on a stream connection.
+	var webSocket: WebSocketSession?
+	/// Whether this connection's WebSocket close frame has gone out. RFC 6455
+	/// allows one per connection, whichever side starts the closing handshake.
+	var webSocketCloseSent = false
+	/// The owner's close of an open WebSocket: the close frame, then the end of
+	/// the dial.
+	var gracefulCloseTask: Task<Void, Never>?
 	var connectTimeoutTask: Task<Void, Never>?
 	var trustAnswer: AsyncStream<Bool>.Continuation?
 	/// State callbacks and deadlines can finish after a failed dial has already
@@ -201,13 +210,21 @@ actor ConnectionSocket {
 		guard disconnecting == false else { return true }
 		guard disconnected == false else { return false }
 
-		phase = .disconnecting(wasConnected: connected)
+		let wasConnected = connected
+		phase = .disconnecting(wasConnected: wasConnected)
 
 		cancelConnectTimeout()
 
 		trustAnswer?.finish()
 		trustAnswer = nil
-		dialTask?.cancel()
+
+		/* An open WebSocket the owner closes is told so first, so the server
+		 sees a normal closure rather than a dropped connection. */
+		if closedByOwner, wasConnected, webSocket != nil, let connection {
+			closeWebSocketGracefully(over: connection)
+		} else {
+			dialTask?.cancel()
+		}
 
 		return true
 	}
@@ -224,11 +241,16 @@ actor ConnectionSocket {
 
 		cancelConnectTimeout()
 
+		gracefulCloseTask?.cancel()
+		gracefulCloseTask = nil
+
 		connectionTask = nil
 		dialTask = nil
 		connection = nil
 
 		framer.reset()
+		webSocket = nil
+		webSocketCloseSent = false
 	}
 
 	// MARK: - Connect Timeout

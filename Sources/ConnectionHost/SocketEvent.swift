@@ -12,6 +12,8 @@ enum SocketEvent: Sendable {
 	case willConnectToProxy(host: String, port: UInt16)
 	case connected(host: String?)
 	case secured(protocolVersion: tls_protocol_version_t, cipherSuite: tls_ciphersuite_t)
+	/// The WebSocket upgrade finished, with the subprotocol the server chose.
+	case negotiatedSubprotocol(String?)
 	/// The complete lines of one read. The transport reads no further until
 	/// `acknowledged` finishes, which the host hands to the application's reply.
 	case received([Data], acknowledged: AsyncStream<Void>.Continuation)

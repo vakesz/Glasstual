@@ -410,6 +410,10 @@ targets:
       - path: Sources/ConnectionHost/ConnectionPeerAdmission.swift
       # So is the flood-control pacing window.
       - path: Sources/ConnectionHost/FloodControlWindow.swift
+      # And the WebSocket handshake, frame and line codecs.
+      - path: Sources/ConnectionHost/WebSocketFrameCodec.swift
+      - path: Sources/ConnectionHost/WebSocketHandshake.swift
+      - path: Sources/ConnectionHost/WebSocketLineCodec.swift
       # Specification corpora the IRCSpec suites read back at runtime. Only
       # the JSON vectors ship. The upstream LICENSE stays beside them in the
       # source tree, as Tests/Corpora/IRCSpec/README.md describes.

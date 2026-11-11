@@ -16,6 +16,10 @@ public nonisolated enum ConnectionConfigurationLog {
 		)
 	}
 
+	public static func unsupportedTransport() {
+		logger.error("Unreadable transport in stored configuration; using a stream")
+	}
+
 	public static func unreadableConfiguration() {
 		logger.error("Received a connection configuration that could not be read")
 	}

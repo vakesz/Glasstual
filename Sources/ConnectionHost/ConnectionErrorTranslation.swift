@@ -29,6 +29,51 @@ extension ConnectionError {
 	}
 }
 
+extension ConnectionError {
+	/// The server answered the WebSocket upgrade request with something other
+	/// than an upgrade.
+	static func webSocketHandshake(_ error: WebSocketHandshakeError) -> ConnectionError {
+		switch error {
+		case let .rejected(status):
+			.other(message: ConnectionErrorLocalization.formatted(
+				.ConnectionErrors.webSocketHandshakeRejected(status),
+				status
+			))
+		case .invalidResponse:
+			.other(message: String(localized: .ConnectionErrors.webSocketHandshakeFailed))
+		}
+	}
+
+	/// The server closed the WebSocket with a status other than a normal one.
+	static func webSocketClosed(code: UInt16, reason: Data) -> ConnectionError {
+		let code = Int(code)
+		let reason = displayableCloseReason(reason)
+
+		let message = if reason.isEmpty {
+			ConnectionErrorLocalization.formatted(.ConnectionErrors.webSocketClosedNoReason(code), code)
+		} else {
+			ConnectionErrorLocalization.formatted(.ConnectionErrors.webSocketClosed(code, reason), code, reason)
+		}
+
+		return .other(message: message)
+	}
+
+	/** A close reason as it can be shown: server-chosen text, so it is cut to
+	 the length RFC 6455 allows, decoded leniently, and stripped of control and
+	 format characters, which covers line breaks and bidirectional overrides. */
+	static func displayableCloseReason(_ reason: Data) -> String {
+		let decoded = WebSocketText.repairingUTF8(reason.prefix(WebSocketCloseCode.maximumReasonLength))
+		let visible = decoded.unicodeScalars.filter { scalar in
+			switch scalar.properties.generalCategory {
+			case .control, .format: false
+			default: true
+			}
+		}
+
+		return String(String.UnicodeScalarView(visible)).trimmingCharacters(in: .whitespaces)
+	}
+}
+
 private extension ConnectionError {
 	/// The reason named beside the numeric code in a DNS error. `kDNSServiceErr_NoError`
 	/// has no entry: `NWError.dns` is only ever built from a failure.

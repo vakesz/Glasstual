@@ -169,8 +169,15 @@ private actor LegacyCipherSuiteListener {
 	private var peers: [NWConnection] = []
 	/// The remote port of each connection, in the order they arrived.
 	private var arrivedFromPorts: [UInt16] = []
+	/// Whether a WebSocket upgrade request is answered, so that a `wss` dial
+	/// gets as far as reporting itself secured.
+	private let answersWebSocketUpgrade: Bool
+	private var upgradeRequests: [ObjectIdentifier: Data] = [:]
+	private var answeredUpgrades: Set<ObjectIdentifier> = []
 
-	init(offering suites: [UInt16]) throws {
+	init(offering suites: [UInt16], answeringWebSocketUpgrade answersWebSocketUpgrade: Bool = false) throws {
+		self.answersWebSocketUpgrade = answersWebSocketUpgrade
+
 		let identity = try Self.identity()
 		let options = NWProtocolTLS.Options()
 
@@ -274,11 +281,34 @@ private actor LegacyCipherSuiteListener {
 	}
 
 	private func drain(_ connection: NWConnection) {
-		connection.receive(minimumIncompleteLength: 1, maximumLength: 65536) { [weak self] _, _, isComplete, error in
+		connection.receive(minimumIncompleteLength: 1, maximumLength: 65536) { [weak self] data, _, isComplete, error in
 			guard isComplete == false, error == nil else { return }
 
-			Task { await self?.drain(connection) }
+			Task {
+				await self?.answerUpgrade(on: connection, after: data ?? Data())
+				await self?.drain(connection)
+			}
 		}
+	}
+
+	/// Answers the first request head each connection sends, once it is whole.
+	private func answerUpgrade(on connection: NWConnection, after data: Data) {
+		let key = ObjectIdentifier(connection)
+
+		guard answersWebSocketUpgrade, answeredUpgrades.contains(key) == false else { return }
+
+		upgradeRequests[key, default: Data()].append(data)
+
+		guard let request = upgradeRequests[key], let (head, _) = LoopbackWebSocketFraming.requestHead(in: request) else {
+			return
+		}
+
+		answeredUpgrades.insert(key)
+		upgradeRequests[key] = nil
+		connection.send(
+			content: LoopbackWebSocketFraming.upgradeResponse(to: head, subprotocol: nil),
+			completion: .idempotent
+		)
 	}
 
 	private static func identity() throws -> sec_identity_t {
@@ -357,6 +387,7 @@ private final class FallbackSessionShim: NSObject, RemoteConnectionClientProtoco
 
 	func willSend(_: Data) {}
 	func didSendData() {}
+	func didNegotiateWebSocketSubprotocol(_: String?) {}
 }
 
 /** The automatic fallback, driven end to end through the real XPC service and a
@@ -391,6 +422,36 @@ nonisolated struct LegacyCipherSuiteFallbackLoopbackTests {
 
 		#expect(SecureTransportSupport.isCipherSuiteLegacy(suite))
 		#expect(outcome.dialCount == 2, "the transport dialled \(outcome.dialCount) times")
+	}
+
+	@Test("A wss server that offers only legacy suites is reached by the second dial, which rebuilds the upgrade")
+	@concurrent
+	func legacyOnlyWebSocketServerIsReachedByTheFallback() async throws {
+		let outcome = try await Self.dial(
+			serverOffering: [0x009C], // TLS_RSA_WITH_AES_128_GCM_SHA256
+			validatingCertificateChain: false,
+			transport: .webSocket(WebSocketTransportOptions())
+		)
+
+		let suite = try #require(outcome.negotiatedSuite, "the connection never secured itself")
+
+		#expect(SecureTransportSupport.isCipherSuiteLegacy(suite))
+		#expect(outcome.dialCount == 2, "the transport dialled \(outcome.dialCount) times")
+	}
+
+	@Test("A wss connection pinned by STS is never retried with the legacy suites", arguments: [false, true])
+	@concurrent
+	func pinnedConnectionIsNotRetried(webSocket: Bool) async throws {
+		let outcome = try await Self.dial(
+			serverOffering: [0x009C],
+			validatingCertificateChain: false,
+			requiringTrustedCertificate: true,
+			transport: webSocket ? .webSocket(WebSocketTransportOptions()) : .stream
+		)
+
+		#expect(outcome.negotiatedSuite == nil)
+		#expect(outcome.disconnectError != nil, "the failure was never reported")
+		#expect(outcome.dialCount == 1, "the transport dialled \(outcome.dialCount) times")
 	}
 
 	@Test("Repeated default-system retries reach a TLS 1.2 static RSA server")
@@ -499,9 +560,11 @@ nonisolated struct LegacyCipherSuiteFallbackLoopbackTests {
 		serverOffering suites: [UInt16],
 		validatingCertificateChain: Bool,
 		cipherSuites: CipherSuiteCollection = .modern,
+		requiringTrustedCertificate: Bool = false,
+		transport: ConnectionTransport = .stream,
 		afterSecuring: SecuredAction = .finish
 	) async throws -> Outcome {
-		let server = try LegacyCipherSuiteListener(offering: suites)
+		let server = try LegacyCipherSuiteListener(offering: suites, answeringWebSocketUpgrade: transport != .stream)
 		let port = try await server.start()
 
 		var config = ConnectionConfig()
@@ -509,7 +572,9 @@ nonisolated struct LegacyCipherSuiteFallbackLoopbackTests {
 		config.serverPort = port
 		config.connectionPrefersSecuredConnection = true
 		config.connectionShouldValidateCertificateChain = validatingCertificateChain
+		config.connectionRequiresTrustedCertificate = requiringTrustedCertificate
 		config.cipherSuites = cipherSuites
+		config.transport = transport
 
 		let (events, continuation) = AsyncStream<FallbackHostEvent>.makeStream()
 		let shim = FallbackSessionShim(events: continuation)

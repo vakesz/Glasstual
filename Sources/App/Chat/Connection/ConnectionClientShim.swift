@@ -64,4 +64,8 @@ final class ConnectionClientShim: NSObject, RemoteConnectionClientProtocol {
 	func didSendData() {
 		events.yield(.didSendData)
 	}
+
+	/// The application configures stream transports only, so the host never
+	/// upgrades one of its connections and this is never called.
+	func didNegotiateWebSocketSubprotocol(_: String?) {}
 }

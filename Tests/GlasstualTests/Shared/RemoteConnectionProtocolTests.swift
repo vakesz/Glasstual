@@ -37,6 +37,14 @@ struct RemoteConnectionProtocolTests {
 		#expect(allowedClasses.contains(NSData.self))
 	}
 
+	/// Both targets ship in one bundle, but the selector is still the wire
+	/// name: renaming the Swift method must not rename it.
+	@Test("The WebSocket negotiation callback keeps its wire name")
+	func webSocketNegotiationSelector() {
+		#expect(NSStringFromSelector(#selector((any RemoteConnectionClientProtocol).didNegotiateWebSocketSubprotocol(_:)))
+			== "remoteConnectionDidNegotiateWebSocketSubprotocol:")
+	}
+
 	@Test("The peer requirement names the application and pins the signing certificate")
 	func peerRequirementText() {
 		let requirement = RemoteConnectionPeerRequirement.requirement(

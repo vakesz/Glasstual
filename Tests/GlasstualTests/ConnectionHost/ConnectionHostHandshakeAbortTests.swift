@@ -79,6 +79,8 @@ private final class AbortSessionShim: NSObject, RemoteConnectionClientProtocol {
 
 	func willSend(_: Data) {}
 	func didSendData() {}
+
+	func didNegotiateWebSocketSubprotocol(_: String?) {}
 }
 
 /** A server that hangs up during the TLS handshake must be reported as a

@@ -1921,6 +1921,294 @@
         }
       }
     },
+    "web-socket-address-invalid": {
+      "comment": "Error shown when the configured server address cannot be written into a WebSocket upgrade request.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server address cannot be used for a WebSocket connection"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A kiszolgáló címe nem használható WebSocket-kapcsolathoz"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Serveradresse kann nicht für eine WebSocket-Verbindung verwendet werden"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La dirección del servidor no se puede usar para una conexión WebSocket"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L’adresse du serveur ne peut pas être utilisée pour une connexion WebSocket"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このサーバアドレスはWebSocket接続に使用できません"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O endereço do servidor não pode ser usado para uma conexão WebSocket"
+          }
+        }
+      }
+    },
+    "web-socket-closed": {
+      "comment": "Error shown when the server closes a WebSocket connection with an error status. Arguments are the numeric WebSocket close code and the reason text the server sent.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server closed the WebSocket connection (%1$lld): %2$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A kiszolgáló lezárta a WebSocket-kapcsolatot (%1$lld): %2$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Server hat die WebSocket-Verbindung geschlossen (%1$lld): %2$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servidor cerró la conexión WebSocket (%1$lld): %2$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le serveur a fermé la connexion WebSocket (%1$lld) : %2$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバがWebSocket接続を閉じました (%1$lld): %2$@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O servidor fechou a conexão WebSocket (%1$lld): %2$@"
+          }
+        }
+      }
+    },
+    "web-socket-closed-no-reason": {
+      "comment": "Error shown when the server closes a WebSocket connection with an error status and no reason text. The argument is the numeric WebSocket close code.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server closed the WebSocket connection (%lld)"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A kiszolgáló lezárta a WebSocket-kapcsolatot (%lld)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Server hat die WebSocket-Verbindung geschlossen (%lld)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servidor cerró la conexión WebSocket (%lld)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le serveur a fermé la connexion WebSocket (%lld)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバがWebSocket接続を閉じました (%lld)"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O servidor fechou a conexão WebSocket (%lld)"
+          }
+        }
+      }
+    },
+    "web-socket-handshake-failed": {
+      "comment": "Error shown when the server's answer to the WebSocket opening handshake is not a valid upgrade.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server did not accept the WebSocket connection"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A kiszolgáló nem fogadta el a WebSocket-kapcsolatot"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Server hat die WebSocket-Verbindung nicht angenommen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servidor no aceptó la conexión WebSocket"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le serveur n’a pas accepté la connexion WebSocket"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバがWebSocket接続を受け入れませんでした"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O servidor não aceitou a conexão WebSocket"
+          }
+        }
+      }
+    },
+    "web-socket-handshake-rejected": {
+      "comment": "Error shown when the server answers the WebSocket opening handshake with an HTTP error. The argument is the HTTP status code, such as 404.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server refused the WebSocket connection (HTTP %lld)"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A kiszolgáló elutasította a WebSocket-kapcsolatot (HTTP %lld)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Server hat die WebSocket-Verbindung abgelehnt (HTTP %lld)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servidor rechazó la conexión WebSocket (HTTP %lld)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le serveur a refusé la connexion WebSocket (HTTP %lld)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバがWebSocket接続を拒否しました (HTTP %lld)"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O servidor recusou a conexão WebSocket (HTTP %lld)"
+          }
+        }
+      }
+    },
+    "web-socket-protocol-violation": {
+      "comment": "Error shown when the server sends WebSocket frames or messages the protocol does not allow, such as several IRC lines in one message.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server broke the WebSocket protocol"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A kiszolgáló megsértette a WebSocket-protokollt"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Server hat gegen das WebSocket-Protokoll verstoßen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servidor infringió el protocolo WebSocket"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le serveur a enfreint le protocole WebSocket"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバがWebSocketプロトコルに違反しました"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O servidor violou o protocolo WebSocket"
+          }
+        }
+      }
+    },
     "wifi-aware-error": {
       "comment": "Error shown when a connection fails somewhere in Wi-Fi Aware, which reports no reason of its own.",
       "extractionState": "manual",

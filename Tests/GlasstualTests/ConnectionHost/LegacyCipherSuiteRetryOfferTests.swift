@@ -144,6 +144,8 @@ private final class RetryOfferSessionShim: NSObject, RemoteConnectionClientProto
 
 	func willSend(_: Data) {}
 	func didSendData() {}
+
+	func didNegotiateWebSocketSubprotocol(_: String?) {}
 }
 
 /** What the legacy cipher-suite retry offers, and when it may run at all.

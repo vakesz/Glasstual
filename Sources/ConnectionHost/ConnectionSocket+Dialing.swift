@@ -137,6 +137,8 @@ extension ConnectionSocket {
 		dialGeneration += 1
 
 		framer.reset()
+		webSocket = nil
+		webSocketCloseSent = false
 
 		config.diagnostics?.record(.transportStarted)
 		scheduleConnectTimeout()
@@ -194,10 +196,14 @@ extension ConnectionSocket {
 		events.yield(.connected(host: proxyEndpoint == nil ? connectedHost : nil))
 	}
 
-	/// The transport finished establishing, so the handshake — if there was
-	/// one — has run and its metadata is readable.
+	/** The transport finished establishing, so the handshake — if there was
+	 one — has run and its metadata is readable.
+
+	 A WebSocket is not connected until its upgrade completes, which
+	 ``onUpgraded(to:generation:)`` reports; a ready transport underneath one
+	 is only the start of that. */
 	func onReady(generation: Int) {
-		guard generation == dialGeneration, connecting, disconnecting == false else { return }
+		guard generation == dialGeneration, connecting, disconnecting == false, case .stream = config.transport else { return }
 
 		config.diagnostics?.record(.transportReady)
 		onConnect()

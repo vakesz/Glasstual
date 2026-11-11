@@ -94,6 +94,15 @@ nonisolated protocol RemoteConnectionClientProtocol: AnyObject, Sendable { // no
 
 	@objc(remoteConnectionDidSendData)
 	func didSendData()
+
+	/** The WebSocket upgrade finished. Sent after `didConnect` and before the
+	 first `didReceive`.
+
+	 `subprotocol` is the one the server chose, or nil when it chose none and
+	 the host frames lines as the IRCv3 WebSocket specification leaves to the
+	 implementation. A stream connection never sends this. */
+	@objc(remoteConnectionDidNegotiateWebSocketSubprotocol:)
+	func didNegotiateWebSocketSubprotocol(_ subprotocol: String?)
 }
 
 /// The interfaces both ends of the connection host speak.
