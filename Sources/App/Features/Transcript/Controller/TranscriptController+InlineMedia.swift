@@ -32,13 +32,17 @@ extension TranscriptController {
 		 became clickable is not necessarily one the inline-content service can
 		 handle. It only ever fetches over HTTP, and aborts on a file: URL. */
 		guard let url = URL(string: address), LinkSchemeRules.isWebURL(url),
+		      let associatedSession,
 		      backingView?.containsLine(identifier: lineNumber) == true else { return nil }
+		// The image goes through the proxy the session's own connection is configured for.
+		let route = InlineImageRoute(session: associatedSession)
 		let generation = renderScheduler.generation
 		let loader = inlineImageLoader
 		// Only admission failures run synchronously; successful callbacks receive the assigned token.
 		var requestIdentifier: UUID?
 		requestIdentifier = loader.load(
 			url: url,
+			route: route,
 			viewIdentifier: uniqueIdentifier,
 			lineNumber: lineNumber,
 			linkIdentifier: linkIdentifier

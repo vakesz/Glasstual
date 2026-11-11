@@ -217,4 +217,96 @@ struct ServerSessionTextEncodingTests {
 
 		#expect(decoded == text)
 	}
+
+	// MARK: - What the wire can carry
+
+	nonisolated static let wideEncodings: [String.Encoding] = [
+		.utf16, .utf16BigEndian, .utf16LittleEndian, .utf32, .utf32BigEndian, .utf32LittleEndian,
+	]
+
+	nonisolated static let asciiCompatibleEncodings: [String.Encoding] = [
+		.utf8, .ascii, .isoLatin1, .isoLatin2, .windowsCP1252, .shiftJIS, .japaneseEUC, .iso2022JP,
+	]
+
+	@Test("UTF-16 and UTF-32 cannot carry IRC lines", arguments: wideEncodings)
+	func wideEncodingsAreNotWireCompatible(encoding: String.Encoding) {
+		#expect(TextEncodingOptions.isWireCompatible(encoding) == false)
+	}
+
+	@Test("Encodings that keep ASCII as ASCII can carry IRC lines", arguments: asciiCompatibleEncodings)
+	func asciiCompatibleEncodingsAreWireCompatible(encoding: String.Encoding) {
+		#expect(TextEncodingOptions.isWireCompatible(encoding))
+	}
+
+	@Test("An encoding the wire cannot carry falls back to the default for its place")
+	func wideEncodingsAreReplaced() {
+		let policy = TextEncodingOptions(primary: .utf16BigEndian, fallback: .utf32, requiresUTF8: false)
+
+		#expect(policy.primary == .utf8)
+		#expect(policy.fallback == .isoLatin1)
+	}
+
+	@Test("A saved configuration with UTF-16 is read back as the defaults")
+	func savedWideEncodingDecodesToDefaults() {
+		let session = TestServerSession(configDictionary: [
+			"primaryEncoding": String.Encoding.utf16.rawValue,
+			"fallbackEncoding": String.Encoding.utf32LittleEndian.rawValue,
+		])
+
+		#expect(session.config.primaryEncoding == String.Encoding.utf8.rawValue)
+		#expect(session.config.fallbackEncoding == String.Encoding.isoLatin1.rawValue)
+		#expect(session.effectivePrimaryEncoding == .utf8)
+	}
+
+	@Test("A saved configuration with an ASCII-compatible encoding keeps it")
+	func savedNarrowEncodingIsKept() {
+		let session = TestServerSession(configDictionary: [
+			"primaryEncoding": String.Encoding.shiftJIS.rawValue,
+			"fallbackEncoding": String.Encoding.windowsCP1252.rawValue,
+		])
+
+		#expect(session.config.primaryEncoding == String.Encoding.shiftJIS.rawValue)
+		#expect(session.config.fallbackEncoding == String.Encoding.windowsCP1252.rawValue)
+	}
+
+	nonisolated struct WireLineCase: Sendable, CustomTestStringConvertible {
+		let name: String
+		let bytes: [UInt8]
+		let isSafe: Bool
+
+		var testDescription: String {
+			name
+		}
+	}
+
+	nonisolated static let wireLineCases: [WireLineCase] = {
+		func line(_ text: String, _ encoding: String.Encoding) -> [UInt8] {
+			Array(text.data(using: encoding) ?? Data())
+		}
+		return [
+			WireLineCase(name: "ASCII", bytes: Array("PRIVMSG #a :hi\r\n".utf8), isSafe: true),
+			WireLineCase(name: "embedded NUL", bytes: Array("PRIVMSG #a :h\0i\r\n".utf8), isSafe: false),
+			WireLineCase(name: "embedded CR", bytes: Array("PRIVMSG #a :h\ri\r\n".utf8), isSafe: false),
+			WireLineCase(name: "embedded LF", bytes: Array("PRIVMSG #a :h\ni\r\n".utf8), isSafe: false),
+			WireLineCase(name: "no terminator", bytes: Array("PRIVMSG #a :hi".utf8), isSafe: false),
+			WireLineCase(name: "LF only", bytes: Array("PRIVMSG #a :hi\n".utf8), isSafe: false),
+			WireLineCase(name: "empty", bytes: [], isSafe: false),
+			WireLineCase(name: "UTF-16BE", bytes: line("PRIVMSG #a :hi\r\n", .utf16BigEndian), isSafe: false),
+			WireLineCase(
+				name: "Shift_JIS",
+				bytes: line("PRIVMSG #a :\u{65E5}\u{672C}\u{8A9E}\u{30C6}\u{30B9}\u{30C8}\r\n", .shiftJIS),
+				isSafe: true
+			),
+			WireLineCase(
+				name: "ISO-2022-JP",
+				bytes: line("PRIVMSG #a :\u{65E5}\u{672C}\u{8A9E}\u{30C6}\u{30B9}\u{30C8}\r\n", .iso2022JP),
+				isSafe: true
+			),
+		]
+	}()
+
+	@Test("Only exactly one terminated line is sent", arguments: wireLineCases)
+	func wireLineSafety(testCase: WireLineCase) {
+		#expect(TextEncodingOptions.isSafeWireLine(Data(testCase.bytes)) == testCase.isSafe)
+	}
 }

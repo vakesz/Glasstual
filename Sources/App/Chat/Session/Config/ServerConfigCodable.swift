@@ -190,16 +190,24 @@ nonisolated extension ServerConfig {
 			forKey: .validateServerCertificateChain,
 			default: Self.codingDefaults.validateServerCertificateChain
 		)
-		primaryEncoding = container.decode(
-			UInt.self,
-			forKey: .primaryEncoding,
-			default: Self.codingDefaults.primaryEncoding
-		)
-		fallbackEncoding = container.decode(
-			UInt.self,
-			forKey: .fallbackEncoding,
-			default: Self.codingDefaults.fallbackEncoding
-		)
+		/* An encoding the wire cannot carry, such as UTF-16, is read back as
+		 the default for its place, so the pane shows what is used. */
+		primaryEncoding = TextEncodingOptions.wireCompatible(
+			String.Encoding(rawValue: container.decode(
+				UInt.self,
+				forKey: .primaryEncoding,
+				default: Self.codingDefaults.primaryEncoding
+			)),
+			otherwise: String.Encoding(rawValue: Self.codingDefaults.primaryEncoding)
+		).rawValue
+		fallbackEncoding = TextEncodingOptions.wireCompatible(
+			String.Encoding(rawValue: container.decode(
+				UInt.self,
+				forKey: .fallbackEncoding,
+				default: Self.codingDefaults.fallbackEncoding
+			)),
+			otherwise: String.Encoding(rawValue: Self.codingDefaults.fallbackEncoding)
+		).rawValue
 
 		decodeConnectionPolicies(from: container)
 	}

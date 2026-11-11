@@ -17,6 +17,7 @@ struct TranscriptInlineImageTransferTests {
 			try await InlineImageTransfer.download(
 				url,
 				limits: InlineImageLimits(),
+				route: .system,
 				protocolClasses: []
 			)
 		}

@@ -142,13 +142,37 @@ nonisolated enum ApplicationLink: Equatable {
 	}
 }
 
+/** Follows the links the application owns, from wherever they come.
+
+ Every `glasstual:` link passes through here: from another application through
+ the URL event, from a transcript after `NSWorkspace` hands it back, and from
+ Spotlight and Shortcuts. An action that reveals something on disk or connects
+ to a server is therefore confirmed here, once, whatever opened it. */
 @MainActor
 enum ApplicationLinkHandler {
-	static func open(_ location: String) {
-		guard ChatServices.shared.applicationState?.applicationIsTerminating != true else { return }
+	/// What a link does once it may run.
+	typealias Performer = @MainActor (ApplicationLink.Action, URL) -> Void
+
+	/// The confirmation on screen, if any. A newer link that needs one replaces
+	/// it, so a burst of links from another application asks once.
+	private static var pendingConfirmation: Task<Void, Never>?
+
+	/// Follows `location`. The task it returns, when there is one, is the
+	/// confirmation the link waits on.
+	@discardableResult
+	static func open(
+		_ location: String,
+		presenter: any AlertPresenter = SystemAlertPresenter(),
+		perform: @escaping Performer = performAction
+	) -> Task<Void, Never>? {
+		guard ChatServices.shared.applicationState?.applicationIsTerminating != true else { return nil }
 		switch ApplicationLink.parse(location) {
 		case let .applicationAction(action, source):
-			perform(action, source: source)
+			guard action.requiresConfirmation else {
+				perform(action, source)
+				return nil
+			}
+			return confirm(action, source: source, presenter: presenter, perform: perform)
 		case let .connect(intent):
 			ServerConnection.connect(using: intent)
 		case nil:
@@ -157,6 +181,27 @@ enum ApplicationLinkHandler {
 			 word leaves nothing to diagnose it with. */
 			applicationLinkLogger.info("Ignoring a malformed application link")
 		}
+		return nil
+	}
+
+	/// Asks with the question a transcript link gets, and performs `action`
+	/// only on Open. Cancel is the default answer, and there is no "do not ask
+	/// again" for these links.
+	private static func confirm(
+		_ action: ApplicationLink.Action,
+		source: URL,
+		presenter: any AlertPresenter,
+		perform: @escaping Performer
+	) -> Task<Void, Never> {
+		pendingConfirmation?.cancel()
+		let request = TranscriptCommands.openLinkRequest(for: source)
+		let task = Task {
+			let outcome = await Alerts.run(request, on: .mainWindow, using: presenter)
+			guard !Task.isCancelled, outcome.response == .alternate else { return }
+			perform(action, source)
+		}
+		pendingConfirmation = task
+		return task
 	}
 
 	/// Opens what a Spotlight result names: the identifier the index was given.
@@ -165,7 +210,7 @@ enum ApplicationLinkHandler {
 		open(link)
 	}
 
-	private static func perform(_ action: ApplicationLink.Action, source: URL) {
+	private static func performAction(_ action: ApplicationLink.Action, source: URL) {
 		let menu = ChatServices.shared.menu
 
 		switch action {

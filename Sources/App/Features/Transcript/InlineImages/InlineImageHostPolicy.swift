@@ -131,7 +131,14 @@ nonisolated struct InlineImageHostResolver: Sendable {
  reports none or when the connection goes through a proxy, whose own address
  is not the origin's; those cases are allowed, so they rest on the name check
  alone. Closing the rest would need a Network.framework connection that
- pins the resolved address. */
+ pins the resolved address.
+
+ A session configured for a proxy fetches through that proxy, and the proxy,
+ not this Mac, resolves the name: looking it up here would reveal it to the
+ local resolver. Only the spelling is checked then, so literal private
+ addresses and local names are still refused, but a public-looking name the
+ proxy resolves to an address on its own network is reached. Tor exits refuse
+ private addresses themselves. */
 nonisolated enum InlineImageHostPolicy {
 	enum Verdict: Equatable {
 		case refused
@@ -193,11 +200,14 @@ nonisolated enum InlineImageHostPolicy {
 		return DCCWireFormat.isDialableAddress(numeric)
 	}
 
-	/// Whether `url` may be fetched, resolving its host when the spelling is
-	/// not enough.
+	/** Whether `url` may be fetched, resolving its host when the spelling is
+	 not enough.
+
+	 A `nil` resolver means a proxy resolves names: a public-looking name is
+	 then allowed on its spelling, without a lookup on this Mac. */
 	static func permits(
 		_ url: URL,
-		resolver: InlineImageHostResolver,
+		resolver: InlineImageHostResolver?,
 		deadline: Duration = InlineImageHostResolver.deadline
 	) async -> Bool {
 		switch verdict(forHost: url.host(percentEncoded: false)) {
@@ -207,6 +217,7 @@ nonisolated enum InlineImageHostPolicy {
 			return true
 		case .needsResolution:
 			guard let host = url.host(percentEncoded: false) else { return false }
+			guard let resolver else { return true }
 
 			/* A lookup that does not finish in time, or a caller that has gone
 			 away, is refused: the check cannot say the name is public. */

@@ -408,6 +408,8 @@ targets:
       # The listener's admission decision is a pure function the service and
       # the tests both compile; the rest of the folder is the service's alone.
       - path: Sources/ConnectionHost/ConnectionPeerAdmission.swift
+      # So is the flood-control pacing window.
+      - path: Sources/ConnectionHost/FloodControlWindow.swift
       # Specification corpora the IRCSpec suites read back at runtime. Only
       # the JSON vectors ship. The upstream LICENSE stays beside them in the
       # source tree, as Tests/Corpora/IRCSpec/README.md describes.

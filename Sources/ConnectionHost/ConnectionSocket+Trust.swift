@@ -73,14 +73,14 @@ extension ConnectionSocket {
 
 		guard config.connectionShouldValidateCertificateChain else {
 			ConnectionHostLog.connection.error(
-				"Certificate chain for '\(serverAddress, privacy: .public)' failed validation but the connection is configured to ignore that: \(failureDescription, privacy: .public)"
+				"Certificate chain for '\(serverAddress, privacy: .private(mask: .hash))' failed validation but the connection is configured to ignore that: \(failureDescription, privacy: .private)"
 			)
 
 			return true
 		}
 
 		ConnectionHostLog.connection.error(
-			"Certificate chain for '\(serverAddress, privacy: .public)' failed validation: \(failureDescription, privacy: .public)"
+			"Certificate chain for '\(serverAddress, privacy: .private(mask: .hash))' failed validation: \(failureDescription, privacy: .private)"
 		)
 
 		guard evaluation.isRecoverableFailure else {

@@ -32,7 +32,7 @@ enum AppServices {
 	/// index that tells Spotlight about its conversations.
 	static let intentActions: any IntentActions = ChatSessionIntentActions(
 		chatSession: { AppServices.chatSession },
-		openLink: { ApplicationLinkHandler.open($0) }
+		openLink: { _ = ApplicationLinkHandler.open($0) }
 	)
 	static let conversationIndex = ConversationIndexCoordinator(actions: AppServices.intentActions)
 

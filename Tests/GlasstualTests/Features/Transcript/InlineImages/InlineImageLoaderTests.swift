@@ -157,6 +157,7 @@ struct InlineImageLoaderTests {
 			try await InlineImageTransfer.download(
 				url,
 				limits: limits,
+				route: .system,
 				protocolClasses: [InlineImageTestProtocol.self]
 			)
 		}
@@ -174,6 +175,7 @@ struct InlineImageLoaderTests {
 			try await InlineImageTransfer.download(
 				url,
 				limits: .init(),
+				route: .system,
 				protocolClasses: [InlineImageTestProtocol.self]
 			)
 		}
@@ -189,6 +191,7 @@ struct InlineImageLoaderTests {
 		let result = try await InlineImageTransfer.download(
 			url,
 			limits: limits,
+			route: .system,
 			protocolClasses: [InlineImageTestProtocol.self]
 		)
 		#expect(result == chunk)
@@ -236,7 +239,7 @@ struct InlineImageLoaderTests {
 		for address in ["file:///tmp/image.png", "ftp://example.invalid/image.png", "data:image/gif;base64,AAAA"] {
 			let url = try #require(URL(string: address))
 			let token = loader
-				.load(url: url, viewIdentifier: "view", lineNumber: "line", linkIdentifier: "link") { result in
+				.load(url: url, route: .system, viewIdentifier: "view", lineNumber: "line", linkIdentifier: "link") { result in
 					if case .failure = result {
 						rejected += 1
 					}
@@ -258,6 +261,7 @@ struct InlineImageLoaderTests {
 		let completion: @MainActor (Result<TranscriptInlineImage, Error>) -> Void = { _ in callbacks += 1 }
 		#expect(first.load(
 			url: url,
+			route: .system,
 			viewIdentifier: "one",
 			lineNumber: "1",
 			linkIdentifier: "a",
@@ -265,6 +269,7 @@ struct InlineImageLoaderTests {
 		) != nil)
 		#expect(second.load(
 			url: url,
+			route: .system,
 			viewIdentifier: "one",
 			lineNumber: "2",
 			linkIdentifier: "a",
@@ -272,6 +277,7 @@ struct InlineImageLoaderTests {
 		) == nil)
 		#expect(second.load(
 			url: url,
+			route: .system,
 			viewIdentifier: "two",
 			lineNumber: "1",
 			linkIdentifier: "a",
@@ -279,6 +285,7 @@ struct InlineImageLoaderTests {
 		) != nil)
 		#expect(first.load(
 			url: url,
+			route: .system,
 			viewIdentifier: "three",
 			lineNumber: "1",
 			linkIdentifier: "a",
@@ -300,7 +307,7 @@ struct InlineImageLoaderTests {
 		let budget = InlineImageBudget(maximumEntries: 1)
 		let loader = InlineImageLoader(budget: budget, protocolClasses: [InlineImageTestProtocol.self])
 		var result: Result<TranscriptInlineImage, Error>?
-		loader.load(url: url, viewIdentifier: "view", lineNumber: "line", linkIdentifier: "link") { result = $0 }
+		loader.load(url: url, route: .system, viewIdentifier: "view", lineNumber: "line", linkIdentifier: "link") { result = $0 }
 		try await Eventually.until(timeout: .seconds(3), "the inline image loader to reach the expected state") { result != nil }
 		let image = try #require(result).get()
 		#expect(image.imageData == Self.gif(frames: 2))
@@ -308,7 +315,7 @@ struct InlineImageLoaderTests {
 		#expect(budget.entryCount == 1)
 		#expect(budget.reservedByteCount > image.imageData.count)
 		var rejected = false
-		#expect(loader.load(url: url, viewIdentifier: "view", lineNumber: "other", linkIdentifier: "link") {
+		#expect(loader.load(url: url, route: .system, viewIdentifier: "view", lineNumber: "other", linkIdentifier: "link") {
 			if case .failure = $0 {
 				rejected = true
 			}
@@ -345,7 +352,7 @@ struct InlineImageLoaderTests {
 		let loader = InlineImageLoader(budget: budget, protocolClasses: [InlineImageTestProtocol.self])
 		var delivered = false
 		var token: UUID?
-		token = loader.load(url: url, viewIdentifier: "view", lineNumber: "line", linkIdentifier: "link") { result in
+		token = loader.load(url: url, route: .system, viewIdentifier: "view", lineNumber: "line", linkIdentifier: "link") { result in
 			if case .success = result {
 				delivered = true
 			}
@@ -371,11 +378,11 @@ struct InlineImageLoaderTests {
 		var stale = 0
 		var delivered = 0
 		loader
-			.load(url: pending, viewIdentifier: "view", lineNumber: "line", linkIdentifier: "link") { _ in stale += 1 }
+			.load(url: pending, route: .system, viewIdentifier: "view", lineNumber: "line", linkIdentifier: "link") { _ in stale += 1 }
 		try await Eventually
 			.until(timeout: .seconds(3), "the inline image loader to reach the expected state") { InlineImageTestProtocol.started(pending) }
 		loader.cancelLoads(forView: "view", lineNumber: "line")
-		#expect(loader.load(url: ready, viewIdentifier: "view", lineNumber: "line", linkIdentifier: "link") {
+		#expect(loader.load(url: ready, route: .system, viewIdentifier: "view", lineNumber: "line", linkIdentifier: "link") {
 			if case .success = $0 {
 				delivered += 1
 			}
@@ -402,7 +409,7 @@ struct InlineImageLoaderTests {
 		let isReleased = { [weak loader] in loader == nil }
 		var callbacks = 0
 		loader?
-			.load(url: url, viewIdentifier: "view", lineNumber: "line", linkIdentifier: "link") { _ in callbacks += 1 }
+			.load(url: url, route: .system, viewIdentifier: "view", lineNumber: "line", linkIdentifier: "link") { _ in callbacks += 1 }
 		try await Eventually
 			.until(timeout: .seconds(3), "the inline image loader to reach the expected state") { InlineImageTestProtocol.started(url) }
 		loader = nil
@@ -422,7 +429,7 @@ struct InlineImageLoaderTests {
 			let budget = InlineImageBudget(maximumEntries: 1)
 			let loader = InlineImageLoader(budget: budget, protocolClasses: [InlineImageTestProtocol.self])
 			var failed = false
-			loader.load(url: url, viewIdentifier: "view", lineNumber: "line", linkIdentifier: "link") {
+			loader.load(url: url, route: .system, viewIdentifier: "view", lineNumber: "line", linkIdentifier: "link") {
 				if case .failure = $0 {
 					failed = true
 				}

@@ -21,7 +21,7 @@ struct NetworkIconStoreTests {
 		store.onChange = { changes += 1 }
 		let url = try #require(URL(string: address))
 
-		store.request(url)
+		store.request(url, route: .system)
 
 		#expect(store.image(for: url) == nil)
 		#expect(changes == 0)
@@ -32,9 +32,55 @@ struct NetworkIconStoreTests {
 		let store = NetworkIconStore()
 		let url = try #require(URL(string: "file:///etc/hosts"))
 
-		store.request(url)
+		store.request(url, route: .system)
 
 		#expect(store.image(for: url) == nil)
+	}
+
+	@Test("A network whose session's proxy has no address is never fetched")
+	func unavailableRouteIsNotFetched() {
+		let url = InlineImageTestProtocol.register(.init(chunk: Data("GIF89a".utf8)))
+		defer { InlineImageTestProtocol.remove(url) }
+		let store = NetworkIconStore(protocolClasses: [InlineImageTestProtocol.self])
+
+		store.request(url, route: .unavailable)
+
+		#expect(store.isFetching(url, route: .unavailable) == false)
+		#expect(store.image(for: url) == nil)
+		#expect(InlineImageTestProtocol.started(url) == false)
+	}
+
+	@Test("An icon fetched through a proxy is not looked up on this Mac", .timeLimit(.minutes(1)))
+	func proxiedIconIsNotResolved() async throws {
+		let url = try InlineImageTestProtocol.register(.init(
+			headers: ["Content-Type": "image/png"],
+			chunk: Self.pngData()
+		))
+		defer { InlineImageTestProtocol.remove(url) }
+		let counter = LookupCounter()
+		let store = NetworkIconStore(
+			protocolClasses: [InlineImageTestProtocol.self],
+			hostResolver: InlineImageHostResolver { host in await counter.lookup(host) }
+		)
+		let route = InlineImageRoute.proxy(.init(kind: .socks5, host: "127.0.0.1", port: 9150))
+		var changes = 0
+		store.onChange = { changes += 1 }
+
+		store.request(url, route: route)
+		#expect(store.isFetching(url, route: route))
+		#expect(store.isFetching(url, route: .system) == false)
+
+		try await Eventually.until(timeout: .seconds(10), "the icon to arrive") { changes == 1 }
+		#expect(store.image(for: url) != nil)
+		#expect(await counter.callCount == 0)
+	}
+
+	private static func pngData() throws -> Data {
+		let bitmap = try #require(NSBitmapImageRep(
+			bitmapDataPlanes: nil, pixelsWide: 4, pixelsHigh: 4, bitsPerSample: 8, samplesPerPixel: 4,
+			hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0
+		))
+		return try #require(bitmap.representation(using: .png, properties: [:]))
 	}
 
 	@Test("A server row draws the icon its network advertises, and the glyph otherwise")

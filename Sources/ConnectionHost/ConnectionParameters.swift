@@ -52,7 +52,13 @@ nonisolated enum ConnectionParameters {
 	 setting: it adds the suites with no forward secrecy *after* the selected
 	 ones, so a server that has anything better still picks it. Everything else
 	 about the handshake -- the minimum protocol version, the client identity,
-	 the certificate validation the socket adds -- is the same on both dials. */
+	 the certificate validation the socket adds -- is the same on both dials.
+
+	 `TLS.cipherSuites(_:)` replaces the list rather than adding to it, so the
+	 legacy suites go in the same call as the selected ones. The system default
+	 is a group, which cannot be extended, so its retry names the group's suites
+	 instead. The compatibility group is no substitute: it leads with RSA key
+	 exchange and adds 3DES. */
 	static func tls(for config: ConnectionConfig, offeringLegacyCipherSuites: Bool) throws -> TLS {
 		var tls = TLS { tcp(for: config) }
 			.version(min: SecureTransportSupport.minimumProtocolType)
@@ -63,18 +69,25 @@ nonisolated enum ConnectionParameters {
 
 		let selected = SecureTransportSupport.cipherSuites(inCollection: config.cipherSuites)
 
-		if selected.isEmpty {
+		if offeringLegacyCipherSuites {
+			let forwardSecret = selected.isEmpty ? systemDefaultSuites : selected
+			tls = tls.cipherSuites(suiteValues(forwardSecret + SecureTransportSupport.legacyCipherSuites))
+		} else if selected.isEmpty {
 			tls = tls.cipherSuiteGroups([.default])
 		} else {
 			tls = tls.cipherSuites(suiteValues(selected))
 		}
 
-		if offeringLegacyCipherSuites {
-			tls = tls.cipherSuites(suiteValues(SecureTransportSupport.legacyCipherSuites))
-		}
-
 		return tls
 	}
+
+	/** The TLS 1.2 suites of the platform's default group, in the order its
+	 handshake offers them. The TLS 1.3 suites are offered whatever the list.
+	 `LegacyCipherSuiteRetryOfferTests` checks this against what the default
+	 group actually sends, so a platform that changes the group is noticed. */
+	private static let systemDefaultSuites: [NSNumber] = [
+		0xC02C, 0xC02B, 0xCCA9, 0xC030, 0xC02F, 0xCCA8, 0xC00A, 0xC009, 0xC014, 0xC013,
+	].map { NSNumber(value: $0 as UInt16) }
 
 	/// The suites the framework negotiates from. A raw value outside
 	/// `tls_ciphersuite_t` is not a weaker choice but no choice at all, which is

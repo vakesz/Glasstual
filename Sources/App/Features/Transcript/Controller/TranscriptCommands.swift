@@ -385,10 +385,9 @@ final class TranscriptCommands: NSObject {
 			openInBackground.toggle()
 		}
 
-		if LinkSchemeRules.opensDirectly(url)
-			|| (LinkSchemeRules.appSchemes.contains(url.scheme?.lowercased() ?? "")
-				&& ApplicationLink.requiresConfirmation(url) == false)
-		{
+		/* A link into this application comes back through the URL event, and
+		 the link handler asks there before anything that needs asking. */
+		if LinkSchemeRules.opensDirectly(url) || LinkSchemeRules.appSchemes.contains(url.scheme?.lowercased() ?? "") {
 			OpenLink.open(url: url, inBackground: openInBackground)
 			return
 		}

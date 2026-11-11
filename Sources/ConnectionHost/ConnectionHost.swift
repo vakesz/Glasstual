@@ -36,13 +36,15 @@ actor ConnectionHost {
 
 	private var sendQueue = ConnectionHostSendQueue()
 
-	/// Ticks the flood-control window. A `ContinuousClock` task rather than a
-	/// timer, so it keeps its cadence across system sleep and cancels cleanly.
+	/// Wakes the writer when the flood-control window next has room. A
+	/// `ContinuousClock` sleep, so it keeps time across system sleep and
+	/// cancels cleanly; it exists only while enforced lines are waiting.
 	private var floodControlTask: Task<Void, Never>?
-	private var floodControlCurrentMessageCount = 0
 	private var floodControlEnforced = false
-	private var floodControlInterval = Duration.seconds(2)
-	private var floodControlMaximumMessages: UInt = 0
+	private var floodControlWindow = FloodControlWindow(
+		capacity: Int(ConnectionDefaults.floodControlMaximumMessages),
+		interval: .seconds(Double(ConnectionDefaults.floodControlDelayInterval))
+	)
 
 	/** `ProcessInfo.disableSuddenTermination()` is a counter. The host process is shared by
 	 every connection, so an unbalanced disable would permanently pin the whole service. */
@@ -117,8 +119,10 @@ actor ConnectionHost {
 
 		self.socket = socket
 		closing = false
-		floodControlInterval = .seconds(Double(config.floodControlDelayInterval))
-		floodControlMaximumMessages = config.floodControlMaximumMessages
+		floodControlWindow = FloodControlWindow(
+			capacity: Int(config.floodControlMaximumMessages),
+			interval: .seconds(Double(config.floodControlDelayInterval))
+		)
 
 		/* Both references are weak. Holding the transport strongly kept it — and
 		 the file descriptor it owns — alive for as long as the stream had not
@@ -133,8 +137,6 @@ actor ConnectionHost {
 		}
 
 		ConnectionHostLog.connection.debug("Opening connection \(socket.uniqueIdentifier, privacy: .public)...")
-
-		startFloodControlTimer()
 
 		await socket.open()
 
@@ -188,11 +190,11 @@ actor ConnectionHost {
 		writerTask?.cancel()
 		writerTask = nil
 		floodControlEnforced = false
-		floodControlCurrentMessageCount = 0
+		floodControlWindow.reset()
 
 		clearSendQueue()
 
-		stopFloodControlTimer()
+		cancelFloodControlWake()
 	}
 
 	/// Lets go of a transport that has finished, so `open(with:)` can build the
@@ -233,17 +235,19 @@ actor ConnectionHost {
 
 	private func drainWrites(to socket: ConnectionSocket) async {
 		var restartAfterClear = false
+		var waitsForWindow = false
 		while Task.isCancelled == false, self.socket === socket, ready, closing == false, sendQueue.isEmpty == false {
-			let bypass = sendQueue.firstBypassesFloodControl
-			if bypass == false, floodControlEnforced,
-			   floodControlCurrentMessageCount >= Int(floodControlMaximumMessages)
-			{
+			/* Only enforced, queued lines count against the window: PONG and QUIT
+			 bypass it, and registration traffic goes out before it applies. */
+			let paced = sendQueue.firstBypassesFloodControl == false && floodControlEnforced
+			if paced, floodControlWindow.admits(at: .now) == false {
+				waitsForWindow = true
 				break
 			}
 			guard let next = sendQueue.takeFirst() else { break }
 			let clearGeneration = sendQueue.clearGeneration
-			if bypass == false {
-				floodControlCurrentMessageCount += 1
+			if paced {
+				floodControlWindow.record(at: .now)
 			}
 			guard await socket.write(next.data) else {
 				/* Closing clears the queue while a write may be suspended. A failed
@@ -252,8 +256,8 @@ actor ConnectionHost {
 				if clearGeneration != sendQueue.clearGeneration {
 					/* A QUIT may have replaced the queued traffic while this write
 					 was in flight. Let a new drain send that replacement. */
-					if bypass == false, floodControlEnforced, floodControlCurrentMessageCount > 0 {
-						floodControlCurrentMessageCount -= 1
+					if paced {
+						floodControlWindow.forgetLatest()
 					}
 					restartAfterClear = true
 					break
@@ -263,8 +267,8 @@ actor ConnectionHost {
 				 the head, in front of the traffic queued behind it, and let
 				 the next drain try again. */
 				sendQueue.putBack(next)
-				if bypass == false {
-					floodControlCurrentMessageCount -= 1
+				if paced {
+					floodControlWindow.forgetLatest()
 				}
 				break
 			}
@@ -273,43 +277,46 @@ actor ConnectionHost {
 		writerTask = nil
 		if restartAfterClear {
 			startWriterIfNeeded()
+		} else if waitsForWindow {
+			scheduleFloodControlWake()
 		}
 	}
 
 	// MARK: - Flood Control
 
+	/// Registration is over, so the window applies from here, starting empty:
+	/// registration traffic had its own budget.
 	func enforceFloodControl() {
 		guard !floodControlEnforced else { return }
-		floodControlCurrentMessageCount = 0
+		floodControlWindow.reset()
 		floodControlEnforced = true
 		startWriterIfNeeded()
 	}
 
-	private func startFloodControlTimer() {
-		guard floodControlTask == nil else { return }
-
-		let interval = floodControlInterval
+	/// Restarts the writer once the window has room again. One wake at a time,
+	/// and only while flood control holds lines back.
+	private func scheduleFloodControlWake() {
+		guard floodControlTask == nil, floodControlEnforced,
+		      let deadline = floodControlWindow.nextAdmission() else { return }
 
 		floodControlTask = Task { [weak self] in
-			while Task.isCancelled == false {
-				try? await Task.sleep(for: interval, clock: .continuous)
+			try? await Task.sleep(until: deadline, clock: .continuous)
 
-				guard Task.isCancelled == false, let self else { return }
+			guard Task.isCancelled == false, let self else { return }
 
-				await onFloodControlTimer()
-			}
+			await floodControlWindowOpened()
 		}
 	}
 
-	private func stopFloodControlTimer() {
-		floodControlTask?.cancel()
+	private func floodControlWindowOpened() {
 		floodControlTask = nil
-	}
-
-	private func onFloodControlTimer() {
-		floodControlCurrentMessageCount = 0
 
 		startWriterIfNeeded()
+	}
+
+	private func cancelFloodControlWake() {
+		floodControlTask?.cancel()
+		floodControlTask = nil
 	}
 
 	// MARK: - Secure Connection Information

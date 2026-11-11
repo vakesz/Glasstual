@@ -224,7 +224,7 @@ private actor LegacyCipherSuiteListener {
 
 	func sendOverlongLine() async throws {
 		let peer = try #require(peers.last)
-		let data = Data(repeating: 0x61, count: 1024 * 1024 + 1)
+		let data = Data(repeating: 0x61, count: 16 * 1024 + 1)
 		try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
 			peer.send(content: data, completion: .contentProcessed { error in
 				if let error {

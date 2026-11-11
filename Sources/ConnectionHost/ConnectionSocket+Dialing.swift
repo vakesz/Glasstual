@@ -103,13 +103,19 @@ extension ConnectionSocket {
 	 Everything the connection has done so far is part of the question: a
 	 transport that connected, secured itself or saw the peer's certificate did
 	 agree on a suite, and a close the owner asked for is not something to answer
-	 with another dial. */
+	 with another dial.
+
+	 A connection an STS policy pins is never retried: the server promised a
+	 secure transport, and a peer able to inject a handshake failure must not be
+	 able to trade it for one with no forward secrecy. A server under STS that
+	 offers only static-RSA suites is therefore unreachable. */
 	var retriesWithoutForwardSecrecy: Bool {
-		SecureTransportSupport.retriesWithLegacyCipherSuites(
-			afterErrorCode: tlsFailureCode,
-			legacySuitesAlreadyOffered: offeredLegacyCipherSuites,
-			peerCertificateSeen: trustExport.certificateChain.isEmpty == false
-		)
+		config.connectionRequiresTrustedCertificate == false
+			&& SecureTransportSupport.retriesWithLegacyCipherSuites(
+				afterErrorCode: tlsFailureCode,
+				legacySuitesAlreadyOffered: offeredLegacyCipherSuites,
+				peerCertificateSeen: trustExport.certificateChain.isEmpty == false
+			)
 			&& closedByOwner == false
 			&& connected == false
 			&& secured == false

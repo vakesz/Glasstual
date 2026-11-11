@@ -553,7 +553,7 @@ nonisolated struct ConnectionHostSendOrderingTests {
 	@Test("Host rejects an oversized line whether or not its last chunk includes a newline", arguments: [true, false])
 	@concurrent
 	func oversizedLineFailsExplicitly(_ terminated: Bool) async throws {
-		var chunks = Array(repeating: Data(repeating: 0x78, count: 65536), count: 16)
+		var chunks = Array(repeating: Data(repeating: 0x78, count: 4096), count: 4)
 		chunks.append(Data((terminated ? "x\n" : "x").utf8))
 		let result = try await Self.receiveFromPeer(chunks)
 		#expect(result.contains {
@@ -575,15 +575,44 @@ nonisolated struct ConnectionHostSendOrderingTests {
 	@Test("A line exactly at the host byte ceiling is delivered without truncation")
 	@concurrent
 	func exactLineCeilingIsAccepted() async throws {
-		let chunk = Data(repeating: 0x78, count: 65536)
-		var chunks = Array(repeating: chunk, count: 16)
+		let chunk = Data(repeating: 0x78, count: 4096)
+		var chunks = Array(repeating: chunk, count: 4)
 		chunks.append(Data("\nERROR :finished\n".utf8))
 		let result = try await Self.receiveFromPeer(chunks)
 		let received = result.compactMap { event -> Data? in
 			guard case let .received(data) = event else { return nil }
 			return data
 		}
-		#expect(received == [Data(repeating: 0x78, count: 1024 * 1024), Data("ERROR :finished".utf8)])
+		#expect(received == [Data(repeating: 0x78, count: 16 * 1024), Data("ERROR :finished".utf8)])
+		#expect(result.contains {
+			if case .didDisconnect(nil) = $0 {
+				true
+			} else {
+				false
+			}
+		})
+	}
+
+	/** The longest line a conforming server sends: 8191 bytes of IRCv3 tags,
+	 counting the `@` and the space after them, then a body as long as the
+	 largest `LINELEN` the application believes. */
+	@Test("A maximal tagged line is delivered intact")
+	@concurrent
+	func aMaximalTaggedLineIsDelivered() async throws {
+		let tagPrefix = "@label="
+		let tags = tagPrefix + String(repeating: "t", count: 8191 - tagPrefix.utf8.count - 1) + " "
+		let bodyPrefix = ":server NOTICE me :"
+		let body = bodyPrefix + String(repeating: "b", count: 2040 - bodyPrefix.utf8.count)
+		let line = Data((tags + body).utf8)
+		#expect(line.count == 8191 + 2040)
+		let result = try await Self.receiveFromPeer([
+			line.prefix(5000), line.dropFirst(5000) + Data("\r\nERROR :finished\r\n".utf8),
+		])
+		let received = result.compactMap { event -> Data? in
+			guard case let .received(data) = event else { return nil }
+			return data
+		}
+		#expect(received == [line, Data("ERROR :finished".utf8)])
 		#expect(result.contains {
 			if case .didDisconnect(nil) = $0 {
 				true

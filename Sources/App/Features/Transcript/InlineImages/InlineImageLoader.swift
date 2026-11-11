@@ -7,7 +7,7 @@ import Foundation
 
  Nothing here reaches the reader: a refused preview leaves the link as it was
  and the reason goes to the unified log. ``logDescription`` is therefore a
- diagnostic and stays untranslated — a `LocalizedError` here would put four
+ diagnostic and stays untranslated — a `LocalizedError` here would put
  English literals where the catalogs are the only source of user-facing text. */
 nonisolated enum InlineImageError: Error, Sendable {
 	case invalidResponse
@@ -15,6 +15,7 @@ nonisolated enum InlineImageError: Error, Sendable {
 	case bodyTooLarge
 	case resourceLimit
 	case hostNotAllowed
+	case proxyUnavailable
 
 	var logDescription: String {
 		switch self {
@@ -23,6 +24,7 @@ nonisolated enum InlineImageError: Error, Sendable {
 		case .bodyTooLarge: "the body exceeds the download limit"
 		case .resourceLimit: "the preview exceeds the resource limits"
 		case .hostNotAllowed: "the address names a local or private host"
+		case .proxyUnavailable: "the session's proxy has no address"
 		}
 	}
 }
@@ -73,15 +75,21 @@ final class InlineImageLoader {
 
 	/// Returns nil on admission rejection, and reports the rejection to completion.
 	/// No work is queued. Cancellation deliberately does not invoke completion.
+	/// `route` is the proxy of the session the image is fetched for.
 	@discardableResult
 	func load(
 		url: URL,
+		route: InlineImageRoute,
 		viewIdentifier: String,
 		lineNumber: String,
 		linkIdentifier: String,
 		completion: @escaping @MainActor (Result<TranscriptInlineImage, Error>) -> Void
 	) -> UUID? {
 		let key = Key(view: viewIdentifier, line: lineNumber, link: linkIdentifier)
+		guard route != .unavailable else {
+			completion(.failure(InlineImageError.proxyUnavailable))
+			return nil
+		}
 		guard LinkSchemeRules.isWebURL(url) else {
 			completion(.failure(InlineImageError.unsupportedContent))
 			return nil
@@ -119,6 +127,7 @@ final class InlineImageLoader {
 				let data = try await InlineImageTransfer.download(
 					url,
 					limits: limits,
+					route: route,
 					protocolClasses: protocolClasses,
 					resolver: hostResolver
 				)

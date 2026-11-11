@@ -32,6 +32,10 @@ nonisolated enum ConnectionSafetyStrings {
 		static func lineTruncated(sentByteCount: Int, limit: Int) -> String {
 			String(localized: .ConnectionSafety.outgoingLineTruncated(sentByteCount, limit))
 		}
+
+		static var lineRefusedByEncoding: String {
+			String(localized: .ConnectionSafety.outgoingLineRefusedEncoding)
+		}
 	}
 
 	enum Credentials {

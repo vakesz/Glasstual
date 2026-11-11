@@ -89,8 +89,9 @@ final class Sidebar {
 			sessions: sessions, selectedItemIdentifier: selectedItemIdentifier,
 			filter: filter, filterText: filterText, networkIcon: networkIcons.image(for:)
 		)
-		for url in sessions.compactMap(\.supportInfo.networkIconURL) {
-			networkIcons.request(url)
+		for session in sessions {
+			guard let url = session.supportInfo.networkIconURL else { continue }
+			networkIcons.request(url, route: InlineImageRoute(session: session))
 		}
 	}
 

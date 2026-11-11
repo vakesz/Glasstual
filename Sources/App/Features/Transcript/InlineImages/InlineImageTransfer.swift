@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 import Foundation
+import Network
 import Synchronization
 
 /// URLSession invokes the delegate outside actor isolation. Its only mutable
@@ -20,36 +21,36 @@ final nonisolated class InlineImageTransfer: NSObject, Sendable { // nonisolated
 
 	private let state = Mutex(State())
 	private let maximumBytes: Int
-	private let resolver: InlineImageHostResolver
+	/// `nil` when a proxy resolves names, so nothing is looked up on this Mac.
+	private let resolver: InlineImageHostResolver?
 
-	private init(maximumBytes: Int, resolver: InlineImageHostResolver) {
+	private init(maximumBytes: Int, resolver: InlineImageHostResolver?) {
 		self.maximumBytes = maximumBytes
 		self.resolver = resolver
 	}
 
+	/** Fetches `url` over `route`.
+
+	 A proxied route sends the host name to the proxy: it is not looked up here,
+	 and the address the connection reached is the proxy's, so only the spelling
+	 of the host is checked. An unavailable route fails before any work. */
 	@concurrent
 	static func download(_ url: URL, limits: InlineImageLimits,
+	                     route: InlineImageRoute,
 	                     protocolClasses: [URLProtocol.Type],
 	                     resolver: InlineImageHostResolver = .system) async throws -> Data
 	{
 		try Task.checkCancellation()
+		guard route != .unavailable else { throw InlineImageError.proxyUnavailable }
 		guard LinkSchemeRules.isWebURL(url) else { throw InlineImageError.unsupportedContent }
-		guard await InlineImageHostPolicy.permits(url, resolver: resolver) else {
+		let localResolver = route.resolvesNamesLocally ? resolver : nil
+		guard await InlineImageHostPolicy.permits(url, resolver: localResolver) else {
 			throw InlineImageError.hostNotAllowed
 		}
 		try Task.checkCancellation()
 		guard limits.workingByteCount != nil else { throw InlineImageError.resourceLimit }
-		let configuration = URLSessionConfiguration.ephemeral
-		configuration.urlCache = nil
-		configuration.httpCookieStorage = nil
-		configuration.urlCredentialStorage = nil
-		configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
-		configuration.timeoutIntervalForRequest = 30
-		configuration.timeoutIntervalForResource = 60
-		if !protocolClasses.isEmpty {
-			configuration.protocolClasses = protocolClasses
-		}
-		let delegate = InlineImageTransfer(maximumBytes: limits.maximumEncodedBytes, resolver: resolver)
+		let configuration = configuration(for: route, protocolClasses: protocolClasses)
+		let delegate = InlineImageTransfer(maximumBytes: limits.maximumEncodedBytes, resolver: localResolver)
 		let session = URLSession(configuration: configuration, delegate: delegate, delegateQueue: nil)
 		defer { session.invalidateAndCancel() }
 		return try await withTaskCancellationHandler {
@@ -83,6 +84,29 @@ final nonisolated class InlineImageTransfer: NSObject, Sendable { // nonisolated
 			continuation?.resume(throwing: CancellationError())
 		}
 	}
+
+	/// An ephemeral session that keeps nothing, routed through the proxy
+	/// `route` names with no failover to a direct connection.
+	static func configuration(
+		for route: InlineImageRoute,
+		protocolClasses: [URLProtocol.Type] = []
+	) -> URLSessionConfiguration {
+		let configuration = URLSessionConfiguration.ephemeral
+		configuration.urlCache = nil
+		configuration.httpCookieStorage = nil
+		configuration.urlCredentialStorage = nil
+		configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
+		configuration.timeoutIntervalForRequest = 30
+		configuration.timeoutIntervalForResource = 60
+		let proxies = route.proxyConfigurations
+		if !proxies.isEmpty {
+			configuration.proxyConfigurations = proxies
+		}
+		if !protocolClasses.isEmpty {
+			configuration.protocolClasses = protocolClasses
+		}
+		return configuration
+	}
 }
 
 nonisolated extension InlineImageTransfer: URLSessionDataDelegate { // nonisolated: immutable
@@ -110,8 +134,12 @@ nonisolated extension InlineImageTransfer: URLSessionDataDelegate { // nonisolat
 
 	/** Metrics arrive after the last byte and before completion. A connection that
 	 reached a refused address, as a rebound name would, turns the download into
-	 a failure and drops what was read. */
+	 a failure and drops what was read.
+
+	 Through a configured proxy the address reached is the proxy's own, often
+	 loopback for Tor, and says nothing about the origin, so it is not checked. */
 	func urlSession(_: URLSession, task _: URLSessionTask, didFinishCollecting metrics: URLSessionTaskMetrics) {
+		guard resolver != nil else { return }
 		let refused = metrics.transactionMetrics.contains { transaction in
 			transaction.isProxyConnection == false
 				&& InlineImageHostPolicy.permitsRemoteAddress(transaction.remoteAddress) == false

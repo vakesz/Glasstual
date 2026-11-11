@@ -13,7 +13,14 @@ import AppKit
  Icons are kept by address, which is what makes them per network: every session
  on the same network advertises the same address and shares one image. An
  address that failed once is not tried again until the app restarts, so a
- server advertising a dead link costs one request. */
+ server advertising a dead link costs one request.
+
+ Each fetch goes through the proxy of the session that asked for it, so a
+ network reached over Tor or another proxy never learns this Mac's address
+ from its own icon. Fetches in flight and failures are kept per address and
+ route: an icon that failed through one proxy may still arrive directly for
+ another session, and a direct fetch never stands in for a proxied one. An
+ icon already held is shown to every session, since showing it sends nothing. */
 @MainActor
 final class NetworkIconStore {
 	/// Icons kept at once; the oldest goes first.
@@ -33,12 +40,17 @@ final class NetworkIconStore {
 	/// Called after an icon arrives, so what draws it can draw again.
 	var onChange: (@MainActor () -> Void)?
 
+	private struct Request: Hashable {
+		let url: URL
+		let route: InlineImageRoute
+	}
+
 	private let protocolClasses: [URLProtocol.Type]
 	private let hostResolver: InlineImageHostResolver
 	private var images: [URL: NSImage] = [:]
 	private var order: [URL] = []
-	private var unavailable: Set<URL> = []
-	private var tasks: [URL: Task<Void, Never>] = [:]
+	private var unavailable: Set<Request> = []
+	private var tasks: [Request: Task<Void, Never>] = [:]
 
 	init(protocolClasses: [URLProtocol.Type] = [], hostResolver: InlineImageHostResolver? = nil) {
 		self.protocolClasses = protocolClasses
@@ -57,25 +69,28 @@ final class NetworkIconStore {
 		images[url]
 	}
 
-	/// Starts fetching `url` unless it is held, in flight or known to fail.
-	func request(_ url: URL) {
-		guard images[url] == nil, tasks[url] == nil, unavailable.contains(url) == false else { return }
-		guard LinkSchemeRules.isWebURL(url),
+	/// Starts fetching `url` over `route` unless the icon is held, or that
+	/// fetch is in flight or known to fail.
+	func request(_ url: URL, route: InlineImageRoute) {
+		let request = Request(url: url, route: route)
+		guard images[url] == nil, tasks[request] == nil, unavailable.contains(request) == false else { return }
+		guard route != .unavailable, LinkSchemeRules.isWebURL(url),
 		      InlineImageHostPolicy.verdict(forHost: url.host(percentEncoded: false)) != .refused
 		else {
-			unavailable.insert(url)
+			unavailable.insert(request)
 			return
 		}
 
 		let limits = Self.limits
 		let protocolClasses = protocolClasses
 		let hostResolver = hostResolver
-		tasks[url] = Task { [weak self] in
+		tasks[request] = Task { [weak self] in
 			let image: NSImage?
 			do {
 				let data = try await InlineImageTransfer.download(
 					url,
 					limits: limits,
+					route: route,
 					protocolClasses: protocolClasses,
 					resolver: hostResolver
 				)
@@ -86,18 +101,25 @@ final class NetworkIconStore {
 			} catch {
 				image = nil
 			}
-			self?.finish(url, image: image)
+			self?.finish(request, image: image)
 		}
 	}
 
-	private func finish(_ url: URL, image: NSImage?) {
-		tasks.removeValue(forKey: url)
+	/// Whether an icon fetch for `url` over `route` is under way.
+	func isFetching(_ url: URL, route: InlineImageRoute) -> Bool {
+		tasks[Request(url: url, route: route)] != nil
+	}
+
+	private func finish(_ request: Request, image: NSImage?) {
+		tasks.removeValue(forKey: request)
 
 		guard let image else {
-			unavailable.insert(url)
+			unavailable.insert(request)
 			return
 		}
 
+		let url = request.url
+		guard images[url] == nil else { return }
 		images[url] = image
 		order.append(url)
 		while order.count > Self.capacity {

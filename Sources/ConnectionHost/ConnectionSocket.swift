@@ -25,9 +25,14 @@ actor ConnectionSocket {
 	/// Maximum bytes requested from the transport in a single read.
 	static let maximumDataLength = 64 * 1024
 
-	/// Maximum bytes buffered while waiting for a newline. A peer that never
-	/// sends one is disconnected instead of growing memory forever.
-	static let maximumBufferedLineLength = 1024 * 1024 // 1 MiB
+	/** Maximum bytes buffered while waiting for a newline. A peer that never
+	 sends one, or sends a longer line, is disconnected instead of growing memory.
+
+	 Sized to the protocol: IRCv3 allows 8191 bytes of message tags, and the
+	 application believes a `LINELEN` of at most 2040. 16 KiB holds both with
+	 about 6 KiB to spare for a server or bouncer that sends a longer body than
+	 it advertises, and matches the ceiling direct chats use. */
+	static let maximumBufferedLineLength = 16 * 1024
 
 	/// Seconds allowed for the transport to reach the ready state.
 	static let connectTimeout: TimeInterval = 30

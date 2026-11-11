@@ -21,6 +21,7 @@ extension Connection {
 		let body = line
 			.replacingOccurrences(of: "\r", with: "")
 			.replacingOccurrences(of: "\n", with: "")
+			.replacingOccurrences(of: "\0", with: "")
 		/* Last stop before the socket: everything upstream budgets its own text,
 		 but nothing measured the assembled line, so a long enough command went
 		 out over what the protocol carries and the server cut it where it
@@ -45,6 +46,16 @@ extension Connection {
 		let cleanLine = enforcedBody + "\r\n"
 
 		guard let data = convertToCommonEncoding(cleanLine) else { return }
+
+		/* The text held no NUL, CR or LF, but the bytes an encoding makes of it
+		 can: whatever reaches the server has to be one line and only one. */
+		guard TextEncodingOptions.isSafeWireLine(data) else {
+			connectionLineLogger.error(
+				"Refused an outgoing line of \(data.count, privacy: .public) bytes that its encoding split"
+			)
+			session?.printDebugInformation(toConsole: ConnectionSafetyStrings.Wire.lineRefusedByEncoding)
+			return
+		}
 
 		if Self.bypassesFloodControl(cleanLine) {
 			remoteObjectProxy()?.send(data, bypassQueue: true)

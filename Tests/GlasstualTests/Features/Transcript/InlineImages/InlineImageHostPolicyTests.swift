@@ -172,7 +172,7 @@ struct InlineImageHostPolicyTests {
 		let url = try #require(URL(string: "http://127.0.0.1:8080/a.png"))
 
 		await #expect(throws: InlineImageError.self) {
-			try await InlineImageTransfer.download(url, limits: InlineImageLimits(), protocolClasses: [])
+			try await InlineImageTransfer.download(url, limits: InlineImageLimits(), route: .system, protocolClasses: [])
 		}
 	}
 
@@ -183,7 +183,7 @@ struct InlineImageHostPolicyTests {
 		let url = try #require(URL(string: "https://192.168.1.1/a.png"))
 		var failure: InlineImageError?
 
-		let token = loader.load(url: url, viewIdentifier: "view", lineNumber: "line", linkIdentifier: "link") { result in
+		let token = loader.load(url: url, route: .system, viewIdentifier: "view", lineNumber: "line", linkIdentifier: "link") { result in
 			if case let .failure(error) = result {
 				failure = error as? InlineImageError
 			}
@@ -192,6 +192,97 @@ struct InlineImageHostPolicyTests {
 		#expect(token == nil)
 		#expect(failure == .hostNotAllowed)
 		#expect(budget.entryCount == 0)
+	}
+
+	// MARK: - Through a proxy
+
+	@Test("Through a proxy a public name is allowed without a lookup on this Mac")
+	func proxiedNameIsNotResolved() async throws {
+		let counter = LookupCounter()
+		let resolver = InlineImageHostResolver { host in await counter.lookup(host) }
+		let url = try #require(URL(string: "https://images.example.org/a.png"))
+
+		#expect(await InlineImageHostPolicy.permits(url, resolver: nil))
+		#expect(await InlineImageHostPolicy.permits(url, resolver: resolver))
+		#expect(await counter.callCount == 1)
+	}
+
+	@Test("Through a proxy local and private hosts are still refused", arguments: [
+		"http://127.0.0.1/a.png", "https://192.168.1.1/a.png", "https://localhost/a.png",
+		"https://printer.local/a.png", "https://[::1]/a.png",
+	])
+	func proxiedPrivateHostIsRefused(address: String) async throws {
+		let url = try #require(URL(string: address))
+
+		#expect(await InlineImageHostPolicy.permits(url, resolver: nil) == false)
+	}
+
+	@Test("A proxied download never looks the name up on this Mac", .timeLimit(.minutes(1)))
+	func proxiedDownloadDoesNotResolve() async throws {
+		let image = Data("GIF89a".utf8)
+		let url = InlineImageTestProtocol.register(.init(chunk: image))
+		defer { InlineImageTestProtocol.remove(url) }
+		let counter = LookupCounter()
+		let resolver = InlineImageHostResolver { host in await counter.lookup(host) }
+		let route = InlineImageRoute.proxy(.init(kind: .socks5, host: "127.0.0.1", port: 9150))
+
+		let data = try await InlineImageTransfer.download(
+			url,
+			limits: InlineImageLimits(),
+			route: route,
+			protocolClasses: [InlineImageTestProtocol.self],
+			resolver: resolver
+		)
+
+		#expect(data == image)
+		#expect(await counter.callCount == 0)
+	}
+
+	@Test("A proxy with no address fails the download before any request", .timeLimit(.minutes(1)))
+	func unavailableRouteSendsNothing() async throws {
+		let url = InlineImageTestProtocol.register(.init(chunk: Data("GIF89a".utf8)))
+		defer { InlineImageTestProtocol.remove(url) }
+
+		await #expect(throws: InlineImageError.proxyUnavailable) {
+			try await InlineImageTransfer.download(
+				url,
+				limits: InlineImageLimits(),
+				route: .unavailable,
+				protocolClasses: [InlineImageTestProtocol.self],
+				resolver: .literalOnly
+			)
+		}
+		#expect(InlineImageTestProtocol.started(url) == false)
+	}
+
+	@Test("The loader refuses a proxy with no address without queuing work")
+	func loaderRefusesUnavailableRoute() throws {
+		let budget = InlineImageBudget()
+		let loader = InlineImageLoader(budget: budget, protocolClasses: [InlineImageTestProtocol.self])
+		let url = try #require(URL(string: "https://images.example.org/a.png"))
+		var failure: InlineImageError?
+
+		let token = loader.load(
+			url: url, route: .unavailable, viewIdentifier: "view", lineNumber: "line", linkIdentifier: "link"
+		) { result in
+			if case let .failure(error) = result {
+				failure = error as? InlineImageError
+			}
+		}
+
+		#expect(token == nil)
+		#expect(failure == .proxyUnavailable)
+		#expect(budget.entryCount == 0)
+	}
+}
+
+/// A resolver stand-in that only counts the lookups it is asked for.
+actor LookupCounter {
+	private(set) var callCount = 0
+
+	func lookup(_: String) -> [String] {
+		callCount += 1
+		return ["8.8.8.8"]
 	}
 }
 

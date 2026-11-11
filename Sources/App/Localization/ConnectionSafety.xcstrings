@@ -481,6 +481,54 @@
         }
       }
     },
+    "outgoing-line-refused-encoding" : {
+      "comment" : "Console notice that a line the user typed was not sent, because the text encoding configured for this connection turned it into bytes the IRC protocol treats as line breaks or as the end of the line.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An outgoing line was not sent, because this server’s text encoding would have split it into several lines."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Egy kimenő sor nem lett elküldve, mert a kiszolgálóhoz beállított szövegkódolás több sorra bontotta volna."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine ausgehende Zeile wurde nicht gesendet, weil die Textkodierung dieses Servers sie in mehrere Zeilen aufgeteilt hätte."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se envió una línea saliente porque la codificación de texto de este servidor la habría dividido en varias líneas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une ligne sortante n’a pas été envoyée, car l’encodage de texte de ce serveur l’aurait découpée en plusieurs lignes."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このサーバのテキストエンコーディングでは複数の行に分割されてしまうため、送信行を送信しませんでした。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uma linha de saída não foi enviada porque a codificação de texto deste servidor a teria dividido em várias linhas."
+          }
+        }
+      }
+    },
     "outgoing-line-truncated" : {
       "comment" : "Console notice when a line this client was about to send was longer than the server accepts and had to be cut, so not all of what the user typed reached the server. %1$ld is the length of the assembled line in bytes, %2$ld how many bytes this server carries.",
       "extractionState" : "manual",

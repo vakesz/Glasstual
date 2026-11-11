@@ -245,9 +245,13 @@ struct ServerPropertiesEncodingPane: View {
 
 	/// Built once for the process: the list is the same for every sheet, and
 	/// sorting several hundred encoding names is not work to repeat per view.
+	/// Only encodings that keep ASCII as ASCII can carry IRC lines.
 	private static let encodings: [(value: UInt, title: String)] = {
 		let values = String.Encoding.supportedEncodingsByTitle(favoringUTF8: false)
-		return values.map { ($0.value.uintValue, $0.key) }.sorted { $0.title < $1.title }
+		return values
+			.map { ($0.value.uintValue, $0.key) }
+			.filter { TextEncodingOptions.isWireCompatible(String.Encoding(rawValue: $0.0)) }
+			.sorted { $0.title < $1.title }
 	}()
 
 	var body: some View {
