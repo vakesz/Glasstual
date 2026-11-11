@@ -122,4 +122,18 @@ struct MetadataInboundTests {
 
 		#expect(members.renderRevision != before)
 	}
+
+	@Test("A notification title reads \"Display Name (nick)\", and a colliding name is left out")
+	func notificationTitle() throws {
+		let session = try makeMetadataSession()
+		let channel = session.findConversation("#c")
+		try session.receive(":irc.example.net METADATA peer display-name * :Peer Display")
+		try session.receive(":irc.example.net METADATA spoof display-name * :peer")
+
+		let title = session.notificationSenderTitle("peer", in: channel)
+		#expect(title == String(localized: .ChatNotifications.titleDisplayNameNickname(
+			"Peer Display", session.formatNickname("peer", in: channel)
+		)))
+		#expect(session.notificationSenderTitle("spoof", in: channel) == session.formatNickname("spoof", in: channel))
+	}
 }

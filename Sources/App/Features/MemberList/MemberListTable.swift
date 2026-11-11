@@ -200,6 +200,7 @@ final class MemberListTableController: NSObject, NSTableViewDataSource, NSTableV
 			row: row,
 			style: model.presentationStyle,
 			overrides: model.nicknameColorOverrides,
+			profile: row.member.map { MemberRowProfile($0.user, presentation: model.profilePresentation) } ?? MemberRowProfile(),
 			activationName: SettingsKeys.Input.userDoubleClickAction.value.accessibilityActionTitle,
 			showProfile: { [weak model] in
 				guard let member = row.member else { return }

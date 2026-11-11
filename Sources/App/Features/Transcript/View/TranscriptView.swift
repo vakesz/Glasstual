@@ -86,6 +86,9 @@ final class TranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 	/// kept for the rest of the batch so a name the cache has not seen does not
 	/// build another handle on the defaults suite.
 	var nicknameColorOverrides: NicknameColorOverrides?
+	/// What a sender set on the server, looked up when their header is drawn so
+	/// a profile change redraws held rows without rendering them again.
+	var senderProfile: (String) -> TranscriptSenderProfile? = { _ in nil }
 	/// Set while the view re-selects text it moved itself, so the delegate does
 	/// not mistake bookkeeping for something the reader did.
 	var isAdjustingSelection = false

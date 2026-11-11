@@ -164,10 +164,34 @@ extension ServerSession {
 			: text
 
 		return UserNotificationContent(
-			title: formatNickname(nickname, in: target),
+			title: notificationSenderTitle(nickname, in: target),
 			subtitle: location,
 			body: body
 		)
+	}
+
+	/** The sender as a notification title: "Display Name (nickname)" when they
+	 set a display name that may be shown beside their nickname, and the
+	 nickname alone otherwise. */
+	func notificationSenderTitle(_ nickname: String, in target: Conversation?) -> String {
+		let formatted = formatNickname(nickname, in: target)
+
+		guard environment.settings.showsServerProfiles, let user = findUser(nickname) else { return formatted }
+
+		/* Everyone the session knows, not only the target's members: a query or
+		 a notification without a conversation has no members to compare with,
+		 and the title has to name the sender unmistakably either way. */
+		var others = userIndex.values.map(\.nickname)
+		others.removeAll { casefoldNickname($0) == casefoldNickname(nickname) }
+		let collisions = ProfileNamePresentation.collisionForms(
+			nicknames: others, localNickname: userNickname, casefold: casefoldNickname
+		)
+
+		guard let displayName = ProfileNamePresentation.displayName(
+			for: user.profile, nickname: nickname, collisions: collisions, casefold: casefoldNickname
+		) else { return formatted }
+
+		return String(localized: .ChatNotifications.titleDisplayNameNickname(displayName, formatted))
 	}
 
 	private func kickUserNotificationContent(

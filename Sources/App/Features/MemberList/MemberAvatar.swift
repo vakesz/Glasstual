@@ -17,6 +17,12 @@ struct MemberAvatar: View {
 	 behind it -- the profile popover, a preview -- passes nothing and pays for
 	 the one read it makes. */
 	var overrides: NicknameColorOverrides?
+	/// The colour the person chose on the server, when profiles are shown.
+	var profileColor: ProfileColor?
+	/// The person's picture, once it arrived and pictures may be shown.
+	var image: NSImage?
+
+	@Environment(\.colorSchemeContrast) private var contrast
 
 	/** One lightness for every avatar, in both appearances.
 
@@ -34,22 +40,42 @@ struct MemberAvatar: View {
 	private static let initialScale: CGFloat = 0.48
 
 	var body: some View {
-		let fill = Self.fill(for: nickname, overrides: overrides)
+		let fill = Self.fill(for: nickname, profileColor: profileColor, overrides: overrides)
 		Circle()
 			.fill(Color(nsColor: fill))
 			.overlay {
-				Text(Self.initial(for: nickname))
-					.font(.system(size: round(size * Self.initialScale), weight: .semibold))
-					.foregroundStyle(Color(nsColor: fill.legibleForeground))
+				if let image {
+					Image(nsImage: image)
+						.resizable()
+						.scaledToFill()
+						.clipShape(Circle())
+				} else {
+					Text(Self.initial(for: nickname))
+						.font(.system(size: round(size * Self.initialScale), weight: .semibold))
+						.foregroundStyle(Color(nsColor: fill.legibleForeground))
+				}
+			}
+			.overlay {
+				if image != nil, contrast == .increased {
+					Circle().strokeBorder(Color(nsColor: .separatorColor), lineWidth: 0.5)
+				}
 			}
 			.frame(width: size, height: size)
 	}
 
 	/// A pinned colour is the user's to choose and stays what they chose;
 	/// everything else takes the nickname's hue at the avatar's own lightness.
-	static func fill(for nickname: String, overrides: NicknameColorOverrides? = nil) -> NSColor {
+	static func fill(
+		for nickname: String,
+		profileColor: ProfileColor? = nil,
+		overrides: NicknameColorOverrides? = nil
+	) -> NSColor {
 		if let pinned = NicknameColors.pinnedColor(for: nickname, in: overrides) {
 			return pinned
+		}
+
+		if let profileColor {
+			return NicknameColors.relit(profileColor, lightness: fillLightness)
 		}
 
 		return OKLCHColor(

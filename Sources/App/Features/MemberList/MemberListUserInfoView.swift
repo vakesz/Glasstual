@@ -14,8 +14,11 @@ struct MemberListUserInfoContent {
 	let account: String
 	let privileges: String
 	let awayStatus: String
+	/// What the person set on the server, as the list draws it.
+	let profile: MemberRowProfile
 
-	init(member: Member, privileges: String) {
+	init(member: Member, privileges: String, profile: MemberRowProfile = MemberRowProfile()) {
+		self.profile = profile
 		let user = member.user
 		let unavailable = String(localized: .MemberList.informationUnavailable)
 		let stripsFormatting = SettingsKeys.Messages.removeAllFormatting.value
@@ -66,8 +69,14 @@ struct MemberListUserInfoView: View {
 	var body: some View {
 		VStack(alignment: .leading, spacing: UISpacing.wide) {
 			HStack(spacing: UISpacing.wide) {
-				MemberAvatar(nickname: content.nickname, size: MemberListLayout.profileAvatarSize)
-					.accessibilityHidden(true)
+				MemberAvatar(
+					nickname: content.nickname,
+					size: MemberListLayout.profileAvatarSize,
+					profileColor: content.profile.color,
+					image: content.profile.avatar
+				)
+				.accessibilityHidden(content.profile.avatar == nil)
+				.accessibilityLabel(Text(.MemberList.profilePictureLabel(content.nickname)))
 
 				Text(content.nickname)
 					.font(.title3.weight(.semibold))
@@ -80,6 +89,26 @@ struct MemberListUserInfoView: View {
 				horizontalSpacing: UISpacing.regular,
 				verticalSpacing: UISpacing.tight
 			) {
+				if let displayName = content.profile.displayName {
+					infoRow(String(localized: .MemberList.displayNameRow), TranscriptIsolate.isolated(displayName))
+				}
+				if let color = content.profile.color {
+					GridRow {
+						Text(.MemberList.profileColorRow)
+							.font(.caption.weight(.semibold))
+							.foregroundStyle(.secondary)
+							.frame(width: MemberListLayout.profileLabelWidth, alignment: .trailing)
+						HStack(spacing: UISpacing.tight) {
+							Circle()
+								.fill(Color(nsColor: NicknameColors.relit(color, lightness: 0.6)))
+								.frame(width: 10, height: 10)
+								.accessibilityHidden(true)
+							Text(color.hexString)
+								.monospaced()
+						}
+						.frame(maxWidth: .infinity, alignment: .leading)
+					}
+				}
 				infoRow(String(localized: .MemberList.infoUsername), content.username)
 				infoRow(String(localized: .MemberList.infoAddress), content.address)
 				infoRow(String(localized: .MemberList.infoRealName), content.realName)
@@ -134,12 +163,13 @@ struct MemberListUserInfoView: View {
  content the view wants are assembled here rather than in the transcript: what
  a profile is made of stays with the member list. */
 enum MemberListUserInfoPopover {
-	static func makeViewController(for member: Member) -> NSViewController {
+	static func makeViewController(for member: Member, profile: MemberRowProfile = MemberRowProfile()) -> NSViewController {
 		NSHostingController(
 			rootView: MemberListUserInfoView(
 				content: MemberListUserInfoContent(
 					member: member,
-					privileges: MemberListRanks.privilegeDescription(for: member)
+					privileges: MemberListRanks.privilegeDescription(for: member),
+					profile: profile
 				)
 			)
 		)

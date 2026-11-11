@@ -115,6 +115,27 @@ struct ChannelPropertiesView: View {
 				Toggle(.ChannelProperties.disableHighlights, isOn: $model.config.ignoreHighlights)
 				Toggle(model.inlineMediaOverrideTitle, isOn: $model.inlineMediaOverride)
 			}
+
+			if let profile = model.serverProfile {
+				Section {
+					if let displayName = profile.displayName {
+						LabeledContent(.ChannelProperties.displayNameRow) {
+							Text(TranscriptIsolate.isolated(displayName.text))
+								.textSelection(.enabled)
+						}
+					}
+					if let avatar = profile.avatar {
+						LabeledContent(.ChannelProperties.pictureRow) {
+							Text(avatar.template)
+								.lineLimit(2)
+								.truncationMode(.middle)
+								.textSelection(.enabled)
+						}
+					}
+				} header: {
+					Text(.ChannelProperties.serverProfileSection)
+				}
+			}
 		}
 		.formStyle(.grouped)
 	}

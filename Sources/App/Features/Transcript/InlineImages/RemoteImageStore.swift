@@ -68,6 +68,7 @@ final class RemoteImageStore {
 	private var failures: [Request: ContinuousClock.Instant] = [:]
 	private var tasks: [Request: Task<Void, Never>] = [:]
 	private var queue: [Request] = []
+	private let subscriptions = NotificationSubscriptions()
 
 	init(
 		configuration: Configuration,
@@ -131,6 +132,18 @@ final class RemoteImageStore {
 	/// Whether a fetch for `url` over `route` waits for a slot.
 	func isQueued(_ url: URL, route: InlineImageRoute) -> Bool {
 		queue.contains(Request(url: url, route: route))
+	}
+
+	/// Releases the owner a `Message` names, whenever one is posted that names
+	/// one: a session that disconnected forgets the pictures it asked for.
+	func releaseOwner<Message: NotificationCenter.MainActorMessage>(
+		on messageType: Message.Type,
+		owner: @escaping @MainActor (Message) -> String?
+	) where Message.Subject: AnyObject {
+		subscriptions.observe(messageType, center: notificationCenter) { [weak self] message in
+			guard let name = owner(message) else { return }
+			self?.release(owner: name)
+		}
 	}
 
 	/// Forgets what `owner` asked for: images and fetches no other owner names

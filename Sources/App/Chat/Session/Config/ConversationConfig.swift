@@ -27,6 +27,13 @@ nonisolated struct ConversationConfig: Codable, Sendable, Equatable, Hashable {
 	var ignoreHighlights = false
 	var inlineMediaDisabled = false
 	var inlineMediaEnabled = false
+
+	/// Whether images are shown here, given the app-wide setting: the
+	/// conversation's own switch only ever inverts that default.
+	func showsInlineMedia(settingsDefault: Bool) -> Bool {
+		settingsDefault ? inlineMediaDisabled == false : inlineMediaEnabled
+	}
+
 	/// Whether this conversation notifies at all. The Messages "Hide Alerts"
 	/// switch, under the name it has always been stored as.
 	var pushNotifications = true

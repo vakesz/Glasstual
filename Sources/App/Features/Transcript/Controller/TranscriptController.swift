@@ -65,6 +65,11 @@ final class TranscriptController: ChatItemPresenting, ServerHistoryPresenting {
 	var loadsHistoryLazily: @MainActor () -> Bool = { SettingsKeys.Logging.loadHistoryLazily.value }
 
 	private let memberRenderCache = TranscriptMemberDirectoryCache()
+	/// How senders' profiles draw, kept until the members, the profiles or the
+	/// settings it was read from change.
+	var senderPresentation: (key: SenderPresentationKey, value: ServerProfilePresentation)?
+	/// Profile and picture changes that redraw this transcript's senders.
+	let profileSubscriptions = NotificationSubscriptions()
 	let inlineImageLoader: InlineImageLoader
 	let highlightExpressions: TranscriptHighlightExpressions
 	/// What a line is rendered against; one copy shared by every transcript.
@@ -141,8 +146,7 @@ final class TranscriptController: ChatItemPresenting, ServerHistoryPresenting {
 		guard let conversation = associatedConversation else {
 			return false
 		}
-		let config = conversation.config
-		return settings.current.showsInlineMedia ? !config.inlineMediaDisabled : config.inlineMediaEnabled
+		return conversation.config.showsInlineMedia(settingsDefault: settings.current.showsInlineMedia)
 	}
 
 	var viewIsVisible: Bool {
@@ -201,6 +205,7 @@ final class TranscriptController: ChatItemPresenting, ServerHistoryPresenting {
 	}
 
 	private func setUp() {
+		observeSenderProfiles()
 		transcriptProjection.setCapacity(bufferPolicy.hardLimit)
 		renderScheduler.start { [weak self] edits in
 			if let backingView = self?.backingView {
@@ -232,6 +237,7 @@ final class TranscriptController: ChatItemPresenting, ServerHistoryPresenting {
 			return backingView
 		}
 		let view = TranscriptView(viewController: self)
+		view.senderProfile = { [weak self] nickname in self?.senderProfile(for: nickname) }
 		backingView = view
 		finishLoading(view)
 		return view

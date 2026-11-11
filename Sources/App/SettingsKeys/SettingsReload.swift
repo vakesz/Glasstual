@@ -121,6 +121,8 @@ enum SettingsReload {
 		/* Each connection subscribes or unsubscribes, and the names and
 		 pictures already drawn come and go. */
 		reload([.serverProfiles, .style, .memberList], on: [SettingsKeys.Messages.showServerProfiles])
+		/* Profile pictures in the member list follow the inline image setting. */
+		reload(.memberList, on: [SettingsKeys.Messages.showInlineMedia])
 		reload(.highlightLogging, on: [SettingsKeys.Logging.logHighlights])
 		reload(.textDirection, on: [SettingsKeys.Messages.rightToLeftFormatting])
 		reload(.textFieldFontSize, on: [SettingsKeys.Input.textViewFontSize])

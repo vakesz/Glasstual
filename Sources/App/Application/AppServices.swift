@@ -128,7 +128,11 @@ extension RemoteImageStore {
 	static let networkIcons = RemoteImageStore(configuration: .networkIcons)
 	/// The profile pictures people set on the server, shared by member rows and
 	/// transcript headers.
-	static let avatars = RemoteImageStore(configuration: .avatars)
+	static let avatars: RemoteImageStore = {
+		let store = RemoteImageStore(configuration: .avatars)
+		store.releaseOwner(on: SessionProfilesDidChange.self) { $0.isReset ? $0.subject.uniqueIdentifier : nil }
+		return store
+	}()
 }
 
 extension SettingsTransferSession {

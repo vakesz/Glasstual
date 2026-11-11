@@ -32,7 +32,8 @@ struct MemberListView: View {
 							privileges: MemberListRanks.privilegeDescription(for: model.presentationStyle.displayRank(
 								isIRCOperator: member.user.isIRCop,
 								channelRank: member.rank
-							))
+							)),
+							profile: MemberRowProfile(member.user, presentation: model.profilePresentation)
 						))
 					}
 				}

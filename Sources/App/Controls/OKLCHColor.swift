@@ -14,6 +14,26 @@ nonisolated struct OKLCHColor {
 	/// Degrees.
 	var hue: Double
 
+	init(lightness: Double, chroma: Double, hue: Double) {
+		self.lightness = lightness
+		self.chroma = chroma
+		self.hue = hue
+	}
+
+	/// The OKLCH form of an sRGB colour with components from 0 to 255.
+	init(red: UInt8, green: UInt8, blue: UInt8) {
+		let linear = [red, green, blue].map { Self.decodeSRGB(Double($0) / 255) }
+		let longCone = cbrt(0.412_221_470_8 * linear[0] + 0.536_332_536_3 * linear[1] + 0.051_445_992_9 * linear[2])
+		let mediumCone = cbrt(0.211_903_498_2 * linear[0] + 0.680_699_545_1 * linear[1] + 0.107_396_956_6 * linear[2])
+		let shortCone = cbrt(0.088_302_461_9 * linear[0] + 0.281_718_837_6 * linear[1] + 0.629_978_700_5 * linear[2])
+		let labA = 1.977_998_495_1 * longCone - 2.428_592_205_0 * mediumCone + 0.450_593_709_9 * shortCone
+		let labB = 0.025_904_037_1 * longCone + 0.782_771_766_2 * mediumCone - 0.808_675_766_0 * shortCone
+		lightness = 0.210_454_255_3 * longCone + 0.793_617_785_0 * mediumCone - 0.004_072_046_8 * shortCone
+		chroma = (labA * labA + labB * labB).squareRoot()
+		let degrees = atan2(labB, labA) * 180 / .pi
+		hue = degrees < 0 ? degrees + 360 : degrees
+	}
+
 	var nsColor: NSColor {
 		/* The hue fixes the direction in the a/b plane, and the search below
 		 only shortens the vector along it, so the two transcendentals are
@@ -43,6 +63,10 @@ nonisolated struct OKLCHColor {
 			-1.268_438_004_6 * longCubed + 2.609_757_401_1 * mediumCubed - 0.341_319_396_5 * shortCubed,
 			-0.004_196_086_3 * longCubed - 0.703_418_614_8 * mediumCubed + 1.707_614_701_0 * shortCubed,
 		]
+	}
+
+	private static func decodeSRGB(_ value: Double) -> Double {
+		value <= 0.040_45 ? value / 12.92 : pow((value + 0.055) / 1.055, 2.4)
 	}
 
 	private static func encodeSRGB(_ value: Double) -> Double {

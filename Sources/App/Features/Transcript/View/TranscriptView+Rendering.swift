@@ -46,7 +46,8 @@ extension TranscriptView {
 			.transcriptSelectionSegment: "timestamp",
 		]) { _, new in new }))
 		if !header.nickname.isEmpty || theme.layout == .bubbles {
-			let attributes = nicknameAttributes(for: line, paragraph: paragraph).merging([
+			let profile = line.nickname.flatMap { $0.isEmpty ? nil : senderProfile($0) }
+			let attributes = nicknameAttributes(for: line, paragraph: paragraph, profileColor: profile?.color).merging([
 				.transcriptSelectionSegment: "nickname",
 			]) { _, new in new }
 			/* The gap after the name, and the isolate the name is drawn in, carry
@@ -54,11 +55,18 @@ extension TranscriptView {
 			 popover is anchored to the name alone. */
 			var separatorAttributes = attributes
 			separatorAttributes.removeValue(forKey: .transcriptAction)
-			TranscriptIsolate.appendIsolated(
-				NSAttributedString(string: header.nickname, attributes: attributes),
-				to: result,
-				isolateAttributes: separatorAttributes
-			)
+			if let profile, header.nickname.isEmpty == false, profile.displayName != nil || profile.avatar != nil {
+				appendSender(
+					profile, nickname: header.nickname, spokenNickname: line.nickname ?? header.nickname, nameAttributes: attributes,
+					separatorAttributes: separatorAttributes, metadata: metadata, to: result
+				)
+			} else {
+				TranscriptIsolate.appendIsolated(
+					NSAttributedString(string: header.nickname, attributes: attributes),
+					to: result,
+					isolateAttributes: separatorAttributes
+				)
+			}
 			result.append(NSAttributedString(
 				string: theme.layout == .bubbles ? "\n" : "  ",
 				attributes: separatorAttributes
@@ -142,14 +150,15 @@ extension TranscriptView {
 
 	func nicknameAttributes(
 		for line: TranscriptRow,
-		paragraph: NSParagraphStyle
+		paragraph: NSParagraphStyle,
+		profileColor: ProfileColor? = nil
 	) -> [NSAttributedString.Key: Any] {
 		let controller = themeStore
 		let palette = controller.theme.palette
 		let fallback = line.memberType == .localUser ? palette.localNickname : palette.remoteNickname
 		let color = SettingsKeys.Messages.disableNicknameColorHashing.value
 			? themeColor(fallback)
-			: nicknameColor(for: line.nickname ?? "")
+			: nicknameColor(for: line.nickname ?? "", profileColor: profileColor)
 		var attributes = lineAttributes(for: line).merging([
 			.font: NSFontManager.shared.convert(effectiveFont(controller), toHaveTrait: .boldFontMask),
 			.foregroundColor: color,
@@ -239,18 +248,24 @@ extension TranscriptView {
 	/// one reads the pinned-colour dictionary out of the defaults store, and a
 	/// batch of lines asks for the same few names repeatedly -- so the table is
 	/// read on the first name the cache misses and reused for every one after.
-	func nicknameColor(for nickname: String) -> NSColor {
-		if let cached = nicknameColors[nickname] {
+	func nicknameColor(for nickname: String, profileColor: ProfileColor? = nil) -> NSColor {
+		/* The colour the person chose is part of the key, so choosing another
+		 is not answered from the cache. */
+		let key = profileColor.map { "\(nickname)\u{0}\($0.hexString)" } ?? nickname
+		if let cached = nicknameColors[key] {
 			return cached
 		}
 		let overrides = nicknameColorOverrides ?? NicknameColors.overridesSnapshot()
 		nicknameColorOverrides = overrides
 		/* A printed copy asks for the light appearance's names for the reason
 		 every other colour does: the pale ones a dark theme uses disappear. */
-		let color = rendersForPrint
-			? NicknameColors.color(for: nickname, isDark: false, overrides: overrides)
-			: NicknameColors.color(for: nickname, overrides: overrides)
-		nicknameColors[nickname] = color
+		let color = NicknameColors.color(
+			for: nickname,
+			profileColor: profileColor,
+			isDark: rendersForPrint ? false : LiveThemeSnapshot.current.isDarkAppearance,
+			overrides: overrides
+		)
+		nicknameColors[key] = color
 		return color
 	}
 

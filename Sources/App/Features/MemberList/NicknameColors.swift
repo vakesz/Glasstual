@@ -64,6 +64,43 @@ nonisolated enum NicknameColors {
 		return generatedColor(for: inputString, isDark: isDark)
 	}
 
+	/** The colour for a name whose owner chose one on the server.
+
+	 A pinned colour still wins. Otherwise the chosen colour keeps its hue, its
+	 chroma is held to a range the generated colours share, and its lightness
+	 is replaced by the one this appearance draws names at, so no server can
+	 make a name invisible or match the ground it is drawn on. */
+	static func color(
+		for nickname: String,
+		profileColor: ProfileColor?,
+		isDark: Bool,
+		overrides: NicknameColorOverrides? = nil
+	) -> NSColor {
+		if let pinned = pinnedColor(for: nickname, in: overrides) {
+			return pinned
+		}
+
+		guard let profileColor else {
+			return generatedColor(for: nickname, isDark: isDark)
+		}
+
+		return relit(profileColor, lightness: isDark ? 0.80 : 0.50)
+	}
+
+	/// `color` at `lightness`, with its hue and a chroma in the legible range.
+	static func relit(_ color: ProfileColor, lightness: Double) -> NSColor {
+		let source = OKLCHColor(red: color.red, green: color.green, blue: color.blue)
+
+		return OKLCHColor(
+			lightness: lightness,
+			chroma: min(max(source.chroma, profileChromaRange.lowerBound), profileChromaRange.upperBound),
+			hue: source.hue
+		).nsColor
+	}
+
+	/// The chroma a server-chosen colour is held to.
+	static let profileChromaRange = 0.04 ... chroma * 1.4
+
 	/** The key a nickname's pinned colour is stored under.
 
 	 Case is folded the ASCII way rather than under the server's casemapping:

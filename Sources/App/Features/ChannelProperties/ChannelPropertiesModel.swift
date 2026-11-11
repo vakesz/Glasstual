@@ -105,6 +105,17 @@ final class ChannelPropertiesModel {
 	 shown, and the key that holds it is what earlier releases wrote. The
 	 switch reads as Messages' does, so the model is what inverts it rather
 	 than every reader of the configuration. */
+	/// What the channel set about itself on the server, read-only and shown
+	/// only while profiles are shown. `nil` when it set nothing.
+	var serverProfile: UserProfile? {
+		guard let session, session.environment.settings.showsServerProfiles,
+		      let channel = session.findConversation(config.name), channel.isChannel,
+		      channel.channelProfile.displayName != nil || channel.channelProfile.avatar != nil
+		else { return nil }
+
+		return channel.channelProfile
+	}
+
 	var isMuted: Bool {
 		get { config.pushNotifications == false }
 		set { config.pushNotifications = newValue == false }

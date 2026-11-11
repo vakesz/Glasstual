@@ -72,13 +72,29 @@ final class MemberList: ConversationMembersPresenting {
 	 own flag could not know that. */
 	private(set) var memberShowingProfile: User.ID?
 
+	/// How the profiles people set on the server are drawn, read once per
+	/// invalidation like the style and the pinned colours.
+	private(set) var profilePresentation = ServerProfilePresentation()
+
 	@ObservationIgnored private weak var memberList: ConversationMembers?
+	@ObservationIgnored private weak var conversation: Conversation?
+	@ObservationIgnored private let notifications = NotificationSubscriptions()
 	/// The conversation's ordering as the protocol layer last published it. The
 	/// rows come from ``groups``; this is what the next rebuild reads.
 	@ObservationIgnored private var members: [Member] = []
 	private var lastInteractedMemberID: User.ID?
 
-	init() {}
+	init() {
+		/* A picture arriving changes only how rows draw, not which rows there are. */
+		notifications.observe(RemoteImageStoreDidChange.self, of: RemoteImageStore.avatars) { [weak self] _ in
+			self?.invalidatePresentation()
+		}
+		/* A conversation's own image switch decides whether pictures are fetched. */
+		notifications.observe(ConversationConfigWasUpdated.self) { [weak self] message in
+			guard let self, message.subject === conversation else { return }
+			invalidatePresentation()
+		}
+	}
 
 	func assign(to conversation: Conversation?) {
 		if memberList !== conversation?.memberInfo {
@@ -86,6 +102,7 @@ final class MemberList: ConversationMembersPresenting {
 		}
 		memberList?.assign(nil)
 		sourceIdentifier = conversation?.uniqueIdentifier
+		self.conversation = conversation
 		memberList = conversation?.memberInfo
 		if let memberList {
 			memberList.assign(self)
@@ -241,6 +258,18 @@ final class MemberList: ConversationMembersPresenting {
 	func invalidatePresentation() {
 		nicknameColorOverrides = NicknameColors.overridesSnapshot()
 		presentationStyle = .current()
+		if let session = conversation?.associatedSession {
+			profilePresentation = ServerProfilePresentation(
+				session: session,
+				conversation: conversation,
+				nicknames: ServerProfilePresentation.comparedNicknames(
+					channelMembers: conversation?.isChannel == true ? members : nil, on: session
+				),
+				inlineMediaDefault: SettingsKeys.Messages.showInlineMedia.value
+			)
+		} else {
+			profilePresentation = ServerProfilePresentation()
+		}
 		presentationRevision &+= 1
 	}
 }

@@ -17,6 +17,11 @@ nonisolated enum TranscriptIsolate {
 	/// U+2069 POP DIRECTIONAL ISOLATE: closes it.
 	static let isolateEnd = "\u{2069}"
 
+	/// `text` inside a directional isolate, for a label that draws one string.
+	static func isolated(_ text: String) -> String {
+		isolateStart + text + isolateEnd
+	}
+
 	/** Appends `text` inside a directional isolate, so its own reading order
 	 cannot reorder whatever is drawn beside it.
 

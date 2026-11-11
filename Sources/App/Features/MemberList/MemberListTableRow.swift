@@ -4,6 +4,21 @@
 import AppKit
 import SwiftUI
 
+/// What a member row draws from the person's server profile.
+struct MemberRowProfile {
+	var displayName: String?
+	var color: ProfileColor?
+	var avatar: NSImage?
+
+	init() {}
+
+	init(_ user: User, presentation: ServerProfilePresentation) {
+		displayName = presentation.displayName(for: user)
+		color = presentation.color(for: user)
+		avatar = presentation.avatar(for: user.profile, pixelSize: ServerProfilePresentation.memberListPixelSize)
+	}
+}
+
 /// The table's stable index space, including unselectable section headings.
 enum MemberListTableRow: Identifiable, Equatable {
 	enum Identity: Hashable {
@@ -43,7 +58,7 @@ enum MemberListTableRow: Identifiable, Equatable {
 		}
 	}
 
-	func accessibilityDescription(style: MemberListPresentationStyle) -> String {
+	func accessibilityDescription(style: MemberListPresentationStyle, displayName: String? = nil) -> String {
 		switch self {
 		case let .section(section, count):
 			return String(localized: .MemberList.sectionAccessibilityLabel(section.title, count.formatted()))
@@ -51,7 +66,8 @@ enum MemberListTableRow: Identifiable, Equatable {
 			let user = member.user
 			let rank = style.displayRank(isIRCOperator: user.isIRCop, channelRank: member.rank)
 			var phrases = [
-				AccessibilityStrings.userListEntry(for: user.nickname),
+				displayName.map { String(localized: .MemberList.userWithDisplayName($0, user.nickname)) }
+					?? AccessibilityStrings.userListEntry(for: user.nickname),
 				MemberListRanks.privilegeDescription(for: rank),
 			]
 			if user.isAway {
@@ -87,6 +103,7 @@ final class MemberListTableCell: NSTableCellView {
 		row: MemberListTableRow,
 		style: MemberListPresentationStyle,
 		overrides: NicknameColorOverrides,
+		profile: MemberRowProfile = MemberRowProfile(),
 		activationName: String,
 		showProfile: @escaping () -> Void,
 		activate: @escaping () -> Void
@@ -95,7 +112,7 @@ final class MemberListTableCell: NSTableCellView {
 		// Row-view metadata is not part of that exported accessibility tree.
 		setAccessibilityElement(true)
 		setAccessibilityRole(.staticText)
-		setAccessibilityLabel(row.accessibilityDescription(style: style))
+		setAccessibilityLabel(row.accessibilityDescription(style: style, displayName: profile.displayName))
 		setAccessibilityChildren([])
 		self.showProfile = row.member == nil ? nil : showProfile
 		self.activate = row.member == nil ? nil : activate
@@ -110,7 +127,7 @@ final class MemberListTableCell: NSTableCellView {
 			),
 		])
 		let content = MemberListTableRowContent(
-			row: row, style: style, overrides: overrides, isSelected: backgroundStyle == .emphasized
+			row: row, style: style, overrides: overrides, profile: profile, isSelected: backgroundStyle == .emphasized
 		)
 		self.content = content
 		if let hostingView {
@@ -162,6 +179,7 @@ private struct MemberListTableRowContent: View {
 	let row: MemberListTableRow
 	let style: MemberListPresentationStyle
 	let overrides: NicknameColorOverrides
+	let profile: MemberRowProfile
 	var isSelected: Bool
 
 	var body: some View {
@@ -186,13 +204,32 @@ private struct MemberListTableRowContent: View {
 		let user = member.user
 		let rank = style.displayRank(isIRCOperator: user.isIRCop, channelRank: member.rank)
 		return HStack(spacing: UISpacing.regular) {
-			MemberAvatar(nickname: user.nickname, size: MemberListLayout.avatarSize, overrides: overrides)
-				.opacity(user.isAway ? 0.5 : 1)
-			Text(user.nickname)
-				.lineLimit(1)
-				.truncationMode(.tail)
-				.foregroundStyle(Color(nsColor: isSelected ? .alternateSelectedControlTextColor :
-						(user.isAway ? .secondaryLabelColor : .labelColor)))
+			MemberAvatar(
+				nickname: user.nickname,
+				size: MemberListLayout.avatarSize,
+				overrides: overrides,
+				profileColor: profile.color,
+				image: profile.avatar
+			)
+			.opacity(user.isAway ? 0.5 : 1)
+			if let displayName = profile.displayName {
+				/* The display name gives way first: the nickname is always drawn. */
+				Text(TranscriptIsolate.isolated(displayName))
+					.lineLimit(1)
+					.truncationMode(.tail)
+					.foregroundStyle(primaryColor(isAway: user.isAway))
+				Text(TranscriptIsolate.isolated(user.nickname))
+					.font(.callout)
+					.lineLimit(1)
+					.fixedSize()
+					.layoutPriority(1)
+					.foregroundStyle(Color(nsColor: isSelected ? .alternateSelectedControlTextColor : .secondaryLabelColor))
+			} else {
+				Text(user.nickname)
+					.lineLimit(1)
+					.truncationMode(.tail)
+					.foregroundStyle(primaryColor(isAway: user.isAway))
+			}
 			if user.isBot {
 				Text(.MemberList.botCaption)
 					.font(.caption2.weight(.medium))
@@ -208,5 +245,9 @@ private struct MemberListTableRowContent: View {
 					.help(MemberListRanks.style(for: rank).privilegeDescription)
 			}
 		}
+	}
+
+	private func primaryColor(isAway: Bool) -> Color {
+		Color(nsColor: isSelected ? .alternateSelectedControlTextColor : (isAway ? .secondaryLabelColor : .labelColor))
 	}
 }
