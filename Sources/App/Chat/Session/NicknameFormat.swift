@@ -156,7 +156,6 @@ nonisolated enum NicknameFormat {
 	}
 }
 
-@MainActor
 extension ServerSession {
 	/// The nickname as this connection's theme and the sender's rank in
 	/// `conversation` spell it.

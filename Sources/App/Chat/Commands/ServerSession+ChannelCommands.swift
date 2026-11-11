@@ -22,7 +22,6 @@ private struct ChannelModerationInvocation {
 	static let quietCommands: Set<LocalCommand> = [.quiet, .unquiet]
 }
 
-@MainActor
 extension ServerSession {
 	func dispatchBroadcastCommand(_ command: LocalCommand, parsed: ParsedUserCommand) {
 		guard isLoggedIn, requireArguments(parsed.arguments, for: parsed.command) else { return }

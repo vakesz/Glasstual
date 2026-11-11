@@ -7,7 +7,6 @@ import Foundation
 /// What a newly printed line does to a conversation's unread and highlight
 /// badges. The counters themselves live on ``ChatItem``; these decide when
 /// they move and who is told.
-@MainActor
 extension ServerSession {
 	private func conversationIsSelectedInKeyWindow(_ conversation: Conversation, output: any ServerSessionPresenting) -> Bool {
 		output.isKeyWindow && output.isItemSelected(conversation)

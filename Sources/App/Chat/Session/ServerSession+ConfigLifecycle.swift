@@ -77,7 +77,6 @@ enum ConfigUpdate: Sendable {
 	}
 }
 
-@MainActor
 extension ServerSession {
 	func updateConfig(_ newConfig: ServerConfig, for reason: ConfigUpdate = .edit) {
 		let preservingLocalData = reason.preservesLocalData

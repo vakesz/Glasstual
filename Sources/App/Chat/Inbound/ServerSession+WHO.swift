@@ -4,7 +4,6 @@
 
 import Foundation
 
-@MainActor
 extension ServerSession {
 	func receiveWhoReply(in channel: Conversation, reply: WHOReply) {
 		let parsedFlags = WHOFlags.parse(

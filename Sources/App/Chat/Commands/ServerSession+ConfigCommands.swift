@@ -77,7 +77,6 @@ enum DefaultsCommandRequest: Equatable {
 	}
 }
 
-@MainActor
 extension ServerSession {
 	/// `/defaults` and `/ignore` both edit the connection's stored configuration.
 	func dispatchConfigurationCommand(

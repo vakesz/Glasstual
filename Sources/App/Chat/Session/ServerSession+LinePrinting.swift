@@ -92,7 +92,7 @@ extension ServerSession {
 				return
 			}
 		#endif
-		printOnMainActor(request)
+		printLine(request)
 	}
 }
 
@@ -161,9 +161,8 @@ extension ServerSession {
 	}
 }
 
-@MainActor
 private extension ServerSession {
-	func printOnMainActor(_ request: LinePrintRequest) {
+	func printLine(_ request: LinePrintRequest) {
 		precondition(request.command != nil || request.referenceMessage != nil)
 		guard !isTerminating else { return }
 

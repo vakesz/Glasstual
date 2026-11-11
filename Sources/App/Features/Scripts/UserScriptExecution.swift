@@ -28,7 +28,6 @@ final class ScriptInvocation {
 	}
 }
 
-@MainActor
 extension ServerSession {
 	func outputDescription(
 		for error: Error,

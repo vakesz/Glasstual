@@ -182,7 +182,6 @@ extension ServerSession {
 
 // MARK: - Per-person state
 
-@MainActor
 extension ServerSession {
 	/// The store for `user`, created on first use.
 	private func persistentStore(for user: User) -> UserPersistentStore {
@@ -361,7 +360,6 @@ extension ServerSession {
 	}
 }
 
-@MainActor
 extension ServerSession {
 	func modifyUser(withNickname nickname: String, asAway away: Bool) {
 		guard let user = findUser(nickname) else { return }

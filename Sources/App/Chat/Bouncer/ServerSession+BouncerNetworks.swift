@@ -14,7 +14,6 @@ private let bouncerLogger = Logger(subsystem: LogSubsystem.current, category: "B
  which keeps a connection of its own for every one. Those connections send
  `BOUNCER BIND` before registration ends so the bouncer attaches them to their
  network instead of offering them the account's listing. */
-@MainActor
 extension ServerSession {
 	// MARK: - State
 

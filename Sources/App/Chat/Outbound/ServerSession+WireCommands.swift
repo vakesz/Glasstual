@@ -16,7 +16,6 @@ private nonisolated let wireCommandLogger = Logger(
 /// whatever the nicknames are.
 private let watchListGroupSize = 8
 
-@MainActor
 extension ServerSession {
 	func changeNickname(_ nickname: String) {
 		guard isConnected, nickname.isEmpty == false else { return }

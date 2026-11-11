@@ -5,7 +5,6 @@
 import CocoaExtensions
 import Foundation
 
-@MainActor
 extension ServerSession {
 	func sendCommand(_ input: String, completeTarget: Bool = true, target targetName: String? = nil) {
 		sendCommand(NSAttributedString(string: input), completeTarget: completeTarget, target: targetName)

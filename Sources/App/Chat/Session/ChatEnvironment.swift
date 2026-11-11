@@ -30,7 +30,6 @@ struct ChatEnvironment {
 
 /// Shorthands so the connection code reads `output?.…` rather than reaching
 /// through the environment at every call.
-@MainActor
 extension ServerSession {
 	var output: (any ServerSessionPresenting)? {
 		environment.services.output

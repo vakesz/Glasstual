@@ -31,7 +31,6 @@ extension ServerSession {
 
 /// `ServerSession.processIncomingMessage` is the overridable seam every inbound
 /// message passes through; `dispatchIncomingMessage` is its implementation.
-@MainActor
 extension ServerSession {
 	func dispatchIncomingMessage(_ message: Message) {
 		processIncomingMessageAttributes(message)
@@ -202,7 +201,6 @@ private extension ServerSession {
 	}
 }
 
-@MainActor
 extension ServerSession {
 	func conversation(forTargetedMessage message: Message) -> Conversation? {
 		guard var target = message.params.first else { return nil }

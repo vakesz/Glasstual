@@ -3,7 +3,6 @@
 
 import Foundation
 
-@MainActor
 extension ServerSession {
 	/// Whether the server accepts `REDACT`: it is negotiated and the session is
 	/// registered.

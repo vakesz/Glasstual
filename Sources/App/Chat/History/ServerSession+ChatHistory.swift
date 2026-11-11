@@ -32,7 +32,6 @@ enum ChatHistoryPolicy {
 	}
 }
 
-@MainActor
 extension ServerSession {
 	func resetChatHistoryState() {
 		chatHistory.failedTargets.removeAll()

@@ -65,7 +65,7 @@ extension ServerSession {
 		)
 	}
 
-	@MainActor func populateISONTrackedUsersList() {
+	func populateISONTrackedUsersList() {
 		guard isLoggedIn else { return }
 
 		var additions: [String] = []
@@ -168,7 +168,7 @@ extension ServerSession {
 	 address book and every direct conversation are already on the server's list,
 	 which reports each change as it happens, and a poll on top only re-derived
 	 the same presence thirty seconds late. */
-	@MainActor func onISONTimer() {
+	func onISONTimer() {
 		guard isLoggedIn, isBrokenIRCdKnownAsTwitch == false, supportsAdvancedTracking == false else { return }
 		/* ISON replies have no request identifier. Let a full poll settle before
 		 another begins; when one reply never arrives, expiring that whole sweep
@@ -193,7 +193,7 @@ extension ServerSession {
 		whoTimer.stop()
 	}
 
-	@MainActor func onWhoTimer(now: Date = .now) {
+	func onWhoTimer(now: Date = .now) {
 		guard isLoggedIn, isBrokenIRCdKnownAsTwitch == false else { return }
 		/* A `315` names its WHO target, so a delayed initial request can remain
 		 open and still pair with its terminator. Only a timer sweep that missed a
@@ -211,7 +211,6 @@ extension ServerSession {
 	 joined; away-notify only reports changes from then on. Left to the timer,
 	 that first request waited for a two-minute tick that starts ten seconds
 	 after login and takes five channels at a time. */
-	@MainActor
 	func sendInitialWhoRequest(to channel: Conversation) {
 		guard isLoggedIn, isBrokenIRCdKnownAsTwitch == false,
 		      channel.isActive, channel.isChannel, channel.sentInitialWhoRequest == false,
@@ -222,7 +221,6 @@ extension ServerSession {
 		sendWho(to: channel, hideResponse: true)
 	}
 
-	@MainActor
 	func sendTimedWhoRequests(to conversations: [Conversation], sentAt: Date = .now) {
 		guard isLoggedIn, isBrokenIRCdKnownAsTwitch == false,
 		      let range = UserTrackingWhoBatchPolicy.indexRange(

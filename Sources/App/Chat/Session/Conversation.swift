@@ -340,7 +340,6 @@ class Conversation: ChatItem {
 	 is quitting — differ only in what becomes of the stored key and of the local
 	 data. What happens to the conversation itself is one path, so that a change
 	 to it cannot apply to only one of them. */
-	@MainActor
 	private func tearDown(as reason: ChatItemTeardown, destroysSecretKey: Bool) {
 		statusChangedByAction = true
 		resetStatus(.terminated)
@@ -354,7 +353,7 @@ class Conversation: ChatItem {
 		presentation?.tearDown(reason)
 	}
 
-	@MainActor func prepareForRemoval(preservingLocalData: Bool) {
+	func prepareForRemoval(preservingLocalData: Bool) {
 		associatedSession?.output?.closeSheets(forConversationId: uniqueIdentifier)
 		if !preservingLocalData {
 			associatedSession?.output?.destroyInputHistory(for: self)
@@ -366,7 +365,6 @@ class Conversation: ChatItem {
 		)
 	}
 
-	@MainActor
 	func prepareForApplicationTermination() {
 		let conversationIdentifier = uniqueIdentifier
 		let viewIdentifier = presentation?.presentationIdentifier ?? ""
@@ -385,12 +383,10 @@ class Conversation: ChatItem {
 		connection.close()
 	}
 
-	@MainActor
 	func print(_ chatLine: ChatLine) {
 		print(chatLine, completionBlock: nil)
 	}
 
-	@MainActor
 	func print(
 		_ chatLine: ChatLine,
 		completionBlock: PrintedLineCompletion?

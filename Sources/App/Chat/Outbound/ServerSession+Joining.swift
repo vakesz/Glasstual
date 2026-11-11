@@ -11,7 +11,6 @@ private nonisolated let joinLogger = Logger(
 	category: "Joining"
 )
 
-@MainActor
 extension ServerSession {
 	var canJoinChannels: Bool {
 		isLoggedIn && !isQuitting && !isDisconnecting && !isTerminating

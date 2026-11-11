@@ -27,7 +27,6 @@ private let inboundEventLogger = Logger(
 	category: "ChannelEvents"
 )
 
-@MainActor
 extension ServerSession {
 	func receiveMode(_ message: Message) {
 		guard message.params.count > 1, let channelName = message.params.first else { return }

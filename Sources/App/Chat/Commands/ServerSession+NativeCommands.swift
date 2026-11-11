@@ -9,7 +9,6 @@ import Foundation
 /// the only thing that asks, and it asks for the interval since.
 private let firstCommitTimestamp: TimeInterval = 1_279_871_580
 
-@MainActor
 extension ServerSession {
 	func dispatchRawCommand(_ command: LocalCommand, parsed: ParsedUserCommand) {
 		let arguments = parsed.arguments.rest

@@ -16,7 +16,6 @@ extension ServerSession {
 		body.length == 0 ? NSAttributedString(string: " ") : body
 	}
 
-	@MainActor
 	func dispatchMessageCommand(_ parsed: ParsedUserCommand, targetConversation: Conversation?) {
 		let silentlyConnecting = isPerformingConnectCommands && config.runConnectCommandsSilently
 		guard let policy = OutboundMessageOptions(
@@ -117,12 +116,10 @@ extension ServerSession {
 		selectCommandDestination(destinationToSelect)
 	}
 
-	@MainActor
 	func inputText(_ input: String, as command: RemoteCommand = .privmsg, destination: ChatItem) {
 		inputText(NSAttributedString(string: input), as: command, destination: destination)
 	}
 
-	@MainActor
 	func inputText(_ text: NSAttributedString, as command: RemoteCommand = .privmsg, destination: ChatItem) {
 		guard isTerminating == false, text.length > 0 else { return }
 		guard OutboundMessageOptions(remoteCommand: command) != nil else {
@@ -208,7 +205,6 @@ extension ServerSession {
 		}
 	}
 
-	@MainActor
 	func sendText(_ text: NSAttributedString, as command: RemoteCommand, to conversation: Conversation) {
 		guard text.length > 0 else { return }
 		guard conversation.isConsole == false else {
@@ -258,7 +254,6 @@ extension ServerSession {
 		}
 	}
 
-	@MainActor
 	func sendText(_ text: NSAttributedString, as command: RemoteCommand, toConversations conversations: [Conversation]) {
 		guard text.length > 0, conversations.isEmpty == false,
 		      let policy = OutboundMessageOptions(remoteCommand: command) else { return }
@@ -386,7 +381,6 @@ extension ServerSession {
 		return label
 	}
 
-	@MainActor
 	private func sendCommandText(
 		_ text: NSAttributedString,
 		to rawDestination: String,
@@ -451,7 +445,6 @@ extension ServerSession {
 		return policy.isSecretMessage ? nil : conversation
 	}
 
-	@MainActor
 	private func selectCommandDestination(_ conversation: Conversation?) {
 		guard let conversation else { return }
 		output?.select(conversation)

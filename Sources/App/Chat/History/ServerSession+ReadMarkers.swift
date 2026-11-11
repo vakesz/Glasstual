@@ -4,7 +4,6 @@
 
 import Foundation
 
-@MainActor
 extension ServerSession {
 	func readMarkerIsAvailable(for conversation: Conversation) -> Bool {
 		ChatHistoryPolicy.canUseServerHistory(

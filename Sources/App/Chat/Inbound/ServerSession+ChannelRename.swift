@@ -3,7 +3,6 @@
 
 import Foundation
 
-@MainActor
 extension ServerSession {
 	/** IRCv3 `draft/channel-rename`: `RENAME <old> <new> [:reason]`.
 

@@ -4,7 +4,6 @@
 
 import Foundation
 
-@MainActor
 extension ServerSession {
 	@discardableResult
 	func requestServerHistory(_ request: ServerHistoryRequest, in conversation: Conversation,

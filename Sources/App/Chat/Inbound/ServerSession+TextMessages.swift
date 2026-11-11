@@ -68,7 +68,6 @@ enum InboundTextPolicy {
 	}
 }
 
-@MainActor
 extension ServerSession {
 	func receiveWallops(_ message: Message) {
 		guard let payload = message.params.first else { return }

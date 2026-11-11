@@ -3,7 +3,6 @@
 
 import Foundation
 
-@MainActor
 extension ServerSession {
 	/** IRCv3 `draft/message-redaction`: `REDACT <target> <msgid> [:reason]`.
 

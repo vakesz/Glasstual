@@ -26,7 +26,6 @@ enum JoinBurstPolicy {
 	}
 }
 
-@MainActor
 extension ServerSession {
 	/** Whether an inbound line arrived already seen, so it prints without
 	 touching the unread count, the highlight badge or a notification.

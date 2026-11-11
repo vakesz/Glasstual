@@ -5,7 +5,6 @@
 import CocoaExtensions
 import Foundation
 
-@MainActor
 extension ServerSession {
 	func dispatchTimerCommand(_ parsed: ParsedUserCommand, targetConversation: Conversation?) {
 		var arguments = parsed.arguments

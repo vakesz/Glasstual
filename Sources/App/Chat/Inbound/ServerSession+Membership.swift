@@ -49,7 +49,6 @@ enum MembershipEventPolicy {
 	}
 }
 
-@MainActor
 extension ServerSession {
 	/// Whether a membership or mode event prints, weighing the three settings
 	/// this connection reads it against: the setting, the channel's own

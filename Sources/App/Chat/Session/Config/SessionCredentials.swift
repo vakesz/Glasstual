@@ -62,7 +62,6 @@ struct NickServIdentification {
 	var isConfirmed = false
 }
 
-@MainActor
 extension ServerSession {
 	/// Resolves the current pending edit over the session's stored snapshot.
 	var sessionNicknamePassword: String? {

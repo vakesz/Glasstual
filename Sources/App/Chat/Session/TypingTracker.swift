@@ -235,7 +235,6 @@ final class TypingTracker {
 	}
 }
 
-@MainActor
 extension ServerSession {
 	/// Receiving a message ends that sender's typing state in its destination.
 	/// History cannot clear a live indicator, and an echo belongs to its target.

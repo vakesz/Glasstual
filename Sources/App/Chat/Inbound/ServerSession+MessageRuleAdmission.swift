@@ -3,7 +3,6 @@
 
 import Foundation
 
-@MainActor
 extension ServerSession {
 	/// `text` as the rules see it. They are told whether formatting is removed
 	/// and read the text on that promise, while the transcript strips it only

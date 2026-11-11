@@ -35,7 +35,6 @@ private func whoisUserhostText(
 	return String(localized: .IRC.hasUserhostAndRealName(nickname, username, address, realName))
 }
 
-@MainActor
 extension ServerSession {
 	func handleWhoisNumeric(_ numeric: ServerNumeric, message: Message, shouldPrint: Bool) {
 		let selectedConversation = output?.selectedConversation(on: self)

@@ -11,7 +11,6 @@ import SwiftUI
 
  Everything here still goes through the typed key, so no pane touches a raw
  defaults name. */
-@MainActor
 extension ObservableSettings {
 	/// A checkbox whose label states the opposite of the stored key.
 	func invertedBinding(for key: SettingsKey<Bool>) -> Binding<Bool> {

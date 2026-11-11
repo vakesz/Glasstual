@@ -50,7 +50,6 @@ enum CTCPLagRating: Sendable {
 	}
 }
 
-@MainActor
 extension ServerSession {
 	func receiveCTCPQuery(_ message: Message, text: String) {
 		let sender = message.senderNickname ?? ""

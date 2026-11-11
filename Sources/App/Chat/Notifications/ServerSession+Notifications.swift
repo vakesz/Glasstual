@@ -5,7 +5,6 @@
 import CocoaExtensions
 import Foundation
 
-@MainActor
 extension ServerSession {
 	/** Raises one event: the Dock bounce and the notification itself.
 

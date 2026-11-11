@@ -6,7 +6,6 @@ import Foundation
 
 /// The keywords a line is matched against, and the matches this session keeps
 /// so the highlight sheet can be opened after the fact.
-@MainActor
 extension ServerSession {
 	/** How many highlights one session keeps.
 

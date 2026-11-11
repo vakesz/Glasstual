@@ -176,7 +176,6 @@ final class SessionRequestedCommands {
 
 /// The "Hidden Responses" window, where a reply this session asked for
 /// without showing the command is printed instead of being dropped.
-@MainActor
 extension ServerSession {
 	func removeRequestedCommands() {
 		requestedCommands.removeCommands()

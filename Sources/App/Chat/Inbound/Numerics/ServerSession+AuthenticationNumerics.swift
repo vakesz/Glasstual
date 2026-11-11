@@ -4,7 +4,6 @@
 
 import Foundation
 
-@MainActor
 extension ServerSession {
 	func handleAuthenticationTrackingNumeric(_ numeric: ServerNumeric, message: Message, shouldPrint: Bool) {
 		switch numeric {

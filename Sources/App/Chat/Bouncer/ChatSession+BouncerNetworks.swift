@@ -8,7 +8,6 @@ import Foundation
 
  A parent reports what it heard; the chat session owns the list of connections,
  so it is the one to make, update and retire the network connections. */
-@MainActor
 extension ChatSession {
 	/// Seconds between the staggered starts of connections made by one listing.
 	private static let bouncerNetworkConnectDelay: UInt = 1

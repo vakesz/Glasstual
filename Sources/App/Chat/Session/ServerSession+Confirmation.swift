@@ -4,7 +4,6 @@
 
 import Foundation
 
-@MainActor
 extension ServerSession {
 	/// Keeps a pending user decision in this session. A delayed answer cannot
 	/// act on a replacement connection, a removed conversation or a cancelled

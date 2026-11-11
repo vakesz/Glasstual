@@ -28,7 +28,6 @@ struct ZNCSession {
 /** What ZNC adds on top of plain IRC: the `/attach`, `/detach` and `/znccert`
  commands, and the rewriting of what its `buffextras` and `playback` modules
  send as ordinary chat. */
-@MainActor
 extension ServerSession {
 	// MARK: - Commands
 

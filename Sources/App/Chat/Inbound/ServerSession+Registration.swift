@@ -46,7 +46,6 @@ enum NicknameRetryPolicy {
 	}
 }
 
-@MainActor
 extension ServerSession {
 	func resetCapabilityNegotiation() {
 		capabilityNegotiation.reset()

@@ -4,7 +4,6 @@
 
 import Foundation
 
-@MainActor
 extension ServerSession {
 	func receiveErrorNumericReply(_ message: Message) {
 		let label = message.messageTags?["label"] ?? message.parentBatchMessage?.labeledResponseBatch?.labeledDelivery.label
@@ -133,7 +132,6 @@ extension ServerSession {
 	}
 }
 
-@MainActor
 private extension ServerSession {
 	func handleNicknameError(_ message: Message, numeric: ServerNumeric, shouldPrint: Bool) -> Bool {
 		let isNicknameCollision = numeric.errorKind == .nicknameCollision
