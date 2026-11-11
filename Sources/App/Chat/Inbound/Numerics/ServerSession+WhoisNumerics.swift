@@ -4,6 +4,12 @@
 
 import Foundation
 
+/// The reply the server is in the middle of, between its user line and its end numeric.
+enum WhoisReply {
+	case whois
+	case whowas
+}
+
 /** How a WHOIS or WHOWAS line reads.
 
  WHOWAS answers with the same fields about a connection that has already
@@ -65,9 +71,13 @@ extension ServerSession {
 			printWhoisLine("\(message.params[1]) \(message.sequence(3)) \(message.params[2])",
 			               message: message, in: selectedConversation)
 		case .endofwhois:
-			inWhoisResponse = false
+			if whoisReply == .whois {
+				whoisReply = nil
+			}
 		case .endofwhowas:
-			inWhowasResponse = false
+			if whoisReply == .whowas {
+				whoisReply = nil
+			}
 		default:
 			break
 		}
@@ -89,7 +99,7 @@ extension ServerSession {
 					nickname: message.params[1],
 					address: message.params[2],
 					realName: message.params[3],
-					fromWhowas: inWhowasResponse
+					fromWhowas: whoisReply == .whowas
 				),
 				message: message, in: conversation
 			)
@@ -123,7 +133,7 @@ extension ServerSession {
 	private func handleWhoisServer(_ message: Message, shouldPrint: Bool, in conversation: Conversation?) {
 		guard shouldPrint, message.params.count == 4 else { return }
 		let serverInfo = message.params[3]
-		let text = if inWhowasResponse {
+		let text = if whoisReply == .whowas {
 			String(localized: .IRC.wasConnected(
 				message.params[1],
 				message.params[2],
@@ -160,9 +170,8 @@ extension ServerSession {
 		let username = message.params[2]
 		let address = message.params[3]
 		let realName = String(message.params[5].drop(while: { $0 == ":" }))
-		inWhoisResponse = numeric == .whoisuser
-		inWhowasResponse = numeric == .whowasuser
-		if !inWhowasResponse, nicknameIsMyself(nickname) {
+		whoisReply = numeric == .whoisuser ? .whois : numeric == .whowasuser ? .whowas : nil
+		if whoisReply != .whowas, nicknameIsMyself(nickname) {
 			userHostmask = "\(nickname)!\(username)@\(address)"
 		}
 		guard shouldPrint else { return }
@@ -171,7 +180,7 @@ extension ServerSession {
 			username: username,
 			address: address,
 			realName: realName,
-			fromWhowas: inWhowasResponse
+			fromWhowas: whoisReply == .whowas
 		)
 		printWhoisLine(text, message: message, in: conversation)
 	}

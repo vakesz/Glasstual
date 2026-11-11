@@ -375,8 +375,7 @@ extension ServerSession {
 		sessionCredentials.forget()
 		cancelScheduledConnection()
 		cancelConnectCommandSettling()
-		trackedUserPopulationTask?.stop()
-		trackedUserPopulationTask = nil
+		presencePolling.cancelPopulation()
 		rejoinTasks.values.forEach { $0.stop() }
 		rejoinTasks.removeAll()
 		typingSender.removeAll()

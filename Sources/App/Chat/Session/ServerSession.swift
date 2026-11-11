@@ -175,7 +175,6 @@ class ServerSession: ChatItem {
 	var userRemovalClock = TimerClock.continuous
 	/// The scripts this session started that are still running.
 	let scriptTasks = ScriptTaskBag()
-	var trackedUserPopulationTask: SessionTimer?
 	var rejoinTasks: [String: SessionTimer] = [:]
 	var pendingConfirmationTasks: [UUID: Task<Void, Never>] = [:]
 	var renderAdmission = RenderAdmission()
@@ -288,9 +287,7 @@ class ServerSession: ChatItem {
 
 	/// When and whether the session comes back after the connection ends.
 	var reconnect: ReconnectSchedule
-	var invokingISONCommandForFirstTime = false
-	var inWhoisResponse = false
-	var inWhowasResponse = false
+	var whoisReply: WhoisReply?
 	/// The index in `config.serverList` the last connect attempt dialled, or
 	/// `nil` when none has been dialled yet.
 	var lastServerSelected: UInt?
@@ -317,8 +314,8 @@ class ServerSession: ChatItem {
 	/// What the connection knows about soju's bouncer networks.
 	var bouncer = BouncerSession()
 	var successfulConnects: UInt = 0
-	let isonTimer: SessionTimer
-	let whoTimer: SessionTimer
+	/// ISON and WHO polling for tracked users and away status.
+	var presencePolling: PresencePolling
 	/// The channels waiting to be joined, and the pacing they are joined at.
 	var autojoin: AutojoinSchedule
 	let pongTimer: SessionTimer
@@ -326,7 +323,6 @@ class ServerSession: ChatItem {
 	let requestedCommands = SessionRequestedCommands()
 	var rawDataLogConsole: Conversation?
 	var hiddenCommandResponsesConsole: Conversation?
-	var lastWhoRequestConversationListIndex: UInt = 0
 	lazy var typingTracker = TypingTracker(session: self)
 	lazy var typingSender = TypingSender(session: self)
 	var nextMessageReplyIdentifier: String?
@@ -380,8 +376,10 @@ class ServerSession: ChatItem {
 		 superclass has run. */
 		let timerOwner = SessionTimerOwner()
 		self.timerOwner = timerOwner
-		isonTimer = timerOwner.makeTimer { $0.onISONTimer() }
-		whoTimer = timerOwner.makeTimer { $0.onWhoTimer() }
+		presencePolling = PresencePolling(
+			isonTimer: timerOwner.makeTimer { $0.onISONTimer() },
+			whoTimer: timerOwner.makeTimer { $0.onWhoTimer() }
+		)
 		pongTimer = timerOwner.makeTimer { $0.onPongTimer() }
 		retryTimer = timerOwner.makeTimer { $0.onRetryTimer() }
 		readMarkers = ReadMarkerTracker(timer: timerOwner.makeTimer { $0.onReadMarkerTimer() })
@@ -410,12 +408,12 @@ class ServerSession: ChatItem {
 		notifications.cancelAll()
 		[
 			autojoin.timer, autojoin.delayedWarningTimer,
-			isonTimer, pongTimer, reconnect.timer, retryTimer, whoTimer, readMarkers.timer,
+			presencePolling.isonTimer, pongTimer, reconnect.timer, retryTimer, presencePolling.whoTimer, readMarkers.timer,
 			sasl.timeoutTimer,
 		].forEach { timer in timer.stop() }
 		startup.cancel()
 		scriptTasks.cancelAll()
-		trackedUserPopulationTask?.stop()
+		presencePolling.populationTask?.stop()
 		rejoinTasks.values.forEach { $0.stop() }
 		pendingConfirmationTasks.values.forEach { $0.cancel() }
 		labeledResponses.deadlineTask?.cancel()

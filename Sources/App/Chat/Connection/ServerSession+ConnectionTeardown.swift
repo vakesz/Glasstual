@@ -35,14 +35,13 @@ extension ServerSession {
 		nextLineReplyToMessageIdentifier = nil
 		nextMessageReplyIdentifier = nil
 		reconnect.connectDelay = 0
-		invokingISONCommandForFirstTime = false
+		presencePolling.resetForTeardown()
 		cancelConnectCommandSettling()
 		autojoin.delayedWarningCount = 0
 		connectionState.clearTransport()
 		isLoggedIn = false
 		connectionState.clearShutdown()
-		inWhoisResponse = false
-		inWhowasResponse = false
+		whoisReply = nil
 		nickServ = NickServIdentification()
 		registrationGate = .notStarted
 		unprintedEchoes.removeAll()
@@ -56,7 +55,6 @@ extension ServerSession {
 		resetChatHistoryState()
 		// Reconnect intent belongs to the pending schedule, which survives this reset.
 		reconnect.timeoutWarningShown = false
-		lastWhoRequestConversationListIndex = 0
 		server = nil
 		KeychainPersistence.shared.persist(Dictionary(uniqueKeysWithValues: retiredServerKeychainItems.map { ($0, .cleared) }))
 		retiredServerKeychainItems.removeAll()

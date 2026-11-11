@@ -147,8 +147,8 @@ extension ServerSession {
 	}
 
 	func startISONTimer() {
-		guard isonTimer.isActive == false else { return }
-		isonTimer.start(30, repeats: true)
+		guard presencePolling.isonTimer.isActive == false else { return }
+		presencePolling.isonTimer.start(30, repeats: true)
 		startWhoTimer()
 		/* The timer sleeps a full interval before its first fire, and login has
 		 just marked every direct conversation active. Ask now, so a peer who is
@@ -157,8 +157,8 @@ extension ServerSession {
 	}
 
 	func stopISONTimer() {
-		guard isonTimer.isActive else { return }
-		isonTimer.stop()
+		guard presencePolling.isonTimer.isActive else { return }
+		presencePolling.isonTimer.stop()
 		stopWhoTimer()
 	}
 
@@ -184,13 +184,13 @@ extension ServerSession {
 	}
 
 	func startWhoTimer() {
-		guard whoTimer.isActive == false else { return }
-		whoTimer.start(UserTrackingWhoBatchPolicy.timerInterval, repeats: true)
+		guard presencePolling.whoTimer.isActive == false else { return }
+		presencePolling.whoTimer.start(UserTrackingWhoBatchPolicy.timerInterval, repeats: true)
 	}
 
 	func stopWhoTimer() {
-		guard whoTimer.isActive else { return }
-		whoTimer.stop()
+		guard presencePolling.whoTimer.isActive else { return }
+		presencePolling.whoTimer.stop()
 	}
 
 	func onWhoTimer(now: Date = .now) {
@@ -224,7 +224,7 @@ extension ServerSession {
 	func sendTimedWhoRequests(to conversations: [Conversation], sentAt: Date = .now) {
 		guard isLoggedIn, isBrokenIRCdKnownAsTwitch == false,
 		      let range = UserTrackingWhoBatchPolicy.indexRange(
-		      	startingAt: Int(lastWhoRequestConversationListIndex),
+		      	startingAt: Int(presencePolling.nextWhoConversationIndex),
 		      	conversationCount: conversations.count
 		      )
 		else { return }
@@ -269,7 +269,7 @@ extension ServerSession {
 			}
 		}
 
-		lastWhoRequestConversationListIndex = UInt(endIndex + 1)
+		presencePolling.nextWhoConversationIndex = UInt(endIndex + 1)
 
 		for channel in channelsToQuery {
 			sendWho(to: channel, hideResponse: true, expiresWithNextSweep: true, sentAt: sentAt)

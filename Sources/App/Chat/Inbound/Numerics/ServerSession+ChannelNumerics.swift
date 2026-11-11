@@ -113,11 +113,11 @@ extension ServerSession {
 		for (nickname, previousValue) in tracked where asked.contains(casefoldNickname(nickname)) {
 			let isOnline = foldedOnline.contains(casefoldNickname(nickname))
 			let status: AddressBookUserTrackingStatus = if previousValue, !isOnline,
-			                                               !invokingISONCommandForFirstTime
+			                                               !presencePolling.isFirstISONReply
 			{
 				.signedOff
 			} else if !previousValue, isOnline {
-				invokingISONCommandForFirstTime ? .available : .signedOn
+				presencePolling.isFirstISONReply ? .available : .signedOn
 			} else {
 				.unknown
 			}
@@ -127,7 +127,7 @@ extension ServerSession {
 		}
 		/* The first poll is every command it sent, not just the first reply. */
 		if requestedCommands.hasOpenIsonRequest == false {
-			invokingISONCommandForFirstTime = false
+			presencePolling.isFirstISONReply = false
 		}
 		for directConversation in conversationList where directConversation.isDirect {
 			let foldedName = casefoldNickname(directConversation.name)

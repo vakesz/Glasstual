@@ -79,7 +79,7 @@ extension ServerSession {
 		isLoggedIn = true
 		socket?.config.diagnostics?.record(.registered)
 		supportInfo.serverAddress = message.senderHostmask
-		invokingISONCommandForFirstTime = true
+		presencePolling.isFirstISONReply = true
 		reconnect.isEnabledForSleepMode = false
 		nicknameRetry.sentNickname = nil
 		userNickname = nickname
@@ -109,8 +109,8 @@ extension ServerSession {
 
 		performAutoJoin()
 
-		trackedUserPopulationTask?.stop()
-		trackedUserPopulationTask = SessionTimer.once(after: 10) { [weak self] in
+		presencePolling.populationTask?.stop()
+		presencePolling.populationTask = SessionTimer.once(after: 10) { [weak self] in
 			self?.populateISONTrackedUsersList()
 		}
 	}

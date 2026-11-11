@@ -277,11 +277,11 @@ struct IRCSpecWhoTests {
 
 		try receive(":irc.example.net 311 me alice ali example.org * :Alice Example", on: session)
 
-		#expect(session.inWhoisResponse)
+		#expect(session.whoisReply == .whois)
 
 		try receive(":irc.example.net 318 me alice :End of /WHOIS list", on: session)
 
-		#expect(session.inWhoisResponse == false)
+		#expect(session.whoisReply == nil)
 	}
 
 	/// RFC 2812 §5.1 RPL_ENDOFWHO closes the WHO request the session opened, so

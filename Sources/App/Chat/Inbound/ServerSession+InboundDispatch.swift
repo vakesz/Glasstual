@@ -84,7 +84,7 @@ extension ServerSession {
 		}
 
 		guard shouldPrint else { return }
-		if inWhoisResponse, message.params.count > 2 {
+		if whoisReply == .whois, message.params.count > 2 {
 			printReply(message, in: output?.selectedConversation(on: self))
 		} else {
 			printReply(message)
