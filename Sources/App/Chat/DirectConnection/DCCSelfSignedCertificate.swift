@@ -19,7 +19,8 @@ nonisolated enum DCCSelfSignedCertificate {
 	enum BuildError: Error, Equatable {
 		/// An X.509 serial number is a positive integer, so it cannot be zero.
 		case zeroSerialNumber
-		/// RFC 5280 limits a serial number to 20 octets.
+		/// RFC 5280 limits a serial number to 20 octets, counting the sign
+		/// octet its encoding needs when the high bit is set.
 		case oversizedSerialNumber
 		/// The validity period ends before it starts.
 		case invalidValidityPeriod
@@ -43,7 +44,8 @@ nonisolated enum DCCSelfSignedCertificate {
 	) throws -> Data {
 		let magnitude = Array(serialNumber.drop { $0 == 0 })
 		guard magnitude.isEmpty == false else { throw BuildError.zeroSerialNumber }
-		guard magnitude.count <= 20 else { throw BuildError.oversizedSerialNumber }
+		let signOctets = magnitude[0] & 0x80 == 0 ? 0 : 1
+		guard magnitude.count + signOctets <= 20 else { throw BuildError.oversizedSerialNumber }
 		guard notBefore < notAfter else { throw BuildError.invalidValidityPeriod }
 
 		let signatureAlgorithm = DERWriter.sequence([DERWriter.objectIdentifier(OID.ecdsaWithSHA256)])

@@ -97,6 +97,9 @@ struct DCCSelfSignedCertificateTests {
 		#expect(throws: DCCSelfSignedCertificate.BuildError.oversizedSerialNumber) {
 			try Self.make(serial: Array(repeating: 0x11, count: 21))
 		}
+		#expect(throws: DCCSelfSignedCertificate.BuildError.oversizedSerialNumber) {
+			try Self.make(serial: [0x80] + Array(repeating: 0x11, count: 19))
+		}
 		#expect(throws: DCCSelfSignedCertificate.BuildError.invalidValidityPeriod) {
 			try DCCSelfSignedCertificate.make(
 				privateKey: P256.Signing.PrivateKey(),
@@ -105,6 +108,18 @@ struct DCCSelfSignedCertificateTests {
 				notAfter: Self.notBefore
 			)
 		}
+	}
+
+	/// The sign octet counts toward RFC 5280's 20: a high bit leaves room for 19.
+	@Test("A serial of twenty content octets is accepted, sign octet included", arguments: [
+		Array(repeating: 0x7F, count: 20),
+		[0x80] + Array(repeating: 0x11, count: 18),
+	])
+	func serialAtTheLimit(magnitude: [UInt8]) throws {
+		let der = try Self.make(serial: magnitude)
+		let certificate = try #require(SecCertificateCreateWithData(nil, der as CFData))
+		let serial = try #require(SecCertificateCopySerialNumberData(certificate, nil) as Data?)
+		#expect(serial.count == 20)
 	}
 
 	@Test("A random serial is sixteen octets and never zero")
