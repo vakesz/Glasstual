@@ -113,7 +113,7 @@ final class InputField: FormattedTextView {
 			return
 		}
 
-		session?.nextMessageReplyIdentifier = replyMessageIdentifier
+		session?.replies.nextMessage = replyMessageIdentifier
 		cancelReply()
 	}
 

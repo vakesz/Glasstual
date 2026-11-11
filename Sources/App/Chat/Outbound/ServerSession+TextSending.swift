@@ -158,8 +158,7 @@ extension ServerSession {
 		}
 
 		let source = NSAttributedString(attributedString: text)
-		let replyIdentifier = nextMessageReplyIdentifier
-		nextMessageReplyIdentifier = nil
+		let replyIdentifier = replies.takeForMessage()
 		if let conversation = destination as? Conversation,
 		   let proposal = multilineProposal(for: source, as: command, in: conversation)
 		{
@@ -200,11 +199,11 @@ extension ServerSession {
 		var pendingReply = replyIdentifier
 		enqueueOutboundText(conversations: (destination as? Conversation).map { [$0] } ?? []) { [weak destination] session in
 			guard let destination, let originalLine = remaining.next() else { return false }
-			let laterReply = session.nextMessageReplyIdentifier
-			session.nextMessageReplyIdentifier = pendingReply
+			let laterReply = session.replies.nextMessage
+			session.replies.nextMessage = pendingReply
 			defer {
-				pendingReply = session.nextMessageReplyIdentifier
-				session.nextMessageReplyIdentifier = laterReply
+				pendingReply = session.replies.nextMessage
+				session.replies.nextMessage = laterReply
 			}
 			var line = originalLine
 			let source = line.string
@@ -248,8 +247,7 @@ extension ServerSession {
 		guard let policy = OutboundMessageOptions(remoteCommand: command) else { return }
 
 		typingSender.finish(in: conversation)
-		var replyIdentifier = nextMessageReplyIdentifier
-		nextMessageReplyIdentifier = nil
+		var replyIdentifier = replies.takeForMessage()
 		if isCapabilityEnabled(.messageTags) == false {
 			replyIdentifier = nil
 		}
@@ -261,12 +259,12 @@ extension ServerSession {
 			}
 			let lineReplyIdentifier = replyIdentifier
 			replyIdentifier = nil
-			session.nextLineReplyToMessageIdentifier = lineReplyIdentifier
+			session.replies.nextPrintedLine = lineReplyIdentifier
 
 			let redactedMessage = WireRedaction.redactedServiceMessage(message, sentTo: conversation.name)
 			let deliveryLabel = session.printLocallyIfNeeded(redactedMessage, in: conversation, policy: policy)
 			let wireMessage = policy.lineType == .action ? CTCPPayload.action(message) : message
-			session.nextLineReplyToMessageIdentifier = nil
+			session.replies.nextPrintedLine = nil
 
 			var tags: [String: String] = [:]
 			if let deliveryLabel {

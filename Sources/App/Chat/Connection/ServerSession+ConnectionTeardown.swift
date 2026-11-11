@@ -32,8 +32,7 @@ extension ServerSession {
 		typingTracker.removeAll()
 		typingSender.removeAll()
 
-		nextLineReplyToMessageIdentifier = nil
-		nextMessageReplyIdentifier = nil
+		replies = PendingReplies()
 		reconnect.connectDelay = 0
 		presencePolling.resetForTeardown()
 		cancelConnectCommandSettling()

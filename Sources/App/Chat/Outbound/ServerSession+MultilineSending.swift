@@ -230,13 +230,13 @@ extension ServerSession {
 		let target = conversation.name
 		let text = MultilineBatchPlanner.joinedText(of: lines)
 
-		nextLineReplyToMessageIdentifier = replyIdentifier
+		replies.nextPrintedLine = replyIdentifier
 		let deliveryLabel = printLocallyIfNeeded(
 			WireRedaction.redactedServiceMessage(text, sentTo: target),
 			in: conversation,
 			policy: policy
 		)
-		nextLineReplyToMessageIdentifier = nil
+		replies.nextPrintedLine = nil
 
 		let reference = "ml" + UUID().uuidString.prefix(8).lowercased()
 		var openingTags: [String: String] = [:]

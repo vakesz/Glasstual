@@ -191,11 +191,8 @@ private extension ServerSession {
 	/// queued for the next printed line, which is consumed either way.
 	func takeReplyIdentifier(for request: LinePrintRequest) -> String? {
 		let messageReplyIdentifier = request.referenceMessage?.messageTags?["+draft/reply"]
-		let replyIdentifier = messageReplyIdentifier?.isEmpty == false
-			? messageReplyIdentifier
-			: nextLineReplyToMessageIdentifier
-		nextLineReplyToMessageIdentifier = nil
-		return replyIdentifier
+		let queuedReplyIdentifier = replies.takeForPrintedLine()
+		return messageReplyIdentifier?.isEmpty == false ? messageReplyIdentifier : queuedReplyIdentifier
 	}
 
 	func makeChatLine(for request: LinePrintRequest, in conversation: Conversation?, replyIdentifier: String?) -> ChatLine {

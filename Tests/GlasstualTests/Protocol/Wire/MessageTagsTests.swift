@@ -163,7 +163,7 @@ struct MessageTagsTests {
 	func replyTagIsSentOnFirstLineOnly() throws {
 		let session = makeMessageTagsSession()
 		let channel = try addChannel(named: "#chat", to: session)
-		session.nextMessageReplyIdentifier = "abc123"
+		session.replies.nextMessage = "abc123"
 
 		session.sendText(NSAttributedString(string: "first\nsecond"), as: .privmsg, to: channel)
 
@@ -173,7 +173,7 @@ struct MessageTagsTests {
 			"@+draft/reply=abc123 PRIVMSG #chat :first",
 			"PRIVMSG #chat :second",
 		])
-		#expect(session.nextMessageReplyIdentifier == nil)
+		#expect(session.replies.nextMessage == nil)
 
 		let firstPrinted = session.printedLines.firstObject as? [String: Any]
 
@@ -192,9 +192,9 @@ struct MessageTagsTests {
 		session.renderAdmission = admission
 		let ticket = admission.submit(for: "existing")
 		defer { session.cancelPendingSessionTasks(); admission.finish(ticket) }
-		session.nextMessageReplyIdentifier = "first-reply"
+		session.replies.nextMessage = "first-reply"
 		session.inputText("first", destination: channel)
-		session.nextMessageReplyIdentifier = "second-reply"
+		session.replies.nextMessage = "second-reply"
 		session.inputText("second", destination: channel)
 		#expect(sentLines(of: session).isEmpty)
 		admission.finish(ticket)
@@ -206,7 +206,7 @@ struct MessageTagsTests {
 			"@+draft/reply=first-reply PRIVMSG #chat :first",
 			"@+draft/reply=second-reply PRIVMSG #chat :second",
 		])
-		#expect(session.nextMessageReplyIdentifier == nil)
+		#expect(session.replies.nextMessage == nil)
 	}
 
 	@Test("Without message-tags the reply tag is dropped from the wire")
@@ -214,7 +214,7 @@ struct MessageTagsTests {
 		let session = TestServerSession()
 		session.markAsLoggedIn()
 		let channel = try addChannel(named: "#chat", to: session)
-		session.nextMessageReplyIdentifier = "abc123"
+		session.replies.nextMessage = "abc123"
 
 		session.sendText(NSAttributedString(string: "hello"), as: .privmsg, to: channel)
 

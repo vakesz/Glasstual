@@ -318,8 +318,7 @@ class ServerSession: ChatItem {
 	var hiddenCommandResponsesConsole: Conversation?
 	lazy var typingTracker = TypingTracker(session: self)
 	lazy var typingSender = TypingSender(session: self)
-	var nextMessageReplyIdentifier: String?
-	var nextLineReplyToMessageIdentifier: String?
+	var replies = PendingReplies()
 	/// The chat history this session has asked for and is still waiting on.
 	var chatHistory = ChatHistorySession()
 	let batchMessages = MessageBatchContainer()
