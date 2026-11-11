@@ -105,10 +105,6 @@ public extension NSMenuItem {
 }
 
 public extension NSWindow {
-	var isInactive: Bool {
-		!isKeyWindow && !isMainWindow
-	}
-
 	/// Centres the window on the screen it is on. `NSScreen.main` is the
 	/// screen holding the key window, which need not be this window's screen.
 	func centerOnScreen() {

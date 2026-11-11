@@ -320,46 +320,6 @@ public extension String.Encoding {
 }
 
 public extension NSAttributedString {
-	/// The receiver broken on newlines, with the newlines discarded. A string
-	/// with no newline in it comes back as a single element.
-	var splitIntoLines: [NSAttributedString] {
-		guard length > 0 else {
-			return []
-		}
-
-		let sourceString = string as NSString
-		var result: [NSAttributedString] = []
-		var lineStart = 0
-
-		while lineStart < sourceString.length {
-			let searchRange = NSRange(location: lineStart, length: sourceString.length - lineStart)
-			let newlineRange = sourceString.rangeOfCharacter(from: .newlines, options: [], range: searchRange)
-
-			guard newlineRange.location != NSNotFound else {
-				break
-			}
-
-			result.append(attributedSubstring(from: NSRange(
-				location: lineStart,
-				length: newlineRange.location - lineStart
-			)))
-			lineStart = NSMaxRange(newlineRange)
-		}
-
-		guard !result.isEmpty else {
-			return [self]
-		}
-
-		if lineStart < sourceString.length {
-			result.append(attributedSubstring(from: NSRange(
-				location: lineStart,
-				length: sourceString.length - lineStart
-			)))
-		}
-
-		return result
-	}
-
 	/// The receiver from `index` (a UTF-16 offset) to its end.
 	func attributedSubstring(fromIndex index: Int) -> NSAttributedString {
 		attributedSubstring(from: NSRange(location: index, length: length - index))
