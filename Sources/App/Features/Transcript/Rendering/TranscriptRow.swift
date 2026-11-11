@@ -141,6 +141,19 @@ nonisolated struct TranscriptRow: Equatable, Sendable {
 		))
 	}
 
+	/** The XDCC pack the line offers, if it is a bot's listing line or an
+	 announcement that names a pack.
+
+	 Only messages, actions and notices are read, and only their
+	 formatting-stripped text; the line is never acted on, only offered to the
+	 reader to request. */
+	var xdccPack: XDCCPackReference? {
+		guard [.privateMessage, .privateMessageNoHighlight, .action, .actionNoHighlight, .notice].contains(lineType),
+		      case let .pack(pack)? = XDCCAnnouncementParser.parse(body.plainText, sender: nickname)
+		else { return nil }
+		return pack
+	}
+
 	var lineTypeString: String {
 		ChatLine.string(for: lineType) ?? ""
 	}

@@ -274,6 +274,9 @@ extension TranscriptView {
 		if let nickname = line.nickname, nickname.isEmpty == false {
 			attributes[.transcriptLineNickname] = nickname
 		}
+		if let pack = line.xdccPack {
+			attributes[.transcriptXDCCPack] = pack
+		}
 		return attributes
 	}
 

@@ -27,6 +27,9 @@ struct FileTransferRowPresentation {
 	let progress: Progress
 	/// The lock a secure transfer draws beside its name; `nil` for a plain one.
 	let security: Security?
+	/// "Requested · Pack #5" for an offer that answered the user's XDCC
+	/// request; `nil` for any other.
+	let requestedBadge: String?
 
 	/// What a secure transfer's lock says.
 	struct Security: Equatable {
@@ -59,6 +62,11 @@ struct FileTransferRowPresentation {
 		filename = transfer.filename
 		security = DCCSecurityIndicator(isSecure: transfer.security == .secure, session: transfer.secureSession)
 			.map { Security(indicator: $0, session: transfer.secureSession) }
+		requestedBadge = switch transfer.origin {
+		case .offer: nil
+		case let .xdcc(_, pack?): String(localized: .FileTransfer.requestedPackBadge(String(pack)))
+		case .xdcc(_, nil): String(localized: .FileTransfer.requestedListBadge)
+		}
 		totalSize = LocalizedByteCount.formatted(transfer.totalFilesize)
 		processedSize = LocalizedByteCount.formatted(transfer.processedFilesize)
 		progress = switch transfer.transferStatus {

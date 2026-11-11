@@ -47,15 +47,29 @@ struct FileTransferListView: View {
 			.padding(.vertical, UISpacing.comfortable)
 
 			List(selection: $model.selection) {
-				ForEach(model.visibleTransfers, id: \.uniqueIdentifier) { transfer in
-					row(for: transfer)
+				if model.xdccRequests.isEmpty {
+					transferRows
+				} else {
+					Section {
+						ForEach(model.xdccRequests) { pending in
+							XDCCRequestRow(pending: pending) { center.cancelXDCCRequest(pending) }
+								.selectionDisabled()
+						}
+					} header: {
+						Text(.FileTransfer.waitingForBots)
+					}
+					Section {
+						transferRows
+					} header: {
+						Text(.FileTransfer.transfersSection)
+					}
 				}
 			}
 			.listStyle(.inset)
 			.alternatingRowBackgrounds(model.visibleTransfers.isEmpty ? .disabled : .enabled)
 			.accessibilityLabel(Text(.FileTransfer.fileTransfers))
 			.overlay {
-				if model.visibleTransfers.isEmpty {
+				if model.visibleTransfers.isEmpty, model.xdccRequests.isEmpty {
 					ContentUnavailableView {
 						Label(.FileTransfer.noFileTransfers, systemImage: "arrow.left.arrow.right")
 					} description: {
@@ -138,6 +152,12 @@ struct FileTransferListView: View {
 			allowedContentTypes: [.folder],
 			onCompletion: center.completeDestinationSelection
 		)
+	}
+
+	private var transferRows: some View {
+		ForEach(model.visibleTransfers, id: \.uniqueIdentifier) { transfer in
+			row(for: transfer)
+		}
 	}
 
 	/// A finished transfer's file can be dragged out of the window. The check is
@@ -225,6 +245,14 @@ private struct FileTransferRowView: View {
 					Text(verbatim: presentation.filename)
 						.lineLimit(1)
 						.accessibilityIdentifier("file-transfer-filename-\(transfer.uniqueIdentifier)")
+					if let requested = presentation.requestedBadge {
+						Text(verbatim: requested)
+							.font(.caption)
+							.foregroundStyle(.secondary)
+							.padding(.horizontal, UISpacing.tight)
+							.background(.quaternary, in: Capsule())
+							.accessibilityIdentifier("file-transfer-requested-\(transfer.uniqueIdentifier)")
+					}
 					Spacer()
 					Text(verbatim: presentation.totalSize)
 						.font(.caption)

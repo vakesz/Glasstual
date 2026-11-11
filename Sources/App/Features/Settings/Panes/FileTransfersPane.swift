@@ -41,6 +41,16 @@ struct FileTransfersPane: View {
 		}
 
 		secureConnections
+
+		Section {
+			SettingsToggle(
+				title: .Settings.fileTransfersXdccKnownPeers,
+				note: .Settings.fileTransfersXdccKnownPeersNote,
+				isOn: model.settings.binding(for: SettingsKeys.FileTransfers.xdccRequestsAreKnownPeers)
+			)
+		} header: {
+			Text(.Settings.fileTransfersHeadingXdcc)
+		}
 	}
 
 	/// Encrypted (TLS) transfers and chats: whether to take them, whether to

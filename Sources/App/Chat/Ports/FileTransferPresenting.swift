@@ -59,6 +59,9 @@ protocol FileTransferPresenting: AnyObject {
 	/// `bot`, for `/xdcc cancel`.
 	func stopRequestedTransfers(from bot: String, on session: ServerSession)
 
+	/// The session's XDCC requests changed; the window lists the ones waiting.
+	func xdccRequestsDidChange(on session: ServerSession)
+
 	/// Whether an offer of this session's is already waiting on `token`.
 	func sentOfferExists(withToken token: String, on session: ServerSession, peerNickname: String, filename: String) -> Bool
 

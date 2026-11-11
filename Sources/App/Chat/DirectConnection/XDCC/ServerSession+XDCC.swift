@@ -133,6 +133,22 @@ extension ServerSession {
 		}
 	}
 
+	/** Withdraws one request, from the File Transfers window: a bot that has
+	 started sending is told to cancel, one that has only queued the pack is
+	 told to remove it. */
+	func cancelXDCCRequest(_ id: XDCCRequest.ID) {
+		guard let request = xdccRequests.remove(id: id), isLoggedIn else { return }
+		switch (request.status, request.kind) {
+		case (.sending, _):
+			sendXDCCLine("XDCC CANCEL", to: request.bot)
+		case let (_, .pack(pack)):
+			sendXDCCLine("XDCC REMOVE #\(pack)", to: request.bot)
+		case (_, .list):
+			break
+		}
+		printDebugInformation(String(localized: .IRC.xdccRemovedPack(Self.xdccLabel(for: request), request.bot)))
+	}
+
 	/// Forgets every request, for a connection that ended.
 	func resetXDCCRequests() {
 		scheduled.xdccExpiry?.cancel()

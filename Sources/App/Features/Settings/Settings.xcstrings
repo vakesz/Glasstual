@@ -15936,6 +15936,150 @@
           }
         }
       }
+    },
+    "file-transfers-heading-xdcc": {
+      "comment": "Settings, File Transfers: heading of the section about XDCC bots.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "XDCC"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "XDCC"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "XDCC"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "XDCC"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "XDCC"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "XDCC"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "XDCC"
+          }
+        }
+      }
+    },
+    "file-transfers-xdcc-known-peers": {
+      "comment": "Settings, File Transfers, XDCC: toggle that treats files this user requested from XDCC bots as coming from people they know, for automatic download.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Treat packs I request from XDCC bots as coming from people I know"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Az XDCC-botoktól kért csomagok ismerőstől érkezőnek számítanak"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bei XDCC-Bots angeforderte Pakete wie von bekannten Personen behandeln"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tratar los paquetes que pido a bots XDCC como si vinieran de conocidos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Traiter les packs demandés aux bots XDCC comme venant de personnes connues"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "XDCCボットにリクエストしたパックを知り合いからのものとして扱う"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tratar pacotes que solicito a bots XDCC como vindos de conhecidos"
+          }
+        }
+      }
+    },
+    "file-transfers-xdcc-known-peers-note": {
+      "comment": "Settings, File Transfers, XDCC: explanation under the toggle that treats requested XDCC packs as coming from known people.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A requested pack then downloads on its own only when file transfer requests are set to download automatically, the bot answers from the host it was known by, and the pack is no larger than 512 MB."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A kért csomag ekkor is csak akkor töltődik le magától, ha a fájlátviteli kérések automatikus letöltésre vannak állítva, a bot az ismert gazdagépéről válaszol, és a csomag legfeljebb 512 MB."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein angefordertes Paket wird dann nur von selbst geladen, wenn Dateiübertragungsanfragen automatisch geladen werden, der Bot von seinem bekannten Host antwortet und das Paket höchstens 512 MB groß ist."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un paquete solicitado solo se descarga solo cuando las solicitudes de transferencia están configuradas para descargarse automáticamente, el bot responde desde su host conocido y el paquete no supera los 512 MB."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un pack demandé n’est alors téléchargé tout seul que si les demandes de transfert sont réglées sur le téléchargement automatique, que le bot répond depuis son hôte connu et que le pack ne dépasse pas 512 Mo."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リクエストしたパックが自動でダウンロードされるのは、ファイル転送のリクエストが自動ダウンロードに設定され、ボットが既知のホストから応答し、パックが512 MB以下の場合だけです。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Um pacote solicitado só é baixado sozinho quando as solicitações de transferência estão definidas para baixar automaticamente, o bot responde do host conhecido e o pacote tem até 512 MB."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

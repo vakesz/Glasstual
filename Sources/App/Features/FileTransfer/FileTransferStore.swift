@@ -242,6 +242,18 @@ extension FileTransferStore {
 		return controller.uniqueIdentifier
 	}
 
+	func xdccRequestsDidChange(on session: ServerSession) {
+		model.replaceXDCCRequests(
+			session.xdccRequests.requests.map { PendingXDCCRequest(request: $0, session: session) },
+			of: session.uniqueIdentifier
+		)
+	}
+
+	/// Withdraws a request the Waiting for Bots section lists.
+	func cancelXDCCRequest(_ pending: PendingXDCCRequest) {
+		pending.session?.cancelXDCCRequest(pending.id)
+	}
+
 	func stopRequestedTransfers(from bot: String, on session: ServerSession) {
 		let peer = session.supportInfo.casefoldString(bot)
 		for transfer in model.transfers where transfer.sessionId == session.uniqueIdentifier
@@ -256,6 +268,7 @@ extension FileTransferStore {
 
 	func sessionWillBeDestroyed(_ message: ChatSessionWillDestroySession) {
 		let session = message.subject
+		model.replaceXDCCRequests([], of: session.uniqueIdentifier)
 		removeFileTransfers(model.transfers.filter { $0.session === session })
 	}
 

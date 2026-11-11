@@ -43,9 +43,28 @@ enum FileTransferAction: Sendable {
 	case showCertificate
 }
 
+/// An XDCC request the File Transfers window lists until its bot answers.
+struct PendingXDCCRequest: Identifiable {
+	let request: XDCCRequest
+	weak var session: ServerSession?
+	let sessionIdentifier: String
+
+	init(request: XDCCRequest, session: ServerSession) {
+		self.request = request
+		self.session = session
+		sessionIdentifier = session.uniqueIdentifier
+	}
+
+	var id: XDCCRequest.ID {
+		request.id
+	}
+}
+
 @Observable
 final class FileTransferList {
 	private(set) var transfers: [FileTransfer] = []
+	/// The XDCC requests still waiting for their bot, oldest first.
+	private(set) var xdccRequests: [PendingXDCCRequest] = []
 	var selection: Set<String> = []
 	private var hasActivated = false
 	private var hasExplicitReveal = false
@@ -120,6 +139,12 @@ final class FileTransferList {
 
 	var canClearStoppedTransfers: Bool {
 		stoppedTransfers.isEmpty == false
+	}
+
+	/// Replaces one session's waiting requests with what it holds now.
+	func replaceXDCCRequests(_ requests: [PendingXDCCRequest], of sessionIdentifier: String) {
+		xdccRequests = xdccRequests.filter { $0.sessionIdentifier != sessionIdentifier } + requests
+		xdccRequests.sort { $0.request.requestedAt < $1.request.requestedAt }
 	}
 
 	func add(_ transfer: FileTransfer) {

@@ -23,6 +23,9 @@ nonisolated extension NSAttributedString.Key {
 	static let transcriptLineType = NSAttributedString.Key("GlasstualTranscriptLineType")
 	static let transcriptMessageIdentifier = NSAttributedString.Key("GlasstualTranscriptMessageIdentifier")
 	static let transcriptExcerpt = NSAttributedString.Key("GlasstualTranscriptExcerpt")
+	/// An `XDCCPackReference` the whole line describes, which the context menu
+	/// offers to request.
+	static let transcriptXDCCPack = NSAttributedString.Key("GlasstualTranscriptXDCCPack")
 	/// A `TranscriptAction`: what the run stands for when it is clicked.
 	static let transcriptAction = NSAttributedString.Key("GlasstualTranscriptAction")
 	/// The first row in an expandable group, carried by its disclosure link.

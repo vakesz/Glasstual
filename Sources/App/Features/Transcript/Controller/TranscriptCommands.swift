@@ -46,6 +46,8 @@ final class TranscriptContextTarget: NSObject {
 	var lineType: String?
 	var lineNickname: String?
 	var lineExcerpt: String?
+	/// The XDCC pack the line under the pointer offers.
+	var xdccPack: XDCCPackReference?
 	/// The address an inline image under the pointer was fetched from.
 	var inlineImageURL: String?
 	/// The decoded image itself, so the menu can copy or save what is on screen
@@ -178,9 +180,45 @@ final class TranscriptCommands: NSObject {
 		}
 
 		var items = defaultMenuItems.filter { $0.action != #selector(NSTextView.cut(_:)) }
+		items.append(contentsOf: xdccMenuItems(for: target.xdccPack, session: view.viewController?.associatedSession))
 		items.append(contentsOf: muteMenuItems(for: target.lineNickname))
 		items.append(contentsOf: messageMenuItems(for: target, in: view))
 		return items
+	}
+
+	/** Requesting the pack a bot's line offers, or asking about it.
+
+	 Offered only while the transcript's own connection is logged in, and the
+	 request goes to that connection: the title names the exact pack and bot,
+	 so choosing it is the confirmation. */
+	func xdccMenuItems(for pack: XDCCPackReference?, session: ServerSession?) -> [NSMenuItem] {
+		guard let pack, let session, session.isLoggedIn else { return [] }
+		let request = NSMenuItem(
+			title: String(localized: .Transcript.requestPackFromBot(String(pack.pack), pack.bot)),
+			action: #selector(requestXDCCPack(_:)),
+			keyEquivalent: ""
+		)
+		request.image = NSImage(systemSymbolName: "arrow.down.circle", accessibilityDescription: request.title)
+		request.representedObject = XDCCPackMenuRequest(pack: pack, wantsInfo: false, session: session)
+		let info = NSMenuItem(
+			title: String(localized: .Transcript.getPackInfo),
+			action: #selector(requestXDCCPack(_:)),
+			keyEquivalent: ""
+		)
+		info.image = NSImage(systemSymbolName: "info.circle", accessibilityDescription: info.title)
+		info.representedObject = XDCCPackMenuRequest(pack: pack, wantsInfo: true, session: session)
+		for item in [request, info] {
+			item.target = self
+		}
+		return [.separator(), request, info]
+	}
+
+	/** AppKit invokes a menu item by selector, which is a runtime boundary. */
+	@objc private func requestXDCCPack(_ sender: Any?) {
+		guard let request = (sender as? NSMenuItem)?.representedObject as? XDCCPackMenuRequest,
+		      let session = request.session
+		else { return }
+		sink.requestXDCCPack(session, request.pack, request.wantsInfo)
 	}
 
 	private func muteMenuItems(for nickname: String?) -> [NSMenuItem] {
@@ -510,5 +548,18 @@ extension TranscriptCommands {
 		applicationName.isEmpty
 			? String(localized: .Transcript.openLinkInUnknownApplication)
 			: String(localized: .Transcript.openLinkInApplication(applicationName))
+	}
+}
+
+/// What an XDCC menu item asks, carried on the item to its action.
+final class XDCCPackMenuRequest: NSObject {
+	let pack: XDCCPackReference
+	let wantsInfo: Bool
+	weak var session: ServerSession?
+
+	init(pack: XDCCPackReference, wantsInfo: Bool, session: ServerSession) {
+		self.pack = pack
+		self.wantsInfo = wantsInfo
+		self.session = session
 	}
 }

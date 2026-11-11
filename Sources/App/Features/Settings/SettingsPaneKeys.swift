@@ -208,6 +208,7 @@ enum SettingsPaneKeys {
 		.init(SettingsKeys.FileTransfers.acceptsSecureOffers, .Settings.fileTransfersAcceptSecureOffers),
 		.init(SettingsKeys.FileTransfers.offersAreSecure, .Settings.fileTransfersOffersAreSecure),
 		.init(SettingsKeys.FileTransfers.requirePeerCertificate, .Settings.fileTransfersRequirePeerCertificate),
+		.init(SettingsKeys.FileTransfers.xdccRequestsAreKnownPeers, .Settings.fileTransfersXdccKnownPeers),
 	]
 
 	private static let logLocationKeys: [SettingsBoundKey] = [.init(SettingsKeys.Logging.logToDisk, .Settings.logLocationToggle)]

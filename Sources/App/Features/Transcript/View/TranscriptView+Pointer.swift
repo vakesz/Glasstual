@@ -36,6 +36,7 @@ extension TranscriptView {
 		 raised from a message body answers the person who wrote it. */
 		target.lineNickname = storage.attribute(.transcriptLineNickname, at: index, effectiveRange: nil) as? String
 		target.lineExcerpt = storage.attribute(.transcriptExcerpt, at: index, effectiveRange: nil) as? String
+		target.xdccPack = storage.attribute(.transcriptXDCCPack, at: index, effectiveRange: nil) as? XDCCPackReference
 		switch storage.attribute(.transcriptAction, at: index, effectiveRange: nil) as? TranscriptAction {
 		case let .channel(name): target.channelName = name
 		case let .nickname(name): target.nickname = name

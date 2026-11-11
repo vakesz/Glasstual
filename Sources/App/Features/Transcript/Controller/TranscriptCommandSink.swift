@@ -44,6 +44,9 @@ struct TranscriptCommandSink {
 		_ messageIdentifier: String?,
 		_ excerpt: String?
 	) -> NSMenuItem? = { _, _, _ in nil }
+	/// Requests the pack a bot's line offers, or asks the bot about it, on the
+	/// connection the transcript belongs to.
+	var requestXDCCPack: (_ session: ServerSession, _ pack: XDCCPackReference, _ info: Bool) -> Void = { _, _, _ in }
 
 	/** The menu controller the application delegate holds, or nothing before it
 	 has one — which is every test that builds a transcript without an
@@ -84,6 +87,9 @@ struct TranscriptCommandSink {
 			},
 			privateReplyItem: { nickname, identifier, excerpt in
 				menuActionController?.privateReplyItem(nickname: nickname, messageIdentifier: identifier, excerpt: excerpt)
+			},
+			requestXDCCPack: { session, pack, info in
+				session.askXDCCBot(pack.bot, for: info ? .info(pack.pack) : .pack(pack.pack, filename: pack.filename))
 			}
 		)
 	}
