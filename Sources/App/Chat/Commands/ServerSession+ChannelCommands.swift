@@ -433,6 +433,8 @@ extension ServerSession {
 			setCommandTopic(parsed, targetConversation: targetConversation)
 		case .setqueryname:
 			retitleCommandDirectConversation(parsed, targetConversation: targetConversation)
+		case .whisper:
+			dispatchWhisperCommand(parsed, targetConversation: targetConversation)
 		default:
 			break
 		}

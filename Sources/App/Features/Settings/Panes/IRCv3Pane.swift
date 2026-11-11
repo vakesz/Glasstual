@@ -113,6 +113,10 @@ struct IRCv3Pane: View {
 				title: .Settings.ircv3EchoMessage,
 				isOn: model.settings.binding(for: SettingsKeys.Connection.echoMessageCapability)
 			)
+			SettingsToggle(
+				title: .Settings.ircv3ShowChannelContextInChannel,
+				isOn: model.settings.binding(for: SettingsKeys.Connection.showChannelContextMessagesInChannel)
+			)
 			SettingsNote(.Settings.ircv3ReconnectNote)
 		} header: {
 			Text(.Settings.ircv3Messages)

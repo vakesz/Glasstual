@@ -315,6 +315,26 @@ final class TranscriptCommands: NSObject {
 	)
 
 	private func messageMenuItems(for target: TranscriptContextTarget, in view: TranscriptView) -> [NSMenuItem] {
+		let privateReply = privateReplyItems(for: target, in: view)
+		return publicMessageMenuItems(for: target, in: view, privateReply: privateReply)
+	}
+
+	/// "Reply Privately" for a channel line written by another member.
+	private func privateReplyItems(for target: TranscriptContextTarget, in view: TranscriptView) -> [NSMenuItem] {
+		guard let lineType = target.lineType, Self.replyableLineTypes.contains(lineType),
+		      let nickname = target.lineNickname, nickname.isEmpty == false,
+		      let conversation = view.viewController?.associatedConversation, conversation.isChannel,
+		      let session = view.viewController?.associatedSession, session.nicknameIsMyself(nickname) == false,
+		      let item = sink.privateReplyItem(nickname, target.lineMessageIdentifier, target.lineExcerpt)
+		else { return [] }
+		return [item]
+	}
+
+	private func publicMessageMenuItems(
+		for target: TranscriptContextTarget,
+		in view: TranscriptView,
+		privateReply: [NSMenuItem]
+	) -> [NSMenuItem] {
 		guard let messageIdentifier = target.lineMessageIdentifier,
 		      messageIdentifier.isEmpty == false,
 		      let lineType = target.lineType,
@@ -322,9 +342,9 @@ final class TranscriptCommands: NSObject {
 		      let conversation = view.viewController?.associatedConversation,
 		      conversation.isConsole == false
 		else {
-			return []
+			return privateReply.isEmpty ? [] : [.separator()] + privateReply
 		}
-		let items = sink.messageReplyItems(messageIdentifier, target.lineNickname, target.lineExcerpt)
+		let items = sink.messageReplyItems(messageIdentifier, target.lineNickname, target.lineExcerpt) + privateReply
 		return items + deleteMessageItems(
 			forMessage: messageIdentifier,
 			by: target.lineNickname,

@@ -47,6 +47,10 @@ struct LinePrintRequest {
 	var deliveryLabel: String?
 	/// The `@#channel` form of the target, for a message only some members received.
 	var statusMessageTarget: String?
+	/// The channel a private message belongs to (`channel-context`).
+	var channelContext: String?
+	/// The recipient of our own private message filed in a channel.
+	var privatePeer: String?
 }
 
 extension ServerSession {
@@ -70,6 +74,8 @@ extension ServerSession {
 		referenceMessage: Message? = nil,
 		deliveryLabel: String? = nil,
 		statusMessageTarget: String? = nil,
+		channelContext: String? = nil,
+		privatePeer: String? = nil,
 		completionBlock: PrintedLineCompletion? = nil
 	) {
 		let request = LinePrintRequest(
@@ -84,7 +90,9 @@ extension ServerSession {
 			referenceMessage: referenceMessage,
 			completionBlock: completionBlock,
 			deliveryLabel: deliveryLabel,
-			statusMessageTarget: statusMessageTarget
+			statusMessageTarget: statusMessageTarget,
+			channelContext: channelContext,
+			privatePeer: privatePeer
 		)
 		#if DEBUG
 			if let linePrintObserver {
@@ -232,6 +240,8 @@ private extension ServerSession {
 			chatLine.serverTimestamp = reference.receivedAt
 		}
 		chatLine.statusMessageTarget = request.statusMessageTarget
+		chatLine.channelContext = request.channelContext
+		chatLine.privatePeer = request.privatePeer
 		return chatLine
 	}
 

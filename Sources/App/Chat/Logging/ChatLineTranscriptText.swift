@@ -59,9 +59,19 @@ nonisolated extension ChatLine {
 		}
 
 		if let formattedNickname = formattedNickname(in: conversation, with: nicknameFormat) {
-			components.append(statusMessageTarget.map {
-				ChatLineFormat.statusMessageSender(formattedNickname, target: $0)
-			} ?? formattedNickname)
+			let privateContext = ChatLinePrivateContext(
+				channelContext: channelContext,
+				privatePeer: privatePeer,
+				conversationName: conversation?.name ?? "",
+				caseMapping: conversation?.associatedSession?.supportInfo.caseMapping ?? .rfc1459
+			)
+			if let privateContext {
+				components.append(privateContext.sender(formattedNickname))
+			} else {
+				components.append(statusMessageTarget.map {
+					ChatLineFormat.statusMessageSender(formattedNickname, target: $0)
+				} ?? formattedNickname)
+			}
 		}
 
 		components.append(messageBody)

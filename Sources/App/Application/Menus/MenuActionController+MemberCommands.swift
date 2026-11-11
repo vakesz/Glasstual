@@ -40,6 +40,17 @@ extension MenuActionController {
 		startDirectConversation(sender: sender)
 	}
 
+	/// Starts a private reply to one member from the channel, tagged with it.
+	@objc func memberMessagePrivatelyInChannel(_ sender: NSMenuItem?) {
+		guard let target = context.commandTarget(for: sender), target.conversation.isChannel,
+		      target.nicknames.count == 1, let nickname = target.nicknames.first,
+		      target.session.canSendChannelContext
+		else { return }
+		context.deselectMembers(for: sender)
+		mainWindow.select(target.conversation)
+		mainWindow.inputTextField?.beginPrivateReply(to: nickname, messageIdentifier: nil, excerpt: nil)
+	}
+
 	@objc func memberChangeColor(_ sender: NSMenuItem?) {
 		guard let target = context.commandTarget(for: sender),
 		      let nickname = target.nicknames.first

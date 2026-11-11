@@ -92,7 +92,13 @@ extension TranscriptController {
 			modeSymbol: line.modeSymbol,
 			historyCursor: line.historyCursor,
 			serverTimestamp: line.serverTimestamp,
-			statusMessageTarget: line.statusMessageTarget
+			statusMessageTarget: line.statusMessageTarget,
+			privateContext: ChatLinePrivateContext(
+				channelContext: line.channelContext,
+				privatePeer: line.privatePeer,
+				conversationName: request.context.conversationName,
+				caseMapping: request.context.caseMapping
+			)
 		)
 		let inlineMedia = request.context.inlineMediaEnabled &&
 			(line.lineType == .privateMessage || line.lineType == .action)

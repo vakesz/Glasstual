@@ -72,6 +72,8 @@ nonisolated struct TranscriptRow: Equatable, Sendable {
 	var serverTimestamp: Date?
 	/// The `@#channel` target of a message only some members received.
 	var statusMessageTarget: String?
+	/// How a private message that belongs to a channel is labelled.
+	var privateContext: ChatLinePrivateContext?
 
 	/** Whether `identifier` names this row.
 
@@ -130,6 +132,9 @@ nonisolated struct TranscriptRow: Equatable, Sendable {
 			)
 		}
 		let sender = formattedNickname.trimmingCharacters(in: .whitespacesAndNewlines)
+		if let privateContext {
+			return (timestamp, privateContext.sender(sender))
+		}
 		guard let statusMessageTarget else { return (timestamp, sender) }
 		return (timestamp, ChatLineFormat.statusMessageSender(
 			sender, target: ControlCharacterDisposition.singleLine(statusMessageTarget)

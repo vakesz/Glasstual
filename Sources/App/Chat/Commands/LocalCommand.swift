@@ -116,6 +116,7 @@ enum LocalCommand: String, Sendable, CaseIterable {
 	case wallops
 	case watch
 	case weights
+	case whisper
 	case who
 	case whois
 	case whowas
@@ -191,7 +192,7 @@ extension LocalCommand {
 		case .j, .join, .joinRandom, .cycle, .hop, .rejoin, .leave, .part, .invite: .lifecycle
 		case .clear, .clearall, .close, .remove, .list, .setcolor, .goto: .window
 		case .modeShortcut, .mode, .op, .deop, .halfop, .dehalfop, .voice, .devoice: .mode
-		case .query, .topicShortcut, .topic, .setqueryname: .conversation
+		case .query, .topicShortcut, .topic, .setqueryname, .whisper: .conversation
 		case .aquote, .araw, .quote, .raw, .cap, .caps, .debug, .echo: .raw
 		case .ison, .names, .recv, .redact, .setname, .wallops: .request
 		case .gline, .gzline, .shun, .tempshun, .zline, .kill: .operatorControl
@@ -315,6 +316,7 @@ extension LocalCommand {
 		.unquiet: "[channel] <nickname>",
 		.voice: "[channel] <nickname>",
 		.wallops: "<message>",
+		.whisper: "<nickname> <message>",
 		.who: "<channel>",
 		.whois: "<nickname>",
 		.whowas: "<nickname>",

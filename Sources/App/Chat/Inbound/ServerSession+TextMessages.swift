@@ -203,8 +203,18 @@ extension ServerSession {
 		var destination = findConversation(isSelfMessage ? target : sender)
 		var deliveredText = text
 		var newPrivateMessage = false
+		/* A private message that belongs to a channel (channel-context) is
+		 drawn there, beside the command it answers. */
+		let peer = isSelfMessage ? target : sender
+		let channelContextFiling = channelContextFiling(for: message, peer: peer)
+		var channelContext: String?
+		var filedInChannel = false
 
-		if isNotice {
+		if case let .channel(channel) = channelContextFiling {
+			destination = channel
+			channelContext = channel.name
+			filedInChannel = true
+		} else if isNotice {
 			if sender.caseInsensitiveCompare(ServerQuirks.Services.chanServ) == .orderedSame,
 			   noticeIsFromServices(message)
 			{
@@ -221,6 +231,9 @@ extension ServerSession {
 		} else if destination == nil {
 			newPrivateMessage = true
 			destination = findConversationOrCreate(isSelfMessage ? target : sender, as: .direct)
+		}
+		if case let .query(channelName) = channelContextFiling {
+			channelContext = channelName
 		}
 		let textToDeliver = deliveredText
 		// Capture the read state before asynchronous rendering.
@@ -253,9 +266,10 @@ extension ServerSession {
 		if shouldPrintReceivedText(textToDeliver, message: message, destination: destination, lineType: lineType) {
 			print(textToDeliver, by: sender, in: destination, as: lineType, command: message.command,
 			      receivedAt: message.receivedAt, isEncrypted: false, referenceMessage: message,
+			      channelContext: channelContext, privatePeer: isSelfMessage && filedInChannel ? target : nil,
 			      completionBlock: completion)
 		}
-		if !isNotice, let destination {
+		if !isNotice, !filedInChannel, let destination {
 			applyPresence(true, to: destination)
 		}
 	}

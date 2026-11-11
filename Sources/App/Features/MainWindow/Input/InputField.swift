@@ -104,12 +104,31 @@ final class InputField: FormattedTextView {
 		focus()
 	}
 
+	/// Starts a private reply to `nickname` from the channel being typed in.
+	func beginPrivateReply(to nickname: String, messageIdentifier: String?, excerpt: String?) {
+		precondition(nickname.isEmpty == false)
+		accessoryModel.showPrivateReply(to: nickname, messageIdentifier: messageIdentifier, excerpt: excerpt)
+		placeholder.update(in: self)
+		focus()
+	}
+
+	var privateReplyRecipient: String? {
+		accessoryModel.privateRecipient
+	}
+
 	func cancelReply() {
+		let wasPrivate = accessoryModel.privateRecipient != nil
 		accessoryModel.hideReply()
+		if wasPrivate {
+			placeholder.update(in: self)
+		}
 	}
 
 	func consumeReply(into session: ServerSession?) {
 		guard let replyMessageIdentifier else {
+			if privateReplyRecipient != nil {
+				cancelReply()
+			}
 			return
 		}
 

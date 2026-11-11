@@ -104,6 +104,33 @@ enum MenuPresentation {
 		return [separator, reply, react]
 	}
 
+	/** "Reply Privately": a private message to the line's sender, tagged with
+	 the channel it was read in. Disabled where the server cannot carry the
+	 tag, because the reply would arrive without it. */
+	static func privateReplyItem(
+		nickname: String,
+		messageIdentifier: String?,
+		excerpt: String?,
+		isEnabled: Bool,
+		target: AnyObject
+	) -> NSMenuItem {
+		let item = NSMenuItem(
+			title: String(localized: .Transcript.replyPrivately),
+			action: isEnabled ? #selector(MenuActionController.replyPrivatelyToMessage(_:)) : nil,
+			keyEquivalent: ""
+		)
+		item.target = target
+		item.command = .transcriptReplyPrivately
+		item.isEnabled = isEnabled
+		item.representedObject = MessageMenuContext(
+			messageIdentifier: messageIdentifier ?? "",
+			nickname: nickname,
+			excerpt: excerpt
+		)
+		item.image = NSImage(systemSymbolName: "lock", accessibilityDescription: item.title)
+		return item
+	}
+
 	/** The system's own Share item, renamed.
 
 	 AppKit gives the standard item the title "Share" and a submenu of the

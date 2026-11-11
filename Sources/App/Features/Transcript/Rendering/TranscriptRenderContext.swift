@@ -73,6 +73,9 @@ nonisolated struct RenderedMemberDirectory: Equatable, Sendable, ExpressibleByAr
 nonisolated struct TranscriptRenderContext: Sendable {
 	var inlineMediaEnabled = false
 	var isChannel = false
+	/// The name of the conversation the lines are drawn in, which decides how a
+	/// private message that belongs to a channel is labelled.
+	var conversationName = ""
 	/// Whether a day boundary is drawn between lines. It is read from the
 	/// settings on the main actor and carried here, so rendering stays a
 	/// function of the values it was handed.
@@ -135,6 +138,8 @@ nonisolated struct ChatLineSnapshot: Sendable {
 	var modeSymbol = ""
 	var historyCursor: ScrollbackRowCursor?
 	var statusMessageTarget: String?
+	var channelContext: String?
+	var privatePeer: String?
 
 	init() {}
 
@@ -165,6 +170,8 @@ nonisolated struct ChatLineSnapshot: Sendable {
 		isFirstForDay = chatLine.isFirstForDay
 		fromCurrentSession = chatLine.fromCurrentSession
 		statusMessageTarget = chatLine.statusMessageTarget
+		channelContext = chatLine.channelContext
+		privatePeer = chatLine.privatePeer
 
 		modeSymbol = if let knownModeSymbol {
 			knownModeSymbol

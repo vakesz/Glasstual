@@ -1,6 +1,246 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "private-sender-in-channel": {
+      "comment": "Transcript sender column for a private message drawn in the channel it belongs to (channel-context). %@ is the formatted nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (privately)"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (privát)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (privat)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (en privado)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (en privé)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@（非公開）"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (em privado)"
+          }
+        }
+      }
+    },
+    "private-sender-to-peer": {
+      "comment": "Transcript sender column for your own private message to someone, drawn in the channel it belongs to. %1$@ is your formatted nickname; %2$@ is the recipient.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ → %2$@ (privately)"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ → %2$@ (privát)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ → %2$@ (privat)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ → %2$@ (en privado)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ → %2$@ (en privé)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ → %2$@（非公開）"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ → %2$@ (em privado)"
+          }
+        }
+      }
+    },
+    "private-sender-channel-context": {
+      "comment": "Transcript sender column for a private message drawn in the private conversation, naming the channel it belongs to. %1$@ is the formatted nickname; %2$@ is the channel.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ in %2$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ itt: %2$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ in %2$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ en %2$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ dans %2$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@の%1$@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ em %2$@"
+          }
+        }
+      }
+    },
+    "whisper-needs-channel": {
+      "comment": "/whisper was typed outside a channel. Keep /whisper untranslated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use /whisper in a channel: it sends a private message that belongs to that channel."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A /whisper parancsot csatornában használja: olyan privát üzenetet küld, amely ahhoz a csatornához tartozik."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verwenden Sie /whisper in einem Kanal: Es sendet eine private Nachricht, die zu diesem Kanal gehört."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use /whisper en un canal: envía un mensaje privado que pertenece a ese canal."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utilisez /whisper dans un salon : la commande envoie un message privé rattaché à ce salon."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "/whisper はチャンネルで使用してください。そのチャンネルに属する非公開メッセージを送信します。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use /whisper em um canal: ele envia uma mensagem privada que pertence a esse canal."
+          }
+        }
+      }
+    },
+    "private-reply-not-sent": {
+      "comment": "A private reply from a channel was refused because the server cannot carry the channel-context tag; nothing was sent.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This server can’t mark a private message as belonging to a channel, so the private reply wasn’t sent."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ez a kiszolgáló nem tudja megjelölni, hogy egy privát üzenet egy csatornához tartozik, ezért a privát válasz nem lett elküldve."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Server kann eine private Nachricht nicht als zu einem Kanal gehörig kennzeichnen, daher wurde die private Antwort nicht gesendet."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este servidor no puede marcar un mensaje privado como perteneciente a un canal, así que la respuesta privada no se envió."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce serveur ne peut pas indiquer qu’un message privé est rattaché à un salon ; la réponse privée n’a donc pas été envoyée."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このサーバは非公開メッセージをチャンネルに属するものとして示せないため、非公開の返信は送信されませんでした。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este servidor não consegue marcar uma mensagem privada como pertencente a um canal, por isso a resposta privada não foi enviada."
+          }
+        }
+      }
+    },
     "sasl-reauthentication-started": {
       "comment": "Console line when the connection starts signing in to services again with SASL. %@ is the mechanism wire name.",
       "extractionState": "manual",

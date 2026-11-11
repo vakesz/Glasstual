@@ -234,6 +234,8 @@ struct MenuItemValidator {
 			return validateDictionaryLookup(item)
 		case .transcriptChannelMenu:
 			return conversation?.isChannel == true
+		case .transcriptReplyPrivately:
+			return conversation?.isChannel == true && session?.canSendChannelContext == true
 		case .transcriptReply, .transcriptReact:
 			return session != nil
 				&& conversation?.isConsole == false
@@ -262,6 +264,10 @@ struct MenuItemValidator {
 			return validateMemberMode(item)
 		case .banAccount:
 			return validateAccountBan(item)
+		case .messagePrivatelyInChannel:
+			return MenuCommandContext(session: session, conversation: conversation).satisfies([.loggedIn, .channel])
+				&& session?.canSendChannelContext == true
+				&& context.selectedMembers(for: item).count == 1
 		default:
 			/* The rest depend only on the server and conversation. */
 			return item.command?.memberRequirements.map(selection.satisfies) ?? true

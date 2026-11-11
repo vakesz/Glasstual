@@ -413,6 +413,7 @@ final class TranscriptController: ChatItemPresenting, ServerHistoryPresenting {
 		return TranscriptRenderContext(
 			inlineMediaEnabled: inlineMediaEnabledForView,
 			isChannel: conversation?.isChannel == true,
+			conversationName: conversation?.name ?? "",
 			showsDateChanges: settings.current.showsDateChanges,
 			textPolicy: settings.current.textRules,
 			members: includingMembers ? memberRenderCache.members(in: conversation) : [],

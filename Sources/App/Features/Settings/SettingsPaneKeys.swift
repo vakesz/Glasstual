@@ -187,6 +187,7 @@ enum SettingsPaneKeys {
 		.init(SettingsKeys.Connection.displayTypingNotifications, .Settings.ircv3DisplayTypingNotifications),
 		.init(SettingsKeys.Connection.sendTypingNotifications, .Settings.ircv3SendTypingNotifications),
 		.init(SettingsKeys.Connection.echoMessageCapability, .Settings.ircv3EchoMessage),
+		.init(SettingsKeys.Connection.showChannelContextMessagesInChannel, .Settings.ircv3ShowChannelContextInChannel),
 		.init(SettingsKeys.Connection.requestChatHistory, .Settings.ircv3RequestChatHistory),
 		.init(SettingsKeys.Connection.synchronizeReadMarkers, .Settings.ircv3SynchronizeReadMarkers),
 		.init(SettingsKeys.Connection.disabledCapabilities, .Settings.ircv3Capabilities),

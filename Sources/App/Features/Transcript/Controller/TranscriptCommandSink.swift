@@ -38,6 +38,12 @@ struct TranscriptCommandSink {
 		_ nickname: String?,
 		_ excerpt: String?
 	) -> [NSMenuItem] = { _, _, _ in [] }
+	/// "Reply Privately" for a channel line from another member, or nothing.
+	var privateReplyItem: (
+		_ nickname: String,
+		_ messageIdentifier: String?,
+		_ excerpt: String?
+	) -> NSMenuItem? = { _, _, _ in nil }
 
 	/** The menu controller the application delegate holds, or nothing before it
 	 has one — which is every test that builds a transcript without an
@@ -75,6 +81,9 @@ struct TranscriptCommandSink {
 					nickname: nickname,
 					excerpt: excerpt
 				) ?? []
+			},
+			privateReplyItem: { nickname, identifier, excerpt in
+				menuActionController?.privateReplyItem(nickname: nickname, messageIdentifier: identifier, excerpt: excerpt)
 			}
 		)
 	}

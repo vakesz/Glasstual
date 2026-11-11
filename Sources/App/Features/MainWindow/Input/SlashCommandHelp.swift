@@ -241,6 +241,12 @@ struct SlashCommandHelp {
 		.init([.voice], .SlashCommands.descriptionVoice, .SlashCommands.syntaxChannelNickname, .SlashCommands.hintChannelPrivileges),
 		.init([.weights], .SlashCommands.descriptionNicknameCompletionPriorities),
 		.init(
+			[.whisper],
+			.SlashCommands.descriptionWhisper,
+			.SlashCommands.syntaxWhisperNicknameMessage,
+			.SlashCommands.hintWhisperChannel
+		),
+		.init(
 			[.who],
 			.SlashCommands.descriptionMatchingUserInformation,
 			.SlashCommands.syntaxChannelMaskFlags,

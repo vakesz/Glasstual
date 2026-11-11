@@ -375,6 +375,8 @@ extension ServerSession {
 		policy: OutboundMessageOptions,
 		localCommand: String? = nil,
 		statusMessageTarget: String? = nil,
+		channelContext: String? = nil,
+		privatePeer: String? = nil,
 		registeringDelivery: Bool = true,
 		echoReturnsHere: Bool = true
 	) -> String? {
@@ -403,7 +405,9 @@ extension ServerSession {
 			isEncrypted: false,
 			referenceMessage: nil,
 			deliveryLabel: label,
-			statusMessageTarget: statusMessageTarget
+			statusMessageTarget: statusMessageTarget,
+			channelContext: channelContext,
+			privatePeer: privatePeer
 		)
 
 		return label

@@ -158,7 +158,7 @@ struct ChatLineTests {
 		#expect(Set(encodedLine.keys) == Set(fixtureLine.keys))
 		// Optional additions remain absent when re-encoding an older row.
 		#expect(
-			Set(encodedLine.keys).union(["serverTimestamp", "statusMessageTarget"])
+			Set(encodedLine.keys).union(["serverTimestamp", "statusMessageTarget", "channelContext", "privatePeer"])
 				== Set(ChatLine.CodingKeys.allCases.map(\.rawValue))
 		)
 	}
@@ -175,6 +175,39 @@ struct ChatLineTests {
 
 		#expect(decoded.statusMessageTarget == "@#staff")
 		#expect(try #require(ChatLine(data: ChatLine().scrollbackEntry(forView: "view").data)).statusMessageTarget == nil)
+	}
+
+	@Test("The channel a private message belongs to survives the scrollback archive, and older rows decode without it")
+	func channelContextSurvivesArchiving() throws {
+		var line = ChatLine()
+		line.lineType = .privateMessage
+		line.nickname = "me"
+		line.messageBody = "!help"
+		line.channelContext = "#chan"
+		line.privatePeer = "bot"
+
+		let decoded = try #require(ChatLine(data: line.scrollbackEntry(forView: "view").data))
+
+		#expect(decoded.channelContext == "#chan")
+		#expect(decoded.privatePeer == "bot")
+		let older = try #require(ChatLine(data: Data(contentsOf: Self.storedPayloadFixture)))
+		#expect(older.channelContext == nil)
+		#expect(older.privatePeer == nil)
+	}
+
+	@Test("The transcript log marks a private message filed in its channel, and names the channel in the query")
+	func transcriptLogNamesChannelContext() throws {
+		let session = TestServerSession(configDictionary: ["nickname": "me"])
+		let channel = try #require(session.findConversationOrCreate("#chan"))
+		let query = try #require(session.findConversationOrCreate("bot", isDirect: true))
+		var line = ChatLine()
+		line.lineType = .privateMessage
+		line.nickname = "bot"
+		line.messageBody = "result"
+		line.channelContext = "#chan"
+
+		#expect(line.renderedBodyForTranscriptLog(in: channel).contains(ChatLineFormat.privateSender("<bot>")))
+		#expect(line.renderedBodyForTranscriptLog(in: query).contains(ChatLineFormat.channelContextSender("<bot>", channel: "#chan")))
 	}
 
 	@Test("The transcript log names the target of a message only some members received")

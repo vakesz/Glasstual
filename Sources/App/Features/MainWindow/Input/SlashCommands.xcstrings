@@ -1,6 +1,150 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "description-whisper": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whisper privately to a member from this channel"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privát suttogás egy tagnak ebből a csatornából"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einem Mitglied aus diesem Kanal privat zuflüstern"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Susurrar en privado a un miembro desde este canal"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chuchoter en privé à un membre depuis ce salon"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このチャンネルからメンバーに非公開でささやく"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sussurrar em privado a um membro a partir deste canal"
+          }
+        }
+      }
+    },
+    "syntax-whisper-nickname-message": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<nickname> <message>"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<becenév> <üzenet>"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<Nickname> <Nachricht>"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<apodo> <mensaje>"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<pseudo> <message>"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<ニックネーム> <メッセージ>"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<apelido> <mensagem>"
+          }
+        }
+      }
+    },
+    "hint-whisper-channel": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use in a channel. The message is private and marked as belonging to the channel."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csatornában használja. Az üzenet privát, és a csatornához tartozóként van megjelölve."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In einem Kanal verwenden. Die Nachricht ist privat und als zum Kanal gehörig gekennzeichnet."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Úselo en un canal. El mensaje es privado y se marca como perteneciente al canal."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "À utiliser dans un salon. Le message est privé et marqué comme rattaché au salon."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "チャンネルで使用します。メッセージは非公開で、チャンネルに属するものとして示されます。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use em um canal. A mensagem é privada e marcada como pertencente ao canal."
+          }
+        }
+      }
+    },
     "description-sasl": {
       "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
       "extractionState": "manual",

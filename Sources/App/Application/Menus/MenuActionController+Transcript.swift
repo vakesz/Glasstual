@@ -19,6 +19,28 @@ extension MenuActionController {
 		)
 	}
 
+	@objc func replyPrivatelyToMessage(_ sender: NSMenuItem?) {
+		guard let message = messageContext(from: sender), let nickname = message.nickname, nickname.isEmpty == false,
+		      context.selectedConversation?.isChannel == true
+		else { return }
+		mainWindow.inputTextField?.beginPrivateReply(
+			to: nickname,
+			messageIdentifier: message.messageIdentifier.isEmpty ? nil : message.messageIdentifier,
+			excerpt: message.excerpt
+		)
+	}
+
+	func privateReplyItem(nickname: String, messageIdentifier: String?, excerpt: String?) -> NSMenuItem? {
+		guard let session = context.selectedSession, context.selectedConversation?.isChannel == true else { return nil }
+		return MenuPresentation.privateReplyItem(
+			nickname: nickname,
+			messageIdentifier: messageIdentifier,
+			excerpt: excerpt,
+			isEnabled: session.canSendChannelContext,
+			target: self
+		)
+	}
+
 	@objc func reactToMessage(_ sender: NSMenuItem?) {
 		guard let message = messageContext(from: sender) else { return }
 		sendReaction(message.emoji, messageIdentifier: message.messageIdentifier)

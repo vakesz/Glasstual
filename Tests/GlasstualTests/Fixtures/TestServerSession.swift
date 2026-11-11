@@ -101,6 +101,8 @@ final class TestServerSession: ServerSession {
 		line["channel"] = request.conversation
 		line["nickname"] = request.nickname
 		line["statusMessageTarget"] = request.statusMessageTarget
+		line["channelContext"] = request.channelContext
+		line["privatePeer"] = request.privatePeer
 
 		printedLines.add(line)
 	}

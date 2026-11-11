@@ -45,6 +45,11 @@ nonisolated extension SettingsKeys {
 		static let confirmQuit = SettingsKey(group + "Confirm Quit", default: true)
 		static let requestChatHistory = SettingsKey(group + "Request Chat History", default: true)
 		static let synchronizeReadMarkers = SettingsKey(group + "Synchronize Read Markers", default: true)
+		/// Files a private message tagged with a joined channel's context in that channel.
+		static let showChannelContextMessagesInChannel = SettingsKey(
+			group + "Show Channel Context Messages In Channel",
+			default: true
+		)
 
 		static let echoMessageCapability = SettingsKey(
 			group + "Echo Message Capability",
@@ -73,6 +78,7 @@ nonisolated extension SettingsKeys {
 			displayServerMOTD, rejoinOnKick, sendTypingNotifications, displayTypingNotifications,
 			confirmQuit, requestChatHistory, synchronizeReadMarkers, echoMessageCapability,
 			disabledCapabilities, stsPolicies, preventSleepWhileConnected,
+			showChannelContextMessagesInChannel,
 		]
 	}
 }

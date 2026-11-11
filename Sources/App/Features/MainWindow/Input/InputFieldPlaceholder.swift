@@ -50,7 +50,8 @@ final class InputFieldPlaceholder {
 		paragraphStyle.lineBreakMode = .byTruncatingTail
 
 		let placeholder = NSAttributedString(
-			string: String(localized: .MainWindow.sendMessage),
+			string: field.privateReplyRecipient.map { String(localized: .MainWindow.messagePrivatelyPlaceholder($0)) }
+				?? String(localized: .MainWindow.sendMessage),
 			attributes: [
 				.font: field.preferredFont,
 				.foregroundColor: NSColor.placeholderTextColor,

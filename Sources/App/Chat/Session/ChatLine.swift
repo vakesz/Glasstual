@@ -109,6 +109,11 @@ nonisolated struct ChatLine: Codable, Hashable, Sendable, CustomStringConvertibl
 	/// The `@#channel` target of a message only some of the channel's members
 	/// received; `nil` for one sent to the whole channel.
 	var statusMessageTarget: String?
+	/// The channel a private message belongs to, from its `channel-context`
+	/// tag. Set whether the line was filed in that channel or in the query.
+	var channelContext: String?
+	/// The other party of one of our own private messages filed in a channel.
+	var privatePeer: String?
 
 	/// The line's identity, stable across copies and archives.
 	private(set) var uniqueIdentifier = ""
@@ -141,6 +146,8 @@ nonisolated struct ChatLine: Codable, Hashable, Sendable, CustomStringConvertibl
 		case sessionIdentifier
 		case uniqueIdentifier
 		case statusMessageTarget
+		case channelContext
+		case privatePeer
 	}
 
 	/** Withdraws everything a reader could read from the line, keeping what

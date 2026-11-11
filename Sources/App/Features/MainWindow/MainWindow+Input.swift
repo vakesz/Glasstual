@@ -216,8 +216,26 @@ extension MainWindow {
 		if LocalCommand.lineCarriesSecret(value.string) == false {
 			inputHistory.add(value)
 		}
+		let privateRecipient = inputTextField.privateReplyRecipient
+		let privateReplyIdentifier = inputTextField.replyMessageIdentifier
 		inputTextField.consumeReply(into: selectedSession)
 		guard let destination = selectedItem, let session = destination.associatedSession else { return }
+		/* A private reply from a channel goes to the member, tagged with the
+		 channel, unless the line is a command. */
+		if let privateRecipient, let channel = destination as? Conversation, channel.isChannel,
+		   value.string.hasPrefix("/") == false || value.string.hasPrefix("//")
+		{
+			session.replies.nextMessage = nil
+			let text = value.string.hasPrefix("//") ? value.attributedSubstring(fromIndex: 1) : value
+			session.sendPrivateReply(
+				text,
+				as: command,
+				to: privateRecipient,
+				in: channel,
+				replyIdentifier: session.isCapabilityEnabled(.messageTags) ? privateReplyIdentifier : nil
+			)
+			return
+		}
 		session.inputText(value, as: command, destination: destination)
 	}
 }

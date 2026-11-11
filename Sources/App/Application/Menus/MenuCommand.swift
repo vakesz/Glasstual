@@ -132,6 +132,7 @@ enum MenuCommand: String, CaseIterable, Sendable {
 	case inviteTo // Invite to…
 	case whois // Get Info (Whois)
 	case startDirectConversation // Private Message (Query)
+	case messagePrivatelyInChannel // Message Privately in Channel
 	case giveOp // Give Operator Status
 	case giveHalfop // Give Half-Operator Status
 	case giveVoice // Give Voice
@@ -180,6 +181,7 @@ enum MenuCommand: String, CaseIterable, Sendable {
 	// Built at runtime by `MenuPresentation.messageReplyItems`. They are not in
 	// the static graph but belong to the transcript menu's band.
 	case transcriptReply
+	case transcriptReplyPrivately
 	case transcriptReact
 }
 
@@ -215,10 +217,10 @@ extension MenuCommand {
 		     .browseTranscriptLogs, .highlightList, .fileTransfers, .bringAllToFront:
 			.window
 		case .webSearch, .transcriptDictionary, .transcriptChannelMenu,
-		     .transcriptReply, .transcriptReact:
+		     .transcriptReply, .transcriptReplyPrivately, .transcriptReact:
 			.transcript
 		case .muteUser, .unmuteUser, .addIgnore, .modifyIgnore, .removeIgnore, .inviteTo, .whois,
-		     .startDirectConversation, .giveOp, .giveHalfop, .giveVoice, .takeOp, .takeHalfop,
+		     .startDirectConversation, .messagePrivatelyInChannel, .giveOp, .giveHalfop, .giveVoice, .takeOp, .takeHalfop,
 		     .takeVoice, .ban, .banAccount, .kick, .kickban, .ctcp, .ircOperator, .changeColor,
 		     .ctcpSendFile, .ctcpPing, .ctcpTime, .ctcpClientInfo, .ctcpVersion,
 		     .ctcpFinger, .ctcpUserInfo, .operatorSetVirtualHost, .operatorKill,
@@ -298,6 +300,7 @@ extension MenuCommand {
 		.addIgnore: "eye.slash", .modifyIgnore: "pencil.circle",
 		.removeIgnore: "hand.raised.slash", .inviteTo: "envelope",
 		.whois: "info.circle", .startDirectConversation: "bubble.left",
+		.messagePrivatelyInChannel: "lock",
 		.ban: "nosign", .banAccount: "person.crop.circle.badge.xmark", .kick: "person.fill.xmark", .kickban: "hammer",
 		.ctcp: "arrow.left.arrow.right", .ircOperator: "shield",
 		.changeColor: "paintpalette",

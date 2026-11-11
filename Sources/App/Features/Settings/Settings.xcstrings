@@ -1,6 +1,54 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "ircv3-show-channel-context-in-channel": {
+      "comment": "Settings ▸ IRCv3: switch that shows a private reply tagged with a channel (channel-context) in that channel rather than in the private conversation.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show private replies in the channel they refer to"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A privát válaszok megjelenítése abban a csatornában, amelyre vonatkoznak"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Private Antworten im Kanal anzeigen, auf den sie sich beziehen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar las respuestas privadas en el canal al que se refieren"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afficher les réponses privées dans le salon auquel elles se rapportent"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "非公開の返信を関連するチャンネルに表示"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar respostas privadas no canal a que se referem"
+          }
+        }
+      }
+    },
     "ircv3-capability-extended-isupport": {
       "comment": "Summary of the draft/extended-isupport IRCv3 capability, shown beside its switch in Settings.",
       "extractionState": "manual",

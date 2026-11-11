@@ -26,6 +26,22 @@ nonisolated enum ChatLineFormat {
 	static func statusMessageSender(_ formattedNickname: String, target: String) -> String {
 		String(localized: .IRC.statusMessageSender(formattedNickname, target))
 	}
+
+	/// The sender of a private message drawn in the channel it belongs to.
+	static func privateSender(_ formattedNickname: String) -> String {
+		String(localized: .IRC.privateSenderInChannel(formattedNickname))
+	}
+
+	/// Our own private message to `peer`, drawn in the channel it belongs to.
+	static func privateSender(_ formattedNickname: String, to peer: String) -> String {
+		String(localized: .IRC.privateSenderToPeer(formattedNickname, peer))
+	}
+
+	/// The sender of a private message drawn in the query, with the channel
+	/// it belongs to.
+	static func channelContextSender(_ formattedNickname: String, channel: String) -> String {
+		String(localized: .IRC.privateSenderChannelContext(formattedNickname, channel))
+	}
 }
 
 /** How a line's enumerations are named outside the model.

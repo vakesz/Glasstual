@@ -79,6 +79,7 @@ extension MenuCommand {
 		     .ctcpClientInfo, .ctcpVersion, .ctcpFinger, .ctcpUserInfo:
 			[.loggedIn, .notConsole]
 		case .startDirectConversation: [.loggedIn, .channel]
+		case .messagePrivatelyInChannel: [.loggedIn, .channel]
 		case .changeColor: .channel
 		case .ban, .banAccount, .kick, .kickban: .channelManagement
 		case .ircOperator, .operatorSetVirtualHost, .operatorKill, .operatorShun, .operatorGline:

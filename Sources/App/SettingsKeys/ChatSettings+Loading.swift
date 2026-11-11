@@ -28,6 +28,7 @@ extension ChatSettings {
 		snapshot.enableEchoMessageCapability = stores[SettingsKeys.Connection.echoMessageCapability]
 		snapshot.requestChatHistory = stores[SettingsKeys.Connection.requestChatHistory]
 		snapshot.synchronizeReadMarkers = stores[SettingsKeys.Connection.synchronizeReadMarkers]
+		snapshot.showChannelContextMessagesInChannel = stores[SettingsKeys.Connection.showChannelContextMessagesInChannel]
 		snapshot.disabledCapabilities = Set(stores[SettingsKeys.Connection.disabledCapabilities])
 		snapshot.remembersDirectConversations = stores[SettingsKeys.Appearance.rememberDirectConversations]
 		let awayTrackingLimit = SettingsKeys.Appearance.trackUserAwayStatusMaximumChannelSize

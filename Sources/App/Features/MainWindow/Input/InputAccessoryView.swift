@@ -11,7 +11,7 @@ struct InputAccessoryView: View {
 
 	var body: some View {
 		VStack(alignment: .leading, spacing: UISpacing.tight) {
-			if model.replyMessageIdentifier != nil {
+			if model.hasReply {
 				replyBanner
 					.transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
 			}
@@ -26,7 +26,7 @@ struct InputAccessoryView: View {
 
 	private var replyBanner: some View {
 		HStack(spacing: UISpacing.tight) {
-			Image(systemName: "arrowshape.turn.up.left")
+			Image(systemName: model.privateRecipient == nil ? "arrowshape.turn.up.left" : "lock.fill")
 				.font(.subheadline.weight(.medium))
 				.foregroundStyle(.secondary)
 				.accessibilityHidden(true)
@@ -68,7 +68,9 @@ struct InputAccessoryView: View {
 	}
 
 	private var replyText: AttributedString {
-		var result = AttributedString(InputAccessoryView.replyTarget(model.replyNickname))
+		var result = AttributedString(model.privateRecipient.map {
+			String(localized: .MainWindow.replyingPrivatelyTo($0))
+		} ?? InputAccessoryView.replyTarget(model.replyNickname))
 		result.font = .subheadline.bold()
 
 		if let excerpt = model.replyExcerpt, excerpt.isEmpty == false {

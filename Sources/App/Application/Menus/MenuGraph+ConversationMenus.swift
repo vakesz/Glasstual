@@ -359,6 +359,11 @@ extension MenuGraph {
 			.startDirectConversation,
 			#selector(MenuActionController.memberStartDirectConversation(_:))
 		),
+		.item(
+			String(localized: .MainWindow.menuMemberMessagePrivatelyInChannel),
+			.messagePrivatelyInChannel,
+			#selector(MenuActionController.memberMessagePrivatelyInChannel(_:))
+		),
 		.separator(),
 		.item(String(localized: .MainWindow.menuMemberGiveOp), .giveOp, #selector(MenuActionController.memberModeGiveOp(_:))),
 		.item(
