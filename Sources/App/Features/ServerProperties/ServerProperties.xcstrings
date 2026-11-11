@@ -1,6 +1,54 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "sasl-reauthenticates-automatically" : {
+      "comment" : "Server Properties ▸ Identity: switch that signs in again by itself when the server re-offers SASL while the connection is not signed in.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign In Again When Services Return"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Újbóli bejelentkezés a szolgáltatások visszatérésekor"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erneut anmelden, wenn die Dienste zurückkehren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volver a iniciar sesión cuando vuelvan los servicios"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se reconnecter au retour des services"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サービスの復帰時に再度サインイン"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iniciar sessão novamente quando os serviços voltarem"
+          }
+        }
+      }
+    },
     "sasl-mechanism-oauth-title" : {
       "comment" : "Server Properties ▸ Identity: SASL mechanism menu item for OAUTHBEARER, which signs in with an OAuth token. The wire name follows it.",
       "extractionState" : "manual",

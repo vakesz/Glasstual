@@ -35,6 +35,11 @@ extension MenuGraph {
 			.changeNickname,
 			#selector(MenuActionController.showServerChangeNicknameSheet(_:))
 		),
+		.item(
+			String(localized: .MainWindow.menuServerSignInAgain),
+			.signInAgainWithSASL,
+			#selector(MenuActionController.showSASLSignInSheet(_:))
+		),
 		.separator(),
 		.item(String(localized: .MainWindow.menuServerAddServer), .addServer, #selector(MenuActionController.addServer(_:))),
 		.item(

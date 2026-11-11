@@ -67,9 +67,18 @@ extension ServerSession {
 		)
 	}
 
+	/// What the exchange may try: what registration supports, or during a
+	/// re-authentication the one mechanism asked for or what the user may use.
+	private var candidateSASLMechanisms: [SASLMechanism] {
+		switch sasl.phase {
+		case .registration: supportedSASLMechanisms
+		case let .reauthentication(_, explicit): explicit.map { [$0] } ?? reauthenticationSASLMechanisms
+		}
+	}
+
 	func nextSASLMechanism(from offered: [String]) -> SASLMechanism? {
 		SASLPolicy.nextMechanism(
-			from: supportedSASLMechanisms,
+			from: candidateSASLMechanisms,
 			offered: offered,
 			tried: sasl.triedMechanisms
 		)
@@ -392,14 +401,24 @@ extension ServerSession {
 	func finishSASLNegotiation(failed: Bool) {
 		stopSASLTimeoutTimer()
 		disableCapability(.isInSASLNegotiation)
+		let mechanism = sasl.mechanism
+		let phase = sasl.phase
+		sasl.phase = .registration
 		sasl.mechanism = nil
 		sasl.scramSession = nil
 		sasl.ecdsaExchange = nil
 		sasl.oauthExchange = nil
 		sasl.incomingPayload = nil
+		if case let .reauthentication(wasIdentified, _) = phase {
+			finishSASLReauthentication(failed: failed, wasIdentified: wasIdentified, mechanism: mechanism)
+			return
+		}
+		setSASLExchangeStatus(failed ? .idle : mechanism.map { .succeeded(account: identity.account, mechanism: $0) } ?? .idle)
 		if failed {
 			disableCapability(.isIdentifiedWithSASL)
-			if config.disconnectOnSASLFailure {
+			/* Disconnecting is a registration rule: a registered connection that
+			 loses SASL (a CAP DEL mid-exchange, say) keeps running. */
+			if config.disconnectOnSASLFailure, isLoggedIn == false {
 				printDebugInformation(String(localized: .IRC.saslAuthenticationFailedDisconnecting))
 				quit()
 				return
@@ -449,6 +468,9 @@ extension ServerSession {
 
 	func resetSASLNegotiation() {
 		stopSASLTimeoutTimer()
+		sasl.phase = .registration
+		sasl.pendingReauthentication = nil
+		setSASLExchangeStatus(.idle)
 		disableCapability(.isInSASLNegotiation)
 		disableCapability(.isIdentifiedWithSASL)
 		sasl.mechanism = nil

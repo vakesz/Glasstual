@@ -56,43 +56,43 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "[status | mechanism <name | automatic> [only] | token <token | clear>]"
+            "value": "[status | auth [mechanism] | mechanism <name | automatic> [only] | token <token | clear>]"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "[status | mechanism <név | automatic> [only] | token <token | clear>]"
+            "value": "[status | auth [mechanizmus] | mechanism <név | automatic> [only] | token <token | clear>]"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "[status | mechanism <Name | automatic> [only] | token <Token | clear>]"
+            "value": "[status | auth [Mechanismus] | mechanism <Name | automatic> [only] | token <Token | clear>]"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "[status | mechanism <nombre | automatic> [only] | token <token | clear>]"
+            "value": "[status | auth [mecanismo] | mechanism <nombre | automatic> [only] | token <token | clear>]"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "[status | mechanism <nom | automatic> [only] | token <jeton | clear>]"
+            "value": "[status | auth [mécanisme] | mechanism <nom | automatic> [only] | token <jeton | clear>]"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "[status | mechanism <名前 | automatic> [only] | token <トークン | clear>]"
+            "value": "[status | auth [メカニズム] | mechanism <名前 | automatic> [only] | token <トークン | clear>]"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "[status | mechanism <nome | automatic> [only] | token <token | clear>]"
+            "value": "[status | auth [mecanismo] | mechanism <nome | automatic> [only] | token <token | clear>]"
           }
         }
       }
@@ -104,43 +104,43 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "status lists the account and each mechanism. mechanism sets which one signs in first; only stops fallback. token stores an OAuth token in the keychain."
+            "value": "status lists the account and each mechanism. auth signs in again now. mechanism sets which one signs in first; only stops fallback. token stores an OAuth token in the keychain."
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "A status kilistázza a fiókot és a mechanizmusokat. A mechanism beállítja, melyik jelentkezik be először; az only megakadályozza a tartalékmechanizmusokat. A token egy OAuth-tokent tárol a kulcskarikában."
+            "value": "A status kilistázza a fiókot és a mechanizmusokat. Az auth azonnal újra bejelentkezik. A mechanism beállítja, melyik jelentkezik be először; az only megakadályozza a tartalékmechanizmusokat. A token egy OAuth-tokent tárol a kulcskarikában."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "status zeigt das Konto und jeden Mechanismus. mechanism legt fest, welcher sich zuerst anmeldet; only verhindert das Ausweichen. token sichert ein OAuth-Token im Schlüsselbund."
+            "value": "status zeigt das Konto und jeden Mechanismus. auth meldet sich sofort erneut an. mechanism legt fest, welcher sich zuerst anmeldet; only verhindert das Ausweichen. token sichert ein OAuth-Token im Schlüsselbund."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "status muestra la cuenta y cada mecanismo. mechanism define cuál inicia sesión primero; only impide recurrir a otros. token guarda un token de OAuth en el llavero."
+            "value": "status muestra la cuenta y cada mecanismo. auth vuelve a iniciar sesión ahora. mechanism define cuál inicia sesión primero; only impide recurrir a otros. token guarda un token de OAuth en el llavero."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "status affiche le compte et chaque mécanisme. mechanism choisit celui qui se connecte en premier ; only empêche le repli. token enregistre un jeton OAuth dans le trousseau."
+            "value": "status affiche le compte et chaque mécanisme. auth vous reconnecte maintenant. mechanism choisit celui qui se connecte en premier ; only empêche le repli. token enregistre un jeton OAuth dans le trousseau."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "statusはアカウントと各メカニズムを表示します。mechanismは最初にサインインするメカニズムを設定し、onlyは代替を使わないようにします。tokenはOAuthトークンをキーチェーンに保存します。"
+            "value": "statusはアカウントと各メカニズムを表示します。authは今すぐ再度サインインします。mechanismは最初にサインインするメカニズムを設定し、onlyは代替を使わないようにします。tokenはOAuthトークンをキーチェーンに保存します。"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "status mostra a conta e cada mecanismo. mechanism define qual inicia sessão primeiro; only impede o recurso a outros. token guarda um token OAuth nas Chaves."
+            "value": "status mostra a conta e cada mecanismo. auth inicia sessão novamente agora. mechanism define qual inicia sessão primeiro; only impede o recurso a outros. token guarda um token OAuth nas Chaves."
           }
         }
       }

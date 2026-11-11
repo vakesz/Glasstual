@@ -132,6 +132,10 @@ enum MenuSheetPresenter {
 		}) { $0.startSheet() }
 	}
 
+	static func presentSASLSignIn(for session: ServerSession) {
+		present(SASLSignInSheet(session: session)) { $0.startSheet() }
+	}
+
 	static func presentNicknameColor(for nickname: String) {
 		present(NicknameColorSheet(nickname: nickname) {
 			window?.reloadTheme()

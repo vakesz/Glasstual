@@ -1,6 +1,54 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "menu-server-sign-in-again": {
+      "comment": "Server menu and sidebar server menu: opens the sheet that signs the connection in to services again with SASL.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign In Again…"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Újbóli bejelentkezés…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erneut anmelden …"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a iniciar sesión…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se reconnecter…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "再度サインイン…"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iniciar sessão novamente…"
+          }
+        }
+      }
+    },
     "add-server-or-channel": {
       "comment": "Toolbar & input bar accessibility. Legacy key: ib-ad.",
       "extractionState": "manual",

@@ -66,6 +66,9 @@ nonisolated struct ServerConfig: Codable, Equatable, Sendable {
 	/// Stops SASL falling back to other mechanisms when the preferred one is
 	/// refused or cannot be used. Meaningless without a preference.
 	var saslUsesOnlyPreferredMechanism = false
+	/// Signs in again by itself when the server re-offers SASL to a registered
+	/// connection that is not signed in, as services do after a split.
+	var saslReauthenticatesAutomatically = true
 	var saslAuthenticationDisableExternalMechanism = false
 	var sendAuthenticationRequestsToUserServ = false
 	var identityClientSideCertificate: Data?

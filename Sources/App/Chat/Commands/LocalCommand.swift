@@ -293,7 +293,7 @@ extension LocalCommand {
 		.recv: "<input>",
 		.redact: "[message id [reason]]",
 		.remove: "[target]",
-		.sasl: "[status | mechanism <name | automatic> [only] | token <token | clear>]",
+		.sasl: "[status | auth [mechanism] | mechanism <name | automatic> [only] | token <token | clear>]",
 		.server: "<address> [[+] port] [password]",
 		.setcolor: "<nickname>",
 		.setname: "<real name>",

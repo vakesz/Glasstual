@@ -25,6 +25,7 @@ nonisolated extension ServerConfig {
 		case usesSASL
 		case saslMechanismPreference
 		case saslUsesOnlyPreferredMechanism
+		case saslReauthenticatesAutomatically
 		case saslAuthenticationDisableExternalMechanism
 		case sendAuthenticationRequestsToUserServ
 		case identityClientSideCertificate
@@ -146,6 +147,11 @@ nonisolated extension ServerConfig {
 			Bool.self,
 			forKey: .saslUsesOnlyPreferredMechanism,
 			default: Self.codingDefaults.saslUsesOnlyPreferredMechanism
+		)
+		saslReauthenticatesAutomatically = container.decode(
+			Bool.self,
+			forKey: .saslReauthenticatesAutomatically,
+			default: Self.codingDefaults.saslReauthenticatesAutomatically
 		)
 		usesSASL = container.decode(Bool.self, forKey: .usesSASL, default: Self.codingDefaults.usesSASL)
 		saslAuthenticationDisableExternalMechanism = container.decode(
@@ -418,6 +424,7 @@ nonisolated extension ServerConfig {
 		try container.encodeIfPresent(awayNickname, forKey: .awayNickname)
 		try container.encodeIfPresent(saslMechanismPreference?.wireName, forKey: .saslMechanismPreference)
 		try encode(\.saslUsesOnlyPreferredMechanism, forKey: .saslUsesOnlyPreferredMechanism, &container)
+		try encode(\.saslReauthenticatesAutomatically, forKey: .saslReauthenticatesAutomatically, &container)
 		try encode(\.usesSASL, forKey: .usesSASL, &container)
 		try container.encodeIfPresent(identityClientSideCertificate, forKey: .identityClientSideCertificate)
 

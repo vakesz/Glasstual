@@ -43,6 +43,9 @@ extension ServerSession {
 		sasl.incomingPayload = nil
 		sasl.triedMechanisms.removeAll()
 		sasl.lastAuthenticatedMechanism = nil
+		sasl.phase = .registration
+		sasl.pendingReauthentication = nil
+		sasl.status = .idle
 		failPendingDeliveriesForDisconnect()
 		SessionCapabilitiesDidChange(subject: self).post()
 	}

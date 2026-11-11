@@ -305,9 +305,11 @@ extension ServerSession {
 		/* The ACK is where the mechanism is chosen, and only while nothing is
 		 mid-exchange: a `CAP NEW sasl` arriving during an in-flight SCRAM would
 		 otherwise replace the mechanism the exchange is already speaking. */
-		if enabled, isSASL, isCapabilityEnabled(.isInSASLNegotiation) == false,
-		   selectSASLMechanism(fromOffered: capabilityNegotiation.offeredCapabilities[name] ?? []),
-		   sendSASLIdentificationRequest()
+		if enabled, isSASL, isLoggedIn, isCapabilityEnabled(.isInSASLNegotiation) == false {
+			receivedSASLAcknowledgementAfterRegistration()
+		} else if enabled, isSASL, isCapabilityEnabled(.isInSASLNegotiation) == false,
+		          selectSASLMechanism(fromOffered: capabilityNegotiation.offeredCapabilities[name] ?? []),
+		          sendSASLIdentificationRequest()
 		{
 			pauseCapabilityNegotiation()
 		}
@@ -339,6 +341,10 @@ extension ServerSession {
 				capabilityNegotiation.requestAlone(name)
 			} else {
 				capabilityNegotiation.refuse(name)
+				if name == "sasl", sasl.pendingReauthentication != nil {
+					sasl.pendingReauthentication = nil
+					reportSASLReauthenticationRefusal(.saslNotOffered)
+				}
 			}
 		}
 	}
@@ -432,6 +438,7 @@ extension ServerSession {
 	private func receiveCapabilityAdvertisement(_ actions: String) -> Bool {
 		let offered = CapabilityRegistry.parseCapabilityList(actions)
 		let ceiling = CapabilityNegotiationState.maximumOfferedCapabilities
+		let previousSASLMechanisms = capabilityNegotiation.offeredCapabilities["sasl"]
 
 		for (name, values) in offered {
 			let alreadyOffered = capabilityNegotiation.offeredCapabilities[name] != nil
@@ -439,6 +446,10 @@ extension ServerSession {
 			guard alreadyOffered || capabilityNegotiation.offeredCapabilities.count < ceiling else { continue }
 
 			capabilityNegotiation.offer(name, values: values)
+		}
+
+		if let saslMechanisms = offered["sasl"], capabilityNegotiation.offeredCapabilities["sasl"] != nil {
+			noteSASLMechanismsChanged(from: previousSASLMechanisms, to: saslMechanisms)
 		}
 
 		return handleSTSCapability(from: offered) == false

@@ -1,6 +1,534 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "sasl-reauthentication-started": {
+      "comment": "Console line when the connection starts signing in to services again with SASL. %@ is the mechanism wire name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signing in again with %@…"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Újbóli bejelentkezés ezzel: %@…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erneute Anmeldung mit %@ …"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volviendo a iniciar sesión con %@…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reconnexion avec %@…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@で再度サインインしています…"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iniciando sessão novamente com %@…"
+          }
+        }
+      }
+    },
+    "sasl-reauthentication-succeeded": {
+      "comment": "Console line after signing in again succeeded. %1$@ is the account; %2$@ is the mechanism wire name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signed in again as %1$@ with %2$@."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Újra bejelentkezve mint %1$@ (%2$@)."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erneut angemeldet als %1$@ mit %2$@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sesión iniciada de nuevo como %1$@ con %2$@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reconnecté en tant que %1$@ avec %2$@."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@で%1$@として再度サインインしました。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sessão iniciada novamente como %1$@ com %2$@."
+          }
+        }
+      }
+    },
+    "sasl-reauthentication-failed": {
+      "comment": "Console line when signing in again with SASL failed.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signing in again failed."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Az újbóli bejelentkezés sikertelen."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die erneute Anmeldung ist fehlgeschlagen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo volver a iniciar sesión."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La reconnexion a échoué."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "再度のサインインに失敗しました。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível iniciar sessão novamente."
+          }
+        }
+      }
+    },
+    "sasl-reauthentication-failed-kept-account": {
+      "comment": "Console line when signing in again failed and the earlier sign-in still stands. %@ is the account.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signing in again failed. You’re still signed in as %@."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Az újbóli bejelentkezés sikertelen. Továbbra is be van jelentkezve mint %@."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die erneute Anmeldung ist fehlgeschlagen. Sie sind weiterhin als %@ angemeldet."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo volver a iniciar sesión. Sigue con la sesión iniciada como %@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La reconnexion a échoué. Vous êtes toujours connecté en tant que %@."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "再度のサインインに失敗しました。引き続き%@としてサインインしています。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível iniciar sessão novamente. Você continua com sessão iniciada como %@."
+          }
+        }
+      }
+    },
+    "sasl-reauthentication-not-allowed": {
+      "comment": "Console line when the server answers ERR_SASLALREADY (907) to signing in again: it does not allow changing accounts.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server doesn’t allow signing in again on this connection."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A kiszolgáló nem engedélyezi az újbóli bejelentkezést ezen a kapcsolaton."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Server erlaubt auf dieser Verbindung keine erneute Anmeldung."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servidor no permite volver a iniciar sesión en esta conexión."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le serveur n’autorise pas la reconnexion sur cette connexion."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバはこの接続での再度のサインインを許可していません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O servidor não permite iniciar sessão novamente nesta conexão."
+          }
+        }
+      }
+    },
+    "sasl-reauthentication-refused-not-registered": {
+      "comment": "Why signing in again cannot start: the connection has not finished registering.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in again once the connection has registered."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Akkor jelentkezzen be újra, amikor a kapcsolat regisztrált."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Melden Sie sich erneut an, sobald die Verbindung registriert ist."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vuelva a iniciar sesión cuando la conexión se haya registrado."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reconnectez-vous une fois la connexion enregistrée."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "接続の登録が完了してから再度サインインしてください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inicie sessão novamente quando a conexão tiver sido registrada."
+          }
+        }
+      }
+    },
+    "sasl-reauthentication-refused-in-progress": {
+      "comment": "Why signing in again cannot start: a SASL exchange is already running.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A SASL sign-in is already in progress."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Egy SASL-bejelentkezés már folyamatban van."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eine SASL-Anmeldung läuft bereits."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya hay un inicio de sesión SASL en curso."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une connexion SASL est déjà en cours."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SASLサインインはすでに進行中です。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Já há um início de sessão SASL em andamento."
+          }
+        }
+      }
+    },
+    "sasl-reauthentication-refused-mechanism-not-offered": {
+      "comment": "Why signing in again cannot start: the server does not offer the chosen mechanism. %@ is its wire name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server doesn’t offer %@."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A kiszolgáló nem kínálja ezt: %@."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Server bietet %@ nicht an."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servidor no ofrece %@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le serveur ne propose pas %@."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバは%@を提供していません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O servidor não oferece %@."
+          }
+        }
+      }
+    },
+    "sasl-reauthentication-refused-mechanism-unavailable": {
+      "comment": "Why signing in again cannot start: the chosen mechanism cannot be used. %1$@ is its wire name; %2$@ is the reason, such as “no password”.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ can’t be used: %2$@."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A(z) %1$@ nem használható: %2$@."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ kann nicht verwendet werden: %2$@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se puede usar %1$@: %2$@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible d’utiliser %1$@ : %2$@."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@は使用できません：%2$@。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não é possível usar %1$@: %2$@."
+          }
+        }
+      }
+    },
+    "sasl-reauthentication-refused-no-usable-mechanism": {
+      "comment": "Why signing in again cannot start: none of the offered mechanisms can sign in with what is configured.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "None of the mechanisms the server offers can sign in with what’s set up for this server."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A kiszolgáló által kínált mechanizmusok egyike sem tud bejelentkezni az ehhez a kiszolgálóhoz beállított adatokkal."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keiner der angebotenen Mechanismen kann sich mit den für diesen Server eingerichteten Daten anmelden."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ninguno de los mecanismos que ofrece el servidor puede iniciar sesión con lo configurado para este servidor."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun des mécanismes proposés par le serveur ne peut se connecter avec ce qui est configuré pour ce serveur."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバが提供するメカニズムはいずれも、このサーバに設定された情報ではサインインできません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nenhum dos mecanismos oferecidos pelo servidor consegue iniciar sessão com o que está configurado para este servidor."
+          }
+        }
+      }
+    },
+    "sasl-stronger-mechanism-offered": {
+      "comment": "Console line when the server starts offering a stronger SASL mechanism than the one the user signed in with. %@ is its wire name. Keep /sasl auth untranslated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server now offers %@, which is stronger than the mechanism you signed in with. Type /sasl auth to sign in again."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A kiszolgáló most már a(z) %@ mechanizmust is kínálja, amely erősebb annál, amellyel bejelentkezett. Az újbóli bejelentkezéshez írja be: /sasl auth."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Server bietet jetzt %@ an, das stärker ist als der Mechanismus, mit dem Sie sich angemeldet haben. Geben Sie /sasl auth ein, um sich erneut anzumelden."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servidor ahora ofrece %@, que es más seguro que el mecanismo con el que inició sesión. Escriba /sasl auth para volver a iniciar sesión."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le serveur propose désormais %@, plus robuste que le mécanisme utilisé pour vous connecter. Tapez /sasl auth pour vous reconnecter."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバが%@の提供を開始しました。これはサインインに使用したメカニズムより強力です。再度サインインするには /sasl auth と入力してください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O servidor agora oferece %@, que é mais forte que o mecanismo com que você iniciou sessão. Digite /sasl auth para iniciar sessão novamente."
+          }
+        }
+      }
+    },
     "sasl-unavailable-no-bearer-token": {
       "comment": "/sasl status: OAUTHBEARER cannot be used because no OAuth token is set. Lower case.",
       "extractionState": "manual",

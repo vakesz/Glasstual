@@ -45,6 +45,12 @@ struct ServerPropertiesAuthenticationSection: View {
 			.accessibilityIdentifier("server-sasl-bearer-token")
 			.accessibilityHint(.ServerProperties.saslBearerTokenHelp)
 			Toggle(
+				.ServerProperties.saslReauthenticatesAutomatically,
+				isOn: $model.config.saslReauthenticatesAutomatically
+			)
+			.disabled(model.config.usesSASL == false)
+			.accessibilityIdentifier("server-sasl-reauthenticates")
+			Toggle(
 				.ServerProperties.disconnectOnSaslFailure,
 				isOn: $model.config.disconnectOnSASLFailure
 			)

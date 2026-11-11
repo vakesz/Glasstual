@@ -88,6 +88,11 @@ extension MenuActionController {
 		MenuSheetPresenter.presentNicknameChange(for: session)
 	}
 
+	@objc func showSASLSignInSheet(_: Any?) {
+		guard let session = context.selectedSession, session.canBeginSASLReauthentication else { return }
+		MenuSheetPresenter.presentSASLSignIn(for: session)
+	}
+
 	@objc func showSettingsWindow(_: Any?) {
 		AppServices.scenes.openSettings(.default)
 	}

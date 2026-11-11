@@ -13,6 +13,8 @@ enum SASLCommandRequest: Equatable {
 	case unknownMechanism(String)
 	case setToken(String)
 	case clearToken
+	/// Sign in again now, with one mechanism or with the usual order.
+	case authenticate(SASLMechanism?)
 	case invalid
 
 	init(_ arguments: CommandArguments) {
@@ -22,6 +24,19 @@ enum SASLCommandRequest: Equatable {
 			self = arguments.isEmpty ? .status : .invalid
 		case "mechanism":
 			self = Self.mechanismRequest(&arguments)
+		case "auth":
+			let name = arguments.next()
+			guard arguments.isEmpty else {
+				self = .invalid
+				return
+			}
+			if name.isEmpty {
+				self = .authenticate(nil)
+			} else if let mechanism = SASLMechanism(wireName: name) {
+				self = .authenticate(mechanism)
+			} else {
+				self = .unknownMechanism(name)
+			}
 		case "token":
 			let token = arguments.next()
 			guard token.isEmpty == false, arguments.isEmpty else {
@@ -70,6 +85,10 @@ extension ServerSession {
 		case .clearToken:
 			storeSASLBearerToken(.cleared)
 			printDebugInformation(toConsole: String(localized: .IRC.saslTokenCleared))
+		case let .authenticate(mechanism):
+			if let refusal = beginSASLReauthentication(using: mechanism) {
+				reportSASLReauthenticationRefusal(refusal)
+			}
 		case .invalid:
 			printInvalidSyntaxMessage(for: parsed.command)
 		}

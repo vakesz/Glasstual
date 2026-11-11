@@ -23,6 +23,28 @@ enum OAuthBearerExchange: Equatable {
 	case acknowledgedError(OAuthBearerFailure?)
 }
 
+/// Whether the exchange signs in during registration or again afterwards.
+enum SASLExchangePhase: Equatable {
+	case registration
+	/// SASL 3.2 re-authentication on a registered connection. `wasIdentified`
+	/// is restored if it fails; `explicit` is the one mechanism the user asked
+	/// for, which gets no fallback.
+	case reauthentication(wasIdentified: Bool, explicit: SASLMechanism?)
+}
+
+/// A re-authentication waiting for the server to acknowledge `sasl`.
+struct SASLReauthenticationRequest: Equatable {
+	let explicit: SASLMechanism?
+}
+
+/// Where the last exchange of this connection stands, for the sign-in sheet.
+enum SASLExchangeStatus: Equatable {
+	case idle
+	case inProgress(SASLMechanism)
+	case succeeded(account: String?, mechanism: SASLMechanism)
+	case failed(reason: String)
+}
+
 /** One SASL exchange.
 
  The mechanisms the server offered, the one being tried, the ones already
@@ -35,6 +57,9 @@ struct SASLSession {
 	var triedMechanisms: [SASLMechanism] = []
 	/// The mechanism of the last exchange that succeeded on this connection.
 	var lastAuthenticatedMechanism: SASLMechanism?
+	var phase = SASLExchangePhase.registration
+	var pendingReauthentication: SASLReauthenticationRequest?
+	var status = SASLExchangeStatus.idle
 	var incomingPayload: String?
 	var ecdsaExchange: ECDSAChallengeExchange?
 	var oauthExchange: OAuthBearerExchange?

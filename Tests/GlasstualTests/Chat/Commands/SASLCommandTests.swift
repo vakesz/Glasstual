@@ -29,6 +29,10 @@ struct SASLCommandTests {
 		("mechanism", .invalid),
 		("mechanism plain later", .invalid),
 		("status extra", .invalid),
+		("auth", .authenticate(nil)),
+		("auth plain", .authenticate(.plain)),
+		("auth gssapi", .unknownMechanism("gssapi")),
+		("auth plain extra", .invalid),
 		("token abc.def", .setToken("abc.def")),
 		("token clear", .clearToken),
 		("token", .invalid),
@@ -163,5 +167,20 @@ struct SASLCommandTests {
 	])
 	func secretLines(_ line: String, _ carriesSecret: Bool) {
 		#expect(LocalCommand.lineCarriesSecret(line) == carriesSecret)
+	}
+
+	@Test("auth signs in again, and a refusal is printed")
+	func authRoutes() {
+		let session = session()
+		session.sendCommand("sasl auth", completeTarget: false)
+		#expect(printed(by: session).last == SASLReauthenticationRefusal.notRegistered.localizedDescription)
+
+		session.markAsLoggedIn()
+		session.setConnectionTransportForTesting(.connected)
+		session.capabilityNegotiation.offer("sasl", values: ["PLAIN"])
+		_ = session.capabilityNegotiation.acknowledge("sasl")
+		session.sendCommand("sasl auth plain", completeTarget: false)
+		defer { session.stopAllTimers() }
+		#expect((session.sentLines as NSArray).contains("AUTHENTICATE PLAIN"))
 	}
 }

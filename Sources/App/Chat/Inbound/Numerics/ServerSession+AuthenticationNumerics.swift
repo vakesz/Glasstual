@@ -88,6 +88,14 @@ extension ServerSession {
 			}
 		}
 		guard isCapabilityEnabled(.isInSASLNegotiation) else { return }
+		/* 907 during registration means a bouncer or the server signed the
+		 connection in already. Afterwards it is SASL 3.2's answer to signing in
+		 again where changing accounts is not allowed: the account stays. */
+		if numeric == .saslalready, case .reauthentication = sasl.phase {
+			printDebugInformation(toConsole: String(localized: .IRC.saslReauthenticationNotAllowed))
+			finishSASLNegotiation(failed: true)
+			return
+		}
 		let failed = Self.saslFailureNumerics.contains(numeric)
 		if failed {
 			reportOAuthBearerRejection()

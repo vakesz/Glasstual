@@ -164,6 +164,8 @@ struct MenuItemValidator {
 			 registration. The transcript's menu offers the same command, so it
 			 reaches this guard too. */
 			return session?.isLoggedIn == true
+		case .signInAgainWithSASL:
+			return session?.canBeginSASLReauthentication == true
 		case .duplicateServer, .serverProperties:
 			return session != nil
 		case .deleteServer:
