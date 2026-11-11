@@ -316,6 +316,20 @@ struct ServerSessionZNCTests {
 		#expect(session.znc.certificateChainText == "inside the batch\n")
 	}
 
+	@Test("An untagged CERTINFO line that arrives while a tlsinfo batch is open is not appended")
+	func untaggedCertificateInfoDuringAnOpenBatchIsIgnored() throws {
+		let session = certificateInfoSession()
+
+		try feed([
+			Self.certificateInfoOpening,
+			certificateInfoLine("genuine chunk"),
+			certificateInfoLine("injected chunk", inBatch: false),
+			Self.certificateInfoClosing,
+		], to: session)
+
+		#expect(session.znc.certificateChainText == "genuine chunk\n")
+	}
+
 	@Test(
 		"A CERTINFO chunk from anyone but the bouncer's own sender is not appended",
 		arguments: ["evil!user@host", "irc.example.net", "znc.in!user@host", "*status!znc@znc.in"]

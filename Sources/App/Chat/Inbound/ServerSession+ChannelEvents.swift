@@ -147,6 +147,7 @@ extension ServerSession {
 	func receiveCertInfo(_ message: Message) {
 		guard message.params.count == 2,
 		      znc.isSendingCertificateInfo,
+		      batchMessage(ofKind: .zncTLSInfo, containing: message) != nil,
 		      message.sender.isServer,
 		      message.senderNickname == ServerQuirks.ZNC.messageSender,
 		      InboundEventPolicy.acceptsCertificateChunk(message.sequence),
