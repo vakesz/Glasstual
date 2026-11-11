@@ -95,7 +95,7 @@ extension ServerSession {
 private extension ServerSession {
 	func receiveIncomingLine(_ data: String) {
 		guard isConnected, !isTerminating else { return }
-		lastMessageReceived = Date().timeIntervalSince1970
+		liveness.lastMessageReceived = Date().timeIntervalSince1970
 		chatSession?.noteMessageReceived(length: UInt(data.utf16.count))
 		rawDataLogIncomingTraffic(data)
 

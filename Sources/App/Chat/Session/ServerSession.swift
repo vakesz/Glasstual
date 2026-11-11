@@ -137,7 +137,6 @@ class ServerSession: ChatItem {
 	var away = AwayStatus()
 	/// What the network's nickname service has made of this session.
 	var nickServ = NickServIdentification()
-	var lastMessageReceived: TimeInterval = 0
 	var lastMessageServerTime: TimeInterval = 0 {
 		didSet { markConfigurationStaleIfChanged(from: oldValue, to: lastMessageServerTime) }
 	}
@@ -309,7 +308,8 @@ class ServerSession: ChatItem {
 	var presencePolling: PresencePolling
 	/// The channels waiting to be joined, and the pacing they are joined at.
 	var autojoin: AutojoinSchedule
-	let pongTimer: SessionTimer
+	/// When the server was last heard from, and the PING timer that watches it.
+	var liveness: ConnectionLiveness
 	let retryTimer: SessionTimer
 	let requestedCommands = SessionRequestedCommands()
 	var rawDataLogConsole: Conversation?
@@ -370,7 +370,7 @@ class ServerSession: ChatItem {
 			isonTimer: timerOwner.makeTimer { $0.onISONTimer() },
 			whoTimer: timerOwner.makeTimer { $0.onWhoTimer() }
 		)
-		pongTimer = timerOwner.makeTimer { $0.onPongTimer() }
+		liveness = ConnectionLiveness(pongTimer: timerOwner.makeTimer { $0.onPongTimer() })
 		retryTimer = timerOwner.makeTimer { $0.onRetryTimer() }
 		readMarkers = ReadMarkerTracker(timer: timerOwner.makeTimer { $0.onReadMarkerTimer() })
 		autojoin = AutojoinSchedule(
@@ -398,7 +398,7 @@ class ServerSession: ChatItem {
 		notifications.cancelAll()
 		[
 			autojoin.timer, autojoin.delayedWarningTimer,
-			presencePolling.isonTimer, pongTimer, reconnect.timer, retryTimer, presencePolling.whoTimer, readMarkers.timer,
+			presencePolling.isonTimer, liveness.pongTimer, reconnect.timer, retryTimer, presencePolling.whoTimer, readMarkers.timer,
 			sasl.timeoutTimer,
 		].forEach { timer in timer.stop() }
 		startup.cancel()

@@ -49,12 +49,11 @@ extension ServerSession {
 
 		resetChatHistoryState()
 		// Reconnect intent belongs to the pending schedule, which survives this reset.
-		reconnect.timeoutWarningShown = false
+		liveness.resetForTeardown()
 		server = nil
 		KeychainPersistence.shared.persist(Dictionary(uniqueKeysWithValues: retiredServerKeychainItems.map { ($0, .cleared) }))
 		retiredServerKeychainItems.removeAll()
 		identity = SessionIdentity()
-		lastMessageReceived = 0
 
 		resetSASLNegotiation()
 		resetCapabilityNegotiation()

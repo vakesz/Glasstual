@@ -22,9 +22,6 @@ struct ReconnectSchedule {
 	var registeredAt: TimeInterval?
 	/// Seconds to wait before the connection this schedule is holding back.
 	var connectDelay: UInt = 0
-	/// Whether the user has already been told this connection went quiet, so
-	/// that the warning is printed once rather than every timeout.
-	var timeoutWarningShown = false
 	let timer: SessionTimer
 
 	/// Clears the backoff when the ending connection stayed registered long
@@ -101,45 +98,6 @@ extension ServerSession {
 		stopSASLTimeoutTimer()
 		stopWhoTimer()
 		readMarkers.timer.stop()
-	}
-
-	func startPongTimer() {
-		guard !pongTimer.isActive else { return }
-		pongTimer.start(ConnectionTimerPolicy.pongCheckInterval, repeats: true)
-	}
-
-	func stopPongTimer() {
-		guard pongTimer.isActive else { return }
-		pongTimer.stop()
-	}
-
-	func onPongTimer() {
-		guard isLoggedIn else {
-			stopPongTimer()
-			return
-		}
-
-		let elapsed = Date().timeIntervalSince1970 - lastMessageReceived
-		switch ConnectionTimerPolicy.pongAction(
-			elapsed: elapsed,
-			eofReceived: socket?.EOFReceived ?? false,
-			disconnectOnTimeout: config.performDisconnectOnPongTimer,
-			pingEnabled: config.performPongTimer,
-			warningAlreadyShown: reconnect.timeoutWarningShown
-		) {
-		case .disconnect:
-			printDebugInformation(String(localized: .IRC.minutesHaveElapsedSinceLastResponse(Float(elapsed / 60))), in: nil)
-			disconnect()
-		case .warnTimeout:
-			reconnect.timeoutWarningShown = true
-			printDebugInformation(String(localized: .IRC.minutesHaveElapsedSinceLastResponseFromThis(Float(elapsed / 60))), in: nil)
-		case .ping:
-			if let serverAddress {
-				sendPing(serverAddress)
-			}
-		case .none:
-			break
-		}
 	}
 
 	/** Schedules the next reconnection attempt.

@@ -74,7 +74,7 @@ struct ConfigRemovalTests {
 
 		#expect(fixture.chatSession.sessions.isEmpty)
 		#expect(session.isTerminating)
-		#expect(!session.pongTimer.isActive)
+		#expect(!session.liveness.pongTimer.isActive)
 		#expect(session.pendingConnectionTask == nil)
 		#expect(scheduledConnection.isCancelled)
 		#expect(session.config.pendingNicknamePassword == .set("fixture-nickname"))
