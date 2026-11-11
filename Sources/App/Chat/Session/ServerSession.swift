@@ -61,7 +61,7 @@ class ServerSession: ChatItem {
 
 	/// Hands one parsed message to the inbound state machine.
 	func processIncomingMessage(_ message: Message) {
-		processIncomingMessageOnMainActor(message)
+		dispatchIncomingMessage(message)
 	}
 
 	var config: ServerConfig {

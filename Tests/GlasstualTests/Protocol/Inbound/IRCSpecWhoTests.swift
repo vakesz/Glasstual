@@ -13,6 +13,7 @@ struct IRCSpecWhoTests {
 	@Test("One wire NAMES numeric publishes one member snapshot")
 	func namesPublishesOncePerNumeric() throws {
 		let session = session()
+		session.forwardsProcessedMessages = true
 		let channel = try joinedChannel("#names", on: session)
 		let list = MemberList()
 		list.assign(to: channel)
@@ -32,6 +33,7 @@ struct IRCSpecWhoTests {
 	@Test("A pending read keeps member lookups current before publishing ordered rows")
 	func pendingReadKeepsMembershipCurrent() throws {
 		let session = session()
+		session.forwardsProcessedMessages = true
 		let channel = try joinedChannel("#names", on: session)
 		let list = MemberList()
 		list.assign(to: channel)
@@ -57,6 +59,7 @@ struct IRCSpecWhoTests {
 	@Test("WHO and WHOX publish each related list once and preserve selection", arguments: [false, true])
 	func whoBatchesRelatedPresentations(_ whox: Bool) throws {
 		let session = session()
+		session.forwardsProcessedMessages = true
 		session.enableCapability(.awayNotify)
 		let first = try joinedChannel("#first", on: session)
 		let second = try joinedChannel("#second", on: session)

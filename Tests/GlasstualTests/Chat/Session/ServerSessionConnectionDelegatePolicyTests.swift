@@ -122,7 +122,7 @@ struct ServerSessionConnectionDelegatePolicyTests {
 
 		let stamped = try #require(Message(line: "@time=2026-01-01T00:00:20.000Z :s PING :x", on: session))
 
-		session.processIncomingMessageOnMainActor(stamped)
+		session.dispatchIncomingMessage(stamped)
 
 		let advanced = session.lastMessageServerTime
 
@@ -130,13 +130,13 @@ struct ServerSessionConnectionDelegatePolicyTests {
 
 		let older = try #require(Message(line: "@time=2026-01-01T00:00:10.000Z :s PING :x", on: session))
 
-		session.processIncomingMessageOnMainActor(older)
+		session.dispatchIncomingMessage(older)
 
 		#expect(session.lastMessageServerTime == advanced)
 
 		let unstamped = try #require(Message(line: ":s PING :x", on: session))
 
-		session.processIncomingMessageOnMainActor(unstamped)
+		session.dispatchIncomingMessage(unstamped)
 
 		#expect(session.lastMessageServerTime == advanced)
 	}

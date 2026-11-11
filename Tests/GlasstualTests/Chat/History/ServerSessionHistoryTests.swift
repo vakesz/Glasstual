@@ -288,6 +288,7 @@ struct ServerSessionHistoryTests {
 			session.setConnectionTransportForTesting(.connected)
 			let socket = Connection(config: ConnectionConfig(), onSession: session)
 			session.socket = socket
+			session.forwardsProcessedMessages = true
 			let before = Date(timeIntervalSince1970: 100)
 			session.requestChatHistory(before: before, in: channel)
 			let pending = try #require(session.chatHistory.serverRequests[channel.uniqueIdentifier])
@@ -301,7 +302,7 @@ struct ServerSessionHistoryTests {
 			] {
 				session.connectionDidReceive(wire)
 			}
-			#expect(session.processedMessages.count == 0)
+			#expect(session.processedMessages.filter { $0.remoteCommand == .privmsg }.isEmpty)
 			#expect(session.chatHistory.serverRequests.isEmpty)
 			session.requestChatHistory(before: before, in: channel)
 			#expect(session.sentLines.count == 2)

@@ -98,6 +98,7 @@ struct LinePresentationPolicyTests {
 		)
 		session.setConnectionTransportForTesting(.connected)
 		session.socket = Connection(config: ConnectionConfig(), onSession: session)
+		session.forwardsProcessedMessages = true
 		_ = try #require(session.socket)
 		let channel = try #require(session.findConversationOrCreate("#\u{2}chan"))
 

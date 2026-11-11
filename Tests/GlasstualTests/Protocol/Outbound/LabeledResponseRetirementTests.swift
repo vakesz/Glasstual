@@ -180,7 +180,7 @@ struct LabeledResponseRetirementTests {
 		] {
 			session.connectionDidReceive(line)
 		}
-		let messages = session.processedMessages
+		let messages = session.processedMessages.filter { $0.remoteCommand == .privmsg }
 		#expect(messages.map { $0.params.last ?? "" } == ["first", "second"])
 		#expect(messages.allSatisfy { $0.parentBatchMessage?.isReplay == true })
 		let bodies = session.printedLines.compactMap { ($0 as? [String: Any])?["messageBody"] as? String }

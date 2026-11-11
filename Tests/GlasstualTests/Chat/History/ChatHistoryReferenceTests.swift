@@ -64,7 +64,7 @@ struct ChatHistoryReferenceTests {
 		let pending = try #require(session.chatHistory.serverRequests[channel.uniqueIdentifier])
 		let label = try #require(pending.label)
 		let message = try #require(Message(line: "@label=\(label) :server \(numeric) me CHATHISTORY :Rejected", on: session))
-		session.processIncomingMessageOnMainActor(message)
+		session.dispatchIncomingMessage(message)
 		#expect(session.chatHistory.serverRequests.isEmpty)
 		#expect(pending.timeoutTimer == nil)
 		#expect(session.canRetryServerHistory(for: channel))
@@ -80,6 +80,7 @@ struct ChatHistoryReferenceTests {
 		let socket = Connection(config: ConnectionConfig(), onSession: session)
 		session.socket = socket
 		session.setConnectionTransportForTesting(.connected)
+		session.forwardsProcessedMessages = true
 		let request = ServerHistoryRequest(id: UUID(), before: Date(timeIntervalSince1970: 100), oldestLineNumber: nil)
 		#expect(session.requestServerHistory(request, in: channel))
 		let pending = try #require(session.chatHistory.serverRequests[channel.uniqueIdentifier])
@@ -99,7 +100,7 @@ struct ChatHistoryReferenceTests {
 
 		#expect(session.chatHistory.serverRequests.isEmpty)
 		#expect(pending.timeoutTimer == nil)
-		#expect(session.processedMessages.count == 1)
+		#expect(session.processedMessages.filter { $0.remoteCommand == .privmsg }.count == 1)
 	}
 
 	@Test("Message identifier support respects advertisement removal and reconnect", arguments: [

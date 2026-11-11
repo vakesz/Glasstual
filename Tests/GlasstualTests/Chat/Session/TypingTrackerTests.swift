@@ -154,7 +154,7 @@ struct TypingReceiptTests {
 		defer { session.typingTracker.removeAll() }
 		var message = try #require(Message(line: ":Alice!u@h \(command)", on: session))
 		message.isReplayed = replayed
-		session.processIncomingMessageOnMainActor(message)
+		session.dispatchIncomingMessage(message)
 		#expect(session.typingTracker.typingNicknames(in: fixture.first) == (replayed ? ["Alice"] : []))
 		#expect(session.typingTracker.typingNicknames(in: fixture.second) == ["Alice"])
 	}
@@ -170,7 +170,7 @@ struct TypingReceiptTests {
 		defer { session.typingTracker.removeAll() }
 		var message = try #require(Message(line: line, on: session))
 		message.isPrintOnlyMessage = printOnly
-		session.processIncomingMessageOnMainActor(message)
+		session.dispatchIncomingMessage(message)
 		let affectsAll = message.remoteCommand == .quit || message.remoteCommand == .nick || message.remoteCommand == .kill
 		#expect(session.typingTracker.typingNicknames(in: fixture.first) == (printOnly ? ["Alice"] : []))
 		#expect(session.typingTracker.typingNicknames(in: fixture.second) == (!printOnly && affectsAll ? [] : ["Alice"]))

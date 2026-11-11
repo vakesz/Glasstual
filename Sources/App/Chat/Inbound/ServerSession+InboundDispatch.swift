@@ -13,7 +13,7 @@ extension ServerSession {
 	 belongs to this session and arrives in the order the server sent it. */
 	func connectionDidReceive(_ data: String) {
 		guard data.isEmpty == false else { return }
-		processIncomingDataOnMainActor(data)
+		receiveIncomingLine(data)
 	}
 
 	/// The five facts the wire parser reads a line against. The one place this
@@ -29,11 +29,11 @@ extension ServerSession {
 	}
 }
 
-/// `ServerSession.processIncomingMessage` is the overridable seam in front of this,
-/// which is why the dispatch entry point is separate from the handlers below.
+/// `ServerSession.processIncomingMessage` is the overridable seam every inbound
+/// message passes through; `dispatchIncomingMessage` is its implementation.
 @MainActor
 extension ServerSession {
-	func processIncomingMessageOnMainActor(_ message: Message) {
+	func dispatchIncomingMessage(_ message: Message) {
 		processIncomingMessageAttributes(message)
 		if resolveLabeledResponse(for: message) {
 			handleZNCStatusNotice(message)
@@ -94,7 +94,7 @@ extension ServerSession {
 }
 
 private extension ServerSession {
-	func processIncomingDataOnMainActor(_ data: String) {
+	func receiveIncomingLine(_ data: String) {
 		guard isConnected, !isTerminating else { return }
 		lastMessageReceived = Date().timeIntervalSince1970
 		chatSession?.noteMessageReceived(length: UInt(data.utf16.count))
@@ -109,7 +109,7 @@ private extension ServerSession {
 		guard let interceptedMessage = interceptZNCServerInput(message) else { return }
 		message = interceptedMessage
 		guard !filterBatchCommandIncomingData(message) else { return }
-		processIncomingMessageOnMainActor(message)
+		processIncomingMessage(message)
 	}
 
 	/** The stored server time is the point a bouncer replays from, so it tracks

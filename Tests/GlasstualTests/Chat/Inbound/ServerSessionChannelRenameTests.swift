@@ -207,7 +207,7 @@ struct ServerSessionChannelRenameTests {
 		let channel = try joinedChannel("#old", on: session)
 
 		let message = try #require(Message(line: ":server RENAME #old #new :reason", on: session))
-		session.processIncomingMessageOnMainActor(message)
+		session.dispatchIncomingMessage(message)
 
 		#expect(channel.name == "#new")
 	}

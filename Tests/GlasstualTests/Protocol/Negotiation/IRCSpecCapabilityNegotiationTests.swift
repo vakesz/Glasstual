@@ -46,6 +46,7 @@ struct IRCSpecCapabilityNegotiationTests {
 		session.setConnectionTransportForTesting(.connected)
 		let socket = Connection(config: ConnectionConfig(), onSession: session)
 		session.socket = socket
+		session.forwardsProcessedMessages = true
 		func receive(_ line: String) {
 			session.connectionDidReceive(line)
 		}
@@ -74,6 +75,7 @@ struct IRCSpecCapabilityNegotiationTests {
 		session.setConnectionTransportForTesting(.connected)
 		let socket = Connection(config: ConnectionConfig(), onSession: session)
 		session.socket = socket
+		session.forwardsProcessedMessages = true
 		func receive(_ line: String) {
 			session.connectionDidReceive(line)
 		}
@@ -99,6 +101,7 @@ struct IRCSpecCapabilityNegotiationTests {
 		session.isLoggedIn = true
 		let socket = Connection(config: ConnectionConfig(), onSession: session)
 		session.socket = socket
+		session.forwardsProcessedMessages = true
 		func receive(_ line: String) {
 			session.connectionDidReceive(line)
 		}
