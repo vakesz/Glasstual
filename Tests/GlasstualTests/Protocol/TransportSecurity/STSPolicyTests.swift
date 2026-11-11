@@ -166,7 +166,7 @@ struct STSPolicyTests {
 	}
 }
 
-/** `performedSTSUpgrade` stops one connection attempt from upgrading twice.
+/** `sts.performedUpgrade` stops one connection attempt from upgrading twice.
 
  It was cleared only by a successful TLS handshake, so an upgrade that failed to
  connect left it set for the life of the session object and every later STS offer
@@ -179,10 +179,13 @@ struct ConnectionSTSUpgradeResetTests {
 	func disconnectClearsTheUpgradeFlag() {
 		let session = TestServerSession(configDictionary: ["nickname": "mara"])
 		defer { session.stopAllTimers() }
-		session.performedSTSUpgrade = true
+		_ = session.sts.beginUpgrade(to: PendingIRCEndpoint(
+			host: "irc.example.net", port: 6697, secured: true, origin: nil, reason: .stsUpgrade
+		))
+		#expect(session.sts.performedUpgrade)
 
 		session.resetAllPropertyValues()
 
-		#expect(session.performedSTSUpgrade == false)
+		#expect(session.sts.performedUpgrade == false)
 	}
 }

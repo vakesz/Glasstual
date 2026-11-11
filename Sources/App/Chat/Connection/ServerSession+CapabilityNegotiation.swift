@@ -172,13 +172,6 @@ extension ServerSession {
 
 		switch action {
 		case let .upgrade(upgradePort):
-			guard performedSTSUpgrade == false, upgradePort > 0 else {
-				return false
-			}
-
-			performedSTSUpgrade = true
-			printDebugInformation(toConsole: String(localized: .IRC.serverOffersStrictTransportSecurityReconnecting(String(upgradePort))))
-
 			// Snapshot the pending secret too: teardown may retire its keychain item.
 			var origin = server
 			origin?.pendingServerPassword = PendingKeychainSecret(sessionServerPassword)
@@ -189,7 +182,11 @@ extension ServerSession {
 				origin: origin,
 				reason: .stsUpgrade
 			)
-			lastSTSUpgradeAttempt = endpoint
+			guard upgradePort > 0, sts.beginUpgrade(to: endpoint) else {
+				return false
+			}
+
+			printDebugInformation(toConsole: String(localized: .IRC.serverOffersStrictTransportSecurityReconnecting(String(upgradePort))))
 			addDisconnectCallback { [weak self] in
 				guard let self else { return }
 				pendingEndpoint = endpoint
@@ -200,10 +197,10 @@ extension ServerSession {
 
 			return true
 		case let .stored(policyPort):
-			activeSTSPolicy = STSConnectionPolicy(host: host, port: policyPort, values: parsed)
+			sts.activePolicy = STSConnectionPolicy(host: host, port: policyPort, values: parsed)
 			printDebugInformation(toConsole: String(localized: .IRC.storedAStrictTransportSecurityPolicy(String(policyPort))))
 		case .cleared:
-			activeSTSPolicy = nil
+			sts.activePolicy = nil
 			printDebugInformation(toConsole: String(localized: .IRC.serverWithdrewItsStrictTransportSecurity))
 		case .none:
 			break

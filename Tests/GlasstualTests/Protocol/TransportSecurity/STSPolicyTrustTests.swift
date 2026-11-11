@@ -101,7 +101,7 @@ struct STSPolicyTrustTests {
 		let session = ServerSession(config: ServerConfig(), environment: ChatEnvironment(settings: .current(), services: services))
 		let offer = try values(["duration=300", "port=6697"])
 		policyStore.setPolicy(STSPolicy(port: 7000, expiresAt: .distantPast, preload: false), forHost: "irc.example.net")
-		session.activeSTSPolicy = STSConnectionPolicy(host: "irc.example.net", port: 7000, values: offer)
+		session.sts.activePolicy = STSConnectionPolicy(host: "irc.example.net", port: 7000, values: offer)
 		let closedAt = Date()
 
 		session.resetAllPropertyValues()
@@ -109,6 +109,6 @@ struct STSPolicyTrustTests {
 		let renewed = try #require(policyStore.policy(forHost: "irc.example.net"))
 		#expect(renewed.port == 7000)
 		#expect(renewed.expiresAt >= closedAt.addingTimeInterval(300))
-		#expect(session.activeSTSPolicy == nil)
+		#expect(session.sts.activePolicy == nil)
 	}
 }

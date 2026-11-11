@@ -22,8 +22,7 @@ extension SessionDisconnectMode {
 
 extension ServerSession {
 	func resetAllPropertyValues() {
-		if let policy = activeSTSPolicy {
-			activeSTSPolicy = nil
+		if let policy = sts.resetForTeardown() {
 			_ = environment.services.stsPolicies.applyCapabilityValues(
 				policy.values, forHost: policy.host, connectedPort: policy.port,
 				secured: true, certificateChainValidated: true
@@ -53,13 +52,6 @@ extension ServerSession {
 		znc.isSendingCertificateInfo = false
 		znc.certificateChainText = nil
 		znc.isPlayingBackHistory = false
-
-		/* The flag exists to stop one connection attempt from upgrading twice.
-		 Clearing it only on a successful TLS handshake meant an upgrade that
-		 failed to connect left it set for the life of the session object, and
-		 every later STS offer from that server was ignored. The session it
-		 guards ends here. */
-		performedSTSUpgrade = false
 
 		resetChatHistoryState()
 		// Reconnect intent belongs to the pending schedule, which survives this reset.
@@ -139,10 +131,8 @@ extension ServerSession {
 	}
 
 	func connectionDidSecure(protocolType: tls_protocol_version_t, cipherSuite: tls_ciphersuite_t) {
-		performedSTSUpgrade = false
-		if let attempt = lastSTSUpgradeAttempt {
+		if let attempt = sts.noteSecured() {
 			environment.services.stsPolicies.noteUpgradeSucceeded(host: attempt.host)
-			lastSTSUpgradeAttempt = nil
 		}
 		output?.reloadChatItem(self)
 		output?.updateTitle(for: self)
@@ -199,11 +189,8 @@ extension ServerSession {
 	}
 
 	func connectionDidDisconnect(error disconnectError: Error?) {
-		if let attempt = lastSTSUpgradeAttempt, disconnectError != nil, socket?.isSecured != true {
+		if let attempt = sts.noteDisconnect(withError: disconnectError != nil, secured: socket?.isSecured == true) {
 			environment.services.stsPolicies.noteUpgradeFailed(host: attempt.host, port: attempt.port)
-			lastSTSUpgradeAttempt = nil
-		} else if socket?.isSecured == true {
-			lastSTSUpgradeAttempt = nil
 		}
 		changeStateOff(withError: disconnectError)
 		invokeDisconnectCallbacks()

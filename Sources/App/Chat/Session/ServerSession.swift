@@ -227,11 +227,7 @@ class ServerSession: ChatItem {
 	/// it is waiting on.
 	var sasl: SASLSession
 	var pendingEndpoint: PendingIRCEndpoint?
-	var performedSTSUpgrade = false
-	var activeSTSPolicy: STSConnectionPolicy?
-	/// The last plaintext-to-TLS upgrade attempt, cleared once TLS secures.
-	/// A disconnect before that records the endpoint as failed for a cooldown.
-	var lastSTSUpgradeAttempt: PendingIRCEndpoint?
+	var sts = STSUpgradeState()
 	var sidebarItemIsExpanded = false {
 		didSet { markConfigurationStaleIfChanged(from: oldValue, to: sidebarItemIsExpanded) }
 	}
