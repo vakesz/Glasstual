@@ -27,4 +27,9 @@ struct ChatHistorySession {
 	/// Set once the server answered a message identifier with
 	/// `INVALID_MSGREFTYPE`: pages are asked for by time from then on.
 	var refusesMessageIdentifiers = false
+	/// Catch-up and gap-fill paging in flight, keyed by conversation identity.
+	/// One per conversation, and none while a scroll-back page is pending.
+	var paging: [String: PendingChatHistoryPaging] = [:]
+	/// Messages known to be missing, keyed by conversation identity.
+	var gaps: [String: ChatHistoryGap] = [:]
 }

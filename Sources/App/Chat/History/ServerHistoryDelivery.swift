@@ -16,6 +16,15 @@ protocol ServerHistoryPresenting: AnyObject {
 	func receiveServerHistory(_ outcome: ServerHistoryOutcome, for request: ServerHistoryRequest)
 }
 
+/// Whether a conversation is missing messages the server still has, for the
+/// banner the transcript draws over it.
+enum MissingServerHistoryState: Equatable {
+	case none
+	case missing
+	case loading
+	case failed(reason: String?)
+}
+
 /// Where the page a `CHATHISTORY BEFORE` brings back is delivered.
 enum ServerHistoryDelivery {
 	/// The session prepends the lines to the conversation's transcript itself.

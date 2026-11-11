@@ -46,6 +46,7 @@ extension ServerSession {
 	private func serverHistoryRequestIsAdmissible(for conversation: Conversation) -> Bool {
 		!isTerminating && chatHistoryIsAvailable(for: conversation)
 			&& chatHistory.serverRequests[conversation.uniqueIdentifier] == nil
+			&& chatHistory.paging[conversation.uniqueIdentifier] == nil
 			&& chatHistory.serverRequests.count < ChatHistoryPolicy.maximumPendingRequests
 	}
 
@@ -123,6 +124,10 @@ extension ServerSession {
 	}
 
 	func replayChatHistoryBatch(_ batch: MessageBatch, contents: MessageBatch) {
+		if serverHistoryRequestID(for: batch) == nil, let paging = pagingAnswered(by: batch) {
+			replayPagingBatch(batch, contents: contents, paging: paging)
+			return
+		}
 		let requestID = serverHistoryRequestID(for: batch)
 		chatHistory.requestsByBatchToken.removeValue(forKey: batch.batchToken)
 		let pending = chatHistory.serverRequests.values.first { $0.request.id == requestID }

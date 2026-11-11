@@ -206,8 +206,10 @@ struct ServerSessionHistoryTests {
 
 			session.requestChatHistory(for: channel)
 
+			/* With a line known, the catch-up asks for what came after it, five
+			 seconds early so lines within clock skew are not missed. */
 			#expect(
-				sentLines(of: session).last == "CHATHISTORY LATEST #chat timestamp=2023-11-14T22:13:20.500Z 100"
+				sentLines(of: session).last == "CHATHISTORY AFTER #chat timestamp=2023-11-14T22:13:15.500Z 100"
 			)
 		}
 	}

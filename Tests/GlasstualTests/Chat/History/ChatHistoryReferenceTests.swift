@@ -49,8 +49,13 @@ struct ChatHistoryReferenceTests {
 			Scrollback.shared.duplicates.forgetLines([known.uniqueIdentifier, local.uniqueIdentifier], inView: channel.uniqueIdentifier)
 		}
 		session.requestChatHistory(for: channel)
-		let expected = hasServerMessage ? "timestamp=1970-01-01T00:01:40.000Z" : "*"
-		#expect(session.sentLines.compactMap { $0 as? String } == ["CHATHISTORY LATEST #history \(expected) 100"])
+		/* The catch-up counts from the last server timestamp, five seconds
+		 early; with none, it asks for the latest page. */
+		let expected = hasServerMessage
+			? "CHATHISTORY AFTER #history timestamp=1970-01-01T00:01:35.000Z 100"
+			: "CHATHISTORY LATEST #history * 100"
+		#expect(session.sentLines.compactMap { $0 as? String } == [expected])
+		session.stopAllTimers()
 	}
 
 	@Test("A labeled legacy error numeric promptly retires its history request", arguments: [401, 461, 499])

@@ -1,6 +1,251 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "missing-history-title" : {
+      "comment" : "Transcript banner: some messages sent while the user was away were not loaded from the server's history.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Some messages from while you were away weren’t loaded."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A távolléte alatt érkezett üzenetek egy része nem lett betöltve."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einige Nachrichten aus Ihrer Abwesenheit wurden nicht geladen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se cargaron algunos mensajes de mientras no estaba."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certains messages reçus pendant votre absence n’ont pas été chargés."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不在中のメッセージの一部が読み込まれていません。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Algumas mensagens de quando você estava ausente não foram carregadas."
+          }
+        }
+      }
+    },
+    "missing-history-load" : {
+      "comment" : "Transcript banner button: loads the messages missing from the server's history.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Load Missing Messages"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hiányzó üzenetek betöltése"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fehlende Nachrichten laden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cargar mensajes que faltan"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Charger les messages manquants"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "欠けているメッセージを読み込む"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Carregar mensagens em falta"
+          }
+        }
+      }
+    },
+    "missing-history-retry" : {
+      "comment" : "Transcript banner button after loading the missing messages failed.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Try Again"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Újrapróbálás"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erneut versuchen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reintentar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réessayer"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "再試行"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tentar Novamente"
+          }
+        }
+      }
+    },
+    "missing-history-failed" : {
+      "comment" : "Transcript banner detail when loading missing messages failed. %@ is the server's reason.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loading failed: %@"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A betöltés sikertelen: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laden fehlgeschlagen: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo cargar: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Échec du chargement : %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "読み込みに失敗しました：%@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falha ao carregar: %@"
+          }
+        }
+      }
+    },
+    "missing-history-failed-without-reason" : {
+      "comment" : "Transcript banner detail when loading missing messages failed and the server gave no reason.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loading failed. The server didn’t answer in time."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A betöltés sikertelen. A kiszolgáló nem válaszolt időben."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laden fehlgeschlagen. Der Server hat nicht rechtzeitig geantwortet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo cargar. El servidor no respondió a tiempo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Échec du chargement. Le serveur n’a pas répondu à temps."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "読み込みに失敗しました。サーバが時間内に応答しませんでした。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falha ao carregar. O servidor não respondeu a tempo."
+          }
+        }
+      }
+    },
     "reply-privately" : {
       "comment" : "Transcript context menu: reply privately to the line's sender, from the channel, tagged with the channel.",
       "extractionState" : "manual",

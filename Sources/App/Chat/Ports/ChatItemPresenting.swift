@@ -68,12 +68,25 @@ protocol ChatItemPresenting: AnyObject {
 	 method serves both. */
 	func prependEarlierChatLines(_ chatLines: [ChatLine])
 
+	/** Stores lines that belong somewhere in the middle of the history, such
+	 as a filled gap, and shows them where they fall. They are older than what
+	 is drawn at the live end, so they are not drawn there. */
+	func archiveRecoveredChatLines(_ chatLines: [ChatLine])
+	/// Whether the conversation is missing messages the server still has.
+	func noteMissingServerHistory(_ state: MissingServerHistoryState)
+
 	func tearDown(_ reason: ChatItemTeardown)
 }
 
 extension ChatItemPresenting {
 	/// A presentation that draws no messages has nothing to replace.
 	func noteRedaction(ofMessageIdentifier _: String) {}
+
+	/// A presentation without stored history has nowhere to put them.
+	func archiveRecoveredChatLines(_: [ChatLine]) {}
+
+	/// A presentation without a history banner has nothing to show.
+	func noteMissingServerHistory(_: MissingServerHistoryState) {}
 
 	func replacePendingLine(_ line: ChatLine, reason: String?) {
 		updateDeliveryState(forLineNumber: line.uniqueIdentifier, state: line.deliveryState,

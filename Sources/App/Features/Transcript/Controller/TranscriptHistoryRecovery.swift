@@ -107,6 +107,8 @@ final class TranscriptHistoryRecovery {
 	/// that state moves.
 	var serverRetryIsAvailable = false
 	var isRetrying = false
+	/// Whether the server holds messages a catch-up could not reach.
+	var missingServerHistory = MissingServerHistoryState.none
 
 	/// What this view's own failure reads as, or nothing where its history
 	/// loaded.
@@ -137,6 +139,11 @@ struct TranscriptHistoryRecoveryView: View {
 		VStack(spacing: 0) {
 			if history?.isDetachedFromLive == true {
 				TranscriptDetachedBanner { controller?.returnToLive() }
+			}
+			if let history, history.missingServerHistory != .none {
+				TranscriptMissingHistoryBanner(state: history.missingServerHistory) {
+					controller?.loadMissingServerHistory()
+				}
 			}
 			failureBanner(
 				controller: controller, history: history, storage: storage,
@@ -213,6 +220,43 @@ struct TranscriptDetachedBanner: View {
 				perform: returnToLive
 			),
 			identifier: "history-window-banner"
+		)
+	}
+}
+
+/** The banner over a conversation missing messages the server still has:
+ a catch-up after a long absence stopped short of them. One action loads
+ them, and becomes Try Again with the server's reason if loading failed. */
+struct TranscriptMissingHistoryBanner: View {
+	let state: MissingServerHistoryState
+	let load: () -> Void
+
+	var body: some View {
+		let failure: String? = if case let .failed(reason) = state {
+			reason
+		} else {
+			nil
+		}
+		let failed = if case .failed = state {
+			true
+		} else {
+			false
+		}
+		TranscriptNoticeBanner(
+			symbol: "clock.badge.exclamationmark",
+			symbolTint: .orange,
+			symbolLabel: String(localized: .Transcript.warningAccessibility),
+			title: String(localized: .Transcript.missingHistoryTitle),
+			detail: failed ? (failure.map { String(localized: .Transcript.missingHistoryFailed($0)) }
+				?? String(localized: .Transcript.missingHistoryFailedWithoutReason)) : nil,
+			isBusy: state == .loading,
+			primaryAction: .init(
+				title: String(localized: failed ? .Transcript.missingHistoryRetry : .Transcript.missingHistoryLoad),
+				identifier: "missing-history-load",
+				isEnabled: state != .loading,
+				perform: load
+			),
+			identifier: "missing-history-banner"
 		)
 	}
 }

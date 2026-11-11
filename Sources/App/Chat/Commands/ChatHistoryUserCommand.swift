@@ -232,7 +232,16 @@ extension ServerSession {
 		case let .between(name, first, second, requested):
 			guard let target = chatHistoryCommandTarget(named: name, in: selected) else { return }
 			sendChatHistoryCommand(.between(target: target, first, second, limit: limit(requested)))
-		case .targets, .fill:
+		case let .fill(name):
+			guard let conversation = chatHistoryCommandConversation(named: name, in: selected) else { return }
+			guard fillChatHistoryGap(in: conversation) else {
+				printDebugInformation(
+					String(localized: .ChatHistory.chatHistoryNothingMissing(conversation.name)),
+					in: conversation
+				)
+				return
+			}
+		case .targets:
 			printDebugInformation(String(localized: .ChatHistory.chatHistoryUnknownSubcommand(
 				command.subcommandName
 			)))

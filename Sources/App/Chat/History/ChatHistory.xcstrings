@@ -1,6 +1,55 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "chat-history-nothing-missing" : {
+      "comment" : "/chathistory fill: no missing messages are recorded for the conversation. %@ is its name.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing is missing in %@."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A(z) %@ beszélgetésből semmi sem hiányzik."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In %@ fehlt nichts."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No falta nada en %@."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rien ne manque dans %@."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@に欠けているメッセージはありません。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nada está faltando em %@."
+          }
+        }
+      }
+    },
     "chat-history-command-syntax" : {
       "comment" : "/chathistory usage line. Command names and subcommands stay untranslated; translate the placeholder names.",
       "extractionState" : "manual",

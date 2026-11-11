@@ -40,6 +40,7 @@ extension ServerSession {
 		chatHistory.prependConversation = nil
 		chatHistory.prependedLines = nil
 		chatHistory.refusesMessageIdentifiers = false
+		resetChatHistoryPaging()
 		readMarkers.sentDates.removeAll()
 		readMarkers.pendingConversations.removeAll()
 		readMarkers.timer.stop()
@@ -130,9 +131,7 @@ extension ServerSession {
 
 	func requestChatHistory(for conversation: Conversation) {
 		guard chatHistoryIsAvailable(for: conversation) else { return }
-		let newest = newestKnownServerTimestamp(for: conversation)
-		guard let arguments = chatHistoryLatestArguments(target: conversation.name, since: newest) else { return }
-		send(.chathistory, arguments: arguments)
+		requestChatHistoryCatchUp(for: conversation)
 	}
 
 	func requestChatHistory(before date: Date, in conversation: Conversation) {
@@ -160,6 +159,16 @@ extension ServerSession {
 
 	func noteChatHistoryFailure(_ message: Message) -> Bool {
 		let label = message.messageTags?["label"] ?? message.parentBatchMessage?.labeledResponseBatch?.labeledDelivery.label
+		if let paging = pagingFailed(
+			label: label?.hasPrefix(ChatHistoryPolicy.pagingLabelPrefix) == true ? label : nil,
+			target: label == nil ? message.params.dropFirst(2).dropLast().first(where: { findConversation($0) != nil }) : nil
+		) {
+			endPaging(paging, failure: message.params.last)
+			return true
+		}
+		if let label, label.hasPrefix(ChatHistoryPolicy.pagingLabelPrefix) {
+			return false
+		}
 		if let label, label.hasPrefix(ChatHistoryPolicy.requestLabelPrefix) {
 			guard let pending = chatHistory.serverRequests.values.first(where: { $0.label == label }) else { return false }
 			if retryWithTimestamp(pending, after: message) {
