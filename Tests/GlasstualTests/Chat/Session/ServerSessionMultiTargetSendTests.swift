@@ -245,6 +245,24 @@ struct ServerSessionMultiTargetSendTests {
 		#expect(session.sentLines.compactMap { $0 as? String } == ["PRIVMSG #one,#two :hello"])
 	}
 
+	/// The channels the session is in are grouped; a destination that is not
+	/// one of them still gets its own line.
+	@Test("A /msg to grouped channels and another target sends both")
+	func msgGroupsChannelsAndSendsTheRestSeparately() throws {
+		let session = session()
+		session.setConnectionTransportForTesting(.connected)
+		session.markAsLoggedIn()
+		session.supportInfo.processConfigurationData("TARGMAX=PRIVMSG:4")
+		_ = try channels(["#one", "#two"], on: session)
+
+		session.sendCommand("msg #ONE,#two,#other hello", completeTarget: false, target: nil)
+
+		#expect(session.sentLines.compactMap { $0 as? String } == [
+			"PRIVMSG #one,#two :hello",
+			"PRIVMSG #other :hello",
+		])
+	}
+
 	/// `MAXTARGETS` is the older, command-agnostic form of the same statement,
 	/// and it groups the same way for a command `TARGMAX` did not name.
 	@Test("MAXTARGETS groups the channels where TARGMAX named no command")

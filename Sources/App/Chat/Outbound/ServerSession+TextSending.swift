@@ -9,6 +9,13 @@ private enum OutboundTextSuppressionKey: String {
 	case potentialFlood = "Input Text Possible Flood Warning"
 }
 
+/// Where `dispatchMessageCommand` sends its text.
+private enum MessageTarget {
+	case sentDirectly
+	case refused
+	case named(String)
+}
+
 extension ServerSession {
 	/// An empty ACTION would be dropped by most servers, so it goes out with a
 	/// single space instead.
@@ -40,27 +47,11 @@ extension ServerSession {
 		}
 
 		let targetName: String
-		if policy.isSecretMessage == false, policy.lineType == .action,
-		   let targetConversation
-		{
-			guard targetConversation.isConsole == false else {
-				printDebugInformation(String(localized: .IRC.thisCommandCannotBeUsedWithin))
-				return
-			}
-			if targetConversation.isDirectChat {
-				// An empty action still has to carry a body onto the wire.
-				sendDirectChatText(Self.actionBody(cursor.attributedRest), as: .privmsgAction, to: targetConversation)
-				return
-			}
-			targetName = targetConversation.name
-		} else if policy.isOperatorMessage,
-		          stringIsChannelName(cursor.rest) == false,
-		          targetConversation?.isChannel == true,
-		          let targetConversation
-		{
-			targetName = targetConversation.name
-		} else {
-			targetName = cursor.next()
+		switch resolveMessageTarget(cursor: &cursor, policy: policy, targetConversation: targetConversation) {
+		case .sentDirectly, .refused:
+			return
+		case let .named(name):
+			targetName = name
 		}
 		guard requireArguments(targetName, for: parsed.command) else { return }
 
@@ -76,28 +67,7 @@ extension ServerSession {
 		   operatorPrefix == nil,
 		   supportInfo.groupsMultipleTargets(forCommand: policy.remoteCommand.wireName)
 		{
-			/* Channels are found under the server's casemapping, so `#Chat` and
-			 `#chat` are one channel: it is grouped once, and every spelling of it
-			 is taken out of the per-destination loop below. Matching the typed
-			 names against the channels' own spelling left `#Chat` behind and sent
-			 the message a second time. */
-			var groupedChannels: [Conversation] = []
-			var groupedIdentities: Set<ObjectIdentifier> = []
-			for destinationName in destinations {
-				guard let channel = findConversation(destinationName), channel.isChannel, channel.isActive,
-				      groupedIdentities.insert(ObjectIdentifier(channel)).inserted
-				else { continue }
-				groupedChannels.append(channel)
-			}
-			if groupedChannels.count > 1 {
-				sendText(arguments, as: policy.remoteCommand, toConversations: groupedChannels)
-				if environment.settings.giveFocusOnMessageCommand {
-					destinationToSelect = groupedChannels.first
-				}
-				destinations.removeAll { destinationName in
-					findConversation(destinationName).map { groupedIdentities.contains(ObjectIdentifier($0)) } ?? false
-				}
-			}
+			destinationToSelect = sendToGroupedChannels(arguments, destinations: &destinations, policy: policy)
 		}
 
 		for destination in destinations {
@@ -114,6 +84,66 @@ extension ServerSession {
 			}
 		}
 		selectCommandDestination(destinationToSelect)
+	}
+
+	/// Who the message goes to. An action in a direct chat is sent from here,
+	/// and an action in the console is refused.
+	private func resolveMessageTarget(
+		cursor: inout CommandArguments,
+		policy: OutboundMessageOptions,
+		targetConversation: Conversation?
+	) -> MessageTarget {
+		if policy.isSecretMessage == false, policy.lineType == .action,
+		   let targetConversation
+		{
+			guard targetConversation.isConsole == false else {
+				printDebugInformation(String(localized: .IRC.thisCommandCannotBeUsedWithin))
+				return .refused
+			}
+			if targetConversation.isDirectChat {
+				// An empty action still has to carry a body onto the wire.
+				sendDirectChatText(Self.actionBody(cursor.attributedRest), as: .privmsgAction, to: targetConversation)
+				return .sentDirectly
+			}
+			return .named(targetConversation.name)
+		} else if policy.isOperatorMessage,
+		          stringIsChannelName(cursor.rest) == false,
+		          targetConversation?.isChannel == true,
+		          let targetConversation
+		{
+			return .named(targetConversation.name)
+		} else {
+			return .named(cursor.next())
+		}
+	}
+
+	/** Sends one line to every active channel among `destinations` and takes
+	 them out of the list. Returns the channel to select, if any.
+
+	 Channels are found under the server's casemapping, so `#Chat` and
+	 `#chat` are one channel: it is grouped once, and every spelling of it
+	 is taken out of the per-destination loop. Matching the typed names
+	 against the channels' own spelling left `#Chat` behind and sent the
+	 message a second time. */
+	private func sendToGroupedChannels(
+		_ arguments: NSAttributedString,
+		destinations: inout [String],
+		policy: OutboundMessageOptions
+	) -> Conversation? {
+		var groupedChannels: [Conversation] = []
+		var groupedIdentities: Set<ObjectIdentifier> = []
+		for destinationName in destinations {
+			guard let channel = findConversation(destinationName), channel.isChannel, channel.isActive,
+			      groupedIdentities.insert(ObjectIdentifier(channel)).inserted
+			else { continue }
+			groupedChannels.append(channel)
+		}
+		guard groupedChannels.count > 1 else { return nil }
+		sendText(arguments, as: policy.remoteCommand, toConversations: groupedChannels)
+		destinations.removeAll { destinationName in
+			findConversation(destinationName).map { groupedIdentities.contains(ObjectIdentifier($0)) } ?? false
+		}
+		return environment.settings.giveFocusOnMessageCommand ? groupedChannels.first : nil
 	}
 
 	func inputText(_ input: String, as command: RemoteCommand = .privmsg, destination: ChatItem) {
