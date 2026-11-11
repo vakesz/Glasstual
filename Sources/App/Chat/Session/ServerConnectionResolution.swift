@@ -69,6 +69,8 @@ enum ServerConnectionResolution {
 		guard !session.isTerminating, config.serverAddress?.caseInsensitiveCompare(request.serverAddress) == .orderedSame,
 		      config.serverPort == request.serverPort,
 		      config.prefersSecuredConnection == request.connectSecurely,
+		      config.serverTransport == request.transport,
+		      request.transport == .irc || config.serverList.first?.webSocketPath == request.webSocketPath,
 		      config.cipherSuites == .system,
 		      request.connectSecurely == false || config.validateServerCertificateChain
 		else { return false }
@@ -125,7 +127,9 @@ extension ChatSession {
 		var server = ServerEndpoint(
 			serverAddress: request.serverAddress,
 			serverPort: request.serverPort,
-			prefersSecuredConnection: request.connectSecurely
+			prefersSecuredConnection: request.connectSecurely,
+			transport: request.transport,
+			webSocketPath: request.webSocketPath
 		)
 		server.serverPassword = request.serverPassword
 		config.serverList = [server]

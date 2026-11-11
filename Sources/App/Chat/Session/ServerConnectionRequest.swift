@@ -30,9 +30,15 @@ nonisolated struct ServerConnectionRequest: Equatable, Sendable {
 	let connectSecurely: Bool
 	let channels: [String]
 	let options: ServerConnectionOptions
+	var transport: ServerTransport = .irc
+	var webSocketPath = "/"
 
-	/// Parses `[-SSL|-TLS] host[:port] [port] [password]`.
-	/// URL requests bypass this tokenizer entirely.
+	/** Parses `[-SSL|-TLS] host[:port] [port] [password]`, or
+	 `[-SSL|-TLS] ws[s]://host[:port]/path[#channels] [password]`.
+
+	 A `ws://` URL is accepted here because this is typed inside the app;
+	 the system never hands the app one. `-TLS` makes it `wss`. Links from
+	 elsewhere go through ``ApplicationLink`` and bypass this tokenizer. */
 	static func parse(
 		_ serverInfo: String,
 		channels channelList: String?,
@@ -48,6 +54,17 @@ nonisolated struct ServerConnectionRequest: Equatable, Sendable {
 		{
 			connectSecurely = true
 			addressAndPort = tokens.nextToken()
+		}
+
+		if let address = WebSocketAddress(addressAndPort) {
+			return webSocketRequest(
+				address,
+				forcingSecure: connectSecurely,
+				explicitPort: URLComponents(string: addressAndPort)?.port != nil,
+				password: tokens.remainder.isEmpty ? nil : tokens.nextToken(),
+				channels: channelList ?? address.fragmentChannelList,
+				options: options
+			)
 		}
 
 		let parsedAddress: String
@@ -115,6 +132,29 @@ nonisolated struct ServerConnectionRequest: Equatable, Sendable {
 			channels: parseChannels(channelList),
 			options: options
 		)
+	}
+
+	private static func webSocketRequest(
+		_ address: WebSocketAddress,
+		forcingSecure: Bool,
+		explicitPort: Bool,
+		password: String?,
+		channels: String?,
+		options: ServerConnectionOptions
+	) -> Self { // nonisolated: pure
+		let secured = address.secured || forcingSecure
+		let port = explicitPort ? address.port : ServerTransport.webSocket.defaultPort(secured: secured)
+		var request = Self(
+			serverAddress: address.host,
+			serverPort: port,
+			serverPassword: password,
+			connectSecurely: secured,
+			channels: parseChannels(channels),
+			options: options
+		)
+		request.transport = .webSocket
+		request.webSocketPath = address.path
+		return request
 	}
 
 	private static func parseChannels(_ channelList: String?) -> [String] { // nonisolated: pure

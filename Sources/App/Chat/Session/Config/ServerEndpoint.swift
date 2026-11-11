@@ -3,6 +3,9 @@
 
 import CocoaExtensions
 import Foundation
+import os
+
+private nonisolated let serverEndpointLogger = Logger(subsystem: LogSubsystem.current, category: "ServerEndpoint")
 
 /** One endpoint in a connection's server list.
 
@@ -14,6 +17,11 @@ nonisolated struct ServerEndpoint: Codable, Sendable, Equatable, Hashable {
 	var serverAddress: String
 	var serverPort: UInt16
 	var prefersSecuredConnection: Bool
+	/// IRC over TCP or TLS, or IRC over a WebSocket.
+	var transport: ServerTransport
+	/// The WebSocket request target. Kept, but unused, for an IRC entry, so a
+	/// switch back and forth does not lose it.
+	var webSocketPath: String
 
 	/** An unflushed edit to the password: one waiting to be written, one read
 	 back out of the keychain so that a duplicate can carry it to its own
@@ -26,20 +34,37 @@ nonisolated struct ServerEndpoint: Codable, Sendable, Equatable, Hashable {
 		serverAddress: String = "",
 		serverPort: UInt16 = UInt16(ConnectionDefaults.serverPort),
 		prefersSecuredConnection: Bool = false,
+		transport: ServerTransport = .irc,
+		webSocketPath: String = "/",
 		pendingServerPassword: PendingKeychainSecret = .unchanged
 	) {
 		self.uniqueIdentifier = uniqueIdentifier
 		self.serverAddress = serverAddress
 		self.serverPort = serverPort
 		self.prefersSecuredConnection = prefersSecuredConnection
+		self.transport = transport
+		self.webSocketPath = webSocketPath
 		self.pendingServerPassword = pendingServerPassword
 	}
 
-	private enum CodingKeys: String, CodingKey {
+	/// An entry for a `ws://` or `wss://` URL.
+	init(webSocketAddress address: WebSocketAddress) {
+		self.init(
+			serverAddress: address.host,
+			serverPort: address.port,
+			prefersSecuredConnection: address.secured,
+			transport: .webSocket,
+			webSocketPath: address.path
+		)
+	}
+
+	enum CodingKeys: String, CodingKey {
 		case uniqueIdentifier
 		case serverAddress
 		case serverPort
 		case prefersSecuredConnection
+		case transport
+		case webSocketPath
 	}
 
 	init(from decoder: any Decoder) throws {
@@ -54,6 +79,20 @@ nonisolated struct ServerEndpoint: Codable, Sendable, Equatable, Hashable {
 			default: UInt16(ConnectionDefaults.serverPort)
 		)
 		prefersSecuredConnection = container.decode(Bool.self, forKey: .prefersSecuredConnection, default: false)
+		transport = Self.decodedTransport(from: container)
+		let path = container.decode(String.self, forKey: .webSocketPath, default: "/")
+		webSocketPath = ServerTransport.isValidWebSocketPath(path) ? path : "/"
+	}
+
+	/// An absent transport is an entry from before there was a choice. One this
+	/// build does not know is dialled as IRC, which is what that build would do.
+	private static func decodedTransport(from container: KeyedDecodingContainer<CodingKeys>) -> ServerTransport {
+		guard let name = try? container.decodeIfPresent(String.self, forKey: .transport) else { return .irc }
+		guard let transport = ServerTransport(rawValue: name) else {
+			serverEndpointLogger.error("Unknown server transport; connecting over IRC")
+			return .irc
+		}
+		return transport
 	}
 
 	func encode(to encoder: any Encoder) throws {
@@ -63,6 +102,12 @@ nonisolated struct ServerEndpoint: Codable, Sendable, Equatable, Hashable {
 		try container.encode(serverAddress, forKey: .serverAddress)
 		try container.encode(uniqueIdentifier, forKey: .uniqueIdentifier)
 		try container.encode(serverPort, forKey: .serverPort)
+		/* Only a WebSocket entry names its transport, so an IRC entry is stored
+		 exactly as it was before there was a choice. */
+		if transport != .irc {
+			try container.encode(transport, forKey: .transport)
+			try container.encode(webSocketPath, forKey: .webSocketPath)
+		}
 	}
 }
 
@@ -90,5 +135,18 @@ nonisolated extension ServerEndpoint {
 	var serverPassword: String? {
 		get { pendingServerPassword.value(orStored: serverPasswordFromKeychain) }
 		set { pendingServerPassword = PendingKeychainSecret(newValue) }
+	}
+}
+
+nonisolated extension ServerEndpoint {
+	/// The `ws://` or `wss://` URL a WebSocket entry dials, and nil for IRC.
+	var webSocketURL: String? {
+		guard transport == .webSocket else { return nil }
+		return WebSocketAddress.url(
+			host: serverAddress,
+			port: serverPort,
+			secured: prefersSecuredConnection,
+			path: webSocketPath
+		)
 	}
 }

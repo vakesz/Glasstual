@@ -19,7 +19,7 @@ extension ServerSession {
 		TextEncodingOptions(
 			primary: String.Encoding(rawValue: config.primaryEncoding),
 			fallback: String.Encoding(rawValue: config.fallbackEncoding),
-			requiresUTF8: supportInfo.utf8Only
+			requiresUTF8: supportInfo.utf8Only || socket?.webSocketFraming?.requiresUTF8 == true
 		)
 	}
 

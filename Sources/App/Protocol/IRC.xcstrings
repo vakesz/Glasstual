@@ -15628,6 +15628,198 @@
           }
         }
       }
+    },
+    "connecting-via-web-socket": {
+      "comment": "Console line before a WebSocket connection. The argument is the ws:// or wss:// address, with query values hidden.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connecting to %@ over WebSocket"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Verbindung zu %@ über WebSocket wird hergestellt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Conectando con %@ mediante WebSocket"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Connexion à %@ via WebSocket"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Csatlakozás ehhez: %@ WebSocketen keresztül"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "WebSocketで%@に接続しています"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Conectando a %@ via WebSocket"
+          }
+        }
+      }
+    },
+    "web-socket-subprotocol-negotiated": {
+      "comment": "Console line once a WebSocket connection is upgraded. The argument is the subprotocol name, such as text.ircv3.net.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server chose the WebSocket subprotocol %@."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Der Server hat das WebSocket-Subprotokoll %@ gewählt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "El servidor eligió el subprotocolo WebSocket %@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Le serveur a choisi le sous-protocole WebSocket %@."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "A kiszolgáló a(z) %@ WebSocket-alprotokollt választotta."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "サーバーはWebSocketサブプロトコル%@を選択しました。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "O servidor escolheu o subprotocolo WebSocket %@."
+          }
+        }
+      }
+    },
+    "web-socket-no-subprotocol": {
+      "comment": "Console line once a WebSocket connection is upgraded without an IRC subprotocol.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server chose no IRC WebSocket subprotocol. Lines are sent as UTF-8 text."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Der Server hat kein IRC-WebSocket-Subprotokoll gewählt. Zeilen werden als UTF-8-Text gesendet."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "El servidor no eligió ningún subprotocolo WebSocket de IRC. Las líneas se envían como texto UTF-8."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Le serveur n’a choisi aucun sous-protocole WebSocket IRC. Les lignes sont envoyées en texte UTF-8."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "A kiszolgáló nem választott IRC WebSocket-alprotokollt. A sorok UTF-8 szövegként mennek el."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "サーバーはIRC WebSocketサブプロトコルを選択しませんでした。行はUTF-8テキストとして送信されます。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "O servidor não escolheu nenhum subprotocolo WebSocket de IRC. As linhas são enviadas como texto UTF-8."
+          }
+        }
+      }
+    },
+    "sts-upgrade-changes-transport": {
+      "comment": "Strict Transport Security (STS). Console line when a plain WebSocket connection moves to IRC over TLS. The argument is the port number.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Strict Transport Security applies to this host. Connecting over IRC with TLS on port %@ instead of WebSocket."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Für diesen Host gilt Strict Transport Security. Statt über WebSocket wird über IRC mit TLS auf Port %@ verbunden."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Strict Transport Security se aplica a este host. Conectando mediante IRC con TLS en el puerto %@ en lugar de WebSocket."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Strict Transport Security s’applique à cet hôte. Connexion via IRC avec TLS sur le port %@ au lieu de WebSocket."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Erre a gépre Strict Transport Security vonatkozik. Csatlakozás IRC-n TLS-sel a(z) %@ porton WebSocket helyett."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "このホストにはStrict Transport Securityが適用されます。WebSocketの代わりにポート%@でTLSを使用してIRCで接続します。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "O Strict Transport Security se aplica a este host. Conectando via IRC com TLS na porta %@ em vez de WebSocket."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

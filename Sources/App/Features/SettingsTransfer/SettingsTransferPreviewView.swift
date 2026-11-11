@@ -236,7 +236,10 @@ struct SettingsTransferPreviewView: View {
 	}
 
 	private static func description(of endpoint: SettingsRiskyChange.Endpoint) -> String {
-		endpoint.isEncrypted
+		if let url = endpoint.webSocketURL {
+			return String(localized: .SettingsTransfer.websocketEndpoint(url))
+		}
+		return endpoint.isEncrypted
 			? String(localized: .SettingsTransfer.endpointEncrypted(endpoint.host, String(endpoint.port)))
 			: String(localized: .SettingsTransfer.endpointPlain(endpoint.host, String(endpoint.port)))
 	}

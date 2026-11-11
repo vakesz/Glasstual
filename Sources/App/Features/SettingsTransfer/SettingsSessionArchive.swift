@@ -151,6 +151,9 @@ nonisolated enum SettingsSessionArchive {
 		func unsigned(_ name: String) -> UInt? {
 			values[name].flatMap { UInt.settingValue(from: $0.propertyListObject) }
 		}
+		if kind == .server, let path = values["webSocketPath"]?.string, ServerTransport.isValidWebSocketPath(path) == false {
+			throw SettingsTransferError.invalidWebSocketPath
+		}
 		let valid: Bool = switch kind {
 		case .session:
 			(unsigned("dictionaryVersion") ?? 0) <= ServerConfigDefaults.dictionaryVersion
@@ -169,6 +172,7 @@ nonisolated enum SettingsSessionArchive {
 				&& unsigned("cipherSuites").map { CipherSuiteCollection(rawValue: $0) != nil } != false
 		case .server:
 			values["serverAddress"]?.string.map { !$0.isEmpty && !$0.contains(where: \.isWhitespace) } == true
+				&& values["transport"]?.string.map { ServerTransport(rawValue: $0) != nil } != false
 		case .channel:
 			values["name"]?.string.map { !$0.isEmpty && !$0.contains(where: \.isWhitespace) } == true
 				&& unsigned("type").map { ConversationKind(rawValue: $0) != nil } != false
@@ -193,7 +197,7 @@ nonisolated enum SettingsSessionArchive {
 			}
 		case .server:
 			switch name {
-			case "uniqueIdentifier", "serverAddress": .text
+			case "uniqueIdentifier", "serverAddress", "transport", "webSocketPath": .text
 			case "serverPort": .port
 			case "prefersSecuredConnection": .flag
 			default: nil

@@ -21,6 +21,8 @@ enum ConnectionEvent: Sendable {
 	case requestInsecureCertificateTrust(TrustDecisionHandler)
 	case willSend(Data)
 	case didSendData
+	/// The WebSocket upgrade finished; nil when the server chose no subprotocol.
+	case negotiatedWebSocketSubprotocol(String?)
 	case serviceFailed(Error)
 	case serviceInterrupted
 	case serviceInvalidated

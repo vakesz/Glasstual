@@ -30,6 +30,10 @@ struct PendingIRCEndpoint {
 	let secured: Bool
 	let origin: ServerEndpoint?
 	let reason: Reason
+	/// How the endpoint is reached. An STS upgrade is always IRC over TLS: the
+	/// policy names a TLS port, and that is the only one the server vouched for.
+	var transport: ServerTransport = .irc
+	var webSocketPath = "/"
 
 	var credentialEndpoint: ServerEndpoint? {
 		// Only STS carries endpoint credentials across a reconnect. Redirects
@@ -141,6 +145,15 @@ extension ServerSession {
 		if config.showConnectionPrefersIPv4Warning {
 			printDebugInformation(String(localized: .IRC.pleaseTakeNoticeThePreferenceLabeled))
 		}
+		if case let .webSocket(options) = socketConfig.transport {
+			printDebugInformation(toConsole: String(localized: .IRC.connectingViaWebSocket(WebSocketAddress.displayURL(
+				host: socketConfig.serverAddress,
+				port: socketConfig.serverPort,
+				secured: socketConfig.connectionPrefersSecuredConnection,
+				path: options.path
+			))))
+			return
+		}
 		printDebugInformation(toConsole: String(localized: .IRC.connectingToOnPort(
 			socketConfig.serverAddress,
 			String(socketConfig.serverPort)
@@ -206,20 +219,47 @@ extension ServerSession {
 		let host = target.host
 		var port = target.port
 		var secured = target.secured
+		var transport = target.transport
 		let enforcedPort = environment.services.stsPolicies.enforcedPort(forHost: host)
 		if let enforcedPort {
-			if enforcedPort != port || secured == false {
-				printDebugInformation(toConsole: String(localized: .IRC.strictTransportSecurityPolicy(String(enforcedPort))))
+			/* A secure WebSocket already is what the policy asks for, and the
+			 policy's port is a TLS IRC port, not a WebSocket one: it keeps its
+			 own port and only gains the trusted-certificate requirement. A
+			 plain one moves to IRC over TLS on the policy's port. */
+			if transport == .webSocket, secured {
+				// Already encrypted.
+			} else {
+				if transport == .webSocket {
+					printDebugInformation(toConsole: String(localized: .IRC.stsUpgradeChangesTransport(String(enforcedPort))))
+					transport = .irc
+				} else if enforcedPort != port || secured == false {
+					printDebugInformation(toConsole: String(localized: .IRC.strictTransportSecurityPolicy(String(enforcedPort))))
+				}
+				port = enforcedPort
+				secured = true
 			}
-			port = enforcedPort
-			secured = true
 		}
 		var connectionConfig = ConnectionConfig()
 		connectionConfig.serverAddress = host
 		connectionConfig.serverPort = port
 		connectionConfig.connectionPrefersSecuredConnection = secured
 		connectionConfig.connectionRequiresTrustedCertificate = enforcedPort != nil || target.reason == .stsUpgrade
+		if transport == .webSocket {
+			connectionConfig.transport = .webSocket(WebSocketTransportOptions(
+				path: target.webSocketPath,
+				subprotocols: Self.webSocketOffer(primaryEncoding: effectivePrimaryEncoding)
+			))
+		}
 		return connectionConfig
+	}
+
+	/** The subprotocols a WebSocket offers, most preferred first.
+
+	 A server picks the first it supports. Text frames carry UTF-8 only, so a
+	 session that speaks another encoding asks for binary frames first and
+	 keeps its bytes intact on a server that has both. */
+	static func webSocketOffer(primaryEncoding: String.Encoding) -> [WebSocketSubprotocol] {
+		primaryEncoding == .utf8 ? [.text, .binary] : [.binary, .text]
 	}
 
 	/** Whether the session a follow-up endpoint replaces was meant to be encrypted.
@@ -239,14 +279,42 @@ extension ServerSession {
 	/// for the encryption the current session has.
 	func connectCommandEndpoint(host: String) -> PendingIRCEndpoint {
 		let secured = sessionPrefersSecuredConnection
+		let current = endpoints.current ?? config.serverList.first
+		let transport: ServerTransport = if let socket {
+			if case .webSocket = socket.config.transport {
+				.webSocket
+			} else {
+				.irc
+			}
+		} else {
+			current?.transport ?? .irc
+		}
+		/* A path can carry a gateway token in its query, so only a host the
+		 server list names gets a path with one: that entry's own. Any other
+		 host keeps the current path without its query. */
+		let path: String = if let configured = config.serverList.first(where: {
+			$0.transport == .webSocket && $0.serverAddress.caseInsensitiveCompare(host) == .orderedSame
+		}) {
+			configured.webSocketPath
+		} else if case let .webSocket(options)? = socket?.config.transport {
+			Self.pathWithoutQuery(options.path)
+		} else {
+			Self.pathWithoutQuery(current?.webSocketPath ?? "/")
+		}
 
 		return PendingIRCEndpoint(
 			host: host,
-			port: secured ? ConnectionDefaults.serverPortSecure : ConnectionDefaults.serverPort,
+			port: transport.defaultPort(secured: secured),
 			secured: secured,
 			origin: endpoints.current,
-			reason: .userCommand
+			reason: .userCommand,
+			transport: transport,
+			webSocketPath: path
 		)
+	}
+
+	private static func pathWithoutQuery(_ path: String) -> String {
+		path.split(separator: "?", maxSplits: 1, omittingEmptySubsequences: false).first.map(String.init) ?? "/"
 	}
 
 	func autoConnect(withDelay delay: UInt, afterWakeUp: Bool) {

@@ -24,6 +24,9 @@ final class Connection {
 	private(set) var isConnecting = false
 	private(set) var isDisconnecting = false
 	private(set) var isSecured = false
+	/// How a WebSocket connection frames its lines, once the upgrade said;
+	/// nil on a stream connection and before the upgrade.
+	private(set) var webSocketFraming: WebSocketFraming?
 	private(set) var certificateTrustWasOverridden = false
 	/// SHA-256 of the DER of the certificate the server presented, once TLS is up.
 	private(set) var peerCertificateFingerprint: Data?
@@ -277,6 +280,10 @@ final class Connection {
 			willWrite(data)
 		case .didSendData:
 			didWrite()
+		case let .negotiatedWebSocketSubprotocol(name):
+			let framing = WebSocketFraming(subprotocolName: name)
+			webSocketFraming = framing
+			session?.connectionDidNegotiateWebSocket(framing)
 		case let .serviceFailed(error):
 			didDisconnect(with: error, trigger: .serviceFailure)
 		case .serviceInterrupted:

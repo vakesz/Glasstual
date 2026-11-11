@@ -193,7 +193,12 @@ extension ServerSession {
 				return false
 			}
 
-			printDebugInformation(toConsole: String(localized: .IRC.serverOffersStrictTransportSecurityReconnecting(String(upgradePort))))
+			if case .webSocket = socket?.config.transport {
+				printDebugInformation(toConsole: String(localized: .IRC.stsUpgradeChangesTransport(String(upgradePort))))
+			} else {
+				printDebugInformation(toConsole: String(localized: .IRC
+						.serverOffersStrictTransportSecurityReconnecting(String(upgradePort))))
+			}
 			addDisconnectCallback { [weak self] in
 				guard let self else { return }
 				endpoints.pending = endpoint

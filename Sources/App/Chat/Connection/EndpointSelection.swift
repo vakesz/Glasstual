@@ -21,6 +21,8 @@ struct EndpointSelection {
 		let port: UInt16
 		let secured: Bool
 		let reason: PendingIRCEndpoint.Reason?
+		var transport: ServerTransport = .irc
+		var webSocketPath = "/"
 	}
 
 	/** Takes the pending endpoint, or advances the rotation over `servers`.
@@ -34,7 +36,14 @@ struct EndpointSelection {
 		pending = nil
 		current = endpoint?.credentialEndpoint(among: servers)
 		if let endpoint, endpoint.host.isValidInternetAddress {
-			return Target(host: endpoint.host, port: endpoint.port, secured: endpoint.secured, reason: endpoint.reason)
+			return Target(
+				host: endpoint.host,
+				port: endpoint.port,
+				secured: endpoint.secured,
+				reason: endpoint.reason,
+				transport: endpoint.transport,
+				webSocketPath: endpoint.webSocketPath
+			)
 		}
 
 		let retryIndex = servers.firstIndex { $0.uniqueIdentifier == identifier }
@@ -47,7 +56,9 @@ struct EndpointSelection {
 			host: selected.serverAddress,
 			port: selected.serverPort,
 			secured: selected.prefersSecuredConnection,
-			reason: endpoint?.reason
+			reason: endpoint?.reason,
+			transport: selected.transport,
+			webSocketPath: selected.webSocketPath
 		)
 	}
 }

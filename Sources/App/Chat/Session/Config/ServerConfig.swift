@@ -188,6 +188,10 @@ nonisolated extension ServerConfig {
 		serverList.first?.prefersSecuredConnection ?? false
 	}
 
+	var serverTransport: ServerTransport {
+		serverList.first?.transport ?? .irc
+	}
+
 	/// `true` when the connection is pinned to IPv4 twice over, which the
 	/// server-properties sheet warns about.
 	var showConnectionPrefersIPv4Warning: Bool {

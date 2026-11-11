@@ -2546,6 +2546,104 @@
           }
         }
       }
+    },
+    "import-invalid-web-socket-path": {
+      "comment": "Import error. A server in the file has a WebSocket path that cannot be used.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A server in this file has a WebSocket path that is not valid. A path starts with “/” and contains no spaces or “#”."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ein Server in dieser Datei hat einen ungültigen WebSocket-Pfad. Ein Pfad beginnt mit „/“ und enthält keine Leerzeichen oder „#“."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Un servidor de este archivo tiene una ruta WebSocket no válida. Una ruta empieza por «/» y no contiene espacios ni «#»."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Un serveur de ce fichier a un chemin WebSocket non valide. Un chemin commence par « / » et ne contient ni espace ni « # »."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "A fájl egyik kiszolgálójának WebSocket-útvonala érvénytelen. Az útvonal „/” jellel kezdődik, és nem tartalmaz szóközt vagy „#” jelet."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "このファイル内のサーバーのWebSocketパスが無効です。パスは「/」で始まり、スペースや「#」を含めることはできません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Um servidor neste arquivo tem um caminho WebSocket inválido. Um caminho começa com “/” e não contém espaços nem “#”."
+          }
+        }
+      }
+    },
+    "websocket-endpoint": {
+      "comment": "Import preview. Where a server connects, when it is a WebSocket. The argument is the ws:// or wss:// address.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (WebSocket)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ (WebSocket)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ (WebSocket)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ (WebSocket)"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ (WebSocket)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@（WebSocket）"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ (WebSocket)"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -28,13 +28,7 @@ extension ServerPropertiesModel {
 		if let network = picker.selectedNetwork {
 			var config = config
 			config.connectionName = network.networkName
-			config.serverList = [
-				ServerEndpoint(
-					serverAddress: network.serverAddress,
-					serverPort: network.serverPort,
-					prefersSecuredConnection: network.prefersSecuredConnection
-				),
-			]
+			config.serverList = network.serverList
 			config.usesSASL = network.saslSupported
 			config.conversationList = network.suggestedChannels.map { ConversationConfig.seed(withName: $0) }
 			replace(with: config)

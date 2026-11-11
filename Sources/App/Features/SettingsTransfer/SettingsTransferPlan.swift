@@ -34,6 +34,8 @@ nonisolated enum SettingsRiskyChange: Hashable, Sendable {
 		let host: String
 		let port: UInt16
 		let isEncrypted: Bool
+		/// The `ws://` or `wss://` URL for a WebSocket server, nil for IRC.
+		var webSocketURL: String?
 	}
 
 	/// What the import does with the server whose endpoint moved.
@@ -167,7 +169,10 @@ nonisolated struct SettingsTransferPlan: Sendable {
 	}
 
 	private static func serverKey(_ server: ServerEndpoint) -> String {
-		"\(server.serverAddress.lowercased()):\(server.serverPort)"
+		if let url = server.webSocketURL {
+			return url.lowercased()
+		}
+		return "\(server.serverAddress.lowercased()):\(server.serverPort)"
 	}
 
 	private static func proxyKey(of session: ServerConfig) -> String? {
@@ -186,7 +191,12 @@ nonisolated struct SettingsTransferPlan: Sendable {
 		var destinations: [(key: String, destination: SettingsRiskyChange.Destination)] = []
 		for server in imported.serverList where known.insert(serverKey(server)).inserted {
 			destinations.append((serverKey(server), .server(
-				.init(host: server.serverAddress, port: server.serverPort, isEncrypted: server.prefersSecuredConnection)
+				.init(
+					host: server.serverAddress,
+					port: server.serverPort,
+					isEncrypted: server.prefersSecuredConnection,
+					webSocketURL: server.webSocketURL
+				)
 			)))
 		}
 		if let key = proxyKey(of: imported), known.insert(key).inserted, let host = imported.proxyAddress {
@@ -207,7 +217,12 @@ nonisolated struct SettingsTransferPlan: Sendable {
 
 	private static func endpoint(of session: ServerConfig) -> SettingsRiskyChange.Endpoint? {
 		session.serverList.first.map {
-			.init(host: $0.serverAddress, port: $0.serverPort, isEncrypted: $0.prefersSecuredConnection)
+			.init(
+				host: $0.serverAddress,
+				port: $0.serverPort,
+				isEncrypted: $0.prefersSecuredConnection,
+				webSocketURL: $0.webSocketURL
+			)
 		}
 	}
 
@@ -221,7 +236,7 @@ nonisolated struct SettingsTransferPlan: Sendable {
 		var shownKey: String?
 		if let existing, let from = endpoint(of: existing), let to = endpoint(of: imported),
 		   from.host.caseInsensitiveCompare(to.host) != .orderedSame || from.port != to.port
-		   || from.isEncrypted != to.isEncrypted
+		   || from.isEncrypted != to.isEncrypted || from.webSocketURL != to.webSocketURL
 		{
 			let outcome: SettingsRiskyChange.EndpointOutcome = switch mode {
 			case .merge?: .newServerExistingKept

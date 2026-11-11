@@ -10,6 +10,8 @@ nonisolated enum SettingsTransferError: LocalizedError {
 	case unsupportedVersion
 	case tooLarge
 	case invalidValue(String)
+	/// A server entry's WebSocket path could not be sent as a request target.
+	case invalidWebSocketPath
 	case stalePreview
 	case connectionsDidNotClose
 	case busy
@@ -20,6 +22,7 @@ nonisolated enum SettingsTransferError: LocalizedError {
 		case .unsupportedVersion: String(localized: .SettingsTransfer.configurationSnapshotUsesANewerFormat)
 		case .tooLarge: String(localized: .SettingsTransfer.configurationFileExceedsSizeLimit)
 		case .invalidValue: String(localized: .SettingsTransfer.invalidValue)
+		case .invalidWebSocketPath: String(localized: .SettingsTransfer.importInvalidWebSocketPath)
 		case .stalePreview: String(localized: .SettingsTransfer.configurationChangedAfterPreview)
 		case .connectionsDidNotClose: String(localized: .SettingsTransfer.serversDidNotDisconnect)
 		case .busy: String(localized: .SettingsTransfer.configurationTransferInProgress)
