@@ -100,10 +100,11 @@ nonisolated extension ServerConfig {
 
 extension ServerConfig {
 	/// The keychain items this connection may delete when it is removed. A
-	/// bouncer network shares its account's secrets and owns only its channels'.
+	/// bouncer network shares its account's secrets and owns only its channels'
+	/// and its own secure DCC identity.
 	var ownedKeychainItems: [KeychainItem] {
-		guard bouncerNetwork != nil else { return keychainItems }
-		return conversationList.map(\.keychainItem)
+		guard bouncerNetwork != nil else { return keychainItems + dccIdentityKeychainItems }
+		return conversationList.map(\.keychainItem) + dccIdentityKeychainItems
 	}
 }
 

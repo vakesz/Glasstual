@@ -86,7 +86,7 @@ public enum PendingKeychainSecret: Sendable, Equatable, Hashable {
 	}
 }
 
-/// One of the five secrets Glasstual keeps out of its property lists, named by
+/// One of the secrets Glasstual keeps out of its property lists, named by
 /// the model that owns it rather than by the label and service-name strings it
 /// expands to. Every secret is scoped to the owning model's `uniqueIdentifier`,
 /// which is what the associated value carries.
@@ -97,6 +97,11 @@ public enum KeychainItem: Sendable, Equatable, Hashable {
 	case channelSecretKey(String)
 	/// The base64 raw representation of the P-256 key SASL ECDSA signs with.
 	case saslSigningKey(String)
+	/// The base64 X9.63 representation of the P-256 key behind one network's
+	/// secure DCC certificate.
+	case dccIdentityKey(String)
+	/// The base64 DER of one network's self-signed secure DCC certificate.
+	case dccIdentityCertificate(String)
 
 	/// `kSecAttrLabel`. This is what Keychain Access shows the user.
 	public var label: String {
@@ -106,6 +111,8 @@ public enum KeychainItem: Sendable, Equatable, Hashable {
 		case .serverPassword: "Glasstual (Server Password)"
 		case .channelSecretKey: "Glasstual (Channel JOIN Key)"
 		case .saslSigningKey: "Glasstual (SASL ECDSA Key)"
+		case .dccIdentityKey: "Glasstual (Secure DCC Key)"
+		case .dccIdentityCertificate: "Glasstual (Secure DCC Certificate)"
 		}
 	}
 
@@ -118,6 +125,8 @@ public enum KeychainItem: Sendable, Equatable, Hashable {
 		case let .serverPassword(identifier): "glasstual.server.\(identifier)"
 		case let .channelSecretKey(identifier): "glasstual.channel-key.\(identifier)"
 		case let .saslSigningKey(identifier): "glasstual.sasl-ecdsa.\(identifier)"
+		case let .dccIdentityKey(identifier): "glasstual.dcc-identity-key.\(identifier)"
+		case let .dccIdentityCertificate(identifier): "glasstual.dcc-identity-certificate.\(identifier)"
 		}
 	}
 

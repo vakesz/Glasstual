@@ -141,15 +141,18 @@ struct ServerConfigBouncerNetworkTests {
 		#expect(child.pendingKeychainEdits.isEmpty)
 	}
 
-	@Test("Removing a network deletes only its channels' keys, never the account's secrets")
+	@Test("Removing a network deletes its channels' keys and DCC identity, never the account's secrets")
 	func removalLeavesTheAccountsSecrets() {
 		let parent = account()
 		var child = parent.derivingBouncerNetwork(BouncerNetwork(id: "7", name: "Libera"))
 		child.conversationList = [ConversationConfig(name: "#chat")]
 
-		#expect(child.ownedKeychainItems == child.conversationList.map(\.keychainItem))
+		#expect(child.ownedKeychainItems == child.conversationList.map(\.keychainItem) + [
+			.dccIdentityKey(child.uniqueIdentifier), .dccIdentityCertificate(child.uniqueIdentifier),
+		])
 		#expect(child.ownedKeychainItems.contains(parent.nicknamePasswordKeychainItem) == false)
-		#expect(parent.ownedKeychainItems == parent.keychainItems)
+		#expect(child.ownedKeychainItems.contains(.dccIdentityKey(parent.uniqueIdentifier)) == false)
+		#expect(parent.ownedKeychainItems == parent.keychainItems + parent.dccIdentityKeychainItems)
 	}
 
 	@Test("The binding and the account's switches round-trip through the stored dictionary")
