@@ -13,7 +13,7 @@ struct ServerSessionSecureDCCOfferTests {
 	private func makeSession() -> TestServerSession {
 		let session = TestServerSession(configDictionary: ["nickname": "me"])
 		session.userNickname = "me"
-		session.userHostmask = "me!u@h"
+		session.identity.hostmask = "me!u@h"
 		session.markAsLoggedIn()
 		session.forwardsProcessedMessages = true
 		return session
