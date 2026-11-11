@@ -424,7 +424,7 @@ extension ServerSession {
 				return
 			}
 		}
-		resumeCapabilityNegotiation()
+		resumeCapabilityNegotiation(.sasl)
 	}
 
 	func retrySASLNegotiation(withMechanisms mechanisms: [String]) -> Bool {
@@ -468,6 +468,9 @@ extension ServerSession {
 
 	func resetSASLNegotiation() {
 		stopSASLTimeoutTimer()
+		/* An exchange that ends here no longer holds `CAP END` back. A caller
+		 still negotiating advances the negotiation itself. */
+		capabilityNegotiation.holds.remove(.sasl)
 		sasl.phase = .registration
 		sasl.pendingReauthentication = nil
 		setSASLExchangeStatus(.idle)

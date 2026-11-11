@@ -280,12 +280,15 @@ extension ServerSession {
 		send(.away, arguments: [awayMessageForRegistration])
 	}
 
-	private func pauseCapabilityNegotiation() {
-		capabilityNegotiation.isPaused = true
+	/// Holds `CAP END` back for `reason` until ``resumeCapabilityNegotiation(_:)``
+	/// lifts it. Other reasons are held and lifted independently.
+	func pauseCapabilityNegotiation(_ reason: CapabilityNegotiationHolds) {
+		capabilityNegotiation.holds.insert(reason)
 	}
 
-	func resumeCapabilityNegotiation() {
-		capabilityNegotiation.isPaused = false
+	/// Lifts the hold for `reason`, and advances once nothing holds anymore.
+	func resumeCapabilityNegotiation(_ reason: CapabilityNegotiationHolds) {
+		capabilityNegotiation.holds.remove(reason)
 		advanceCapabilityNegotiation()
 	}
 
@@ -324,7 +327,7 @@ extension ServerSession {
 		          selectSASLMechanism(fromOffered: capabilityNegotiation.offeredCapabilities[name] ?? []),
 		          sendSASLIdentificationRequest()
 		{
-			pauseCapabilityNegotiation()
+			pauseCapabilityNegotiation(.sasl)
 		}
 
 		SessionCapabilitiesDidChange(subject: self).post()

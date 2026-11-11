@@ -200,8 +200,10 @@ extension ServerSession {
 			printDebugInformation(toConsole: String(localized: .IRC.saslReauthenticationSucceeded(account, mechanism.wireName)))
 			setSASLExchangeStatus(.succeeded(account: identity.account, mechanism: mechanism))
 		}
-		if capabilityNegotiation.isPaused {
-			resumeCapabilityNegotiation()
+		/* Only the exchange's own hold is lifted: an account registration
+		 still waiting keeps `CAP END` back. */
+		if capabilityNegotiation.holds.contains(.sasl) {
+			resumeCapabilityNegotiation(.sasl)
 		}
 	}
 

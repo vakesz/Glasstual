@@ -3,6 +3,16 @@
 
 import Foundation
 
+/// The reasons `CAP END` is being held back.
+struct CapabilityNegotiationHolds: OptionSet, Sendable {
+	let rawValue: UInt8
+
+	/// A SASL exchange is in progress.
+	static let sasl = Self(rawValue: 1 << 0)
+	/// An account registration sent before connecting awaits its outcome.
+	static let accountRegistration = Self(rawValue: 1 << 1)
+}
+
 /** Everything `CAP` negotiation remembers for one connection.
 
  Requests are pipelined. Every capability the server has offered whose
@@ -62,9 +72,15 @@ struct CapabilityNegotiationState {
 	/// requested until its last line lands.
 	var isCollectingList = false
 
-	/// Set while a SASL exchange is in progress: `CAP END` must not go out
-	/// until the exchange has completed.
-	var isPaused = false
+	/// Why `CAP END` must not go out yet: a SASL exchange, or an account
+	/// registration that has to finish before the connection is complete.
+	/// Each reason is lifted on its own.
+	var holds: CapabilityNegotiationHolds = []
+
+	/// Whether anything holds the negotiation open.
+	var isPaused: Bool {
+		holds.isEmpty == false
+	}
 
 	/// Whether `CAP END` has already been sent for this registration.
 	var endSent = false
@@ -253,7 +269,7 @@ struct CapabilityNegotiationState {
 		facts = []
 		capabilities = []
 		isCollectingList = false
-		isPaused = false
+		holds = []
 		endSent = false
 		sentISupportRequest = false
 		deferredLegacyCapabilities.removeAll()

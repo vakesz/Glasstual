@@ -27,6 +27,7 @@ extension ServerSession {
 			}
 		case .loggedout:
 			guard message.params.count == 3 else { return }
+			let heldNegotiation = capabilityNegotiation.holds.contains(.sasl)
 			resetSASLNegotiation()
 			identity.account = nil
 			sasl.lastAuthenticatedMechanism = nil
@@ -36,6 +37,11 @@ extension ServerSession {
 			nickServ.isConfirmed = false
 			if shouldPrint {
 				printNumericSequence(message, startingAt: 2)
+			}
+			/* A logout in the middle of the registration exchange ends it, and
+			 `CAP END` must not wait for an exchange that is gone. */
+			if heldNegotiation {
+				advanceCapabilityNegotiation()
 			}
 		case .saslmechs: handleSASLMechanismsNumeric(message, shouldPrint: shouldPrint)
 		case .saslsuccess, .nicklocked, .saslfail, .sasltoolong, .saslaborted, .saslalready:
