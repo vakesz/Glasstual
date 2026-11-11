@@ -1,6 +1,251 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "chat-history-command-syntax" : {
+      "comment" : "/chathistory usage line. Command names and subcommands stay untranslated; translate the placeholder names.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usage: /chathistory <latest | before | after | around | between | targets | fill> [target] [references] [limit]"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Használat: /chathistory <latest | before | after | around | between | targets | fill> [cél] [hivatkozások] [korlát]"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verwendung: /chathistory <latest | before | after | around | between | targets | fill> [Ziel] [Verweise] [Limit]"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uso: /chathistory <latest | before | after | around | between | targets | fill> [destino] [referencias] [límite]"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utilisation : /chathistory <latest | before | after | around | between | targets | fill> [cible] [références] [limite]"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使い方：/chathistory <latest | before | after | around | between | targets | fill> [対象] [参照] [上限]"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uso: /chathistory <latest | before | after | around | between | targets | fill> [destino] [referências] [limite]"
+          }
+        }
+      }
+    },
+    "chat-history-unknown-subcommand" : {
+      "comment" : "/chathistory: the typed subcommand is not one Glasstual knows. %@ is what was typed. Keep /quote CHATHISTORY untranslated.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ isn’t a /chathistory subcommand. To send a request as typed, use /quote CHATHISTORY."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A(z) %@ nem /chathistory alparancs. A kérés begépelt formában történő elküldéséhez használja a /quote CHATHISTORY parancsot."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ ist kein Unterbefehl von /chathistory. Um eine Anfrage wie eingegeben zu senden, verwenden Sie /quote CHATHISTORY."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ no es un subcomando de /chathistory. Para enviar una solicitud tal como la escribe, use /quote CHATHISTORY."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ n’est pas une sous-commande de /chathistory. Pour envoyer une requête telle que saisie, utilisez /quote CHATHISTORY."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@は/chathistoryのサブコマンドではありません。入力したとおりに要求を送信するには /quote CHATHISTORY を使用してください。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ não é um subcomando de /chathistory. Para enviar uma solicitação como digitada, use /quote CHATHISTORY."
+          }
+        }
+      }
+    },
+    "chat-history-invalid-reference" : {
+      "comment" : "/chathistory: a token is neither a message ID, a timestamp, a target nor a limit. %@ is the token.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ isn’t a message ID, a timestamp or a limit."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A(z) %@ nem üzenetazonosító, időbélyeg vagy korlát."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ ist weder eine Nachrichten-ID noch ein Zeitstempel oder Limit."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ no es un ID de mensaje, una marca de tiempo ni un límite."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ n’est ni un identifiant de message, ni un horodatage, ni une limite."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@はメッセージID、タイムスタンプ、上限のいずれでもありません。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ não é um ID de mensagem, um carimbo de data/hora nem um limite."
+          }
+        }
+      }
+    },
+    "chat-history-reference-unsupported" : {
+      "comment" : "/chathistory: the server cannot look up history by the kind of reference given (message ID or timestamp).",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The server can’t look up history by that kind of reference."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A kiszolgáló nem tud ilyen típusú hivatkozással előzményt keresni."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Server kann den Verlauf nicht über diese Art von Verweis abrufen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El servidor no puede buscar el historial con ese tipo de referencia."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le serveur ne peut pas rechercher l’historique avec ce type de référence."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サーバはその種類の参照で履歴を検索できません。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O servidor não consegue procurar o histórico com esse tipo de referência."
+          }
+        }
+      }
+    },
+    "chat-history-no-target" : {
+      "comment" : "/chathistory: no conversation is selected or named, or the named one is not open.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose a channel or private conversation, or name one in the command."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Válasszon ki egy csatornát vagy privát beszélgetést, vagy nevezzen meg egyet a parancsban."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wählen Sie einen Kanal oder eine private Unterhaltung aus oder nennen Sie eine im Befehl."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elija un canal o una conversación privada, o nombre uno en el comando."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisissez un salon ou une conversation privée, ou nommez-en un dans la commande."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "チャンネルまたは非公開の会話を選択するか、コマンドで指定してください。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escolha um canal ou uma conversa privada, ou indique um no comando."
+          }
+        }
+      }
+    },
     "deletion-not-repeated" : {
       "extractionState" : "manual",
       "generatesSymbol" : true,

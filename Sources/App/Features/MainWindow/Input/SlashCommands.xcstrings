@@ -4808,43 +4808,43 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Server support is required. Use an IRCv3 CHATHISTORY subcommand such as LATEST with its target and arguments."
+            "value": "Server support is required. latest, before, after, around and between fetch messages; targets finds conversations you missed; fill loads missing messages."
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kiszolgálói támogatás szükséges. IRCv3 CHATHISTORY-alparancsot használj, például LATEST, a céllal és argumentumokkal."
+            "value": "Kiszolgálótámogatás szükséges. A latest, before, after, around és between üzeneteket kér le; a targets megkeresi a kihagyott beszélgetéseket; a fill betölti a hiányzó üzeneteket."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Serverunterstützung ist erforderlich. Nutze einen IRCv3-CHATHISTORY-Unterbefehl wie LATEST mit Ziel und Argumenten."
+            "value": "Serverunterstützung erforderlich. latest, before, after, around und between rufen Nachrichten ab; targets findet verpasste Unterhaltungen; fill lädt fehlende Nachrichten."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Requiere compatibilidad del servidor. Usa un subcomando CHATHISTORY de IRCv3, como LATEST, con su destino y argumentos."
+            "value": "Requiere compatibilidad del servidor. latest, before, after, around y between obtienen mensajes; targets encuentra conversaciones que se perdió; fill carga los mensajes que faltan."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "La prise en charge par le serveur est requise. Utilisez une sous-commande IRCv3 CHATHISTORY, comme LATEST, avec sa cible et ses arguments."
+            "value": "Nécessite la prise en charge du serveur. latest, before, after, around et between récupèrent des messages ; targets trouve les conversations manquées ; fill charge les messages manquants."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "サーバの対応が必要です。LATESTなどのIRCv3 CHATHISTORYサブコマンドを、対象と引数とともに使用します。"
+            "value": "サーバの対応が必要です。latest、before、after、around、between はメッセージを取得し、targets は見逃した会話を探し、fill は欠けているメッセージを読み込みます。"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Requer suporte do servidor. Use um subcomando IRCv3 CHATHISTORY, como LATEST, com o alvo e os argumentos."
+            "value": "Requer suporte do servidor. latest, before, after, around e between buscam mensagens; targets encontra conversas que você perdeu; fill carrega as mensagens que faltam."
           }
         }
       }
@@ -8168,43 +8168,43 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "<subcommand> <target> [arguments]"
+            "value": "<latest | before | after | around | between | targets | fill> [target] [arguments]"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "<alparancs> <cél> [argumentumok]"
+            "value": "<latest | before | after | around | between | targets | fill> [cél] [argumentumok]"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "<Unterbefehl> <Ziel> [Argumente]"
+            "value": "<latest | before | after | around | between | targets | fill> [Ziel] [Argumente]"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "<subcomando> <destino> [argumentos]"
+            "value": "<latest | before | after | around | between | targets | fill> [destino] [argumentos]"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "<sous-commande> <cible> [arguments]"
+            "value": "<latest | before | after | around | between | targets | fill> [cible] [arguments]"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "<サブコマンド> <対象> [引数]"
+            "value": "<latest | before | after | around | between | targets | fill> [対象] [引数]"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "<subcomando> <alvo> [argumentos]"
+            "value": "<latest | before | after | around | between | targets | fill> [alvo] [argumentos]"
           }
         }
       }

@@ -75,7 +75,7 @@ extension ServerSession {
 		case .notification:
 			dispatchNotificationCommand(command, parsed: parsed)
 		case .capability:
-			dispatchNativeCapabilityCommand(command, parsed: parsed)
+			dispatchNativeCapabilityCommand(command, parsed: parsed, targetConversation: targetConversation)
 		case .information:
 			dispatchNativeInformationCommand(command, parsed: parsed, targetConversation: targetConversation)
 		}

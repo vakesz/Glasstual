@@ -272,16 +272,15 @@ extension ServerSession {
 		menu?.toggleMuteOnNotificationSoundsShortcut(on: muted)
 	}
 
-	func dispatchNativeCapabilityCommand(_ command: LocalCommand, parsed: ParsedUserCommand) {
+	func dispatchNativeCapabilityCommand(
+		_ command: LocalCommand,
+		parsed: ParsedUserCommand,
+		targetConversation: Conversation?
+	) {
 		let arguments = parsed.arguments.rest
 		switch command {
 		case .chathistory:
-			guard isLoggedIn, requireArguments(parsed.arguments, for: parsed.command) else { return }
-			guard isCapabilityEnabled(.chatHistory) else {
-				printDebugInformation(String(localized: .IRC.thisServerDoesNotSupportChat))
-				return
-			}
-			sendLine("CHATHISTORY \(arguments)")
+			dispatchChatHistoryCommand(parsed, targetConversation: targetConversation)
 
 		case .umode:
 			guard isLoggedIn else { return }

@@ -24,4 +24,7 @@ struct ChatHistorySession {
 	/// A batch is the wire's record of a group of lines; what this session asked
 	/// for is this subsystem's own bookkeeping and stays here.
 	var requestsByBatchToken: [String: UUID] = [:]
+	/// Set once the server answered a message identifier with
+	/// `INVALID_MSGREFTYPE`: pages are asked for by time from then on.
+	var refusesMessageIdentifiers = false
 }

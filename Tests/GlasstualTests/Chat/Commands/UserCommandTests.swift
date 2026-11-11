@@ -242,7 +242,7 @@ struct CommandArityTests {
 	@MainActor
 	@Test
 	func carriesTheDeclaredArityOntoTheParsedArguments() throws {
-		let command = try #require(ParsedUserCommand("/chathistory latest #channel"))
+		let command = try #require(ParsedUserCommand("/ctcp bob version"))
 
 		#expect(command.arguments.arity.required == 2)
 		#expect(command.arguments.satisfiesDeclaredArity)
@@ -251,7 +251,7 @@ struct CommandArityTests {
 	@MainActor
 	@Test
 	func failsTheDeclaredArityWhenTooFewArgumentsAreGiven() throws {
-		let command = try #require(ParsedUserCommand("/chathistory latest"))
+		let command = try #require(ParsedUserCommand("/ctcp bob"))
 
 		#expect(command.arguments.satisfiesDeclaredArity == false)
 	}

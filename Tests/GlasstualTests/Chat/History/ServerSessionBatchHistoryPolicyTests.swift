@@ -28,9 +28,9 @@ struct ServerSessionBatchHistoryPolicyTests {
 
 	@Test("The server maximum caps the request only when it is stricter than the local one")
 	func historyLimitUsesServerMaximumOnlyWhenItIsStricter() {
-		#expect(ChatHistoryPolicy.requestLimit(serverMaximum: 0) == 100)
-		#expect(ChatHistoryPolicy.requestLimit(serverMaximum: 25) == 25)
-		#expect(ChatHistoryPolicy.requestLimit(serverMaximum: 250) == 100)
+		#expect(ChatHistoryLimit.clamp(ChatHistoryPolicy.defaultRequestLimit, serverMaximum: 0) == 100)
+		#expect(ChatHistoryLimit.clamp(ChatHistoryPolicy.defaultRequestLimit, serverMaximum: 25) == 25)
+		#expect(ChatHistoryLimit.clamp(ChatHistoryPolicy.defaultRequestLimit, serverMaximum: 250) == 100)
 	}
 
 	@Test("A target that already failed is not asked for history again")

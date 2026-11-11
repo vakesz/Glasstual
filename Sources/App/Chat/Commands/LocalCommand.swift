@@ -242,7 +242,7 @@ extension LocalCommand {
 		.away: "[comment]",
 		.ban: "[channel] <nickname>",
 		.banaccount: "[channel] <nickname>",
-		.chathistory: "<subcommand> <target> [arguments]",
+		.chathistory: "<latest | before | after | around | between | targets | fill> [target] [arguments]",
 		.close: "[target]",
 		.conn: "[server]",
 		.ctcp: "<nickname> <command> [extra]",

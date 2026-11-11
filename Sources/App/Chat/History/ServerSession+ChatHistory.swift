@@ -11,11 +11,6 @@ enum ChatHistoryPolicy {
 	static let requestTimeout: TimeInterval = 30
 	static let requestLabelPrefix = "history-"
 
-	static func requestLimit(serverMaximum: UInt) -> UInt {
-		guard serverMaximum > 0, serverMaximum <= defaultRequestLimit else { return defaultRequestLimit }
-		return serverMaximum
-	}
-
 	static func canUseServerHistory(
 		isLoggedIn: Bool,
 		capabilityEnabled: Bool,
@@ -44,13 +39,29 @@ extension ServerSession {
 		}
 		chatHistory.prependConversation = nil
 		chatHistory.prependedLines = nil
+		chatHistory.refusesMessageIdentifiers = false
 		readMarkers.sentDates.removeAll()
 		readMarkers.pendingConversations.removeAll()
 		readMarkers.timer.stop()
 	}
 
 	func chatHistoryRequestLimit() -> UInt {
-		ChatHistoryPolicy.requestLimit(serverMaximum: supportInfo.chatHistoryMaximumLines)
+		ChatHistoryLimit.clamp(ChatHistoryPolicy.defaultRequestLimit, serverMaximum: supportInfo.chatHistoryMaximumLines)
+	}
+
+	/// The references the server takes: `MSGREFTYPES`, less message
+	/// identifiers once it has refused one on this connection.
+	var chatHistoryReferenceSupport: ChatHistoryReferenceSupport {
+		ChatHistoryReferenceSupport(
+			timestamps: supportInfo.chatHistorySupportsTimestamps,
+			messageIdentifiers: supportInfo.chatHistorySupportsMessageIdentifiers && chatHistory.refusesMessageIdentifiers == false
+		)
+	}
+
+	/// The parameters of `command` as this server takes them, or `nil` when it
+	/// cannot be asked here.
+	func chatHistoryArguments(_ command: ChatHistoryCommand) -> [String]? {
+		try? command.arguments(support: chatHistoryReferenceSupport)
 	}
 
 	func chatHistoryIsAvailable(for conversation: Conversation) -> Bool {
@@ -73,25 +84,24 @@ extension ServerSession {
 	/// The request goes out as arguments rather than an assembled line: the
 	/// outbound transport is what builds the line and attaches the message tags
 	/// a labelled request needs.
-	func chatHistoryLatestArguments(target: String, since date: Date?) -> [String] {
-		let reference = supportInfo.chatHistorySupportsTimestamps ? date.map(chatHistoryTimestamp(for:)) : nil
-		return ["LATEST", target, reference ?? "*", String(chatHistoryRequestLimit())]
-	}
-
-	func chatHistoryBeforeArguments(target: String, date: Date) -> [String] {
-		["BEFORE", target, chatHistoryTimestamp(for: date), String(chatHistoryRequestLimit())]
-	}
-
-	func chatHistoryBeforeArguments(target: String, request: ServerHistoryRequest) -> [String]? {
-		if supportInfo.chatHistorySupportsMessageIdentifiers,
-		   let identifier = request.messageIdentifier, !identifier.isEmpty,
-		   !identifier.hasPrefix(":"),
-		   !identifier.utf8.contains(where: { $0 == 0 || $0 == 10 || $0 == 13 || $0 == 32 })
-		{
-			return ["BEFORE", target, "msgid=\(identifier)", String(chatHistoryRequestLimit())]
+	func chatHistoryLatestArguments(target: String, since date: Date?) -> [String]? {
+		let reference: ChatHistoryReference = if chatHistoryReferenceSupport.timestamps, let date {
+			.timestamp(date)
+		} else {
+			.unbounded
 		}
-		guard supportInfo.chatHistorySupportsTimestamps else { return nil }
-		return chatHistoryBeforeArguments(target: target, date: request.before)
+		return chatHistoryArguments(.latest(target: target, after: reference, limit: chatHistoryRequestLimit()))
+	}
+
+	/// A scroll-back page: before the oldest line's message identifier where
+	/// the server takes those, and before its time otherwise.
+	func chatHistoryBeforeArguments(target: String, request: ServerHistoryRequest) -> [String]? {
+		let reference = ChatHistoryReference.preferred(
+			messageIdentifier: request.messageIdentifier,
+			timestamp: request.before,
+			support: chatHistoryReferenceSupport
+		)
+		return reference.flatMap { chatHistoryArguments(.before(target: target, $0, limit: chatHistoryRequestLimit())) }
 	}
 
 	func newestKnownServerTimestamp(for conversation: Conversation) -> Date? {
@@ -120,13 +130,9 @@ extension ServerSession {
 
 	func requestChatHistory(for conversation: Conversation) {
 		guard chatHistoryIsAvailable(for: conversation) else { return }
-		send(
-			.chathistory,
-			arguments: chatHistoryLatestArguments(
-				target: conversation.name,
-				since: newestKnownServerTimestamp(for: conversation)
-			)
-		)
+		let newest = newestKnownServerTimestamp(for: conversation)
+		guard let arguments = chatHistoryLatestArguments(target: conversation.name, since: newest) else { return }
+		send(.chathistory, arguments: arguments)
 	}
 
 	func requestChatHistory(before date: Date, in conversation: Conversation) {
@@ -156,6 +162,9 @@ extension ServerSession {
 		let label = message.messageTags?["label"] ?? message.parentBatchMessage?.labeledResponseBatch?.labeledDelivery.label
 		if let label, label.hasPrefix(ChatHistoryPolicy.requestLabelPrefix) {
 			guard let pending = chatHistory.serverRequests.values.first(where: { $0.label == label }) else { return false }
+			if retryWithTimestamp(pending, after: message) {
+				return true
+			}
 			finishServerHistory(pending, outcome: .failed(reason: message.params.last))
 			return true
 		}
@@ -168,9 +177,35 @@ extension ServerSession {
 			return true
 		}
 		guard label == nil else { return true }
+		if message.param(at: 1) == "INVALID_MSGREFTYPE" {
+			chatHistory.refusesMessageIdentifiers = true
+			return true
+		}
 		let foldedTarget = supportInfo.casefoldString(target)
 		guard !chatHistory.failedTargets.contains(foldedTarget) else { return false }
 		chatHistory.failedTargets.insert(foldedTarget)
+		return true
+	}
+
+	/** `INVALID_MSGREFTYPE` for a page asked for by message identifier: the
+	 server does not take them after all, whatever `MSGREFTYPES` said. The same
+	 page is asked for once more by time, and message identifiers are not used
+	 again on this connection. */
+	private func retryWithTimestamp(_ pending: PendingServerHistoryRequest, after message: Message) -> Bool {
+		guard message.param(at: 1) == "INVALID_MSGREFTYPE",
+		      chatHistory.refusesMessageIdentifiers == false,
+		      pending.request.messageIdentifier != nil,
+		      let conversation = pending.conversation,
+		      let key = chatHistory.serverRequests.first(where: { $0.value === pending })?.key
+		else { return false }
+		chatHistory.refusesMessageIdentifiers = true
+		chatHistory.serverRequests.removeValue(forKey: key)
+		pending.timeoutTimer?.stop()
+		pending.timeoutTimer = nil
+		let retried = requestServerHistory(pending.request, in: conversation, presentation: pending.presentation)
+		if retried == false {
+			pending.presentation?.receiveServerHistory(.failed(reason: message.params.last), for: pending.request)
+		}
 		return true
 	}
 }
