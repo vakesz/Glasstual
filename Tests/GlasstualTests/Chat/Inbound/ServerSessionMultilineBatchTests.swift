@@ -93,6 +93,27 @@ struct ServerSessionMultilineBatchTests {
 		#expect(session.processedMessages.first?.messageIdentifier == "abc123")
 	}
 
+	@Test("A batch of one line still carries the identifier it was opened with")
+	func oneLineBatchKeepsItsIdentifier() throws {
+		let session = session()
+		session.enableCapability(.serverTime)
+
+		try feed([
+			"@msgid=abc123;account=alice;time=2026-01-02T03:04:05.000Z :alice!u@h BATCH +m draft/multiline #chan",
+			"@batch=m :alice!u@h PRIVMSG #chan :only",
+			":alice!u@h BATCH -m",
+		], to: session)
+
+		let delivered = try #require(session.processedMessages.first)
+
+		#expect(session.processedMessages.count == 1)
+		#expect(delivered.params == ["#chan", "only"])
+		#expect(delivered.messageIdentifier == "abc123")
+		#expect(delivered.senderAccount == "alice")
+		#expect(delivered.hasServerTime)
+		#expect(delivered.receivedAt == Date(timeIntervalSince1970: 1_767_323_045))
+	}
+
 	@Test("A batch inside another batch is still one message")
 	func nestedBatchIsOneMessage() throws {
 		let session = session()
@@ -151,5 +172,26 @@ struct ServerSessionMultilineBatchTests {
 
 		#expect(session.deliveryState(forLabel: label) != .pending)
 		#expect(session.processedMessages.count == 1)
+	}
+
+	@Test("A labelled echo of a one-line batch settles its delivery once")
+	func oneLineEchoSettlesTheDeliveryOnce() throws {
+		let session = session()
+		session.enableCapability(.labeledResponse)
+		session.enableCapability(.echoMessage)
+		session.forwardsProcessedMessages = true
+		let channel = try #require(session.findConversationOrCreate("#chan"))
+		channel.activate()
+		let label = try #require(session.registerPendingDelivery(for: channel))
+
+		try feed([
+			"@label=\(label);msgid=m1 :me!u@h BATCH +r draft/multiline #chan",
+			"@batch=r :me!u@h PRIVMSG #chan :only",
+			":me!u@h BATCH -r",
+		], to: session)
+
+		#expect(session.deliveryState(forLabel: label) != .pending)
+		#expect(session.processedMessages.count == 1)
+		#expect(session.processedMessages.first?.messageIdentifier == "m1")
 	}
 }

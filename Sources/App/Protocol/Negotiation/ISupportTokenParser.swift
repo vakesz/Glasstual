@@ -148,6 +148,11 @@ nonisolated enum ISupportTokenParser {
 		)
 	}
 
+	/// The names `ACCOUNTEXTBAN` lists, comma-separated, without empty entries.
+	static func accountExtendedBanNames(from token: String) -> [String] {
+		token.split(separator: ",").map(String.init)
+	}
+
 	static func userPrefixConfiguration(from token: String) -> ISupportPrefixConfig? {
 		let token = token as NSString
 		let openingParenthesis = token.range(of: "(").location

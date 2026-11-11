@@ -138,6 +138,7 @@ enum MenuCommand: String, CaseIterable, Sendable {
 	case takeHalfop // Take Half-Operator Status
 	case takeVoice // Take Voice
 	case ban // Ban
+	case banAccount // Ban Account
 	case kick // Kick
 	case kickban // Kick and Ban
 	case ctcp // Client-to-Client
@@ -217,7 +218,7 @@ extension MenuCommand {
 			.transcript
 		case .muteUser, .unmuteUser, .addIgnore, .modifyIgnore, .removeIgnore, .inviteTo, .whois,
 		     .startDirectConversation, .giveOp, .giveHalfop, .giveVoice, .takeOp, .takeHalfop,
-		     .takeVoice, .ban, .kick, .kickban, .ctcp, .ircOperator, .changeColor,
+		     .takeVoice, .ban, .banAccount, .kick, .kickban, .ctcp, .ircOperator, .changeColor,
 		     .ctcpSendFile, .ctcpPing, .ctcpTime, .ctcpClientInfo, .ctcpVersion,
 		     .ctcpFinger, .ctcpUserInfo, .operatorSetVirtualHost, .operatorKill,
 		     .operatorShun, .operatorGline:
@@ -296,7 +297,7 @@ extension MenuCommand {
 		.addIgnore: "eye.slash", .modifyIgnore: "pencil.circle",
 		.removeIgnore: "hand.raised.slash", .inviteTo: "envelope",
 		.whois: "info.circle", .startDirectConversation: "bubble.left",
-		.ban: "nosign", .kick: "person.fill.xmark", .kickban: "hammer",
+		.ban: "nosign", .banAccount: "person.crop.circle.badge.xmark", .kick: "person.fill.xmark", .kickban: "hammer",
 		.ctcp: "arrow.left.arrow.right", .ircOperator: "shield",
 		.changeColor: "paintpalette",
 		// Application, File and Edit menus.

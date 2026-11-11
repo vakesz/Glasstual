@@ -13,7 +13,7 @@ private struct ChannelModerationInvocation {
 
 	/// The moderation commands that set or clear a list mode before, or
 	/// instead of, kicking.
-	static let modeCommands: Set<LocalCommand> = [.ban, .kb, .kickban, .quiet, .unban, .unquiet]
+	static let modeCommands: Set<LocalCommand> = [.ban, .banaccount, .kb, .kickban, .quiet, .unban, .unquiet]
 
 	static let kickCommands: Set<LocalCommand> = [.kb, .kick, .kickban]
 
@@ -102,11 +102,30 @@ extension ServerSession {
 			printDebugInformation(String(localized: .IRC.modeIsNotSupported(String(modeSymbol))))
 			return false
 		}
-		let banTarget = invocation.channel?.findMember(invocation.nickname)?.user
-		let banMask = banTarget.map(banMask(for:)) ?? invocation.nickname
+		guard let banMask = moderationMask(for: invocation) else { return false }
 		let removesMode = ChannelModerationInvocation.removingCommands.contains(invocation.command)
 		send(.mode, arguments: [invocation.channelName, "\(removesMode ? "-" : "+")\(modeSymbol)", banMask])
 		return true
+	}
+
+	/// The mask a ban command sets: the member's hostmask in the configured
+	/// format, or their account when the command bans by account.
+	private func moderationMask(for invocation: ChannelModerationInvocation) -> String? {
+		let user = invocation.channel?.findMember(invocation.nickname)?.user
+		guard invocation.command == .banaccount else {
+			return user.map(banMask(for:)) ?? invocation.nickname
+		}
+		guard supportInfo.accountExtendedBanNames.isEmpty == false else {
+			printDebugInformation(String(localized: .IRC.accountBansAreNotSupported))
+			return nil
+		}
+		guard let account = (user ?? findUser(invocation.nickname))?.account,
+		      let mask = supportInfo.accountExtendedBanMask(for: account)
+		else {
+			printDebugInformation(String(localized: .IRC.accountOfIsNotKnown(invocation.nickname)))
+			return nil
+		}
+		return mask
 	}
 
 	private func applyModerationKickIfNeeded(_ invocation: ChannelModerationInvocation) {

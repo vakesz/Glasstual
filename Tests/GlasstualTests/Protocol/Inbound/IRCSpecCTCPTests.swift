@@ -279,7 +279,9 @@ struct IRCSpecCTCPTests {
 
 	/// modern.ircdocs.horse §CLIENTINFO: the reply "is a list of the CTCP
 	/// messages this session supports and implements", so every command the
-	/// session actually answers has to appear in it.
+	/// session actually answers has to appear in it, and ACTION, which it
+	/// reads, is one of them. LAGCHECK is a query the session sends itself and
+	/// is not offered to anyone.
 	@Test("CLIENTINFO lists the CTCP commands the session answers")
 	func clientInfoListsWhatIsImplemented() throws {
 		let session = session()
@@ -290,9 +292,70 @@ struct IRCSpecCTCPTests {
 
 		#expect(reply.hasPrefix("NOTICE alice :\(Self.delimiter)CLIENTINFO "))
 
-		for command in ["CLIENTINFO", "PING", "TIME", "USERINFO", "VERSION"] {
-			#expect(reply.contains(command), "CLIENTINFO should list \(command)")
+		let listed = reply.dropFirst("NOTICE alice :\(Self.delimiter)CLIENTINFO ".count)
+			.trimmingCharacters(in: CharacterSet(charactersIn: Self.delimiter))
+			.split(separator: " ")
+			.map(String.init)
+
+		for command in ["ACTION", "CLIENTINFO", "DCC", "PING", "TIME", "USERINFO", "VERSION"] {
+			#expect(listed.contains(command), "CLIENTINFO should list \(command)")
 		}
+		#expect(listed.contains("LAGCHECK") == false)
+	}
+
+	/// The advertised list is the typed verb table, not a string a translator
+	/// can edit: it is every verb the session names except its internal one.
+	@Test("The CLIENTINFO list is the verb table without LAGCHECK")
+	func clientInfoListIsTheVerbTable() {
+		let expected = CTCPVerb.allCases.filter { $0 != .lagCheck }.map(\.wireName)
+
+		#expect(CTCPClientInfo.verbList.split(separator: " ").map(String.init) == expected)
+		#expect(CTCPVerb.advertised == CTCPVerb.allCases.filter { $0 != .lagCheck })
+	}
+
+	/// `CLIENTINFO <verb>` describes one verb, whatever case it is asked in.
+	@Test("CLIENTINFO with a verb describes that verb")
+	func clientInfoDescribesAVerb() throws {
+		let session = session()
+
+		try deliver(":alice!a@h PRIVMSG me :\(Self.delimiter)CLIENTINFO ping\(Self.delimiter)", on: session)
+		try deliver(":bob!b@h PRIVMSG me :\(Self.delimiter)CLIENTINFO ACTION\(Self.delimiter)", on: session)
+
+		let lines = sentLines(of: session)
+
+		#expect(lines.count == 2)
+		#expect(lines[0].hasPrefix("NOTICE alice :\(Self.delimiter)CLIENTINFO PING :"))
+		#expect(lines[0].contains(CTCPVerb.ping.clientInfoDescription))
+		#expect(lines[1].hasPrefix("NOTICE bob :\(Self.delimiter)CLIENTINFO ACTION :"))
+	}
+
+	/// An unknown verb is answered with ERRMSG, naming the query. LAGCHECK is
+	/// not offered, so it is as unknown to a peer as any other name.
+	@Test("CLIENTINFO with an unknown verb is answered with ERRMSG")
+	func clientInfoRefusesAnUnknownVerb() throws {
+		let session = session()
+
+		try deliver(":alice!a@h PRIVMSG me :\(Self.delimiter)CLIENTINFO SOURCE\(Self.delimiter)", on: session)
+		try deliver(":bob!b@h PRIVMSG me :\(Self.delimiter)CLIENTINFO LAGCHECK\(Self.delimiter)", on: session)
+
+		let lines = sentLines(of: session)
+
+		#expect(lines == [
+			"NOTICE alice :\(Self.delimiter)ERRMSG CLIENTINFO SOURCE :Unknown CTCP verb\(Self.delimiter)",
+			"NOTICE bob :\(Self.delimiter)ERRMSG CLIENTINFO LAGCHECK :Unknown CTCP verb\(Self.delimiter)",
+		])
+	}
+
+	/// The unknown verb is echoed back, so an oversized one is not answered,
+	/// the same bound a PING parameter has.
+	@Test("An oversized CLIENTINFO argument is not echoed")
+	func oversizedClientInfoArgumentIsNotEchoed() throws {
+		let session = session()
+		let argument = String(repeating: "X", count: CTCPClientInfo.maximumArgumentBytes + 1)
+
+		try deliver(":alice!a@h PRIVMSG me :\(Self.delimiter)CLIENTINFO \(argument)\(Self.delimiter)", on: session)
+
+		#expect(sentLines(of: session).isEmpty)
 	}
 
 	/// A CTCP reply is a NOTICE, and a NOTICE must never produce another
@@ -315,6 +378,113 @@ struct IRCSpecCTCPTests {
 		try deliver(":alice!a@h PRIVMSG me :\(Self.delimiter)VERSION\(Self.delimiter)", on: session)
 
 		#expect(sentLines(of: session).isEmpty)
+	}
+
+	// MARK: - Replayed history
+
+	private func deliverReplayed(_ line: String, on session: TestServerSession) throws {
+		var message = try #require(Message(line: line, on: session))
+
+		message.isReplayed = true
+		session.receivePrivmsgAndNotice(message)
+	}
+
+	private func printedKinds(of session: TestServerSession) -> [NSNumber?] {
+		(session.printedLines as NSArray).compactMap { $0 as? [String: Any] }.map { $0["lineType"] as? NSNumber }
+	}
+
+	private func printedLineCount(of kind: ChatLineKind, on session: TestServerSession) -> Int {
+		printedKinds(of: session).filter { $0 == NSNumber(value: kind.rawValue) }.count
+	}
+
+	/// A replayed query is history. The person who sent it may be gone and the
+	/// nickname may be someone else's now, so it is recorded and not answered.
+	@Test("A replayed VERSION query is printed and not answered")
+	func replayedQueriesAreNotAnswered() throws {
+		let session = session()
+
+		try deliverReplayed(":alice!a@h PRIVMSG me :\(Self.delimiter)VERSION\(Self.delimiter)", on: session)
+
+		#expect(sentLines(of: session).isEmpty)
+		#expect(printedLineCount(of: .ctcpQuery, on: session) == 1)
+	}
+
+	@Test("The same VERSION query live is answered")
+	func liveQueriesAreAnswered() throws {
+		let session = session()
+
+		try deliver(":alice!a@h PRIVMSG me :\(Self.delimiter)VERSION\(Self.delimiter)", on: session)
+
+		#expect(sentLines(of: session).count == 1)
+		#expect(printedLineCount(of: .ctcpQuery, on: session) == 1)
+	}
+
+	@Test("A replayed PING is not answered with a lag figure")
+	func replayedPingIsNotAnswered() throws {
+		let session = session()
+
+		try deliverReplayed(":alice!a@h PRIVMSG me :\(Self.delimiter)PING 1699999999.123\(Self.delimiter)", on: session)
+
+		#expect(sentLines(of: session).isEmpty)
+	}
+
+	/// An offer of a file from a stale peer address must not reach the
+	/// transfer list. Live, the same line prints the request and queues it.
+	@Test("A replayed DCC SEND offers no transfer, and a live one does")
+	func replayedFileOffersAreNotRaised() throws {
+		let line = ":alice!a@h PRIVMSG me :\(Self.delimiter)DCC SEND file 1568397154 5000 1234\(Self.delimiter)"
+
+		let replayed = session()
+		replayed.markAsLoggedIn()
+		try deliverReplayed(line, on: replayed)
+
+		#expect(sentLines(of: replayed).isEmpty)
+		#expect(printedLineCount(of: .dccFileTransfer, on: replayed) == 0)
+		#expect(printedLineCount(of: .ctcpQuery, on: replayed) == 1)
+
+		let live = session()
+		live.markAsLoggedIn()
+		try deliver(line, on: live)
+
+		#expect(printedLineCount(of: .dccFileTransfer, on: live) == 1)
+	}
+
+	// MARK: - Echoed replies
+
+	private func reply(_ text: String, from sender: String = "me") -> String {
+		":\(sender)!u@h NOTICE alice :\(Self.delimiter)\(text)\(Self.delimiter)"
+	}
+
+	@Test("With echo-message, the echo of our own CTCP reply is not printed")
+	func echoedRepliesAreNotPrinted() throws {
+		let session = session()
+		session.enableCapability(.echoMessage)
+
+		try deliver(reply("VERSION Glasstual"), on: session)
+		try deliver(reply("PING 1699999999.123"), on: session)
+
+		#expect(printedLineCount(of: .ctcpReply, on: session) == 0)
+	}
+
+	/// Without echo-message a reply from one's own nickname is a real reply,
+	/// such as a CTCP to oneself or another client on the account.
+	@Test("Without echo-message, a reply from our own nickname is printed")
+	func ownRepliesWithoutEchoMessageArePrinted() throws {
+		let session = session()
+
+		try deliver(reply("VERSION Glasstual"), on: session)
+
+		#expect(printedLineCount(of: .ctcpReply, on: session) == 1)
+	}
+
+	@Test("A CTCP reply from someone else is printed with echo-message on")
+	func repliesFromOthersArePrinted() throws {
+		let session = session()
+		session.enableCapability(.echoMessage)
+
+		try deliver(reply("VERSION Some Client", from: "bob"), on: session)
+
+		#expect(printedLineCount(of: .ctcpReply, on: session) == 1)
 	}
 
 	// MARK: - Delimiters inside a payload

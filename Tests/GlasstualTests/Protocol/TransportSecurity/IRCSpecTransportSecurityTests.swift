@@ -97,6 +97,53 @@ struct IRCSpecTransportSecurityTests {
 		#expect(action == .none)
 	}
 
+	/// `sts`: a server may send `duration` to every client, and "clients that
+	/// are not connected securely MUST ignore it". `duration=0` is how a server
+	/// withdraws a policy, which a cleartext client has not stored, so the
+	/// port still decides.
+	@Test("sts: duration=0 over cleartext does not stop the upgrade")
+	func cleartextZeroDurationStillUpgrades() throws {
+		let action = try store().applyCapabilityValues(
+			values("port=6697,duration=0"),
+			forHost: "irc.example.net",
+			connectedPort: 6667,
+			secured: false,
+			certificateChainValidated: false
+		)
+
+		#expect(action == .upgrade(port: 6697))
+	}
+
+	@Test("sts: duration=0 with no port over cleartext does nothing")
+	func cleartextZeroDurationWithoutAPortDoesNothing() throws {
+		let action = try store().applyCapabilityValues(
+			values("duration=0"),
+			forHost: "irc.example.net",
+			connectedPort: 6667,
+			secured: false,
+			certificateChainValidated: false
+		)
+
+		#expect(action == .none)
+	}
+
+	@Test("sts: a cleartext offer still waits out an upgrade that just failed")
+	func cleartextOfferWaitsOutAFailedUpgrade() throws {
+		let store = store()
+
+		store.noteUpgradeFailed(host: "irc.example.net", port: 6697)
+
+		let action = try store.applyCapabilityValues(
+			values("port=6697,duration=0"),
+			forHost: "irc.example.net",
+			connectedPort: 6667,
+			secured: false,
+			certificateChainValidated: false
+		)
+
+		#expect(action == .none)
+	}
+
 	/// `sts`: "Sessions MUST NOT save the policy if the connection's TLS
 	/// certificate did not validate" — otherwise one clicked-through
 	/// certificate pins the host.

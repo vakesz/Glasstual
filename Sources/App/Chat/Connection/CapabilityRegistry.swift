@@ -20,11 +20,30 @@ struct CapabilityRegistry: Sendable {
 
 	private let capabilitiesByName: [String: Capability]
 
+	/// Every spelling of one feature, keyed by each of its names.
+	private let spellingsByName: [String: Set<String>]
+
 	init(capabilities: [Capability]) {
 		self.capabilities = capabilities
 		capabilitiesByName = Dictionary(
 			capabilities.map { ($0.name, $0) }, uniquingKeysWith: { first, _ in first }
 		)
+
+		var families: [String: Set<String>] = [:]
+		for capability in capabilities {
+			let primary = capability.aliasOf ?? capability.name
+			families[primary, default: [primary]].insert(capability.name)
+		}
+		spellingsByName = Dictionary(
+			capabilities.map { ($0.name, families[$0.aliasOf ?? $0.name] ?? [$0.name]) },
+			uniquingKeysWith: { first, _ in first }
+		)
+	}
+
+	/** The names the user's switch covers for `capability`: its own and every
+	 other spelling of the same feature. */
+	func spellings(of capability: Capability) -> Set<String> {
+		spellingsByName[capability.name] ?? [capability.name]
 	}
 
 	func capability(named name: String) -> Capability? {
@@ -55,7 +74,7 @@ struct CapabilityRegistry: Sendable {
 	 can never disagree about what the user asked for. */
 	private func isEnabled(_ capability: Capability, settings: ChatSettings) -> Bool {
 		capability.gate.isEnabled(in: settings)
-			&& settings.disabledCapabilities.contains(capability.name) == false
+			&& spellings(of: capability).isDisjoint(with: settings.disabledCapabilities)
 	}
 
 	/** The capabilities a `CAP LS`/`NEW` line offers, keyed by name.
@@ -154,6 +173,12 @@ struct CapabilityRegistry: Sendable {
 		      isEnabled(capability, settings: settings),
 		      offered[capability.name] != nil
 		else {
+			return false
+		}
+
+		/* One feature offered under two spellings is asked for once, under the
+		 primary one. */
+		if let primary = capability.aliasOf, offered[primary] != nil {
 			return false
 		}
 

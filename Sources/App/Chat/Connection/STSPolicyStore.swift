@@ -75,11 +75,10 @@ final class STSPolicyStore {
 		certificateChainValidated: Bool
 	) -> STSPolicyAction {
 		if secured == false {
-			// An explicit `duration=0` withdraws the policy and never upgrades.
-			// A port-only offer without a duration still upgrades, as before.
-			if values.hasDuration, values.duration <= 0 {
-				return .none
-			}
+			/* A client on a plaintext connection acts on `port` alone: the
+			 specification has it ignore `duration` there, so a server that
+			 sends `duration=0` to everyone still gets its upgrade. Withdrawing
+			 a policy is something only a validated secure connection may do. */
 			guard values.port > 0 else {
 				return .none
 			}

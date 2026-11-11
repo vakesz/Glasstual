@@ -19,6 +19,7 @@ enum LocalCommand: String, Sendable, CaseIterable {
 	case away
 	case back
 	case ban
+	case banaccount
 	case cap
 	case caps
 	case chathistory
@@ -185,7 +186,7 @@ extension LocalCommand {
 		case .ctcp, .ctcpreply: .ctcp
 		case .defaults, .ignore, .unignore: .configuration
 		case .timer: .timer
-		case .ban, .kb, .kick, .kickban, .quiet, .unban, .unquiet: .moderation
+		case .ban, .banaccount, .kb, .kick, .kickban, .quiet, .unban, .unquiet: .moderation
 		case .j, .join, .joinRandom, .cycle, .hop, .rejoin, .leave, .part, .invite: .lifecycle
 		case .clear, .clearall, .close, .remove, .list, .setcolor, .goto: .window
 		case .modeShortcut, .mode, .op, .deop, .halfop, .dehalfop, .voice, .devoice: .mode
@@ -238,6 +239,7 @@ extension LocalCommand {
 		.attach: "[channel]",
 		.away: "[comment]",
 		.ban: "[channel] <nickname>",
+		.banaccount: "[channel] <nickname>",
 		.chathistory: "<subcommand> <target> [arguments]",
 		.close: "[target]",
 		.conn: "[server]",

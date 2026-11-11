@@ -81,6 +81,26 @@ struct MultilineAssemblerTests {
 		#expect(assembled.first?.params == ["#chan", "only"])
 	}
 
+	/// The identifier, time and account sit on the batch's opening line, so a
+	/// batch holding one line needs them as much as a longer one.
+	@Test("A one-line batch takes its identifier and account from the opening line")
+	func oneLineTakesTagsFromTheOpeningLine() throws {
+		let batch = batch(
+			opening: "@msgid=abc;account=alice;label=g1;time=2026-01-02T03:04:05.000Z :alice!u@h BATCH +m draft/multiline #chan"
+		)
+		let line = try message("@draft/multiline-concat :alice!u@h PRIVMSG #chan :only", in: batch)
+
+		let assembled = try #require(MultilineAssembler.assemble([line]).first)
+
+		#expect(assembled.params == ["#chan", "only"])
+		#expect(assembled.messageIdentifier == "abc")
+		#expect(assembled.messageTags?["msgid"] == "abc")
+		#expect(assembled.senderAccount == "alice")
+		#expect(assembled.messageTags?["label"] == nil)
+		#expect(assembled.messageTags?[MultilineLimits.concatTag] == nil)
+		#expect(assembled.parentBatchMessage === batch)
+	}
+
 	@Test("Messages outside a multi-line batch keep their place and order")
 	func otherMessagesKeepTheirPlace() throws {
 		let batch = batch()

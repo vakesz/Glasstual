@@ -55,6 +55,12 @@ struct SlashCommandHelp {
 		.init([.away], .SlashCommands.descriptionAway, .SlashCommands.syntaxComment, .SlashCommands.hintOptionalReason),
 		.init([.back], .SlashCommands.descriptionClearAwayStatus),
 		.init([.ban], .SlashCommands.descriptionBan, .SlashCommands.syntaxChannelNickname, .SlashCommands.hintChannelPrivileges),
+		.init(
+			[.banaccount],
+			.SlashCommands.descriptionBanAccount,
+			.SlashCommands.syntaxChannelNickname,
+			.SlashCommands.hintChannelPrivileges
+		),
 		.init([.cap, .caps], .SlashCommands.descriptionCapabilities),
 		.init(
 			[.chathistory],

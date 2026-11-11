@@ -27,7 +27,16 @@ nonisolated enum ISupportChange: Sendable, Equatable {
 		case safeList, utf8Only, whox
 	}
 
+	/// A list of words a token's value sets.
+	nonisolated enum Names: Sendable, Equatable {
+		/// `ELIST`, one search extension per letter.
+		case extendedList
+		/// `ACCOUNTEXTBAN`, the names an account extended ban goes by.
+		case accountExtendedBan
+	}
+
 	case count(Count, UInt)
+	case names(Names, [String])
 	case modeSymbol(ModeLetter, String)
 	case feature(Feature)
 
@@ -45,7 +54,6 @@ nonisolated enum ISupportChange: Sendable, Equatable {
 	case channelLimits([Character: UInt])
 	case clientTagDenyList([String])
 	case chatHistoryReferences(timestamps: Bool, messageIdentifiers: Bool)
-	case extendedListTokens([String])
 	case extendedBan(prefix: String?, types: [String])
 	case maximumListEntries([Character: UInt])
 	case maximumTargetsByCommand([String: UInt])
@@ -114,10 +122,12 @@ private nonisolated extension ISupportChange {
 				messageIdentifiers: references.contains("msgid")
 			)
 		case .elist:
-			return .extendedListTokens(value.uppercased().map(String.init))
+			return .names(.extendedList, value.uppercased().map(String.init))
 		case .extban:
 			let configuration = ISupportTokenParser.extendedBanConfiguration(from: value)
 			return .extendedBan(prefix: configuration.prefix, types: configuration.types)
+		case .accountextban:
+			return .names(.accountExtendedBan, ISupportTokenParser.accountExtendedBanNames(from: value))
 		case .maxlist:
 			return .maximumListEntries(ISupportTokenParser.maximumListEntries(from: value))
 		case .targmax:

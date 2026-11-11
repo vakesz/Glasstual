@@ -75,16 +75,21 @@ extension ServerSession {
 			printDebugInformation(toConsole: String(localized: .IRC.ctcpFromWasIgnored(parsed.rawCommand, sender)))
 			return
 		}
+		/* A replayed query is history: the person who sent it may be gone, and
+		 someone else may hold the nickname now. It stays in the transcript as a
+		 record, but it earns no reply, no file-transfer offer and no chat. */
+		if message.isReplayed {
+			printCTCPQuery(message, parsed: parsed, sender: sender)
+			return
+		}
 		if parsed.verb == .dcc {
 			receivedDCCQuery(message, text: parsed.arguments, ignoreInfo: ignore)
 			return
 		}
 
-		let printTarget = noticePrintTarget()
-		print(String(localized: .IRC.miscellaneousMessagesRelatedCtcp(parsed.rawCommand, sender)), by: nil, in: printTarget, as: .ctcpQuery,
-		      command: message.command, receivedAt: message.receivedAt)
+		printCTCPQuery(message, parsed: parsed, sender: sender)
 
-		guard let replyText = ctcpReplyText(for: parsed.verb, arguments: parsed.arguments) else {
+		guard let reply = ctcpReply(for: parsed) else {
 			return
 		}
 
@@ -98,14 +103,26 @@ extension ServerSession {
 			return
 		}
 
-		sendCTCPReply(sender, command: parsed.rawCommand, text: replyText)
+		sendCTCPReply(sender, command: reply.command, text: reply.text)
 	}
 
-	/// What this session answers `command` with, or `nil` when it answers nothing.
+	private func printCTCPQuery(_ message: Message, parsed: CTCPMessage, sender: String) {
+		print(String(localized: .IRC.miscellaneousMessagesRelatedCtcp(parsed.rawCommand, sender)), by: nil, in: noticePrintTarget(),
+		      as: .ctcpQuery, command: message.command, receivedAt: message.receivedAt)
+	}
+
+	/// What this session answers `query` with, or `nil` when it answers nothing.
+	private func ctcpReply(for query: CTCPMessage) -> CTCPReply? {
+		if query.verb == .clientInfo {
+			return CTCPClientInfo.reply(toArguments: query.arguments)
+		}
+		return ctcpReplyText(for: query.verb, arguments: query.arguments)
+			.map { CTCPReply(command: query.rawCommand, text: $0) }
+	}
+
+	/// The text this session answers `command` with, or `nil` when it answers nothing.
 	private func ctcpReplyText(for command: CTCPVerb?, arguments: String) -> String? {
 		switch command {
-		case .clientInfo:
-			return String(localized: .IRC.clientinfoDccFingerPingTimeUserinfo)
 		case .finger:
 			return String(localized: .IRC.stopFingeringMePervert)
 		case .ping:
@@ -172,6 +189,12 @@ extension ServerSession {
 		}
 		guard let parsed = CTCPPolicy.commandAndArguments(from: text) else { return }
 		let sender = message.senderNickname ?? ""
+		/* With echo-message the NOTICE this session sent as an answer comes
+		 back. Without it a reply from the user's own nickname is real — a CTCP
+		 to oneself, or another client on the same account — and is printed. */
+		if nicknameIsMyself(sender), isCapabilityEnabled(.echoMessage) {
+			return
+		}
 		let output: String
 		/* Only a PING whose echo comes back as the number that was sent can be
 		 timed. An unparsable one used to read as zero — the epoch — and the

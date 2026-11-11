@@ -1105,54 +1105,6 @@
         }
       }
     },
-    "clientinfo-dcc-finger-ping-time-userinfo": {
-      "comment": "Miscellaneous messages related to IRC events. Legacy key: jer-ju.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "CLIENTINFO DCC FINGER PING TIME USERINFO VERSION"
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "CLIENTINFO DCC FINGER PING TIME USERINFO VERSION"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "CLIENTINFO DCC FINGER PING TIME USERINFO VERSION"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "CLIENTINFO DCC FINGER PING TIME USERINFO VERSION"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "CLIENTINFO DCC FINGER PING TIME USERINFO VERSION"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "CLIENTINFO DCC FINGER PING TIME USERINFO VERSION"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "CLIENTINFO DCC FINGER PING TIME USERINFO VERSION"
-          }
-        }
-      }
-    },
     "command-responses-which-are-normally-hidden": {
       "comment": "Hidden command responses messages. Legacy key: yem-td.",
       "extractionState": "manual",
@@ -6111,6 +6063,102 @@
           "stringUnit": {
             "state": "translated",
             "value": "O modo \u0002+%@\u0002 não é compatível com este servidor"
+          }
+        }
+      }
+    },
+    "account-bans-are-not-supported": {
+      "comment": "Console message when the ban-account command is used on a server that does not announce account bans.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This server does not support banning by account."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ez a kiszolgáló nem támogatja a fiók szerinti kitiltást."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Server unterstützt keine Banns nach Konto."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este servidor no admite bloquear por cuenta."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce serveur ne permet pas de bannir par compte."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このサーバはアカウント単位のBANに対応していません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este servidor não permite banir por conta."
+          }
+        }
+      }
+    },
+    "account-of-is-not-known": {
+      "comment": "Console message when the ban-account command names someone whose services account is not known. The argument is their nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The account of \u0002%@\u0002 is not known, so it cannot be banned."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\u0002%@\u0002 fiókja nem ismert, ezért nem tiltható ki."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Konto von \u0002%@\u0002 ist unbekannt und kann daher nicht gebannt werden."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se desconoce la cuenta de \u0002%@\u0002, así que no se puede bloquear."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le compte de \u0002%@\u0002 est inconnu et ne peut donc pas être banni."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\u0002%@\u0002のアカウントが不明なため、BANできません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A conta de \u0002%@\u0002 não é conhecida, então não pode ser banida."
           }
         }
       }

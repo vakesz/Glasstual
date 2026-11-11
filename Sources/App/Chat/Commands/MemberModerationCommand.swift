@@ -19,6 +19,10 @@ nonisolated enum MemberModerationCommand {
 		"\(command) \(nicknames.joined(separator: " "))"
 	}
 
+	static func banAccount(_ nickname: String) -> String {
+		"banaccount \(nickname)"
+	}
+
 	static func kickban(_ nickname: String, reason: String) -> String {
 		"KICKBAN \(nickname) \(reason)"
 	}

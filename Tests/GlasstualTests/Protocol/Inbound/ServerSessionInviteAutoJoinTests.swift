@@ -68,6 +68,41 @@ struct ServerSessionInviteAutoJoinTests {
 		}
 	}
 
+	/// An invitation read back from history is a record: joining on it, or
+	/// announcing it, would act on an invitation that may have lapsed.
+	@Test
+	func replayedInviteIsPrintedButNotActedOn() throws {
+		try withAutoJoinOnInvite {
+			let fixture = ChatEnvironmentFixture()
+			let session = TestServerSession(configDictionary: [:], nicknamePassword: nil, fixture: fixture)
+			session.userNickname = "mynick"
+			session.markAsLoggedIn()
+			var message = try #require(Message(line: ":friend!u@h INVITE mynick #room", on: session))
+			message.isReplayed = true
+
+			session.receiveInvite(message)
+
+			#expect(sentLines(of: session).contains { $0.hasPrefix("JOIN") } == false)
+			#expect(fixture.notifications.posted.isEmpty)
+			#expect(session.printedLines.count == 1)
+		}
+	}
+
+	@Test
+	func liveInviteIsAnnounced() throws {
+		try withAutoJoinOnInvite {
+			let fixture = ChatEnvironmentFixture()
+			let session = TestServerSession(configDictionary: [:], nicknamePassword: nil, fixture: fixture)
+			session.userNickname = "mynick"
+			session.markAsLoggedIn()
+			let message = try #require(Message(line: ":friend!u@h INVITE mynick #room", on: session))
+
+			session.receiveInvite(message)
+
+			#expect(fixture.notifications.posted.count == 1)
+		}
+	}
+
 	/// The user typing `/join 0` deliberately is a different path and keeps
 	/// working.
 	@Test

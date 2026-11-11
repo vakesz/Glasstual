@@ -30,6 +30,66 @@ nonisolated enum CTCPVerb: String, Sendable, CaseIterable {
 	var wireName: String {
 		rawValue
 	}
+
+	/// The verbs a `CLIENTINFO` reply lists: every one this session reads or
+	/// answers, which leaves out `LAGCHECK`, a query it sends only to itself.
+	static var advertised: [CTCPVerb] {
+		allCases.filter { $0 != .lagCheck }
+	}
+
+	/// What a peer is told after the verb's name when it asks `CLIENTINFO <verb>`.
+	/// This is protocol text that goes to another client, so it stays out of
+	/// the String Catalogs, where a translation would change what is sent.
+	var clientInfoDescription: String {
+		switch self {
+		case .action: "shows its text as an action, like /me"
+		case .clientInfo: "lists the supported verbs, or describes the one named"
+		case .dcc: "offers a file (SEND) or a direct chat (CHAT)"
+		case .finger: "returns a short message"
+		case .lagCheck: "measures lag to the server"
+		case .ping: "returns its token unchanged"
+		case .time: "returns the local time in ISO 8601"
+		case .userInfo: "returns text the user chose to share"
+		case .version: "returns the client name"
+		}
+	}
+}
+
+/// A CTCP reply before it is framed: the verb it carries and its text.
+nonisolated struct CTCPReply: Sendable, Equatable {
+	let command: String
+	let text: String
+}
+
+/** How `CLIENTINFO` is answered.
+
+ With no argument the reply lists the verbs. With one it describes that verb,
+ or says through `ERRMSG` that the verb is not one of them. An argument is
+ echoed back in the error, so one longer than a `PING` parameter earns no
+ reply, the same bound that keeps the session from being an amplifier. */
+nonisolated enum CTCPClientInfo {
+	/// The longest argument that is answered, in UTF-8 bytes.
+	static let maximumArgumentBytes = 50
+
+	/// The list a bare `CLIENTINFO` is answered with.
+	static var verbList: String {
+		CTCPVerb.advertised.map(\.wireName).joined(separator: " ")
+	}
+
+	static func reply(toArguments arguments: String) -> CTCPReply? {
+		guard arguments.utf8.count <= maximumArgumentBytes else { return nil }
+
+		let verbName = arguments.split(separator: " ", maxSplits: 1).first.map(String.init)
+
+		guard let verbName else {
+			return CTCPReply(command: CTCPVerb.clientInfo.wireName, text: verbList)
+		}
+		guard let verb = CTCPVerb(wireName: verbName), CTCPVerb.advertised.contains(verb) else {
+			return CTCPReply(command: "ERRMSG", text: "\(CTCPVerb.clientInfo.wireName) \(verbName) :Unknown CTCP verb")
+		}
+
+		return CTCPReply(command: CTCPVerb.clientInfo.wireName, text: "\(verb.wireName) :\(verb.clientInfoDescription)")
+	}
 }
 
 /// CTCP wraps an extended message between two `0x01` bytes. ACTION is the one

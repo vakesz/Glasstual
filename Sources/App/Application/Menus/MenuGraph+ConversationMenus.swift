@@ -372,6 +372,11 @@ extension MenuGraph {
 		.item(String(localized: .MainWindow.menuMemberTakeVoice), .takeVoice, #selector(MenuActionController.memberModeTakeVoice(_:))),
 		.separator(),
 		.item(String(localized: .MainWindow.menuMemberBan), .ban, #selector(MenuActionController.memberBanFromChannel(_:))),
+		.item(
+			String(localized: .MainWindow.menuMemberBanAccount),
+			.banAccount,
+			#selector(MenuActionController.memberBanAccountFromChannel(_:))
+		),
 		.item(String(localized: .MainWindow.menuMemberKick), .kick, #selector(MenuActionController.memberKickFromChannel(_:))),
 		.item(
 			String(localized: .MainWindow.menuMemberKickban),

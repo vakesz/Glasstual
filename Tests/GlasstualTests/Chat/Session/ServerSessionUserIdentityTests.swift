@@ -240,24 +240,39 @@ struct ServerSessionUserIdentityTests {
 		#expect(alice?.account == "kept")
 	}
 
-	@Test("pre-away is requested when offered, and acknowledging it sends nothing yet")
-	func preAwayIsRequestedAndRestoresAwayOnReconnect() throws {
+	@Test(
+		"pre-away is requested under the name the server offers, and acknowledging it sends nothing yet",
+		arguments: ["draft/pre-away", "pre-away"]
+	)
+	func preAwayIsRequestedAndRestoresAwayOnReconnect(_ name: String) throws {
 		let session = makeSession(named: "me")
 
 		try session.handleCapabilityOrAuthenticationRequest(message(
-			":irc.example.net CAP * LS :pre-away",
+			":irc.example.net CAP * LS :\(name)",
 			on: session
 		))
-		#expect(capabilityCommands(of: session) == ["REQ pre-away"])
+		#expect(capabilityCommands(of: session) == ["REQ \(name)"])
 
 		try session.handleCapabilityOrAuthenticationRequest(message(
-			":irc.example.net CAP me ACK :pre-away",
+			":irc.example.net CAP me ACK :\(name)",
 			on: session
 		))
 
 		#expect(session.isCapabilityEnabled(.preAway))
 		#expect(capabilityCommands(of: session).last == "END")
 		#expect(session.sentLines.count == 0)
+	}
+
+	@Test("A server offering both spellings of pre-away is asked for the draft one only")
+	func preAwayIsRequestedOnceWhenBothSpellingsAreOffered() throws {
+		let session = makeSession(named: "me")
+
+		try session.handleCapabilityOrAuthenticationRequest(message(
+			":irc.example.net CAP * LS :pre-away draft/pre-away",
+			on: session
+		))
+
+		#expect(capabilityCommands(of: session) == ["REQ draft/pre-away"])
 	}
 
 	@Test("Reconnecting with pre-away restores the away message before CAP END")

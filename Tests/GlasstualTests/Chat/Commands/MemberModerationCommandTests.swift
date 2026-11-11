@@ -8,6 +8,7 @@ struct MemberModerationCommandTests {
 		#expect(MemberModerationCommand.ignore("Alice") == "ignore Alice")
 		#expect(MemberModerationCommand.unignore("Alice") == "unignore Alice")
 		#expect(MemberModerationCommand.mode("HALFOP", nicknames: ["Alice", "Bob"]) == "HALFOP Alice Bob")
+		#expect(MemberModerationCommand.banAccount("Alice") == "banaccount Alice")
 		#expect(MemberModerationCommand.kickban("Alice", reason: "Requested") == "KICKBAN Alice Requested")
 		#expect(
 			MemberModerationCommand.operatorCommand("GLINE", nickname: "Alice", reason: "Abuse")

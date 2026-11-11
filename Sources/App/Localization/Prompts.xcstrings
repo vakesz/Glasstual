@@ -2881,6 +2881,54 @@
         }
       }
     },
+    "moderation-ban-account-title": {
+      "comment": "Title of the sheet that confirms banning members by services account. The first argument names the members, the second the channel.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ban the account of %1$@ from %2$@?"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kitiltod %1$@ fiókját a(z) %2$@ csatornáról?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Konto von %1$@ aus %2$@ bannen?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Bloquear la cuenta de %1$@ en %2$@?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bannir le compte de %1$@ de %2$@ ?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@から%1$@のアカウントをBANしますか？"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Banir a conta de %1$@ de %2$@?"
+          }
+        }
+      }
+    },
     "moderation-kickban-title": {
       "comment": "Title of the sheet that confirms a moderation kick and ban. The first argument names the members, the second the channel.",
       "extractionState": "manual",
@@ -3025,6 +3073,54 @@
         }
       }
     },
+    "moderation-ban-account-body": {
+      "comment": "Body of the confirmation sheet for banning members by services account.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "They cannot join the channel again while logged in to this account, until the ban is removed."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amíg a kitiltást fel nem oldják, nem csatlakozhatnak újra a csatornához ezzel a fiókkal bejelentkezve."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solange der Bann besteht, können sie dem Kanal mit diesem Konto nicht wieder beitreten."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No podrán volver a unirse al canal con esta cuenta hasta que se quite el bloqueo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ils ne peuvent pas rejoindre le canal avec ce compte tant que le bannissement n’est pas levé."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BANが解除されるまで、このアカウントでチャンネルに再度参加できません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eles não poderão entrar no canal novamente com esta conta até que o banimento seja removido."
+          }
+        }
+      }
+    },
     "moderation-kick-button": {
       "comment": "Moderation button that kicks the members.",
       "extractionState": "manual",
@@ -3117,6 +3213,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "Banir"
+          }
+        }
+      }
+    },
+    "moderation-ban-account-button": {
+      "comment": "Moderation button that bans the members by services account.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ban Account"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fiók kitiltása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konto bannen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bloquear cuenta"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bannir le compte"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アカウントをBAN"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Banir conta"
           }
         }
       }

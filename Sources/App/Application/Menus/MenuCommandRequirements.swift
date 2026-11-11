@@ -80,7 +80,7 @@ extension MenuCommand {
 			[.loggedIn, .notConsole]
 		case .startDirectConversation: [.loggedIn, .channel]
 		case .changeColor: .channel
-		case .ban, .kick, .kickban: .channelManagement
+		case .ban, .banAccount, .kick, .kickban: .channelManagement
 		case .ircOperator, .operatorSetVirtualHost, .operatorKill, .operatorShun, .operatorGline:
 			[.ircOperator, .loggedIn, .notConsole]
 		default: nil

@@ -88,8 +88,11 @@ enum MultilineAssembler {
 			groups[key] = group
 		}
 
+		/* Every group is combined, one line included: the message's identifier,
+		 time and account sit on the opening line of the batch, never on the
+		 line inside it, and a batch holding a single line is still a batch. */
 		for key in order {
-			guard let group = groups[key], group.lines.count > 1 else { continue }
+			guard let group = groups[key] else { continue }
 
 			output[group.index] = combined(first: output[group.index], group: group)
 		}

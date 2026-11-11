@@ -32,7 +32,7 @@ struct IRCv3Pane: View {
 		"multi-prefix": .Settings.ircv3CapabilityMultiPrefix,
 		"draft/multiline": .Settings.ircv3CapabilityMultiline,
 		"draft/no-implicit-names": .Settings.ircv3CapabilityNoImplicitNames,
-		"pre-away": .Settings.ircv3CapabilityPreAway,
+		"draft/pre-away": .Settings.ircv3CapabilityPreAway,
 		"sasl": .Settings.ircv3CapabilitySasl,
 		"server-time": .Settings.ircv3CapabilityServerTime,
 		"setname": .Settings.ircv3CapabilitySetname,
@@ -65,28 +65,32 @@ struct IRCv3Pane: View {
 	 A capability gated by a setting of its own — chat history, read
 	 markers, echo-message — keeps that switch and stays out of this list, so
 	 the draft and final spellings of one feature never appear as two
-	 controls. */
+	 controls. A capability's unprefixed alias is the same feature under its
+	 ratified name, so it shares the switch of the name it stands for. */
 	private var switchableCapabilities: [Capability] {
 		CapabilityRegistry.defaultRegistry.capabilities
-			.filter { $0.gate == .always }
+			.filter { $0.gate == .always && $0.aliasOf == nil }
 			.sorted { $0.name < $1.name }
 	}
 
 	/** A capability's switch, read and written through the list of disabled
 	 names: on means the name is absent. Absence as the enabled state is what
-	 lets a capability added later start enabled. */
-	private func capabilityBinding(for name: String) -> Binding<Bool> {
+	 lets a capability added later start enabled. Every spelling of the feature
+	 counts, so a switch-off stored under an older spelling still reads as off,
+	 and turning the feature on clears them all. */
+	private func capabilityBinding(for capability: Capability) -> Binding<Bool> {
 		let disabled = model.settings.binding(for: SettingsKeys.Connection.disabledCapabilities)
+		let spellings = CapabilityRegistry.defaultRegistry.spellings(of: capability)
 
 		return Binding(
-			get: { disabled.wrappedValue.contains(name) == false },
+			get: { spellings.isDisjoint(with: disabled.wrappedValue) },
 			set: { isEnabled in
 				var names = Set(disabled.wrappedValue)
 
 				if isEnabled {
-					names.remove(name)
+					names.subtract(spellings)
 				} else {
-					names.insert(name)
+					names.insert(capability.name)
 				}
 
 				disabled.wrappedValue = names.sorted()
@@ -161,7 +165,7 @@ struct IRCv3Pane: View {
 			),
 			specification: capability.specification,
 			specificationTitle: .Settings.ircv3CapabilitySpecification,
-			isOn: capabilityBinding(for: capability.name)
+			isOn: capabilityBinding(for: capability)
 		)
 	}
 

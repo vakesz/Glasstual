@@ -65,4 +65,52 @@ struct ISupportNetworkIconTests {
 
 		#expect(support.networkIconURL == nil)
 	}
+
+	/// The work-in-progress specification names the token `draft/ICON`, and a
+	/// server follows it in whatever case it writes the name.
+	@Test("The draft name carries the icon too", arguments: [
+		"draft/ICON", "DRAFT/ICON", "Draft/Icon", "draft/icon",
+	])
+	func draftNameIsRead(_ name: String) {
+		let support = ISupport()
+
+		support.processConfigurationData("\(name)=https://example.org/icon.svg")
+
+		#expect(support.networkIconURL == URL(string: "https://example.org/icon.svg"))
+	}
+
+	@Test("A negated draft name withdraws the icon")
+	func negatedDraftNameWithdrawsTheIcon() {
+		let support = ISupport()
+
+		support.processConfigurationData("draft/ICON=https://example.org/icon.png")
+		support.processConfigurationData("-draft/ICON")
+
+		#expect(support.networkIconURL == nil)
+	}
+
+	@Test("A negation reaches an icon set under the other name")
+	func negationCrossesSpellings() {
+		let support = ISupport()
+
+		support.processConfigurationData("draft/ICON=https://example.org/icon.png")
+		support.processConfigurationData("-ICON")
+
+		#expect(support.networkIconURL == nil)
+
+		support.processConfigurationData("ICON=https://example.org/icon.png")
+		support.processConfigurationData("-draft/ICON")
+
+		#expect(support.networkIconURL == nil)
+	}
+
+	@Test("A negation drops the cached line of the icon under either name")
+	func negationDropsTheCachedSpelling() {
+		let support = ISupport()
+
+		support.processConfigurationData("draft/ICON=https://example.org/icon.png NETWORK=Example")
+		support.processConfigurationData("-ICON")
+
+		#expect(support.stringValueForLastUpdate?.contains("ICON") != true)
+	}
 }

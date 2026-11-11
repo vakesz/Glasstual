@@ -125,6 +125,9 @@ extension ServerSession {
 			print(text, by: nil, in: selectedConversation, as: .invite, command: message.command,
 			      receivedAt: message.receivedAt)
 		}
+		/* A replayed invitation is a record. Announcing it or joining from it
+		 would act on an invitation that may have lapsed long ago. */
+		guard message.isReplayed == false else { return }
 		notifyEvent(.invite, lineType: .invite, target: nil, nickname: sender, text: channelName)
 		// `JOIN 0` is the "leave every channel" form, and the invite target is
 		// whatever the inviting user typed, so only real channel names may be

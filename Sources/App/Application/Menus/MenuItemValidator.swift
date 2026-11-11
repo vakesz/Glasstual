@@ -258,6 +258,8 @@ struct MenuItemValidator {
 			return existingIgnore(for: item) == .some
 		case .giveOp, .giveHalfop, .giveVoice, .takeOp, .takeHalfop, .takeVoice:
 			return validateMemberMode(item)
+		case .banAccount:
+			return validateAccountBan(item)
 		default:
 			/* The rest depend only on the server and conversation. */
 			return item.command?.memberRequirements.map(selection.satisfies) ?? true
@@ -282,6 +284,21 @@ struct MenuItemValidator {
 		}
 
 		return session.findIgnores(forHostmask: hostmask).isEmpty ? .none : .some
+	}
+
+	/// An account ban applies when the server announced account bans and every
+	/// selected member is logged in to an account to name in one.
+	private func validateAccountBan(_ item: NSMenuItem) -> Bool {
+		guard MenuCommandContext(session: session, conversation: conversation)
+			.satisfies(.channelManagement),
+			session?.supportInfo.accountExtendedBanNames.isEmpty == false
+		else {
+			return false
+		}
+
+		let members = context.selectedMembers(for: item)
+
+		return members.isEmpty == false && members.allSatisfy { $0.user.account != nil }
 	}
 
 	/// A rank command applies when the member does not already stand where it

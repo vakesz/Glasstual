@@ -12,6 +12,7 @@ import Foundation
  session both reads and forgets.
  */
 nonisolated enum ISupportToken: String, CaseIterable, Sendable {
+	case accountextban = "ACCOUNTEXTBAN"
 	case awaylen = "AWAYLEN"
 	case bot = "BOT"
 	case callerid = "CALLERID"
@@ -55,8 +56,8 @@ nonisolated enum ISupportToken: String, CaseIterable, Sendable {
 	init?(tokenName: String) {
 		let normalized = tokenName.uppercased()
 
-		if normalized == Self.draftChatHistoryName {
-			self = .chathistory
+		if let token = Self.draftAliases[normalized] {
+			self = token
 
 			return
 		}
@@ -76,5 +77,10 @@ nonisolated enum ISupportToken: String, CaseIterable, Sendable {
 		}
 	}
 
-	private static let draftChatHistoryName = "DRAFT/CHATHISTORY"
+	/// The names a token goes by while its specification is a draft, which a
+	/// server advertises in place of the bare name.
+	private static let draftAliases: [String: ISupportToken] = [
+		"DRAFT/CHATHISTORY": .chathistory,
+		"DRAFT/ICON": .icon,
+	]
 }

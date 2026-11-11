@@ -42,6 +42,9 @@ final class ISupport {
 	private(set) var channelNamePrefixes: [String] = ["#"]
 	private(set) var statusMessagePrefixCharacters: [String] = []
 	private(set) var extendedBanTypes: [String] = []
+	/// `ACCOUNTEXTBAN=`: the names an account extended ban goes by, such as
+	/// `account` for `~account:name`, in the order the server lists them.
+	private(set) var accountExtendedBanNames: [String] = []
 	private(set) var extendedListTokens: [String] = []
 	private(set) var clientTagDenyList: [String] = []
 	/// What class the server put each channel mode in, and therefore whether
@@ -192,7 +195,8 @@ final class ISupport {
 		case .bot, .callerid, .casemapping, .chanmodes, .chantypes, .deaf,
 		     .excepts, .invex, .prefix, .statusmsg:
 			resetModeSetting(token)
-		case .chanlimit, .clienttagdeny, .elist, .extban, .icon, .maxlist, .msgreftypes, .network, .targmax:
+		case .accountextban, .chanlimit, .clienttagdeny, .elist, .extban, .icon, .maxlist, .msgreftypes,
+		     .network, .targmax:
 			resetCollection(token)
 		case .monitor, .namesx, .safelist, .uhnames, .utf8only, .watch, .whox:
 			resetAnnouncement(token, into: &effects)
@@ -261,6 +265,8 @@ final class ISupport {
 
 	private func resetCollection(_ token: ISupportToken) {
 		switch token {
+		case .accountextban:
+			accountExtendedBanNames = []
 		case .chanlimit:
 			channelLimits = [:]
 		case .clienttagdeny:
@@ -316,9 +322,21 @@ final class ISupport {
 	}
 
 	func removeCachedSetting(_ key: String) {
-		for cachedKey in lastConfiguration.keys where cachedKey.caseInsensitiveCompare(key) == .orderedSame {
+		for cachedKey in lastConfiguration.keys where namesSameSetting(cachedKey, key) {
 			lastConfiguration.removeValue(forKey: cachedKey)
 		}
+	}
+
+	/// Whether two spellings are one setting: the same name in any case, or
+	/// the bare and draft names of one token.
+	private func namesSameSetting(_ first: String, _ second: String) -> Bool {
+		if first.caseInsensitiveCompare(second) == .orderedSame {
+			return true
+		}
+
+		guard let token = ISupportToken(tokenName: first) else { return false }
+
+		return token == ISupportToken(tokenName: second)
 	}
 
 	/** Reads one ISUPPORT line into the table.
@@ -363,7 +381,9 @@ final class ISupport {
 				}
 
 				removeCachedSetting(negatedKey)
-				configuration.removeValue(forKey: negatedKey)
+				for key in configuration.keys where namesSameSetting(key, negatedKey) {
+					configuration.removeValue(forKey: key)
+				}
 
 				continue
 			}
@@ -401,6 +421,8 @@ private extension ISupport {
 		switch change {
 		case let .count(count, value):
 			set(count, to: value)
+		case let .names(names, words):
+			set(names, to: words)
 		case let .modeSymbol(letter, symbol):
 			set(letter, to: symbol)
 		case let .feature(feature):
@@ -430,8 +452,6 @@ private extension ISupport {
 		case let .chatHistoryReferences(timestamps, messageIdentifiers):
 			chatHistorySupportsTimestamps = timestamps
 			chatHistorySupportsMessageIdentifiers = messageIdentifiers
-		case let .extendedListTokens(tokens):
-			extendedListTokens = tokens
 		case let .extendedBan(prefix, types):
 			extendedBanPrefix = prefix
 			extendedBanTypes = types
@@ -460,6 +480,13 @@ private extension ISupport {
 		case .watchEntries: maximumWatchEntries = value
 		case .nicknameLength: maximumNicknameLength = value
 		case .topicLength: maximumTopicLength = value
+		}
+	}
+
+	func set(_ names: ISupportChange.Names, to words: [String]) {
+		switch names {
+		case .extendedList: extendedListTokens = words
+		case .accountExtendedBan: accountExtendedBanNames = words
 		}
 	}
 

@@ -108,6 +108,12 @@ extension MenuActionController {
 		}
 	}
 
+	@objc func memberBanAccountFromChannel(_ sender: NSMenuItem?) {
+		performChannelModeration(.banAccount, sender: sender) { session, channel, nickname in
+			session.sendCommand(MemberModerationCommand.banAccount(nickname), completeTarget: true, target: channel.name)
+		}
+	}
+
 	@objc func memberKickbanFromChannel(_ sender: NSMenuItem?) {
 		performChannelModeration(.kickban, sender: sender) { session, channel, nickname in
 			session.sendCommand(
@@ -275,12 +281,14 @@ private extension MenuActionController {
 	enum ChannelModeration {
 		case kick
 		case ban
+		case banAccount
 		case kickban
 
 		func title(members: String, channel: String) -> String {
 			switch self {
 			case .kick: String(localized: .Prompts.moderationKickTitle(members, channel))
 			case .ban: String(localized: .Prompts.moderationBanTitle(members, channel))
+			case .banAccount: String(localized: .Prompts.moderationBanAccountTitle(members, channel))
 			case .kickban: String(localized: .Prompts.moderationKickbanTitle(members, channel))
 			}
 		}
@@ -289,6 +297,7 @@ private extension MenuActionController {
 			switch self {
 			case .kick: String(localized: .Prompts.moderationKickBody)
 			case .ban, .kickban: String(localized: .Prompts.moderationBanBody)
+			case .banAccount: String(localized: .Prompts.moderationBanAccountBody)
 			}
 		}
 
@@ -296,6 +305,7 @@ private extension MenuActionController {
 			switch self {
 			case .kick: String(localized: .Prompts.moderationKickButton)
 			case .ban: String(localized: .Prompts.moderationBanButton)
+			case .banAccount: String(localized: .Prompts.moderationBanAccountButton)
 			case .kickban: String(localized: .Prompts.moderationKickbanButton)
 			}
 		}

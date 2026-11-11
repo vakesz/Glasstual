@@ -145,9 +145,18 @@ extension CapabilityRegistry {
 				identifier: .noImplicitNames,
 				specification: ircv3Specification("no-implicit-names")
 			),
+			/* The specification is still a draft, so servers advertise
+				`draft/pre-away`. The unprefixed name is the ratified one and is
+				accepted too; only one of the two is ever requested. */
+			Capability.capability(
+				named: "draft/pre-away",
+				identifier: .preAway,
+				specification: ircv3Specification("pre-away")
+			),
 			Capability.capability(
 				named: "pre-away",
 				identifier: .preAway,
+				aliasOf: "draft/pre-away",
 				specification: ircv3Specification("pre-away")
 			),
 			Capability(

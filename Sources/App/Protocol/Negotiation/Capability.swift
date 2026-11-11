@@ -25,6 +25,14 @@ struct Capability: Sendable {
 	let dependencies: [String]
 	let negotiation: CapabilityNegotiationKind
 
+	/** The name this one is the unprefixed spelling of, for a capability whose
+	 ratified name drops the `draft/` prefix.
+
+	 Both spellings stay in the catalog, because a server advertises whichever
+	 one it implements, but they are one feature: the session asks for only one
+	 of them, and a user's choice to switch the feature off covers both. */
+	let aliasOf: String?
+
 	/** Where the capability is defined: an IRCv3 extension page, or the ZNC
 	 documentation for a bouncer capability.
 
@@ -37,6 +45,7 @@ struct Capability: Sendable {
 		named name: String,
 		identifier: CapabilitySet,
 		requestedByDefault: Bool = true,
+		aliasOf: String? = nil,
 		specification: URL? = nil
 	) -> Capability {
 		Capability(
@@ -46,6 +55,7 @@ struct Capability: Sendable {
 			gate: .always,
 			dependencies: [],
 			negotiation: .automatic,
+			aliasOf: aliasOf,
 			specification: specification
 		)
 	}
@@ -57,6 +67,7 @@ struct Capability: Sendable {
 		gate: CapabilityGate = .always,
 		dependencies: [String] = [],
 		negotiation: CapabilityNegotiationKind = .automatic,
+		aliasOf: String? = nil,
 		specification: URL? = nil
 	) {
 		precondition(name.isEmpty == false)
@@ -70,6 +81,7 @@ struct Capability: Sendable {
 		self.gate = gate
 		self.dependencies = dependencies
 		self.negotiation = negotiation
+		self.aliasOf = aliasOf
 		self.specification = specification
 	}
 }

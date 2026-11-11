@@ -83,8 +83,14 @@ extension ISupport {
 		return denied
 	}
 
+	/// Whether the server said it takes extended bans at all, by the `EXTBAN`
+	/// token's prefix or its letters.
+	private var advertisesExtendedBans: Bool {
+		extendedBanPrefix != nil || extendedBanTypes.isEmpty == false
+	}
+
 	func descriptionForExtendedBanMask(_ mask: String) -> String? {
-		if extendedBanTypes.isEmpty {
+		guard advertisesExtendedBans else {
 			return nil
 		}
 
@@ -109,27 +115,65 @@ extension ISupport {
 			return nil
 		}
 
-		let type = String(body.prefix(1))
+		let description: String
 
-		if extendedBanTypes.contains(type) == false {
-			return nil
+		if let account = accountName(inExtendedBanBody: body) {
+			description = ExtendedBanKind.describing(type: ExtendedBanKind.account.rawValue, argument: account)
+		} else {
+			let type = String(body.prefix(1))
+
+			if extendedBanTypes.contains(type) == false {
+				return nil
+			}
+
+			var argument: String?
+
+			if body.count > 2, body[body.index(body.startIndex, offsetBy: 1)] == ":" {
+				argument = String(body.dropFirst(2))
+			} else if body.count > 1 || extendedBanPrefix == nil {
+				return nil
+			}
+
+			description = ExtendedBanKind.describing(type: type, argument: argument)
 		}
-
-		var argument: String?
-
-		if body.count > 2, body[body.index(body.startIndex, offsetBy: 1)] == ":" {
-			argument = String(body.dropFirst(2))
-		} else if body.count > 1 || extendedBanPrefix == nil {
-			return nil
-		}
-
-		let description = ExtendedBanKind.describing(type: type, argument: argument)
 
 		if negated {
 			return String(localized: .IRC.everyoneExcept(description))
 		}
 
 		return description
+	}
+
+	/// The account an extended ban body names, when it is written with one of
+	/// the names `ACCOUNTEXTBAN` announced.
+	private func accountName(inExtendedBanBody body: String) -> String? {
+		for name in accountExtendedBanNames where body.hasPrefix(name + ":") {
+			let account = String(body.dropFirst(name.count + 1))
+
+			return account.isEmpty ? nil : account
+		}
+
+		return nil
+	}
+
+	/** The extended ban that bans `account`, or `nil` when the server has no
+	 account ban to offer or `account` cannot be written into one.
+
+	 The name is the first `ACCOUNTEXTBAN` lists. A server that does not send
+	 the token is asked in the conventional spelling, letter `a`, if its
+	 `EXTBAN` letters include it. */
+	func accountExtendedBanMask(for account: String) -> String? {
+		guard advertisesExtendedBans, account.isEmpty == false,
+		      account.rangeOfCharacter(from: .whitespacesAndNewlines) == nil,
+		      account.contains(",") == false
+		else {
+			return nil
+		}
+
+		let name = accountExtendedBanNames.first
+			?? (extendedBanTypes.contains(ExtendedBanKind.account.rawValue) ? ExtendedBanKind.account.rawValue : nil)
+
+		return name.map { "\(extendedBanPrefix ?? "")\($0):\(account)" }
 	}
 
 	func stringValue(forConfiguration configuration: [String: ISupportValue]) -> String? {

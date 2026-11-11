@@ -298,6 +298,46 @@ struct MenuItemValidatorTests {
 		}
 	}
 
+	@Test("Ban Account needs account bans on the server and a known account for every member")
+	func banAccountFollowsServerSupportAndAccounts() throws {
+		let fixture = try Fixture(.channelJoined)
+		let validator = fixture.controller.validator
+		var known = member("alice")
+		known.user.account = "alice-acct"
+		var other = member("bob")
+		other.user.account = "bob-acct"
+		let anonymous = member("carol")
+
+		func validates(_ members: [Member]) -> Bool {
+			fixture.controller.context.withContext(.members(members)) {
+				validator.validateMemberCommand(menuItem(.banAccount))
+			}
+		}
+
+		/* The server has not announced account bans. */
+		#expect(validates([known]) == false)
+
+		fixture.session.supportInfo.processConfigurationData("EXTBAN=~,a ACCOUNTEXTBAN=account")
+
+		#expect(validates([known]))
+		#expect(validates([known, other]))
+		#expect(validates([anonymous]) == false)
+		#expect(validates([known, anonymous]) == false)
+		#expect(validates([]) == false)
+	}
+
+	@Test("Ban Account needs an active channel on a registered connection", arguments: [Scene.none, .console, .query, .channelParted])
+	func banAccountNeedsActiveChannel(scene: Scene) throws {
+		let fixture = try Fixture(scene)
+		fixture.session.supportInfo.processConfigurationData("EXTBAN=~,a ACCOUNTEXTBAN=account")
+		var known = member("alice")
+		known.user.account = "alice-acct"
+
+		fixture.controller.context.withContext(.members([known])) {
+			#expect(fixture.controller.validator.validateMemberCommand(menuItem(.banAccount)) == false)
+		}
+	}
+
 	private func menuItem(_ command: MenuCommand) -> NSMenuItem {
 		let item = NSMenuItem()
 		item.command = command

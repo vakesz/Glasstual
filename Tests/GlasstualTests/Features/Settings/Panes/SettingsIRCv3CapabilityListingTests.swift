@@ -17,7 +17,7 @@ struct SettingsIRCv3CapabilityListingTests {
 	/// with a setting of its own keeps that switch instead, which is what
 	/// keeps the draft and final spellings of one feature to one control.
 	private var switchableCapabilities: [Capability] {
-		CapabilityRegistry.defaultRegistry.capabilities.filter { $0.gate == .always }
+		CapabilityRegistry.defaultRegistry.capabilities.filter { $0.gate == .always && $0.aliasOf == nil }
 	}
 
 	@Test("Every capability the pane switches carries a summary")
@@ -49,6 +49,15 @@ struct SettingsIRCv3CapabilityListingTests {
 		for name in ["draft/chathistory", "chathistory", "draft/read-marker", "read-marker", "echo-message"] {
 			#expect(listed.contains(name) == false, "\(name) has a preference of its own")
 		}
+	}
+
+	@Test("A capability's unprefixed alias shares the switch of the name it stands for")
+	func aliasesAreNotListed() {
+		let listed = Set(switchableCapabilities.map(\.name))
+
+		#expect(listed.contains("draft/pre-away"))
+		#expect(listed.contains("pre-away") == false)
+		#expect(IRCv3Pane.summary(for: "draft/pre-away") != nil)
 	}
 
 	@Test("A name the registry does not declare has no summary")
