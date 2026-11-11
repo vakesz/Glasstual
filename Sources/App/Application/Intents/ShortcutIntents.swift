@@ -9,13 +9,16 @@ import AppIntents
  come from another shortcut or from Siri. A message that starts with a slash is
  sent as it is; it is never run as a command. */
 struct SendMessageIntent: AppIntent {
-	static let title = LocalizedStringResource.ShortcutIntents.sendMessageTitle
-	static let description: IntentDescription? = IntentDescription(LocalizedStringResource.ShortcutIntents.sendMessageDescription)
+	static let title = LocalizedStringResource("send-message-title", table: "ShortcutIntents")
+	static let description: IntentDescription? = IntentDescription(LocalizedStringResource(
+		"send-message-description",
+		table: "ShortcutIntents"
+	))
 
-	@Parameter(title: LocalizedStringResource.ShortcutIntents.conversationParameter)
+	@Parameter(title: LocalizedStringResource("conversation-parameter", table: "ShortcutIntents"))
 	var conversation: ConversationEntity
 
-	@Parameter(title: LocalizedStringResource.ShortcutIntents.messageParameter)
+	@Parameter(title: LocalizedStringResource("message-parameter", table: "ShortcutIntents"))
 	var text: String
 
 	@MainActor
@@ -32,13 +35,16 @@ struct SendMessageIntent: AppIntent {
 }
 
 struct JoinChannelIntent: AppIntent {
-	static let title = LocalizedStringResource.ShortcutIntents.joinChannelTitle
-	static let description: IntentDescription? = IntentDescription(LocalizedStringResource.ShortcutIntents.joinChannelDescription)
+	static let title = LocalizedStringResource("join-channel-title", table: "ShortcutIntents")
+	static let description: IntentDescription? = IntentDescription(LocalizedStringResource(
+		"join-channel-description",
+		table: "ShortcutIntents"
+	))
 
-	@Parameter(title: LocalizedStringResource.ShortcutIntents.serverParameter)
+	@Parameter(title: LocalizedStringResource("server-parameter", table: "ShortcutIntents"))
 	var server: ServerEntity
 
-	@Parameter(title: LocalizedStringResource.ShortcutIntents.channelParameter)
+	@Parameter(title: LocalizedStringResource("channel-parameter", table: "ShortcutIntents"))
 	var channel: String
 
 	@MainActor
@@ -50,10 +56,10 @@ struct JoinChannelIntent: AppIntent {
 }
 
 struct ConnectServerIntent: AppIntent {
-	static let title = LocalizedStringResource.ShortcutIntents.connectTitle
-	static let description: IntentDescription? = IntentDescription(LocalizedStringResource.ShortcutIntents.connectDescription)
+	static let title = LocalizedStringResource("connect-title", table: "ShortcutIntents")
+	static let description: IntentDescription? = IntentDescription(LocalizedStringResource("connect-description", table: "ShortcutIntents"))
 
-	@Parameter(title: LocalizedStringResource.ShortcutIntents.serverParameter)
+	@Parameter(title: LocalizedStringResource("server-parameter", table: "ShortcutIntents"))
 	var server: ServerEntity
 
 	@MainActor
@@ -64,10 +70,13 @@ struct ConnectServerIntent: AppIntent {
 }
 
 struct DisconnectServerIntent: AppIntent {
-	static let title = LocalizedStringResource.ShortcutIntents.disconnectTitle
-	static let description: IntentDescription? = IntentDescription(LocalizedStringResource.ShortcutIntents.disconnectDescription)
+	static let title = LocalizedStringResource("disconnect-title", table: "ShortcutIntents")
+	static let description: IntentDescription? = IntentDescription(LocalizedStringResource(
+		"disconnect-description",
+		table: "ShortcutIntents"
+	))
 
-	@Parameter(title: LocalizedStringResource.ShortcutIntents.serverParameter)
+	@Parameter(title: LocalizedStringResource("server-parameter", table: "ShortcutIntents"))
 	var server: ServerEntity
 
 	@MainActor
@@ -79,10 +88,13 @@ struct DisconnectServerIntent: AppIntent {
 
 /// Selects a conversation. Spotlight runs this for an indexed conversation too.
 struct OpenConversationIntent: OpenIntent {
-	static let title = LocalizedStringResource.ShortcutIntents.openConversationTitle
-	static let description: IntentDescription? = IntentDescription(LocalizedStringResource.ShortcutIntents.openConversationDescription)
+	static let title = LocalizedStringResource("open-conversation-title", table: "ShortcutIntents")
+	static let description: IntentDescription? = IntentDescription(LocalizedStringResource(
+		"open-conversation-description",
+		table: "ShortcutIntents"
+	))
 
-	@Parameter(title: LocalizedStringResource.ShortcutIntents.conversationParameter)
+	@Parameter(title: LocalizedStringResource("conversation-parameter", table: "ShortcutIntents"))
 	var target: ConversationEntity
 
 	@MainActor
@@ -97,31 +109,31 @@ struct GlasstualShortcuts: AppShortcutsProvider {
 		AppShortcut(
 			intent: OpenConversationIntent(),
 			phrases: ["Open \(\.$target) in \(.applicationName)"],
-			shortTitle: LocalizedStringResource.ShortcutIntents.openConversationTitle,
+			shortTitle: LocalizedStringResource("open-conversation-title", table: "ShortcutIntents"),
 			systemImageName: "bubble.left.and.bubble.right"
 		)
 		AppShortcut(
 			intent: SendMessageIntent(),
 			phrases: ["Send a message with \(.applicationName)"],
-			shortTitle: LocalizedStringResource.ShortcutIntents.sendMessageTitle,
+			shortTitle: LocalizedStringResource("send-message-title", table: "ShortcutIntents"),
 			systemImageName: "paperplane"
 		)
 		AppShortcut(
 			intent: JoinChannelIntent(),
 			phrases: ["Join a channel in \(.applicationName)"],
-			shortTitle: LocalizedStringResource.ShortcutIntents.joinChannelTitle,
+			shortTitle: LocalizedStringResource("join-channel-title", table: "ShortcutIntents"),
 			systemImageName: "number"
 		)
 		AppShortcut(
 			intent: ConnectServerIntent(),
 			phrases: ["Connect \(\.$server) in \(.applicationName)"],
-			shortTitle: LocalizedStringResource.ShortcutIntents.connectTitle,
+			shortTitle: LocalizedStringResource("connect-title", table: "ShortcutIntents"),
 			systemImageName: "bolt.horizontal"
 		)
 		AppShortcut(
 			intent: DisconnectServerIntent(),
 			phrases: ["Disconnect \(\.$server) in \(.applicationName)"],
-			shortTitle: LocalizedStringResource.ShortcutIntents.disconnectTitle,
+			shortTitle: LocalizedStringResource("disconnect-title", table: "ShortcutIntents"),
 			systemImageName: "bolt.horizontal.circle"
 		)
 	}

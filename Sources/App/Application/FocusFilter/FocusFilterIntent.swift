@@ -5,7 +5,7 @@ import AppIntents
 
 /// A configured server, as the Focus filter's network picker lists it.
 nonisolated struct FocusNetworkEntity: AppEntity {
-	static let typeDisplayRepresentation = TypeDisplayRepresentation(name: LocalizedStringResource.FocusFilter.network)
+	static let typeDisplayRepresentation = TypeDisplayRepresentation(name: LocalizedStringResource("network", table: "FocusFilter"))
 	static let defaultQuery = FocusNetworkQuery()
 
 	let id: String
@@ -36,20 +36,20 @@ nonisolated enum FocusNetworkCatalog {
 }
 
 nonisolated extension FocusFilterState.Mode: AppEnum {
-	static let typeDisplayRepresentation = TypeDisplayRepresentation(name: LocalizedStringResource.FocusFilter.mode)
+	static let typeDisplayRepresentation = TypeDisplayRepresentation(name: LocalizedStringResource("mode", table: "FocusFilter"))
 	static let caseDisplayRepresentations: [Self: DisplayRepresentation] = [
-		.muteNotifications: DisplayRepresentation(title: LocalizedStringResource.FocusFilter.modeMute),
-		.setAway: DisplayRepresentation(title: LocalizedStringResource.FocusFilter.modeAway),
-		.muteAndSetAway: DisplayRepresentation(title: LocalizedStringResource.FocusFilter.modeMuteAndAway),
+		.muteNotifications: DisplayRepresentation(title: LocalizedStringResource("mode-mute", table: "FocusFilter")),
+		.setAway: DisplayRepresentation(title: LocalizedStringResource("mode-away", table: "FocusFilter")),
+		.muteAndSetAway: DisplayRepresentation(title: LocalizedStringResource("mode-mute-and-away", table: "FocusFilter")),
 	]
 }
 
 nonisolated extension FocusFilterState.ConversationKind: AppEnum {
-	static let typeDisplayRepresentation = TypeDisplayRepresentation(name: LocalizedStringResource.FocusFilter.kind)
+	static let typeDisplayRepresentation = TypeDisplayRepresentation(name: LocalizedStringResource("kind", table: "FocusFilter"))
 	static let caseDisplayRepresentations: [Self: DisplayRepresentation] = [
-		.all: DisplayRepresentation(title: LocalizedStringResource.FocusFilter.kindAll),
-		.channels: DisplayRepresentation(title: LocalizedStringResource.FocusFilter.kindChannels),
-		.directMessages: DisplayRepresentation(title: LocalizedStringResource.FocusFilter.kindDirectMessages),
+		.all: DisplayRepresentation(title: LocalizedStringResource("kind-all", table: "FocusFilter")),
+		.channels: DisplayRepresentation(title: LocalizedStringResource("kind-channels", table: "FocusFilter")),
+		.directMessages: DisplayRepresentation(title: LocalizedStringResource("kind-direct-messages", table: "FocusFilter")),
 	]
 }
 
@@ -57,29 +57,29 @@ nonisolated extension FocusFilterState.ConversationKind: AppEnum {
  when a Focus that carries it turns on, and again with no mode when it
  turns off; the result is handed to the sessions as a `FocusFilterState`. */
 struct GlasstualFocusFilter: SetFocusFilterIntent {
-	static let title = LocalizedStringResource.FocusFilter.title
-	static let description: IntentDescription? = IntentDescription(LocalizedStringResource.FocusFilter.summary)
+	static let title = LocalizedStringResource("title", table: "FocusFilter")
+	static let description: IntentDescription? = IntentDescription(LocalizedStringResource("summary", table: "FocusFilter"))
 
 	/** Left unset, the filter is off. The system runs `perform()` once more with
 	 no values when the Focus ends, and a filter with every default would look
 	 the same as that. */
-	@Parameter(title: LocalizedStringResource.FocusFilter.mode)
+	@Parameter(title: LocalizedStringResource("mode", table: "FocusFilter"))
 	var mode: FocusFilterState.Mode?
 
-	@Parameter(title: LocalizedStringResource.FocusFilter.networks)
+	@Parameter(title: LocalizedStringResource("networks", table: "FocusFilter"))
 	var networks: [FocusNetworkEntity]?
 
-	@Parameter(title: LocalizedStringResource.FocusFilter.kind, default: .all)
+	@Parameter(title: LocalizedStringResource("kind", table: "FocusFilter"), default: .all)
 	var conversationKind: FocusFilterState.ConversationKind
 
-	@Parameter(title: LocalizedStringResource.FocusFilter.exempt, default: false)
+	@Parameter(title: LocalizedStringResource("exempt", table: "FocusFilter"), default: false)
 	var exemptsHighlightsAndDirectMessages: Bool
 
-	@Parameter(title: LocalizedStringResource.FocusFilter.awayMessage)
+	@Parameter(title: LocalizedStringResource("away-message", table: "FocusFilter"))
 	var awayMessage: String?
 
 	var displayRepresentation: DisplayRepresentation {
-		DisplayRepresentation(title: LocalizedStringResource.FocusFilter.title)
+		DisplayRepresentation(title: LocalizedStringResource("title", table: "FocusFilter"))
 	}
 
 	var state: FocusFilterState? {

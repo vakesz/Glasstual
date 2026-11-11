@@ -6,7 +6,7 @@ import CoreSpotlight
 
 /// A configured server, as Shortcuts lists it.
 nonisolated struct ServerEntity: AppEntity {
-	static let typeDisplayRepresentation = TypeDisplayRepresentation(name: LocalizedStringResource.ShortcutIntents.serverType)
+	static let typeDisplayRepresentation = TypeDisplayRepresentation(name: LocalizedStringResource("server-type", table: "ShortcutIntents"))
 	static let defaultQuery = ServerEntityQuery()
 
 	let id: String
@@ -20,7 +20,7 @@ nonisolated struct ServerEntity: AppEntity {
 /// A channel or direct conversation on a server.
 nonisolated struct ConversationEntity: IndexedEntity {
 	static let typeDisplayRepresentation = TypeDisplayRepresentation(
-		name: LocalizedStringResource.ShortcutIntents.conversationType
+		name: LocalizedStringResource("conversation-type", table: "ShortcutIntents")
 	)
 	static let defaultQuery = ConversationEntityQuery()
 
