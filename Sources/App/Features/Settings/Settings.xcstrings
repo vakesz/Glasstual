@@ -1,6 +1,54 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "ircv3-capability-extended-isupport": {
+      "comment": "Summary of the draft/extended-isupport IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Learns the server’s limits and features before registration finishes."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Már a regisztráció befejezése előtt megismeri a kiszolgáló korlátait és funkcióit."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erfährt die Grenzen und Funktionen des Servers, bevor die Registrierung abgeschlossen ist."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conoce los límites y funciones del servidor antes de que termine el registro."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Découvre les limites et fonctions du serveur avant la fin de l’enregistrement."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登録の完了前にサーバの制限と機能を取得します。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conhece os limites e recursos do servidor antes de o registro terminar."
+          }
+        }
+      }
+    },
     "prevent-sleep-explanation": {
       "comment": "Explanation below the prevent-sleep preference toggle.",
       "extractionState": "manual",

@@ -30,6 +30,8 @@ nonisolated enum RemoteCommand: String, Sendable, CaseIterable {
 	case globops
 	case gzline
 	case invite
+	/// `draft/extended-isupport`: asks for the full RPL_ISUPPORT list.
+	case isupport
 	case ison
 	case join
 	case kick
@@ -128,6 +130,7 @@ nonisolated extension RemoteCommand { // nonisolated: pure
 		.globops: .startsAtArgument(0),
 		.gzline: .startsAtArgument(2),
 		.invite: .never,
+		.isupport: .never,
 		.ison: .never,
 		.join: .never,
 		.kick: .startsAtArgument(2),

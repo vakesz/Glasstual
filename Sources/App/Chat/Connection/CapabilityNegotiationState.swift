@@ -69,6 +69,13 @@ struct CapabilityNegotiationState {
 	/// Whether `CAP END` has already been sent for this registration.
 	var endSent = false
 
+	/// Whether `ISUPPORT` went out on this connection (draft/extended-isupport).
+	var sentISupportRequest = false
+
+	/// Legacy `PROTOCTL` lines an ISUPPORT before registration asked for. They
+	/// go out once the server has registered the connection.
+	var deferredLegacyCapabilities: [ISupportEffects.LegacyCapability] = []
+
 	private let registry: CapabilityRegistry
 
 	init(registry: CapabilityRegistry = .defaultRegistry) {
@@ -248,6 +255,8 @@ struct CapabilityNegotiationState {
 		isCollectingList = false
 		isPaused = false
 		endSent = false
+		sentISupportRequest = false
+		deferredLegacyCapabilities.removeAll()
 	}
 
 	// MARK: - Private

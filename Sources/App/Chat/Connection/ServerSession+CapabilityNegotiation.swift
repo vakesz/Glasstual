@@ -37,11 +37,12 @@ extension ServerSession {
 	func enableCapability(_ capability: CapabilitySet) {
 		let couldTrackPresence = supportsAdvancedTracking
 		capabilityNegotiation.enable(capability)
-		/* ISUPPORT lands after login has already marked every direct conversation
-		 active. The moment the server offers MONITOR or WATCH, ask about the
-		 peers; it answers at once with who is really there, well before the
-		 tracked-user list is built ten seconds in. */
-		if couldTrackPresence == false, supportsAdvancedTracking {
+		/* ISUPPORT usually lands after login has already marked every direct
+		 conversation active. The moment the server offers MONITOR or WATCH, ask
+		 about the peers; it answers at once with who is really there, well
+		 before the tracked-user list is built ten seconds in. An ISUPPORT before
+		 registration leaves that to 001, which asks once it is registered. */
+		if couldTrackPresence == false, supportsAdvancedTracking, isLoggedIn {
 			modifyWatchList(byAdding: true, nicknames: directPeerNicknames)
 		}
 	}
@@ -79,6 +80,12 @@ extension ServerSession {
 		}
 
 		for legacy in effects.legacyCapabilities where capabilityFacts.contains(legacy.capability) == false {
+			guard isLoggedIn else {
+				if capabilityNegotiation.deferredLegacyCapabilities.contains(legacy) == false {
+					capabilityNegotiation.deferredLegacyCapabilities.append(legacy)
+				}
+				continue
+			}
 			sendLine(legacy.command)
 			addCapabilityFacts(legacy.capability)
 		}
@@ -295,6 +302,7 @@ extension ServerSession {
 
 		if enabled {
 			guard capabilityNegotiation.acknowledge(name) else { return }
+			requestISupportBeforeRegistration(acknowledging: name)
 		} else {
 			capabilityNegotiation.revoke(name)
 			if isSASL, isCapabilityEnabled(.isInSASLNegotiation) {
@@ -315,6 +323,29 @@ extension ServerSession {
 		}
 
 		SessionCapabilitiesDidChange(subject: self).post()
+	}
+
+	/** `draft/extended-isupport`: once acknowledged before registration, ask for
+	 the whole ISUPPORT list. This runs before the negotiation advances, so the
+	 request goes out ahead of `CAP END`. After registration the 005 lines
+	 arrive anyway, so nothing is asked. */
+	private func requestISupportBeforeRegistration(acknowledging name: String) {
+		guard CapabilityRegistry.defaultRegistry.capability(named: name)?.identifier == .extendedISupport,
+		      isLoggedIn == false, capabilityNegotiation.sentISupportRequest == false
+		else { return }
+		capabilityNegotiation.sentISupportRequest = true
+		send(.isupport, arguments: [])
+	}
+
+	/// Sends what an ISUPPORT before registration had to hold back: the legacy
+	/// `PROTOCTL` lines and the presence watch list.
+	func flushPreRegistrationISupportEffects() {
+		let deferred = capabilityNegotiation.deferredLegacyCapabilities
+		capabilityNegotiation.deferredLegacyCapabilities.removeAll()
+		apply(ISupportEffects(legacyCapabilities: deferred))
+		if supportsAdvancedTracking {
+			modifyWatchList(byAdding: true, nicknames: directPeerNicknames)
+		}
 	}
 
 	/** Matches an `ACK` or `NAK` back to the outstanding requests it names.

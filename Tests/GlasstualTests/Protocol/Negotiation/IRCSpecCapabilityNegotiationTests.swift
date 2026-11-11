@@ -73,6 +73,8 @@ struct IRCSpecCapabilityNegotiationTests {
 	func legacyFactsAreIndependent() {
 		let session = session()
 		session.setConnectionTransportForTesting(.connected)
+		// PROTOCTL waits for registration, so the facts are recorded once registered.
+		session.isLoggedIn = true
 		let socket = Connection(config: ConnectionConfig(), onSession: session)
 		session.socket = socket
 		session.forwardsProcessedMessages = true

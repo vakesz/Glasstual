@@ -14,6 +14,7 @@ struct BatchKindTests {
 			("soju.im/bouncer-networks", .bouncerNetworks),
 			("netsplit", .netsplit), ("netjoin", .netjoin),
 			("playback", .playback), ("znc.in/playback", .zncPlayback), ("znc.in/tlsinfo", .zncTLSInfo),
+			("draft/isupport", .isupport), ("isupport", .isupport),
 		]
 	)
 	func knownSpellingsAreRecognised(_ testCase: (type: String, kind: BatchKind)) {

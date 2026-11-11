@@ -105,6 +105,13 @@ extension CapabilityRegistry {
 				gate: .echoMessage,
 				specification: ircv3Specification("echo-message")
 			),
+			/* Only the draft name: software that implements the draft must not
+				use the unprefixed one. Batching is optional, so it depends on nothing. */
+			Capability.capability(
+				named: "draft/extended-isupport",
+				identifier: .extendedISupport,
+				specification: ircv3Specification("extended-isupport")
+			),
 			Capability.capability(
 				named: "extended-join",
 				identifier: .extendedJoin,

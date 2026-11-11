@@ -183,6 +183,8 @@ private extension ServerSession {
 				replayNetsplitBatch(batch)
 			case .bouncerNetworks:
 				receiveBouncerNetworkBatch(batch)
+			case .isupport:
+				replayISupportBatch(batch)
 			default:
 				processQueuedMessages(of: batch)
 			}
@@ -214,6 +216,15 @@ private extension ServerSession {
 			}
 			batchMessages.dequeueEntry(member)
 		}
+	}
+
+	/// A `draft/isupport` batch holds only RPL_ISUPPORT, applied as one update.
+	/// Anything else inside it is not allowed there and is dropped.
+	private func replayISupportBatch(_ batch: MessageBatch) {
+		let lines = batch.queuedMessages.filter { $0.commandNumeric == ServerNumeric.isupport.rawValue }
+		batchMessages.dequeueEntry(batch)
+		guard let first = lines.first else { return }
+		applyISupport(lines, shouldPrint: shouldPrintReceivedMessage(first))
 	}
 
 	private func endZNCPlaybackState(for batch: MessageBatch) {

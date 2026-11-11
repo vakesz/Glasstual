@@ -98,6 +98,7 @@ extension ServerSession {
 		}
 		output?.reloadChatItem(self)
 		output?.updateTitle(for: self)
+		flushPreRegistrationISupportEffects()
 
 		performAutoJoin()
 

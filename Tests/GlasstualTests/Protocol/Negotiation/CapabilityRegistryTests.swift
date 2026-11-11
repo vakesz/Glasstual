@@ -195,6 +195,7 @@ struct CapabilityRegistryTests {
 		"cap-notify",
 		"chghost",
 		"draft/channel-rename",
+		"draft/extended-isupport",
 		"draft/message-redaction",
 		"draft/multiline",
 		"draft/no-implicit-names",
@@ -303,5 +304,16 @@ struct CapabilityRegistryTests {
 		let zncPlayback = try #require(registry.capability(named: "znc.in/playback")?.identifier)
 
 		#expect(zncPlayback.contains(.playback))
+	}
+
+	@Test("extended-isupport is requested by default under its draft name only")
+	func extendedISupportUsesTheDraftName() throws {
+		let registry = CapabilityRegistry.defaultRegistry
+		let capability = try #require(registry.capability(named: "draft/extended-isupport"))
+
+		#expect(capability.requestedByDefault)
+		#expect(capability.dependencies.isEmpty)
+		#expect(capability.identifier == .extendedISupport)
+		#expect(registry.capability(named: "extended-isupport") == nil)
 	}
 }

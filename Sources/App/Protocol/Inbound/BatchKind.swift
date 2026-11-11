@@ -26,6 +26,9 @@ nonisolated enum BatchKind: Sendable, Equatable {
 	case zncPlayback
 	/// ZNC's `znc.in/tlsinfo` certificate listing.
 	case zncTLSInfo
+	/// `draft/extended-isupport`'s RPL_ISUPPORT batch, or the name it will
+	/// have once final.
+	case isupport
 	case other(String)
 
 	init(wireType: String) {
@@ -38,6 +41,7 @@ nonisolated enum BatchKind: Sendable, Equatable {
 		case "playback": self = .playback
 		case "znc.in/playback": self = .zncPlayback
 		case "znc.in/tlsinfo": self = .zncTLSInfo
+		case "draft/isupport", "isupport": self = .isupport
 		default: self = .other(wireType)
 		}
 	}
@@ -54,6 +58,7 @@ nonisolated enum BatchKind: Sendable, Equatable {
 		case .playback: "playback"
 		case .zncPlayback: "znc.in/playback"
 		case .zncTLSInfo: "znc.in/tlsinfo"
+		case .isupport: "draft/isupport"
 		case let .other(type): type
 		}
 	}

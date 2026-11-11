@@ -52,13 +52,29 @@ extension ServerSession {
 	}
 
 	private func handleISupportNumeric(_ message: Message, shouldPrint: Bool) {
-		guard message.params.count >= 3 else { return }
-		let configuration = message.params.dropFirst().dropLast().joined(separator: " ")
-		let explanatoryText = message.params.last ?? ""
+		applyISupport([message], shouldPrint: shouldPrint)
+	}
+
+	/** Applies one or more RPL_ISUPPORT lines as one update.
+
+	 A `draft/isupport` batch is one list sent over several lines, so its
+	 tokens are applied together and what follows from them — the socket's line
+	 budget, re-keying users, re-sorting members, the console line — happens
+	 once rather than once per line. */
+	func applyISupport(_ messages: [Message], shouldPrint: Bool) {
+		let lines = messages.filter { $0.params.count >= 3 }
+		guard let last = lines.last else { return }
 		let previousCaseMapping = supportInfo.caseMapping
 		let previousPrefixes = currentUserPrefixes
 		let wasUTF8Only = supportInfo.utf8Only
-		apply(supportInfo.processConfigurationData(configuration))
+		var updates: [String] = []
+		for message in lines {
+			let configuration = message.params.dropFirst().dropLast().joined(separator: " ")
+			apply(supportInfo.processConfigurationData(configuration))
+			if let update = supportInfo.stringValueForLastUpdate, update.isEmpty == false {
+				updates.append(update)
+			}
+		}
 		/* The socket is what measures the assembled line, and until 005 lands it
 		 has only the RFC's 512 to measure against. A `LINELEN` that raises the
 		 budget every other outbound path already reads has to reach it too, or
@@ -89,14 +105,14 @@ extension ServerSession {
 		if shouldPrint {
 			printDebugInformation(
 				toConsole: String(localized: .IRC.miscellaneousMessagesRelated2(
-					supportInfo.stringValueForLastUpdate ?? "",
-					explanatoryText
+					updates.joined(separator: " "),
+					last.params.last ?? ""
 				)),
-				asCommand: message.command
+				asCommand: last.command
 			)
 		}
 		if !wasUTF8Only, supportInfo.utf8Only {
-			printDebugInformation(toConsole: String(localized: .IRC.thisServerOnlyAcceptsUtf8), asCommand: message.command)
+			printDebugInformation(toConsole: String(localized: .IRC.thisServerOnlyAcceptsUtf8), asCommand: last.command)
 		}
 	}
 
