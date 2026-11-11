@@ -14,7 +14,6 @@ private nonisolated let rendererLogger = Logger(
 
 private nonisolated enum RendererPatterns {
 	static let combiningMarks = compile("[\\p{InCombining_Diacritical_Marks}]{3,}")
-	static let channelName = compile("#([A-Za-z0-9_\\^\\{\\}\\|\\`\\-\\#]+)")
 
 	private static func compile(_ pattern: String) -> NSRegularExpression? {
 		do {
@@ -125,37 +124,38 @@ nonisolated struct TranscriptRenderer {
 		let matchMethod = policy.highlightMatchingMethod
 
 		for keyword in highlighted where isHighlight == false {
-			let matches = matchMethod == .regularExpression
-				? firstRange(ofRegularExpression: keyword).map { [$0] } ?? []
-				: ranges(of: keyword, options: .caseInsensitive)
-			for range in matches {
-				guard excludedRanges.allSatisfy({ NSIntersectionRange(range, $0).length == 0 }) else { continue }
+			func accepts(_ range: NSRange) -> Bool {
+				/* A match counts only where it is not inside an excluded
+				 keyword, is bounded as the mode asks and is not part of a
+				 link. The first match that fails those tests must not hide a
+				 later one that passes them. */
+				guard excludedRanges.allSatisfy({ NSIntersectionRange(range, $0).length == 0 }) else { return false }
 				if matchMethod == .exact, isSurroundedByNonAlphanumerics(range) == false {
-					continue
+					return false
 				}
-				guard attributedBody.attribute(RendererFormatting.url, at: range.location, effectiveRange: nil) == nil
-				else { continue }
-				attributedBody.addAttribute(RendererFormatting.keywordHighlight, value: true, range: range)
-				isHighlight = true
-				break
+				return attributedBody.attribute(RendererFormatting.url, at: range.location, effectiveRange: nil) == nil
 			}
+			let accepted = matchMethod == .regularExpression
+				? firstRange(ofRegularExpression: keyword, accepting: accepts)
+				: ranges(of: keyword, options: .caseInsensitive).first(where: accepts)
+			guard let accepted else { continue }
+			attributedBody.addAttribute(RendererFormatting.keywordHighlight, value: true, range: accepted)
+			isHighlight = true
 		}
 	}
 
 	private func annotateChannels(in attributedBody: NSMutableAttributedString) {
-		guard isMessageOrNotice, let expression = RendererPatterns.channelName else { return }
+		guard isMessageOrNotice else { return }
 		/* The whole line, not the first four kilobytes of it: that cap is for
-		 the patterns the reader writes, and this one is the renderer's own --
-		 a bounded alternation that cannot backtrack. Sharing the cap meant a
-		 channel named past the cap in a long line was not a link, while the
-		 same name a line earlier was. */
-		for range in ranges(of: expression, matchedLength: (body as NSString).length) {
-			guard isSurroundedByNonAlphanumerics(range),
-			      attributedBody.attribute(RendererFormatting.url, at: range.location, effectiveRange: nil) == nil
+		 the patterns the reader writes, and this scan is the renderer's own --
+		 one linear pass that cannot backtrack. */
+		let source = body as NSString
+		for range in TranscriptChannelReference.locate(in: body, prefixes: configuration.channelPrefixes) {
+			guard attributedBody.attribute(RendererFormatting.url, at: range.location, effectiveRange: nil) == nil
 			else { continue }
 			attributedBody.addAttribute(
 				RendererFormatting.channelName,
-				value: (body as NSString).substring(with: range),
+				value: source.substring(with: range),
 				range: range
 			)
 		}
@@ -217,9 +217,11 @@ nonisolated struct TranscriptRenderer {
 	 unbounded in shape. The cap is far past any real message and far short of
 	 anything that could stall a render.
 
-	 Only the first non-empty match is wanted, so the search stops there rather
-	 than collecting every match of the message. */
-	private func firstRange(ofRegularExpression pattern: String) -> NSRange? {
+	 The search stops at the first non-empty match `accepting` approves, so it
+	 neither collects every match of the message nor lets an earlier match
+	 that falls inside a link or an excluded keyword hide a later one. It
+	 never looks past the cap. */
+	private func firstRange(ofRegularExpression pattern: String, accepting accepts: (NSRange) -> Bool) -> NSRange? {
 		guard let expression = configuration.highlightExpressions.expression(for: pattern) else { return nil }
 		let matchedLength = min((body as NSString).length, TranscriptHighlightExpressions.maximumMatchedLength)
 		var first: NSRange?
@@ -227,18 +229,11 @@ nonisolated struct TranscriptRenderer {
 			in: body,
 			range: NSRange(location: 0, length: matchedLength)
 		) { match, _, stop in
-			guard let range = match?.range, range.length > 0 else { return }
+			guard let range = match?.range, range.length > 0, accepts(range) else { return }
 			first = range
 			stop.pointee = true
 		}
 		return first
-	}
-
-	private func ranges(of expression: NSRegularExpression, matchedLength: Int) -> [NSRange] {
-		expression.matches(
-			in: body,
-			range: NSRange(location: 0, length: matchedLength)
-		).map(\.range).filter { $0.length > 0 }
 	}
 
 	private func isSurroundedByNonAlphanumerics(_ range: NSRange) -> Bool {
@@ -287,6 +282,9 @@ nonisolated struct TranscriptRenderer {
 			}
 			if attributes[IRCFormattingAttribute.underline] != nil {
 				traits.insert(.underline)
+			}
+			if attributes[IRCFormattingAttribute.reverse] != nil {
+				traits.insert(.reverse)
 			}
 			if attributes[RendererFormatting.keywordHighlight] != nil {
 				traits.insert(.highlighted)
@@ -456,6 +454,8 @@ nonisolated struct TranscriptRenderOptions: Sendable {
 	var textPolicy = TranscriptTextRules()
 	/// The server's casemapping for member nickname references.
 	var caseMapping = ISupportCaseMapping.rfc1459
+	/// The server's `CHANTYPES`, which decide what begins a channel name.
+	var channelPrefixes = ["#"]
 	/// The compiled Regular Expression keywords, kept between renders.
 	var highlightExpressions = TranscriptHighlightExpressions()
 }

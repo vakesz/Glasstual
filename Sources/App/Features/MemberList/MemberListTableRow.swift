@@ -73,6 +73,7 @@ final class MemberListTableCell: NSTableCellView {
 	private var hostingView: NSHostingView<MemberListTableRowContent>?
 	private var content: MemberListTableRowContent?
 	private var showProfile: (() -> Void)?
+	private var activate: (() -> Void)?
 
 	override var backgroundStyle: NSView.BackgroundStyle {
 		didSet {
@@ -86,7 +87,9 @@ final class MemberListTableCell: NSTableCellView {
 		row: MemberListTableRow,
 		style: MemberListPresentationStyle,
 		overrides: NicknameColorOverrides,
-		showProfile: @escaping () -> Void
+		activationName: String,
+		showProfile: @escaping () -> Void,
+		activate: @escaping () -> Void
 	) {
 		// The table exports proxy rows, whose children come from these cells.
 		// Row-view metadata is not part of that exported accessibility tree.
@@ -95,9 +98,15 @@ final class MemberListTableCell: NSTableCellView {
 		setAccessibilityLabel(row.accessibilityDescription(style: style))
 		setAccessibilityChildren([])
 		self.showProfile = row.member == nil ? nil : showProfile
+		self.activate = row.member == nil ? nil : activate
+		/* Show Profile stays first. The second action is what a double click on
+		 the row does, which a screen reader has no other way to perform. */
 		setAccessibilityCustomActions(row.member == nil ? [] : [
 			NSAccessibilityCustomAction(
 				name: String(localized: .MemberList.showProfileAction), target: self, selector: #selector(openProfile)
+			),
+			NSAccessibilityCustomAction(
+				name: activationName, target: self, selector: #selector(activateRow)
 			),
 		])
 		let content = MemberListTableRowContent(
@@ -127,6 +136,25 @@ final class MemberListTableCell: NSTableCellView {
 		guard let showProfile else { return false }
 		showProfile()
 		return true
+	}
+
+	@objc private func activateRow() -> Bool {
+		guard let activate else { return false }
+		activate()
+		return true
+	}
+}
+
+extension UserDoubleClickAction {
+	/// What a member-list row's activation action is called: the action the
+	/// reader chose for a double click on a member, since that is what it runs.
+	var accessibilityActionTitle: String {
+		switch self {
+		case .whois: String(localized: .MemberList.whoisAction)
+		case .startDirectConversation: String(localized: .MemberList.openConversationAction)
+		case .insertTextField: String(localized: .MemberList.insertNicknameAction)
+		@unknown default: String(localized: .MemberList.openConversationAction)
+		}
 	}
 }
 

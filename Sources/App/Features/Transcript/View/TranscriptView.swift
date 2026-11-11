@@ -69,6 +69,9 @@ final class TranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 	}
 
 	var scrollsToBottomOnLayout = false
+	/// The widest an inline image was last drawn, so a layout that finds the
+	/// column wider or narrower than that can draw the pictures again.
+	var renderedInlineImageWidth: CGFloat?
 	/// The clip view's last observed top, so a bounds change can say whether
 	/// the reader moved towards the start of the transcript.
 	var lastVisibleTop: CGFloat = 0
@@ -249,6 +252,9 @@ final class TranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 		commands.contextMenu(for: self, defaultMenuItems: defaultItems)
 	}
 
+	/** Runs `edits` as one batch: the text storage is edited once, and the
+	 selection, the viewport and the buffer limit are settled once at the end,
+	 by `endEditing`. Every edit to the transcript goes through here. */
 	func performEditingBatch<Output>(_ edits: () -> Output) -> Output {
 		closeMemberInformation()
 		beginEditing()
@@ -264,9 +270,6 @@ final class TranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 	func setBufferLimit(_ limit: Int) {
 		performEditingBatch {
 			document.bufferLimit = max(1, limit)
-			let anchor = selectionAnchor()
-			trimToBufferLimit()
-			restoreSelection(anchor)
 		}
 	}
 

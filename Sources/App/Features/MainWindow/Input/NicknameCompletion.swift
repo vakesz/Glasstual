@@ -23,6 +23,13 @@ final class NicknameCompletion {
 	private weak var window: (any NicknameCompletionWindow)?
 	private var session: CompletionSession?
 
+	/// What the selected server considers the same name. A nickname and a
+	/// channel are compared under it, as the server compares them; a command is
+	/// not an IRC name and keeps plain lowercasing.
+	private var caseMapping: ISupportCaseMapping {
+		window?.selectedSession?.supportInfo.caseMapping ?? .rfc1459
+	}
+
 	init(window: any NicknameCompletionWindow) {
 		self.window = window
 	}
@@ -69,15 +76,28 @@ final class NicknameCompletion {
 			return nil
 		}
 
-		var candidates = completionCandidates(for: request)
+		let caseMapping = caseMapping
+		var candidates = completionCandidates(for: request, caseMapping: caseMapping)
 
-		if request.kind == .channelName || request.kind == .command {
+		switch request.kind {
+		case .command:
 			candidates = candidates.map {
 				Candidate(displayValue: $0.displayValue, comparisonValue: $0.displayValue.lowercased())
 			}
+		case .channelName:
+			candidates = candidates.map {
+				Candidate(
+					displayValue: $0.displayValue,
+					comparisonValue: IRCCaseFolding.fold($0.displayValue, using: caseMapping)
+				)
+			}
+		default:
+			break
 		}
 		if !searchPatternIsEmpty {
-			let searchPattern = request.searchPattern.lowercased()
+			let searchPattern = request.kind == .command
+				? request.searchPattern.lowercased()
+				: IRCCaseFolding.fold(request.searchPattern, using: caseMapping)
 			candidates = candidates.filter { $0.comparisonValue.hasPrefix(searchPattern) }
 		}
 
@@ -89,7 +109,7 @@ final class NicknameCompletion {
 		return request.prefix + candidates[index].displayValue
 	}
 
-	private func completionCandidates(for request: CompletionRequest) -> [Candidate] {
+	private func completionCandidates(for request: CompletionRequest, caseMapping: ISupportCaseMapping) -> [Candidate] {
 		if request.kind == .command {
 			var commands = CommandIndex.candidates(
 				includingDeveloperCommands: SettingsKeys.Commands.developerMode.value,
@@ -131,7 +151,8 @@ final class NicknameCompletion {
 		return nicknameCandidates(
 			from: channel.memberList,
 			session: session,
-			searchPatternIsEmpty: request.searchPattern.isEmpty
+			searchPatternIsEmpty: request.searchPattern.isEmpty,
+			caseMapping: caseMapping
 		)
 	}
 
@@ -160,7 +181,8 @@ final class NicknameCompletion {
 	private func nicknameCandidates(
 		from members: [Member],
 		session: ServerSession,
-		searchPatternIsEmpty: Bool
+		searchPatternIsEmpty: Bool,
+		caseMapping: ISupportCaseMapping
 	) -> [Candidate] {
 		let sortedMembers: [Member]
 		let priorityMember: Member?
@@ -192,7 +214,7 @@ final class NicknameCompletion {
 		let includeTrimmedNicknames = !searchPatternIsEmpty
 
 		func addNickname(_ nickname: String, includeTrimmedVariant: Bool) {
-			let comparisonValue = nickname.lowercased()
+			let comparisonValue = IRCCaseFolding.fold(nickname, using: caseMapping)
 			candidates.append(Candidate(displayValue: nickname, comparisonValue: comparisonValue))
 			comparisonValues.insert(comparisonValue)
 
@@ -204,7 +226,7 @@ final class NicknameCompletion {
 				return
 			}
 
-			let trimmedComparisonValue = trimmedNickname.lowercased()
+			let trimmedComparisonValue = IRCCaseFolding.fold(trimmedNickname, using: caseMapping)
 
 			if comparisonValues.insert(trimmedComparisonValue).inserted {
 				candidates.append(Candidate(displayValue: nickname, comparisonValue: trimmedComparisonValue))

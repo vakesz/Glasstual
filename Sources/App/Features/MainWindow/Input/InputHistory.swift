@@ -14,13 +14,14 @@ enum InputHistoryScope: Hashable, Sendable {
 	case item(String)
 }
 
-@MainActor
-private final class InputHistoryObject {
+/// One buffer of entries and the cursor walking it. A value, so forking the
+/// global buffer into a selection's own is a copy.
+private struct InputHistoryObject {
 	private var historyBuffer: [NSAttributedString] = []
 	private var historyBufferPosition = 0
 	var lastHistoryItem: NSAttributedString?
 
-	func add(_ string: NSAttributedString) {
+	mutating func add(_ string: NSAttributedString) {
 		guard string.length > 0 else {
 			return
 		}
@@ -32,7 +33,7 @@ private final class InputHistoryObject {
 		historyBufferPosition = historyBuffer.count
 	}
 
-	func up(_ string: NSAttributedString) -> NSAttributedString? {
+	mutating func up(_ string: NSAttributedString) -> NSAttributedString? {
 		if string.length > 0, entryAtBufferPosition()?.string != string.string {
 			addToBuffer(string)
 		}
@@ -48,7 +49,7 @@ private final class InputHistoryObject {
 		return nil
 	}
 
-	func down(_ string: NSAttributedString) -> NSAttributedString? {
+	mutating func down(_ string: NSAttributedString) -> NSAttributedString? {
 		guard string.length > 0 else {
 			historyBufferPosition = historyBuffer.count
 
@@ -66,16 +67,7 @@ private final class InputHistoryObject {
 		return entryAtBufferPosition() ?? NSAttributedString(string: "")
 	}
 
-	func copied() -> InputHistoryObject {
-		let copy = InputHistoryObject()
-		copy.historyBuffer = historyBuffer
-		copy.historyBufferPosition = historyBufferPosition
-		copy.lastHistoryItem = lastHistoryItem.map(NSAttributedString.init(attributedString:))
-
-		return copy
-	}
-
-	private func addToBuffer(_ string: NSAttributedString) {
+	private mutating func addToBuffer(_ string: NSAttributedString) {
 		historyBuffer.append(NSAttributedString(attributedString: string))
 
 		guard historyBuffer.count > inputHistoryMaximumCount else {
@@ -137,13 +129,12 @@ final class InputHistory {
 			return
 		}
 
-		if let oldObject = currentObjectForFocusedSidebarItem() {
-			oldObject.lastHistoryItem = NSAttributedString(attributedString: textView.attributedStringValue)
-		}
+		let draft = NSAttributedString(attributedString: textView.attributedStringValue)
+		withCurrentObject { $0.lastHistoryItem = draft }
 
 		currentSidebarItem = sidebarItem.uniqueIdentifier
 
-		if let lastHistoryItem = currentObjectForFocusedSidebarItem()?.lastHistoryItem {
+		if let scope = currentScope, let lastHistoryItem = historyObjects[scope]?.lastHistoryItem {
 			textView.attributedStringValue = lastHistoryItem
 		} else {
 			textView.stringValue = ""
@@ -152,31 +143,36 @@ final class InputHistory {
 
 	func noteInputHistoryObjectScopeDidChange() {
 		if SettingsKeys.Input.historyIsPerSelection.value {
-			for session in AppServices.chatSession.sessions {
-				applyGlobalHistory(to: session.uniqueIdentifier)
-
-				for conversation in session.conversationList {
-					applyGlobalHistory(to: conversation.uniqueIdentifier)
-				}
-			}
-
-			historyObjects.removeValue(forKey: .global)
+			forkGlobalHistory(into: AppServices.chatSession.sessions.flatMap { session in
+				[session.uniqueIdentifier] + session.conversationList.map(\.uniqueIdentifier)
+			})
 		} else {
 			historyObjects.removeAll()
 			currentSidebarItem = nil
 		}
 	}
 
+	/// Gives each item its own copy of the global buffer and retires the global
+	/// one, so what was typed before the switch is still there to walk back
+	/// through, and what is typed after it stays with one item.
+	func forkGlobalHistory(into itemIdentifiers: [String]) {
+		for identifier in itemIdentifiers {
+			applyGlobalHistory(to: identifier)
+		}
+
+		historyObjects.removeValue(forKey: .global)
+	}
+
 	func add(_ string: NSAttributedString) {
-		currentObjectForFocusedSidebarItem()?.add(string)
+		withCurrentObject { $0.add(string) }
 	}
 
 	func up(_ string: NSAttributedString) -> NSAttributedString? {
-		currentObjectForFocusedSidebarItem()?.up(string)
+		withCurrentObject { $0.up(string) } ?? nil
 	}
 
 	func down(_ string: NSAttributedString) -> NSAttributedString? {
-		currentObjectForFocusedSidebarItem()?.down(string)
+		withCurrentObject { $0.down(string) } ?? nil
 	}
 
 	private func applyGlobalHistory(to itemIdentifier: String) {
@@ -184,9 +180,9 @@ final class InputHistory {
 			return
 		}
 
-		let newObject = globalObject.copied()
-		newObject.lastHistoryItem = nil
-		historyObjects[.item(itemIdentifier)] = newObject
+		var forked = globalObject
+		forked.lastHistoryItem = nil
+		historyObjects[.item(itemIdentifier)] = forked
 	}
 
 	/// `nil` when history is kept per selection and nothing is focused.
@@ -198,18 +194,14 @@ final class InputHistory {
 		return currentSidebarItem.map(InputHistoryScope.item)
 	}
 
-	private func currentObjectForFocusedSidebarItem() -> InputHistoryObject? {
+	/// Runs `body` on the focused scope's buffer, in place, creating it on first
+	/// use. `nil` when history is kept per selection and nothing is focused.
+	@discardableResult
+	private func withCurrentObject<Result>(_ body: (inout InputHistoryObject) -> Result) -> Result? {
 		guard let scope = currentScope else {
 			return nil
 		}
 
-		if let currentObject = historyObjects[scope] {
-			return currentObject
-		}
-
-		let currentObject = InputHistoryObject()
-		historyObjects[scope] = currentObject
-
-		return currentObject
+		return body(&historyObjects[scope, default: InputHistoryObject()])
 	}
 }

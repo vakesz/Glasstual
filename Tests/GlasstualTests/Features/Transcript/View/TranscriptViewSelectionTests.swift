@@ -52,6 +52,33 @@ struct TranscriptViewSelectionTests {
 		}
 	}
 
+	@Test("The cached selection is exactly the selected text, after a multi-byte character too")
+	func selectionIsTheSelectedSubstring() throws {
+		try withSelectedTranscript { view in
+			view.setBufferLimit(10)
+			view.appendLines([line("emoji \u{1F600} caf\u{00E9} tail")])
+			let range = (view.textView.string as NSString).range(of: "caf\u{00E9} tail")
+			try #require(range.location != NSNotFound)
+			view.textView.setSelectedRange(range)
+			view.textViewDidChangeSelection(Notification(name: NSTextView.didChangeSelectionNotification))
+			#expect(view.selection == "caf\u{00E9} tail")
+			view.textView.setSelectedRange(NSRange(location: range.location, length: 0))
+			view.textViewDidChangeSelection(Notification(name: NSTextView.didChangeSelectionNotification))
+			#expect(view.selection == nil)
+		}
+	}
+
+	@Test("A selection below an older-history prepend still names the same text")
+	func selectionSurvivesAPrepend() throws {
+		try withSelectedTranscript { view in
+			view.setBufferLimit(10)
+			view.prependLines([line("older one"), line("older two")])
+			#expect(view.textView.string.contains("older one"))
+			#expect((view.textView.string as NSString).substring(with: view.textView.selectedRange()) == "first body")
+			#expect(view.selection == "first body")
+		}
+	}
+
 	private func withSelectedTranscript(_ body: (TranscriptView) throws -> Void) throws {
 		let copyOnSelect = SettingsKeys.Messages.copyOnSelect.value
 		defer { SettingsKeys.Messages.copyOnSelect.value = copyOnSelect }

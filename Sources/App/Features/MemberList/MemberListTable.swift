@@ -196,10 +196,17 @@ final class MemberListTableController: NSObject, NSTableViewDataSource, NSTableV
 	private func configure(_ cell: MemberListTableCell, at index: Int) {
 		guard rows.indices.contains(index) else { return }
 		let row = rows[index]
-		cell.configure(row: row, style: model.presentationStyle, overrides: model.nicknameColorOverrides) { [weak model] in
-			guard let member = row.member else { return }
-			model?.showProfile(for: member.id)
-		}
+		cell.configure(
+			row: row,
+			style: model.presentationStyle,
+			overrides: model.nicknameColorOverrides,
+			activationName: SettingsKeys.Input.userDoubleClickAction.value.accessibilityActionTitle,
+			showProfile: { [weak model] in
+				guard let member = row.member else { return }
+				model?.showProfile(for: member.id)
+			},
+			activate: { [weak self] in self?.activateMember(at: index) }
+		)
 	}
 
 	func tableViewSelectionDidChange(_: Notification) {
@@ -263,7 +270,15 @@ final class MemberListNativeTable: NSTableView {
 	}
 
 	override func keyDown(with event: NSEvent) {
-		if let text = TypingRedirect.text(
+		/* Return and Enter do what a double click on the selected member does,
+		 under the same setting. A pointer has the double click; a keyboard has
+		 nothing else that activates a row. */
+		if event.modifierFlags.isDisjoint(with: [.command, .control, .option]),
+		   event.charactersIgnoringModifiers == "\r" || event.charactersIgnoringModifiers == "\u{3}",
+		   selectedRow >= 0
+		{
+			owner?.activateMember(at: selectedRow)
+		} else if let text = TypingRedirect.text(
 			for: event.characters ?? "",
 			commandIsPressed: event.modifierFlags.contains(.command),
 			controlIsPressed: event.modifierFlags.contains(.control)

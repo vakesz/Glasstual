@@ -347,12 +347,13 @@ struct TranscriptDocument {
 	}
 
 	/// Merges reactions into every line that carries `messageIdentifier`, and
-	/// answers with the indices the caller has to redraw.
+	/// answers with the indices the caller has to redraw. A redacted line
+	/// carries none: its message is gone.
 	mutating func mergeReactions(_ reactions: [String: [String]], messageIdentifier: String) -> [Int] {
 		var changed: [Int] = []
 		for ordinal in messageLineOrdinals[MessageIdentifierKey(messageIdentifier)] ?? [] {
 			let index = ordinal - firstLineOrdinal
-			guard lines.indices.contains(index) else { continue }
+			guard lines.indices.contains(index), lines[index].lineType != .redacted else { continue }
 			lines[index].mergeReactions(reactions)
 			changed.append(index)
 		}

@@ -50,4 +50,20 @@ struct TranscriptControllerReactionTests {
 
 		#expect(visibleTranscriptText(transcript.attributedString()).contains("\u{1f44d} 1"))
 	}
+
+	@Test("A reaction to a message the server deleted is not recorded")
+	func redactedMessageTakesNoReactions() {
+		let window = MainWindow(
+			contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
+			styleMask: .borderless,
+			backing: .buffered,
+			defer: false
+		)
+		let controller = TranscriptController(session: ServerSession(config: ServerConfig()), in: window)
+		controller.redactions.record("gone")
+
+		controller.noteReaction("\u{1f44d}", fromNickname: "bob", toMessageIdentifier: "gone")
+
+		#expect(controller.reactions.reactions(forMessage: "gone") == nil)
+	}
 }

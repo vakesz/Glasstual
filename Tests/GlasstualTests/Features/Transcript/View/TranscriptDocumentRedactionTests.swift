@@ -67,4 +67,20 @@ struct TranscriptDocumentRedactionTests {
 		#expect(document.redactMessage(messageIdentifier: "msg-2", placeholder: "Message deleted").isEmpty)
 		#expect(document.redactMessage(messageIdentifier: "unknown", placeholder: "Message deleted").isEmpty)
 	}
+
+	@Test("A reaction is not merged into a redacted row, only into one that still has its message")
+	func redactedRowTakesNoReactions() {
+		var document = TranscriptDocument()
+		var bare = row("first", identifier: "msg-1")
+		bare.reactions = [:]
+		var other = row("second", identifier: "msg-2")
+		other.reactions = [:]
+		document.insert([bare, other], at: 0, starts: [0, 6], totalLength: 12)
+		_ = document.redactMessage(messageIdentifier: "msg-1", placeholder: "Message deleted")
+
+		#expect(document.mergeReactions(["👍": ["carol"]], messageIdentifier: "msg-1").isEmpty)
+		#expect(document[0].reactions.isEmpty)
+		#expect(document.mergeReactions(["👍": ["carol"]], messageIdentifier: "msg-2") == [1])
+		#expect(document[1].reactions == ["👍": ["carol"]])
+	}
 }

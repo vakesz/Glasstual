@@ -76,4 +76,53 @@ struct TranscriptReactionLedgerTests {
 		#expect(ledger.all == before)
 		#expect(ledger.reactions(forMessage: "missing") == nil)
 	}
+
+	@Test("A message records at most the per-message number of distinct reactions")
+	func distinctReactionCap() {
+		var ledger = TranscriptReactionLedger()
+		let cap = TranscriptReactionLedger.maximumReactionsPerMessage
+		for index in 0 ..< cap + 10 {
+			let recorded = ledger.record("r\(index)", from: "alice", forMessage: "m")
+			#expect((recorded != nil) == (index < cap))
+		}
+		#expect(ledger.reactions(forMessage: "m")?.count == cap)
+	}
+
+	@Test("A reaction already recorded still gains reactors once the message is at the cap")
+	func existingReactionGainsReactorsAtCap() {
+		var ledger = TranscriptReactionLedger()
+		for index in 0 ..< TranscriptReactionLedger.maximumReactionsPerMessage {
+			_ = ledger.record("r\(index)", from: "alice", forMessage: "m")
+		}
+		let recorded = ledger.record("r0", from: "bob", forMessage: "m")
+		#expect(recorded?["r0"] == ["alice", "bob"])
+		#expect(ledger.reactions(forMessage: "m")?.count == TranscriptReactionLedger.maximumReactionsPerMessage)
+	}
+
+	@Test("One message at the cap does not limit another")
+	func capIsPerMessage() {
+		var ledger = TranscriptReactionLedger()
+		for index in 0 ..< TranscriptReactionLedger.maximumReactionsPerMessage + 1 {
+			_ = ledger.record("r\(index)", from: "alice", forMessage: "full")
+		}
+		#expect(ledger.record("fresh", from: "alice", forMessage: "other") == ["fresh": ["alice"]])
+	}
+
+	@Test("Carrying onto an identifier with reactions never exceeds the per-message cap and keeps what it had")
+	func carryRespectsMessageCap() throws {
+		var ledger = TranscriptReactionLedger()
+		let cap = TranscriptReactionLedger.maximumReactionsPerMessage
+		for index in 0 ..< cap {
+			_ = ledger.record("old\(index)", from: "alice", forMessage: "old")
+		}
+		for index in 0 ..< cap / 2 {
+			_ = ledger.record("new\(index)", from: "bob", forMessage: "new")
+		}
+		ledger.carry(from: "old", to: "new")
+		let merged = try #require(ledger.reactions(forMessage: "new"))
+		#expect(merged.count == cap)
+		for index in 0 ..< cap / 2 {
+			#expect(merged["new\(index)"] == ["bob"])
+		}
+	}
 }

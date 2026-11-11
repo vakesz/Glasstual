@@ -12,6 +12,9 @@ nonisolated struct TranscriptTextTraits: OptionSet, Equatable, Sendable {
 	static let strikethrough = Self(rawValue: 1 << 3)
 	static let underline = Self(rawValue: 1 << 4)
 	static let highlighted = Self(rawValue: 1 << 5)
+	/// The run's foreground and background swap. Display only: the text keeps
+	/// the colours it names.
+	static let reverse = Self(rawValue: 1 << 6)
 }
 
 nonisolated enum TranscriptRunColor: Equatable, Sendable {

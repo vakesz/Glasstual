@@ -183,6 +183,31 @@ struct TranscriptViewTopicTests {
 		#expect(visibleTranscriptText(transcriptView.topicBar.label.attributedStringValue) == "House rules")
 	}
 
+	/// The label is what VoiceOver says for the transcript, so a rename that
+	/// leaves the old name in it sends the reader to the wrong conversation.
+	@Test("A renamed conversation is spoken under its new name")
+	func accessibilityLabelFollowsARename() {
+		let session = ServerSession(config: ServerConfig())
+		let channel = Conversation(config: ConversationConfig(name: "#before"))
+		channel.associatedSession = session
+		channel.activate()
+		let window = MainWindow(
+			contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
+			styleMask: .borderless,
+			backing: .buffered,
+			defer: false
+		)
+		let controller = TranscriptController(conversation: channel, in: window)
+		let transcriptView = controller.ensureBackingView()
+		#expect(transcriptView.textView.accessibilityLabel()?.contains("#before") == true)
+
+		channel.applyChannelRename(to: "#after")
+
+		let label = transcriptView.textView.accessibilityLabel()
+		#expect(label?.contains("#after") == true)
+		#expect(label?.contains("#before") == false)
+	}
+
 	private func makeTranscriptView(bufferLimit: Int = 1000) -> TranscriptView {
 		let session = ServerSession(config: ServerConfig())
 		let window = MainWindow(

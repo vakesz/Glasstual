@@ -14,15 +14,19 @@ typealias ReactionsByEmoji = [String: [String]]
  for as long as the process runs. Which messages still have a row is the
  transcript's question, so a caller answers it with the `stillHeld` predicate.
 
- Both caps are enforced here rather than at the wire: a reaction is an emoji
- sent by a stranger, and neither its length nor the number of people who send
- it is bounded by anything the server promises. */
+ The caps are enforced here rather than at the wire: a reaction is an emoji
+ sent by a stranger, and neither its length, the number of people who send it
+ nor the number of different reactions one message collects is bounded by
+ anything the server promises. */
 nonisolated struct TranscriptReactionLedger: Sendable {
 	/// The longest reaction kept, in UTF-16 units. A reaction is an emoji, and
 	/// the longest sequences in use are a few dozen units.
 	static let maximumReactionLength = 64
 	/// How many people one reaction on one message records.
 	static let maximumReactorsPerReaction = 256
+	/// How many different reactions one message records. A reaction that is
+	/// already recorded still gains reactors once the message is at this cap.
+	static let maximumReactionsPerMessage = 32
 
 	private var reactionsByMessage: [MessageIdentifierKey: ReactionsByEmoji] = [:]
 
@@ -38,8 +42,8 @@ nonisolated struct TranscriptReactionLedger: Sendable {
 	/** Records `wireEmoji` from `nickname`, and returns every reaction the
 	 message now carries — what a drawn row is updated with. `nil` where the
 	 reaction was refused: an empty emoji after sanitising, one longer than the
-	 cap, a nameless sender, or a message already answered by as many people as
-	 one reaction records. */
+	 cap, a nameless sender, a message already answered by as many different
+	 reactions as it records, or by as many people as one reaction records. */
 	mutating func record(
 		_ wireEmoji: String,
 		from nickname: String,
@@ -52,6 +56,7 @@ nonisolated struct TranscriptReactionLedger: Sendable {
 			return nil
 		}
 		var reactions = reactionsByMessage[MessageIdentifierKey(messageIdentifier)] ?? [:]
+		guard reactions[emoji] != nil || reactions.count < Self.maximumReactionsPerMessage else { return nil }
 		var nicknames = reactions[emoji] ?? []
 		guard nicknames.count < Self.maximumReactorsPerReaction || nicknames.contains(nickname) else { return nil }
 		if !nicknames.contains(nickname) {
@@ -65,7 +70,9 @@ nonisolated struct TranscriptReactionLedger: Sendable {
 	/** Copies what `previousIdentifier` recorded onto `messageIdentifier`, for a
 	 row whose identity changed — a local echo the server acknowledged under
 	 its own identifier. The earlier reactors come first, as they were drawn,
-	 and each reaction keeps the per-reaction cap. The previous entry stays
+	 and each reaction keeps the per-reaction cap. A reaction the target does
+	 not hold yet is added, in sorted order, only while the target is under the
+	 per-message cap. The previous entry stays
 	 until `forget(_:stillHeld:)` finds no row left for it. */
 	mutating func carry(from previousIdentifier: String, to messageIdentifier: String) {
 		let previousKey = MessageIdentifierKey(previousIdentifier)
@@ -76,7 +83,12 @@ nonisolated struct TranscriptReactionLedger: Sendable {
 			return
 		}
 		var reactions = reactionsByMessage[key] ?? [:]
-		for (emoji, earlier) in previous {
+		for emoji in previous.keys.sorted() {
+			guard let earlier = previous[emoji],
+			      reactions[emoji] != nil || reactions.count < Self.maximumReactionsPerMessage
+			else {
+				continue
+			}
 			let later = reactions[emoji] ?? []
 			let merged = earlier + later.filter { !earlier.contains($0) }
 			reactions[emoji] = Array(merged.prefix(Self.maximumReactorsPerReaction))

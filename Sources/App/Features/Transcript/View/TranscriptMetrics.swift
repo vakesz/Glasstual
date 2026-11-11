@@ -49,6 +49,17 @@ enum TranscriptMetrics {
 	/// picture never runs under the scroller.
 	static let inlineImageSideInset: CGFloat = 40
 
+	/** The widest an inline image is drawn in a text view `width` points wide.
+
+	 A text view that has not been laid out yet reports no width. That is not a
+	 column of no width: the picture is drawn at the box's width, and drawn
+	 again at the width the column turns out to have. */
+	static func inlineImageMaximumWidth(forTextViewWidth width: CGFloat) -> CGFloat {
+		guard width > 0 else { return inlineImageBox.width }
+		let available = max(0, width - inlineImageSideInset)
+		return max(min(inlineImageBox.width, available), min(available, 120))
+	}
+
 	/// One paragraph style for transcript lines, shared by the document and
 	/// the fold summaries so spacing cannot drift between them.
 	static func transcriptParagraph(lineSpacing: CGFloat, messageSpacing: CGFloat, horizontalPadding: CGFloat) -> NSMutableParagraphStyle {

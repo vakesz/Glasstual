@@ -125,6 +125,96 @@ struct MemberListTableTests {
 		#expect(actedOn == nil)
 	}
 
+	private func returnKey(modifiers: NSEvent.ModifierFlags = [], characters: String = "\r") throws -> NSEvent {
+		try #require(NSEvent.keyEvent(
+			with: .keyDown, location: .zero, modifierFlags: modifiers, timestamp: 0, windowNumber: 0,
+			context: nil, characters: characters, charactersIgnoringModifiers: characters,
+			isARepeat: false, keyCode: 36
+		))
+	}
+
+	@Test("Return on the selected member does what a double click does")
+	func returnActivatesTheSelectedMember() throws {
+		let fixture = Fixture(count: 3)
+		defer { fixture.window.close() }
+		var actedOn: User.ID?
+		fixture.controller.performDoubleClick = { actedOn = fixture.model.primaryInteractedMember?.id }
+		let table = fixture.controller.tableView
+		table.selectRowIndexes(IndexSet(integer: 2), byExtendingSelection: false)
+		try table.keyDown(with: returnKey())
+		#expect(actedOn == fixture.members[1].id)
+		actedOn = nil
+		try table.keyDown(with: returnKey(characters: "\u{3}"))
+		#expect(actedOn == fixture.members[1].id)
+	}
+
+	@Test("Return with nothing selected, or with Command held, activates nothing")
+	func returnNeedsASelectionAndNoCommand() throws {
+		let fixture = Fixture(count: 3)
+		defer { fixture.window.close() }
+		var activations = 0
+		fixture.controller.performDoubleClick = { activations += 1 }
+		let table = fixture.controller.tableView
+		table.deselectAll(nil)
+		try table.keyDown(with: returnKey())
+		#expect(activations == 0)
+		table.selectRowIndexes(IndexSet(integer: 2), byExtendingSelection: false)
+		try table.keyDown(with: returnKey(modifiers: .command))
+		try table.keyDown(with: returnKey(modifiers: .control))
+		try table.keyDown(with: returnKey(modifiers: .option))
+		#expect(activations == 0)
+	}
+
+	@Test("A printable key still redirects typing to the input field")
+	func printableKeysStillRedirect() throws {
+		let fixture = Fixture(count: 3)
+		defer { fixture.window.close() }
+		var typed: String?
+		var activations = 0
+		fixture.controller.redirectTyping = { typed = $0 }
+		fixture.controller.performDoubleClick = { activations += 1 }
+		let table = fixture.controller.tableView
+		table.selectRowIndexes(IndexSet(integer: 2), byExtendingSelection: false)
+		try table.keyDown(with: returnKey(characters: "h"))
+		#expect(typed == "h")
+		#expect(activations == 0)
+	}
+
+	@Test("A member row offers the configured double-click action after Show Profile, and performing it activates the member")
+	func rowOffersTheActivationAction() throws {
+		let setting = SettingsKeys.Input.userDoubleClickAction
+		let saved = setting.value
+		defer { setting.value = saved }
+		let fixture = Fixture(count: 3)
+		defer { fixture.window.close() }
+		var actedOn: User.ID?
+		fixture.controller.performDoubleClick = { actedOn = fixture.model.primaryInteractedMember?.id }
+		let table = fixture.controller.tableView
+		for (action, title) in [
+			(UserDoubleClickAction.whois, String(localized: .MemberList.whoisAction)),
+			(.startDirectConversation, String(localized: .MemberList.openConversationAction)),
+			(.insertTextField, String(localized: .MemberList.insertNicknameAction)),
+		] {
+			setting.value = action
+			let cell = try #require(fixture.controller.tableView(table, viewFor: nil, row: 2) as? MemberListTableCell)
+			let actions = try #require(cell.accessibilityCustomActions())
+			#expect(actions.map(\.name) == [String(localized: .MemberList.showProfileAction), title])
+			actedOn = nil
+			let activation = actions[1]
+			#expect(try NSApp.sendAction(#require(activation.selector), to: activation.target, from: nil))
+			#expect(actedOn == fixture.members[1].id)
+		}
+	}
+
+	@Test("A section heading offers no member actions")
+	func headingOffersNoActions() throws {
+		let fixture = Fixture(count: 3)
+		defer { fixture.window.close() }
+		let table = fixture.controller.tableView
+		let cell = try #require(fixture.controller.tableView(table, viewFor: nil, row: 0) as? MemberListTableCell)
+		#expect(cell.accessibilityCustomActions()?.isEmpty != false)
+	}
+
 	@Test("File drops and context menus use the clicked member without selecting them")
 	func clickedTargetsStaySeparateFromSelection() throws {
 		let fixture = Fixture(count: 3)

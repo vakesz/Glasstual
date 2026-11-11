@@ -85,6 +85,8 @@ nonisolated struct TranscriptRenderContext: Sendable {
 	var members: RenderedMemberDirectory = []
 	/// The server's casemapping, which decides what spells the same name.
 	var caseMapping = ISupportCaseMapping.rfc1459
+	/// The server's `CHANTYPES`, which decide what begins a channel name.
+	var channelPrefixes = ["#"]
 	var sessionReactions: [MessageIdentifierKey: ReactionsByEmoji] = [:]
 	/** The compiled highlight keywords the body renderer matches with. A
 	 reference the application shares between every transcript, so a pattern

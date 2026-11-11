@@ -156,7 +156,7 @@ struct TranscriptViewFoldingTests {
 			view.document.bufferLimit = 3
 			view.appendLines([line("first", kind: .join), line("second", kind: .part)])
 			view.toggleFoldedGroup("first")
-			view.rebuild()
+			view.performEditingBatch { view.rebuild() }
 			#expect(view.textView.string.contains("first body"))
 			#expect(view.textView.string.contains("second body"))
 			#expect(view.prependLines([line("older", kind: .nick)]) == ["older"])
@@ -190,7 +190,7 @@ struct TranscriptViewFoldingTests {
 			#expect(selectedText(in: view) == "selected body")
 			view.updateReactions(["👍": ["bob"]], messageIdentifier: "message-second")
 			#expect(selectedText(in: view) == "selected body")
-			view.rebuild()
+			view.performEditingBatch { view.rebuild() }
 			#expect(selectedText(in: view) == "selected body")
 			#expect(view.document.lineStarts.last == view.textView.textStorage?.length)
 		}

@@ -45,7 +45,7 @@ nonisolated enum TextFormatting {
 			switch character {
 			case TextFormatterControlCharacter.bold,
 			     TextFormatterControlCharacter.italic,
-			     TextFormatterControlCharacter.legacyItalic,
+			     TextFormatterControlCharacter.reverse,
 			     TextFormatterControlCharacter.monospace,
 			     TextFormatterControlCharacter.strikethrough,
 			     TextFormatterControlCharacter.underline,

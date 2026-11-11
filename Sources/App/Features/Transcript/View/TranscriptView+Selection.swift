@@ -12,7 +12,9 @@ extension TranscriptView {
 	func textViewDidChangeSelection(_: Notification) {
 		guard isAdjustingSelection == false else { return }
 		let range = textView.selectedRange()
-		selection = range.length > 0 ? (textView.string as NSString).substring(with: range) : nil
+		/* `textView.string` is the whole transcript; the storage reads only the
+		 selected characters. */
+		selection = range.length > 0 ? textView.textStorage?.attributedSubstring(from: range).string : nil
 		/* Stepping through find results selects each match in turn; that is the
 		 find bar moving the reader, not the reader selecting text, so it must
 		 not overwrite the pasteboard. */
@@ -156,6 +158,8 @@ extension TranscriptView {
 		noteViewportMovedByView()
 	}
 
+	/// Opens a batch. The outermost one records the selection and, for a reader
+	/// who is not following the bottom, the viewport, as semantic anchors.
 	func beginEditing() {
 		if editDepth == 0 {
 			batchSelection = selectionAnchor()
@@ -166,13 +170,18 @@ extension TranscriptView {
 		editDepth += 1
 	}
 
+	/** Closes the outermost batch. Everything the batch's edits left to settle is
+	 settled here, once: the overflow is trimmed while the storage is still
+	 open, then the selection and the viewport taken at `beginEditing` are put
+	 back against the new text, and a reader who follows the bottom is scrolled
+	 to it. The edits inside a batch therefore leave all of that alone. */
 	func endEditing() {
 		precondition(editDepth > 0)
 		if editDepth > 1 {
 			editDepth -= 1
 			return
 		}
-		trimToBufferLimit(force: true)
+		trimOverflow()
 		textView.textStorage?.endEditing()
 		editDepth = 0
 		isAdjustingSelection = false

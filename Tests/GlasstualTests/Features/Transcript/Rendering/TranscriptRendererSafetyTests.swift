@@ -95,4 +95,44 @@ struct TranscriptRendererSafetyTests {
 		#expect(body.isHighlight)
 		#expect(body.runs == [TranscriptTextRun(text: "b"), TranscriptTextRun(text: "a", traits: .highlighted)])
 	}
+
+	@Test("A regular expression match inside a link does not hide a later plain match")
+	func laterMatchOutsideLinkHighlights() {
+		let body = TranscriptRenderer.renderNativeBody("see https://foo.example/ then foo", withAttributes: TranscriptRenderOptions(
+			renderLinks: true,
+			lineType: .privateMessage,
+			highlightKeywords: ["foo"],
+			textPolicy: TranscriptTextRules(highlightMatchingMethod: .regularExpression)
+		), members: [])
+
+		#expect(body.isHighlight)
+		let highlighted = body.runs.filter { $0.traits.contains(.highlighted) }
+		#expect(highlighted.map(\.text) == ["foo"])
+		#expect(body.runs.last?.traits.contains(.highlighted) == true)
+	}
+
+	@Test("A regular expression match inside an excluded keyword does not hide a later one")
+	func laterMatchOutsideExclusionHighlights() {
+		let body = TranscriptRenderer.renderNativeBody("foobar and foo", withAttributes: TranscriptRenderOptions(
+			lineType: .privateMessage,
+			highlightKeywords: ["foo"],
+			excludedKeywords: ["foobar"],
+			textPolicy: TranscriptTextRules(highlightMatchingMethod: .regularExpression)
+		), members: [])
+
+		#expect(body.isHighlight)
+		#expect(body.runs.last == TranscriptTextRun(text: "foo", traits: .highlighted))
+	}
+
+	@Test("A regular expression match past the matched-length cap is ignored")
+	func matchBeyondTheCapIsIgnored() {
+		let padding = String(repeating: "x", count: TranscriptHighlightExpressions.maximumMatchedLength + 10)
+		let body = TranscriptRenderer.renderNativeBody(padding + " foo", withAttributes: TranscriptRenderOptions(
+			lineType: .privateMessage,
+			highlightKeywords: ["foo"],
+			textPolicy: TranscriptTextRules(highlightMatchingMethod: .regularExpression)
+		), members: [])
+
+		#expect(body.isHighlight == false)
+	}
 }

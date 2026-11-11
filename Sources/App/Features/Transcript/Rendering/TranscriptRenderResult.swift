@@ -65,6 +65,7 @@ extension TranscriptController {
 			excludedKeywords: line.excludeKeywords ?? [],
 			textPolicy: request.context.textPolicy,
 			caseMapping: request.context.caseMapping,
+			channelPrefixes: request.context.channelPrefixes,
 			highlightExpressions: request.context.highlightExpressions
 		)
 

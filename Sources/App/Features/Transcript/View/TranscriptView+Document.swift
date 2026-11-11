@@ -28,11 +28,8 @@ extension TranscriptView {
 			let accepted = document.accepting(newLines)
 			guard accepted.isEmpty == false else { return }
 			let followsBottom = followsBottom
-			let anchor = selectionAnchor()
 			insert(accepted, at: document.count)
-			trimToBufferLimit()
 			updateLayoutAfterEdit()
-			restoreSelection(anchor)
 			if followsBottom {
 				scrollToBottom()
 			}
@@ -55,13 +52,9 @@ extension TranscriptView {
 			/* The tail of the fetched block is the part adjacent to what is on
 			 screen, so a block that does not fit keeps its newest lines. */
 			let accepted = Array(document.accepting(newLines).suffix(room))
-			let anchor = selectionAnchor()
-			preservingVisibleText {
-				insert(accepted, at: 0)
-				document.scrollbackAllowance += accepted.count
-				updateLayoutAfterEdit()
-			}
-			restoreSelection(anchor)
+			insert(accepted, at: 0)
+			document.scrollbackAllowance += accepted.count
+			updateLayoutAfterEdit()
 			return accepted.map(\.lineNumber)
 		}
 	}
@@ -144,14 +137,12 @@ extension TranscriptView {
 
 	/// Drops the oldest lines that no longer fit. Only the oldest: the end of
 	/// the transcript is what the controller, the jump commands and the reader
-	/// all address.
-	func trimToBufferLimit(force: Bool = false) {
-		guard editDepth == 0 || force else { return }
+	/// all address. The batch's `endEditing` calls it once, after the batch's
+	/// edits and before the selection and the viewport are put back.
+	func trimOverflow() {
 		let overflow = document.overflow(followsBottom: followsBottom)
 		guard overflow > 0 else { return }
-		preservingVisibleText {
-			remove(0 ..< overflow)
-		}
+		remove(0 ..< overflow)
 	}
 
 	func range(ofLine lineNumber: String) -> NSRange? {
@@ -221,7 +212,6 @@ extension TranscriptView {
 	func refresh(at index: Int) {
 		guard let storage = textView.textStorage, document.indices.contains(index) else { return }
 		beginNicknameColorBatch()
-		let anchor = selectionAnchor()
 		let rendered = renderVisibleLine(document[index])
 		storage.replaceCharacters(
 			in: NSRange(location: document.location(ofLineAt: index), length: document.length(ofLineAt: index)),
@@ -229,18 +219,17 @@ extension TranscriptView {
 		)
 		document.noteLineRedrawn(at: index, newLength: rendered.length)
 		updateLayoutAfterEdit()
-		restoreSelection(anchor)
 	}
 
 	/** Rewrites the whole document.
 
 	 Only a change that alters how every line draws needs one: the theme and the
 	 text scale. Ordinary traffic edits the storage in place, which is what keeps
-	 a busy conversation from re-rendering its whole scrollback per message. */
-	func rebuild(preservingScrollPosition: Bool = true) {
-		let oldOrigin = scrollView.contentView.bounds.origin
-		let viewport = viewportAnchor()
-		let anchor = selectionAnchor()
+	 a busy conversation from re-rendering its whole scrollback per message.
+
+	 A caller runs it inside ``performEditingBatch(_:)``, which puts the
+	 selection and the viewport back once the batch ends. */
+	func rebuild() {
 		beginNicknameColorBatch()
 		let retainedLines = document.takeLinesForRebuild()
 		textView.textStorage?.beginEditing()
@@ -248,33 +237,5 @@ extension TranscriptView {
 		insert(retainedLines, at: 0)
 		textView.textStorage?.endEditing()
 		updateLayoutAfterEdit()
-		restoreSelection(anchor)
-		guard preservingScrollPosition, window != nil, !isHiddenOrHasHiddenAncestor, editDepth == 0 else { return }
-		if let viewport {
-			restoreViewport(viewport)
-			return
-		}
-		textView.layoutSubtreeIfNeeded()
-		scrollView.contentView.scroll(to: oldOrigin)
-		scrollView.reflectScrolledClipView(scrollView.contentView)
-		noteViewportMovedByView()
-	}
-
-	/// Runs an edit that changes what sits above the viewport and keeps the
-	/// text the reader is looking at where it was.
-	private func preservingVisibleText(_ edit: () -> Void) {
-		guard window != nil, !isHiddenOrHasHiddenAncestor, editDepth == 0 else {
-			edit()
-			return
-		}
-		let oldHeight = textView.bounds.height
-		let origin = scrollView.contentView.bounds.origin
-		edit()
-		textView.layoutSubtreeIfNeeded()
-		var adjusted = origin
-		adjusted.y += textView.bounds.height - oldHeight
-		scrollView.contentView.scroll(to: adjusted)
-		scrollView.reflectScrolledClipView(scrollView.contentView)
-		noteViewportMovedByView()
 	}
 }

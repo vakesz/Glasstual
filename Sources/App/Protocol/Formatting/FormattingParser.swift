@@ -23,6 +23,10 @@ nonisolated enum FormattingParser {
 
 	private struct Parser {
 		private let inputCharacters: [UniChar]
+		/// The source again, as the string the colour scanner reads. Built once:
+		/// the digits of a code are not deleted until it is consumed, so they are
+		/// read where they were written instead of from a copy of the result.
+		private let inputString: NSString
 		private let result: NSMutableAttributedString
 		private let preservesLineFeeds: Bool
 		private var removedCount = 0
@@ -35,6 +39,7 @@ nonisolated enum FormattingParser {
 				input.getCharacters(&characters, range: NSRange(location: 0, length: input.length))
 			}
 			inputCharacters = characters
+			inputString = NSString(characters: characters, length: characters.count)
 			result = NSMutableAttributedString(string: source)
 		}
 
@@ -54,7 +59,7 @@ nonisolated enum FormattingParser {
 					continue
 				}
 
-				let consumedCount = consume(character, at: inputIndex - removedCount)
+				let consumedCount = consume(character, at: inputIndex - removedCount, inputIndex: inputIndex)
 				removedCount += consumedCount
 				inputIndex += max(consumedCount, 1)
 			}
@@ -63,13 +68,14 @@ nonisolated enum FormattingParser {
 			return result
 		}
 
-		private mutating func consume(_ character: UniChar, at position: Int) -> Int {
+		private mutating func consume(_ character: UniChar, at position: Int, inputIndex: Int) -> Int {
 			switch character {
 			case TextFormatterControlCharacter.bold:
 				return toggle(IRCFormattingAttribute.bold, at: position)
-			case TextFormatterControlCharacter.italic,
-			     TextFormatterControlCharacter.legacyItalic:
+			case TextFormatterControlCharacter.italic:
 				return toggle(IRCFormattingAttribute.italic, at: position)
+			case TextFormatterControlCharacter.reverse:
+				return toggle(IRCFormattingAttribute.reverse, at: position)
 			case TextFormatterControlCharacter.monospace:
 				return toggle(IRCFormattingAttribute.monospace, at: position)
 			case TextFormatterControlCharacter.strikethrough:
@@ -78,7 +84,7 @@ nonisolated enum FormattingParser {
 				return toggle(IRCFormattingAttribute.underline, at: position)
 			case TextFormatterControlCharacter.colorDigit,
 			     TextFormatterControlCharacter.colorHex:
-				return consumeColor(character, at: position)
+				return consumeColor(character, at: position, inputIndex: inputIndex)
 			case TextFormatterControlCharacter.terminator:
 				result.setAttributes([:], range: remainingRange(from: position))
 				result.deleteCharacters(in: NSRange(location: position, length: 1))
@@ -108,10 +114,13 @@ nonisolated enum FormattingParser {
 			return 1
 		}
 
-		private func consumeColor(_ character: UniChar, at position: Int) -> Int {
-			let components = (result.string as NSString).colorComponents(
+		/// `position` is where the code sits in the result, which is where it is
+		/// deleted; `inputIndex` is where it sits in the source, which is where
+		/// it is read.
+		private func consumeColor(_ character: UniChar, at position: Int, inputIndex: Int) -> Int {
+			let components = inputString.colorComponents(
 				ofCharacter: character,
-				startingAt: UInt(position)
+				startingAt: UInt(inputIndex)
 			)
 
 			/* Each half is applied on its own. Deciding the background from

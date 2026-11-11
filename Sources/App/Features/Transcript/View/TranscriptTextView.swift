@@ -160,6 +160,16 @@ final class TranscriptTextView: NSTextView {
 		menu?.popUp(positioning: nil, at: NSPoint(x: anchor.minX, y: anchor.maxY), in: self)
 	}
 
+	/// The native text actions, plus joining the channel or opening the nickname
+	/// the selection sits on: the runs are not links, so a screen reader that
+	/// moves the cursor through the text has no other way to activate them.
+	override func accessibilityCustomActions() -> [NSAccessibilityCustomAction]? {
+		let native = super.accessibilityCustomActions() ?? []
+		guard let owner else { return native.isEmpty ? nil : native }
+		let actions = native + owner.nameAccessibilityActions()
+		return actions.isEmpty ? nil : actions
+	}
+
 	func selectionContextMenu() -> NSMenu? {
 		guard let owner else { return nil }
 		owner.contextMenuTarget = owner.selectedContextTarget()

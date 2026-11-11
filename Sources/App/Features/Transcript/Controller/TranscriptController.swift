@@ -423,6 +423,7 @@ final class TranscriptController: ChatItemPresenting, ServerHistoryPresenting {
 			textPolicy: settings.current.textRules,
 			members: includingMembers ? memberRenderCache.members(in: conversation) : [],
 			caseMapping: associatedSession?.supportInfo.caseMapping ?? .rfc1459,
+			channelPrefixes: associatedSession?.supportInfo.channelNamePrefixes ?? ["#"],
 			sessionReactions: reactions.all,
 			highlightExpressions: highlightExpressions
 		)

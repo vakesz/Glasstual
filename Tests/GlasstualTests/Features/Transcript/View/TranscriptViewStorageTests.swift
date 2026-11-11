@@ -204,6 +204,23 @@ struct TranscriptViewStorageTests {
 		#expect(try document(of: transcriptView) == rebuiltDocument(of: (0 ..< 5).map(message)))
 	}
 
+	@Test("Lowering the buffer limit trims the oldest lines when the batch ends")
+	func bufferLimitTrimsOldestLines() {
+		let transcriptView = makeTranscriptView(bufferLimit: 5)
+		transcriptView.appendLines((0 ..< 4).map(message))
+		transcriptView.setBufferLimit(2)
+		#expect(transcriptView.displayedLines.map(\.lineNumber) == ["message 2", "message 3"])
+		#expect(transcriptView.textView.string.contains("message 1") == false)
+	}
+
+	@Test("An append that overflows the buffer limit keeps the newest lines")
+	func appendTrimsToTheBufferLimit() throws {
+		let transcriptView = makeTranscriptView(bufferLimit: 2)
+		transcriptView.appendLines((0 ..< 3).map(message))
+		#expect(transcriptView.displayedLines.map(\.lineNumber) == ["message 1", "message 2"])
+		#expect(try document(of: transcriptView) == rebuiltDocument(of: (1 ..< 3).map(message)))
+	}
+
 	@Test("A batch that repeats a line within itself draws it once")
 	func appendingRefusesRepeatsWithinOneBatch() {
 		let transcriptView = makeTranscriptView(bufferLimit: 20)

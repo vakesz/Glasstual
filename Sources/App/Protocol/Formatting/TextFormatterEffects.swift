@@ -38,7 +38,9 @@ nonisolated enum TextFormatterControlCharacter {
 	static let colorHex: unichar = 0x04
 	static let bold: unichar = 0x02
 	static let italic: unichar = 0x1D
-	static let legacyItalic: unichar = 0x16
+	/// Swaps the foreground and background colours. Some old clients drew it
+	/// as italic; modern ones, and the specification, mean reverse colours.
+	static let reverse: unichar = 0x16
 	static let monospace: unichar = 0x11
 	static let strikethrough: unichar = 0x1E
 	static let underline: unichar = 0x1F

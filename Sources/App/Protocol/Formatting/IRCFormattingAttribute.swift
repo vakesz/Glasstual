@@ -15,4 +15,5 @@ nonisolated enum IRCFormattingAttribute {
 	static let monospace = NSAttributedString.Key("GlasstualRendererMonospace")
 	static let strikethrough = NSAttributedString.Key("GlasstualRendererStrikethrough")
 	static let underline = NSAttributedString.Key("GlasstualRendererUnderline")
+	static let reverse = NSAttributedString.Key("GlasstualRendererReverse")
 }

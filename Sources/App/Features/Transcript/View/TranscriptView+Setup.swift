@@ -21,12 +21,14 @@ extension TranscriptView {
 			notifications.observe(ConversationConfigWasUpdated.self) { [weak self] message in
 				guard let self, message.subject === viewController?.associatedConversation else { return }
 				reloadFolding()
+				updateAccessibilityDescription()
 			}
 		}
 		if viewController?.associatedSession != nil {
 			notifications.observe(ServerSessionConfigWasUpdated.self) { [weak self] message in
 				guard let self, message.subject === viewController?.associatedSession else { return }
 				reloadFolding()
+				updateAccessibilityDescription()
 			}
 		}
 	}
@@ -176,6 +178,7 @@ extension TranscriptView {
 	override func layout() {
 		super.layout()
 		guard window != nil, !isHiddenOrHasHiddenAncestor, editDepth == 0 else { return }
+		reflowInlineImages()
 		textView.updateBottomAlignment()
 		if scrollsToBottomOnLayout {
 			/* The scroll view tiles in its own pass, after this one; forcing it
@@ -184,6 +187,35 @@ extension TranscriptView {
 			scrollView.layoutSubtreeIfNeeded()
 			scrollToBottomIfPending()
 		}
+	}
+
+	override func viewDidEndLiveResize() {
+		super.viewDidEndLiveResize()
+		reflowInlineImages()
+	}
+
+	/** Draws the inline images again when the column they are sized to has
+	 changed width.
+
+	 An image is sized when its line is drawn, from the width the text view has
+	 then; a transcript that is resized afterwards, or that was not yet laid out
+	 when the image arrived, keeps pictures sized to a column that is gone. A
+	 live resize waits for its end rather than redrawing every frame, and only a
+	 change in the widest size an image may take redraws at all, so a window
+	 wider than the box costs nothing. */
+	func reflowInlineImages() {
+		guard inLiveResize == false, editDepth == 0, document.inlineImages.isEmpty == false else { return }
+		scrollView.layoutSubtreeIfNeeded()
+		let width = TranscriptMetrics.inlineImageMaximumWidth(forTextViewWidth: textView.bounds.width)
+		guard width != renderedInlineImageWidth else { return }
+		performEditingBatch {
+			for lineNumber in document.inlineImages.keys {
+				if let index = document.index(ofLine: lineNumber) {
+					refresh(at: index)
+				}
+			}
+		}
+		renderedInlineImageWidth = width
 	}
 
 	// Starts a batch of renders: the colours resolved for the last one, and the

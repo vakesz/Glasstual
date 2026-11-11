@@ -63,17 +63,32 @@ enum TranscriptFormattedText {
 			result[.underlineStyle] = NSUnderlineStyle.single.rawValue
 			result[NSAttributedString.Key(TextFormatterAttributeName.underlineAttributeName.rawValue)] = true
 		}
-		if let foreground = runAttributes[IRCFormattingAttribute.foregroundColor] {
-			result[.foregroundColor] = mapColor(foreground)
+		let foreground = runAttributes[IRCFormattingAttribute.foregroundColor]
+		let background = runAttributes[IRCFormattingAttribute.backgroundColor]
+		if let foreground {
 			result[NSAttributedString.Key(TextFormatterAttributeName.foregroundColorAttributeName.rawValue)] =
 				foreground
-		} else if let defaultColor {
-			result[.foregroundColor] = defaultColor
 		}
-		if let background = runAttributes[IRCFormattingAttribute.backgroundColor] {
-			result[.backgroundColor] = mapColor(background)
+		if let background {
 			result[NSAttributedString.Key(TextFormatterAttributeName.backgroundColorAttributeName.rawValue)] =
 				background
+		}
+		let drawnForeground = foreground.flatMap(mapColor) ?? defaultColor
+		let drawnBackground = background.flatMap(mapColor)
+		if runAttributes[IRCFormattingAttribute.reverse] != nil {
+			/* Display only, and no attribute key is added for it: what is read
+			 back out of a selection keeps the colours the text names. */
+			let colors = TranscriptReverseColors.resolve(
+				foreground: drawnForeground ?? .textColor,
+				background: drawnBackground,
+				isReversed: true,
+				fallbackBackground: .textBackgroundColor
+			)
+			result[.foregroundColor] = colors.foreground
+			result[.backgroundColor] = colors.background
+		} else {
+			result[.foregroundColor] = drawnForeground
+			result[.backgroundColor] = drawnBackground
 		}
 		return result.compactMapValues { $0 }
 	}

@@ -182,10 +182,17 @@ extension TranscriptView {
 		}
 		attributes[.font] = font
 		attributes[.paragraphStyle] = paragraph
-		attributes[.foregroundColor] = resolved(run.foreground) ?? themeColor(
-			line.lineType == .privateMessage || line.lineType == .action ? palette.primaryText : palette.eventText
+		let bubble = bubbleBackground(for: line)
+		let colors = TranscriptReverseColors.resolve(
+			foreground: resolved(run.foreground) ?? themeColor(
+				line.lineType == .privateMessage || line.lineType == .action ? palette.primaryText : palette.eventText
+			),
+			background: resolved(run.background) ?? bubble,
+			isReversed: run.traits.contains(.reverse),
+			fallbackBackground: bubble ?? themeColor(palette.background)
 		)
-		if let background = resolved(run.background) ?? bubbleBackground(for: line) {
+		attributes[.foregroundColor] = colors.foreground
+		if let background = colors.background {
 			attributes[.backgroundColor] = background
 		}
 		if run.traits.contains(.highlighted) {
@@ -273,12 +280,9 @@ extension TranscriptView {
 		paragraph: NSParagraphStyle
 	) {
 		let image = inlineImage.image
-		let availableWidth = max(0, textView.bounds.width - TranscriptMetrics.inlineImageSideInset)
-		let boxWidth = min(TranscriptMetrics.inlineImageBox.width, availableWidth)
-		let maxSize = NSSize(
-			width: max(boxWidth, min(availableWidth, 120)),
-			height: TranscriptMetrics.inlineImageBox.height
-		)
+		let maximumWidth = TranscriptMetrics.inlineImageMaximumWidth(forTextViewWidth: textView.bounds.width)
+		renderedInlineImageWidth = maximumWidth
+		let maxSize = NSSize(width: maximumWidth, height: TranscriptMetrics.inlineImageBox.height)
 		let size = inlineImage.originalSize
 		let scale = min(1, maxSize.width / size.width, maxSize.height / size.height)
 		image.size = NSSize(width: size.width * scale, height: size.height * scale)

@@ -10,7 +10,8 @@ extension TranscriptController {
 		fromNickname nickname: String,
 		toMessageIdentifier messageIdentifier: String
 	) {
-		guard holdsMessage(withIdentifier: messageIdentifier),
+		guard redactions.contains(messageIdentifier) == false,
+		      holdsMessage(withIdentifier: messageIdentifier),
 		      let merged = reactions.record(wireEmoji, from: nickname, forMessage: messageIdentifier)
 		else {
 			return

@@ -72,6 +72,16 @@ struct TranscriptRenderRequestTests {
 		#expect(result.processesInlineMedia)
 	}
 
+	@Test("The context's channel prefixes decide which names are channels")
+	func contextPrefixesReachTheRenderer() {
+		let context = TranscriptRenderContext(channelPrefixes: ["&"])
+		let request = TranscriptRenderRequest(line: makeSnapshot(body: "&local #x", in: context), context: context)
+		let runs = TranscriptController.renderJob(request).transcriptLine.body.runs
+
+		#expect(runs.contains { $0.action == .channel("&local") })
+		#expect(runs.contains { $0.action == .channel("#x") } == false)
+	}
+
 	@Test("A keyword match is represented semantically")
 	func keywordMatchIsAHighlight() {
 		var line = makeChatLine(body: "hello alice")
