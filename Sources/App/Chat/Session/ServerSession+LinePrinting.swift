@@ -166,30 +166,55 @@ private extension ServerSession {
 		precondition(request.command != nil || request.referenceMessage != nil)
 		guard !isTerminating else { return }
 
+		let replyIdentifier = takeReplyIdentifier(for: request)
+		let chatLine = makeChatLine(for: request, in: request.conversation, replyIdentifier: replyIdentifier)
+		if let label = request.deliveryLabel {
+			recordLabeledPrint(chatLine, label: label)
+		}
+
+		guard let conversation = request.conversation else {
+			printAndLog(chatLine, completionBlock: request.completionBlock)
+			return
+		}
+		if chatHistory.prependConversation === conversation {
+			chatHistory.prependedLines?.append(chatLine)
+			return
+		}
+		guard let output else {
+			conversation.print(chatLine, completionBlock: request.completionBlock)
+			return
+		}
+		deliver(chatLine, request: request, to: conversation, output: output)
+	}
+
+	/// The reply the line carries: its own `+draft/reply` tag, or else the one
+	/// queued for the next printed line, which is consumed either way.
+	func takeReplyIdentifier(for request: LinePrintRequest) -> String? {
+		let messageReplyIdentifier = request.referenceMessage?.messageTags?["+draft/reply"]
+		let replyIdentifier = messageReplyIdentifier?.isEmpty == false
+			? messageReplyIdentifier
+			: nextLineReplyToMessageIdentifier
+		nextLineReplyToMessageIdentifier = nil
+		return replyIdentifier
+	}
+
+	func makeChatLine(for request: LinePrintRequest, in conversation: Conversation?, replyIdentifier: String?) -> ChatLine {
 		let command = request.command ?? request.referenceMessage?.command ?? ChatLineFormat.defaultCommand
-		let conversation = request.conversation
 		let memberType = LinePresentationPolicy.memberType(nickname: request.nickname, localNickname: userNickname)
 		let keywordLists = highlightKeywordLists(
 			for: conversation,
 			lineType: request.lineType,
 			memberType: memberType
 		)
-		let lineType = LinePresentationPolicy.normalized(request.lineType)
 		var chatLine = ChatLine()
 		chatLine.command = command.lowercased()
 		chatLine.messageIdentifier = request.referenceMessage?.messageIdentifier
 		chatLine.deliveryState = request.deliveryLabel == nil ? .none : .pending
-
-		let messageReplyIdentifier = request.referenceMessage?.messageTags?["+draft/reply"]
-		let replyIdentifier = messageReplyIdentifier?.isEmpty == false
-			? messageReplyIdentifier
-			: nextLineReplyToMessageIdentifier
-		nextLineReplyToMessageIdentifier = nil
 		if let replyIdentifier, !replyIdentifier.isEmpty {
 			chatLine.replyToMessageIdentifier = replyIdentifier
 		}
 
-		chatLine.lineType = lineType
+		chatLine.lineType = LinePresentationPolicy.normalized(request.lineType)
 		chatLine.memberType = memberType
 		chatLine.isEncrypted = request.isEncrypted
 		chatLine.excludeKeywords = keywordLists.exclude
@@ -210,45 +235,53 @@ private extension ServerSession {
 			chatLine.serverTimestamp = reference.receivedAt
 		}
 		chatLine.statusMessageTarget = request.statusMessageTarget
+		return chatLine
+	}
 
-		if let label = request.deliveryLabel {
-			labeledResponses.pending[label]?.printedLine = chatLine
-			labeledResponses.pending[label]?.lineNumber = chatLine.uniqueIdentifier
-		}
+	func recordLabeledPrint(_ chatLine: ChatLine, label: String) {
+		labeledResponses.pending[label]?.printedLine = chatLine
+		labeledResponses.pending[label]?.lineNumber = chatLine.uniqueIdentifier
+	}
 
-		guard let conversation else {
-			printAndLog(chatLine, completionBlock: request.completionBlock)
-			return
-		}
-		if chatHistory.prependConversation === conversation {
-			chatHistory.prependedLines?.append(chatLine)
-			return
-		}
-
-		guard let output else {
-			conversation.print(chatLine, completionBlock: request.completionBlock)
-			return
-		}
+	func deliver(
+		_ chatLine: ChatLine,
+		request: LinePrintRequest,
+		to conversation: Conversation,
+		output: any ServerSessionPresenting
+	) {
 		if LinePresentationPolicy.needsUnreadMarker(
 			autoMark: environment.settings.autoAddUnreadMarker,
 			itemIsVisible: output.isItemVisible(conversation),
 			windowIsMain: output.isMainWindow,
 			conversationIsUnread: conversation.isUnread,
-			lineType: lineType
+			lineType: chatLine.lineType
 		) {
 			conversation.presentation?.mark()
 		}
+		conversation.print(
+			chatLine,
+			completionBlock: readMarkerCompletion(for: conversation, line: chatLine, request: request)
+		)
+	}
+
+	/// Runs the caller's completion, then moves the read marker if the line
+	/// was shown to someone looking at it, on the connection that printed it.
+	func readMarkerCompletion(
+		for conversation: Conversation,
+		line chatLine: ChatLine,
+		request: LinePrintRequest
+	) -> PrintedLineCompletion {
 		let readGeneration = conversation.readStateGeneration
 		let connectionIdentifier = socket?.uniqueIdentifier
 		let isPlayback = lineIsJoinBurst(request.referenceMessage, in: conversation)
 		let readMarkerTimestamp = chatLine.readMarkerTimestamp
-		conversation.print(chatLine) { [weak self, weak conversation] context in
+		return { [weak self, weak conversation] context in
 			request.completionBlock?(context)
 			guard let self, let conversation, !isTerminating,
 			      socket?.uniqueIdentifier == connectionIdentifier,
 			      conversation.associatedSession === self, context.isDisplayed, !context.isDuplicate, !isPlayback,
 			      conversation.readStateGeneration == readGeneration,
-			      self.output?.isKeyWindow == true, self.output?.isItemVisible(conversation) == true,
+			      output?.isKeyWindow == true, output?.isItemVisible(conversation) == true,
 			      let readMarkerTimestamp else { return }
 			scheduleReadMarker(for: conversation, date: readMarkerTimestamp)
 		}
