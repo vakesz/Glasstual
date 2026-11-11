@@ -284,8 +284,6 @@ class ServerSession: ChatItem {
 	/// The index in `config.serverList` the last connect attempt dialled, or
 	/// `nil` when none has been dialled yet.
 	var lastServerSelected: UInt?
-	/// Which alternate nickname registration is on, and the one it sent.
-	var nicknameRetry = NicknameRetry()
 	var conversationListPrivate: [Conversation] = []
 	/** `findConversation(_:)` sits on the path of nearly every inbound line, so the
 	 conversation list is mirrored by casefolded name. The mirror is rebuilt
@@ -343,8 +341,8 @@ class ServerSession: ChatItem {
 	var dccOfferThrottle = DCCOfferThrottle()
 	/// Messages sent without a local print, whose echo is dropped rather than shown.
 	var unprintedEchoes = UnprintedEchoRegistry()
-	/// How far this connection has got with sending its registration lines.
-	var registrationGate = RegistrationGate.notStarted
+	/// How far this connection has got with registering.
+	var registration = ConnectionRegistration()
 
 	/** Settings and services this session reads instead of reaching for the
 	 application's singletons. The chat session it belongs to keeps the setting half

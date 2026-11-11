@@ -314,10 +314,10 @@ struct InboundPresenceTrackingTests {
 	func aNicknameThatLandsResetsTheRetryCount() throws {
 		let session = session(nickname: "mara")
 		session.setConnectionTransportForTesting(.connected)
-		session.nicknameRetry.attempt = NicknameRetryPolicy.maximumAttempts
+		session.registration.nicknameRetry.attempt = NicknameRetryPolicy.maximumAttempts
 
 		try receive(":mara!m@example.org NICK mara2", on: session)
 
-		#expect(session.nicknameRetry.attempt == 0)
+		#expect(session.registration.nicknameRetry.attempt == 0)
 	}
 }

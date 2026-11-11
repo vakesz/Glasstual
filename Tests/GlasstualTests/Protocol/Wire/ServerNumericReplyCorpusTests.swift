@@ -166,10 +166,10 @@ struct ServerNumericReplyCorpusTests {
 
 		session.supportInfo.processConfigurationData("NICKLEN=9")
 		session.setConnectionTransportForTesting(.connected)
-		session.nicknameRetry.sentNickname = "abcdefghi"
+		session.registration.nicknameRetry.sentNickname = "abcdefghi"
 		session.tryAnotherNickname()
 
-		#expect(session.nicknameRetry.sentNickname == "abcdefgh_")
+		#expect(session.registration.nicknameRetry.sentNickname == "abcdefgh_")
 	}
 
 	/// Before ISUPPORT lands there is nothing to read, so the RFC-era default
@@ -179,10 +179,10 @@ struct ServerNumericReplyCorpusTests {
 		let session = TestServerSession(configDictionary: ["nickname": "nick", "username": "nick"])
 
 		session.setConnectionTransportForTesting(.connected)
-		session.nicknameRetry.sentNickname = "nick"
+		session.registration.nicknameRetry.sentNickname = "nick"
 		session.tryAnotherNickname()
 
-		#expect(session.nicknameRetry.sentNickname == "nick_")
+		#expect(session.registration.nicknameRetry.sentNickname == "nick_")
 	}
 }
 

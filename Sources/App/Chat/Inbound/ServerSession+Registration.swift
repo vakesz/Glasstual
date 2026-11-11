@@ -5,18 +5,6 @@
 import CocoaExtensions
 import Foundation
 
-/** Where registration is in working through the alternate nicknames.
-
- A server that refuses a nickname is answered with the next candidate, so the
- session has to remember which one it is on and what it last sent: the refusal
- names the nickname the server saw, not the one the user configured. */
-struct NicknameRetry {
-	/// How many alternates have been tried, zero before the first refusal.
-	var attempt: UInt = 0
-	/// The nickname the last `NICK` sent, which is what a refusal is about.
-	var sentNickname: String?
-}
-
 enum NicknameRetryPolicy {
 	static let fallbackNickname = "0"
 
@@ -81,7 +69,7 @@ extension ServerSession {
 		supportInfo.serverAddress = message.senderHostmask
 		presencePolling.isFirstISONReply = true
 		reconnect.isEnabledForSleepMode = false
-		nicknameRetry.sentNickname = nil
+		registration.nicknameRetry.sentNickname = nil
 		userNickname = nickname
 		successfulConnects += 1
 		socket?.enforceFloodControl()
@@ -118,14 +106,14 @@ extension ServerSession {
 	func receiveNicknameCollisionError(_: Message) {
 		guard isConnected, !isLoggedIn else { return }
 		printDebugInformation(
-			toConsole: String(localized: .IRC.cannotUseNicknameTryingAnother(nicknameRetry.sentNickname ?? ""))
+			toConsole: String(localized: .IRC.cannotUseNicknameTryingAnother(registration.nicknameRetry.sentNickname ?? ""))
 		)
 
 		/* Past the ceiling the session says so once and waits: the count is reset
 		 when the user's own /nick lands, so asking again is what starts it over. */
-		guard nicknameRetry.attempt < NicknameRetryPolicy.maximumAttempts else {
-			if nicknameRetry.attempt == NicknameRetryPolicy.maximumAttempts {
-				nicknameRetry.attempt += 1
+		guard registration.nicknameRetry.attempt < NicknameRetryPolicy.maximumAttempts else {
+			if registration.nicknameRetry.attempt == NicknameRetryPolicy.maximumAttempts {
+				registration.nicknameRetry.attempt += 1
 				printDebugInformation(toConsole: String(localized: .IRC.nicknameRetriesExhausted))
 			}
 
@@ -133,15 +121,15 @@ extension ServerSession {
 		}
 
 		if let nickname = NicknameRetryPolicy.alternate(
-			at: nicknameRetry.attempt,
+			at: registration.nicknameRetry.attempt,
 			from: config.alternateNicknames
 		) {
-			nicknameRetry.sentNickname = nickname
+			registration.nicknameRetry.sentNickname = nickname
 			changeNickname(nickname)
 		} else {
 			tryAnotherNickname()
 		}
-		nicknameRetry.attempt += 1
+		registration.nicknameRetry.attempt += 1
 	}
 
 	/** The length to pad a retried nickname to.
@@ -160,10 +148,10 @@ extension ServerSession {
 	func tryAnotherNickname() {
 		guard isConnected, !isLoggedIn else { return }
 		let nickname = NicknameRetryPolicy.padded(
-			nicknameRetry.sentNickname,
+			registration.nicknameRetry.sentNickname,
 			maximumLength: nicknameRetryMaximumLength
 		)
-		nicknameRetry.sentNickname = nickname
+		registration.nicknameRetry.sentNickname = nickname
 		changeNickname(nickname)
 	}
 }

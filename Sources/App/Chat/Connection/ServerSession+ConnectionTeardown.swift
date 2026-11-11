@@ -42,7 +42,7 @@ extension ServerSession {
 		connectionState.clearShutdown()
 		whoisReply = nil
 		nickServ = NickServIdentification()
-		registrationGate = .notStarted
+		registration = ConnectionRegistration()
 		unprintedEchoes.removeAll()
 		away.resetForTeardown()
 		znc = ZNCSession()
@@ -54,8 +54,6 @@ extension ServerSession {
 		KeychainPersistence.shared.persist(Dictionary(uniqueKeysWithValues: retiredServerKeychainItems.map { ($0, .cleared) }))
 		retiredServerKeychainItems.removeAll()
 		identity = SessionIdentity()
-		nicknameRetry.attempt = 0
-		nicknameRetry.sentNickname = nil
 		lastMessageReceived = 0
 
 		resetSASLNegotiation()
@@ -144,7 +142,7 @@ extension ServerSession {
 			printDebugInformation(toConsole: String(localized: .IRC.connectionIsNotForwardSecret))
 		}
 
-		if registrationGate == .awaitingTLS {
+		if registration.gate == .awaitingTLS {
 			beginRegistration()
 		}
 	}
@@ -165,7 +163,7 @@ extension ServerSession {
 
 		connectionState.didConnect()
 		userNickname = config.nickname
-		nicknameRetry.sentNickname = config.nickname
+		registration.nicknameRetry.sentNickname = config.nickname
 		output?.updateTitle(for: self)
 		ServerSessionDidConnect(subject: self).post()
 
@@ -173,7 +171,7 @@ extension ServerSession {
 		 what stands behind the certificate: `PASS` waits on that, and the
 		 lines after it wait on `PASS`. */
 		if socket?.config.connectionPrefersSecuredConnection == true, isSecured == false {
-			registrationGate = .awaitingTLS
+			registration.gate = .awaitingTLS
 			return
 		}
 		beginRegistration()

@@ -180,7 +180,7 @@ struct ServerSessionCredentialConsentTests {
 
 		#expect(registrationCommands(of: session).isEmpty)
 		#expect(capabilityCommands(of: session).isEmpty)
-		#expect(session.registrationGate == .awaitingTLS)
+		#expect(session.registration.gate == .awaitingTLS)
 
 		try await secure(connection)
 
@@ -188,7 +188,7 @@ struct ServerSessionCredentialConsentTests {
 		#expect(registrationCommands(of: session) == ["PASS", "NICK", "USER"])
 		try #expect(passLines(of: session) == [SendingMessage.string(command: .pass, arguments: ["bouncer-secret"])])
 		#expect(session.recordedOutput.responseRequests.isEmpty)
-		#expect(session.registrationGate == .sent)
+		#expect(session.registration.gate == .sent)
 	}
 
 	@Test("An unchecked chain asks before PASS and holds NICK and USER")
@@ -198,8 +198,8 @@ struct ServerSessionCredentialConsentTests {
 		session.recordedOutput.responseAnswer = .alternate
 
 		try await secure(connection)
-		#expect(session.registrationGate == .awaitingCredentialConsent || session.registrationGate == .sent)
-		try await Eventually.until("the registration") { session.registrationGate == .sent }
+		#expect(session.registration.gate == .awaitingCredentialConsent || session.registration.gate == .sent)
+		try await Eventually.until("the registration") { session.registration.gate == .sent }
 
 		#expect(session.recordedOutput.responseRequests.count == 1)
 		#expect(registrationCommands(of: session) == ["PASS", "NICK", "USER"])
@@ -214,7 +214,7 @@ struct ServerSessionCredentialConsentTests {
 		defer { session.stopAllTimers() }
 
 		try await secure(connection)
-		try await Eventually.until("the registration") { session.registrationGate == .sent }
+		try await Eventually.until("the registration") { session.registration.gate == .sent }
 
 		#expect(session.recordedOutput.responseRequests.count == 1)
 		#expect(registrationCommands(of: session) == ["NICK", "USER"])

@@ -3,24 +3,6 @@
 
 import Foundation
 
-/** How far a connection has got with sending `CAP LS`, `PASS`, `NICK` and `USER`.
-
- The server password is often a bouncer's login, so it is held to the same
- rule as the account password: it goes only where the connection can vouch for
- the server. Bouncers expect `PASS` before registration completes, so the lines
- after it wait with it rather than go out without it. */
-enum RegistrationGate: Equatable {
-	/// Nothing has been sent on this connection yet.
-	case notStarted
-	/// The connection is to be TLS and the handshake has not finished.
-	case awaitingTLS
-	/// The user is being asked whether the password may go to a server whose
-	/// certificate was not checked.
-	case awaitingCredentialConsent
-	/// The registration lines are on their way.
-	case sent
-}
-
 extension ServerSession {
 	/// Sends the registration lines, or asks first when the server password
 	/// cannot go out on this connection as it stands.
@@ -41,15 +23,15 @@ extension ServerSession {
 
 		/* One question for every credential this connection would carry: the
 		 answer is recorded for the host and port, and SASL `PLAIN` reads it. */
-		registrationGate = .awaitingCredentialConsent
+		registration.gate = .awaitingCredentialConsent
 		sessionCredentials.reportedWithheldCredentials = true
 		askToSendCredentials(
 			sent: { session in
-				guard session.registrationGate == .awaitingCredentialConsent else { return }
+				guard session.registration.gate == .awaitingCredentialConsent else { return }
 				session.sendRegistration(password: session.sessionServerPassword)
 			},
 			declined: { session in
-				guard session.registrationGate == .awaitingCredentialConsent else { return }
+				guard session.registration.gate == .awaitingCredentialConsent else { return }
 				session.printDebugInformation(toConsole: ConnectionSafetyStrings.Credentials.withheldUnverifiedCertificate)
 				session.sendRegistration(password: nil)
 			}
@@ -57,7 +39,7 @@ extension ServerSession {
 	}
 
 	private func sendRegistration(password: String?) {
-		registrationGate = .sent
+		registration.gate = .sent
 
 		/* What `USER` sends: an empty username or real name falls back to the
 		 nickname, and the mode bits are the RFC 2812 ones for invisible and

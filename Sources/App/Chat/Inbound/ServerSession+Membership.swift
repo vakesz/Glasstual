@@ -314,14 +314,14 @@ extension ServerSession {
 		if !printOnly {
 			if isLocalUser {
 				userNickname = newNickname
-				if nicknameRetry.sentNickname != nil {
-					nicknameRetry.sentNickname = newNickname
+				if registration.nicknameRetry.sentNickname != nil {
+					registration.nicknameRetry.sentNickname = newNickname
 				}
 				/* A nickname the session now holds is the retry sequence resolved,
 				 whether the session asked for it or the user did. Leaving the count
 				 where it was is what would keep the ceiling in force for the rest of
 				 the session. */
-				nicknameRetry.attempt = 0
+				registration.nicknameRetry.attempt = 0
 				output?.updateTitle(for: self)
 			} else {
 				if let oldIgnore {
