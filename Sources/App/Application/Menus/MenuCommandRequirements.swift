@@ -75,7 +75,7 @@ extension MenuCommand {
 	var memberRequirements: MenuCommandRequirement? {
 		switch self {
 		case .inviteTo: [.loggedIn, .notConsole, .otherChannelExists]
-		case .whois, .ctcp, .ctcpSendFile, .ctcpPing, .ctcpTime,
+		case .whois, .ctcp, .ctcpSendFile, .ctcpSendFileSecurely, .ctcpPing, .ctcpTime,
 		     .ctcpClientInfo, .ctcpVersion, .ctcpFinger, .ctcpUserInfo:
 			[.loggedIn, .notConsole]
 		case .startDirectConversation: [.loggedIn, .channel]

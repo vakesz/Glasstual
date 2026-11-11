@@ -155,7 +155,8 @@ struct SidebarProjection {
 			showsUnreadCount: conversation.config.showsUnreadCount,
 			highlightCount: conversation.config.ignoreHighlights ? 0 : conversation.nicknameHighlightCount,
 			unreadBadgeTint: unreadBadgeTint,
-			isFavorite: conversation.config.isFavorite
+			isFavorite: conversation.config.isFavorite,
+			directChatSecurity: conversation.directChatConnection?.securityIndicator
 		)
 	}
 }

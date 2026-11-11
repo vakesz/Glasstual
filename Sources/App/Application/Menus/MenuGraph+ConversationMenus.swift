@@ -400,6 +400,11 @@ extension MenuGraph {
 				.ctcpSendFile,
 				#selector(MenuActionController.memberSendFileRequest(_:))
 			),
+			.item(
+				String(localized: .MainWindow.menuMemberSendFileSecurely),
+				.ctcpSendFileSecurely,
+				#selector(MenuActionController.memberSendFileSecurelyRequest(_:))
+			),
 			.separator(),
 			.item(String(localized: .MainWindow.menuMemberCtcpPing), .ctcpPing, #selector(MenuActionController.memberSendCTCPPing(_:))),
 			.item(String(localized: .MainWindow.menuMemberCtcpTime), .ctcpTime, #selector(MenuActionController.memberSendCTCPTime(_:))),

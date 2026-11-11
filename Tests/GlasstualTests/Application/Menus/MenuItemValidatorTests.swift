@@ -35,7 +35,7 @@ struct MenuItemValidatorTests {
 	]
 
 	nonisolated static let ctcpCommands: [MenuCommand] = [
-		.whois, .ctcp, .ctcpSendFile, .ctcpPing, .ctcpTime,
+		.whois, .ctcp, .ctcpSendFile, .ctcpSendFileSecurely, .ctcpPing, .ctcpTime,
 		.ctcpClientInfo, .ctcpVersion, .ctcpFinger, .ctcpUserInfo,
 	]
 

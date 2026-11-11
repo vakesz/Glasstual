@@ -105,6 +105,15 @@ struct FileTransferListView: View {
 				}
 				.help(Text(.FileTransfer.quickLook))
 				.disabled(model.canPerform(.preview) == false)
+
+				Button {
+					center.perform(.showCertificate, on: model.selection)
+				} label: {
+					Label(.FileTransfer.showCertificate, systemImage: "checkmark.seal")
+				}
+				.help(Text(.FileTransfer.showCertificate))
+				.disabled(model.canPerform(.showCertificate) == false)
+				.accessibilityIdentifier("file-transfer-show-certificate")
 			}
 
 			ToolbarSpacer()
@@ -175,6 +184,9 @@ struct FileTransferListView: View {
 			.disabled(model.canPerform(.open, on: identifiers) == false)
 		Button(.FileTransfer.showInFinder) { center.perform(.reveal, on: identifiers) }
 			.disabled(model.canPerform(.reveal, on: identifiers) == false)
+		if model.canPerform(.showCertificate, on: identifiers) {
+			Button(.FileTransfer.showCertificate) { center.perform(.showCertificate, on: identifiers) }
+		}
 
 		/* Asking the model settles the rows' local files once for the whole
 		 menu, and leaves the share holding the access it needs to read them. */
@@ -203,6 +215,13 @@ private struct FileTransferRowView: View {
 
 			VStack(alignment: .leading, spacing: UISpacing.tight) {
 				HStack {
+					if let security = presentation.security {
+						Image(systemName: security.indicator.symbolName)
+							.foregroundStyle(security.indicator == .unverified ? AnyShapeStyle(.orange) : AnyShapeStyle(.secondary))
+							.help(Text(verbatim: security.details))
+							.accessibilityLabel(Text(verbatim: security.accessibilityLabel))
+							.accessibilityIdentifier("file-transfer-security-\(transfer.uniqueIdentifier)")
+					}
 					Text(verbatim: presentation.filename)
 						.lineLimit(1)
 						.accessibilityIdentifier("file-transfer-filename-\(transfer.uniqueIdentifier)")

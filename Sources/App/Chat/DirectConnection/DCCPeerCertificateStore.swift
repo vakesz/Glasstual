@@ -118,6 +118,23 @@ actor DCCPeerCertificateStore {
 		loaded().networks
 	}
 
+	/// Removes one pin, named by the key ``all()`` files it under.
+	func remove(_ fingerprint: DCCCertificateFingerprint, network: String, nicknameKey: String) throws {
+		var contents = loaded()
+		guard var nicknames = contents.networks[network], var pins = nicknames[nicknameKey] else { return }
+		pins.removeAll { $0.fingerprint == fingerprint }
+		nicknames[nicknameKey] = pins.isEmpty ? nil : pins
+		contents.networks[network] = nicknames.isEmpty ? nil : nicknames
+		guard contents != loaded() else { return }
+		try write(contents)
+	}
+
+	/// Removes every pin on every network.
+	func forgetAll() throws {
+		guard loaded().networks.isEmpty == false else { return }
+		try write(DCCPeerCertificateFile())
+	}
+
 	// MARK: - Storage
 
 	private static func key(_ nickname: String, _ caseMapping: ISupportCaseMapping) -> String {

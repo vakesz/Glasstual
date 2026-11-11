@@ -141,6 +141,14 @@ final class SidebarCellView: NSTableCellView {
 			if conversation.hasJoinError {
 				leadingImage.toolTip = String(localized: .MainWindow.sidebarJoinFailed)
 			}
+			if let security = conversation.directChatSecurity {
+				let description = security == .unverified
+					? String(localized: .MainWindow.encryptedDirectChatUnverified)
+					: String(localized: .MainWindow.encryptedDirectChat)
+				securityImage.image = NSImage(systemSymbolName: security.symbolName, accessibilityDescription: description)
+				securityImage.toolTip = description
+				securityImage.isHidden = false
+			}
 			badge.configure(count: conversation.unreadCount, emphasized: conversation.isEmphasized,
 			                tint: conversation.unreadBadgeTint)
 			badge.isHidden = !conversation.showsUnreadBadge

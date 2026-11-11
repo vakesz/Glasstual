@@ -167,6 +167,7 @@ enum MenuCommand: String, CaseIterable, Sendable {
 	case nextUnreadChannel // Next Unread Channel
 	case previousUnreadChannel // Previous Unread Channel
 	case ctcpSendFile // Send File…
+	case ctcpSendFileSecurely // Send File Securely…
 	case ctcpPing // Lag (PING)
 	case ctcpTime // Local Time (TIME)
 	case ctcpClientInfo // Client Information (CLIENTINFO)
@@ -222,7 +223,7 @@ extension MenuCommand {
 		case .muteUser, .unmuteUser, .addIgnore, .modifyIgnore, .removeIgnore, .inviteTo, .whois,
 		     .startDirectConversation, .messagePrivatelyInChannel, .giveOp, .giveHalfop, .giveVoice, .takeOp, .takeHalfop,
 		     .takeVoice, .ban, .banAccount, .kick, .kickban, .ctcp, .ircOperator, .changeColor,
-		     .ctcpSendFile, .ctcpPing, .ctcpTime, .ctcpClientInfo, .ctcpVersion,
+		     .ctcpSendFile, .ctcpSendFileSecurely, .ctcpPing, .ctcpTime, .ctcpClientInfo, .ctcpVersion,
 		     .ctcpFinger, .ctcpUserInfo, .operatorSetVirtualHost, .operatorKill,
 		     .operatorShun, .operatorGline:
 			.member

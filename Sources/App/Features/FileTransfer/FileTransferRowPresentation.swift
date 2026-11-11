@@ -25,9 +25,40 @@ struct FileTransferRowPresentation {
 	let processedSize: String
 	let status: String
 	let progress: Progress
+	/// The lock a secure transfer draws beside its name; `nil` for a plain one.
+	let security: Security?
+
+	/// What a secure transfer's lock says.
+	struct Security: Equatable {
+		let indicator: DCCSecurityIndicator
+		let accessibilityLabel: String
+		/// The protocol, cipher suite and fingerprint, once connected.
+		let details: String
+
+		init(indicator: DCCSecurityIndicator, session: DCCSecureSessionInfo?) {
+			self.indicator = indicator
+			accessibilityLabel = switch indicator {
+			case .pending: String(localized: .FileTransfer.secureIndicatorPending)
+			case .verified: String(localized: .FileTransfer.secureIndicatorVerified)
+			case .unverified: String(localized: .FileTransfer.secureIndicatorUnverified)
+			}
+			details = switch (session, session?.peer) {
+			case let (session?, peer?):
+				String(localized: .FileTransfer.secureTransferDetailsVerified(
+					session.protocolName, session.cipherSuiteName, peer.fingerprint.formatted
+				))
+			case let (session?, nil):
+				String(localized: .FileTransfer.secureTransferDetailsUnverified(session.protocolName, session.cipherSuiteName))
+			case (nil, _):
+				accessibilityLabel
+			}
+		}
+	}
 
 	init(transfer: FileTransfer) {
 		filename = transfer.filename
+		security = DCCSecurityIndicator(isSecure: transfer.security == .secure, session: transfer.secureSession)
+			.map { Security(indicator: $0, session: transfer.secureSession) }
 		totalSize = LocalizedByteCount.formatted(transfer.totalFilesize)
 		processedSize = LocalizedByteCount.formatted(transfer.processedFilesize)
 		progress = switch transfer.transferStatus {

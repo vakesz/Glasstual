@@ -155,6 +155,11 @@ extension MenuActionController {
 		showFilePicker(sender: sender)
 	}
 
+	/// Send File over TLS, whatever the setting for offers says.
+	@objc func memberSendFileSecurelyRequest(_ sender: NSMenuItem?) {
+		showFilePicker(sender: sender, secure: true)
+	}
+
 	/// The member list's own double click. It carries no menu item, so the
 	/// command applies to the row the list just recorded.
 	func memberInMemberListDoubleClicked() {
@@ -413,7 +418,7 @@ private extension MenuActionController {
 		}
 	}
 
-	func showFilePicker(sender: NSMenuItem?) {
+	func showFilePicker(sender: NSMenuItem?, secure: Bool = false) {
 		guard let target = context.commandTarget(for: sender), target.session.isLoggedIn,
 		      target.nicknames.isEmpty == false
 		else { return }
@@ -430,7 +435,7 @@ private extension MenuActionController {
 						path: url.path,
 						autoOpen: true,
 						accessURL: url,
-						secure: session.environment.settings.fileTransferOffersAreSecure
+						secure: secure || session.environment.settings.fileTransferOffersAreSecure
 					)
 				}
 			}

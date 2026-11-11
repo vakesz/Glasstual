@@ -80,3 +80,44 @@ nonisolated struct DCCSecureSessionInfo: Equatable, Sendable {
 		SecureTransportSupport.description(forCipherSuite: cipherSuite)
 	}
 }
+
+/// How far a secure DCC transfer or chat has got, as an indicator shows it.
+nonisolated enum DCCSecurityIndicator: Equatable, Sendable {
+	/// Offered or accepted over TLS, not connected yet.
+	case pending
+	/// Connected, and the peer's certificate was trusted.
+	case verified
+	/// Connected and encrypted, but the peer presented no certificate.
+	case unverified
+
+	/// `nil` for a plain connection.
+	init?(isSecure: Bool, session: DCCSecureSessionInfo?) {
+		guard isSecure else { return nil }
+		guard let session else {
+			self = .pending
+			return
+		}
+		self = session.peer == nil ? .unverified : .verified
+	}
+
+	/// The SF Symbol an indicator draws.
+	var symbolName: String {
+		switch self {
+		case .pending, .verified: "lock.fill"
+		case .unverified: "lock.trianglebadge.exclamationmark"
+		}
+	}
+}
+
+extension DCCPeerCertificate {
+	/// The certificate as a trust object the certificate sheet can show. Nothing
+	/// is evaluated: peers are self-signed and judged by fingerprint.
+	func displayTrust() -> SecTrust? {
+		guard let certificate = SecCertificateCreateWithData(nil, der as CFData) else { return nil }
+		var trust: SecTrust?
+		guard SecTrustCreateWithCertificates(certificate, SecPolicyCreateBasicX509(), &trust) == errSecSuccess else {
+			return nil
+		}
+		return trust
+	}
+}

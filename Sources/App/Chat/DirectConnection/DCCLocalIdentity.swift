@@ -154,6 +154,12 @@ actor DCCLocalIdentityStore {
 		return try create(forNetwork: network)
 	}
 
+	/// The network's identity if one was ever created, without creating one.
+	func existingIdentity(forNetwork network: String) throws -> DCCLocalIdentity? {
+		guard let stored = storage.load(network: network) else { return nil }
+		return try DCCLocalIdentity(privateKey: stored.privateKey, certificate: stored.certificate)
+	}
+
 	/// Replaces the network's identity with a new one. Peers that pinned the
 	/// old certificate will see a change.
 	func regenerate(forNetwork network: String) throws -> DCCLocalIdentity {

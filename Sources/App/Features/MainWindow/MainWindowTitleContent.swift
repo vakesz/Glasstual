@@ -57,7 +57,11 @@ struct MainWindowTitleContent: Equatable {
 		case .direct:
 			return [session.findUser(conversation.name)?.hostmaskFragment].compactMap(nonempty)
 		case .directChat:
-			return [String(localized: .MainWindow.directChat)]
+			return switch conversation.directChatConnection?.securityIndicator {
+			case nil: [String(localized: .MainWindow.directChat)]
+			case .pending, .verified: [String(localized: .MainWindow.encryptedDirectChat)]
+			case .unverified: [String(localized: .MainWindow.encryptedDirectChatUnverified)]
+			}
 		case .console:
 			return []
 		@unknown default:

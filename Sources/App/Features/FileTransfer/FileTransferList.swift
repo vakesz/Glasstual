@@ -39,6 +39,8 @@ enum FileTransferAction: Sendable {
 	case open
 	case reveal
 	case preview
+	/// Show the certificate the peer of a secure transfer presented.
+	case showCertificate
 }
 
 @Observable
@@ -156,6 +158,8 @@ final class FileTransferList {
 			return selected.contains { localFile(of: $0) != nil }
 		case .preview:
 			return selected.allSatisfy { localFile(of: $0) != nil }
+		case .showCertificate:
+			return selected.count == 1 && selected.first?.secureSession?.peer != nil
 		}
 	}
 

@@ -267,6 +267,8 @@ extension FileTransferStore {
 		case .preview:
 			model.selection = identifiers
 			model.presentPreview()
+		case .showCertificate:
+			transfers.first.map(showCertificate(of:))
 		}
 	}
 
@@ -329,6 +331,17 @@ extension FileTransferStore {
 
 	func onMaintenanceTimer() {
 		model.activeTransfers.forEach { $0.onMaintenanceTimer() }
+	}
+
+	/// Shows the certificate a secure transfer's peer presented, in the
+	/// system's certificate sheet.
+	private func showCertificate(of transfer: FileTransfer) {
+		guard let peer = transfer.secureSession?.peer, let trust = peer.displayTrust() else { return }
+		transfer.session?.environment.services.certificates?.presentChain(
+			trust,
+			title: transfer.peerNickname,
+			closeButton: PromptStrings.Action.close
+		)
 	}
 
 	private func startTransfers(_ transfers: [FileTransfer]) {

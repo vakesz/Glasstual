@@ -71,6 +71,8 @@ struct ConversationRow: Identifiable, Equatable {
 	/// Present only in Favorites, where conversations from several networks share one group.
 	var networkTitle: String?
 	var networkIdentityStyle: ServerIdentityStyle?
+	/// The lock of a direct chat carried over TLS; `nil` for any other row.
+	var directChatSecurity: DCCSecurityIndicator?
 
 	/// Asks for attention: a channel where the nickname was said, or a
 	/// conversation with one person that has anything unread — every line of a

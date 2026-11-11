@@ -7,6 +7,7 @@ import SwiftUI
 /// and ports the other end is given, and where downloads land.
 struct FileTransfersPane: View {
 	let model: SettingsModel
+	@State private var showsKnownCertificates = false
 
 	private var usesManualAddress: Bool {
 		model.settings[SettingsKeys.FileTransfers.ipAddressDetectionMethod] == .manual
@@ -37,6 +38,40 @@ struct FileTransfersPane: View {
 				title: .Settings.fileTransfersPreventSleep,
 				isOn: model.settings.binding(for: SettingsKeys.FileTransfers.preventIdleSystemSleep)
 			)
+		}
+
+		secureConnections
+	}
+
+	/// Encrypted (TLS) transfers and chats: whether to take them, whether to
+	/// offer them, how strict to be about the other side, and the certificates
+	/// that are trusted.
+	private var secureConnections: some View {
+		Section {
+			SettingsToggle(
+				title: .Settings.fileTransfersAcceptSecureOffers,
+				isOn: model.settings.binding(for: SettingsKeys.FileTransfers.acceptsSecureOffers)
+			)
+			SettingsToggle(
+				title: .Settings.fileTransfersOffersAreSecure,
+				note: .Settings.fileTransfersOffersAreSecureNote,
+				isOn: model.settings.binding(for: SettingsKeys.FileTransfers.offersAreSecure)
+			)
+			SettingsToggle(
+				title: .Settings.fileTransfersRequirePeerCertificate,
+				note: .Settings.fileTransfersRequirePeerCertificateNote,
+				isOn: model.settings.binding(for: SettingsKeys.FileTransfers.requirePeerCertificate)
+			)
+			HStack {
+				Spacer()
+				Button(.Settings.fileTransfersKnownCertificatesButton) { showsKnownCertificates = true }
+					.accessibilityIdentifier("settings-known-certificates")
+			}
+		} header: {
+			Text(.Settings.fileTransfersHeadingSecureConnections)
+		}
+		.sheet(isPresented: $showsKnownCertificates) {
+			DCCKnownCertificatesSheet(model: .application())
 		}
 	}
 

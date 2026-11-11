@@ -57,6 +57,11 @@ final class DirectChatSession {
 	/// What TLS negotiated, once a secure chat is connected.
 	private(set) var secureSession: DCCSecureSessionInfo?
 
+	/// What a lock beside the chat says, or `nil` for a plain chat.
+	var securityIndicator: DCCSecurityIndicator? {
+		DCCSecurityIndicator(isSecure: isSecure, session: secureSession)
+	}
+
 	private let role: Role
 	private var chat: DirectChatSocket?
 	private var eventTask: Task<Void, Never>?
