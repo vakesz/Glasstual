@@ -10,54 +10,39 @@ import Synchronization
 import Testing
 
 private enum LoopbackTCPServerError: Error {
-	case listenerNeverBecameReady
-	case peerNeverArrived
-	case sentinelNeverArrived
+	case disconnectedBeforeConnecting
 }
 
 /// A plain TCP listener on loopback that keeps everything the session wrote, in
 /// the order the socket delivered it.
 private actor LoopbackTCPServer {
-	private let listener: NWListener
+	private var listener: LoopbackListener?
 	private var peer: NWConnection?
 	private var received = Data()
 	private let readsTraffic: Bool
+	private let arrivals = ArrivalGate()
 
-	init(readsTraffic: Bool = true) throws {
+	init(readsTraffic: Bool = true) {
 		self.readsTraffic = readsTraffic
-		listener = try NWListener(using: .tcp)
 	}
 
 	/// The port the listener settled on, once it is ready.
 	func start() async throws -> UInt16 {
-		listener.newConnectionHandler = { [weak self] connection in
+		let listener = try await LoopbackListener.start(using: .tcp) { [weak self] connection in
 			Task { await self?.accept(connection) }
 		}
-
-		listener.start(queue: .global())
-
-		for _ in 0 ..< 200 {
-			if let port = listener.port?.rawValue, listener.state == .ready {
-				return port
-			}
-
-			try await Task.sleep(for: .milliseconds(25), clock: .continuous)
-		}
-
-		throw LoopbackTCPServerError.listenerNeverBecameReady
+		self.listener = listener
+		return listener.port
 	}
 
 	func stop() {
 		peer?.cancel()
 		peer = nil
-		listener.cancel()
+		listener?.stop()
 	}
 
 	func sendToClient(_ chunks: [Data], finishing: Bool = true) async throws {
-		for _ in 0 ..< 200 where peer == nil {
-			try await Task.sleep(for: .milliseconds(10))
-		}
-		guard let peer else { throw LoopbackTCPServerError.peerNeverArrived }
+		let peer = try await arrivals.wait(for: "the client's connection") { peer }
 		for (index, chunk) in chunks.enumerated() {
 			let final = finishing && index == chunks.count - 1
 			try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
@@ -93,34 +78,21 @@ private actor LoopbackTCPServer {
 	/// Waits for `count` lines and returns what has arrived by then. It cannot
 	/// say nothing else is on its way; ``lines(through:)`` can.
 	func lines(waitingFor count: Int) async throws -> [String] {
-		for _ in 0 ..< 400 {
-			if lines.count >= count {
-				break
-			}
-
-			try await Task.sleep(for: .milliseconds(25), clock: .continuous)
-		}
-
-		return lines
+		try await arrivals.wait(for: "\(count) lines") { lines.count >= count ? lines : nil }
 	}
 
 	/// Waits for the sentinel line and returns every line before it. The wire
 	/// keeps order, so a line that arrived twice, or out of place, is in what
 	/// comes back; nothing has to be waited out to see it.
 	func lines(through sentinel: String) async throws -> [String] {
-		for _ in 0 ..< 1200 {
-			if let index = lines.firstIndex(of: sentinel) {
-				return Array(lines[..<index])
-			}
-
-			try await Task.sleep(for: .milliseconds(25), clock: .continuous)
+		try await arrivals.wait(for: "the line \(sentinel)") {
+			lines.firstIndex(of: sentinel).map { Array(lines[..<$0]) }
 		}
-
-		throw LoopbackTCPServerError.sentinelNeverArrived
 	}
 
 	private func accept(_ connection: NWConnection) {
 		peer = connection
+		arrivals.signal()
 
 		connection.start(queue: .global())
 
@@ -140,6 +112,7 @@ private actor LoopbackTCPServer {
 	private func received(_ content: Data?, isComplete: Bool, failed: Bool) {
 		if let content, content.isEmpty == false {
 			received.append(content)
+			arrivals.signal()
 		}
 
 		guard failed == false, isComplete == false else { return }
@@ -281,7 +254,7 @@ nonisolated struct ConnectionHostSendOrderingTests {
 	@Test("Connect commands precede automatic JOIN on the real XPC wire")
 	@MainActor
 	func connectCommandsPrecedeJoinOnWire() async throws {
-		let server = try LoopbackTCPServer()
+		let server = LoopbackTCPServer()
 		let port = try await server.start()
 		let session = TestServerSession(configDictionary: [
 			"nickname": "tester",
@@ -343,7 +316,7 @@ nonisolated struct ConnectionHostSendOrderingTests {
 	@Test("Close and certificate export pass queued writes during a stalled TLS handshake")
 	@concurrent
 	func stalledHandshakeDoesNotBlockControl() async throws {
-		let server = try LoopbackTCPServer()
+		let server = LoopbackTCPServer()
 		let port = try await server.start()
 		var config = ConnectionConfig()
 		config.serverAddress = "127.0.0.1"
@@ -384,7 +357,7 @@ nonisolated struct ConnectionHostSendOrderingTests {
 	@Test("An established connection with a backpressured writer still exports and closes")
 	@concurrent
 	func backpressuredWriterDoesNotBlockControl() async throws {
-		let server = try LoopbackTCPServer(readsTraffic: false)
+		let server = LoopbackTCPServer(readsTraffic: false)
 		let port = try await server.start()
 		var config = ConnectionConfig()
 		config.serverAddress = "127.0.0.1"
@@ -442,7 +415,7 @@ nonisolated struct ConnectionHostSendOrderingTests {
 		let chunks = stride(from: 0, to: burst.count, by: 500).map { start in
 			Data(burst[start ..< min(start + 500, burst.count)].map { $0 + "\r\n" }.joined().utf8)
 		}
-		let server = try LoopbackTCPServer()
+		let server = LoopbackTCPServer()
 		let port = try await server.start()
 		var config = ConnectionConfig()
 		config.serverAddress = "127.0.0.1"
@@ -644,7 +617,7 @@ nonisolated struct ConnectionHostSendOrderingTests {
 	}
 
 	private static func receiveFromPeer(_ chunks: [Data]) async throws -> [ConnectionEvent] {
-		let server = try LoopbackTCPServer()
+		let server = LoopbackTCPServer()
 		let port = try await server.start()
 		var config = ConnectionConfig()
 		config.serverAddress = "127.0.0.1"
@@ -716,7 +689,7 @@ nonisolated struct ConnectionHostSendOrderingTests {
 		sentinel: Sentinel = .ordinary,
 		_ send: @Sendable (any RemoteConnectionServerProtocol, LoopbackTCPServer) async throws -> Void
 	) async throws -> [String] {
-		let server = try LoopbackTCPServer()
+		let server = LoopbackTCPServer()
 		let port = try await server.start()
 
 		var config = ConnectionConfig()
@@ -765,7 +738,7 @@ nonisolated struct ConnectionHostSendOrderingTests {
 			case .didConnect:
 				connected = true
 			case let .didDisconnect(error):
-				throw error ?? LoopbackTCPServerError.peerNeverArrived
+				throw error ?? LoopbackTCPServerError.disconnectedBeforeConnecting
 			case .received, .withheldRead, .closedReadStream:
 				break
 			}

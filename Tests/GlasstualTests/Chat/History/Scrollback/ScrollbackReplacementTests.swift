@@ -10,8 +10,7 @@ import Testing
 struct ScrollbackReplacementTests {
 	@Test("A receipt changes the stored payload but preserves its cursor and never revives cleared history")
 	func replacementPreservesCursor() async throws {
-		let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-		try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+		let directory = try ScrollbackFixture.makeDirectory()
 		defer { try? FileManager.default.removeItem(at: directory) }
 		let store = ScrollbackStore(filenameSetting: ScrollbackFilenameFixture.unique().store)
 		#expect(await store.openDatabase(inDirectory: directory.path).isOpen)

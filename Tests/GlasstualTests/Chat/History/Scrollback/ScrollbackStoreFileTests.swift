@@ -51,14 +51,10 @@ private nonisolated struct SavedScrollbackRow: Hashable, Sendable {
 /// Existing 2.x stores are upgraded to the current schema. These tests
 /// cover both paths and keep unrelated files in the directory intact.
 @MainActor
-@Suite("Scrollback database file", .serialized)
+@Suite("Scrollback database file")
 struct ScrollbackStoreFileTests {
 	private func makeDirectory() throws -> URL {
-		let directory = FileManager.default.temporaryDirectory
-			.appendingPathComponent("scrollback-file-\(UUID().uuidString)", isDirectory: true)
-		try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-
-		return directory
+		try ScrollbackFixture.makeDirectory(prefix: "scrollback-file-")
 	}
 
 	private func sqliteNames(in directory: URL) throws -> [String] {

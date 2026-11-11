@@ -8,6 +8,25 @@ import Foundation
 /// A test that holds a context beyond the store's lifetime closes its SQLite
 /// connection before deleting the scratch directory.
 nonisolated enum ScrollbackFixture {
+	/// A new, empty directory under the temporary directory. The caller removes it.
+	static func makeDirectory(prefix: String = "") throws -> URL {
+		let url = FileManager.default.temporaryDirectory
+			.appendingPathComponent("\(prefix)\(UUID().uuidString)", isDirectory: true)
+		try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+		return url
+	}
+
+	/// A row whose payload and identifier are `id`, in the one session the tests share.
+	static func entry(_ id: String, view: String = "view", date: TimeInterval = 100) -> ScrollbackEntry {
+		ScrollbackEntry(
+			lineData: Data(id.utf8),
+			uniqueIdentifier: id,
+			viewIdentifier: view,
+			sessionIdentifier: 1,
+			creationDate: date
+		)
+	}
+
 	static func close(_ context: NSManagedObjectContext) async throws {
 		try await context.perform {
 			context.reset()

@@ -111,24 +111,16 @@ private actor TLSClientIdentityPeer {
 			continuation.yield(.trust(accepted: trusted, certificates: presented.withLock { $0 }))
 			complete(trusted)
 		}, .global())
-		let listener = try NWListener(using: NWParameters(tls: serverOptions))
-		listener.newConnectionHandler = { [weak self] connection in
+		let listener = try await LoopbackListener.start(using: NWParameters(tls: serverOptions)) { [weak self] connection in
 			Task { await self?.accept(connection, events: continuation) }
 		}
-		listener.start(queue: .global())
 		defer {
-			listener.cancel()
+			listener.stop()
 			peer?.cancel()
 			peer = nil
 			continuation.finish()
 		}
-		for _ in 0 ..< 200 {
-			if listener.state == .ready {
-				break
-			}
-			try await Task.sleep(for: .milliseconds(10))
-		}
-		let port = try #require(listener.port, "The mTLS listener did not become ready")
+		let port = try #require(NWEndpoint.Port(rawValue: listener.port))
 
 		let clientOptions = NWProtocolTLS.Options()
 		let prepared = try SecureTransportSupport.localIdentity(

@@ -4,43 +4,25 @@ import Foundation
 import Network
 import Testing
 
-private enum AbortingListenerError: Error {
-	case listenerNeverBecameReady
-}
-
 /// A loopback listener that accepts the TCP connection and closes it at once,
 /// before any TLS record is exchanged: the shape of a server that throttles a
 /// reconnect on a TLS port, which has nothing to say and simply hangs up.
 private actor AbortingLoopbackServer {
-	private let listener: NWListener
+	private var listener: LoopbackListener?
 	private var peers: [NWConnection] = []
 
-	init() throws {
-		listener = try NWListener(using: .tcp)
-	}
-
 	func start() async throws -> UInt16 {
-		listener.newConnectionHandler = { [weak self] connection in
+		let listener = try await LoopbackListener.start(using: .tcp) { [weak self] connection in
 			Task { await self?.accept(connection) }
 		}
-
-		listener.start(queue: .global())
-
-		for _ in 0 ..< 200 {
-			if let port = listener.port?.rawValue, listener.state == .ready {
-				return port
-			}
-
-			try await Task.sleep(for: .milliseconds(25), clock: .continuous)
-		}
-
-		throw AbortingListenerError.listenerNeverBecameReady
+		self.listener = listener
+		return listener.port
 	}
 
 	func stop() {
 		peers.forEach { $0.cancel() }
 		peers.removeAll()
-		listener.cancel()
+		listener?.stop()
 	}
 
 	private func accept(_ connection: NWConnection) {
@@ -113,7 +95,7 @@ nonisolated struct ConnectionHostHandshakeAbortTests {
 	@Test("A server that closes during the TLS handshake is reported promptly, not after the connect timer")
 	@concurrent
 	func handshakeAbortIsReportedPromptly() async throws {
-		let server = try AbortingLoopbackServer()
+		let server = AbortingLoopbackServer()
 		let port = try await server.start()
 
 		var config = ConnectionConfig()

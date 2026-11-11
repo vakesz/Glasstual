@@ -94,7 +94,7 @@ extension ServerSession {
 		)
 	}
 
-	private static func certificates(fromPEMSequence data: Data) -> [SecCertificate]? {
+	static func certificates(fromPEMSequence data: Data) -> [SecCertificate]? {
 		var parameters = SecItemImportExportKeyParameters()
 		parameters.version = UInt32(SEC_KEY_IMPORT_EXPORT_PARAMS_VERSION)
 		parameters.flags = []

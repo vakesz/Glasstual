@@ -15,26 +15,17 @@ private actor Bystander {
 	}
 }
 
+/// Every test that asserts a delivery domain trusts these helpers, so one
+/// test has to show they can tell the main actor from another actor: a helper
+/// that always agreed would make all of those vacuous.
 @MainActor
 @Suite("Isolation testing helpers")
 struct IsolationTestingTests {
-	@Test
-	func expectMainActorAcceptsTheMainActor() async {
+	@Test("The helpers tell the main actor from another actor and keep delivery order")
+	func helpersDistinguishTheMainActorFromAnotherActor() async {
 		await expectMainActor()
-	}
-
-	@Test
-	func mainActorPredicateRejectsAnotherActor() async {
 		#expect(await Bystander().isOnMainActor() == false)
-	}
 
-	@Test
-	func mainActorPredicateAcceptsTheMainActor() {
-		#expect(currentIsolationIsMainActor())
-	}
-
-	@Test
-	func probeRecordsDeliveryOrderAndDomain() async {
 		let probe = IsolationProbe()
 
 		await probe.record("first")
@@ -44,10 +35,4 @@ struct IsolationTestingTests {
 		probe.expectOrder(["first", "second", "third"])
 		#expect(probe.observations.map(\.onMainActor) == [true, false, true])
 	}
-}
-
-private func currentIsolationIsMainActor(
-	isolation: isolated (any Actor)? = #isolation
-) -> Bool {
-	isolationIsMainActor(isolation)
 }

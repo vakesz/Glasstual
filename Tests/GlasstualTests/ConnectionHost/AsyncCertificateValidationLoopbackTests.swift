@@ -21,8 +21,6 @@ private nonisolated func dynamicCast<Value>(_ value: Any) -> Value? { // nonisol
 private enum LoopbackTLSServerError: Error {
 	case identityMissing
 	case identityUnreadable(OSStatus)
-	case listenerNeverBecameReady
-	case peerNeverArrived
 }
 
 /** A TLS listener on loopback presenting a self-signed certificate.
@@ -34,9 +32,12 @@ private actor LoopbackTLSServer {
 	/// `Bundle(for:)`.
 	private final class Anchor {}
 
-	private let listener: NWListener
+	private let parameters: NWParameters
+	private var listener: LoopbackListener?
 	private var peer: NWConnection?
+	private var readyPeer: NWConnection?
 	private var received = Data()
+	private let arrivals = ArrivalGate()
 
 	init(protocolVersion: tls_protocol_version_t? = nil) throws {
 		let identity = try Self.identity()
@@ -48,38 +49,28 @@ private actor LoopbackTLSServer {
 			sec_protocol_options_set_max_tls_protocol_version(options.securityProtocolOptions, protocolVersion)
 		}
 
-		listener = try NWListener(using: NWParameters(tls: options))
+		parameters = NWParameters(tls: options)
 	}
 
 	/// The port the listener settled on, once it is ready.
 	func start() async throws -> UInt16 {
-		listener.newConnectionHandler = { [weak self] connection in
+		let listener = try await LoopbackListener.start(using: parameters) { [weak self] connection in
 			Task { await self?.accept(connection) }
 		}
-
-		listener.start(queue: .global())
-
-		for _ in 0 ..< 200 {
-			if let port = listener.port?.rawValue, listener.state == .ready {
-				return port
-			}
-
-			try await Task.sleep(for: .milliseconds(25), clock: .continuous)
-		}
-
-		throw LoopbackTLSServerError.listenerNeverBecameReady
+		self.listener = listener
+		return listener.port
 	}
 
 	func stop() {
 		peer?.cancel()
 		peer = nil
-		listener.cancel()
+		listener?.stop()
 	}
 
 	/// Sends one IRC line after the session accepts the certificate and waits for
 	/// the transport to report it written.
 	func send(_ line: String) async throws {
-		let peer = try await readyPeer()
+		let peer = try await readyPeerConnection()
 		let data = Data((line + "\r\n").utf8)
 
 		await withCheckedContinuation { continuation in
@@ -91,9 +82,18 @@ private actor LoopbackTLSServer {
 
 	private func accept(_ connection: NWConnection) {
 		peer = connection
+		connection.stateUpdateHandler = { [weak self] state in
+			guard case .ready = state else { return }
+			Task { await self?.peerBecameReady(connection) }
+		}
 
 		connection.start(queue: .global())
 		receiveNextChunk()
+	}
+
+	private func peerBecameReady(_ connection: NWConnection) {
+		readyPeer = connection
+		arrivals.signal()
 	}
 
 	private func receiveNextChunk() {
@@ -105,6 +105,7 @@ private actor LoopbackTLSServer {
 	private func received(_ data: Data?, complete: Bool) {
 		if let data {
 			received.append(data)
+			arrivals.signal()
 		}
 		if complete == false {
 			receiveNextChunk()
@@ -112,18 +113,14 @@ private actor LoopbackTLSServer {
 	}
 
 	func registrationLines() async throws -> [String] {
-		for _ in 0 ..< 200 {
+		try await arrivals.wait(for: "the registration lines") {
 			let lines = (String(bytes: received, encoding: .utf8) ?? "").components(separatedBy: "\r\n")
-			if lines.count >= 4 {
-				return Array(lines.dropLast())
-			}
-			try await Task.sleep(for: .milliseconds(10))
+			return lines.count >= 4 ? Array(lines.dropLast()) : nil
 		}
-		return []
 	}
 
 	func serverName() async throws -> String? {
-		let peer = try await readyPeer()
+		let peer = try await readyPeerConnection()
 		guard let metadata = peer.metadata(definition: NWProtocolTLS.definition) as? NWProtocolTLS.Metadata,
 		      let name = sec_protocol_metadata_copy_server_name(metadata.securityProtocolMetadata)
 		else { return nil }
@@ -131,16 +128,8 @@ private actor LoopbackTLSServer {
 		return String(cString: name)
 	}
 
-	private func readyPeer() async throws -> NWConnection {
-		for _ in 0 ..< 400 {
-			if let peer, peer.state == .ready {
-				return peer
-			}
-
-			try await Task.sleep(for: .milliseconds(25), clock: .continuous)
-		}
-
-		throw LoopbackTLSServerError.peerNeverArrived
+	private func readyPeerConnection() async throws -> NWConnection {
+		try await arrivals.wait(for: "the client's TLS handshake") { readyPeer }
 	}
 
 	private static func identity() throws -> sec_identity_t {

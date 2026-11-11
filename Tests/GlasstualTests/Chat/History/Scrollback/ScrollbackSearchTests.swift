@@ -12,8 +12,7 @@ import Testing
 @Suite("Scrollback search")
 struct ScrollbackSearchTests {
 	private func openStore() async throws -> (ScrollbackStore, URL) {
-		let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-		try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+		let directory = try ScrollbackFixture.makeDirectory()
 		let store = ScrollbackStore(filenameSetting: ScrollbackFilenameFixture.unique().store)
 		#expect(await store.openDatabase(inDirectory: directory.path).isOpen)
 		return (store, directory)

@@ -29,12 +29,11 @@ private actor RetentionPassCounter {
 }
 
 @MainActor
-@Suite("Scrollback retention", .serialized)
+@Suite("Scrollback retention")
 struct ScrollbackRetentionTests {
 	@Test("Fetching a reopened view schedules retention without a new message", .timeLimit(.minutes(1)))
 	func reopenedViewSchedulesRetention() async throws {
-		let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-		try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+		let directory = try ScrollbackFixture.makeDirectory()
 		defer { try? FileManager.default.removeItem(at: directory) }
 		let passes = RetentionPassCounter()
 		let store = ScrollbackStore(
@@ -49,7 +48,7 @@ struct ScrollbackRetentionTests {
 		#expect(await store.openDatabase(inDirectory: directory.path).isOpen)
 		await store.setMaximumLineCount(100)
 		for index in 0 ..< 5 {
-			#expect(await store.writeChatLine(entry("line-\(index)")) == .accepted)
+			#expect(await store.writeChatLine(ScrollbackFixture.entry("line-\(index)")) == .accepted)
 		}
 		#expect(await store.close() == .saved)
 		#expect(await store.openDatabase(inDirectory: directory.path).isOpen)
@@ -60,20 +59,9 @@ struct ScrollbackRetentionTests {
 		#expect(await store.close() == .saved)
 	}
 
-	private func entry(_ id: String, date: TimeInterval = 100) -> ScrollbackEntry {
-		ScrollbackEntry(
-			lineData: Data(id.utf8),
-			uniqueIdentifier: id,
-			viewIdentifier: "view",
-			sessionIdentifier: 1,
-			creationDate: date
-		)
-	}
-
 	@Test("A cancelled retention pass cannot clear its replacement", .timeLimit(.minutes(1)))
 	func cancelledPassPreservesReplacement() async throws {
-		let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-		try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+		let directory = try ScrollbackFixture.makeDirectory()
 		defer { try? FileManager.default.removeItem(at: directory) }
 		let scheduledCount = Mutex(0)
 		let (started, didStart) = AsyncStream<Void>.makeStream()
@@ -98,7 +86,7 @@ struct ScrollbackRetentionTests {
 		)
 		#expect(await store.openDatabase(inDirectory: directory.path).isOpen)
 		for index in 0 ..< 8 {
-			#expect(await store.writeChatLine(entry("line-\(index)")) == .accepted)
+			#expect(await store.writeChatLine(ScrollbackFixture.entry("line-\(index)")) == .accepted)
 		}
 		await store.setMaximumLineCount(6)
 		var iterator = started.makeAsyncIterator()
@@ -108,7 +96,7 @@ struct ScrollbackRetentionTests {
 		#expect(scheduledCount.withLock { $0 } == 2)
 		release.finish()
 		// The write waits behind the cancelled pass and must reuse its replacement.
-		#expect(await store.writeChatLine(entry("line-8")) == .accepted)
+		#expect(await store.writeChatLine(ScrollbackFixture.entry("line-8")) == .accepted)
 		#expect(scheduledCount.withLock { $0 } == 2)
 		#expect(await store.close() == .saved)
 	}
@@ -120,10 +108,7 @@ struct ScrollbackRetentionTests {
 	@Test("Retention prunes by each line's own time, not by the order rows were inserted",
 	      .timeLimit(.minutes(1)))
 	func retentionPrunesByLineTime() async throws {
-		let directory = FileManager.default.temporaryDirectory.appendingPathComponent(
-			UUID().uuidString, isDirectory: true
-		)
-		try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+		let directory = try ScrollbackFixture.makeDirectory()
 		defer { try? FileManager.default.removeItem(at: directory) }
 		let store = ScrollbackStore(filenameSetting: ScrollbackFilenameFixture().store, resizeDelay: { .seconds(1800) })
 		#expect(await store.openDatabase(inDirectory: directory.path).isOpen)
@@ -133,7 +118,7 @@ struct ScrollbackRetentionTests {
 			("history-0", 10), ("history-1", 11), ("history-2", 12),
 		]
 		for (identifier, date) in rows {
-			#expect(await store.writeChatLine(entry(identifier, date: date)) == .accepted)
+			#expect(await store.writeChatLine(ScrollbackFixture.entry(identifier, date: date)) == .accepted)
 		}
 
 		guard case let .deleted(result) = await store.resize("view") else {
@@ -158,10 +143,7 @@ struct ScrollbackRetentionTests {
 	@Test("A lowered limit retires the waiting pass, and the pass releases its slot",
 	      .timeLimit(.minutes(1)))
 	func loweringTheLimitPrunesAndLeavesTheSlotFree() async throws {
-		let directory = FileManager.default.temporaryDirectory.appendingPathComponent(
-			UUID().uuidString, isDirectory: true
-		)
-		try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+		let directory = try ScrollbackFixture.makeDirectory()
 		defer { try? FileManager.default.removeItem(at: directory) }
 		let delay = Mutex<Duration>(.seconds(1800))
 		let passes = RetentionPassCounter()
@@ -177,7 +159,7 @@ struct ScrollbackRetentionTests {
 		#expect(await store.openDatabase(inDirectory: directory.path).isOpen)
 		await store.setMaximumLineCount(10)
 		for index in 0 ..< 12 {
-			#expect(await store.writeChatLine(entry("line-\(index)")) == .accepted)
+			#expect(await store.writeChatLine(ScrollbackFixture.entry("line-\(index)")) == .accepted)
 		}
 		// The pass the eleventh write armed is parked for the full half hour.
 		#expect(await store.fetchOutcome(.newestEntries(forView: "view", fetchLimit: 100)).entries
@@ -192,7 +174,7 @@ struct ScrollbackRetentionTests {
 		/* Nothing lowers the limit again: the write alone has to be able to arm
 		 the next pass, which it can only do if the finished one gave its slot
 		 back. */
-		#expect(await store.writeChatLine(entry("line-12")) == .accepted)
+		#expect(await store.writeChatLine(ScrollbackFixture.entry("line-12")) == .accepted)
 		await passes.wait(for: 2)
 		#expect(await store.fetchOutcome(.newestEntries(forView: "view", fetchLimit: 100)).entries
 			.map(\.uniqueIdentifier) == (8 ..< 13).reversed().map { "line-\($0)" })
@@ -201,8 +183,7 @@ struct ScrollbackRetentionTests {
 
 	@Test("A pass larger than one chunk deletes in several steps and reports every line", .timeLimit(.minutes(1)))
 	func retentionDeletesInChunks() async throws {
-		let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-		try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+		let directory = try ScrollbackFixture.makeDirectory()
 		defer { try? FileManager.default.removeItem(at: directory) }
 		let reports = Mutex<[[String]]>([])
 		let store = ScrollbackStore(
@@ -215,7 +196,7 @@ struct ScrollbackRetentionTests {
 		#expect(await store.openDatabase(inDirectory: directory.path).isOpen)
 		await store.setMaximumLineCount(5)
 		for index in 0 ..< 25 {
-			#expect(await store.writeChatLine(entry("line-\(index)", date: TimeInterval(100 + index))) == .accepted)
+			#expect(await store.writeChatLine(ScrollbackFixture.entry("line-\(index)", date: TimeInterval(100 + index))) == .accepted)
 		}
 
 		guard case let .deleted(result) = await store.resize("view") else {

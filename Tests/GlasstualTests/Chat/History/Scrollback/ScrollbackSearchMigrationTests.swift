@@ -75,13 +75,10 @@ private nonisolated struct StoredRow: Hashable, Sendable {
  starting point is the schema a real installation holds rather than a copy of
  the current one. */
 @MainActor
-@Suite("Scrollback search migration", .serialized)
+@Suite("Scrollback search migration")
 struct ScrollbackSearchMigrationTests {
 	private func makeDirectory() throws -> URL {
-		let directory = FileManager.default.temporaryDirectory
-			.appendingPathComponent("scrollback-search-\(UUID().uuidString)", isDirectory: true)
-		try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-		return directory
+		try ScrollbackFixture.makeDirectory(prefix: "scrollback-search-")
 	}
 
 	private func archived(

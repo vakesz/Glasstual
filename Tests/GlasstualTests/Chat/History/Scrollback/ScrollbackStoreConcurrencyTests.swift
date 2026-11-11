@@ -156,7 +156,7 @@ private actor InterleavingWriter {
 	}
 }
 
-@Suite("Scrollback store", .serialized)
+@Suite("Scrollback store")
 struct ScrollbackStoreConcurrencyTests {
 	@Test("The real store distinguishes an unavailable database, missing cursor and exhausted page")
 	func typedStoreFetchDistinguishesOutcomes() async throws {

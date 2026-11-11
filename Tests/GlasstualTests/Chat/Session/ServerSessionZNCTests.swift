@@ -1,12 +1,17 @@
 // Copyright (c) 2026 Codeux Software, LLC & respective contributors.
 // SPDX-License-Identifier: BSD-3-Clause
 
+import Foundation
 @testable import Glasstual
+import Security
 import Testing
 
 /// ZNC's `buffextras` module replays joins, parts, mode changes and the rest as
 /// ordinary chat, and the session turns them back into the events they describe
-/// before anything else reads the line. The rewriting is what these pin.
+/// before anything else reads the line. The rewriting is what these pin. The
+/// `znc.in/tlsinfo` batch that carries the bouncer's certificate chain is
+/// driven through real batch lines, so the session's own batch handling arms
+/// and clears the state these read.
 @MainActor
 @Suite("ZNC bouncer interception")
 struct ServerSessionZNCTests {
@@ -177,5 +182,254 @@ struct ServerSessionZNCTests {
 		)
 
 		#expect(session.interceptZNCServerInput(message)?.params == message.params)
+	}
+
+	// MARK: - znc.in/tlsinfo
+
+	private static let certificateInfoOpening = ":irc.znc.in BATCH +t znc.in/tlsinfo"
+	private static let certificateInfoClosing = ":irc.znc.in BATCH -t"
+
+	private func certificateInfoSession(isZNC: Bool = true) -> TestServerSession {
+		let session = TestServerSession(configDictionary: ["nickname": "me", "username": "me"])
+		session.userNickname = "me"
+		session.enableCapability(.batch)
+		session.enableCapability(.messageTags)
+		session.isLoggedIn = true
+		session.forwardsProcessedMessages = true
+		session.znc.isConnected = isZNC
+		return session
+	}
+
+	/// A line from the bouncer's `tlsinfo` module, inside the batch unless told otherwise.
+	private func certificateInfoLine(_ chunk: String, sender: String = "znc.in", inBatch: Bool = true) -> String {
+		"\(inBatch ? "@batch=t " : ""):\(sender) CERTINFO me :\(chunk)"
+	}
+
+	/// Feeds lines the way the socket reader does: batch bookkeeping first, then
+	/// `BATCH` itself, then everything else through the real dispatch.
+	private func feed(_ lines: [String], to session: TestServerSession) throws {
+		for line in lines {
+			let message = try #require(Message(line: line, on: session))
+
+			if session.filterBatchCommandIncomingData(message) {
+				continue
+			}
+
+			if message.command == "BATCH" {
+				session.receiveBatch(message)
+			} else {
+				session.processIncomingMessage(message)
+			}
+		}
+	}
+
+	private func feedCertificateInfo(
+		_ chunks: [String],
+		closing: Bool = true,
+		to session: TestServerSession
+	) throws {
+		let lines = [Self.certificateInfoOpening]
+			+ chunks.map { certificateInfoLine($0) }
+			+ (closing ? [Self.certificateInfoClosing] : [])
+		try feed(lines, to: session)
+	}
+
+	private func makeChunk(ofLength length: Int) -> String {
+		String(repeating: "A", count: length)
+	}
+
+	/// A chain a bouncer would send: two certificates, 64 characters to a line.
+	private static let pemChain = """
+	-----BEGIN CERTIFICATE-----
+	MIIBazCCARKgAwIBAgIUDTrdlMHsPkONCHnH/4EdehcB5NcwCgYIKoZIzj0EAwIw
+	GzEZMBcGA1UEAwwQZ2xhc3N0dWFsLXRlc3QtYTAgFw0yNjExMTExMzA1NDNaGA8y
+	MTI2MTAxODEzMDU0M1owGzEZMBcGA1UEAwwQZ2xhc3N0dWFsLXRlc3QtYTBZMBMG
+	ByqGSM49AgEGCCqGSM49AwEHA0IABK/z1c7DQ0hsDswEszLPU8KmYYYTsp/VFUR+
+	dRxynBpP8sHbZaJ6bwF7F8iC5yjLgnenri1jwPY+l4KA8m5NxNajMjAwMB0GA1Ud
+	DgQWBBRoFRHmjyuK0nAFNEAKiS/JXFpbBTAPBgNVHRMBAf8EBTADAQH/MAoGCCqG
+	SM49BAMCA0cAMEQCIAtBM/z1SQZgDj8vfWPLc2ZCxDKsSVLoA8yUglyONw0lAiAv
+	14757dspUlAlqvUNVe1FmiPyR1096K3CDoZLtvDQFg==
+	-----END CERTIFICATE-----
+	-----BEGIN CERTIFICATE-----
+	MIIBazCCARKgAwIBAgIUAKoQIc1PjWZVlujHhjgPJGv4TRcwCgYIKoZIzj0EAwIw
+	GzEZMBcGA1UEAwwQZ2xhc3N0dWFsLXRlc3QtYjAgFw0yNjExMTExMzA1NDNaGA8y
+	MTI2MTAxODEzMDU0M1owGzEZMBcGA1UEAwwQZ2xhc3N0dWFsLXRlc3QtYjBZMBMG
+	ByqGSM49AgEGCCqGSM49AwEHA0IABDX5O7R6VqOqO9xMGyBbB7Dudd7uGaAc1xaL
+	zGcOjW3DJD9bUvL54+Bt4NodFnJS7xo1EWWXQlYJOTXJRoudhoKjMjAwMB0GA1Ud
+	DgQWBBScy2UHeb4BMNZ1ZVtysAs9yx1hADAPBgNVHRMBAf8EBTADAQH/MAoGCCqG
+	SM49BAMCA0cAMEQCIE8WeS9ihB9WHIUEWJU9/XqRrTuUqD5oyfNvruJXpuS7AiAX
+	RFT7IoPiYV/5AwKj0I6w4eiaq3Sj57MQaK+CX476zg==
+	-----END CERTIFICATE-----
+	"""
+
+	private static var pemChainLines: [String] {
+		pemChain.split(separator: "\n").map(String.init)
+	}
+
+	@Test("A tlsinfo batch accumulates its chunks, one per line, and is complete once it closes")
+	func certificateInfoBatchAccumulatesItsChunks() throws {
+		let session = certificateInfoSession()
+		let chunks = ["first chunk", "second chunk", "third chunk"]
+
+		try feedCertificateInfo(chunks, closing: false, to: session)
+		#expect(session.znc.isSendingCertificateInfo)
+		// The chunks wait in the batch until it closes.
+		#expect(session.znc.certificateChainText == "")
+
+		try feed([Self.certificateInfoClosing], to: session)
+
+		#expect(session.znc.isSendingCertificateInfo == false)
+		#expect(session.znc.certificateChainText == "first chunk\nsecond chunk\nthird chunk\n")
+		#expect(session.zncBouncerCertificateChainData == Data("first chunk\nsecond chunk\nthird chunk\n".utf8))
+	}
+
+	@Test("The chain is withheld while the batch is open and offered once it has closed")
+	func certificateInfoChainIsOnlyOfferedOnceComplete() throws {
+		let session = certificateInfoSession()
+
+		try feedCertificateInfo(["a chunk"], closing: false, to: session)
+		#expect(session.zncBouncerCertificateChainData == nil)
+
+		try feed([Self.certificateInfoClosing], to: session)
+		#expect(session.zncBouncerCertificateChainData != nil)
+	}
+
+	@Test("A second tlsinfo batch replaces the chain rather than extending it")
+	func secondCertificateInfoBatchReplacesTheChain() throws {
+		let session = certificateInfoSession()
+
+		try feedCertificateInfo(["old chain"], to: session)
+		try feedCertificateInfo(["new chain"], to: session)
+
+		#expect(session.znc.certificateChainText == "new chain\n")
+	}
+
+	@Test("A CERTINFO line outside a tlsinfo batch is ignored")
+	func certificateInfoOutsideABatchIsIgnored() throws {
+		let session = certificateInfoSession()
+
+		try feed([certificateInfoLine("before any batch", inBatch: false)], to: session)
+		#expect(session.znc.certificateChainText == nil)
+
+		try feedCertificateInfo(["inside the batch"], to: session)
+		try feed([certificateInfoLine("after the batch", inBatch: false)], to: session)
+		#expect(session.znc.certificateChainText == "inside the batch\n")
+	}
+
+	@Test(
+		"A CERTINFO chunk from anyone but the bouncer's own sender is not appended",
+		arguments: ["evil!user@host", "irc.example.net", "znc.in!user@host", "*status!znc@znc.in"]
+	)
+	func certificateInfoFromAnotherSenderIsIgnored(_ sender: String) throws {
+		let session = certificateInfoSession()
+
+		try feed([
+			Self.certificateInfoOpening,
+			certificateInfoLine("forged chunk", sender: sender),
+			certificateInfoLine("genuine chunk"),
+			Self.certificateInfoClosing,
+		], to: session)
+
+		#expect(session.znc.certificateChainText == "genuine chunk\n")
+	}
+
+	@Test(
+		"A CERTINFO line with a chunk outside 2...65 characters, or the wrong shape, is ignored",
+		arguments: [
+			"@batch=t :znc.in CERTINFO me :x",
+			"@batch=t :znc.in CERTINFO me :\(String(repeating: "A", count: 66))",
+			"@batch=t :znc.in CERTINFO me extra :a chunk",
+			"@batch=t :znc.in CERTINFO :a chunk",
+		]
+	)
+	func certificateInfoWithAnUnacceptableChunkIsIgnored(_ line: String) throws {
+		let session = certificateInfoSession()
+
+		try feed([Self.certificateInfoOpening, line, Self.certificateInfoClosing], to: session)
+
+		#expect(session.znc.certificateChainText == "")
+	}
+
+	/// The length is checked before the chunk is appended, so the chain can
+	/// finish up to one chunk past the ceiling. What matters is that it stops.
+	@Test("The chain stops growing once it reaches its ceiling")
+	func certificateInfoChainStopsAtItsCeiling() throws {
+		let session = certificateInfoSession()
+		let ceiling = InboundEventPolicy.maximumCertificateChainLength
+		let chunk = makeChunk(ofLength: 65)
+
+		try feed([Self.certificateInfoOpening], to: session)
+		for _ in 0 ..< 1100 {
+			let message = try #require(Message(line: certificateInfoLine(chunk), on: session))
+			session.receiveCertInfo(message)
+		}
+
+		let length = try #require(session.znc.certificateChainText).utf16.count
+		#expect(length >= ceiling)
+		#expect(length < ceiling + 66)
+
+		let further = try #require(Message(line: certificateInfoLine("one more chunk"), on: session))
+		session.receiveCertInfo(further)
+		#expect(session.znc.certificateChainText?.utf16.count == length)
+	}
+
+	@Test("A chain sent past the ceiling in one batch is cut off at it")
+	func oversizedCertificateInfoBatchIsCutOff() throws {
+		let session = certificateInfoSession()
+		let ceiling = InboundEventPolicy.maximumCertificateChainLength
+
+		try feedCertificateInfo(Array(repeating: makeChunk(ofLength: 65), count: 1100), to: session)
+
+		let length = try #require(session.zncBouncerCertificateChainData).count
+		#expect(length >= ceiling)
+		#expect(length < ceiling + 66)
+	}
+
+	@Test("A bouncer that is not a ZNC does not get to arm the chain")
+	func certificateInfoBatchIsIgnoredOffZNC() throws {
+		let session = certificateInfoSession(isZNC: false)
+
+		try feedCertificateInfo(["a chunk"], closing: false, to: session)
+		#expect(session.znc.isSendingCertificateInfo == false)
+
+		try feed([Self.certificateInfoClosing], to: session)
+		#expect(session.znc.certificateChainText == "")
+		#expect(session.zncBouncerCertificateChainData == nil)
+	}
+
+	@Test("Disconnecting forgets the chain, whether the batch finished or not", arguments: [true, false])
+	func disconnectingForgetsTheCertificateChain(batchFinished: Bool) throws {
+		let session = certificateInfoSession()
+		try feedCertificateInfo(["a chunk"], closing: batchFinished, to: session)
+
+		session.resetAllPropertyValues()
+
+		#expect(session.znc.isSendingCertificateInfo == false)
+		#expect(session.znc.certificateChainText == nil)
+		#expect(session.zncBouncerCertificateChainData == nil)
+	}
+
+	@Test("A chain sent as a PEM sequence imports as the certificates it holds")
+	func certificateChainImportsAsPEM() throws {
+		let session = certificateInfoSession()
+		try feedCertificateInfo(Self.pemChainLines, to: session)
+
+		let data = try #require(session.zncBouncerCertificateChainData)
+		let certificates = try #require(ServerSession.certificates(fromPEMSequence: data))
+		let subjects = certificates.compactMap { SecCertificateCopySubjectSummary($0) as String? }
+
+		#expect(subjects == ["glasstual-test-a", "glasstual-test-b"])
+	}
+
+	@Test(
+		"Text that is not a PEM sequence imports as nothing",
+		arguments: [
+			"",
+			"not a certificate",
+			"-----BEGIN CERTIFICATE-----\nAAAA\n-----END CERTIFICATE-----\n",
+		]
+	)
+	func nonCertificateTextImportsAsNothing(_ text: String) {
+		#expect(ServerSession.certificates(fromPEMSequence: Data(text.utf8)) == nil)
 	}
 }

@@ -7,10 +7,6 @@ import Foundation
 import Network
 import Testing
 
-private enum HandshakeRefusingListenerError: Error {
-	case listenerNeverBecameReady
-}
-
 /** A loopback listener that reads each ClientHello, keeps the cipher suites it
  offers, in order, and answers with a fatal `handshake_failure` alert before
  any ServerHello.
@@ -21,7 +17,7 @@ private enum HandshakeRefusingListenerError: Error {
  answers. Reading the offers themselves, rather than which suite a server
  picks, is what says whether the retry still offers forward secrecy first. */
 private actor HandshakeRefusingListener {
-	private let listener: NWListener
+	private var listener: LoopbackListener?
 	private let arrivals: AsyncStream<NWConnection>
 	private let arrivalContinuation: AsyncStream<NWConnection>.Continuation
 	private var accepting: Task<Void, Never>?
@@ -33,33 +29,23 @@ private actor HandshakeRefusingListener {
 	/// (handshake_failure).
 	private static let handshakeFailureAlert = Data([0x15, 0x03, 0x03, 0x00, 0x02, 0x02, 0x28])
 
-	init() throws {
-		listener = try NWListener(using: .tcp)
+	init() {
 		(arrivals, arrivalContinuation) = AsyncStream<NWConnection>.makeStream()
 	}
 
 	func start() async throws -> UInt16 {
 		let arrivalContinuation = arrivalContinuation
-		listener.newConnectionHandler = { connection in
-			arrivalContinuation.yield(connection)
-		}
 		accepting = Task { [arrivals] in
 			for await connection in arrivals {
 				self.accept(connection)
 			}
 		}
 
-		listener.start(queue: .global())
-
-		for _ in 0 ..< 200 {
-			if let port = listener.port?.rawValue, listener.state == .ready {
-				return port
-			}
-
-			try await Task.sleep(for: .milliseconds(25), clock: .continuous)
+		let listener = try await LoopbackListener.start(using: .tcp) { connection in
+			arrivalContinuation.yield(connection)
 		}
-
-		throw HandshakeRefusingListenerError.listenerNeverBecameReady
+		self.listener = listener
+		return listener.port
 	}
 
 	func stop() {
@@ -67,7 +53,7 @@ private actor HandshakeRefusingListener {
 		accepting?.cancel()
 		peers.forEach { $0.cancel() }
 		peers.removeAll()
-		listener.cancel()
+		listener?.stop()
 	}
 
 	private func accept(_ connection: NWConnection) {
@@ -237,7 +223,7 @@ nonisolated struct LegacyCipherSuiteRetryOfferTests {
 		cipherSuites: CipherSuiteCollection,
 		pinnedByStrictTransportSecurity pinned: Bool
 	) async throws -> Outcome {
-		let server = try HandshakeRefusingListener()
+		let server = HandshakeRefusingListener()
 		let port = try await server.start()
 
 		var config = ConnectionConfig()

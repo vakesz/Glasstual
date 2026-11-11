@@ -24,6 +24,7 @@ private final nonisolated class RefusingScrollbackReadStore: NSIncrementalStore 
 	}
 }
 
+// Serialized: the cases register a store class in the process-wide Core Data registry.
 @MainActor
 @Suite("Typed scrollback fetch outcomes", .serialized)
 struct ScrollbackFetchOutcomeTests {

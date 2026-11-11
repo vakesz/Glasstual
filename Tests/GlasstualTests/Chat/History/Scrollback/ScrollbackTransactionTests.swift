@@ -55,11 +55,11 @@ private actor SaveSignal {
 }
 
 @MainActor
-@Suite("Scrollback store transactions", .serialized)
+@Suite("Scrollback store transactions")
 struct ScrollbackTransactionTests {
 	@Test("A history clear preserves messages indexed while its deletion is pending", arguments: [false, true])
 	func clearPreservesNewerIndexEntries(forget: Bool) async throws {
-		let directory = try directory()
+		let directory = try ScrollbackFixture.makeDirectory()
 		defer { try? FileManager.default.removeItem(at: directory) }
 		let gate = HistoryOperationGate()
 		let store = ScrollbackStore(filenameSetting: ScrollbackFilenameFixture().store, willPerform: { operation in
@@ -99,7 +99,7 @@ struct ScrollbackTransactionTests {
 	@Test("Forgetting a view drops the redactions it was waiting to apply; clearing it keeps them",
 	      .timeLimit(.minutes(1)), arguments: [false, true])
 	func forgettingClearsPendingRedactions(forget: Bool) async throws {
-		let directory = try directory()
+		let directory = try ScrollbackFixture.makeDirectory()
 		defer { try? FileManager.default.removeItem(at: directory) }
 		let store = ScrollbackStore(filenameSetting: ScrollbackFilenameFixture().store)
 		let session = ScrollbackSession(store: store, databaseDirectory: { directory.path }, reportFailure: {
@@ -119,25 +119,9 @@ struct ScrollbackTransactionTests {
 		#expect(await session.prepareForTermination() == .saved)
 	}
 
-	private func directory() throws -> URL {
-		let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
-		try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
-		return url
-	}
-
-	private func entry(_ id: String) -> ScrollbackEntry {
-		ScrollbackEntry(
-			lineData: Data(id.utf8),
-			uniqueIdentifier: id,
-			viewIdentifier: "view",
-			sessionIdentifier: 1,
-			creationDate: 100
-		)
-	}
-
 	@Test("Reset and forget serialize later writes instead of resetting their context", arguments: [false, true])
 	func removalCannotEraseLaterWrite(forget: Bool) async throws {
-		let directory = try directory()
+		let directory = try ScrollbackFixture.makeDirectory()
 		defer { try? FileManager.default.removeItem(at: directory) }
 		let gate = HistoryOperationGate()
 		let store = ScrollbackStore(filenameSetting: ScrollbackFilenameFixture().store, willPerform: { operation in
@@ -147,7 +131,7 @@ struct ScrollbackTransactionTests {
 			}
 		})
 		#expect(await store.openDatabase(inDirectory: directory.path).isOpen)
-		#expect(await store.writeChatLine(entry("old")) == .accepted)
+		#expect(await store.writeChatLine(ScrollbackFixture.entry("old")) == .accepted)
 		let removal = Task {
 			if forget {
 				await store.forgetView("view")
@@ -156,7 +140,7 @@ struct ScrollbackTransactionTests {
 			}
 		}
 		await gate.ready()
-		let writer = Task { await store.writeChatLine(entry("new")) }
+		let writer = Task { await store.writeChatLine(ScrollbackFixture.entry("new")) }
 		while await store.pendingOperationCount == 0 {
 			await Task.yield()
 		}
@@ -168,13 +152,13 @@ struct ScrollbackTransactionTests {
 		#expect(await store.close() == .saved)
 		#expect(await store.openDatabase(inDirectory: directory.path).isOpen)
 		let rows = await store.fetchOutcome(.newestEntries(forView: "view", fetchLimit: 10)).entries
-		#expect(rows.map(\.data) == [entry("new").data])
+		#expect(rows.map(\.data) == [ScrollbackFixture.entry("new").data])
 		await store.close()
 	}
 
 	@Test("Close drains admitted writes and rejects later admission")
 	func closeAdmission() async throws {
-		let directory = try directory()
+		let directory = try ScrollbackFixture.makeDirectory()
 		defer { try? FileManager.default.removeItem(at: directory) }
 		let gate = HistoryOperationGate()
 		let store = ScrollbackStore(filenameSetting: ScrollbackFilenameFixture().store, willPerform: { operation in
@@ -183,13 +167,13 @@ struct ScrollbackTransactionTests {
 			}
 		})
 		#expect(await store.openDatabase(inDirectory: directory.path).isOpen)
-		let writer = Task { await store.writeChatLine(entry("admitted")) }
+		let writer = Task { await store.writeChatLine(ScrollbackFixture.entry("admitted")) }
 		await gate.ready()
 		let close = Task { await store.close() }
 		while await store.pendingOperationCount == 0 {
 			await Task.yield()
 		}
-		#expect(await store.writeChatLine(entry("late")) == .unavailable)
+		#expect(await store.writeChatLine(ScrollbackFixture.entry("late")) == .unavailable)
 		await gate.release()
 		#expect(await writer.value == .accepted)
 		#expect(await close.value == .saved)
@@ -201,7 +185,7 @@ struct ScrollbackTransactionTests {
 
 	@Test("A close that fails to save leaves the store saving on its own again", .timeLimit(.minutes(1)))
 	func failedCloseRearmsPeriodicSaves() async throws {
-		let directory = try directory()
+		let directory = try ScrollbackFixture.makeDirectory()
 		defer { try? FileManager.default.removeItem(at: directory) }
 		let context = try ScrollbackQueries.makeStack(at: directory.appendingPathComponent("history.sqlite"))
 		let signal = SaveSignal()
@@ -216,7 +200,7 @@ struct ScrollbackTransactionTests {
 			}
 		)
 		#expect(await store.openDatabase(inDirectory: directory.path).isOpen)
-		let row = entry("pending")
+		let row = ScrollbackFixture.entry("pending")
 		/* Inserted and made invalid in one block on the context's queue, so no
 		 periodic save can land between the two and store the row. */
 		try await context.perform {
@@ -242,12 +226,12 @@ struct ScrollbackTransactionTests {
 
 	@Test("Failed save, deletion and close retain the accepted archive for repair")
 	func failedTransactionsRetainState() async throws {
-		let directory = try directory()
+		let directory = try ScrollbackFixture.makeDirectory()
 		defer { try? FileManager.default.removeItem(at: directory) }
 		let context = try ScrollbackQueries.makeStack(at: directory.appendingPathComponent("history.sqlite"))
 		let store = ScrollbackStore(filenameSetting: ScrollbackFilenameFixture().store, makeStack: { _ in context })
 		#expect(await store.openDatabase(inDirectory: directory.path).isOpen)
-		let row = entry("pending")
+		let row = ScrollbackFixture.entry("pending")
 		#expect(await store.writeChatLine(row) == .accepted)
 		try await context.perform {
 			let inserted = try #require(context.insertedObjects.first)

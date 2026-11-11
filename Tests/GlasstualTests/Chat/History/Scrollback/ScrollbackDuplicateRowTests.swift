@@ -10,7 +10,7 @@ import Testing
  names a line and a row is a row. Paging and retention therefore have to work off
  the physical row, and this drives a store seeded with exactly that shape. */
 @MainActor
-@Suite("Scrollback rows that share a line identity", .serialized)
+@Suite("Scrollback rows that share a line identity")
 struct ScrollbackDuplicateRowTests {
 	private static let view = "duplicate-row-view"
 
@@ -45,11 +45,7 @@ struct ScrollbackDuplicateRowTests {
 
 	@Test("Physical row cursors page tied line identities across reopen; retention counts actual rows")
 	func tiedRowsPageAndPruneByRow() async throws {
-		let directory = FileManager.default.temporaryDirectory.appendingPathComponent(
-			UUID().uuidString,
-			isDirectory: true
-		)
-		try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+		let directory = try ScrollbackFixture.makeDirectory()
 		defer { try? FileManager.default.removeItem(at: directory) }
 
 		let filenameSetting = ScrollbackFilenameFixture.unique()

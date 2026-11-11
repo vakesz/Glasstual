@@ -54,22 +54,11 @@ private actor ScrollbackDirectory {
 }
 
 @MainActor
-@Suite("Scrollback session", .serialized)
+@Suite("Scrollback session")
 struct ScrollbackSessionTests {
-	private func directory() throws -> URL {
-		let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
-		try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
-		return url
-	}
-
+	/// Each row's date is its identifier's length, which gives the rows an order.
 	private func entry(_ identifier: String) -> ScrollbackEntry {
-		ScrollbackEntry(
-			lineData: Data(identifier.utf8),
-			uniqueIdentifier: identifier,
-			viewIdentifier: "view",
-			sessionIdentifier: 1,
-			creationDate: TimeInterval(identifier.count)
-		)
+		ScrollbackFixture.entry(identifier, date: TimeInterval(identifier.count))
 	}
 
 	private func newest() -> ScrollbackFetchRequest {
@@ -96,7 +85,7 @@ struct ScrollbackSessionTests {
 
 	@Test("An empty page and an unavailable database remain different outcomes")
 	func emptyPageIsNotFailure() async throws {
-		let directory = try directory()
+		let directory = try ScrollbackFixture.makeDirectory()
 		defer { try? FileManager.default.removeItem(at: directory) }
 		let (store, context) = try storage(in: directory)
 		let session = session(store: store, directory: { directory.path })
@@ -115,7 +104,7 @@ struct ScrollbackSessionTests {
 
 	@Test("A malformed page remains a failure and a later valid page can load")
 	func invalidPageCanBeRetried() async throws {
-		let directory = try directory()
+		let directory = try ScrollbackFixture.makeDirectory()
 		defer { try? FileManager.default.removeItem(at: directory) }
 		let (store, context) = try storage(in: directory)
 		let session = session(store: store, directory: { directory.path })
@@ -138,7 +127,7 @@ struct ScrollbackSessionTests {
 
 	@Test("Cancelling a page held at transaction admission reports cancellation")
 	func cancelledFetchHasTypedOutcome() async throws {
-		let directory = try directory()
+		let directory = try ScrollbackFixture.makeDirectory()
 		defer { try? FileManager.default.removeItem(at: directory) }
 		let gate = ScrollbackOperationGate()
 		let (store, context) = try storage(in: directory, willPerform: { operation in
@@ -162,7 +151,7 @@ struct ScrollbackSessionTests {
 
 	@Test("Synchronous writes, a clear, and a later page use one request order")
 	func changesRunInTheOrderTheyWereAskedFor() async throws {
-		let directory = try directory()
+		let directory = try ScrollbackFixture.makeDirectory()
 		defer { try? FileManager.default.removeItem(at: directory) }
 		let recorder = ScrollbackOperationRecorder()
 		let (store, context) = try storage(in: directory, willPerform: { operation in
@@ -190,7 +179,7 @@ struct ScrollbackSessionTests {
 
 	@Test("An open failure stays latched until explicit retry")
 	func failedOpenRequiresExplicitRetry() async throws {
-		let directory = try directory()
+		let directory = try ScrollbackFixture.makeDirectory()
 		defer { try? FileManager.default.removeItem(at: directory) }
 		let attempts = Mutex<Int>(0)
 		let shouldFail = Mutex<Bool>(true)
@@ -236,7 +225,7 @@ struct ScrollbackSessionTests {
 
 	@Test("A missing setup directory remains retryable without an open failure")
 	func missingDatabaseDirectoryAnswersSafely() async throws {
-		let directory = try directory()
+		let directory = try ScrollbackFixture.makeDirectory()
 		defer { try? FileManager.default.removeItem(at: directory) }
 		let path = ScrollbackDirectory(nil)
 		let (store, context) = try storage(in: directory)
@@ -258,7 +247,7 @@ struct ScrollbackSessionTests {
 
 	@Test("A failed termination close after opening leaves the session usable")
 	func failedTerminationCloseDuringLoadRestoresLoadedState() async throws {
-		let directory = try directory()
+		let directory = try ScrollbackFixture.makeDirectory()
 		defer { try? FileManager.default.removeItem(at: directory) }
 		let openGate = ScrollbackOperationGate()
 		let closeGate = ScrollbackOperationGate()

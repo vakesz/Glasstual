@@ -133,7 +133,6 @@ struct ForwardSecrecyWarningTests {
 private enum LegacyListenerError: Error {
 	case identityMissing
 	case identityUnreadable(OSStatus)
-	case listenerNeverBecameReady
 	case barrierNeverArrived
 }
 
@@ -160,7 +159,9 @@ private actor LegacyCipherSuiteListener {
 	/// `Bundle(for:)`.
 	private final class Anchor {}
 
-	private let listener: NWListener
+	private let parameters: NWParameters
+	private var listener: LoopbackListener?
+	private let barrierGate = ArrivalGate()
 	private let arrivals: AsyncStream<NWConnection>
 	private let arrivalContinuation: AsyncStream<NWConnection>.Continuation
 	private var counting: Task<Void, Never>?
@@ -185,33 +186,24 @@ private actor LegacyCipherSuiteListener {
 			sec_protocol_options_append_tls_ciphersuite(options.securityProtocolOptions, value)
 		}
 
-		listener = try NWListener(using: NWParameters(tls: options))
+		parameters = NWParameters(tls: options)
 		(arrivals, arrivalContinuation) = AsyncStream<NWConnection>.makeStream()
 	}
 
 	func start() async throws -> UInt16 {
 		let arrivalContinuation = arrivalContinuation
-		listener.newConnectionHandler = { connection in
-			arrivalContinuation.yield(connection)
-		}
 		counting = Task { [arrivals] in
 			for await connection in arrivals {
 				self.accept(connection)
 			}
 		}
 
-		listener.start(queue: .global())
-
-		for _ in 0 ..< 200 {
-			if let port = listener.port?.rawValue, listener.state == .ready {
-				self.port = port
-				return port
-			}
-
-			try await Task.sleep(for: .milliseconds(25), clock: .continuous)
+		let listener = try await LoopbackListener.start(using: parameters) { connection in
+			arrivalContinuation.yield(connection)
 		}
-
-		throw LegacyListenerError.listenerNeverBecameReady
+		self.listener = listener
+		port = listener.port
+		return listener.port
 	}
 
 	func stop() {
@@ -219,7 +211,7 @@ private actor LegacyCipherSuiteListener {
 		counting?.cancel()
 		peers.forEach { $0.cancel() }
 		peers.removeAll()
-		listener.cancel()
+		listener?.stop()
 	}
 
 	func sendOverlongLine() async throws {
@@ -264,15 +256,9 @@ private actor LegacyCipherSuiteListener {
 			throw LegacyListenerError.barrierNeverArrived
 		}
 
-		for _ in 0 ..< 500 {
-			if let index = arrivedFromPorts.firstIndex(of: barrierPort) {
-				return index
-			}
-
-			try await Task.sleep(for: .milliseconds(10), clock: .continuous)
+		return try await barrierGate.wait(for: "the barrier connection to be counted") {
+			arrivedFromPorts.firstIndex(of: barrierPort)
 		}
-
-		throw LegacyListenerError.barrierNeverArrived
 	}
 
 	private func accept(_ connection: NWConnection) {
@@ -281,6 +267,7 @@ private actor LegacyCipherSuiteListener {
 		} else {
 			arrivedFromPorts.append(0)
 		}
+		barrierGate.signal()
 		peers.append(connection)
 		connection.start(queue: .global())
 		drain(connection)

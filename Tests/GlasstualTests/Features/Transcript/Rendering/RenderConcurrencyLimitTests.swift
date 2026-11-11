@@ -66,7 +66,7 @@ struct RenderConcurrencyLimitTests {
 	// MARK: - The budget
 
 	@Test("A slot is handed to the longest waiter, one release at a time", .timeLimit(.minutes(1)))
-	func slotsAreHandedOverInOrder() async {
+	func slotsAreHandedOverInOrder() async throws {
 		let limit = RenderConcurrencyLimit(capacity: 2)
 		#expect(await limit.acquire())
 		#expect(await limit.acquire())
@@ -77,17 +77,13 @@ struct RenderConcurrencyLimitTests {
 			order.append("first")
 			return granted
 		}
-		while limit.waitingCount < 1 {
-			await Task.yield()
-		}
+		try await Eventually.until("1 waiter in the queue") { limit.waitingCount >= 1 }
 		let second = Task {
 			let granted = await limit.acquire()
 			order.append("second")
 			return granted
 		}
-		while limit.waitingCount < 2 {
-			await Task.yield()
-		}
+		try await Eventually.until("2 waiters in the queue") { limit.waitingCount >= 2 }
 
 		limit.release()
 		#expect(await first.value)
@@ -100,14 +96,12 @@ struct RenderConcurrencyLimitTests {
 	}
 
 	@Test("A cancelled waiter leaves the queue without taking a slot", .timeLimit(.minutes(1)))
-	func cancelledWaiterTakesNothing() async {
+	func cancelledWaiterTakesNothing() async throws {
 		let limit = RenderConcurrencyLimit(capacity: 1)
 		#expect(await limit.acquire())
 
 		let waiter = Task { await limit.acquire() }
-		while limit.waitingCount < 1 {
-			await Task.yield()
-		}
+		try await Eventually.until("1 waiter in the queue") { limit.waitingCount >= 1 }
 		waiter.cancel()
 
 		#expect(await waiter.value == false)
@@ -198,9 +192,7 @@ struct RenderConcurrencyLimitTests {
 				return { log.append("\(line)") }
 			})
 		}
-		while probe.current < 2 {
-			await Task.yield()
-		}
+		try await Eventually.until("2 renders in flight") { probe.current >= 2 }
 		try await Task.sleep(for: .milliseconds(100))
 		#expect(probe.current == 2)
 
@@ -235,7 +227,7 @@ struct RenderConcurrencyLimitTests {
 	}
 
 	@Test("A job that waits on storage never takes a render slot", .timeLimit(.minutes(1)))
-	func ioJobsBypassTheBudget() async {
+	func ioJobsBypassTheBudget() async throws {
 		let limit = RenderConcurrencyLimit(capacity: 1)
 		let busy = TranscriptRenderPipeline(limit: limit)
 		let other = TranscriptRenderPipeline(limit: limit)
@@ -251,9 +243,7 @@ struct RenderConcurrencyLimitTests {
 			probe.leave()
 			return nil
 		})
-		while probe.current < 1 {
-			await Task.yield()
-		}
+		try await Eventually.until("1 render in flight") { probe.current >= 1 }
 		#expect(limit.availableCount == 0)
 
 		other.submissions.yield(TranscriptRenderSubmission(isStandalone: true) { { log.append("history") } })
@@ -271,7 +261,7 @@ struct RenderConcurrencyLimitTests {
 	}
 
 	@Test("Stopping a pipeline that is waiting for a slot gives nothing away", .timeLimit(.minutes(1)))
-	func stoppingWhileWaitingForASlotDoesNotLeakIt() async {
+	func stoppingWhileWaitingForASlotDoesNotLeakIt() async throws {
 		let limit = RenderConcurrencyLimit(capacity: 1)
 		let holder = TranscriptRenderPipeline(limit: limit)
 		let waiter = TranscriptRenderPipeline(limit: limit)
@@ -287,13 +277,9 @@ struct RenderConcurrencyLimitTests {
 			probe.leave()
 			return { log.append("held") }
 		})
-		while probe.current < 1 {
-			await Task.yield()
-		}
+		try await Eventually.until("1 render in flight") { probe.current >= 1 }
 		waiter.submissions.yield(cpuJob(probe, log: log, label: "never"))
-		while limit.waitingCount < 1 {
-			await Task.yield()
-		}
+		try await Eventually.until("1 waiter in the queue") { limit.waitingCount >= 1 }
 
 		await waiter.stop()
 		await waiterRunner.value
