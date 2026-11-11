@@ -166,6 +166,8 @@ struct MenuItemValidator {
 			return session?.isLoggedIn == true
 		case .signInAgainWithSASL:
 			return session?.canBeginSASLReauthentication == true
+		case .registerAccount:
+			return session?.accountRegistrationAvailability.isAvailable == true
 		case .duplicateServer, .serverProperties:
 			return session != nil
 		case .deleteServer:

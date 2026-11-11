@@ -93,6 +93,11 @@ extension MenuActionController {
 		MenuSheetPresenter.presentSASLSignIn(for: session)
 	}
 
+	@objc func showRegisterAccountSheet(_: Any?) {
+		guard let session = context.selectedSession, session.accountRegistrationAvailability.isAvailable else { return }
+		MenuSheetPresenter.presentAccountRegistration(for: session)
+	}
+
 	@objc func showSettingsWindow(_: Any?) {
 		AppServices.scenes.openSettings(.default)
 	}

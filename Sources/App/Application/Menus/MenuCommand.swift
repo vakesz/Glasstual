@@ -68,6 +68,7 @@ enum MenuCommand: String, CaseIterable, Sendable {
 	case channelList // Channel List
 	case changeNickname // Change Nickname…
 	case signInAgainWithSASL // Sign In Again…
+	case registerAccount // Register Account…
 	case addServer // Add Server…
 	case duplicateServer // Duplicate Server
 	case deleteServer // Delete Server…
@@ -204,7 +205,7 @@ extension MenuCommand {
 	var validationGroup: ValidationGroup {
 		switch self {
 		case .connect, .connectWithoutProxy, .disconnect, .cancelReconnect,
-		     .channelList, .changeNickname, .signInAgainWithSASL, .addServer, .duplicateServer,
+		     .channelList, .changeNickname, .signInAgainWithSASL, .registerAccount, .addServer, .duplicateServer,
 		     .deleteServer, .serverProperties:
 			.server
 		case .joinChannel, .leaveChannel, .addChannel, .deleteChannel,
@@ -286,6 +287,7 @@ extension MenuCommand {
 		.connect: "bolt", .connectWithoutProxy: "bolt.badge.clock",
 		.disconnect: "bolt.slash", .cancelReconnect: "xmark.circle",
 		.channelList: "list.bullet", .changeNickname: "pencil", .signInAgainWithSASL: "person.badge.key",
+		.registerAccount: "person.crop.circle.badge.plus",
 		.addServer: "plus", .duplicateServer: "plus.square.on.square",
 		.deleteServer: "trash.square", .serverProperties: "gearshape.2",
 		.joinChannel: "arrow.right.square", .leaveChannel: "arrow.left.square",

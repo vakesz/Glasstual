@@ -136,6 +136,11 @@ enum MenuSheetPresenter {
 		present(SASLSignInSheet(session: session)) { $0.startSheet() }
 	}
 
+	/// Registers an account on `session`, connecting first when it is not.
+	static func presentAccountRegistration(for session: ServerSession) {
+		present(AccountRegistrationSheet(session: session)) { $0.startSheet() }
+	}
+
 	static func presentNicknameColor(for nickname: String) {
 		present(NicknameColorSheet(nickname: nickname) {
 			window?.reloadTheme()

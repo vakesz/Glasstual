@@ -379,4 +379,30 @@ struct MenuItemValidatorTests {
 			} == [false, false, false])
 		}
 	}
+
+	@Test("Register Account follows whether the session can register")
+	func registerAccountFollowsAvailability() {
+		let controller = MenuActionController()
+		let session = TestServerSession(configDictionary: ["nickname": "local"])
+		controller.context.pointedSession = session
+		let validate = { controller.validator.validateServerCommand(menuItem(.registerAccount)) }
+
+		// Disconnected: Glasstual connects to register.
+		#expect(validate())
+
+		session.setConnectionTransportForTesting(.connected)
+		session.markAsLoggedIn()
+		session.addCapabilityFacts(.isIdentifiedWithSASL)
+		#expect(validate() == false)
+
+		session.removeCapabilityFacts(.isIdentifiedWithSASL)
+		session.config.bouncerNetwork = BouncerNetworkBinding(parentIdentifier: "parent", networkIdentifier: "1")
+		#expect(validate() == false)
+
+		session.config.bouncerNetwork = nil
+		session.accountRegistration.phase = .awaitingCapability(
+			AccountRegistrationRequest(account: .currentNickname, email: nil, password: "pw")
+		)
+		#expect(validate() == false)
+	}
 }

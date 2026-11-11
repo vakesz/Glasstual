@@ -40,6 +40,11 @@ extension MenuGraph {
 			.signInAgainWithSASL,
 			#selector(MenuActionController.showSASLSignInSheet(_:))
 		),
+		.item(
+			String(localized: .MainWindow.menuServerRegisterAccount),
+			.registerAccount,
+			#selector(MenuActionController.showRegisterAccountSheet(_:))
+		),
 		.separator(),
 		.item(String(localized: .MainWindow.menuServerAddServer), .addServer, #selector(MenuActionController.addServer(_:))),
 		.item(

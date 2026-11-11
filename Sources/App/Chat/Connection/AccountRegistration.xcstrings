@@ -1646,13 +1646,13 @@
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ez a szerver fiókot követel meg. Válaszd a Szerver › Fiók regisztrálása… menüpontot, vagy írd be a /register parancsot."
+            "value": "Ez a szerver fiókot követel meg. Válaszd a Kiszolgáló › Fiók regisztrálása… menüpontot, vagy írd be a /register parancsot."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dieser Server verlangt einen Account. Wähle „Server“ › „Account registrieren …“ oder gib /register ein, um einen zu erstellen."
+            "value": "Dieser Server verlangt einen Account. Wähle „Server“ › „Account registrieren…“ oder gib /register ein, um einen zu erstellen."
           }
         },
         "es": {
@@ -1934,7 +1934,7 @@
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "A(z) „%@” fiók megerősítve. Az automatikus bejelentkezéshez add meg a jelszavát a Szerver tulajdonságaiban."
+            "value": "A(z) „%@” fiók megerősítve. Az automatikus bejelentkezéshez add meg a jelszavát a Kiszolgáló tulajdonságai ablakban."
           }
         },
         "de": {
@@ -2600,31 +2600,31 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "To register, type /register <account | *> <email | *> <password>, or choose Server › Register Account…."
+            "value": "To register, type /register <account | *> <email | *> <password>, or choose Server › Register Account…"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Regisztráláshoz írd be: /register <account | *> <email | *> <password>, vagy válaszd a Szerver › Fiók regisztrálása… menüpontot."
+            "value": "Regisztráláshoz írd be: /register <account | *> <email | *> <password>, vagy válaszd a Kiszolgáló › Fiók regisztrálása… menüpontot."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gib zum Registrieren /register <account | *> <email | *> <password> ein oder wähle „Server“ › „Account registrieren …“."
+            "value": "Gib zum Registrieren /register <account | *> <email | *> <password> ein oder wähle „Server“ › „Account registrieren…“."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Para registrarte, escribe /register <account | *> <email | *> <password> o elige Servidor › Registrar cuenta…."
+            "value": "Para registrarte, escribe /register <account | *> <email | *> <password> o elige Servidor › Registrar cuenta…"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pour vous enregistrer, tapez /register <account | *> <email | *> <password> ou choisissez Serveur › Enregistrer un compte…."
+            "value": "Pour vous enregistrer, tapez /register <account | *> <email | *> <password> ou choisissez Serveur › Enregistrer un compte…"
           }
         },
         "ja": {
@@ -2636,7 +2636,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Para se registrar, digite /register <account | *> <email | *> <password> ou escolha Servidor › Registrar Conta…."
+            "value": "Para se registrar, digite /register <account | *> <email | *> <password> ou escolha Servidor › Registrar Conta…"
           }
         }
       }
