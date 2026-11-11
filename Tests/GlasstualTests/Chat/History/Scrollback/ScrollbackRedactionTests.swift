@@ -82,7 +82,41 @@ struct ScrollbackRedactionTests {
 		_ = await store.close()
 	}
 
-	@Test("A non-ASCII identifier is found without the byte pre-filter")
+	@Test("A line that learns its message identifier when it is replaced can then be redacted")
+	func replacedLineGainsItsIdentifier() async throws {
+		let (store, directory) = try await openStore()
+		defer { try? FileManager.default.removeItem(at: directory) }
+		var echoed = line("secret", identifier: nil, at: 100)
+		#expect(await store.writeChatLine(echoed.scrollbackEntry(forView: "view")) == .accepted)
+		#expect(await store.redactChatLine(messageIdentifier: "msg-9", inView: "view") == .missing)
+
+		echoed.messageIdentifier = "msg-9"
+		#expect(await store.replaceChatLine(echoed.scrollbackEntry(forView: "view")) == .replaced)
+		let outcome = await store.redactChatLine(messageIdentifier: "msg-9", inView: "view")
+
+		guard case let .redacted(redacted) = outcome else {
+			Issue.record("Expected the replaced line to be redacted, got \(outcome)")
+			return
+		}
+		#expect(redacted.uniqueIdentifier == echoed.uniqueIdentifier)
+		_ = await store.close()
+	}
+
+	@Test("A line that only mentions the identifier in its text is not redacted")
+	func identifierInTheBodyIsNotAMatch() async throws {
+		let (store, directory) = try await openStore()
+		defer { try? FileManager.default.removeItem(at: directory) }
+		#expect(await store
+			.writeChatLine(line("see msg-7 above", identifier: "msg-8", at: 100).scrollbackEntry(forView: "view")) == .accepted)
+
+		#expect(await store.redactChatLine(messageIdentifier: "msg-7", inView: "view") == .missing)
+
+		let stored = await store.fetchOutcome(.newestEntries(forView: "view", fetchLimit: 10)).entries.first
+		#expect(stored.flatMap { ChatLine(entry: $0) }?.messageBody == "see msg-7 above")
+		_ = await store.close()
+	}
+
+	@Test("A non-ASCII identifier is found")
 	func nonASCIIIdentifierIsFound() async throws {
 		let (store, directory) = try await openStore()
 		defer { try? FileManager.default.removeItem(at: directory) }

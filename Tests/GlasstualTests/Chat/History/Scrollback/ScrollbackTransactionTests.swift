@@ -96,6 +96,29 @@ struct ScrollbackTransactionTests {
 		#expect(await session.prepareForTermination() == .saved)
 	}
 
+	@Test("Forgetting a view drops the redactions it was waiting to apply; clearing it keeps them",
+	      .timeLimit(.minutes(1)), arguments: [false, true])
+	func forgettingClearsPendingRedactions(forget: Bool) async throws {
+		let directory = try directory()
+		defer { try? FileManager.default.removeItem(at: directory) }
+		let store = ScrollbackStore(filenameSetting: ScrollbackFilenameFixture().store)
+		let session = ScrollbackSession(store: store, databaseDirectory: { directory.path }, reportFailure: {
+			Issue.record(Comment(rawValue: $0))
+		})
+		let history = Scrollback(session: session)
+
+		// A redaction for a line never stored waits for it.
+		history.redactMessage(withIdentifier: "ghost", inView: "view")
+		while !history.hasPendingRedaction("ghost", inView: "view") {
+			await Task.yield()
+		}
+
+		await history.removeHistory(forView: "view", forget: forget).value
+
+		#expect(history.hasPendingRedaction("ghost", inView: "view") == !forget)
+		#expect(await session.prepareForTermination() == .saved)
+	}
+
 	private func directory() throws -> URL {
 		let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
 		try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)

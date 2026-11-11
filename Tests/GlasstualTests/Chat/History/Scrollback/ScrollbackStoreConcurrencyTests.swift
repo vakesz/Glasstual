@@ -131,6 +131,31 @@ private actor ScrollbackStoreHarness {
 	}
 }
 
+/** Writes a line the first time a chunked removal reports, and holds the
+ removal until that write is queued behind it, so the removal's next chunk
+ can only run after the write had its turn. */
+private actor InterleavingWriter {
+	private var store: ScrollbackStore?
+	private(set) var reports: [[String]] = []
+
+	func attach(_ store: ScrollbackStore) {
+		self.store = store
+	}
+
+	func chunkDeleted(_ identifiers: [String]) async {
+		reports.append(identifiers)
+		guard reports.count == 1, let store else { return }
+		let late = ScrollbackEntry(
+			lineData: Data("late".utf8), uniqueIdentifier: "late", viewIdentifier: "view",
+			sessionIdentifier: 1, creationDate: 50
+		)
+		Task { await store.writeChatLine(late) }
+		while await store.pendingOperationCount < 1 {
+			await Task.yield()
+		}
+	}
+}
+
 @Suite("Scrollback store", .serialized)
 struct ScrollbackStoreConcurrencyTests {
 	@Test("The real store distinguishes an unavailable database, missing cursor and exhausted page")
@@ -476,5 +501,43 @@ struct ScrollbackStoreConcurrencyTests {
 		#expect(await firstCount == 6)
 		#expect(await secondCount == 6)
 		await harness.shutdown()
+	}
+
+	@Test("A chunked removal lets a queued write in between chunks, and the write stays", .timeLimit(.minutes(1)))
+	func chunkedForgetInterleavesQueuedWrite() async throws {
+		let directory = URL(fileURLWithPath: NSTemporaryDirectory())
+			.appendingPathComponent("scrollback-chunks-\(UUID().uuidString)", isDirectory: true)
+		try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+		defer { try? FileManager.default.removeItem(at: directory) }
+		let writer = InterleavingWriter()
+		let store = ScrollbackStore(
+			filenameSetting: ScrollbackFilenameFixture.unique().store,
+			deletionChunkSize: 10,
+			deletionHandler: { identifiers, _ in await writer.chunkDeleted(identifiers) }
+		)
+		await writer.attach(store)
+		await store.setMaximumLineCount(10000)
+		#expect(await store.openDatabase(inDirectory: directory.path).isOpen)
+		for index in 0 ..< 25 {
+			await store.writeChatLine(ScrollbackEntry(
+				lineData: Data("line \(index)".utf8), uniqueIdentifier: "line-\(index)", viewIdentifier: "view",
+				sessionIdentifier: 1, creationDate: TimeInterval(100 + index)
+			))
+		}
+
+		guard case let .deleted(result) = await store.forgetView("view") else {
+			Issue.record("The removal did not delete")
+			return
+		}
+
+		// The late line is older by its own time, but was written after the
+		// removal was asked for, so it is not one of the rows the removal covers.
+		#expect(result.deletedCount == 25)
+		let reports = await writer.reports
+		#expect(reports.count >= 3)
+		#expect(Set(reports.joined()) == Set((0 ..< 25).map { "line-\($0)" }))
+		#expect(await store.fetchOutcome(.newestEntries(forView: "view", fetchLimit: 100)).entries
+			.map(\.uniqueIdentifier) == ["late"])
+		#expect(await store.close() == .saved)
 	}
 }

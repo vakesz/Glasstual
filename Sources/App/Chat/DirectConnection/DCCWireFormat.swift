@@ -230,3 +230,11 @@ nonisolated enum DCCWireFormat {
 		return octets
 	}
 }
+
+extension Character {
+	/// Wire numbers are ASCII, in every DCC offer. `isNumber` also admits `²`,
+	/// `٣` and `½`, which are not digits a peer's client would send.
+	nonisolated var isASCIIDigit: Bool { // nonisolated: pure
+		isASCII && isNumber
+	}
+}

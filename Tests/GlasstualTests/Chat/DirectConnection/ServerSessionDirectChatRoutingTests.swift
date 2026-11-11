@@ -95,4 +95,39 @@ struct ServerSessionDirectChatRoutingTests {
 
 		#expect(session.recordedOutput.presentedAlerts.count == overall)
 	}
+
+	/// A passive offer: accepting it would listen and answer whoever holds the
+	/// sender's nickname, which is what a stale answer must not do.
+	private static let passiveOffer = "CHAT chat 0 0 T12"
+
+	@Test("Accepting an offer after the connection that carried it was replaced does nothing")
+	func staleAcceptanceIsIgnored() throws {
+		let session = TestServerSession()
+		session.markAsLoggedIn()
+		session.receivedDCCChatQuery("alice", text: Self.passiveOffer)
+		let completion = try #require(session.recordedOutput.presentedAlertCompletions.first)
+
+		// A reconnect starts a new startup, and the session is logged in again.
+		session.startup = StartupState()
+		completion(AlertOutcome(response: .default, isSuppressed: false))
+
+		#expect(session.directChatConversation(forNickname: "alice") == nil)
+	}
+
+	@Test("Declining an offer still says so after a reconnect")
+	func staleDeclinePrintsTheDeclinedLine() throws {
+		let session = TestServerSession()
+		session.markAsLoggedIn()
+		session.receivedDCCChatQuery("alice", text: Self.passiveOffer)
+		let completion = try #require(session.recordedOutput.presentedAlertCompletions.first)
+		session.startup = StartupState()
+		let printedBefore = session.printedLines.count
+
+		completion(AlertOutcome(response: .alternate, isSuppressed: false))
+
+		#expect(session.printedLines.count == printedBefore + 1)
+		let line = try #require(session.printedLines.lastObject as? [String: Any])
+		#expect(line["messageBody"] as? String == String(localized: .IRC.declinedDirectChatRequest("alice")))
+		#expect(session.directChatConversation(forNickname: "alice") == nil)
+	}
 }

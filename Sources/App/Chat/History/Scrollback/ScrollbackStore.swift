@@ -83,6 +83,10 @@ actor ScrollbackStore {
 	private let saveRowThreshold: Int
 	/// The longest a written row waits for a save while traffic continues.
 	private let saveDelay: Duration
+	/** The most rows one step of a removal or a retention pass deletes and
+	 saves before queued work gets its turn. A thousand rows is about 1.4 MB of
+	 registered objects. */
+	private let deletionChunkSize: Int
 	private let willPerform: (@Sendable (ScrollbackStoreOperation) async -> Void)?
 	var pendingOperationCount: Int {
 		waiting.count - waitingHead
@@ -96,6 +100,7 @@ actor ScrollbackStore {
 		saveInterval: Duration = .seconds(120),
 		saveRowThreshold: Int = 500,
 		saveDelay: Duration = .seconds(5),
+		deletionChunkSize: Int = 1000,
 		willPerform: (@Sendable (ScrollbackStoreOperation) async -> Void)? = nil,
 		saveFailureHandler: @escaping SaveFailureHandler = { _ in },
 		deletionHandler: @escaping DeletionHandler = { _, _ in }
@@ -106,6 +111,7 @@ actor ScrollbackStore {
 		self.saveInterval = saveInterval
 		self.saveRowThreshold = max(1, saveRowThreshold)
 		self.saveDelay = saveDelay
+		self.deletionChunkSize = max(1, deletionChunkSize)
 		self.willPerform = willPerform
 		self.saveFailureHandler = saveFailureHandler
 		self.deletionHandler = deletionHandler
@@ -297,25 +303,83 @@ actor ScrollbackStore {
 		defer { leave() }
 		await willPerform?(forget ? .forget : .reset)
 		guard let context else { return .unavailable }
-		// A deletion saves what is pending before it deletes, and again after.
-		rowsSinceSave = 0
-		let outcome = await context.perform {
-			ScrollbackQueries.deleteOutcome(.everything, in: context, viewIdentifier: identifier)
-		}
-		if case let .deleted(result) = outcome {
+		/* The rows to remove are the ones written before the removal was asked
+		 for. A line queued behind it may be written between two chunks, gets a
+		 higher entry identifier, and stays. */
+		let ceiling: UInt
+		do {
+			ceiling = try await context.perform {
+				try ScrollbackQueries.initialCounts(in: context, viewIdentifier: identifier).maximumIdentifier
+			}
+		} catch { return .failed(error.localizedDescription) }
+		let outcome = await deleteInChunks(
+			.everything(throughEntryIdentifier: max(ceiling, views[identifier]?.maximumIdentifier ?? 0)),
+			inView: identifier, context: context, continues: { true }
+		)
+		if case .deleted = outcome {
 			views[identifier]?.resize?.task.cancel()
 			if forget {
 				views.removeValue(forKey: identifier)
 			} else {
-				views[identifier]?.totalLineCount = 0
 				views[identifier]?.resize = nil
-			}
-			// The one-way notification completes before a newer view generation can enter.
-			if !result.uniqueIdentifiers.isEmpty {
-				await deletionHandler(result.uniqueIdentifiers, identifier)
 			}
 		}
 		return outcome
+	}
+
+	/** Runs `deletion` a chunk at a time, holding the store for each chunk and
+	 letting the work queued behind it run in between.
+
+	 Each chunk takes its rows off the view's count and reports the identifiers
+	 it removed before the store is let go, so the duplicate index never trails
+	 the database. A failure stops the run: the chunks before it stay deleted
+	 and were reported, and the failure is what the run answers. `continues` is
+	 asked before every later chunk; a run it stops answers what it deleted. */
+	private func deleteInChunks(
+		_ deletion: ScrollbackQueries.Deletion,
+		inView identifier: String,
+		context: NSManagedObjectContext,
+		continues: () -> Bool
+	) async -> ScrollbackDeletionOutcome {
+		let chunkLimit = deletionChunkSize
+		var deletedCount: UInt = 0
+		var uniqueIdentifiers: [String] = []
+		while true {
+			// A deletion saves what is pending before it deletes, and again after.
+			rowsSinceSave = 0
+			let outcome = await context.perform {
+				ScrollbackQueries.deleteOutcome(
+					deletion, in: context, viewIdentifier: identifier, chunkLimit: chunkLimit
+				)
+			}
+			guard case let .deleted(chunk) = outcome else { return outcome }
+			deletedCount = saturatedAdd(deletedCount, chunk.deletedCount)
+			uniqueIdentifiers += chunk.uniqueIdentifiers
+			if let count = views[identifier]?.totalLineCount {
+				views[identifier]?.totalLineCount = count - min(count, chunk.deletedCount)
+			}
+			// The one-way notification completes before a newer view generation can enter.
+			if !chunk.uniqueIdentifiers.isEmpty {
+				await deletionHandler(chunk.uniqueIdentifiers, identifier)
+			}
+			guard chunk.hasMore else { break }
+			await yieldBetweenChunks()
+			guard self.context === context else { return .unavailable }
+			guard continues() else { break }
+		}
+		return .deleted(ScrollbackQueries.DeletionResult(deletedCount: deletedCount, uniqueIdentifiers: uniqueIdentifiers))
+	}
+
+	/** Hands the store to the operations queued behind a long deletion, and
+	 takes it back after them.
+
+	 Not while a close is waiting: it would end the deletion halfway, and a
+	 removal that was accepted finishes before the store closes, as it did when
+	 it was one transaction. */
+	private func yieldBetweenChunks() async {
+		guard closingCount == 0, pendingOperationCount > 0 else { return }
+		leave()
+		await enter()
 	}
 
 	func fetchOutcome(_ request: ScrollbackFetchRequest) async -> ScrollbackFetchOutcome {
@@ -491,20 +555,19 @@ actor ScrollbackStore {
 			releaseResizeSlot(identifier, requestIdentifier: requestIdentifier)
 			return .unavailable
 		}
+		/* A retention pass commits pending rows first, as a removal does. A pass
+		 that was cancelled, replaced or given another limit between its chunks
+		 stops there; the limit's own pass takes over. */
 		let limit = maximumLineCount
-		// A retention pass commits pending rows first, as a removal does.
-		rowsSinceSave = 0
-		let outcome = await context.perform {
-			ScrollbackQueries.deleteOutcome(.retainingNewest(count: limit), in: context, viewIdentifier: identifier)
-		}
+		let outcome = await deleteInChunks(
+			.retainingNewest(count: limit), inView: identifier, context: context,
+			continues: {
+				!Task.isCancelled && maximumLineCount == limit
+					&& (requestIdentifier == nil || requestIdentifier == views[identifier]?.resize?.identifier)
+			}
+		)
 		releaseResizeSlot(identifier, requestIdentifier: requestIdentifier)
 		if case let .deleted(result) = outcome, result.deletedCount > 0 {
-			if let count = views[identifier]?.totalLineCount {
-				views[identifier]?.totalLineCount = count - min(count, result.deletedCount)
-			}
-			if !result.uniqueIdentifiers.isEmpty {
-				await deletionHandler(result.uniqueIdentifiers, identifier)
-			}
 			/* One pass may leave the view over its limit — the limit can have been
 			 lowered again while this one ran. A pass that deleted nothing arms no
 			 successor, so a counter that disagrees with the store cannot spin. */

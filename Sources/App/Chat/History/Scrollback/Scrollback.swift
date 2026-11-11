@@ -127,6 +127,9 @@ final class Scrollback {
 			case let .redacted(line):
 				duplicates.replaceChatLine(line, forView: viewIdentifier)
 				pendingRedactions[viewIdentifier]?.remove(MessageIdentifierKey(messageIdentifier))
+				if pendingRedactions[viewIdentifier]?.isEmpty == true {
+					pendingRedactions.removeValue(forKey: viewIdentifier)
+				}
 			case .missing:
 				rememberPendingRedaction(messageIdentifier, inView: viewIdentifier)
 			case .unavailable:
@@ -138,18 +141,19 @@ final class Scrollback {
 	}
 
 	/// Message identifiers redacted before their line was stored, per view.
-	/// Bounded: an identifier is dropped when it is applied, and the oldest
-	/// are dropped first beyond the ceiling.
-	private var pendingRedactions: [String: Set<MessageIdentifierKey>] = [:]
+	/// Bounded: an identifier is dropped when it is applied, the oldest are
+	/// dropped first beyond the ceiling, and a forgotten view drops them all.
+	private var pendingRedactions: [String: ScrollbackPendingRedactions] = [:]
 	private static let pendingRedactionLimit = 512
 
 	private func rememberPendingRedaction(_ messageIdentifier: String, inView viewIdentifier: String) {
-		var pending = pendingRedactions[viewIdentifier] ?? []
-		if pending.count >= Self.pendingRedactionLimit, let dropped = pending.first {
-			pending.remove(dropped)
-		}
-		pending.insert(MessageIdentifierKey(messageIdentifier))
-		pendingRedactions[viewIdentifier] = pending
+		pendingRedactions[viewIdentifier, default: ScrollbackPendingRedactions(limit: Self.pendingRedactionLimit)]
+			.insert(MessageIdentifierKey(messageIdentifier))
+	}
+
+	/// Whether a redaction of `messageIdentifier` waits for its line in the view.
+	func hasPendingRedaction(_ messageIdentifier: String, inView viewIdentifier: String) -> Bool {
+		pendingRedactions[viewIdentifier]?.contains(MessageIdentifierKey(messageIdentifier)) == true
 	}
 
 	/// Whether a line about to be stored was already redacted, in which case
@@ -179,6 +183,10 @@ final class Scrollback {
 				duplicates.removeGenerations(removedGenerations, inView: viewIdentifier)
 				if forget {
 					duplicates.forgetViewIfEmpty(viewIdentifier)
+					/* A conversation that is gone has no line left in flight. A
+					 reset keeps them: the reader is still in the view, and a
+					 line still rendering there must be redacted when it lands. */
+					pendingRedactions.removeValue(forKey: viewIdentifier)
 				}
 				recovery.deletionFailures.removeValue(forKey: viewIdentifier)
 			case let .failed(reason): recovery.deletionFailures[viewIdentifier] = reason
@@ -221,6 +229,50 @@ final class Scrollback {
 	/// Searches the stored text of the views the query names.
 	func search(_ query: ScrollbackSearchQuery) async -> ScrollbackSearchOutcome {
 		await session.search(query)
+	}
+}
+
+/** The message identifiers one view was asked to redact before their lines
+ were stored, oldest first.
+
+ Kept in the order they arrived so the ceiling evicts the one that has waited
+ longest, the least likely still to be in flight, rather than whichever a hash
+ happens to put first. There is no expiry by age: a line can legitimately
+ arrive much later, in a history page fetched after the redaction. */
+struct ScrollbackPendingRedactions {
+	let limit: Int
+	private var order: [MessageIdentifierKey] = []
+	private var members: Set<MessageIdentifierKey> = []
+
+	init(limit: Int) {
+		self.limit = max(1, limit)
+	}
+
+	var isEmpty: Bool {
+		members.isEmpty
+	}
+
+	var count: Int {
+		members.count
+	}
+
+	func contains(_ identifier: MessageIdentifierKey) -> Bool {
+		members.contains(identifier)
+	}
+
+	/// Adds `identifier` as the newest, unless it is already waiting, and
+	/// drops the oldest past the limit.
+	mutating func insert(_ identifier: MessageIdentifierKey) {
+		guard members.insert(identifier).inserted else { return }
+		order.append(identifier)
+		while order.count > limit {
+			members.remove(order.removeFirst())
+		}
+	}
+
+	mutating func remove(_ identifier: MessageIdentifierKey) {
+		guard members.remove(identifier) != nil, let index = order.firstIndex(of: identifier) else { return }
+		order.remove(at: index)
 	}
 }
 

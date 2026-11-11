@@ -57,6 +57,18 @@ struct ServerSessionDCCPolicyTests {
 		#expect(DirectChatPolicy.parseOffer("CHAT chat 3232235777 0") == nil)
 	}
 
+	/// `isNumber` admits superscripts, other scripts' digits and fractions; a
+	/// wire number is ASCII, as the file-transfer parser already requires.
+	@Test("A chat offer with a digit that is not ASCII is refused", arguments: [
+		"CHAT chat 0 0 T\u{0663}\u{0663}",
+		"CHAT chat 0 0 T\u{00B2}",
+		"CHAT chat 1568397154 \u{0665}\u{0660}\u{0660}\u{0660}",
+		"CHAT chat 1568397154 5000 T\u{00BD}",
+	])
+	func refusesNonASCIIDigits(offer: String) {
+		#expect(DirectChatPolicy.parseOffer(offer) == nil)
+	}
+
 	/// A lone "T" is the token prefix with nothing after it, so it names no token:
 	/// a passive offer then has nothing to be matched by and is refused, and an
 	/// active one is just an active offer.

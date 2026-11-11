@@ -25,7 +25,10 @@ nonisolated enum ScrollbackQueries {
 	/// Which rows a deletion covers. `Sendable` so the request can be rebuilt
 	/// on the parent context's queue instead of being carried across.
 	enum Deletion: Sendable {
-		case everything
+		/// Every row of the view whose entry identifier is at most the ceiling:
+		/// the rows written before the removal was asked for. A line written
+		/// while it runs is newer, and stays.
+		case everything(throughEntryIdentifier: UInt)
 		case retainingNewest(count: UInt)
 	}
 
@@ -35,6 +38,8 @@ nonisolated enum ScrollbackQueries {
 	struct DeletionResult: Sendable {
 		let deletedCount: UInt
 		let uniqueIdentifiers: [String]
+		/// Whether rows the deletion covers were left for another chunk.
+		var hasMore = false
 	}
 
 	// MARK: - Stack
@@ -56,7 +61,7 @@ nonisolated enum ScrollbackQueries {
 			throw error
 		}
 
-		let coordinator = NSPersistentStoreCoordinator(managedObjectModel: versions.searchable)
+		let coordinator = NSPersistentStoreCoordinator(managedObjectModel: versions.current)
 		// The explicit upgrade handles only the known earlier schemas. Never
 		// infer a migration for any other store at ordinary open.
 		let options: [AnyHashable: Any] = [
@@ -179,7 +184,7 @@ nonisolated enum ScrollbackQueries {
 		)
 		entry.setValue(chatLine.viewIdentifier, forKey: ScrollbackAttribute.viewID.rawValue)
 		entry.setValue(chatLine.data, forKey: ScrollbackAttribute.lineData.rawValue)
-		chatLine.search.write(to: entry)
+		chatLine.writeDerivedColumns(to: entry)
 		entry.setValue(chatLine.uniqueIdentifier, forKey: ScrollbackAttribute.lineID.rawValue)
 		entry.setValue(
 			NSNumber(value: chatLine.sessionIdentifier),
@@ -200,7 +205,8 @@ nonisolated enum ScrollbackQueries {
 			for row in rows {
 				// Preserve physical cursors and insertion order already handed to views.
 				row.setValue(entry.data, forKey: ScrollbackAttribute.lineData.rawValue)
-				entry.search.write(to: row)
+				// A labelled echo learns its server message identifier here.
+				entry.writeDerivedColumns(to: row)
 			}
 			return .replaced
 		} catch { return .failed(error.localizedDescription) }
@@ -210,10 +216,12 @@ nonisolated enum ScrollbackQueries {
 	 view with the line redacted, so the deleted text does not stay in the
 	 database.
 
-	 The identifier lives inside the payload rather than in a column, so this
-	 reads the view's rows. An ASCII identifier is first looked for as bytes in
-	 the stored payload, which spares decoding every row that cannot be the one.
-	 The row keeps its cursor, order and line identity: only `lineData` changes. */
+	 The identifier is a column beside the payload, indexed with the view, so
+	 only the rows that carry it are read. The column compares bytes, as
+	 ``MessageIdentifierKey`` does, and each match is still checked against its
+	 archive before it is overwritten. The row keeps its cursor, order, line
+	 identity and message identifier: only `lineData` and the search columns
+	 change. */
 	static func redact(
 		messageIdentifier: String,
 		viewIdentifier: String,
@@ -221,15 +229,16 @@ nonisolated enum ScrollbackQueries {
 	) -> ScrollbackRedactionOutcome {
 		guard messageIdentifier.isEmpty == false else { return .missing }
 		let request = NSFetchRequest<NSManagedObject>(entityName: entityName)
-		request.predicate = NSPredicate(format: "%K == %@", ScrollbackAttribute.viewID.rawValue, viewIdentifier)
+		request.predicate = NSPredicate(
+			format: "%K == %@ AND %K == %@",
+			ScrollbackAttribute.viewID.rawValue, viewIdentifier,
+			ScrollbackAttribute.messageID.rawValue, messageIdentifier
+		)
 		request.includesPendingChanges = true
-		request.fetchBatchSize = 256
-		let needle = messageIdentifier.data(using: .ascii)
 		do {
 			var redactedLine: ChatLine?
 			for row in try context.fetch(request) {
 				guard let data = row.value(forKey: ScrollbackAttribute.lineData.rawValue) as? Data,
-				      needle.map({ data.range(of: $0) != nil }) ?? true,
 				      var line = ChatLine(data: data),
 				      MessageIdentifierKey.equal(line.messageIdentifier, messageIdentifier)
 				else { continue }

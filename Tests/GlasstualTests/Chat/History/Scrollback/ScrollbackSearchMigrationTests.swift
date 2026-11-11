@@ -6,9 +6,10 @@ import CoreData
 import Synchronization
 import Testing
 
-/// One stored row as a test reads it back: the six original columns and the
-/// three the searchable schema added. `nil` marks a column the schema does not
-/// have, which is how the old schema's rows read.
+/// One stored row as a test reads it back: the six original columns, the
+/// three the searchable schema added and the message identifier the current
+/// one added. `nil` marks a column the schema does not have, which is how the
+/// old schemas' rows read.
 private nonisolated struct StoredRow: Hashable, Sendable {
 	let entryID: Int64
 	let createdAt: Double
@@ -19,6 +20,7 @@ private nonisolated struct StoredRow: Hashable, Sendable {
 	let plainText: String?
 	let sender: String?
 	let searchText: String?
+	let messageID: String?
 
 	init(
 		entryID: Int64, createdAt: Double, data: Data, lineID: String, sessionID: Int64, viewID: String
@@ -32,6 +34,7 @@ private nonisolated struct StoredRow: Hashable, Sendable {
 		plainText = nil
 		sender = nil
 		searchText = nil
+		messageID = nil
 	}
 
 	init(_ object: NSManagedObject) throws {
@@ -45,6 +48,8 @@ private nonisolated struct StoredRow: Hashable, Sendable {
 		plainText = hasSearchColumns ? object.value(forKey: ScrollbackAttribute.plainText.rawValue) as? String : nil
 		sender = hasSearchColumns ? object.value(forKey: ScrollbackAttribute.sender.rawValue) as? String : nil
 		searchText = hasSearchColumns ? object.value(forKey: ScrollbackAttribute.searchText.rawValue) as? String : nil
+		let hasMessageColumn = object.entity.propertiesByName[ScrollbackAttribute.messageID.rawValue] != nil
+		messageID = hasMessageColumn ? object.value(forKey: ScrollbackAttribute.messageID.rawValue) as? String : nil
 	}
 
 	/// The original columns only, which is what an upgrade has to leave alone.
@@ -63,7 +68,8 @@ private nonisolated struct StoredRow: Hashable, Sendable {
 	}
 }
 
-/** The upgrade from the schema with indexes to the one with searchable columns.
+/** The upgrades from the earlier schemas to the current one, which adds the
+ searchable columns and the indexed message identifier.
 
  Every store here is minted from the earlier model in the test itself, so the
  starting point is the schema a real installation holds rather than a copy of
@@ -82,12 +88,14 @@ struct ScrollbackSearchMigrationTests {
 		_ body: String,
 		nickname: String? = "alice",
 		type: ChatLineKind = .privateMessage,
-		redacted: Bool = false
+		redacted: Bool = false,
+		messageIdentifier: String? = nil
 	) -> (data: Data, identifier: String) {
 		var line = ChatLine()
 		line.messageBody = body
 		line.nickname = nickname
 		line.lineType = type
+		line.messageIdentifier = messageIdentifier
 		if redacted {
 			line.redact()
 		}
@@ -98,9 +106,15 @@ struct ScrollbackSearchMigrationTests {
 	/// Mints a store in the indexed schema, which is what every store written
 	/// before searchable columns holds.
 	private func seedIndexedStore(at url: URL, rows: [StoredRow]) async throws {
+		try await seedStore(at: url, schema: .indexed, rows: rows)
+	}
+
+	/// Mints a store in an earlier schema. Only the six original columns are
+	/// written, which is all a copy reads from it.
+	private func seedStore(at url: URL, schema: Schema, rows: [StoredRow]) async throws {
 		let context = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
 		try await context.perform {
-			let model = try ScrollbackModelMigration.indexedModel(from: ScrollbackModelMigration.loadUnindexedModel())
+			let model = try Self.model(for: schema)
 			let entity = try #require(model.entitiesByName[ScrollbackQueries.entityName])
 			let coordinator = NSPersistentStoreCoordinator(managedObjectModel: model)
 			let store = try coordinator.addPersistentStore(type: .sqlite, at: url)
@@ -115,17 +129,22 @@ struct ScrollbackSearchMigrationTests {
 	}
 
 	private nonisolated enum Schema: Sendable {
-		case indexed, searchable
+		case indexed, searchable, current
+	}
+
+	private nonisolated static func model(for schema: Schema) throws -> NSManagedObjectModel { // nonisolated: pure
+		let versions = try ScrollbackModelMigration.versions()
+		return switch schema {
+		case .indexed: versions.indexed
+		case .searchable: versions.searchable
+		case .current: versions.current
+		}
 	}
 
 	private func readRows(at url: URL, schema: Schema) async throws -> [StoredRow] {
 		let context = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
 		return try await context.perform {
-			let versions = try ScrollbackModelMigration.versions()
-			let model = switch schema {
-			case .indexed: versions.indexed
-			case .searchable: versions.searchable
-			}
+			let model = try Self.model(for: schema)
 			let coordinator = NSPersistentStoreCoordinator(managedObjectModel: model)
 			let store = try coordinator.addPersistentStore(type: .sqlite, at: url)
 			context.persistentStoreCoordinator = coordinator
@@ -168,7 +187,7 @@ struct ScrollbackSearchMigrationTests {
 		let versions = try ScrollbackModelMigration.versions()
 		let before = try metadata(at: url)
 		#expect(versions.indexed.isConfiguration(withName: nil, compatibleWithStoreMetadata: before))
-		#expect(!versions.searchable.isConfiguration(withName: nil, compatibleWithStoreMetadata: before))
+		#expect(!versions.current.isConfiguration(withName: nil, compatibleWithStoreMetadata: before))
 
 		let fractions = Mutex<[Double]>([])
 		let store = ScrollbackStore(
@@ -179,8 +198,8 @@ struct ScrollbackSearchMigrationTests {
 		#expect(await store.close() == .saved)
 
 		let after = try metadata(at: url)
-		#expect(versions.searchable.isConfiguration(withName: nil, compatibleWithStoreMetadata: after))
-		let rows = try await readRows(at: url, schema: .searchable)
+		#expect(versions.current.isConfiguration(withName: nil, compatibleWithStoreMetadata: after))
+		let rows = try await readRows(at: url, schema: .current)
 		// Row-count parity, and every original column exactly as it was.
 		#expect(rows.count == seeded.count)
 		#expect(rows.map(\.original).sorted { ($0.viewID, $0.entryID, $0.lineID) < ($1.viewID, $1.entryID, $1.lineID) }
@@ -228,7 +247,7 @@ struct ScrollbackSearchMigrationTests {
 		let first = ScrollbackStore(filenameSetting: setting)
 		#expect(await first.openDatabase(inDirectory: directory.path).isOpen)
 		#expect(await first.close() == .saved)
-		let upgraded = try await readRows(at: url, schema: .searchable)
+		let upgraded = try await readRows(at: url, schema: .current)
 		let storeUUID = try #require(try metadata(at: url)[NSStoreUUIDKey] as? String)
 
 		let fractions = Mutex<[Double]>([])
@@ -241,7 +260,7 @@ struct ScrollbackSearchMigrationTests {
 
 		#expect(fractions.withLock { $0 }.isEmpty)
 		#expect(try metadata(at: url)[NSStoreUUIDKey] as? String == storeUUID)
-		#expect(try await Set(readRows(at: url, schema: .searchable)) == Set(upgraded))
+		#expect(try await Set(readRows(at: url, schema: .current)) == Set(upgraded))
 		let leftovers = try FileManager.default.contentsOfDirectory(atPath: directory.path)
 			.filter { $0.hasSuffix(".sqlite") }
 		#expect(leftovers == ["history.sqlite"])
@@ -270,7 +289,7 @@ struct ScrollbackSearchMigrationTests {
 		#expect(await store.openDatabase(inDirectory: directory.path).isOpen)
 		#expect(await store.close() == .saved)
 
-		let upgraded = try await readRows(at: url, schema: .searchable)
+		let upgraded = try await readRows(at: url, schema: .current)
 		#expect(upgraded.count == count)
 		#expect(Set(upgraded.map(\.lineID)) == Set(rows.map(\.lineID)))
 		#expect(upgraded.allSatisfy { $0.plainText?.hasPrefix("message number ") == true })
@@ -294,7 +313,7 @@ struct ScrollbackSearchMigrationTests {
 		#expect(await store.openDatabase(inDirectory: directory.path).isOpen)
 		#expect(await store.close() == .saved)
 
-		#expect(try await readRows(at: url, schema: .searchable).count == seeded.count)
+		#expect(try await readRows(at: url, schema: .current).count == seeded.count)
 		#expect(!FileManager.default.fileExists(atPath: workingCopy.path))
 	}
 
@@ -327,6 +346,56 @@ struct ScrollbackSearchMigrationTests {
 		let rows = try await readRows(at: url, schema: .indexed)
 		#expect(rows.count == seeded.count)
 		#expect(Set(rows.map(\.original)) == Set(seeded))
+	}
+
+	@Test("A searchable store gains the message identifier column, and its old rows can be redacted")
+	func searchableStoreGainsMessageIdentifiers() async throws {
+		let directory = try makeDirectory()
+		defer { try? FileManager.default.removeItem(at: directory) }
+		let url = directory.appendingPathComponent("history.sqlite")
+		let tagged = archived("a secret said before the update", messageIdentifier: "msg-1")
+		let other = archived("an unrelated line", nickname: "bob", messageIdentifier: "msg-2")
+		let untagged = archived("no identifier at all")
+		let seeded = [
+			StoredRow(entryID: 1, createdAt: 1000, data: tagged.data, lineID: tagged.identifier, sessionID: 5, viewID: "main"),
+			StoredRow(entryID: 2, createdAt: 1001, data: other.data, lineID: other.identifier, sessionID: 5, viewID: "main"),
+			StoredRow(entryID: 3, createdAt: 1002, data: untagged.data, lineID: untagged.identifier, sessionID: 5, viewID: "main"),
+			StoredRow(entryID: 1, createdAt: 1003, data: Data("not a property list".utf8), lineID: "broken", sessionID: 6, viewID: "side"),
+		]
+		try await seedStore(at: url, schema: .searchable, rows: seeded)
+		let versions = try ScrollbackModelMigration.versions()
+		let before = try metadata(at: url)
+		#expect(versions.searchable.isConfiguration(withName: nil, compatibleWithStoreMetadata: before))
+		#expect(!versions.current.isConfiguration(withName: nil, compatibleWithStoreMetadata: before))
+
+		let fractions = Mutex<[Double]>([])
+		let store = ScrollbackStore(
+			filenameSetting: ScrollbackFilenameFixture("history.sqlite").store,
+			migrationProgress: { fraction in fractions.withLock { $0.append(fraction) } }
+		)
+		#expect(await store.openDatabase(inDirectory: directory.path).isOpen)
+		#expect(fractions.withLock { $0.last } == 1)
+
+		// A row written before the update is found through the new column.
+		guard case let .redacted(line) = await store.redactChatLine(messageIdentifier: "msg-1", inView: "main") else {
+			Issue.record("The migrated row was not found by its message identifier")
+			return
+		}
+		#expect(line.uniqueIdentifier == tagged.identifier)
+		#expect(line.messageBody.isEmpty)
+		#expect(await store.close() == .saved)
+
+		#expect(try versions.current.isConfiguration(withName: nil, compatibleWithStoreMetadata: metadata(at: url)))
+		let rows = try await readRows(at: url, schema: .current)
+		#expect(rows.count == seeded.count)
+		let byLine = Dictionary(uniqueKeysWithValues: rows.map { ($0.lineID, $0) })
+		#expect(byLine[tagged.identifier]?.messageID == "msg-1")
+		#expect(byLine[tagged.identifier]?.plainText == "")
+		#expect(byLine[other.identifier]?.messageID == "msg-2")
+		#expect(byLine[other.identifier]?.plainText == "an unrelated line")
+		#expect(byLine[untagged.identifier]?.messageID == nil)
+		#expect(byLine["broken"]?.messageID == nil)
+		#expect(byLine["broken"]?.data == Data("not a property list".utf8))
 	}
 
 	@Test("A store the build does not recognise is left untouched")

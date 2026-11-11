@@ -18,6 +18,9 @@ nonisolated enum ScrollbackAttribute: String {
 	case plainText
 	case sender
 	case searchText
+	/// The IRCv3 message identifier the fourth schema copies out of `lineData`,
+	/// so a redaction finds its row through an index.
+	case messageID
 }
 
 /// The value stored in Core Data between the archive and application models.
@@ -31,6 +34,9 @@ nonisolated struct ScrollbackEntry: Sendable {
 	let cursor: ScrollbackRowCursor?
 	/// The plain text written beside the archive so the row can be searched.
 	let search: ScrollbackSearchFields
+	/// The line's IRCv3 message identifier, written beside the archive so a
+	/// redaction can find the row without reading the view. Never empty.
+	let messageIdentifier: String?
 
 	init(
 		lineData data: Data,
@@ -39,7 +45,8 @@ nonisolated struct ScrollbackEntry: Sendable {
 		sessionIdentifier: UInt,
 		creationDate: TimeInterval,
 		cursor: ScrollbackRowCursor? = nil,
-		search: ScrollbackSearchFields = .empty
+		search: ScrollbackSearchFields = .empty,
+		messageIdentifier: String? = nil
 	) {
 		self.data = data
 		self.uniqueIdentifier = uniqueIdentifier
@@ -48,6 +55,7 @@ nonisolated struct ScrollbackEntry: Sendable {
 		self.creationDate = creationDate
 		self.cursor = cursor
 		self.search = search
+		self.messageIdentifier = messageIdentifier?.isEmpty == false ? messageIdentifier : nil
 	}
 
 	/// One malformed stored row is discarded without affecting the store.
@@ -81,6 +89,16 @@ nonisolated struct ScrollbackEntry: Sendable {
 		self.creationDate = creationDate
 		cursor = ScrollbackRowCursor(object: managedObject)
 		search = ScrollbackSearchFields(managedObject: managedObject)
+		messageIdentifier = managedObject.entity.propertiesByName[ScrollbackAttribute.messageID.rawValue] == nil
+			? nil
+			: managedObject.value(forKey: ScrollbackAttribute.messageID.rawValue) as? String
+	}
+
+	/// Writes the columns derived from the line beside its archive: the search
+	/// text and the message identifier.
+	func writeDerivedColumns(to object: NSManagedObject) {
+		search.write(to: object)
+		object.setValue(messageIdentifier, forKey: ScrollbackAttribute.messageID.rawValue)
 	}
 }
 

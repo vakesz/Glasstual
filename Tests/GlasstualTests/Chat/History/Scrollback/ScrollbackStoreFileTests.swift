@@ -48,7 +48,7 @@ private nonisolated struct SavedScrollbackRow: Hashable, Sendable {
 ///
 /// 2.0 writes a schema no 1.x release wrote, so a 1.x
 /// `logControllerHistoricLog_*.sqlite` is never named by the setting again.
-/// Existing 2.x stores are upgraded to the searchable schema. These tests
+/// Existing 2.x stores are upgraded to the current schema. These tests
 /// cover both paths and keep unrelated files in the directory intact.
 @MainActor
 @Suite("Scrollback database file", .serialized)
@@ -105,7 +105,9 @@ struct ScrollbackStoreFileTests {
 		}
 		let unindexedModel = try ScrollbackModelMigration.loadUnindexedModel()
 		let indexedModel = try ScrollbackModelMigration.indexedModel(from: unindexedModel)
-		let searchableModel = try ScrollbackModelMigration.searchableModel(from: indexedModel)
+		let currentModel = try ScrollbackModelMigration.messageLookupModel(
+			from: ScrollbackModelMigration.searchableModel(from: indexedModel)
+		)
 		let originalMetadata = try NSPersistentStoreCoordinator.metadataForPersistentStore(
 			type: .sqlite, at: url, options: nil
 		)
@@ -128,7 +130,7 @@ struct ScrollbackStoreFileTests {
 		let upgradedMetadata = try NSPersistentStoreCoordinator.metadataForPersistentStore(
 			type: .sqlite, at: url, options: nil
 		)
-		#expect(searchableModel.isConfiguration(withName: nil, compatibleWithStoreMetadata: upgradedMetadata))
+		#expect(currentModel.isConfiguration(withName: nil, compatibleWithStoreMetadata: upgradedMetadata))
 		#expect(!indexedModel.isConfiguration(withName: nil, compatibleWithStoreMetadata: upgradedMetadata))
 		let upgradedUUID = try #require(upgradedMetadata[NSStoreUUIDKey] as? String)
 

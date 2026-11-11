@@ -8,13 +8,16 @@ import Foundation
 /// current process bundle, which is different in tests and helper processes.
 private final nonisolated class ScrollbackModelBundleToken {} // nonisolated: immutable
 
-/** The three schemas a scrollback store has had, and the one this build writes.
+/** The four schemas a scrollback store has had, and the one this build writes.
 
  - Unindexed: the shipped entity, with no indexes.
  - Indexed: the same entity with the query indexes. Core Data excludes indexes
  from an entity's version hash, so a version modifier tells the two apart.
  - Searchable: the indexed entity with the plain-text columns a search reads
- (``ScrollbackSearchFields``), which is the schema this build opens.
+ (``ScrollbackSearchFields``).
+ - Current: the searchable entity with the message identifier as an indexed
+ column, so a redaction reads only the rows it names. This is the schema this
+ build opens.
 
  A group of values rather than a tuple, because the migration names each of
  them. */
@@ -22,11 +25,12 @@ nonisolated struct ScrollbackModelVersions {
 	let unindexed: NSManagedObjectModel
 	let indexed: NSManagedObjectModel
 	let searchable: NSManagedObjectModel
+	let current: NSManagedObjectModel
 
 	/// The schemas older than the current one, newest first: the order an
 	/// existing store is matched against.
 	var olderThanCurrent: [NSManagedObjectModel] {
-		[indexed, unindexed]
+		[searchable, indexed, unindexed]
 	}
 }
 
@@ -35,15 +39,18 @@ nonisolated struct ScrollbackModelVersions {
  store, so nothing infers a mapping and nothing changes the file in place.
 
  The upgrade copies every row into a new store beside the old one, filling the
- searchable columns from each row's archive as it goes, checks the row count,
+ searchable columns and the message identifier from each row's archive as it
+ goes, checks the row count,
  and only then replaces the old store with the copy. Until that last step the
  old store is untouched, so a failure or a crash at any point leaves history
  exactly as it was, and the next launch discards the half-built copy and starts
- again. A row whose archive cannot be read is copied with empty search columns:
- it stays in history and is not searchable, and it never fails the upgrade. */
+ again. A row whose archive cannot be read is copied with empty search columns
+ and no message identifier: it stays in history and is neither searchable nor
+ redactable, and it never fails the upgrade. */
 nonisolated enum ScrollbackModelMigration {
 	private static let indexedVersion = "GlasstualScrollbackIndexesV1"
 	private static let searchableVersion = "GlasstualScrollbackSearchV2"
+	private static let messageLookupVersion = "GlasstualScrollbackMessageIDV3"
 	/// How many rows are copied, and saved, together: the most a migration
 	/// holds in memory at a time.
 	static let copyBatchSize = 500
@@ -98,11 +105,33 @@ nonisolated enum ScrollbackModelMigration {
 		return model
 	}
 
+	/// The searchable schema plus the message identifier, indexed with the view.
+	static func messageLookupModel(from searchableModel: NSManagedObjectModel) throws -> NSManagedObjectModel {
+		guard let model = searchableModel.copy() as? NSManagedObjectModel,
+		      let entity = model.entitiesByName[ScrollbackQueries.entityName],
+		      let view = entity.propertiesByName[ScrollbackAttribute.viewID.rawValue]
+		else { throw CocoaError(.persistentStoreInvalidType) }
+
+		let column = NSAttributeDescription()
+		column.name = ScrollbackAttribute.messageID.rawValue
+		column.attributeType = .stringAttributeType
+		column.isOptional = true
+		entity.properties += [column]
+		entity.indexes += [NSFetchIndexDescription(name: "byViewAndMessage", elements: [
+			NSFetchIndexElementDescription(property: view, collationType: .binary),
+			NSFetchIndexElementDescription(property: column, collationType: .binary),
+		])]
+		entity.versionHashModifier = messageLookupVersion
+		return model
+	}
+
 	static func versions() throws -> ScrollbackModelVersions {
 		let unindexed = try loadUnindexedModel()
 		let indexed = try indexedModel(from: unindexed)
+		let searchable = try searchableModel(from: indexed)
 		return try ScrollbackModelVersions(
-			unindexed: unindexed, indexed: indexed, searchable: searchableModel(from: indexed)
+			unindexed: unindexed, indexed: indexed, searchable: searchable,
+			current: messageLookupModel(from: searchable)
 		)
 	}
 
@@ -127,13 +156,13 @@ nonisolated enum ScrollbackModelMigration {
 			type: .sqlite, at: url, options: options
 		)
 		let temporaryURL = workingCopyURL(for: url)
-		if versions.searchable.isConfiguration(withName: nil, compatibleWithStoreMetadata: metadata) {
+		if versions.current.isConfiguration(withName: nil, compatibleWithStoreMetadata: metadata) {
 			// A previous process may have stopped after replacement but before
 			// removing its working copy. Keep that copy if row counts disagree.
 			if FileManager.default.fileExists(atPath: temporaryURL.path),
-			   let storedCount = try? rowCount(at: url, model: versions.searchable, options: options)
+			   let storedCount = try? rowCount(at: url, model: versions.current, options: options)
 			{
-				let temporaryCount = try? rowCount(at: temporaryURL, model: versions.searchable, options: options)
+				let temporaryCount = try? rowCount(at: temporaryURL, model: versions.current, options: options)
 				if temporaryCount == nil || temporaryCount == storedCount {
 					_ = discardTemporary(at: temporaryURL, using: coordinator, options: options)
 				}
@@ -161,10 +190,10 @@ nonisolated enum ScrollbackModelMigration {
 		let sourceCount = try rowCount(at: url, model: source, options: options)
 		progress?(0)
 		try copyRows(
-			from: url, sourceModel: source, to: temporaryURL, destinationModel: versions.searchable,
+			from: url, sourceModel: source, to: temporaryURL, destinationModel: versions.current,
 			options: options, expectedCount: sourceCount, progress: progress
 		)
-		guard try rowCount(at: temporaryURL, model: versions.searchable, options: options) == sourceCount else {
+		guard try rowCount(at: temporaryURL, model: versions.current, options: options) == sourceCount else {
 			throw CocoaError(.persistentStoreIncompleteSave)
 		}
 		// If replacement or the destination read fails, retain the checked
@@ -174,7 +203,7 @@ nonisolated enum ScrollbackModelMigration {
 			at: url, destinationOptions: options,
 			withPersistentStoreFrom: temporaryURL, sourceOptions: options, type: .sqlite
 		)
-		guard try rowCount(at: url, model: versions.searchable, options: options) == sourceCount else {
+		guard try rowCount(at: url, model: versions.current, options: options) == sourceCount else {
 			throw CocoaError(.persistentStoreIncompleteSave)
 		}
 		preserveTemporaryCopy = false
@@ -183,8 +212,8 @@ nonisolated enum ScrollbackModelMigration {
 
 	/** Copies every row of the old store into a new one, in batches.
 
-	 Each row keeps all six original columns exactly; the searchable columns are
-	 derived from its archive. The batches bound memory: a batch is saved and
+	 Each row keeps all six original columns exactly; the searchable columns and
+	 the message identifier are derived from its archive. The batches bound memory: a batch is saved and
 	 forgotten before the next is read. */
 	private static func copyRows(
 		from sourceURL: URL,
@@ -249,7 +278,7 @@ nonisolated enum ScrollbackModelMigration {
 	}
 
 	/// What one old row carries across: its original columns exactly, and the
-	/// search columns its archive yields.
+	/// search columns and message identifier its archive yields.
 	private struct CopiedRow: Sendable {
 		let createdAt: Double?
 		let entryID: Int64?
@@ -258,6 +287,7 @@ nonisolated enum ScrollbackModelMigration {
 		let sessionID: Int64?
 		let viewID: String?
 		let search: ScrollbackSearchFields
+		let messageID: String?
 
 		init(_ row: NSManagedObject) {
 			createdAt = row.value(forKey: ScrollbackAttribute.createdAt.rawValue) as? Double
@@ -266,7 +296,10 @@ nonisolated enum ScrollbackModelMigration {
 			lineID = row.value(forKey: ScrollbackAttribute.lineID.rawValue) as? String
 			sessionID = row.value(forKey: ScrollbackAttribute.sessionID.rawValue) as? Int64
 			viewID = row.value(forKey: ScrollbackAttribute.viewID.rawValue) as? String
-			search = ScrollbackModelMigration.searchFields(of: row)
+			// One decode serves every derived column.
+			let line = lineData.flatMap { ChatLine(data: $0) }
+			search = line.map(ScrollbackSearchFields.init(line:)) ?? .empty
+			messageID = line?.messageIdentifier.flatMap { $0.isEmpty ? nil : $0 }
 		}
 
 		func insert(into object: NSManagedObject) {
@@ -277,16 +310,8 @@ nonisolated enum ScrollbackModelMigration {
 			object.setValue(sessionID, forKey: ScrollbackAttribute.sessionID.rawValue)
 			object.setValue(viewID, forKey: ScrollbackAttribute.viewID.rawValue)
 			search.write(to: object)
+			object.setValue(messageID, forKey: ScrollbackAttribute.messageID.rawValue)
 		}
-	}
-
-	/// The searchable columns of one stored row, derived from its archive. A row
-	/// that cannot be read has none: it stays in history and out of search.
-	static func searchFields(of row: NSManagedObject) -> ScrollbackSearchFields {
-		guard let data = row.value(forKey: ScrollbackAttribute.lineData.rawValue) as? Data,
-		      let line = ChatLine(data: data)
-		else { return .empty }
-		return ScrollbackSearchFields(line: line)
 	}
 
 	/// Core Data handles SQLite locks and its sidecars. Remove residual empty

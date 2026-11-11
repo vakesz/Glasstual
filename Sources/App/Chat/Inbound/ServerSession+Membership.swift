@@ -294,7 +294,7 @@ extension ServerSession {
 
 	/// The query with `nickname`, if one is open. A channel never matches: its
 	/// name cannot be a nickname.
-	private func directConversation(named nickname: String) -> Conversation? {
+	func directConversation(named nickname: String) -> Conversation? {
 		guard let conversation = findConversation(nickname), conversation.isDirect else { return nil }
 		return conversation
 	}

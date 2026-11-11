@@ -30,10 +30,10 @@ enum DirectChatPolicy {
 		let rawToken = input.nextToken()
 		let tokenText = rawToken.hasPrefix("T") ? String(rawToken.dropFirst()) : rawToken
 		let token = tokenText.isEmpty ? nil : tokenText
-		guard portText.allSatisfy(\.isNumber), let portValue = Int(portText),
+		guard portText.allSatisfy(\.isASCIIDigit), let portValue = Int(portText),
 		      portValue >= 0, portValue <= 65535,
 		      portValue > 0 || token != nil,
-		      token?.allSatisfy(\.isNumber) ?? true
+		      token?.allSatisfy(\.isASCIIDigit) ?? true
 		else { return nil }
 		if portValue > 0, !address.isIPAddress {
 			return nil
@@ -162,6 +162,11 @@ extension ServerSession {
 			defaultButton: PromptStrings.Action.accept,
 			alternateButton: PromptStrings.Action.decline
 		)
+		/* The answer can come after the connection that carried the offer has
+		 gone, and a reconnect, perhaps to another server where somebody else
+		 holds the sender's nickname, must not act on it. */
+		let startupIdentifier = startup.identifier
+		let socketIdentifier = socket?.uniqueIdentifier
 		output?.presentAlertSheet(
 			request,
 			completion: { [weak self] outcome in
@@ -171,7 +176,9 @@ extension ServerSession {
 					      as: .dccFileTransfer, command: ChatLineFormat.defaultCommand)
 					return
 				}
-				guard isLoggedIn else { return }
+				guard isLoggedIn, !isTerminating, startup.identifier == startupIdentifier,
+				      socket?.uniqueIdentifier == socketIdentifier
+				else { return }
 				if offer.isPassive {
 					openDirectChat(withNickname: sender, listeningWithToken: offer.token, offeredAddress: offer.address)
 				} else {

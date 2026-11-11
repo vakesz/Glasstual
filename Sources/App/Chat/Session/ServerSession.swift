@@ -171,6 +171,8 @@ class ServerSession: ChatItem {
 
 	/// Paces the settling delay after connect commands; tests step their own.
 	var startupClock = TimerClock.continuous
+	/// Paces the reaping of users who share no channel; tests step their own.
+	var userRemovalClock = TimerClock.continuous
 	/// The scripts this session started that are still running.
 	let scriptTasks = ScriptTaskBag()
 	var trackedUserPopulationTask: SessionTimer?

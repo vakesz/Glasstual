@@ -42,6 +42,75 @@ struct ServerSessionUserDirectoryTests {
 		#expect(session.numberOfUsers == 1)
 	}
 
+	@Test("Renaming into a nickname a stale person still holds retires that person")
+	func renameIntoHeldNicknameRetiresTheHolder() throws {
+		let clock = ManualTimerClock()
+		defer { clock.finish() }
+		let session = TestServerSession()
+		session.userNickname = "me"
+		session.userRemovalClock = clock.timerClock
+		// "bar" wrote once and closed the query, so only a removal timer holds them.
+		let query = try #require(session.findConversationOrCreate("bar", as: .direct))
+		query.activate()
+		let staleBar = try #require(session.findUser("bar"))
+		query.deactivate()
+		#expect(session.userStores[staleBar.id]?.removeUserTask != nil)
+		let channel = try #require(session.findConversationOrCreate("#chan", as: .channel))
+		channel.activate()
+		let foo = session.findUserOrCreate("foo")
+		channel.addUser(foo)
+
+		session.rename(foo, to: "bar")
+
+		#expect(session.findUser("bar")?.id == foo.id)
+		#expect(session.findUser("foo") == nil)
+		#expect(session.userStores[staleBar.id] == nil)
+		#expect(session.numberOfUsers == 2)
+		#expect(channel.memberInfo?.findMember("bar")?.id == foo.id)
+	}
+
+	@Test("A rename that only changes case keeps the person, their store and their channels")
+	func caseOnlyRenameKeepsThePerson() throws {
+		let session = TestServerSession()
+		let channel = try #require(session.findConversationOrCreate("#chan", as: .channel))
+		channel.activate()
+		let foo = session.findUserOrCreate("foo")
+		channel.addUser(foo)
+		let store = try #require(session.userStores[foo.id])
+
+		session.rename(foo, to: "FOO")
+
+		let renamed = try #require(session.findUser("foo"))
+		#expect(renamed.id == foo.id)
+		#expect(renamed.nickname == "FOO")
+		#expect(session.userStores[foo.id] === store)
+		#expect(session.relatedChannels(of: renamed).contains(channel))
+		#expect(channel.memberInfo?.findMember("FOO")?.id == foo.id)
+	}
+
+	@Test("An open query named after the retired person passes to the nickname's new holder")
+	func openQueryFollowsTheNickname() throws {
+		let clock = ManualTimerClock()
+		defer { clock.finish() }
+		let session = TestServerSession()
+		session.userNickname = "me"
+		session.userRemovalClock = clock.timerClock
+		let query = try #require(session.findConversationOrCreate("bar", as: .direct))
+		query.activate()
+		let staleBar = try #require(session.findUser("bar"))
+		let channel = try #require(session.findConversationOrCreate("#chan", as: .channel))
+		channel.activate()
+		let foo = session.findUserOrCreate("foo")
+		channel.addUser(foo)
+
+		session.rename(foo, to: "bar")
+
+		#expect(query.memberInfo?.findMember("bar")?.id == foo.id)
+		#expect(query.memberInfo?.findMember(withUserID: staleBar.id) == nil)
+		#expect(session.userStores[staleBar.id] == nil)
+		#expect(session.myself.flatMap { query.memberInfo?.findMember(withUserID: $0.id) } != nil)
+	}
+
 	@Test("Removing a user updates the published list and the count")
 	func removingUserUpdatesSnapshotsAndCount() {
 		let session = TestServerSession()

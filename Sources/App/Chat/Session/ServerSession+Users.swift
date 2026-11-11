@@ -32,13 +32,26 @@ extension ServerSession {
 
 		for user in userIndex.rekeyed(by: casefoldNickname, naming: \.nickname) {
 			discardDisplacedUser(user)
+			handDirectConversation(named: user.nickname)
 		}
 	}
 
-	/// Takes a user the rekey could not keep out of every channel it was in.
-	/// `remove(_:)` is not what this wants: it would delete the directory entry
-	/// the winner now holds under the same folded nickname.
+	/** Takes a user that lost its folded nickname to another person out of
+	 every conversation it was in: the rekey's loser, or the stale holder of a
+	 nickname somebody was just renamed into.
+
+	 `remove(_:)` is not what this wants: it would delete the directory entry
+	 the winner now holds under the same folded nickname. The direct
+	 conversation named after the user goes first, because removing its member
+	 restarts the removal timer through `disassociate`, which has to happen
+	 while the store is still there to be dropped. */
 	private func discardDisplacedUser(_ user: User) {
+		if let direct = directConversation(named: user.nickname),
+		   let member = direct.memberInfo?.findMember(withUserID: user.id)
+		{
+			direct.memberInfo?.removeMember(member)
+		}
+
 		for (channel, member) in relations(of: user) {
 			channel.memberInfo?.removeMember(member)
 		}
@@ -50,6 +63,18 @@ extension ServerSession {
 		}
 
 		userStores.removeValue(forKey: user.id)
+	}
+
+	/// Gives an open direct conversation named `nickname` a member for whoever
+	/// holds that nickname now, once its previous holder has been discarded.
+	/// The conversation is the one the user has been reading under that name, so
+	/// it follows the nickname rather than the person who left it.
+	private func handDirectConversation(named nickname: String) {
+		guard let direct = directConversation(named: nickname), let members = direct.memberInfo,
+		      let holder = findUser(nickname), members.findMember(withUserID: holder.id) == nil
+		else { return }
+
+		direct.addUser(holder)
 	}
 
 	/// An editable stand-in for `nickname`: a copy of the stored user, or a
@@ -121,21 +146,36 @@ extension ServerSession {
 
 	 A rename drops the old key and the address-book match cached against the
 	 old hostmask, but keeps the person: their store is keyed by identity, so
-	 the channels they are in and their removal timer survive the rename. */
+	 the channels they are in and their removal timer survive the rename.
+
+	 A rename into a nickname the directory still files under somebody else —
+	 a person who changed nick out of sight and was never reaped — retires that
+	 person first, as a rekey does. A rename that only changes case finds the
+	 renamed person under the new key, and is no collision. */
 	func modify(_ user: User, block: (inout User) -> Void) {
 		var editedUser = user
 
 		block(&editedUser)
 
+		var displacedUser: User?
 		if user.nickname != editedUser.nickname {
 			if let hostmask = user.hostmask {
 				clearAddressBookCache(forHostmask: hostmask)
 			}
 
 			removeUser(withNickname: user.nickname)
+
+			if let holder = findUser(editedUser.nickname), holder.id != editedUser.id {
+				displacedUser = holder
+				discardDisplacedUser(holder)
+			}
 		}
 
 		add(editedUser)
+
+		if displacedUser != nil {
+			handDirectConversation(named: editedUser.nickname)
+		}
 	}
 
 	func modifyUser(withNickname nickname: String, block: (inout User) -> Void) {
@@ -198,10 +238,18 @@ extension ServerSession {
 		return channel.memberInfo?.findMember(withUserID: user.id)
 	}
 
-	/// A direct conversation is not a shared room, so it is not a relation: only
-	/// a channel keeps a person in the directory.
+	/** A direct conversation is not a shared room, so it is not a relation.
+
+	 Opening one still holds its two people in the directory: closing it runs
+	 `disassociate`, which starts the removal timer for anyone left with no
+	 channel, and opening it again has to stop that timer, or the person is
+	 reaped while the conversation is open. A later `disassociate` starts it
+	 again. */
 	func associate(_ user: User, with channel: Conversation) {
-		guard channel.isChannel else { return }
+		guard channel.isChannel else {
+			cancelRemoveUserTimer(for: user)
+			return
+		}
 
 		persistentStore(for: user).relatedChannels.insert(channel)
 		toggleRemoveUserTimer(for: user)
@@ -261,18 +309,49 @@ extension ServerSession {
 		 to retire is whichever the directory holds when the timer comes due. */
 		let identifier = user.id
 		let startingNickname = user.nickname
+		let clock = userRemovalClock
 
 		store.removeUserTask = Task { [weak self] in
-			try? await Task.sleep(for: .seconds(removeUserTimerInterval))
+			await clock.wait(removeUserTimerInterval)
 
-			guard Task.isCancelled == false, let self,
-			      let user = storedUser(withID: identifier, startingNickname: startingNickname)
-			else {
+			guard Task.isCancelled == false, let self else {
 				return
 			}
 
-			remove(user)
+			removalTimerFired(for: identifier, startingNickname: startingNickname)
 		}
+	}
+
+	/** Retires the person a removal timer was started for, unless something
+	 outside the channels still holds them.
+
+	 The slot is cleared first, so a timer that came due without reaping leaves
+	 room for the next `disassociate` to start another. A person the directory
+	 no longer holds — renamed over, or already removed — leaves only the store,
+	 which is dropped here rather than kept for good. */
+	private func removalTimerFired(for identifier: User.ID, startingNickname: String) {
+		userStores[identifier]?.removeUserTask = nil
+
+		guard let user = storedUser(withID: identifier, startingNickname: startingNickname) else {
+			userStores.removeValue(forKey: identifier)
+			return
+		}
+
+		guard isHeldOutsideChannels(user) == false else {
+			return
+		}
+
+		remove(user)
+	}
+
+	/// The local user, whom `myself` has to keep finding, and the peer of an
+	/// open direct conversation, whose member row is found through the directory.
+	private func isHeldOutsideChannels(_ user: User) -> Bool {
+		if nicknameIsMyself(user.nickname) {
+			return true
+		}
+
+		return directConversation(named: user.nickname)?.memberInfo?.findMember(withUserID: user.id) != nil
 	}
 
 	/** The directory's user for `identifier`. The nickname the timer started with

@@ -33,7 +33,7 @@ struct ScrollbackFetchOutcomeTests {
 		                                                forStoreType: RefusingScrollbackReadStore.storeType)
 		let context = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
 		try await context.perform {
-			let model = try ScrollbackModelMigration.versions().searchable
+			let model = try ScrollbackModelMigration.versions().current
 			let coordinator = NSPersistentStoreCoordinator(managedObjectModel: model)
 			// Custom stores need a URL; only the in-memory store supports nil here.
 			let storeURL = try #require(URL(string: "scrollback-read-failure://fixture/\(UUID().uuidString)"))

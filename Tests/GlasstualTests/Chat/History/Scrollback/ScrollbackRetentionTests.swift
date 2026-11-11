@@ -198,4 +198,40 @@ struct ScrollbackRetentionTests {
 			.map(\.uniqueIdentifier) == (8 ..< 13).reversed().map { "line-\($0)" })
 		#expect(await store.close() == .saved)
 	}
+
+	@Test("A pass larger than one chunk deletes in several steps and reports every line", .timeLimit(.minutes(1)))
+	func retentionDeletesInChunks() async throws {
+		let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+		try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+		defer { try? FileManager.default.removeItem(at: directory) }
+		let reports = Mutex<[[String]]>([])
+		let store = ScrollbackStore(
+			filenameSetting: ScrollbackFilenameFixture().store,
+			// Parked: the test runs the pass itself.
+			resizeDelay: { .seconds(3600) },
+			deletionChunkSize: 10,
+			deletionHandler: { identifiers, _ in reports.withLock { $0.append(identifiers) } }
+		)
+		#expect(await store.openDatabase(inDirectory: directory.path).isOpen)
+		await store.setMaximumLineCount(5)
+		for index in 0 ..< 25 {
+			#expect(await store.writeChatLine(entry("line-\(index)", date: TimeInterval(100 + index))) == .accepted)
+		}
+
+		guard case let .deleted(result) = await store.resize("view") else {
+			Issue.record("The retention pass did not delete")
+			return
+		}
+
+		#expect(result.deletedCount == 20)
+		#expect(result.hasMore == false)
+		#expect(Set(result.uniqueIdentifiers) == Set((0 ..< 20).map { "line-\($0)" }))
+		let reported = reports.withLock { $0 }
+		#expect(reported.count >= 2)
+		#expect(reported.allSatisfy { $0.count <= 10 })
+		#expect(Set(reported.joined()) == Set((0 ..< 20).map { "line-\($0)" }))
+		#expect(await store.fetchOutcome(.newestEntries(forView: "view", fetchLimit: 100)).entries
+			.map(\.uniqueIdentifier) == (20 ..< 25).reversed().map { "line-\($0)" })
+		#expect(await store.close() == .saved)
+	}
 }

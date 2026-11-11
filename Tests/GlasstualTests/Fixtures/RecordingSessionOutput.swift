@@ -16,6 +16,9 @@ final class RecordingSessionOutput: ServerSessionPresenting {
 	/// Every sheet the protocol layer asked for, in order. No window is
 	/// involved, which is the point of the seam.
 	private(set) var presentedAlerts: [AlertRequest] = []
+	/// The completion of each sheet in ``presentedAlerts``, at the same index,
+	/// so a test can answer one as the user would, and as late as it likes.
+	private(set) var presentedAlertCompletions: [AlertCompletion] = []
 	/// Every confirmation the protocol layer asked for, in order.
 	private(set) var confirmations: [AlertRequest] = []
 	private(set) var closedSheetSessions: [ServerSession] = []
@@ -53,8 +56,9 @@ final class RecordingSessionOutput: ServerSessionPresenting {
 	var isMainWindow = false
 	var visibleItems: [ChatItem] = []
 
-	func presentAlertSheet(_ request: AlertRequest, completion _: @escaping AlertCompletion) {
+	func presentAlertSheet(_ request: AlertRequest, completion: @escaping AlertCompletion) {
 		presentedAlerts.append(request)
+		presentedAlertCompletions.append(completion)
 	}
 
 	func confirm(_ request: AlertRequest) async -> Bool {
