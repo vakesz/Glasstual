@@ -136,6 +136,43 @@ nonisolated struct TranscriptThemePalette: Codable, Equatable, Sendable {
 	}
 }
 
+nonisolated extension CodingUserInfoKey {
+	/// Set while decoding a version-3 theme, whose palette predates the
+	/// window-chrome ground.
+	static let transcriptThemeChromeFallsBackToBackground = CodingUserInfoKey(
+		rawValue: "transcriptThemeChromeFallsBackToBackground"
+	)!
+}
+
+nonisolated extension TranscriptThemePalette {
+	/// A version-3 palette has no window-chrome ground. The columns stood on
+	/// the transcript ground before they had a colour of their own, so an
+	/// upgraded theme keeps standing on it. Any other palette must carry one.
+	init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		background = try container.decode(AdaptiveTranscriptColor.self, forKey: .background)
+		primaryText = try container.decode(AdaptiveTranscriptColor.self, forKey: .primaryText)
+		secondaryText = try container.decode(AdaptiveTranscriptColor.self, forKey: .secondaryText)
+		timestampText = try container.decode(AdaptiveTranscriptColor.self, forKey: .timestampText)
+		eventText = try container.decode(AdaptiveTranscriptColor.self, forKey: .eventText)
+		link = try container.decode(AdaptiveTranscriptColor.self, forKey: .link)
+		localNickname = try container.decode(AdaptiveTranscriptColor.self, forKey: .localNickname)
+		remoteNickname = try container.decode(AdaptiveTranscriptColor.self, forKey: .remoteNickname)
+		highlightBackground = try container.decode(AdaptiveTranscriptColor.self, forKey: .highlightBackground)
+		highlightText = try container.decode(AdaptiveTranscriptColor.self, forKey: .highlightText)
+		bubbleIncoming = try container.decode(AdaptiveTranscriptColor.self, forKey: .bubbleIncoming)
+		bubbleOutgoing = try container.decode(AdaptiveTranscriptColor.self, forKey: .bubbleOutgoing)
+		unreadMarker = try container.decode(AdaptiveTranscriptColor.self, forKey: .unreadMarker)
+		failure = try container.decode(AdaptiveTranscriptColor.self, forKey: .failure)
+		if decoder.userInfo[.transcriptThemeChromeFallsBackToBackground] as? Bool == true {
+			chromeBackground = try container.decodeIfPresent(AdaptiveTranscriptColor.self, forKey: .chromeBackground)
+				?? background
+		} else {
+			chromeBackground = try container.decode(AdaptiveTranscriptColor.self, forKey: .chromeBackground)
+		}
+	}
+}
+
 /// The one native transcript theme format. It is both the runtime model and
 /// the payload written by Export Theme, avoiding adapters between setting,
 /// file, and rendering representations.
@@ -152,9 +189,9 @@ nonisolated struct TranscriptTheme: Codable, Equatable, Sendable {
 	 version-1 document would otherwise pass and draw bracketed nicknames with
 	 no increased-contrast pair.
 
-	 Version 4 adds the window-chrome ground. A version-3 document decodes with
-	 the chrome copied from its transcript ground, which is what the columns
-	 stood on before they had a colour of their own. */
+	 Version 4 adds the window-chrome ground. `decoded(from:)` upgrades a
+	 version-3 document with the chrome copied from its transcript ground,
+	 which is what the columns stood on before they had a colour of their own. */
 	static let currentFormatVersion = 4
 
 	var formatVersion = currentFormatVersion
@@ -168,89 +205,6 @@ nonisolated struct TranscriptTheme: Codable, Equatable, Sendable {
 	var messageSpacing: Double
 	var horizontalPadding: Double
 	var palette: TranscriptThemePalette
-
-	private enum CodingKeys: String, CodingKey {
-		case formatVersion
-		case name
-		case layout
-		case fontName
-		case fontSize
-		case timestampFormat
-		case nicknameFormat
-		case lineSpacing
-		case messageSpacing
-		case horizontalPadding
-		case palette
-	}
-
-	/** The palette as a version-3 document stores it: every role but the
-	 window-chrome ground version 4 added. */
-	private struct PaletteV3: Decodable {
-		var background: AdaptiveTranscriptColor
-		var primaryText: AdaptiveTranscriptColor
-		var secondaryText: AdaptiveTranscriptColor
-		var timestampText: AdaptiveTranscriptColor
-		var eventText: AdaptiveTranscriptColor
-		var link: AdaptiveTranscriptColor
-		var localNickname: AdaptiveTranscriptColor
-		var remoteNickname: AdaptiveTranscriptColor
-		var highlightBackground: AdaptiveTranscriptColor
-		var highlightText: AdaptiveTranscriptColor
-		var bubbleIncoming: AdaptiveTranscriptColor
-		var bubbleOutgoing: AdaptiveTranscriptColor
-		var unreadMarker: AdaptiveTranscriptColor
-		var failure: AdaptiveTranscriptColor
-
-		/// The columns stood on the transcript ground before they had a
-		/// colour of their own, so an upgraded theme keeps standing on it.
-		func withChromeFromBackground() -> TranscriptThemePalette {
-			TranscriptThemePalette(
-				background: background,
-				primaryText: primaryText,
-				secondaryText: secondaryText,
-				timestampText: timestampText,
-				eventText: eventText,
-				link: link,
-				localNickname: localNickname,
-				remoteNickname: remoteNickname,
-				highlightBackground: highlightBackground,
-				highlightText: highlightText,
-				bubbleIncoming: bubbleIncoming,
-				bubbleOutgoing: bubbleOutgoing,
-				unreadMarker: unreadMarker,
-				failure: failure,
-				chromeBackground: background
-			)
-		}
-	}
-
-	/** Decodes a stored theme, upgrading a version-3 document on the way in.
-
-	 A version-3 palette carries no window-chrome ground and fails the
-	 version-4 decode for the missing key, so one is read through the
-	 version-3 shape first. Anything else that fails to decode is refused
-	 by the caller as before. */
-	init(from decoder: Decoder) throws {
-		let container = try decoder.container(keyedBy: CodingKeys.self)
-		formatVersion = try container.decode(Int.self, forKey: .formatVersion)
-		name = try container.decode(String.self, forKey: .name)
-		layout = try container.decode(TranscriptThemeLayout.self, forKey: .layout)
-		fontName = try container.decode(String.self, forKey: .fontName)
-		fontSize = try container.decode(Double.self, forKey: .fontSize)
-		timestampFormat = try container.decode(String.self, forKey: .timestampFormat)
-		nicknameFormat = try container.decode(String.self, forKey: .nicknameFormat)
-		lineSpacing = try container.decode(Double.self, forKey: .lineSpacing)
-		messageSpacing = try container.decode(Double.self, forKey: .messageSpacing)
-		horizontalPadding = try container.decode(Double.self, forKey: .horizontalPadding)
-		if formatVersion == 3,
-		   let legacy = try? container.decode(PaletteV3.self, forKey: .palette)
-		{
-			palette = legacy.withChromeFromBackground()
-			formatVersion = Self.currentFormatVersion
-		} else {
-			palette = try container.decode(TranscriptThemePalette.self, forKey: .palette)
-		}
-	}
 
 	init(
 		name: String,
@@ -352,15 +306,28 @@ nonisolated struct TranscriptTheme: Codable, Equatable, Sendable {
 		)
 	}
 
+	private struct FormatProbe: Decodable {
+		let formatVersion: Int
+	}
+
 	/** The one way a stored or imported property list becomes a theme: decode,
-	 refuse a version this build does not write, and refuse anything the renderer
-	 could not draw. */
+	 upgrade a version-3 document, refuse any other version this build does not
+	 write, and refuse anything the renderer could not draw. */
 	static func decoded(from data: Data) throws -> Self {
-		let decoded: Self
+		let decoder = PropertyListDecoder()
+		if (try? decoder.decode(FormatProbe.self, from: data))?.formatVersion == 3 {
+			decoder.userInfo[.transcriptThemeChromeFallsBackToBackground] = true
+		}
+
+		var decoded: Self
 		do {
-			decoded = try PropertyListDecoder().decode(Self.self, from: data)
+			decoded = try decoder.decode(Self.self, from: data)
 		} catch {
 			throw TranscriptThemeCodingError.invalidDocument
+		}
+
+		if decoded.formatVersion == 3 {
+			decoded.formatVersion = currentFormatVersion
 		}
 
 		guard decoded.formatVersion == currentFormatVersion else {

@@ -180,6 +180,39 @@ struct TranscriptThemeStoreTests {
 		#expect(controller.theme.palette.chromeBackground == controller.theme.palette.background)
 	}
 
+	@Test("A version-4 document without a chrome ground is refused")
+	func version4DocumentRequiresChrome() throws {
+		let data = try document(TranscriptTheme.bubbles, version: 4, removingPaletteKey: "chromeBackground")
+
+		#expect(throws: TranscriptThemeCodingError.invalidDocument) {
+			try TranscriptTheme.decoded(from: data)
+		}
+	}
+
+	/// Only `decoded(from:)` upgrades; a plain decode reads the document as written.
+	@Test("A plain decode of a version-3 document keeps its version")
+	func plainDecodeDoesNotUpgrade() throws {
+		var legacy = TranscriptTheme.bubbles
+		legacy.formatVersion = 3
+
+		let decoded = try PropertyListDecoder().decode(TranscriptTheme.self, from: encoded(legacy))
+
+		#expect(decoded.formatVersion == 3)
+		#expect(decoded.palette == legacy.palette)
+	}
+
+	private func document(_ theme: TranscriptTheme, version: Int, removingPaletteKey key: String) throws -> Data {
+		var format: PropertyListSerialization.PropertyListFormat = .xml
+		var document = try #require(
+			PropertyListSerialization.propertyList(from: encoded(theme), options: [], format: &format) as? [String: Any]
+		)
+		var palette = try #require(document["palette"] as? [String: Any])
+		palette.removeValue(forKey: key)
+		document["palette"] = palette
+		document["formatVersion"] = version
+		return try PropertyListSerialization.data(fromPropertyList: document, format: .xml, options: 0)
+	}
+
 	/// A stored document this build cannot read leaves the shipped theme in
 	/// place, and is left on disk rather than overwritten.
 	@Test("A stored document of an older version falls back to the shipped theme")
